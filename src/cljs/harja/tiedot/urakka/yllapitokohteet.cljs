@@ -75,55 +75,17 @@
 (def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
 (def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
 
-(defn kasittele-paivittyneet-kohdeosat
-  "Käsittelee päivittyneen kohdeosien muokkaus-grid datan. Sekä uudet ja vanhat
-  ovat mäppejä numerosta riviin. Oletetaan, että yksi avainten arvoista on muuttunut
-  käyttäjän tekemän editointioperaation johdosta.
-  Jos käyttäjä muokkasi alkuosaa, asetetaan mahdollisen edeltävän rivin loppuosa samaksi.
-  Jos käyttäjä muokkasi loppuosaa, asetetaaan seuraavan rivin alkuosa samaksi."
-  [vanhat uudet]
-  (if-not (= (count vanhat) (count uudet))
-    uudet
-    (let [riveja (count uudet)
-          [muokattu-vanha muokattu-uusi muokattu-key]
-          (some #(let [vanha (get vanhat %)
-                       uusi (get uudet %)]
-                   (when-not (= vanha uusi)
-                     [vanha uusi %]))
-                (keys uudet))
-          edellinen-key (when (> muokattu-key 1)
-                          (dec muokattu-key))
-          edellinen (when edellinen-key
-                      (get uudet edellinen-key))
-
-          seuraava-key (when (< muokattu-key riveja)
-                         (inc muokattu-key))
-          seuraava (when seuraava-key
-                     (get uudet seuraava-key))
-
-          alku-muutettu? (not= (alku muokattu-vanha) (alku muokattu-uusi))
-          loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
-
-      (as-> uudet rivit
-            (if alku-muutettu?
-              (assoc rivit edellinen-key
-                           (merge edellinen
-                                  (zipmap [:tr-loppuosa :tr-loppuetaisyys]
-                                          (alku muokattu-uusi))))
-              rivit)
-
-            (if loppu-muutettu?
-              (assoc rivit seuraava-key
-                           (merge seuraava
-                                  (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                                          (loppu muokattu-uusi))))
-              rivit)))))
-
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
-  [kohdeosat key]
+  [kohdeosat key yllapitokohde]
   (let [rivi (get kohdeosat key)
+        ;; Jos ennestään ei yhtään kohdeosaa täytetään ajorata ja kaista pääkohteelta
+        rivi (if rivi
+               rivi
+               {:tr-numero (:tr-numero yllapitokohde)
+                :tr-ajorata (:tr-ajorata yllapitokohde)
+                :tr-kaista (:tr-kaista yllapitokohde)})
         avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
         uusi-rivi {:nimi ""
                    :tr-numero (:tr-numero rivi)
@@ -144,48 +106,18 @@
                          (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
 (defn poista-kohdeosa
-  "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus
-  täyttää poistetun kohdeosan jättämän alueen. Jos poistetaan ensimmäinen kohdeosa, pidennetään
-  vastaavasti seuraava."
+  "Poistaa valitun kohdeosan annetulla avaimella. Huolehtii siitä, että osat pysyvät järjestyksessä
+   eikä väliin jää puuttumaan avaimia."
   [kohdeosat key]
-  (let [avaimet (sort (keys kohdeosat))
-        avaimet-ennen (filter #(< % key) avaimet)
-        avaimet-jalkeen (filter #(> % key) avaimet)
-        ennen (when-not (empty? avaimet-ennen)
-                (get kohdeosat (last avaimet-ennen)))
-        kohdeosa (get kohdeosat key)
-        jalkeen (when-not (empty? avaimet-jalkeen)
-                  (get kohdeosat (first avaimet-jalkeen)))]
-    (cond
-      ;; Poistetaan ainoa kohdeosa
-      (= (count avaimet) 1)
-      {}
-
-      ;; Poistetaan ensimmäistä, aseta ensimmäisen alku seuraavan aluksi
-      (nil? ennen)
-      (merge {1 (merge jalkeen
-                       (select-keys kohdeosa [:tr-alkuosa :tr-alkuetaisyys]))}
-             (zipmap (iterate inc 2)
-                     (map #(get kohdeosat %) (rest avaimet-jalkeen))))
-
-      ;; Poistetaan viimeistä, aseta viimeisen loppu toiseksi viimeiseen
-      (nil? jalkeen)
-      (merge (zipmap (iterate inc 1)
-                     (map #(get kohdeosat %) (butlast avaimet-ennen)))
-             {(count avaimet-ennen)
-              (merge ennen
-                     (select-keys kohdeosa [:tr-loppuosa :tr-loppuetaisyys]))})
-
-      ;; Poistetaan rivi välistä, asetetaan tämän rivin loppuosa seuraavan alkuosaksi
-      :default
-      (merge (zipmap (iterate inc 1)
-                     (map #(get kohdeosat %) avaimet-ennen))
-             {(inc (count avaimet-ennen))
-              (merge jalkeen
-                     (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                             (alku kohdeosa)))}
-             (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
-                     (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))
+  (let [kohdeosat (dissoc kohdeosat key)
+        kohdeosat-uusilla-avaimilla (map-indexed (fn [index [vanha-avain rivi]]
+                                                   [(inc index) rivi])
+                                                 kohdeosat)
+        tulos (reduce (fn [tulos [avain arvo]]
+                        (assoc tulos avain arvo))
+                      {}
+                      kohdeosat-uusilla-avaimilla)]
+    tulos))
 
 (defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
   (when (oikeustarkistus-fn)

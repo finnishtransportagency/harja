@@ -378,7 +378,7 @@
       (q/liita-kommentti<! db {:paallystysilmoitus paallystysilmoitus-id
                                :kommentti (:id kommentti)}))))
 
-(defn- lisaa-paallystysilmoitukseen-kohdeosien-idt
+(defn lisaa-paallystysilmoitukseen-kohdeosien-idt
   "Liittää päällystysilmoituksen osoitetietoihin vastaavan
    ylläpitokohdeosan id:n."
   [paallystysilmoitus paivitetyt-kohdeosat]
@@ -392,6 +392,8 @@
                                 (first
                                   (filter #(and
                                              (= (:tr-numero %) (:tr-numero osoite))
+                                             (or (nil? (:tr-ajorata osoite)) (= (:tr-ajorata %) (:tr-ajorata osoite)))
+                                             (or (nil? (:tr-kaista osoite)) (= (:tr-kaista %) (:tr-kaista osoite)))
                                              (= (:tr-alkuosa %) (:tr-alkuosa osoite))
                                              (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
                                              (= (:tr-loppuosa %) (:tr-loppuosa osoite))
@@ -502,14 +504,14 @@
                                                              :uusi-paatos (:tekninen-osa_paatos tuore-paallystysilmoitus)
                                                              :vanha-paatos (:tekninen-osa_paatos vanha-paallystysilmoitus)})
 
-          ;; Rakennetaan vastaus
-          (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                                     :sopimus-id sopimus-id
-                                                                                     :vuosi vuosi})
-                uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
-                                                                             :sopimus-id sopimus-id})]
-            {:yllapitokohteet yllapitokohteet
-             :paallystysilmoitukset uudet-ilmoitukset}))))))
+      ;; Rakennetaan vastaus
+      (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                                 :sopimus-id sopimus-id
+                                                                                 :vuosi vuosi})
+            uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
+                                                                         :sopimus-id sopimus-id
+        :vuosi vuosi})]{:yllapitokohteet yllapitokohteet
+         :paallystysilmoitukset uudet-ilmoitukset}))))))
 
 (defn tallenna-paallystysilmoitusten-takuupvmt [db user {urakka-id ::urakka-domain/id
                                                          takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
