@@ -4,6 +4,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
@@ -80,7 +81,7 @@
       []
       (q/hae-paikkaustoteumat-tierekisteriosoitteella db (assoc (merge kysely-params-template (:tr tiedot))
                                                            :urakka-id (::paikkaus/urakka-id tiedot)
-                                                           :paikkaus-idt (:paikkaus-idt tiedot)
+                                                           :paikkaus-idt (when (:paikkaus-idt tiedot) (str "{" (apply str (interpose "," (:paikkaus-idt tiedot))) "}"))
                                                            :alkuaika (first (:aikavali tiedot))
                                                            :loppuaika (second (:aikavali tiedot)))))))
 

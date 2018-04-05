@@ -110,63 +110,21 @@ INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id",
          ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 222 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
          ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 223 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
          ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 224 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL);
+
+ INSERT INTO paikkaustoteuma ("ulkoinen-id","urakka-id","paikkauskohde-id","toteuma-id","luoja-id",tyyppi,selite,
+                              hinta,yksikko,yksikkohinta,maara)
+ VALUES -- Kokonaishintaiset
+        (6661, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+         'Liikennejärjestelyt', 3500, NULL, NULL, NULL),
+        (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'kokonaishintainen',
+         'Liikennejärjestelyt 2', 400, NULL, NULL, NULL),
+        (133, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'kokonaishintainen',
+         'Liikennejärjestelyt', 700, NULL, NULL, NULL),
+       -- Yksikköhintaiset
+        (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'yksikkohintainen',
+         'Asfaltti', NULL, 'tonnia/€', 200, 13.2),
+        (6662, oulun_alueurakan_id, hoito_paikkauskohde_id, NULL, destia_kayttaja, 'yksikkohintainen',
+         'Selite', NULL, 'tonnia/€', 100, 2),
+        (133, oulun_alueurakan_id, hoito_paikkauskohde_2_id, NULL, destia_kayttaja, 'yksikkohintainen',
+         'Asfaltti', NULL, 'tonnia/€', 50, 14);
 END $$;
-
-INSERT INTO paikkaustoteuma ("ulkoinen-id",
-                             "urakka-id",
-                             "paikkauskohde-id",
-                             "toteuma-id",
-                             "luoja-id",
-                             tyyppi,
-                             selite,
-                             hinta)
-VALUES
-  (6661,
-   (SELECT id
-    FROM urakka
-    WHERE sampoid = '1242141-OULU2'
-    LIMIT 1),
-   (SELECT id
-    FROM paikkauskohde
-    WHERE "ulkoinen-id" = 666
-    LIMIT 1),
-   NULL,
-   (SELECT id
-    FROM kayttaja
-    WHERE kayttajanimi = 'destia'
-    LIMIT 1),
-   'kokonaishintainen',
-   'Liikennejärjestelyt',
-   3500);
-
-INSERT INTO paikkaustoteuma ("ulkoinen-id",
-                             "urakka-id",
-                             "paikkauskohde-id",
-                             "toteuma-id",
-                             "luoja-id",
-                             tyyppi,
-                             selite,
-                             yksikko,
-                             yksikkohinta,
-                             maara)
-VALUES
-  (6662,
-   (SELECT id
-    FROM urakka
-    WHERE sampoid = '1242141-OULU2'
-    LIMIT 1),
-   (SELECT id
-    FROM paikkauskohde
-    WHERE "ulkoinen-id" = 666
-    LIMIT 1),
-   NULL,
-   (SELECT id
-    FROM kayttaja
-    WHERE kayttajanimi = 'destia'
-    LIMIT 1),
-   'yksikkohintainen',
-   'Asfaltti',
-   'tonnia/€',
-   200,
-   13.2)
-

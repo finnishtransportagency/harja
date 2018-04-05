@@ -162,4 +162,4 @@ WHERE pt."urakka-id"=:urakka-id AND
         ((p.tierekisteriosoite).losa = :loppuosa OR
          :loppuosa :: INTEGER IS NULL)) OR
        (p.tierekisteriosoite).losa < :loppuosa) AND
-      (:paikkaus-idt :: BIGINT IS NULL OR pk.id IN (:paikkaus-idt));
+      (:paikkaus-idt :: INTEGER [] IS NULL OR pk.id = ANY (:paikkaus-idt :: INTEGER []));

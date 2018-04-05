@@ -33,6 +33,15 @@
 (defrecord KustannuksetEiHaettu [])
 (defrecord HaeKustannuksetKutsuLahetetty [])
 
+(defn- lisaa-otsikko-ja-yhteenveto
+  [otsikko otsikkokomponentti paikkaukset skeema]
+  (let [otsikkorivi (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (:paikkauskohde-id (first paikkaukset)))})
+        yhteenveto-id (gensym "yhteenveto")
+        ;; Yhteenveto rivin pitää sopeutua gridin määrittämään skeemaan. Sen takia
+        ;; arvot ovat ehkä hieman outojen avaimien takana
+        yhteenvetorivi (assoc skeema :paikkaustoteuma-id yhteenveto-id)]
+    (cons otsikkorivi (conj paikkaukset yhteenvetorivi))))
+
 (defn kasittele-haettu-tulos
   [tulos {otsikkokomponentti :otsikkokomponentti}]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
@@ -40,11 +49,40 @@
         kokonaishintaiset-tiedot (filter #(= (:tyyppi %) "kokonaishintainen") kiinnostavat-tiedot)
         yksikkohintaiset-tiedot (filter #(= (:tyyppi %) "yksikkohintainen") kiinnostavat-tiedot)
         kokonaishintaiset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                         (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
+                                         (lisaa-otsikko-ja-yhteenveto otsikko otsikkokomponentti paikkaukset {:lihavoi true
+                                                                                                              :hinta (apply + (map :hinta paikkaukset))
+                                                                                                              :selite "Yhteensä: "
+                                                                                                              :colspan {:selite 2 :hinta 1}
+                                                                                                              :oikealle? #{:selite}}))
                                        (group-by :nimi kokonaishintaiset-tiedot))
+        ;; Lisätään kokonaishintaisiin kaikkien hinnat yhteen laskeva rivi
+        kokonaishintaiset-grid (conj kokonaishintaiset-grid
+                                     {:yhteenveto true
+                                      :hinta (apply + (map :hinta kokonaishintaiset-tiedot))
+                                      :paikkaustoteuma-id :yhteenveto
+                                      :colspan {:selite 2 :hinta 1}
+                                      :oikealle? #{:selite}
+                                      :selite "Kokonaishintaiset yhteensä: "})
         yksikkohintaset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                       (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
-                                     (group-by :nimi yksikkohintaiset-tiedot))]
+                                       (lisaa-otsikko-ja-yhteenveto otsikko otsikkokomponentti paikkaukset {:lihavoi true
+                                                                                                            :yksikkohinta (apply + (map #(* (:yksikkohinta %)
+                                                                                                                                            (:maara %))
+                                                                                                                                        paikkaukset))
+                                                                                                            :colspan {:yksikko 4 :yksikkohinta 1}
+                                                                                                            :oikealle? #{:yksikko}
+                                                                                                            :yksikko "Yhteensä: "})
+                                       ;(cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (:paikkauskohde-id (first paikkaukset)))}) paikkaukset)
+                                       )
+                                     (group-by :nimi yksikkohintaiset-tiedot))
+        yksikkohintaset-grid (conj yksikkohintaset-grid
+                                   {:yhteenveto true
+                                    :yksikkohinta (apply + (map #(* (:yksikkohinta %)
+                                                             (:maara %))
+                                                         yksikkohintaiset-tiedot))
+                                    :paikkaustoteuma-id :yhteenveto
+                                    :colspan {:yksikko 4 :yksikkohinta 1}
+                                    :oikealle? #{:yksikko}
+                                    :yksikko "Yksikköhintaiset yhteensä: "})]
     {:yksikkohintaiset-grid yksikkohintaset-grid
      :kokonaishintaiset-grid kokonaishintaiset-grid}))
 
@@ -106,8 +144,6 @@
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
-    (println "TULOS: ")
-    (cljs.pprint/pprint tulos)
     (yhteiset-tiedot/ensimmaisen-haun-kasittely {:paikkauskohde-idn-polku [:paikkauskohde-id]
                                                  :paikkauskohde-nimen-polku [:nimi]
                                                  :kasittele-haettu-tulos kasittele-haettu-tulos
