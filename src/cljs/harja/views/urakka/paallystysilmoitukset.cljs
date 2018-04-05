@@ -593,29 +593,33 @@
                    :voi-muokata? alustatoimet-voi-muokata?
                    :voi-kumota? false
                    :uusi-id (inc (count @alustalle-tehdyt-toimet))
-                   :virheet (wrap-virheet :alustalle-tehdyt-toimet)
+                   :muutos (fn [grid]
+                             (swap! lomakedata-nyt assoc-in [:ilmoitustiedot :alustatoimet]
+                                    (vals (grid/hae-muokkaustila grid))))
+                   ;:virheet (wrap-virheet :alustalle-tehdyt-toimet)
                    :virheet-ylos? true}
                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
                     :pituus-max 256
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
                     :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
                     :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
                     :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
                     :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
                     :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
+                    }
                    {:otsikko "Käsittely\u00ADmenetelmä"
                     :nimi :kasittelymenetelma
                     :tyyppi :valinta
@@ -626,11 +630,13 @@
                                        "- Valitse menetelmä -"))
                     :valinnat pot/+alustamenetelmat+
                     :leveys 30
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
+                    }
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
                     :tyyppi :positiivinen-numero :tasaa :oikea
                     :desimaalien-maara 0
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
+                    }
                    {:otsikko "Verkko\u00ADtyyppi"
                     :nimi :verkkotyyppi
                     :tyyppi :valinta
