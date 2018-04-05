@@ -117,6 +117,8 @@
                                                  :app app}))
   PaikkauksetHaettu
   (process-event [{tulos :tulos} app]
+    (println "TULOS")
+    (cljs.pprint/pprint tulos)
     (let [naytettavat-tiedot (kasittele-haettu-tulos tulos app)]
       (-> app
           (merge naytettavat-tiedot)

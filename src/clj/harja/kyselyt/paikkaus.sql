@@ -151,7 +151,15 @@ WHERE pt."urakka-id"=:urakka-id AND
       (:loppuaika :: TIMESTAMP IS NULL OR pt.kirjattu <= :loppuaika) AND
       (:numero :: INTEGER IS NULL OR (p.tierekisteriosoite).tie = :numero) AND
       (:alkuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).aosa >= :alkuosa) AND
-      (:alkuetaisyys :: INTEGER IS NULL OR (p.tierekisteriosoite).aet >= :alkuetaisyys) AND
+      (:alkuetaisyys :: INTEGER IS NULL OR
+       ((p.tierekisteriosoite).aet >= :alkuetaisyys AND
+        ((p.tierekisteriosoite).aosa = :alkuosa OR
+         :alkuosa :: INTEGER IS NULL)) OR
+       (p.tierekisteriosoite).aosa > :alkuosa) AND
       (:loppuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).losa <= :loppuosa) AND
-      (:loppuetaisyys :: INTEGER IS NULL OR (p.tierekisteriosoite).let <= :loppuetaisyys) AND
+      (:loppuetaisyys :: INTEGER IS NULL OR
+       ((p.tierekisteriosoite).let <= :loppuetaisyys AND
+        ((p.tierekisteriosoite).losa = :loppuosa OR
+         :loppuosa :: INTEGER IS NULL)) OR
+       (p.tierekisteriosoite).losa < :loppuosa) AND
       (:paikkaus-idt :: BIGINT IS NULL OR pk.id IN (:paikkaus-idt));

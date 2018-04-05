@@ -184,43 +184,6 @@
         (hae-urakan-paikkausilmoitukset c user {:urakka-id urakka-id
                                                 :sopimus-id sopimus-id})))))
 
-(defn hae-urakan-paikkauskohteet [db user tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (let [kysely-params-tieosa (if-let [tr (:tr tiedot)]
-                               (assoc tiedot ::paikkaus/tierekisteriosoite
-                                             (cond-> {}
-                                                     (:numero tr) (assoc ::tierekisteri/tie (:numero tr))
-                                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
-                                                     (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                                                     (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
-                               tiedot)
-        kysely-params-aika (if-let [aikavali (:aikavali tiedot)]
-                             (assoc kysely-params-tieosa ::paikkaus/alkuaika (cond
-                                                                               (and (first aikavali) (not (second aikavali))) (op/>= (first aikavali))
-                                                                               (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
-                                                                               :else (apply op/between aikavali)))
-                             kysely-params-tieosa)
-        kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
-                                     (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
-                                     kysely-params-aika)
-        kysely-params (dissoc kysely-params-paikkaus-idt :aikavali :paikkaus-idt :tr)]
-    (q/hae-paikkaukset db kysely-params)))
-
-(defn hae-paikkausurakan-kustannukset [db user tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
-                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil}]
-    (println "----> TIEDOT: " (pr-str tiedot))
-    (if (and (not (nil? (:paikkaus-idt tiedot)))
-             (empty? (:paikkaus-idt tiedot)))
-      []
-      (q/hae-paikkaustoteumat-tierekisteriosoitteella db (assoc (merge kysely-params-template (:tr tiedot))
-                                                           :urakka-id (::paikkaus/urakka-id tiedot)
-                                                           :paikkaus-idt (:paikkaus-idt tiedot)
-                                                           :alkuaika (first (:aikavali tiedot))
-                                                           :loppuaika (second (:aikavali tiedot)))))))
-
 (defrecord Paikkaus []
   component/Lifecycle
   (start [this]
@@ -235,16 +198,6 @@
       (julkaise-palvelu http :tallenna-paikkausilmoitus
                         (fn [user tiedot]
                           (tallenna-paikkausilmoitus db user tiedot)))
-      (julkaise-palvelu http :hae-urakan-paikkauskohteet
-                        (fn [user tiedot]
-                          (hae-urakan-paikkauskohteet db user tiedot))
-                        {:kysely-spec ::paikkaus/urakan-paikkauskohteet-kysely
-                         :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
-      (julkaise-palvelu http :hae-paikkausurakan-kustannukset
-                        (fn [user tiedot]
-                          (hae-paikkausurakan-kustannukset db user tiedot))
-                        {:kysely-spec ::paikkaus/paikkausurakan-kustannukset-kysely
-                         :vastaus-spec ::paikkaus/paikkausurakan-kustannukset-vastaus})
       this))
 
   (stop [this]
@@ -252,7 +205,5 @@
       (:http-palvelin this)
       :urakan-paikkausilmoitukset
       :urakan-paikkausilmoitus-paikkauskohteella
-      :tallenna-paikkaussilmoitus
-      :urakan-paikkauskohteet
-      :hae-paikkausurakan-kustannukset)
+      :tallenna-paikkaussilmoitus)
     this))
