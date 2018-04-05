@@ -345,7 +345,12 @@
       (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
-            muokkaus-mahdollista? (and tekninen-osa-voi-muokata? (empty? @yllapitokohde-virheet))
+            muokkaus-mahdollista? (and tekninen-osa-voi-muokata?
+                                       ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
+                                       ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
+                                       ;; kenttien virheet tyhjät.
+                                       (or (empty? @yllapitokohde-virheet)
+                                           (empty? (flatten (map vals (vals @yllapitokohde-virheet))))))
             jarjestys-fn :id]
         [:fieldset.lomake-osa
          [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
@@ -678,7 +683,11 @@
       (let [lukittu? (lukko/nakyma-lukittu? lukko)
             valmis-tallennettavaksi? (and
                                        (not (= tila :lukittu))
-                                       (every? empty? (vals virheet))
+                                       ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
+                                       ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
+                                       ;; kenttien virheet tyhjät.
+                                       (or (every? empty? (vals virheet))
+                                           (empty? (flatten (map vals (vals (:alikohteet virheet))))))
                                        (false? lukittu?))
 
             grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
