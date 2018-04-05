@@ -333,11 +333,11 @@
   [{urakka :urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt} :lomakedata-nyt
     voi-muokata? :tekninen-osa-voi-muokata? alustatoimet-voi-muokata? :alustatoimet-voi-muokata? grid-wrap
     :grid-wrap wrap-virheet :wrap-virheet muokkaa! :muokkaa!}]
-  (let [osan-pituus (atom {})]
+  (let [osan-pituus (atom {})
+        alustalle-tehdyt-toimet (atom (zipmap (iterate inc 1) (get-in lomakedata-nyt [:ilmoitustiedot :alustatoimet])))]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [{:keys [urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]}]
       (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
-            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
             muokkaus-mahdollista? (and tekninen-osa-voi-muokata? (empty? @yllapitokohde-virheet))
             jarjestys-fn #(if (not (nil? (:id %)))
