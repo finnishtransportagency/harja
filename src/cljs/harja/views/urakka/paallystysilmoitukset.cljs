@@ -227,7 +227,9 @@
         polun-data (into (sorted-map)
                          (map (fn [data i]
                                 (if (contains? data :id)
+                                  ;; Jos rivillä on olemassa id, otetaan se käyttöön tunnisteeksi gridin datassa
                                   [(:id data) data]
+                                  ;; Muussa tapauksessa käytetään järjestysnumeroa
                                   [i data]))
                               (if (:jarjestetty-kerran? polun-meta)
                                 (get-in lomakedata-nyt polku)
@@ -732,6 +734,7 @@
         (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
         (reset! paallystys/paallystysilmoitus-lomakedata
                 (-> vastaus
+                    ;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
                     (update-in [:ilmoitustiedot :alustatoimet]
                                (fn [alustatoimet]
                                  (vec (map #(assoc %1 :id %2)
