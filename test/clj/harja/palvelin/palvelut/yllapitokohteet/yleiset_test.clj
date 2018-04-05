@@ -5,9 +5,11 @@
 
 (deftest vaadi-etta-kohdeosat-eivat-mene-paallekkain
   (let [db (luo-testitietokanta)]
+    666
     (is (= ["Kohde: 'Testi 1' menee päällekkäin urakan: 'Muhoksen päällystysurakka' kohteen: 'Leppäjärven ramppi 2018' kohdeosan: 'Leppäjärven kohdeosa 2018' kanssa."]
            (yleiset/vaadi-etta-kohdeosat-eivat-mene-paallekkain
              db
+             666
              2018
              [{:nimi "Testi 1"
                :tr-numero 20
@@ -22,6 +24,7 @@
     (is (nil?
           (yleiset/vaadi-etta-kohdeosat-eivat-mene-paallekkain
             db
+            666
             2018
             [{:nimi "Testi 1"
               :id 10001
@@ -37,6 +40,7 @@
     (is (nil?
           (yleiset/vaadi-etta-kohdeosat-eivat-mene-paallekkain
             db
+            666
             2018
             [{:nimi "Testi 1"
               :tr-numero 20
@@ -50,6 +54,7 @@
 
     (is (nil? (yleiset/vaadi-etta-kohdeosat-eivat-mene-paallekkain
                 db
+                666
                 2018
                 [{:nimi "Testi 1"
                   :tr-numero 4
@@ -65,6 +70,7 @@
     (is (= ["Kohde: 'Ei-validi' menee päällekkäin urakan: 'Muhoksen päällystysurakka' kohteen: 'Leppäjärven ramppi 2018' kohdeosan: 'Leppäjärven kohdeosa 2018' kanssa."]
            (yleiset/vaadi-etta-kohdeosat-eivat-mene-paallekkain
              db
+             666
              2018
              [{:nimi "Validi"
                :tr-numero 4

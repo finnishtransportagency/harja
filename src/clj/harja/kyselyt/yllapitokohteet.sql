@@ -992,6 +992,7 @@ SELECT
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN urakka u ON ypk.urakka = u.id
-WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
+WHERE not u.id = :urakkaid AND
+      vuodet @> ARRAY [:vuosi] :: INT [] AND
       ypko.poistettu IS NOT TRUE AND
       ypko.tr_numero IN (:tiet);
