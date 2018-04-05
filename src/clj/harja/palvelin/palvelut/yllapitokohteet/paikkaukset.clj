@@ -53,8 +53,9 @@
 (defn hae-urakan-paikkauskohteet [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-urakka-id (select-keys tiedot #{::paikkaus/urakka-id})
-        kysely-params-tieosa (when-let [tr (:tr tiedot)]
-                               (muodosta-tr-ehdot tr))
+        kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
+                               (when (not (empty? tr))
+                                 (muodosta-tr-ehdot tr)))
         kysely-params-aika (if-let [aikavali (:aikavali tiedot)]
                              (assoc kysely-params-urakka-id ::paikkaus/alkuaika (cond
                                                                                   (and (first aikavali) (not (second aikavali))) (op/>= (first aikavali))
@@ -74,7 +75,6 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
                                 :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil}]
-    (println "----> TIEDOT: " (pr-str tiedot))
     (if (and (not (nil? (:paikkaus-idt tiedot)))
              (empty? (:paikkaus-idt tiedot)))
       []

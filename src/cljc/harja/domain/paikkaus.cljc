@@ -40,8 +40,10 @@
     ::materiaalit (specql.rel/has-many ::id
                                        ::paikkauksen_materiaali
                                        ::paikkaus-id)}]
-  ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
-  ["paikkauksen_materiaali" ::paikkauksen_materiaali]
+  ["paikkauksen_tienkohta" ::paikkauksen-tienkohta
+   {"id" ::tienkohta-id}]
+  ["paikkauksen_materiaali" ::paikkauksen_materiaali
+   {"id" ::materiaali-id}]
   ["paikkaustoteuma" ::paikkaustoteuma
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
@@ -72,12 +74,14 @@
     [::paikkauskohde #{::nimi
                        ::ulkoinen-id
                        ::id}]
-    [::tienkohdat #{::ajorata
+    [::tienkohdat #{::tienkohta-id
+                    ::ajorata
                     ::reunat
                     ::ajourat
                     ::ajouravalit
                     ::keskisaumat}]
-    [::materiaalit #{::esiintyma
+    [::materiaalit #{::materiaali-id
+                     ::esiintyma
                      ::kuulamylly-arvo
                      ::muotoarvo
                      ::sideainetyyppi

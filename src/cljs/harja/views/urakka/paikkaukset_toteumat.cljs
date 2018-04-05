@@ -46,52 +46,58 @@
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
    app]
   (let [nayta-numerot #(apply str (interpose ", " %))
-        skeema [{:otsikko "Ajo\u00ADrata"
-                 :leveys 1
-                 :nimi ::paikkaus/ajorata}
-                {:otsikko "Reu\u00ADnat"
-                 :leveys 1
-                 :nimi ::paikkaus/reunat
-                 :fmt nayta-numerot}
-                {:otsikko "Ajo\u00ADurat"
-                 :leveys 1
-                 :nimi ::paikkaus/ajourat
-                 :fmt nayta-numerot}
-                {:otsikko "Ajoura\u00ADvälit"
-                 :leveys 1
-                 :nimi ::paikkaus/ajouravalit
-                 :fmt nayta-numerot}
-                {:otsikko "Kes\u00ADkisau\u00ADmat"
-                 :leveys 1
-                 :nimi ::paikkaus/keskisaumat
-                 :fmt nayta-numerot}
-                {:otsikko "Esiin\u00ADtymä"
-                 :leveys 1
-                 :nimi ::paikkaus/esiintyma}
-                {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
-                 :leveys 2
-                 :nimi ::paikkaus/kuulamyllyarvo}
-                {:otsikko "Muoto\u00ADarvo"
-                 :leveys 2
-                 :nimi ::paikkaus/muotoarvo}
-                {:otsikko "Side\u00ADaine\u00ADtyyp\u00ADpi"
-                 :leveys 2
-                 :nimi ::paikkaus/sideainetyyppi}
-                {:otsikko "Pitoi\u00ADsuus"
-                 :leveys 1
-                 :nimi ::paikkaus/pitoisuus}
-                {:otsikko "Lisä\u00ADaineet"
-                 :leveys 2
-                 :nimi ::paikkaus/lisa-aineet}]
-        yhdistetty [(apply merge {::paikkaus/id id} (concat tienkohdat materiaalit))]]
+        tienkohdat-skeema [{:otsikko "Ajo\u00ADrata"
+                            :leveys 1
+                            :nimi ::paikkaus/ajorata}
+                           {:otsikko "Reu\u00ADnat"
+                            :leveys 1
+                            :nimi ::paikkaus/reunat
+                            :fmt nayta-numerot}
+                           {:otsikko "Ajo\u00ADurat"
+                            :leveys 1
+                            :nimi ::paikkaus/ajourat
+                            :fmt nayta-numerot}
+                           {:otsikko "Ajoura\u00ADvälit"
+                            :leveys 1
+                            :nimi ::paikkaus/ajouravalit
+                            :fmt nayta-numerot}
+                           {:otsikko "Kes\u00ADkisau\u00ADmat"
+                            :leveys 1
+                            :nimi ::paikkaus/keskisaumat
+                            :fmt nayta-numerot}]
+        materiaalit-skeema [{:otsikko "Esiin\u00ADtymä"
+                             :leveys 1
+                             :nimi ::paikkaus/esiintyma}
+                            {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
+                             :leveys 2
+                             :nimi ::paikkaus/kuulamyllyarvo}
+                            {:otsikko "Muoto\u00ADarvo"
+                             :leveys 2
+                             :nimi ::paikkaus/muotoarvo}
+                            {:otsikko "Side\u00ADaine\u00ADtyyp\u00ADpi"
+                             :leveys 2
+                             :nimi ::paikkaus/sideainetyyppi}
+                            {:otsikko "Pitoi\u00ADsuus"
+                             :leveys 1
+                             :nimi ::paikkaus/pitoisuus}
+                            {:otsikko "Lisä\u00ADaineet"
+                             :leveys 2
+                             :nimi ::paikkaus/lisa-aineet}]]
     [:div
      [grid/grid
-      {:otsikko "Tienkohdat & Materiaalit"
-       :tunniste ::paikkaus/id
+      {:otsikko "Tienkohdat"
+       :tunniste ::paikkaus/tienkohta-id
        :sivuta grid/vakiosivutus
        :tyhja "Ei tietoja"}
-      skeema
-      yhdistetty]]))
+      tienkohdat-skeema
+      tienkohdat]
+     [grid/grid
+      {:otsikko "Materiaalit"
+       :tunniste ::paikkaus/materiaali-id
+       :sivuta grid/vakiosivutus
+       :tyhja "Ei tietoja"}
+      materiaalit-skeema
+      materiaalit]]))
 
 (defn paikkaukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
