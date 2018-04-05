@@ -111,6 +111,8 @@
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
 
+    [harja.palvelin.palvelut.tieluvat :as tieluvat]
+
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
     [harja.palvelin.ajastetut-tehtavat.reittien-validointi :as reittitarkistukset]
@@ -618,9 +620,14 @@
                       (api-tieluvat/->Tieluvat)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
+
       :api-paikkaukset (component/using
         (api-paikkaukset/->Paikkaukset)
         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+
+      :tieluvat (component/using
+                  (tieluvat/->Tieluvat)
+                  [:http-palvelin :db])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

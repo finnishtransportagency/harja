@@ -71,6 +71,7 @@
     :api-paikkaukset
     :koordinaatit
     :tiedostopesula
+    :tieluvat
     :paikkaukset})
 
 (deftest main-komponentit-loytyy
