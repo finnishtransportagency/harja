@@ -9,75 +9,48 @@
 
 (defn- muodosta-tr-ehdot
   [tr]
-  (let [#_#_ehto-1 (when (or (:alkuosa tr) (:loppuosa tr))
-                     (cond-> {}
-                             (:numero tr) (assoc ::tierekisteri/tie (:numero tr))
-                             (:alkuosa tr) (assoc ::tierekisteri/aosa (op/> (:alkuosa tr)))
-                             (:loppuosa tr) (assoc ::tierekisteri/losa (op/< (:loppuosa tr)))
-                             (and (:alkuetaisyys tr) (nil? (:alkuosa tr))) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
-                             (and (:loppuetaisyys tr) (nil? (:loppuosa tr))) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
-        #_#_ehto-2 (when (and (:alkuosa tr) (:alkuetaisyys tr))
-                     (cond-> {}
-                             (:numero tr) (assoc ::tierekisteri/tie (:numero tr))
-                             (:alkuosa tr) (assoc ::tierekisteri/aosa (op/= (:alkuosa tr)))
-                             (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))))
-        #_#_ehto-3 (when (and (:loppuosa tr) (:loppuetaisyys tr))
-                     (cond-> {}
-                             (:numero tr) (assoc ::tierekisteri/tie (:numero tr))
-                             (:loppuosa tr) (assoc ::tierekisteri/losa (op/= (:loppuosa tr)))
-                             (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
-        #_#_ehto-4 (when (= '(:numero) (keys tr))
-                     {::tierekisteri/tie (:numero tr)})
-        #_#_ehdot-2-ja-3 (when (and ehto-2 ehto-3)
-                           (op/and {::paikkaus/tierekisteriosoite ehto-2} {::paikkaus/tierekisteriosoite ehto-3}))
-        tr (into {} (filter (fn [[_ arvo]] arvo) tr))
+  (let [tr (into {} (filter (fn [[_ arvo]] arvo) tr))
         ehto-1 (when (:alkuosa tr)
                  (cond-> {::tierekisteri/aosa ((if (:alkuetaisyys tr)
                                                  op/>
                                                  op/>=)
                                                 (:alkuosa tr))}
                          (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
+                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
+                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
         ehto-2 (when (:alkuetaisyys tr)
                  (cond-> {::tierekisteri/aet (op/>= (:alkuetaisyys tr))}
                          (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
+                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
+                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
         ehto-3 (when (and (:alkuosa tr) (:alkuetaisyys tr))
                  (cond-> {::tierekisteri/aosa (:alkuosa tr)
                           ::tierekisteri/aet (op/>= (:alkuetaisyys tr))}
                          (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
+                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
+                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
         ehto-4 (when (:loppuosa tr)
                  (cond-> {::tierekisteri/losa ((if (:loppuetaisyys tr)
                                                  op/<
                                                  op/<=)
                                                 (:loppuosa tr))}
                          (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                         (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))))
+                         (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
+                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
         ehto-5 (when (= '(:loppuetaisyys) (keys tr))
                  {::tierekisteri/let (op/<= (:loppuetaisyys tr))})
         ehto-6 (when (and (:loppuosa tr) (:loppuetaisyys tr))
                  (cond-> {::tierekisteri/losa (:loppuosa tr)
                           ::tierekisteri/let (op/<= (:loppuetaisyys tr))}
                          (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                         (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))))]
-    #_(apply op/or (if ehdot-2-ja-3
-                     (conj (keep #(when-not (nil? %)
-                                    {::paikkaus/tierekisteriosoite %})
-                                 (if ehdot-2-ja-3
-                                   [ehto-1 ehto-4]
-                                   [ehto-1 ehto-2 ehto-3 ehto-4]))
-                           ehdot-2-ja-3)
-                     (keep #(when-not (nil? %)
-                              {::paikkaus/tierekisteriosoite %})
-                           (if ehdot-2-ja-3
-                             [ehto-1 ehto-4]
-                             [ehto-1 ehto-2 ehto-3 ehto-4]))))
-    (println "EHTO 2: " (pr-str ehto-2))
+                         (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
+                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
+        ehto-7 (when (= '(:numero) (keys tr))
+                 {::tierekisteri/tie (:numero tr)})]
     (apply op/or
            (keep #(when-not (nil? %)
                     {::paikkaus/tierekisteriosoite %})
-                 [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6]))))
+                 [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
 
 (defn hae-urakan-paikkauskohteet [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))

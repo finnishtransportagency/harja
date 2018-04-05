@@ -65,100 +65,105 @@
                                          :tr %})
         urakan-kaikkien-paikkauksine-osoitteet (map ::paikkaus/tierekisteriosoite
                                                     (paikkaus-kutsu nil))
-        testaus-homma (fn [ns-tr-avaimet tr-avaimet testaus-fn]
-                        (let [ryhmittely (group-by (apply juxt ns-tr-avaimet) urakan-kaikkien-paikkauksine-osoitteet)
-                              _ (is (> (count (keys ryhmittely)) 1))
-                              tr-filtteri (zipmap tr-avaimet
-                                                  (second (sort (keys ryhmittely))))
-                              _ (println "TR FILTTERI: " (pr-str tr-filtteri))
-                              _ (println "RYHMITTLEY: ")
-                              _ (clojure.pprint/pprint ryhmittely)
-                              kutsun-vastaus (paikkaus-kutsu tr-filtteri)
-                              arvojen-lkm (apply + (keep (fn [[avain arvo]]
-                                                           (when (testaus-fn avain tr-filtteri)
-                                                             (count arvo)))
-                                                         ryhmittely))]
-                          ;(println "KUTSUN VASTAUS")
-                          ;(clojure.pprint/pprint kutsun-vastaus)
-                          (println "KUTSUN LUKUMÄÄRÄ: " (pr-str (count kutsun-vastaus)))
-                          (println "ARVOJEN LUKUMÄÄRÄ: " (pr-str arvojen-lkm))
-                          (is (= (count kutsun-vastaus)
-                                 arvojen-lkm))))]
-    (testaus-homma [::tierekisteri/aosa] [:alkuosa] (fn [[ryhma-aosa] {:keys [alkuosa]}]
-                                                      (>= ryhma-aosa alkuosa)))
-    (testaus-homma [::tierekisteri/aet] [:alkuetaisyys] (fn [[ryhma-aet] {:keys [alkuetaisyys]}]
-                                                          (>= ryhma-aet alkuetaisyys)))
-    (testaus-homma [::tierekisteri/losa] [:loppuosa] (fn [[ryhma-losa] {:keys [loppuosa]}]
-                                                       (<= ryhma-losa loppuosa)))
-    (testaus-homma [::tierekisteri/let] [:loppuetaisyys] (fn [[ryhma-let] {:keys [loppuetaisyys]}]
-                                                           (<= ryhma-let loppuetaisyys)))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/aet]
-                   [:alkuosa :alkuetaisyys]
-                   (fn [[ryhma-aosa ryhma-aet] {:keys [alkuosa alkuetaisyys]}]
-                     (or (> ryhma-aosa alkuosa)
-                         (and (= ryhma-aosa alkuosa)
-                              (>= ryhma-aet alkuetaisyys)))))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/losa]
-                   [:alkuosa :loppuosa]
-                   (fn [[ryhma-aosa ryhma-losa] {:keys [alkuosa loppuosa]}]
-                     (and (>= ryhma-aosa alkuosa)
-                          (<= ryhma-losa loppuosa))))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/let]
-                   [:alkuosa :loppuetaisyys]
-                   (fn [[ryhma-aosa ryhma-let] {:keys [alkuosa loppuetaisyys]}]
-                     (and (>= ryhma-aosa alkuosa)
-                          (<= ryhma-let loppuetaisyys))))
-    (testaus-homma [::tierekisteri/aet ::tierekisteri/losa]
-                   [:alkuetaisyys :loppuosa]
-                   (fn [[ryhma-aet ryhma-losa] {:keys [alkuetaisyys loppuosa]}]
-                     (and (>= ryhma-aet alkuetaisyys)
-                          (<= ryhma-losa loppuosa))))
-    (testaus-homma [::tierekisteri/aet ::tierekisteri/let]
-                   [:alkuetaisyys :loppuetaisyys]
-                   (fn [[ryhma-aet ryhma-let] {:keys [alkuetaisyys loppuetaisyys]}]
-                     (and (>= ryhma-aet alkuetaisyys)
-                          (<= ryhma-let loppuetaisyys))))
-    (testaus-homma [::tierekisteri/losa ::tierekisteri/let]
-                   [:loppuosa :loppuetaisyys]
-                   (fn [[ryhma-losa ryhma-let] {:keys [loppuosa loppuetaisyys]}]
-                     (or (< ryhma-losa loppuosa)
-                         (and (= ryhma-losa loppuosa)
-                              (<= ryhma-let loppuetaisyys)))))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa]
-                   [:alkuosa :alkuetaisyys :loppuosa]
-                   (fn [[ryhma-aosa ryhma-aet ryhma-losa] {:keys [alkuosa alkuetaisyys loppuosa]}]
-                     (and (or (> ryhma-aosa alkuosa)
+        testaus-template (fn [ns-tr-avaimet tr-avaimet testaus-fn]
+                           (let [ryhmittely (group-by (apply juxt ns-tr-avaimet) urakan-kaikkien-paikkauksine-osoitteet)
+                                 _ (is (> (count (keys ryhmittely)) 1))
+                                 tr-filtteri (zipmap tr-avaimet
+                                                     (second (sort (keys ryhmittely))))
+                                 kutsun-vastaus (paikkaus-kutsu tr-filtteri)
+                                 arvojen-lkm (apply + (keep (fn [[avain arvo]]
+                                                              (when (testaus-fn avain tr-filtteri)
+                                                                (count arvo)))
+                                                            ryhmittely))]
+                             (is (= (count kutsun-vastaus)
+                                    arvojen-lkm))))]
+    (testaus-template [::tierekisteri/aosa] [:alkuosa] (fn [[ryhma-aosa] {:keys [alkuosa]}]
+                                                         (>= ryhma-aosa alkuosa)))
+    (testaus-template [::tierekisteri/aet] [:alkuetaisyys] (fn [[ryhma-aet] {:keys [alkuetaisyys]}]
+                                                             (>= ryhma-aet alkuetaisyys)))
+    (testaus-template [::tierekisteri/losa] [:loppuosa] (fn [[ryhma-losa] {:keys [loppuosa]}]
+                                                          (<= ryhma-losa loppuosa)))
+    (testaus-template [::tierekisteri/let] [:loppuetaisyys] (fn [[ryhma-let] {:keys [loppuetaisyys]}]
+                                                              (<= ryhma-let loppuetaisyys)))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/aet]
+                      [:alkuosa :alkuetaisyys]
+                      (fn [[ryhma-aosa ryhma-aet] {:keys [alkuosa alkuetaisyys]}]
+                        (or (> ryhma-aosa alkuosa)
+                            (and (= ryhma-aosa alkuosa)
+                                 (>= ryhma-aet alkuetaisyys)))))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/losa]
+                      [:alkuosa :loppuosa]
+                      (fn [[ryhma-aosa ryhma-losa] {:keys [alkuosa loppuosa]}]
+                        (and (>= ryhma-aosa alkuosa)
+                             (<= ryhma-losa loppuosa))))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/let]
+                      [:alkuosa :loppuetaisyys]
+                      (fn [[ryhma-aosa ryhma-let] {:keys [alkuosa loppuetaisyys]}]
+                        (and (>= ryhma-aosa alkuosa)
+                             (<= ryhma-let loppuetaisyys))))
+    (testaus-template [::tierekisteri/aet ::tierekisteri/losa]
+                      [:alkuetaisyys :loppuosa]
+                      (fn [[ryhma-aet ryhma-losa] {:keys [alkuetaisyys loppuosa]}]
+                        (and (>= ryhma-aet alkuetaisyys)
+                             (<= ryhma-losa loppuosa))))
+    (testaus-template [::tierekisteri/aet ::tierekisteri/let]
+                      [:alkuetaisyys :loppuetaisyys]
+                      (fn [[ryhma-aet ryhma-let] {:keys [alkuetaisyys loppuetaisyys]}]
+                        (and (>= ryhma-aet alkuetaisyys)
+                             (<= ryhma-let loppuetaisyys))))
+    (testaus-template [::tierekisteri/losa ::tierekisteri/let]
+                      [:loppuosa :loppuetaisyys]
+                      (fn [[ryhma-losa ryhma-let] {:keys [loppuosa loppuetaisyys]}]
+                        (or (< ryhma-losa loppuosa)
+                            (and (= ryhma-losa loppuosa)
+                                 (<= ryhma-let loppuetaisyys)))))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa]
+                      [:alkuosa :alkuetaisyys :loppuosa]
+                      (fn [[ryhma-aosa ryhma-aet ryhma-losa] {:keys [alkuosa alkuetaisyys loppuosa]}]
+                        (and (or (> ryhma-aosa alkuosa)
+                                 (and (= ryhma-aosa alkuosa)
+                                      (>= ryhma-aet alkuetaisyys)))
+                             (<= ryhma-losa loppuosa))))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/let]
+                      [:alkuosa :alkuetaisyys :loppuetaisyys]
+                      (fn [[ryhma-aosa ryhma-aet ryhma-let] {:keys [alkuosa alkuetaisyys loppuetaisyys]}]
+                        (and (or (> ryhma-aosa alkuosa)
+                                 (and (= ryhma-aosa alkuosa)
+                                      (>= ryhma-aet alkuetaisyys)))
+                             (<= ryhma-let loppuetaisyys))))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/losa ::tierekisteri/let]
+                      [:alkuosa :loppuosa :loppuetaisyys]
+                      (fn [[ryhma-aosa ryhma-losa ryhma-let] {:keys [alkuosa loppuosa loppuetaisyys]}]
+                        (and (or (< ryhma-losa loppuosa)
+                                 (and (= ryhma-losa loppuosa)
+                                      (<= ryhma-let loppuetaisyys)))
+                             (>= ryhma-aosa alkuosa))))
+    (testaus-template [::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let]
+                      [:alkuetaisyys :loppuosa :loppuetaisyys]
+                      (fn [[ryhma-aet ryhma-losa ryhma-let] {:keys [alkuetaisyys loppuosa loppuetaisyys]}]
+                        (and (or (< ryhma-losa loppuosa)
+                                 (and (= ryhma-losa loppuosa)
+                                      (<= ryhma-let loppuetaisyys)))
+                             (>= ryhma-aet alkuetaisyys))))
+    (testaus-template [::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let]
+                      [:alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
+                      (fn [[ryhma-aosa ryhma-aet ryhma-losa ryhma-let] {:keys [alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
+                        (and
+                          (or (> ryhma-aosa alkuosa)
                               (and (= ryhma-aosa alkuosa)
                                    (>= ryhma-aet alkuetaisyys)))
-                          (<= ryhma-losa loppuosa))))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/let]
-                   [:alkuosa :alkuetaisyys :loppuetaisyys]
-                   (fn [[ryhma-aosa ryhma-aet ryhma-let] {:keys [alkuosa alkuetaisyys loppuetaisyys]}]
-                     (and (or (> ryhma-aosa alkuosa)
-                              (and (= ryhma-aosa alkuosa)
-                                   (>= ryhma-aet alkuetaisyys)))
-                          (<= ryhma-let loppuetaisyys))))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/losa ::tierekisteri/let]
-                   [:alkuosa :loppuosa :loppuetaisyys]
-                   (fn [[ryhma-aosa ryhma-losa ryhma-let] {:keys [alkuosa loppuosa loppuetaisyys]}]
-                     (and (or (< ryhma-losa loppuosa)
+                          (or (< ryhma-losa loppuosa)
                               (and (= ryhma-losa loppuosa)
-                                   (<= ryhma-let loppuetaisyys)))
-                          (>= ryhma-aosa alkuosa))))
-    (testaus-homma [::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let]
-                   [:alkuetaisyys :loppuosa :loppuetaisyys]
-                   (fn [[ryhma-aet ryhma-losa ryhma-let] {:keys [alkuetaisyys loppuosa loppuetaisyys]}]
-                     (and (or (< ryhma-losa loppuosa)
-                              (and (= ryhma-losa loppuosa)
-                                   (<= ryhma-let loppuetaisyys)))
-                          (>= ryhma-aet alkuetaisyys))))
-    (testaus-homma [::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let]
-                   [:alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
-                   (fn [[ryhma-aosa ryhma-aet ryhma-losa ryhma-let] {:keys [alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
-                     (and
-                       (or (> ryhma-aosa alkuosa)
-                           (and (= ryhma-aosa alkuosa)
-                                (>= ryhma-aet alkuetaisyys)))
-                       (or (< ryhma-losa loppuosa)
-                              (and (= ryhma-losa loppuosa)
-                                   (<= ryhma-let loppuetaisyys))))))))
+                                   (<= ryhma-let loppuetaisyys))))))
+    ;; Kera tienumeron testit (ei 100% kattavat)
+    (testaus-template [::tierekisteri/tie]
+                      [:numero]
+                      (fn [[ryhma-tie] {:keys [numero]}]
+                        (= ryhma-tie numero)))
+    (testaus-template [::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/losa]
+                      [:numero :alkuosa :loppuosa]
+                      (fn [[ryhma-tie ryhma-aosa ryhma-losa] {:keys [numero alkuosa loppuosa]}]
+                        (and
+                          (= ryhma-tie numero)
+                          (and (>= ryhma-aosa alkuosa)
+                               (<= ryhma-losa loppuosa)))))))
