@@ -133,12 +133,13 @@
 
       ;; Muokataan toiseksi viimeisen osoiterivin loppua siten, että se menee viimeisin
       ;; rivin loppukohdan yli. Tämän pitäisi tehdä virhe viimeiselle riville.
-      (change (grid-solu "yllapitokohdeosat" 1 6 "input") "3") ;; losa
+      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "3") ;; losa
       (<! (paivita))
 
-      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "20") ;; let
+      (change (grid-solu "yllapitokohdeosat" 1 8 "input") "20") ;; let
       (<! (paivita))
 
+      (log "Lomake data" (pr-str @lomake))
       (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 2 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 
@@ -173,7 +174,7 @@
 
           ;; Tarkista, että tieosoite näkyy oikein
           (is (= "piru 1"
-                 (some-> (grid-solu "yllapitokohdeosat" 0 0 "input")
+                 (some-> (grid-solu "yllapitokohdeosat" 0 1 "input")
                          .-value)))
 
           (<! pituudet-haettu)
