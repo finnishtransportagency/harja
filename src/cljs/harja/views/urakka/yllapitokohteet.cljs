@@ -523,18 +523,18 @@
               :komponentti (fn [rivi {:keys [index]}]
                              [:div.tasaa-oikealle
                               [napit/yleinen-ensisijainen "Lisää osa"
-                               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index)))
+                               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
                                {:ikoni (ikonit/livicon-arrow-down)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
-                                              (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                              (= yllapitokohdetyyppi :sora))
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
                                {:ikoni (ikonit/livicon-trash)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
-                                              (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                              (= yllapitokohdetyyppi :sora))
                                 :luokka "btn-xs"}]])})
        kohdeosat-atom])))
 
