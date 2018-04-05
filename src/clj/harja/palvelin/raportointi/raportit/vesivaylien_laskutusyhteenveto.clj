@@ -76,19 +76,21 @@
                                   db
                                   {:urakkaid urakka-id
                                    :alkupvm alkupvm
-                                   :loppupvm loppupvm}))]
-    {:yksikkohintaiset (yhdista-yks-hint-rivit hintaryhmat omat-hinnoittelut)
-     :kokonaishintaiset {:kauppamerenkulku
-                         (first (hae-kokonaishintaiset-toimenpiteet db
-                                                                    {:urakkaid urakka-id
+                                   :loppupvm loppupvm}))
+        kauppamerenkulku-kok (hae-kokonaishintaiset-toimenpiteet db
+                                                                 {:urakkaid urakka-id
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm
+                                                                  :vaylatyyppi "kauppamerenkulku"})
+        muu-vesiliikenne-kok (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                      :alkupvm alkupvm
                                                                      :loppupvm loppupvm
-                                                                     :vaylatyyppi "kauppamerenkulku"}))
+                                                                     :vaylatyyppi "muu"})]
+    {:yksikkohintaiset (yhdista-yks-hint-rivit hintaryhmat omat-hinnoittelut)
+     :kokonaishintaiset {:kauppamerenkulku
+                         (first kauppamerenkulku-kok)
                          :muu
-                         (first (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
-                                                                        :alkupvm alkupvm
-                                                                        :loppupvm loppupvm
-                                                                        :vaylatyyppi "muu"}))}
+                         (first muu-vesiliikenne-kok)}
      :sanktiot (:summa (first (hae-sanktiot db {:urakkaid urakka-id
                                                 :alkupvm alkupvm
                                                 :loppupvm loppupvm})))
@@ -155,18 +157,10 @@
 
         ;; Summaillaan ja liitetään eri urakoiden tiedot yhteen
         yksikkohintaiset (apply concat (reduce conj [] (keep #(:yksikkohintaiset %) urakoiden-tiedot)))
-        kokonaishintaiset (reduce (fn [kokonaishintaiset jotain]
-                                    (let [{{suunniteltu-maara-k :suunniteltu-maara
-                                            toteutunut-maara-k :toteutunut-maara}
-                                           :kauppamerenkulku
-                                           {suunniteltu-maara-muu :suunniteltu-maara
-                                            toteutunut-maara-muu :toteutunut-maara}
-                                           :muu} kokonaishintaiset]
-
-                                      {:kauppamerenkulku {:suunniteltu-maara suunniteltu-maara-k
-                                                          :toteutunut-maara toteutunut-maara-k}
-                                       :muu {:suunniteltu-maara suunniteltu-maara-muu
-                                             :toteutunut-maara toteutunut-maara-muu}}))
+        kokonaishintaiset (reduce (fn [a b]
+                                    (merge-with
+                                      (partial merge-with +)
+                                      a b))
                                   {:kauppamerenkulku {:suunniteltu-maara 0M
                                                       :toteutunut-maara 0M}
                                    :muu {:suunniteltu-maara 0M
