@@ -56,7 +56,7 @@
 
 (deftest uuden-kohteen-lisaaminen
   (let [vanhat-kohdeosat kohdeosat
-        uudet-kohdeosat (yllapitokohteet/lisaa-uusi-kohdeosa kohdeosat 1)]
+        uudet-kohdeosat (yllapitokohteet/lisaa-uusi-kohdeosa kohdeosat 1 {})]
     (is (= #{1 2 3 4} (avaimet uudet-kohdeosat)))
 
     (is (= (loppu (get vanhat-kohdeosat 1))
@@ -68,32 +68,6 @@
            (alku (get uudet-kohdeosat 2)))
         "Rivin loppu ja seuraavan alku ovat tyhjiä lisäämisen jälkeen")))
 
-(deftest ensimmaisen-osan-poistaminen
-  (let [vanhat-kohdeosat kohdeosat
-        uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 1)]
-    (is (= #{1 2} (avaimet uudet-kohdeosat)))
-
-    (is (= (alku (get vanhat-kohdeosat 1))
-           (alku (get uudet-kohdeosat 1)))
-        "Alku pysyy samana vaikka ensimmäisen osan poistaa")
-
-    (is (= (loppu (get vanhat-kohdeosat 2))
-           (loppu (get uudet-kohdeosat 1)))
-        "Seuraavan rivin loppu siirtyy ensimmäiselle riville")
-    (is (= (pituus-yht vanhat-kohdeosat) (pituus-yht uudet-kohdeosat))
-        "Pilkkominen ja yhdistäminen ei muuta pituutta")))
-
-(deftest viimeisen-osan-poistaminen
-  (let [vanhat-kohdeosat kohdeosat
-        uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 3)]
-
-    (is (= #{1 2} (avaimet uudet-kohdeosat)))
-    (is (= (loppu (get uudet-kohdeosat 2))
-           (loppu (get vanhat-kohdeosat 3)))
-        "Loppu siirtyy edellisen rivin lopuksi")
-    (is (= (pituus-yht vanhat-kohdeosat) (pituus-yht uudet-kohdeosat))
-        "Pilkkominen ja yhdistäminen ei muuta pituutta")))
-
 (deftest valissa-olevan-osan-poistaminen
   (let [vanhat-kohdeosat kohdeosat
         uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 2)]
@@ -104,9 +78,7 @@
 
     (is (= (loppu (get uudet-kohdeosat 2))
            (loppu (get vanhat-kohdeosat 3)))
-        "Loppu siirtyy yhdellä aiemmaksi")
-    (is (= (pituus-yht vanhat-kohdeosat) (pituus-yht uudet-kohdeosat))
-        "Pilkkominen ja yhdistäminen ei muuta pituutta")))
+        "Loppu siirtyy yhdellä aiemmaksi")))
 
 (defn tierekisteriosoite [tie osien-pituus osa-min osa-max]
   (gen/fmap
