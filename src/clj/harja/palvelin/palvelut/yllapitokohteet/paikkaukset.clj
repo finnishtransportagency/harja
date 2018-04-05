@@ -10,41 +10,39 @@
 (defn- muodosta-tr-ehdot
   [tr]
   (let [tr (into {} (filter (fn [[_ arvo]] arvo) tr))
+        ;; Täytyy luoda yhteinen pohja, koska nämä kaikki ehdot yhdistetään OR:lla
+        alun-yhteinen-pohja (cond-> {}
+                               (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
+                               (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
+                               (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
+                               (:numero tr) (assoc ::tierekisteri/tie (:numero tr)))
+        ;; Jos molemmat, alkuosa ja alkuetaisyys ovat annettuna, tarvitaan ehdot 1 ja 3. Muutenhan nuo voisi yhdistää.
         ehto-1 (when (:alkuosa tr)
-                 (cond-> {::tierekisteri/aosa ((if (:alkuetaisyys tr)
-                                                 op/>
-                                                 op/>=)
-                                                (:alkuosa tr))}
-                         (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
-                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
+                 (assoc alun-yhteinen-pohja ::tierekisteri/aosa ((if (:alkuetaisyys tr)
+                                                              op/>
+                                                              op/>=)
+                                                             (:alkuosa tr))))
         ehto-2 (when (:alkuetaisyys tr)
-                 (cond-> {::tierekisteri/aet (op/>= (:alkuetaisyys tr))}
-                         (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
-                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
+                 (assoc alun-yhteinen-pohja ::tierekisteri/aet (op/>= (:alkuetaisyys tr))))
         ehto-3 (when (and (:alkuosa tr) (:alkuetaisyys tr))
-                 (cond-> {::tierekisteri/aosa (:alkuosa tr)
-                          ::tierekisteri/aet (op/>= (:alkuetaisyys tr))}
-                         (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                         (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
-                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
+                 (assoc alun-yhteinen-pohja ::tierekisteri/aosa (:alkuosa tr)
+                                            ::tierekisteri/aet (op/>= (:alkuetaisyys tr))))
+
+        lopun-yhteinen-pohja (cond-> {}
+                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
+                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
+                                     (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
+                                     (:numero tr) (assoc ::tierekisteri/tie (:numero tr)))
         ehto-4 (when (:loppuosa tr)
-                 (cond-> {::tierekisteri/losa ((if (:loppuetaisyys tr)
-                                                 op/<
-                                                 op/<=)
-                                                (:loppuosa tr))}
-                         (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                         (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
-                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
-        ehto-5 (when (= '(:loppuetaisyys) (keys tr))
-                 {::tierekisteri/let (op/<= (:loppuetaisyys tr))})
+                 (assoc lopun-yhteinen-pohja ::tierekisteri/losa ((if (:loppuetaisyys tr)
+                                                                    op/<
+                                                                    op/<=)
+                                                                   (:loppuosa tr))))
+        ehto-5 (when (:loppuetaisyys tr)
+                 (assoc lopun-yhteinen-pohja ::tierekisteri/let (op/<= (:loppuetaisyys tr))))
         ehto-6 (when (and (:loppuosa tr) (:loppuetaisyys tr))
-                 (cond-> {::tierekisteri/losa (:loppuosa tr)
-                          ::tierekisteri/let (op/<= (:loppuetaisyys tr))}
-                         (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                         (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
-                         (:numero tr) (assoc ::tierekisteri/tie (:numero tr))))
+                 (assoc lopun-yhteinen-pohja ::tierekisteri/losa (:loppuosa tr)
+                                             ::tierekisteri/let (op/<= (:loppuetaisyys tr))))
         ehto-7 (when (= '(:numero) (keys tr))
                  {::tierekisteri/tie (:numero tr)})]
     (apply op/or

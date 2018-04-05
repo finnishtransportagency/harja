@@ -160,6 +160,18 @@
                       [:numero]
                       (fn [[ryhma-tie] {:keys [numero]}]
                         (= ryhma-tie numero)))
+    (testaus-template [::tierekisteri/tie ::tierekisteri/losa]
+                      [:numero :loppuosa]
+                      (fn [[ryhma-tie ryhma-losa] {:keys [numero loppuosa]}]
+                        (and
+                          (= ryhma-tie numero)
+                          (<= ryhma-losa loppuosa))))
+    (testaus-template [::tierekisteri/tie ::tierekisteri/let]
+                      [:numero :loppuetaisyys]
+                      (fn [[ryhma-tie ryhma-let] {:keys [numero loppuetaisyys]}]
+                        (and
+                          (= ryhma-tie numero)
+                          (<= ryhma-let loppuetaisyys))))
     (testaus-template [::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/losa]
                       [:numero :alkuosa :loppuosa]
                       (fn [[ryhma-tie ryhma-aosa ryhma-losa] {:keys [numero alkuosa loppuosa]}]
