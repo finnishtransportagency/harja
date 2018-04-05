@@ -504,14 +504,15 @@
                                                              :uusi-paatos (:tekninen-osa_paatos tuore-paallystysilmoitus)
                                                              :vanha-paatos (:tekninen-osa_paatos vanha-paallystysilmoitus)})
 
-      ;; Rakennetaan vastaus
-      (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                                 :sopimus-id sopimus-id
-                                                                                 :vuosi vuosi})
-            uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
-                                                                         :sopimus-id sopimus-id
-        :vuosi vuosi})]{:yllapitokohteet yllapitokohteet
-         :paallystysilmoitukset uudet-ilmoitukset}))))))
+          ;; Rakennetaan vastaus
+          (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                                     :sopimus-id sopimus-id
+                                                                                     :vuosi vuosi})
+                uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
+                                                                             :sopimus-id sopimus-id
+                                                                             :vuosi vuosi})]
+            {:yllapitokohteet yllapitokohteet
+             :paallystysilmoitukset uudet-ilmoitukset}))))))
 
 (defn tallenna-paallystysilmoitusten-takuupvmt [db user {urakka-id ::urakka-domain/id
                                                          takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
