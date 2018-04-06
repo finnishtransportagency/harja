@@ -254,10 +254,10 @@
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
-(defn vaadi-etta-kohdeosat-eivat-mene-paallekkain [db urakka-id vuosi muut-kohteet]
+(defn vaadi-etta-kohdeosat-eivat-mene-paallekkain [db yllapitokohde-id vuosi muut-kohteet]
   (let [tiet (distinct (map :tr-numero muut-kohteet))
         kohdeosat (group-by (juxt :tr-numero :tr-ajorata :tr-kaista)
-                            (q/hae-yhden-vuoden-kohdeosat-teille db {:urakkaid urakka-id
+                            (q/hae-yhden-vuoden-kohdeosat-teille db {:yllapitokohdeid yllapitokohde-id
                                                                      :vuosi vuosi
                                                                      :tiet tiet}))
         virheet (map (fn [{tallennettava-id :id

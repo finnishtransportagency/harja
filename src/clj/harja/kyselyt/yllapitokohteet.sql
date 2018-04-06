@@ -986,9 +986,8 @@ SELECT
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista"
 FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id AND NOT ypk.id = :yllapitokohdeid
   LEFT JOIN urakka u ON ypk.urakka = u.id
-WHERE not u.id = :urakkaid AND
-      vuodet @> ARRAY [:vuosi] :: INT [] AND
+WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
       ypko.poistettu IS NOT TRUE AND
       ypko.tr_numero IN (:tiet);

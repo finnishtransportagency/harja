@@ -484,6 +484,7 @@
                                                           :osoitteet
                                                           (filter (comp not :poistettu))))})]
 
+      
       (if (:validointivirheet paivitetyt-kohdeosat)
         paivitetyt-kohdeosat
 
