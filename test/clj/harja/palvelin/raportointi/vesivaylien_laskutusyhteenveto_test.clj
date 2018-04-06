@@ -750,16 +750,16 @@
         taulukko-kauppamerenkulku-yhteensa (yhteensa-rivi taulukko-kauppamerenkulku)
         taulukko-muu-vesiliikenne (nth vastaus 3)
         taulukko-muu-vesiliikenne-yhteensa (yhteensa-rivi taulukko-muu-vesiliikenne)
-        taulukko-yhteenveto (nth vastaus 4)
+        taulukko-yhteenveto (nth vastaus 5)
         taulukko-yhteenveto-yhteensa (yhteensa-rivi taulukko-yhteenveto)]
 
 
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 0.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 30.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 10000.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 10030.0M] taulukko-yhteenveto-yhteensa))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-hoitokausi-2016-2017
@@ -777,13 +777,13 @@
         taulukko-kauppamerenkulku-yhteensa (yhteensa-rivi taulukko-kauppamerenkulku)
         taulukko-muu-vesiliikenne (nth vastaus 3)
         taulukko-muu-vesiliikenne-yhteensa (yhteensa-rivi taulukko-muu-vesiliikenne)
-        taulukko-yhteenveto (nth vastaus 4)
+        taulukko-yhteenveto (nth vastaus 5)
         taulukko-yhteenveto-yhteensa (yhteensa-rivi taulukko-yhteenveto)]
 
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 0.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 60.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 20000.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 20060.0M] taulukko-yhteenveto-yhteensa))))
 
