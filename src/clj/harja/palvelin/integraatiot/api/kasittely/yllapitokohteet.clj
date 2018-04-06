@@ -73,6 +73,7 @@
   (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
     db (assoc (clojure.set/rename-keys
                 kohteen-sijainti
+                ;; Huom: Ajorataa ja kaistaa ei saa koskaan päivittää API:sta!
                 {:aosa :tr_alkuosa
                  :aet :tr_alkuetaisyys
                  :losa :tr_loppuosa
