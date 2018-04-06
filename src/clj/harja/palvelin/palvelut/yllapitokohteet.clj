@@ -428,7 +428,7 @@
    tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
 
    Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi]}]
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
