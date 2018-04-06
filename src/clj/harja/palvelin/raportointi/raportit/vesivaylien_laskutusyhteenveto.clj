@@ -219,10 +219,10 @@
                                              (:yksikkohintaiset raportin-tiedot)
                                              #(or (empty? (:vaylatyyppi %))
                                                   (= (:vaylatyyppi %) #{"kauppamerenkulku" "muu"})))
-                   molemmat-yht-rivit (hinnoittelu-yhteensa-rivi
-                                        (vaylatyypin-summa raportin-tiedot #(or (empty? (:vaylatyyppi %))
-                                                                                (= (:vaylatyyppi %) #{"kauppamerenkulku" "muu"})) nil))]
-               (when-not (= 0 molemmat-yht-rivit)
+                   molemmat-summa (vaylatyypin-summa raportin-tiedot #(or (empty? (:vaylatyyppi %))
+                                                                          (= (:vaylatyyppi %) #{"kauppamerenkulku" "muu"})) nil)
+                   molemmat-yht-rivit (hinnoittelu-yhteensa-rivi molemmat-summa)]
+               (when-not (= 0M molemmat-summa)
                  [:taulukko {:otsikko "Molemmat väylätyypit, tai ei väylätyyppiä"
                              :tyhja (if (empty? molemmat-yht-rivit) "Ei raportoitavaa.")
                              :sheet-nimi raportin-nimi
