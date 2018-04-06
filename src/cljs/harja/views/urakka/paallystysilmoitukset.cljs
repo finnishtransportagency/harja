@@ -223,11 +223,19 @@
        :kun-onnistuu tallennus-onnistui}]]))
 
 (defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
+  ;; Huom. datan järjestyksen täytyy konformoida gridin id:ten kanssa.
   (let [polun-meta (meta (get-in lomakedata-nyt polku))
         polun-data (into (sorted-map)
-                         (zipmap (iterate inc 1) (if (:jarjestetty-kerran? polun-meta)
-                                                   (get-in lomakedata-nyt polku)
-                                                   (yllapitokohde-domain/jarjesta-yllapitokohteet (get-in lomakedata-nyt polku)))))]
+                         (map (fn [data i]
+                                (if (contains? data :id)
+                                  ;; Jos rivillä on olemassa id, otetaan se käyttöön tunnisteeksi gridin datassa
+                                  [(:id data) data]
+                                  ;; Muussa tapauksessa käytetään järjestysnumeroa
+                                  [i data]))
+                              (if (:jarjestetty-kerran? polun-meta)
+                                (get-in lomakedata-nyt polku)
+                                (yllapitokohde-domain/jarjesta-yllapitokohteet (get-in lomakedata-nyt polku)))
+                              (iterate inc 1)))]
     (r/wrap (with-meta polun-data polun-meta)
             (fn [uusi-arvo]
               (muokkaa!
@@ -340,10 +348,13 @@
       (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
-            muokkaus-mahdollista? (and tekninen-osa-voi-muokata? (empty? @yllapitokohde-virheet))
-            jarjestys-fn #(if (not (nil? (:id %)))
-                            [(:id %) 0 0 0]
-                            ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
+            muokkaus-mahdollista? (and tekninen-osa-voi-muokata?
+                                       ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
+                                       ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
+                                       ;; kenttien virheet tyhjät.
+                                       (or (empty? @yllapitokohde-virheet)
+                                           (empty? (flatten (map vals (vals @yllapitokohde-virheet))))))
+            jarjestys-fn :id]
         [:fieldset.lomake-osa
          [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
           {:otsikko "Päällystysilmoituksen täytön vihjeet"}
@@ -584,86 +595,82 @@
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
-           ;; FIXME Validoinni disabloitu, koska bugit estävät käyttöä (HAR-7712)
-           ;; Tämä vaikuttaa siltä, että itse validointi tuntuu toimivan oikein, mutta jostain syystä uuden rivin lisäys
-           ;; lisää rivin ylimmäksi, eikä alimmaksi, kuten pitäisi, eli järjestys menee väärin.
-           ;; Tästä syystä validointivirheet osuvat virheellisesti väärällä riville.
-           [:div [grid/muokkaus-grid
-                  {:otsikko "Alustalle tehdyt toimet"
-                   :jarjesta jarjestys-fn
-                   :voi-muokata? alustatoimet-voi-muokata?
-                   :voi-kumota? false
-                   :uusi-id (inc (count @alustalle-tehdyt-toimet))
-                   :virheet (wrap-virheet :alustalle-tehdyt-toimet)
-                   :virheet-ylos? true}
-                  [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
-                    :pituus-max 256
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
-                    :tasaa :oikea
-                    :kokonaisluku? true}
-                   {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
-                    :tasaa :oikea
-                    :kokonaisluku? true}
-                   {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
-                    :tasaa :oikea
-                    :kokonaisluku? true}
-                   {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
-                    :tasaa :oikea
-                    :kokonaisluku? true}
-                   {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
-                    :muokattava? (constantly false)
-                    :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
-                    }
-                   {:otsikko "Käsittely\u00ADmenetelmä"
-                    :nimi :kasittelymenetelma
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinta-nayta (fn [rivi]
-                                     (if rivi
-                                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                                       "- Valitse menetelmä -"))
-                    :valinnat pot/+alustamenetelmat+
-                    :leveys 30
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
-                    }
-                   {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
-                    :tyyppi :positiivinen-numero :tasaa :oikea
-                    :desimaalien-maara 0
-                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
-                    }
-                   {:otsikko "Verkko\u00ADtyyppi"
-                    :nimi :verkkotyyppi
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinta-nayta #(:nimi %)
-                    :valinnat pot/+verkkotyypit-ja-nil+
-                    :leveys 25}
-                   {:otsikko "Verkon sijainti"
-                    :nimi :verkon-sijainti
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinta-nayta #(:nimi %)
-                    :valinnat pot/+verkon-sijainnit-ja-nil+
-                    :leveys 25}
-                   {:otsikko "Verkon tarkoitus"
-                    :nimi :verkon-tarkoitus
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinta-nayta #(:nimi %)
-                    :valinnat pot/+verkon-tarkoitukset-ja-nil+
-                    :leveys 25}
-                   {:otsikko "Tekninen toimen\u00ADpide"
-                    :nimi :tekninen-toimenpide
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinta-nayta #(:nimi %)
-                    :valinnat pot/+tekniset-toimenpiteet-ja-nil+
-                    :leveys 30}]
-                  alustalle-tehdyt-toimet]])]))))
+           [:div
+            [debug @alustalle-tehdyt-toimet {:otsikko "Alustatoimenpiteet"}]
+            [:div [grid/muokkaus-grid
+                   {:otsikko "Alustalle tehdyt toimet"
+                    :jarjesta jarjestys-fn
+                    :voi-muokata? alustatoimet-voi-muokata?
+                    :voi-kumota? false
+                    :uusi-id (inc (count @alustalle-tehdyt-toimet))
+                    :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
+                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
+                     :pituus-max 256
+                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
+                    {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
+                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
+                    {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
+                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
+                    {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
+                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
+                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
+                     :muokattava? (constantly false)
+                     :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
+                     :validoi [[:ei-tyhja "Tieto puuttuu"]]
+                     }
+                    {:otsikko "Käsittely\u00ADmenetelmä"
+                     :nimi :kasittelymenetelma
+                     :tyyppi :valinta
+                     :valinta-arvo :koodi
+                     :valinta-nayta (fn [rivi]
+                                      (if rivi
+                                        (str (:lyhenne rivi) " - " (:nimi rivi))
+                                        "- Valitse menetelmä -"))
+                     :valinnat pot/+alustamenetelmat+
+                     :leveys 30
+                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
+                     :tyyppi :positiivinen-numero :tasaa :oikea
+                     :desimaalien-maara 0
+                     :validoi [[:ei-tyhja "Tieto puuttuu"]]
+                     }
+                    {:otsikko "Verkko\u00ADtyyppi"
+                     :nimi :verkkotyyppi
+                     :tyyppi :valinta
+                     :valinta-arvo :koodi
+                     :valinta-nayta #(:nimi %)
+                     :valinnat pot/+verkkotyypit-ja-nil+
+                     :leveys 25}
+                    {:otsikko "Verkon sijainti"
+                     :nimi :verkon-sijainti
+                     :tyyppi :valinta
+                     :valinta-arvo :koodi
+                     :valinta-nayta #(:nimi %)
+                     :valinnat pot/+verkon-sijainnit-ja-nil+
+                     :leveys 25}
+                    {:otsikko "Verkon tarkoitus"
+                     :nimi :verkon-tarkoitus
+                     :tyyppi :valinta
+                     :valinta-arvo :koodi
+                     :valinta-nayta #(:nimi %)
+                     :valinnat pot/+verkon-tarkoitukset-ja-nil+
+                     :leveys 25}
+                    {:otsikko "Tekninen toimen\u00ADpide"
+                     :nimi :tekninen-toimenpide
+                     :tyyppi :valinta
+                     :valinta-arvo :koodi
+                     :valinta-nayta #(:nimi %)
+                     :valinnat pot/+tekniset-toimenpiteet-ja-nil+
+                     :leveys 30}]
+                   alustalle-tehdyt-toimet]]])]))))
 
 (defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                 _ muokkaa! historia tallennus-onnistui]
@@ -674,7 +681,13 @@
       (let [lukittu? (lukko/nakyma-lukittu? lukko)
             valmis-tallennettavaksi? (and
                                        (not (= tila :lukittu))
-                                       (every? empty? (vals virheet))
+                                       ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
+                                       ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
+                                       ;; kenttien virheet tyhjät.
+                                       (or (every? empty? (vals virheet))
+                                           (empty? (reduce (fn [tehty [_ virhe-map]]
+                                                             (concat tehty (flatten (map vals (vals virhe-map)))))
+                                                           [] virheet)))
                                        (false? lukittu?))
 
             grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
@@ -718,10 +731,16 @@
       (if (k/virhe? vastaus)
         (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
         (reset! paallystys/paallystysilmoitus-lomakedata
-                (assoc vastaus
-                  :kirjoitusoikeus?
-                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                            (:id @nav/valittu-urakka))))))))
+                (-> vastaus
+                    ;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
+                    (update-in [:ilmoitustiedot :alustatoimet]
+                               (fn [alustatoimet]
+                                 (vec (map #(assoc %1 :id %2)
+                                           alustatoimet (iterate inc 1)))))
+                    (assoc
+                      :kirjoitusoikeus?
+                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                                (:id @nav/valittu-urakka)))))))))
 
 (defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
   (when paallystysilmoitukset
