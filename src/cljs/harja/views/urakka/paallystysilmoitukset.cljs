@@ -594,11 +594,6 @@
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
-           ;; FIXME Validoinni disabloitu, koska bugit estävät käyttöä (HAR-7712)
-           ;; Tämä vaikuttaa siltä, että itse validointi tuntuu toimivan oikein, mutta jostain syystä uuden rivin lisäys
-           ;; lisää rivin ylimmäksi, eikä alimmaksi, kuten pitäisi, eli järjestys menee väärin.
-           ;; Tästä syystä validointivirheet osuvat virheellisesti väärällä riville.
-
            [:div
             [debug @alustalle-tehdyt-toimet {:otsikko "Alustatoimenpiteet"}]
             [:div [grid/muokkaus-grid
