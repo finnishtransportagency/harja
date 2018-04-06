@@ -1133,8 +1133,259 @@ VALUES
                                WHERE lisatieto = 'Poijujen korjausta kuten on sovittu')
             AND oman_hinnoittelun_id IS NOT NULL));
 
--- ***********************************************
--- TODO: ERIKSEEN TILATTU YKSIKKÖHINTAINEN TYÖ?
--- ***********************************************
+  INSERT INTO reimari_toimenpide
+  (hintatyyppi,
+   "reimari-komponentit",
+   "urakka-id",
+   "sopimus-id",
+   suoritettu,
+   luotu,
+   luoja,
+   "harjassa-luotu",
+  lisatieto)
+  VALUES
+    ('yksikkohintainen',
+      '{}',
+      hel_itainen_vaylahoitourakka_id,
+      hel_vayla_paasopimus_id,
+      '2017-08-08T23:23Z',
+      '2017-08-08',
+      (SELECT id
+       FROM kayttaja
+       WHERE kayttajanimi = 'tero'),
+      TRUE,
+    'Harjassa luotu 1');
+
+  INSERT INTO vv_hinnoittelu
+  (nimi, hintaryhma, luoja, "urakka-id")
+  VALUES
+    ('Harjassa luotu 1 oma hinta', FALSE,
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     hel_itainen_vaylahoitourakka_id);
+
+  INSERT INTO vv_hinnoittelu_toimenpide
+  ("toimenpide-id", "hinnoittelu-id", luoja)
+  VALUES
+    ((SELECT id
+      FROM reimari_toimenpide
+      WHERE lisatieto = 'Harjassa luotu 1'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotu 1 oma hinta'),
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'));
+
+  INSERT INTO vv_hinnoittelu_kommentti
+  (tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
+  VALUES
+    ('hyvaksytty'::kommentin_tila,
+     '2017-08-08',
+     '2017-08-08',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Harjassa luotu 1 oma hinta'));
+
+  INSERT INTO vv_hinta
+  ("hinnoittelu-id", otsikko, summa, luoja, ryhma)
+  VALUES
+    ((SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotu 1 oma hinta'),
+     'Yleiset materiaalit', 500,
+     kayttaja_id_tero, 'muu');
+
+  INSERT INTO reimari_toimenpide
+  (hintatyyppi,
+   "reimari-komponentit",
+   "urakka-id",
+   "sopimus-id",
+   suoritettu,
+   luotu,
+   luoja,
+   "harjassa-luotu",
+   lisatieto)
+  VALUES
+    ('yksikkohintainen',
+     '{}',
+     hel_itainen_vaylahoitourakka_id,
+     hel_vayla_paasopimus_id,
+     '2017-09-09T23:23Z',
+     '2017-09-09',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     TRUE,
+     'Harjassa luotu 2');
+
+  INSERT INTO vv_hinnoittelu
+  (nimi, hintaryhma, luoja, "urakka-id")
+  VALUES
+    ('Harjassa luotu 2 oma hinta', FALSE,
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     hel_itainen_vaylahoitourakka_id);
+
+  INSERT INTO vv_hinnoittelu_toimenpide
+  ("toimenpide-id", "hinnoittelu-id", luoja)
+  VALUES
+    ((SELECT id
+      FROM reimari_toimenpide
+      WHERE lisatieto = 'Harjassa luotu 2'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotu 2 oma hinta'),
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'));
+
+  INSERT INTO vv_hinnoittelu_kommentti
+  (tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
+  VALUES
+    ('hyvaksytty'::kommentin_tila,
+     '2017-10-10',
+     '2017-10-10',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Harjassa luotu 2 oma hinta'));
+
+  INSERT INTO vv_hinta
+  ("hinnoittelu-id", otsikko, summa, luoja, ryhma)
+  VALUES
+    ((SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotu 2 oma hinta'),
+     'Yleiset materiaalit', 600,
+     kayttaja_id_tero, 'muu');
+
+  INSERT INTO reimari_toimenpide
+  (hintatyyppi,
+   "reimari-komponentit",
+   "urakka-id",
+   "sopimus-id",
+   suoritettu,
+   luotu,
+   luoja,
+   "harjassa-luotu",
+   lisatieto)
+  VALUES
+    ('yksikkohintainen',
+     '{}',
+     hel_itainen_vaylahoitourakka_id,
+     hel_vayla_paasopimus_id,
+     '2017-10-10T23:23Z',
+     '2017-10-10',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     TRUE,
+     'Harjassa luotu 3');
+
+  INSERT INTO vv_hinnoittelu
+  (nimi, hintaryhma, luoja, "urakka-id")
+  VALUES
+    ('Harjassa luotu 3 oma hinta', FALSE,
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     hel_itainen_vaylahoitourakka_id);
+
+  INSERT INTO vv_hinnoittelu_toimenpide
+  ("toimenpide-id", "hinnoittelu-id", luoja)
+  VALUES
+    ((SELECT id
+      FROM reimari_toimenpide
+      WHERE lisatieto = 'Harjassa luotu 3'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotu 3 oma hinta'),
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'));
+
+  INSERT INTO vv_hinta
+  ("hinnoittelu-id", otsikko, summa, luoja, ryhma)
+  VALUES
+    ((SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotu 3 oma hinta'),
+     'Yleiset materiaalit', 400,
+     kayttaja_id_tero, 'muu');
+
+  -- Tee harjassa luoduille toimenpiteille tilaus, ryhmähinta, ja hyväksy se
+
+  INSERT INTO vv_hinnoittelu
+  (nimi, hintaryhma, luoja, "urakka-id")
+  VALUES
+    ('Harjassa luotujen tilaus', TRUE,
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     hel_itainen_vaylahoitourakka_id);
+
+  INSERT INTO vv_hinnoittelu_toimenpide
+  ("toimenpide-id", "hinnoittelu-id", luoja)
+  VALUES
+    ((SELECT id
+      FROM reimari_toimenpide
+      WHERE lisatieto = 'Harjassa luotu 1'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotujen tilaus'),
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'));
+
+  INSERT INTO vv_hinnoittelu_toimenpide
+  ("toimenpide-id", "hinnoittelu-id", luoja)
+  VALUES
+    ((SELECT id
+      FROM reimari_toimenpide
+      WHERE lisatieto = 'Harjassa luotu 2'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotujen tilaus'),
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'));
+
+  INSERT INTO vv_hinnoittelu_toimenpide
+  ("toimenpide-id", "hinnoittelu-id", luoja)
+  VALUES
+    ((SELECT id
+      FROM reimari_toimenpide
+      WHERE lisatieto = 'Harjassa luotu 3'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotujen tilaus'),
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'));
+
+  INSERT INTO vv_hinnoittelu_kommentti
+  (tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
+  VALUES
+    ('hyvaksytty'::kommentin_tila,
+     '2017-11-11',
+     '2017-11-11',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Harjassa luotujen tilaus'));
+
+  INSERT INTO vv_hinta
+  ("hinnoittelu-id", otsikko, summa, luoja)
+  VALUES
+    ((SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Harjassa luotujen tilaus'),
+     'Ryhmähinta', 60000, (SELECT id
+                           FROM kayttaja
+                           WHERE kayttajanimi = 'tero'));
 
 END $$;
