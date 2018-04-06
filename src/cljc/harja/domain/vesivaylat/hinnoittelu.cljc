@@ -91,7 +91,8 @@
 
 ;; Palvelut
 
-(s/def ::laskutus-pvm (s/nilable (comp pvm/pvm? pvm/joda-timeksi)))
+(s/def ::laskutus-pvm #?(:clj (s/nilable (comp pvm/pvm? pvm/joda-timeksi))
+                         :cljs (s/nilable pvm/pvm?)))
 (s/def ::laskutettu? boolean?)
 
 (s/def ::hae-hintaryhmat-kysely
