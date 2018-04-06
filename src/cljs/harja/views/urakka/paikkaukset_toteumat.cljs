@@ -25,11 +25,7 @@
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Tierekisteriosoite"
        :kentta-params {:tyyppi :tierekisteriosoite
-                       :tr-otsikot? false
-                       #_#_:validoi [(fn [osoite {sijainti :sijainti}]
-                                       (when (and (tr-osoite-taytetty? osoite)
-                                                  (nil? sijainti))
-                                         "Tarkista tierekisteriosoite"))]}
+                       :tr-otsikot? false}
        :arvo-atom (tr-atomi :tr)
        :tyylit {:width "fit-content"}}]
      [valinnat/aikavali (aikavali-atomi :aikavali)]

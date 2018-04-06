@@ -21,8 +21,7 @@
                                        ::paikkaus
                                        ::paikkauskohde-id)
     ::kustannukset (specql.rel/has-many ::id
-                                        ;; TODO Pitäskö olla ::paikkaustoteuma
-                                        ::paikkauskustannus
+                                        ::paikkaustoteuma
                                         ::paikkauskohde-id)}]
   ["paikkaus" ::paikkaus
    {"luoja-id" ::muokkaustiedot/luoja-id

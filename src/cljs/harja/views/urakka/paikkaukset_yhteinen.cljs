@@ -32,10 +32,3 @@
         (:urakan-paikkauskohteet valinnat)
         paikkaus-valittu-fn
         [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
-
-;[napit/yleinen-ensisijainen
-; "Siirry kustannuksiin"
-; #(e! (tiedot/->SiirryKustannuksiin (some (fn [paikkakohde]
-;                                            (when (= (::paikkaus/id rivin-paikkauskohde) (:id paikkakohde))
-;                                              (:id paikkakohde)))
-;                                          (get-in app [:valinnat :urakan-paikkauskohteet]))))]
