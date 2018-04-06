@@ -151,14 +151,17 @@ yllapitoluokkanimi->numero
            paakohteen-kaista (kaista kohteen-sijainti)]
        (if (and paakohteen-ajorata paakohteen-kaista)
          (mapv (fn [{:keys [tunnus tunniste sijainti]}]
-                 (if (not= paakohteen-ajorata (ajorata sijainti))
+                 (if (and (not (nil? (ajorata sijainti)))
+                          (not= paakohteen-ajorata (ajorata sijainti)))
                    (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                               (format "Alikohteen (tunniste: %s) ajorata (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
                                       (or tunnus (:id tunniste))
                                       (ajorata sijainti)
                                       kohde-id
                                       paakohteen-ajorata))
-                   (when (not= paakohteen-kaista (kaista sijainti))
+                   (when (and
+                           (not (nil? (kaista sijainti)))
+                           (not= paakohteen-kaista (kaista sijainti)))
                      (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                                 (format "Alikohteen (tunniste: %s) kaista: (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
                                         (or tunnus (:id tunniste))
