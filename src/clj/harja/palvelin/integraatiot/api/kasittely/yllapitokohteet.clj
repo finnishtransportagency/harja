@@ -15,37 +15,32 @@
   (mapv
     (fn [alikohde]
       (let [sijainti (:sijainti alikohde)
-            ;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista, ja alikohteen katsottiin kuuluvan
-            ;; samalle ajoradalle ja kaistalle.
-            ;; Jatkossa (kaudella 2018) pääkohteella ei ole pakko olla ajorataa ja kaistaa, vaan ne voidaan
-            ;; antaa alikohdetasolla. Taaksepäinyhteensopivuuden vuoksi tehdään niin, että mikäli
-            ;; päivitetään alikohde ilman ajorataa ja kaistaa, asetetaan ne pääkohteelta, jos ne on.
-            paivityksessa-alikohteella-ajorata-ja-kaista? (boolean (and (:ajr sijainti) (:kaista sijainti)))
             olemassa-oleva-paakohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)}))
             paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata olemassa-oleva-paakohde)
                                                           (:tr-kaista olemassa-oleva-paakohde)))
-            sijainti (if (and paakohteella-ajorata-ja-kaista?
-                              (not paivityksessa-alikohteella-ajorata-ja-kaista?))
-                       (assoc sijainti
-                         :ajr (:tr-ajorata olemassa-oleva-paakohde)
-                         :kaista (:tr-kaista olemassa-oleva-paakohde))
-                       sijainti)
-            parametrit {:yllapitokohde (:id kohde)
-                        :nimi (:nimi alikohde)
-                        :tunnus (:tunnus alikohde)
-                        :tr_numero (:numero sijainti)
-                        :tr_alkuosa (:aosa sijainti)
-                        :tr_alkuetaisyys (:aet sijainti)
-                        :tr_loppuosa (:losa sijainti)
-                        :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (:ajr sijainti)
-                        :tr_kaista (:kaista sijainti)
-                        :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
-                        :raekoko (:raekoko alikohde)
-                        :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
-                        :massamaara (:kokonaismassamaara alikohde)
-                        :toimenpide (:toimenpide alikohde)
-                        :ulkoinen-id (:ulkoinen-id alikohde)}]
+            ;; Päivitä alikohde. Mikäli pääkohteella on ajorata ja kaista, käytetään sitä, koska alikohde kuuluu
+            ;; samalle ajoradalle ja kaistalle
+            parametrit (merge
+                         {:yllapitokohde (:id kohde)
+                          :nimi (:nimi alikohde)
+                          :tunnus (:tunnus alikohde)
+                          :tr_numero (:numero sijainti)
+                          :tr_alkuosa (:aosa sijainti)
+                          :tr_alkuetaisyys (:aet sijainti)
+                          :tr_loppuosa (:losa sijainti)
+                          :tr_loppuetaisyys (:let sijainti)
+                          :tr_ajorata (if paakohteella-ajorata-ja-kaista?
+                                        (:tr-ajorata olemassa-oleva-paakohde)
+                                        (:ajr sijainti))
+                          :tr_kaista (if paakohteella-ajorata-ja-kaista?
+                                       (:tr-kaista olemassa-oleva-paakohde)
+                                       (:kaista sijainti))
+                          :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
+                          :raekoko (:raekoko alikohde)
+                          :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
+                          :massamaara (:kokonaismassamaara alikohde)
+                          :toimenpide (:toimenpide alikohde)
+                          :ulkoinen-id (:ulkoinen-id alikohde)})]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
     alikohteet))
 
@@ -73,6 +68,7 @@
   (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
     db (assoc (clojure.set/rename-keys
                 kohteen-sijainti
+                ;; Huom: Ajorataa ja kaistaa ei saa koskaan päivittää API:sta!
                 {:aosa :tr_alkuosa
                  :aet :tr_alkuetaisyys
                  :losa :tr_loppuosa
