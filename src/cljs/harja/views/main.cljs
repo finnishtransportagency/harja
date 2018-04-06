@@ -102,7 +102,8 @@
       [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
        [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
-    (when (oikeudet/ilmoitukset)
+    (when (and (oikeudet/tieluvat)
+               (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
       [:li {:role "presentation" :class (when (= s :tienpidon-luvat) "active")}
        [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
 
