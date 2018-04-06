@@ -495,14 +495,14 @@
                            ;; Vanhassa kohdeosat-koodissa tilan muokkauksessa ulkopuolelta
                            ;; tehtiin aina uusi virhevalidointi gridille käsin. Voisi kokeilla samaa nyt.
                            #_(not (empty? @virheet))
-                             (not (every? #(and (:tr-numero %)
-                                                (:tr-alkuosa %)
-                                                (:tr-alkuetaisyys %)
-                                                (:tr-loppuosa %)
-                                                (:tr-loppuetaisyys %))
-                                          (vals @kohdeosat-atom)))
-                             (not kirjoitusoikeus?)
-                             (not voi-muokata?))
+                           (not (every? #(and (:tr-numero %)
+                                              (:tr-alkuosa %)
+                                              (:tr-alkuetaisyys %)
+                                              (:tr-loppuosa %)
+                                              (:tr-loppuetaisyys %))
+                                        (vals @kohdeosat-atom)))
+                           (not kirjoitusoikeus?)
+                           (not voi-muokata?))
                :luokka "nappi-myonteinen grid-tallenna"
                :virheviesti "Tallentaminen epäonnistui."
                :kun-onnistuu (partial kohdeosat-tallennettu-onnistuneesti kohdeosat-atom tallennettu-fn)}]))]
@@ -655,8 +655,8 @@
         (fn [{:keys [rivi]}]
           ;; Jos pääkohde päivittyy, palvelin saattaa tehdä automaattisia korjauksia kohdeosiin.
           ;; Täten kohteen osat -atomi tulee resetoida vastaamaan päivitettyjä osia.
-          (reset! kohteen-osat (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
+          (reset! kohteen-osat (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                     (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
 
       (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
         (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)

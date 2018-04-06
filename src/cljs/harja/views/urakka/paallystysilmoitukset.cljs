@@ -894,7 +894,6 @@
          historia
          (fn [vastaus]
            (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
-           ;; todo: katoppa tämä!
            (if (:validointivirheet vastaus)
              (modal/nayta!
                {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
