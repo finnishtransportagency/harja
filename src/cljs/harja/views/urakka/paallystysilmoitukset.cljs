@@ -689,7 +689,9 @@
                                        ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
                                        ;; kenttien virheet tyhjät.
                                        (or (every? empty? (vals virheet))
-                                           (empty? (flatten (map vals (vals (:alikohteet virheet))))))
+                                           (empty? (reduce (fn [tehty [_ virhe-map]]
+                                                             (concat tehty (flatten (map vals (vals virhe-map)))))
+                                                           [] virheet)))
                                        (false? lukittu?))
 
             grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
