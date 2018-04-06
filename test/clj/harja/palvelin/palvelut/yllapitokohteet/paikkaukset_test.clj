@@ -45,7 +45,7 @@
                                                             +kayttaja-jvh+
                                                             {::paikkaus/urakka-id urakka-id
                                                              :paikkaus-idt #{testikohde-id}})]
-    (is (= (count paikkaukset) 4))
+    (is (= (count paikkaukset) 8))
     (is (= (count paikkaukset-tr-filtteri) 2))
     (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) paikaukset-paikkauskohteet-filtteri)))))
 

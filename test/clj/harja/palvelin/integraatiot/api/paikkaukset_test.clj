@@ -38,6 +38,7 @@
                                                     ::paikkaus/muotoarvo "testi"
                                                     ::paikkaus/lisa-aineet "lisäaineet"
                                                     ::paikkaus/pitoisuus 1.2M
+                                                    ::paikkaus/materiaali-id 11
                                                     ::paikkaus/sideainetyyppi "20/30"}]
                            ::paikkaus/raekoko 1
                            ::paikkaus/ulkoinen-id 3453455
@@ -53,9 +54,11 @@
                                                    ::paikkaus/ajorata 1
                                                    ::paikkaus/keskisaumat [1 1]
                                                    ::paikkaus/ajouravalit [5 7]
+                                                   ::paikkaus/tienkohta-id 10
                                                    ::paikkaus/reunat [1]}]
                            ::paikkaus/kuulamylly "AN5"
                            ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
+                                                     ::paikkaus/id 5
                                                      ::paikkaus/nimi "Testipaikkauskohde"}
 
                            ::paikkaus/massamenekki 12}
