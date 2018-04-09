@@ -210,7 +210,7 @@
        :footer [laskutusdialogin-footer e! paivitys-event hinnoittelu hintaryhman-laskutusluvan-tallennus-kaynnissa? laskutus-kk-atomi]}
      [laskutusdialogin-sisalto teksti hinnoittelu laskutus-kk-atomi])))
 
-(defn laskutuslupanappi [e! app hinnoittelu paivitys-event]
+(defn laskutuslupanappi [e! app hinnoittelu paivitys-event nappi-luokka]
   (let [nappi-disabloitu? (or (:toimenpiteiden-haku-kaynnissa? app)
                               (:hintaryhmien-haku-kaynnissa? app)
                               (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app))]
@@ -234,7 +234,7 @@
                                   " laskulla. Kyseinen kuukausi ei ole vielä mennyt, joten voit vielä muokata laskutuslupaa.")
                              hinnoittelu)
        {:ikoni (ikonit/livicon-document-full)
-        :luokka "laskutuslupa-nappi"
+        :luokka nappi-luokka
         :ikoninappi? true
         :disabled nappi-disabloitu?}]]
 
@@ -250,7 +250,7 @@
          ja riveittäin hinnoitelluille toimenpiteille pitää antaa omat laskutusluvat, ja luvat voivat olla eri kuukausille."
          hinnoittelu)
       {:ikoni (ikonit/livicon-document-full)
-       :luokka "laskutuslupa-nappi"
+       :luokka nappi-luokka
        :disabled nappi-disabloitu?}])))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
@@ -328,7 +328,8 @@
                               (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
                                                             oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                             (:id @nav/valittu-urakka))))}]]
-             [laskutuslupanappi e! app* hintaryhma (tiedot/->HaeHintaryhmat)]])))]]))
+             [laskutuslupanappi e! app* hintaryhma (tiedot/->HaeHintaryhmat)
+              "laskutuslupa-nappi-tilaus"]])))]]))
 
 (defn- toimenpidelomake [e! {:keys [valittu-toimenpide tallennus-kaynnissa?] :as app}]
   (let [uusi-toimenpide? (not (id-olemassa? (::to/id valittu-toimenpide)))]
@@ -501,7 +502,10 @@
                        :tyyppi :komponentti
                        :leveys 8
                        :komponentti (fn [rivi]
-                                      [laskutuslupanappi e! app* (::to/oma-hinnoittelu rivi) (tiedot/->HaeToimenpiteet (:valinnat app*))])}
+                                      [laskutuslupanappi e! app*
+                                       (::to/oma-hinnoittelu rivi)
+                                       (tiedot/->HaeToimenpiteet (:valinnat app*))
+                                       "nappi-grid"])}
                       (jaettu/sarake-checkbox e! app*)]
                      :listaus-tunniste listaus-tunniste
                      :avaa-toimenpide-lomakkeelle #(e! (tiedot/->AvaaLomakkeelle %))
