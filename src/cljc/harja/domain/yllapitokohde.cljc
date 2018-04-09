@@ -151,14 +151,17 @@ yllapitoluokkanimi->numero
            paakohteen-kaista (kaista kohteen-sijainti)]
        (if (and paakohteen-ajorata paakohteen-kaista)
          (mapv (fn [{:keys [tunnus tunniste sijainti]}]
-                 (if (not= paakohteen-ajorata (ajorata sijainti))
+                 (if (and (not (nil? (ajorata sijainti)))
+                          (not= paakohteen-ajorata (ajorata sijainti)))
                    (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                               (format "Alikohteen (tunniste: %s) ajorata (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
                                       (or tunnus (:id tunniste))
                                       (ajorata sijainti)
                                       kohde-id
                                       paakohteen-ajorata))
-                   (when (not= paakohteen-kaista (kaista sijainti))
+                   (when (and
+                           (not (nil? (kaista sijainti)))
+                           (not= paakohteen-kaista (kaista sijainti)))
                      (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                                 (format "Alikohteen (tunniste: %s) kaista: (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
                                         (or tunnus (:id tunniste))
@@ -183,8 +186,10 @@ yllapitoluokkanimi->numero
                                 seuraava-alkuosa (get-in seuraava [:sijainti :aosa])
                                 edellinen-loppuetaisyys (get-in edellinen [:edellinen :sijainti :let])
                                 seuraava-alkuetaisyys (get-in seuraava [:sijainti :aet])
-                                edellinen-ajorata (get-in edellinen [:edellinen :sijainti :ajorata])
-                                seuraava-ajorata (get-in seuraava [:sijainti :ajorata])
+                                edellinen-ajorata (or (get-in edellinen [:edellinen :sijainti :ajorata])
+                                                      (get-in edellinen [:edellinen :sijainti :ajr]))
+                                seuraava-ajorata (or (get-in seuraava [:sijainti :ajorata])
+                                                     (get-in seuraava [:sijainti :ajr]))
                                 edellinen-kaista (get-in edellinen [:edellinen :sijainti :kaista])
                                 seuraava-kaista (get-in seuraava [:sijainti :kaista])]
                             (and

@@ -262,11 +262,11 @@
   :virheet-ylos?                  Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
                                   avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?
   :virhe-viesti                   String, joka näytetään gridin otsikon oikealla puolella punaisella.
-  :renderoinnin-jalkeen           Funktio, joka ajetaan heti taulukon renderoinnin jälkeen. Saa argumentikseen Gridin tilan"
+  :luomisen-jalkeen               Funktio, joka ajetaan heti taulukon luomisen jälkeen. Saa argumentikseen Gridin tilan"
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti toimintonappi-fn disabloi-rivi? renderoinnin-jalkeen] :as opts}
+           virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -452,8 +452,8 @@
        :component-did-mount (fn [this]
                               (when jarjesta-kun-kasketaan
                                 (lisaa-meta-fn @muokatut @virheet-atom))
-                              (when renderoinnin-jalkeen
-                                (renderoinnin-jalkeen @muokatut)))
+                              (when luomisen-jalkeen
+                                (luomisen-jalkeen @muokatut)))
        :component-did-update (fn [this [_ _ _ muokatut]]
                                (when (:paivita? @meta-atom)
                                  (lisaa-meta-fn @muokatut @virheet-atom)))})))
