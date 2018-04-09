@@ -288,3 +288,5 @@ E'View, joka sisältää hyväksytyt hinnoittelut (tilaukset tai toimenpiteen om
 COMMENT ON VIEW vv_toimenpiteen_hinnoittelut IS
 E'View, jonka avulla toimenpiteen hinnoittelujen hakeminen helpottuu. Sisältää toimenpiteen id:n, tilauksen id:n, ja toimenpiteen oman hinnoittelun id:n.';
 
+COMMENT ON TABLE harja.public.vv_turvalaite IS
+E'vv_turvalaite-taulu korvattu vatu_turvalaite-taululla. vv_turvalaite-taulua ei poistettu migraatiolla, koska siitä täytyi kopioida reimari_toimenpide-tauluun liittyvät viittaukset vatu_turvalaite-tauluun ennen taulun poistamista. Migraatio ja taulun poisto tehtiin manuaalisesti, koska oli vaarana että tauluun liityvän proseduurin triggeröinti jumittaisi ja aiheuttaisi koko deploymentin epäonnistumisen.';
