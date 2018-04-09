@@ -27,7 +27,7 @@
   Optiot on map, jossa voi olla:
   :id                             Otsikkorivin yksilöivä id (vaaditaan jos otsikkorivit halutaan piilottaa gridissä)
                                   Jos ei anneta, generoidaan uniikki id.
-  :otsikkokomponentit             Vector mappeja, jossa avaimina sijainti ja sisalto.
+  :otsikkokomponentit             Vector mappeja, jossa avaimina sijainti, sisalto ja tyyli.
                                   Sijainti annetaan prosentteina X-akselilla ja sisalto on funktio,
                                   joka palauttaa komponentin."
   ([teksti] (otsikko teksti {}))
