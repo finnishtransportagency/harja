@@ -423,6 +423,31 @@
    [:div.valintaryhma.col-sm-12.col-md-3
     ryhma4]])
 
+(defn checkbox-pudotusvalikko
+  [valinnat on-change teksti]
+  (let [idn-alku-label (gensym "label")
+        idn-alku-cb (gensym "cb")]
+    (fn [valinnat on-change teksti]
+      [livi-pudotusvalikko
+       {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? valinnat))
+                               paikkaukohteiden-maara (count valinnat)]
+                           (str valittujen-paikkauskohteiden-maara (case valittujen-paikkauskohteiden-maara
+                                                                     paikkaukohteiden-maara "Kaikki"
+                                                                     1 (first teksti)
+                                                                     (second teksti))))
+        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+        :itemit-komponentteja? true}
+       (map (fn [{:keys [id nimi valittu?] :as valinta}]
+              [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
+                                              :id (str idn-alku-label id)}
+               nimi
+               [:input {:id (str idn-alku-cb id)
+                        :type "checkbox"
+                        :checked valittu?
+                        :on-change #(let [valittu? (-> % .-target .-checked)]
+                                      (on-change valinta valittu?))}]])
+            valinnat)])))
+
 (defn materiaali-valikko
   "Pudotusvalikko materiaaleille. Ottaa mapin, jolle täytyy antaa parametrit valittu-materiaali ja
    valitse-fn.

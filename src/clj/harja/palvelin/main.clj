@@ -50,6 +50,7 @@
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
+    [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
@@ -369,6 +370,9 @@
       :paikkaus (component/using
                   (paikkaus/->Paikkaus)
                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :paikkaukset (component/using
+                     (paikkaukset/->Paikkaukset)
+                     [:http-palvelin :db])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
