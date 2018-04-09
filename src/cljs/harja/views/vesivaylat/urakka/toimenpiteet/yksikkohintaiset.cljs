@@ -505,7 +505,7 @@
                                       [laskutuslupanappi e! app*
                                        (::to/oma-hinnoittelu rivi)
                                        (tiedot/->HaeToimenpiteet (:valinnat app*))
-                                       "nappi-grid"])}
+                                       "laskutuslupa-nappi-grid"])}
                       (jaettu/sarake-checkbox e! app*)]
                      :listaus-tunniste listaus-tunniste
                      :avaa-toimenpide-lomakkeelle #(e! (tiedot/->AvaaLomakkeelle %))
