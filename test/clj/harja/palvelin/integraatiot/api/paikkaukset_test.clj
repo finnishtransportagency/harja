@@ -19,7 +19,7 @@
                        (api-paikkaukset/->Paikkaukset)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])))
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture
+(use-fixtures :each (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
 
 (deftest kirjaa-paikkaus

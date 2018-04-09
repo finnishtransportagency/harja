@@ -103,13 +103,12 @@
                                       {:nimi ::tierekisteri/aet}
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}]
-        aika-formatteri #(try [:div
-                               [:span {:style {:width "100%"
-                                               :display "inline-block"}}
-                                (pvm/pvm %)]
-                               [:span (str "klo. " (pvm/aika %))]]
-                              (catch :default e
-                                nil))
+        aika-formatteri #(when-not (nil? %)
+                           [:div
+                            [:span {:style {:width "100%"
+                                            :display "inline-block"}}
+                             (pvm/pvm %)]
+                            [:span (str "klo. " (pvm/aika %))]])
         skeema (into []
                      (concat
                        [{:tyyppi :vetolaatikon-tila :leveys 1}]
