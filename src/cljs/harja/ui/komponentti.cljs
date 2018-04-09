@@ -182,9 +182,7 @@
   ovat samat, kuin render-funktiolle annettavat."
   [callback]
   {:component-will-receive-props
-   ;; Reagentin dokumentaation mukaan tämän pitäisi olla [this argv].
-   ;; Todellisuudessa [this jotain-häröä param1 param2 ..]
-   (fn [this _ & uudet]
+   (fn [this react-constructor & uudet]
      ;; Reactissa ensimmäinen parametri on props, ja loput on children
      (let [vanhat (into [(r/props this)] (r/children this))]
        (callback vanhat (vec uudet))))})
