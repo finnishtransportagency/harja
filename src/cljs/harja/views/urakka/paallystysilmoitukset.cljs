@@ -45,7 +45,8 @@
             [cljs-time.core :as t]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.views.urakka.valinnat :as u-valinnat]
-            [harja.ui.leijuke :as leijuke])
+            [harja.ui.leijuke :as leijuke]
+            [harja.ui.modal :as modal])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -893,10 +894,19 @@
          historia
          (fn [vastaus]
            (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
-           (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
-           (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus))
-           (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
-           (reset! ilmoituslomake nil))]))))
+           (if (:validointivirheet vastaus)
+             (modal/nayta!
+               {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
+                :otsikko-tyyli :virhe}
+               [:div
+                [:p "Virheet:"]
+                (into [:ul] (mapv (fn [virhe]
+                                    [:li virhe])
+                                  (:validointivirheet vastaus)))])
+             (do (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+                 (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus))
+                 (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
+                 (reset! ilmoituslomake nil))))]))))
 
 (defn valinnat [urakka]
   [:div

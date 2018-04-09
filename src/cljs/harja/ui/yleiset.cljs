@@ -95,12 +95,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     :varoitus "varoitus"
                     :virhe "virhe"
                     :huomautus "huomautus")}
-     (for* [v (distinct virheet)]
+     (doall (for* [v (distinct virheet)]
+
        [:span
         (case tyyppi
           :huomautus (ikonit/livicon-info-circle)
           (ikonit/livicon-warning-sign))
-        [:span (str " " v)]])]]))
+        [:span (str " " v)]]))]]))
 
 
 (defn linkki [otsikko toiminto]
