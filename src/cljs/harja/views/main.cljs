@@ -28,6 +28,7 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.views.tierekisteri :as tierekisteri]
+            [harja.views.tieluvat.tieluvat :as tieluvat]
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
@@ -100,6 +101,11 @@
     (when (oikeudet/ilmoitukset)
       [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
        [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
+
+    (when (and (oikeudet/tieluvat)
+               (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
+      [:li {:role "presentation" :class (when (= s :tienpidon-luvat) "active")}
+       [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
 
     (when (oikeudet/hallinta)
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
@@ -196,6 +202,7 @@
         :urakat [urakat/urakat]
         :raportit [raportit/raportit]
         :ilmoitukset [ilmoitukset/ilmoitukset]
+        :tienpidon-luvat [tieluvat/tieluvat]
         :hallinta [hallinta/hallinta]
         :tilannekuva [tilannekuva/tilannekuva]
         :about [about/about]
