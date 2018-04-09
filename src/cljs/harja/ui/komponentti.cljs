@@ -199,11 +199,7 @@
                                         noden sisällä. Eventin triggeröivällä elementillä täytyy olla id asetettuna."
   ([ulkopuolella-fn] (klikattu-ulkopuolelle ulkopuolella-fn nil))
   ([ulkopuolella-fn {:keys [tarkista-komponentti?]}]
-   (let [tarkista-onko-komponentti-unmountattu (fn [tapahtuma elementin-id]
-                                                 (if (not= (js/document.getElementById elementin-id) (.-target (:tapahtuma tapahtuma)))
-                                                   (js/document.getElementById elementin-id)
-                                                   (.-target (:tapahtuma tapahtuma))))
-         tarkistettu-komponentti-sisalla? (fn [this tapahtuma]
+   (let [tarkistettu-komponentti-sisalla? (fn [this tapahtuma]
                                             (let [elementin-id (-> (:tapahtuma tapahtuma) .-target .-id)
                                                   dom-elementti (js/document.getElementById elementin-id)
                                                   tapahtuma-elementti (.-target (:tapahtuma tapahtuma))]
