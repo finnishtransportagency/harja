@@ -65,7 +65,7 @@
                   ", " (:urakka kohde2))]]))])
 
 (defn validointivirheet-modal []
-  (let [modal-data @paallystys-tiedot/validointivirheet-modal ;; Pakko lukea eikä passata tänne, jotta ei aiheuta ridin renderiä
+  (let [modal-data @paallystys-tiedot/validointivirheet-modal ;; Pakko lukea eikä passata tänne, jotta ei aiheuta gridin renderiä
         validointivirheet-ryhmittain (group-by :validointivirhe (:validointivirheet modal-data))
         kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)
         sulje-fn #(swap! paallystys-tiedot/validointivirheet-modal assoc :nakyvissa? false)]
