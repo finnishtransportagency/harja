@@ -207,7 +207,7 @@
        :paikkaukset
        (when (valilehti-mahdollinen? :paikkaukset ur)
          ^{:key "paikkaukset"}
-         [paikkaukset/kohdeluettelo ur])
+         [paikkaukset/paikkaukset ur])
 
        "Laskutus"
        :laskutus

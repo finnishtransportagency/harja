@@ -8,8 +8,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]))
 
-(defn kohdeluettelo
-  "Kohdeluettelo-pääkomponentti"
+(defn paikkaukset
   [ur]
   (komp/luo
     (komp/sisaan-ulos
