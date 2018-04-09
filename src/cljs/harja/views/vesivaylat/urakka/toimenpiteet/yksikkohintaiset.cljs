@@ -207,6 +207,7 @@
                                                                      (time/plus (pvm/nyt) (time/months 1)))))]
     (modal/nayta!
       {:otsikko "Muokkaa laskutuslupaa"
+       :luokka "laskutuslupa-dialogi"
        :footer [laskutusdialogin-footer e! paivitys-event hinnoittelu hintaryhman-laskutusluvan-tallennus-kaynnissa? laskutus-kk-atomi]}
      [laskutusdialogin-sisalto teksti hinnoittelu laskutus-kk-atomi])))
 
