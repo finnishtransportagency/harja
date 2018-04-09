@@ -71,7 +71,8 @@
     :api-paikkaukset
     :koordinaatit
     :tiedostopesula
-    :tieluvat})
+    :tieluvat
+    :paikkaukset})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
