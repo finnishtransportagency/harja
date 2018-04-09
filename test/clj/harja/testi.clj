@@ -470,17 +470,13 @@
   ([]
    (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla {}))
   ([{:keys [limit] :as optiot}]
-   (let [tulos (q (str "SELECT id FROM reimari_toimenpide
+   (q (str "SELECT id FROM reimari_toimenpide
                     WHERE
                     \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
-                       (when limit
-                         (str " LIMIT " limit))
-                       ";"))]
-     (if (= limit 1)
-       (ffirst tulos)
-
-       (mapv first tulos)))))
+           (when limit
+             (str " LIMIT " limit))
+           ";"))))
 
 (defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla
   ([]
@@ -493,7 +489,7 @@
                                FROM vv_hinnoittelu_toimenpide AS ht
                                INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                                WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
-                               AND ht.\"toimenpide-id\" NOT IN (" (str/join ", " (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla)) ")"
+                               AND ht.\"toimenpide-id\" NOT IN (" (str/join ", " (mapv first (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla))) ")"
                  (when (some? hintaryhma?)
                    (str " AND hintaryhma = " hintaryhma?))
                  ");"))]
