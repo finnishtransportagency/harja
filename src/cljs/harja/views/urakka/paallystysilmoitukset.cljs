@@ -493,23 +493,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :pinta-ala (:pinta-ala toistettava-rivi)))}
-           {:otsikko "Kuulamylly"
-            :nimi :kuulamylly
-            :tyyppi :valinta
-            :valinta-arvo :koodi
-            :valinta-nayta #(:nimi %)
-            :valinnat pot/+kyylamyllyt-ja-nil+
-            :leveys 30
-            :tayta-alas? #(not (nil? %))
-            :tayta-fn (fn [lahtorivi tama-rivi]
-                        (assoc tama-rivi :kuulamylly (:kuulamylly lahtorivi)))
-            :tayta-sijainti :ylos
-            :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
-            :tayta-alas-toistuvasti? #(not (nil? %))
-            :tayta-toistuvasti-fn
-            (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}]
+              (assoc tama-rivi :pinta-ala (:pinta-ala toistettava-rivi)))}]
           paallystystoimenpiteet]
 
          [grid/muokkaus-grid
@@ -524,7 +508,23 @@
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :virheet (wrap-virheet :kiviaines)
            :jarjesta jarjestys-fn}
-          [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
+          [{:otsikko "Kuulamylly"
+            :nimi :kuulamylly
+            :tyyppi :valinta
+            :valinta-arvo :koodi
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+kyylamyllyt-ja-nil+
+            :leveys 30
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kuulamylly (:kuulamylly lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}
+           {:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
             :leveys 30
             :tayta-alas? #(not (nil? %))
             :tayta-fn (fn [lahtorivi tama-rivi]
