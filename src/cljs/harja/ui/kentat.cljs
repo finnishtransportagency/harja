@@ -886,28 +886,29 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe
+(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
                                  piste? vaadi-vali?]
   [:table
-   [:thead
-    [:tr
-     [:th
-      [:span "Tie"]
-      (when pakollinen? [:span.required-tahti " *"])]
-     [:th
-      [:span "aosa"]
-      (when pakollinen? [:span.required-tahti " *"])]
-     [:th
-      [:span "aet"]
-      (when pakollinen? [:span.required-tahti " *"])]
-     (when (not piste?)
+   (when tr-otsikot?
+     [:thead
+      [:tr
        [:th
-        [:span "losa"]
-        (when vaadi-vali? [:span.required-tahti " *"])])
-     (when (not piste?)
+        [:span "Tie"]
+        (when pakollinen? [:span.required-tahti " *"])]
        [:th
-        [:span "let"]
-        (when vaadi-vali? [:span.required-tahti " *"])])]]
+        [:span "aosa"]
+        (when pakollinen? [:span.required-tahti " *"])]
+       [:th
+        [:span "aet"]
+        (when pakollinen? [:span.required-tahti " *"])]
+       (when (not piste?)
+         [:th
+          [:span "losa"]
+          (when vaadi-vali? [:span.required-tahti " *"])])
+       (when (not piste?)
+         [:th
+          [:span "let"]
+          (when vaadi-vali? [:span.required-tahti " *"])])]])
    [:tbody
     [:tr
      [:td tie]
@@ -928,7 +929,7 @@
 (defn- tierekisterikentat-rivitetty
   "Erilainen tyyli TR valitsimelle, jos lomake on hyvin kapea.
   Rivittää tierekisterivalinnan usealle riville."
-  [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe]
+  [pakollinen? tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe]
   [:table
    [:tbody
     [:tr
@@ -1047,11 +1048,14 @@
                     (tasot/poista-geometria! :tr-valittu-osoite)
                     (kartta/zoomaa-geometrioihin)))
 
-      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali?]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
                              (count avaimet)))
+              tr-otsikot? (if (nil? tr-otsikot?)
+                            true
+                            tr-otsikot?)
               [numero-avain alkuosa-avain alkuetaisyys-avain loppuosa-avain loppuetaisyys-avain]
               avaimet
 
@@ -1095,6 +1099,7 @@
              "losa" loppuosa loppuosa-avain @karttavalinta-kaynnissa?]
             [tr-kentan-elementti lomake? muuta! blur
              "let" loppuetaisyys loppuetaisyys-avain @karttavalinta-kaynnissa?]
+            tr-otsikot?
             (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu?)
               [napit/poista nil
                #(do (tasot/poista-geometria! :tr-valittu-osoite)
@@ -1239,8 +1244,9 @@
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
 
-(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
-  [:span {:class (or luokka "label-ja-kentta")}
+(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
+  [:span {:class (or luokka "label-ja-kentta")
+          :style tyylit}
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])

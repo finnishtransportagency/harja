@@ -20,3 +20,8 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaa
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,jarjestelma) values ('AURA-SIIRTO', 'AURA', 'SIIRTO', TRUE);
 INSERT INTO kayttaja (kayttajanimi, organisaatio, jarjestelma, kuvaus) VALUES ('livi', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), TRUE, 'Liikenneviraston testi järjestelmätunnus');
+
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES ('oletus-kaytto-oikeudet','Testi','Kayttaja','testi.kayttaja@example.com', '893123456789', (SELECT id FROM organisaatio WHERE lyhenne='Livi'));
+INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
+  ((SELECT id FROM kayttaja WHERE kayttajanimi='oletus-kaytto-oikeudet'), 'jarjestelmavastuuhenkilo'),
+  ((SELECT id FROM kayttaja WHERE kayttajanimi='oletus-kaytto-oikeudet'), 'liikennepaivystaja');

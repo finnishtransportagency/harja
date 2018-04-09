@@ -292,6 +292,12 @@
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
+(defn korvaa-ehka-oletuskayttajalla [kutsu]
+  ;; Jos asetukset mahdollistaa ja kutsussa ei ole käyttäjätietoja, käytetään oletuskäyttöoikeuksia
+  (if (empty? (get (:headers kutsu) "oam_remote_user"))
+    (assoc kutsu :headers (conj (:headers kutsu) {"oam_remote_user" "oletus-kaytto-oikeudet"}))
+    kutsu))
+
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          lopetus-fn kehitysmoodi
                          mittarit]
@@ -314,6 +320,9 @@
                        (metriikka/inc! mittarit :aktiiviset_pyynnot)
 
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                             req (if (:salli-oletuskayttaja? asetukset)
+                                   (korvaa-ehka-oletuskayttajalla req)
+                                   req)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
                              random-avain (get (:headers req) "x-csrf-token")
