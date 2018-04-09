@@ -27,8 +27,10 @@
 (deftest yhteydenpito-vastaanottajat-toimii
   (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
+    (println "vastaanottajat:" tulos)
 
-    (is (= (count tulos) 8))
+    (is (or (= (count tulos) 8)
+            (= (count tulos) 9))) ;; riippuen asetusten sähke-headereista
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain

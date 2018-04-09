@@ -5,7 +5,18 @@
                   {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
  :http-palvelin {:threads 16
-                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")}
+                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
+                 :salli-oletuskayttaja? false}
+
+ ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
+ :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"
+                                            "oam_user_first_name" "Testi"
+                                            "oam_user_last_name" "Käyttäjä"
+                                            "oam_user_email" "testi.kayttaja@example.com"
+                                            "oam_groups" "Jarjestelmavastaava"
+                                            "oam_organization" "Liikennevirasto"}}
+
+
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
@@ -202,4 +213,4 @@
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
- }
+}
