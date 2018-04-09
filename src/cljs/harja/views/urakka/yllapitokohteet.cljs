@@ -220,10 +220,10 @@
                                       rivin-id (:valiaikainen-id rivi)]
                                   (when (or (= id-1 rivin-id) (= id-2 rivin-id))
                                     {:rivi avain
-                                     :viesti (str "Kohteenosa on päällekkäin osan "
+                                     :viesti (str "Kohteenosa on päällekkäin "
                                                   (cond
-                                                    (= rivin-id id-1) nimi-2
-                                                    (= rivin-id id-2) nimi-1
+                                                    (= rivin-id id-1) (if (empty? nimi-2) "toisen osan" (str "osan " nimi-2))
+                                                    (= rivin-id id-2) (if (empty? nimi-1) "toisen osan" (str "osan " nimi-1))
                                                     :else nil)
                                                   " kanssa")}))
                                paallekkaiset-osat)]
