@@ -428,17 +428,24 @@
    tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
 
    Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi] :as tiedot}]
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi vuosi] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
-    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    ;; Todo: Päällystys 2.0. Testi osatyyppi filtterille
     (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
-          hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
-                                                                  {:urakka-id urakka-id
-                                                                   :sopimus-id sopimus-id
-                                                                   :yllapitokohde-id yllapitokohde-id})
+          muut-kohteet (filter #(not= (:tr-numero %) kohteen-tienumero) osat)]
+      (if-let [paallekkaiset-kohdeosat (yy/vaadi-etta-kohdeosat-eivat-mene-paallekkain db
+                                                                                       yllapitokohde-id
+                                                                                       vuosi
+                                                                                       muut-kohteet)]
+        {:validointivirheet paallekkaiset-kohdeosat}
+
+        (do
+          (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
+          (let [hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
+                                                           {:urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :yllapitokohde-id yllapitokohde-id})
           kaikki-osat (hae-kaikki-osat)
           tarkasteltavat-osat (case osatyyppi
                                 :kohteen-omat-kohdeosat (filter #(= (:tr-numero %) kohteen-tienumero) kaikki-osat)
@@ -448,19 +455,19 @@
           uudet-osa-idt (into #{} (keep :id) osat)
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
-      (doseq [id poistuneet-osa-idt]
-        (q/poista-yllapitokohdeosa! db {:urakka urakka-id
-                                        :id id}))
+            (doseq [id poistuneet-osa-idt]
+              (q/poista-yllapitokohdeosa! db {:urakka urakka-id
+                                              :id id}))
 
-      (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
-      (doseq [osa osat]
-        (if (id-olemassa? (:id osa))
-          (paivita-yllapitokohdeosa db user urakka-id osa)
-          (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
-      (yy/paivita-yllapitourakan-geometria db urakka-id)
-      (let [yllapitokohdeosat (hae-kaikki-osat)]
-        (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
+            (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
+            (doseq [osa osat]
+              (if (id-olemassa? (:id osa))
+                (paivita-yllapitokohdeosa db user urakka-id osa)
+                (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
+            (yy/paivita-yllapitourakan-geometria db urakka-id)
+            (let [yllapitokohdeosat (hae-kaikki-osat)]
+              (log/debug "Tallennus suoritettu. Uudet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
+              (tr-domain/jarjesta-tiet yllapitokohdeosat))))))))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
                                {:keys [kohdenumero nimi

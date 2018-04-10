@@ -182,20 +182,34 @@
   ovat samat, kuin render-funktiolle annettavat."
   [callback]
   {:component-will-receive-props
-   ;; Reagentin dokumentaation mukaan tämän pitäisi olla [this argv].
-   ;; Todellisuudessa [this jotain-häröä param1 param2 ..]
-   (fn [this _ & uudet]
+   (fn [this react-constructor & uudet]
      ;; Reactissa ensimmäinen parametri on props, ja loput on children
      (let [vanhat (into [(r/props this)] (r/children this))]
        (callback vanhat (vec uudet))))})
 
 (defn klikattu-ulkopuolelle
-  "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen."
-  [ulkopuolella-fn]
-  (kuuntelija :body-klikkaus
-              (fn [this tapahtuma]
-                (when-not (dom/sisalla? this (:tapahtuma tapahtuma))
-                  (ulkopuolella-fn)))))
+  "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen.
+
+   :tarkista-komponentti?               Jos tätä käytetään, niin eventistä tarkistetaan ensin, että onko sen referoima
+                                        elementti enää mountattuna. On mahdollista, että react on kerennyt jo unmountata
+                                        elementin ja mountata sen takaisin jonkun eventin aiheuttaman päivityksen takia,
+                                        jolloinka dom/sisalla? funktio luulee, että eventin referoima node ei ole tämän
+                                        noden sisällä. Eventin triggeröivällä elementillä täytyy olla id asetettuna."
+  ([ulkopuolella-fn] (klikattu-ulkopuolelle ulkopuolella-fn nil))
+  ([ulkopuolella-fn {:keys [tarkista-komponentti?]}]
+   (let [tarkistettu-komponentti-sisalla? (fn [this tapahtuma]
+                                            (let [elementin-id (-> (:tapahtuma tapahtuma) .-target .-id)
+                                                  dom-elementti (js/document.getElementById elementin-id)
+                                                  tapahtuma-elementti (.-target (:tapahtuma tapahtuma))]
+                                              (if (and (not= "" elementin-id) (not= dom-elementti tapahtuma-elementti))
+                                                (dom/sisalla? this dom-elementti {:elementti? true})
+                                                (dom/sisalla? this (:tapahtuma tapahtuma)))))]
+     (kuuntelija :body-klikkaus
+                 (fn [this tapahtuma]
+                   (when-not (if tarkista-komponentti?
+                               (tarkistettu-komponentti-sisalla? this tapahtuma)
+                               (dom/sisalla? this (:tapahtuma tapahtuma)))
+                     (ulkopuolella-fn)))))))
 
 (defn ulos
   "Mixin, joka kutsuu annettua funktiota komponentin poistuessa."

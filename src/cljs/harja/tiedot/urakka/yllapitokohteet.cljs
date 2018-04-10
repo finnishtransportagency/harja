@@ -52,9 +52,10 @@
                                       :vuosi vuosi
                                       :kohteet kohteet}))
 
-(defn tallenna-yllapitokohdeosat! [{:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi]}]
+(defn tallenna-yllapitokohdeosat! [{:keys [urakka-id sopimus-id vuosi yllapitokohde-id osat osatyyppi]}]
   (k/post! :tallenna-yllapitokohdeosat {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
+                                        :vuosi vuosi
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat osat
                                         :osatyyppi osatyyppi}))

@@ -131,3 +131,35 @@ SELECT EXISTS(SELECT id
 UPDATE yllapitokohteen_kustannukset
    SET toteutunut_hinta = :toteutunut_hinta
  WHERE yllapitokohde = :id;
+
+-- name: hae-paikkaustoteumat-tierekisteriosoitteella
+SELECT pt.kirjattu,
+       pt.selite,
+       pt.yksikko,
+       pt.yksikkohinta,
+       pt.maara,
+       pt.hinta,
+       pt.tyyppi,
+       pt.id              AS "paikkaustoteuma-id",
+       pk.id              AS "paikkauskohde-id",
+       pk.nimi
+FROM paikkaustoteuma pt
+  JOIN paikkauskohde pk ON pt."paikkauskohde-id"=pk.id
+  INNER JOIN paikkaus p ON p."ulkoinen-id"=pt."ulkoinen-id"
+WHERE pt."urakka-id"=:urakka-id AND
+      (:alkuaika :: TIMESTAMP IS NULL OR pt.kirjattu >= :alkuaika) AND
+      (:loppuaika :: TIMESTAMP IS NULL OR pt.kirjattu <= :loppuaika) AND
+      (:numero :: INTEGER IS NULL OR (p.tierekisteriosoite).tie = :numero) AND
+      (:alkuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).aosa >= :alkuosa) AND
+      (:alkuetaisyys :: INTEGER IS NULL OR
+       ((p.tierekisteriosoite).aet >= :alkuetaisyys AND
+        ((p.tierekisteriosoite).aosa = :alkuosa OR
+         :alkuosa :: INTEGER IS NULL)) OR
+       (p.tierekisteriosoite).aosa > :alkuosa) AND
+      (:loppuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).losa <= :loppuosa) AND
+      (:loppuetaisyys :: INTEGER IS NULL OR
+       ((p.tierekisteriosoite).let <= :loppuetaisyys AND
+        ((p.tierekisteriosoite).losa = :loppuosa OR
+         :loppuosa :: INTEGER IS NULL)) OR
+       (p.tierekisteriosoite).losa < :loppuosa) AND
+      (:paikkaus-idt :: INTEGER [] IS NULL OR pk.id = ANY (:paikkaus-idt :: INTEGER []));

@@ -40,7 +40,9 @@
     (log "muokkausrivi on nil"))
   [:tr.muokataan {:class luokka}
 
-   (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as sarake} skeema]
+   (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as sarake} (if (:colspan rivi)
+                                                                                               (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
+                                                                                               skeema)]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id]
@@ -65,7 +67,10 @@
                   [:td {:class (str "muokattava " tasaus-luokka (cond
                                                                   (not (empty? kentan-virheet)) " sisaltaa-virheen"
                                                                   (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                                                  (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
+                                                                  (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
+                        :col-span (if-let [leveys (get (:colspan rivi) nimi)]
+                                    leveys
+                                    1)}
                    (cond
                      (not (empty? kentan-virheet)) (virheen-ohje kentan-virheet)
                      (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)
@@ -177,6 +182,9 @@
                                        (.preventDefault %)
                                        (.stopPropagation %)
                                        (solu-klikattu rivi)))
+                        :col-span (if-let [leveys (get (:colspan rivi) nimi)]
+                                    leveys
+                                    1)
                         :class (y/luokat
                                  (y/tasaus-luokka tasaa)
                                  (when pakota-rivitys? "grid-pakota-rivitys")
@@ -189,7 +197,7 @@
                                  (when solun-luokka
                                    (solun-luokka haettu-arvo rivi)))}
                    ;; Solun sisältö
-                   [:span
+                   [:span (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
@@ -216,7 +224,9 @@
                                                                   (name (:tyyppi huomion-tiedot)))}
                                                ikoni]
                            teksti])))]])))
-            skeema))
+            (if (:colspan rivi)
+              (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
+              skeema)))
    (when (or nayta-toimintosarake?
              (and (not piilota-toiminnot?)
                   tallenna))
@@ -356,13 +366,13 @@
      [:td {:colSpan colspan}
       (when salli-valiotsikoiden-piilotus?
         (if (@piilotetut-valiotsikot valiotsikko-id)
-          (ikonit/livicon-plus)
-          (ikonit/livicon-minus)))
+          (ikonit/livicon-chevron-right)
+          (ikonit/livicon-chevron-down)))
 
       (map-indexed
-        (fn [i {:keys [sijainti sisalto]}]
+        (fn [i {:keys [sijainti sisalto tyyli]}]
           ^{:key i}
-          [:div.grid-valiotsikko-custom-komponentti {:style {:top -2 :left sijainti}}
+          [:div.grid-valiotsikko-custom-komponentti {:style (or tyyli {:top -2 :left sijainti})}
            [sisalto {:id valiotsikko-id}]])
         otsikkokomponentit)
 

@@ -95,12 +95,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     :varoitus "varoitus"
                     :virhe "virhe"
                     :huomautus "huomautus")}
-     (for* [v (distinct virheet)]
+     (doall (for* [v (distinct virheet)]
+
        [:span
         (case tyyppi
           :huomautus (ikonit/livicon-info-circle)
           (ikonit/livicon-warning-sign))
-        [:span (str " " v)]])]]))
+        [:span (str " " v)]]))]]))
 
 
 (defn linkki [otsikko toiminto]
@@ -183,7 +184,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [_ vaihtoehdot]
+  [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
   (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
@@ -192,7 +193,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                     (reset! avautumissuunta (:suunta maaritys))
                                                     (reset! max-korkeus (:max-korkeus maaritys))))]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
                            EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
@@ -213,18 +214,17 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                             (if itemit-komponentteja?
                               vaihtoehto
                               (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                                          (reset! auki? false)
-                                                                                          nil)))])]
+                                                                  (reset! auki? false)
+                                                                  nil)))])]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki? "open"))}
            [:button.nappi-alasveto
             {:class (when disabled "disabled")
              :type "button"
              :disabled (if disabled "disabled" "")
              :title title
-             :on-click #(do
-                          (when-not (empty? vaihtoehdot)
-                            (swap! auki? not)
-                            nil))
+             :on-click #(when-not (empty? vaihtoehdot)
+                          (swap! auki? not)
+                          nil)
              :on-focus on-focus
              :on-key-down #(let [kc (.-keyCode %)
                                  vaihtoehdot (if (map? vaihtoehdot)

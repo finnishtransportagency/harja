@@ -254,7 +254,7 @@
                                                    kysely-params)))))
 
 (deftest tallenna-toimenpiteelle-ylimaarainen-hinnoittelu
-  (let [toimenpide-id (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla {:limit 1})
+  (let [toimenpide-id (ffirst (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla {:limit 1}))
         hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
         hinnoittelujen-maara (:maara (first (q-map (str "SELECT COUNT(*) AS maara FROM vv_hinnoittelu_toimenpide WHERE \"toimenpide-id\"=" toimenpide-id ";"))))]
     (is (= 2 hinnoittelujen-maara))
