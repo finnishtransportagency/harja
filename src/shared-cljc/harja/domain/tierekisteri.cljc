@@ -43,13 +43,13 @@
   (let [osoite (or osoite {})
         ks (fn [& avaimet]
              (some osoite avaimet))]
-    {tie-avain (ks ::tie :numero :tr-numero :tie)
-     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :aosa)
-     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
-     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :losa)
-     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)
-     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata)
-     kaista-avain (ks ::kaista :kaista)}))
+    {tie-avain (ks ::tie :numero :tr-numero :tr_numero :tie)
+     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :tr_alkuosa :aosa)
+     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :tr_alkuetaisyys :aet)
+     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :tr_loppuosa :losa)
+     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :tr_loppuetaisyys :let)
+     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata :tr-ajorata :tr_ajorata)
+     kaista-avain (ks ::kaista :kaista :tr-kaista :tr_kaista)}))
 
 (defn normalisoi
   "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."

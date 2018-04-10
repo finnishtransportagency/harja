@@ -14,6 +14,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sop]
+            [harja.domain.vesivaylat.kommentti :as kommentti]
 
             [harja.id :refer [id-olemassa?]]
             [cljs.core.async :as async :refer [<!]]
@@ -29,7 +30,8 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tt]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -157,6 +159,9 @@
 (defrecord TallennaHintaryhmanHinnoittelu [tiedot])
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
+(defrecord MuutaHintaryhmanLaskutuslupaa [id tila pvm paivitys])
+(defrecord LaskutuslupaTallennettu [tulos id paivitys])
+(defrecord LaskutuslupaEiTallennettu [virhe])
 ;; Kartta
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
@@ -684,19 +689,19 @@
     (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/post! :tallenna-hintaryhmalle-hinta
                                {::ur/id (get-in app [:valinnat :urakka-id])
-                                       ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
-                                       ::h/tallennettavat-hinnat (mapv
-                                                                   (fn [hinta]
-                                                                     (merge
-                                                                       (when-let [id (::hinta/id hinta)]
-                                                                         {::hinta/id id})
-                                                                       {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                        ::hinta/summa (::hinta/summa hinta)
-                                                                        ::hinta/ryhma :muu
-                                                                        ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                                                   (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
+                                ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
+                                ::h/tallennettavat-hinnat (mapv
+                                                            (fn [hinta]
+                                                              (merge
+                                                                (when-let [id (::hinta/id hinta)]
+                                                                  {::hinta/id id})
+                                                                {::hinta/otsikko (::hinta/otsikko hinta)
+                                                                 ::hinta/summa (::hinta/summa hinta)
+                                                                 ::hinta/ryhma :muu
+                                                                 ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                            (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
                                {:onnistui ->HintaryhmanHinnoitteluTallennettu
-                                       :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
+                                :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
           (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
@@ -711,6 +716,52 @@
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false))
+
+  MuutaHintaryhmanLaskutuslupaa
+  (process-event [{id :id tila :tila pvm :pvm paivitys :paivitys} app]
+    ;; Paivitys on tuck-event, joka laukaistaan, kun laskutuslupa on onnistuneesti tallennettu
+    (if-not (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)
+      (-> app
+         (tuck-tyokalut/post!
+           :tallenna-hinnoittelun-kommentti
+           {::h/urakka-id (get-in app [:valinnat :urakka-id])
+            ::kommentti/kommentti nil
+            ::kommentti/tila tila
+            ::kommentti/laskutus-pvm pvm
+            ::h/id id}
+           {:onnistui ->LaskutuslupaTallennettu
+            :onnistui-parametrit [id paivitys]
+            :epaonnistui ->LaskutuslupaEiTallennettu})
+         (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? true))
+
+      app))
+
+  LaskutuslupaTallennettu
+  (process-event [{id :id p :paivitys} app]
+    ;; Paivitys on tuck-event, joka laukaistaan, kun laskutuslupa on onnistuneesti tallennettu
+    ;; Käytännössä HaeHintaryhmat tai HaeToimenpiteet
+    ;; Kysely ei voi suoraan palauttaa haluttuja tietoja, koska samaa tallennusta käytetään
+    ;; toimenpiteille ja hintaryhmille. Parametrisoimalla siitä olisi selvitty, mutta aikapaine
+    ;; painoi päälle
+    (when (modal/nakyvissa?) (modal/piilota!))
+    (tuck/action!
+      (fn [e!]
+        (e! p)))
+    (-> app
+        (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? false)
+        (update :hintaryhmat
+                (fn [ht]
+                  (map
+                    (fn [h]
+                      (if (= id (::h/id h))
+                        (update h ::h/laskutuslupa? not)
+                        h))
+                    ht)))))
+
+  LaskutuslupaEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Laskutusluvan muuttaminen epäonnistui!" :danger)
+    (assoc app :hintaryhman-laskutusluvan-tallennus-kaynnissa? false))
 
   KorostaHintaryhmaKartalla
   (process-event [{hintaryhma :hintaryhma} {:keys [toimenpiteet] :as app}]
