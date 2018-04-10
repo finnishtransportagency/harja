@@ -54,7 +54,7 @@
           (fn [u]
             (e! (->PaivitaValinnat {polku u})))))
 
-(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet])
+(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet :tyomenetelma])
 
 (extend-protocol tuck/Event
   PaivitaValinnat
@@ -104,7 +104,8 @@
                    :epaonnistui ->PaikkauksetEiHaettu})
         (assoc :nakymassa? true
                :paikkauksien-haku-kaynnissa? true
-               :otsikkokomponentti otsikkokomponentti)))
+               :otsikkokomponentti otsikkokomponentti
+               :valinnat {:tyomenetelma #{:massapintaus :kuumennuspintaus :remix-pintaus}})))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))

@@ -83,6 +83,8 @@
         kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
                                      (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
                                      kysely-params-aika)
+        kysely-params-tyomenetelmat (if-let [tyomenetelmat (:tyomenetelma tiedot)]
+                                      (assoc kysely-params-tyomenetelmat ))
         kysely-params (if kysely-params-tieosa
                         (op/and kysely-params-paikkaus-idt
                                 kysely-params-tieosa)

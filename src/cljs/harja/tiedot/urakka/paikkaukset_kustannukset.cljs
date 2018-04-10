@@ -86,7 +86,7 @@
     {:yksikkohintaiset-grid yksikkohintaset-grid
      :kokonaishintaiset-grid kokonaishintaiset-grid}))
 
-(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet])
+(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet :tyomenetelma])
 
 (extend-protocol tuck/Event
   PaivitaValinnat
@@ -138,7 +138,8 @@
                    :epaonnistui ->KustannuksetEiHaettu})
         (assoc :nakymassa? true
                :otsikkokomponentti otsikkokomponentti
-               :paikkauksien-haku-kaynnissa? true)))
+               :paikkauksien-haku-kaynnissa? true
+               :valinnat {:tyomenetelma #{:massapintaus :kuumennuspintaus :remix-pintaus}})))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))
