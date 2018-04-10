@@ -3,23 +3,27 @@
             [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
             [clojure.set :as set]
+            [clj-time.core :as t]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
             [specql.rel :as rel]
-            [taoensso.timbre :as log]
 
+            [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
+
             [harja.pvm :as pvm]
 
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
-
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.tyo :as tyo]
-            [harja.domain.muokkaustiedot :as m]))
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.vesivaylat.kommentti :as kommentti]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn- vaadi-hinnoittelut-kuuluvat-urakkaan* [tulos hinnoittelu-idt urakka-id]
   (when (or
@@ -129,7 +133,8 @@
                       ::h/hintaryhma? true
                       ::m/poistettu? false})
        (mapv #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))
-       (mapv #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))))
+       (mapv #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))
+       (to-q/liita-laskutuslupatiedot-hinnoitteluihin db)))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)
@@ -289,3 +294,19 @@
                         {::tyo/hinnoittelu-id hinnoittelu-id
                         ::m/luotu (pvm/nyt)
                         ::m/luoja-id (:id user)})))))
+
+(defn lisaa-kommentti! [db user tila kommentti pvm hinnoittelu-id]
+  ;; Laskutusluvan voi antaa nykyiselle tai seuraaville kuukausille
+  (when pvm
+    (assert
+      (to-q/laskutuspvm-nyt-tai-tulevaisuudessa? (t/now) pvm)
+      "Laskutusluvan pitää olla tässä kuussa tai tulevaisuudessa"))
+
+  (specql/insert! db
+                  ::kommentti/hinnoittelun-kommentti
+                  {::kommentti/aika (pvm/nyt)
+                   ::kommentti/kommentti kommentti
+                   ::kommentti/tila tila
+                   ::kommentti/laskutus-pvm pvm
+                   ::kommentti/kayttaja-id (:id user)
+                   ::kommentti/hinnoittelu-id hinnoittelu-id}))

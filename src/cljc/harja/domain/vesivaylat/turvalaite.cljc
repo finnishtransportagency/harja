@@ -40,7 +40,7 @@
 })
 
 (s/def ::turvalaitenumerot
-  (s/nilable (s/coll-of ::turvalaitenro)))
+  (s/nilable (s/coll-of (s/nilable ::turvalaitenro))))
 
 (s/def ::hae-turvalaitteet-kartalle-kysely
   (s/keys :req [] :opt-un [::turvalaitenumerot]))

@@ -5,6 +5,9 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.vesivaylat.hinnoittelut :as q]
+            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
+            [harja.tyokalut.tietoturva :as tietoturva]
+            [harja.id :as id]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.hinnoittelu :as h]
@@ -12,8 +15,7 @@
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
-            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
-            [harja.id :as id]))
+            [harja.domain.vesivaylat.kommentti :as kommentti]))
 
 (defn hae-hintaryhmat [db user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -67,9 +69,15 @@
       (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/tallennettavat-hinnat tiedot)))
                                              (::h/id tiedot))
       (jdbc/with-db-transaction [db db]
+        (assert (not (to-q/hinnoittelu-laskutettu? db (::h/id tiedot)))
+                "Hintaryhmä on jo laskutettu, eli hintaa ei voi enää muokata.")
+
         (q/tallenna-hintaryhmalle-hinta! db user
                                          (::h/id tiedot)
                                          (::h/tallennettavat-hinnat tiedot))
+
+        (q/lisaa-kommentti! db user :muokattu nil nil (::h/id tiedot))
+
         (hae-hintaryhmat db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
@@ -89,6 +97,9 @@
         (q/vaadi-tyot-kuuluvat-toimenpiteeseen db olemassa-olevat-tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
+          (assert (not (to-q/hinnoittelu-laskutettu? db hinnoittelu-id))
+                  "Toimenpiteen hinnoittelu on jo laskutettu, eli hintaa ei voi enää muokata.")
+
           (q/tallenna-toimenpiteen-omat-hinnat!
             {:db db
              :user user
@@ -99,7 +110,34 @@
              :user user
              :hinnoittelu-id hinnoittelu-id
              :tyot (::h/tallennettavat-tyot tiedot)})
+
+          (q/lisaa-kommentti! db user :muokattu nil nil hinnoittelu-id)
+
           (q/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))))
+
+(defn tallenna-hinnoittelun-kommentti! [db user tiedot]
+  (let [urakka-id (::h/urakka-id tiedot)]
+    (assert urakka-id "Urakka-id puuttuu!")
+
+    ;; Hinnoittelu, jonka id on kommentin hinnoittelu-id,
+    ;; pitää kuulua urakkaan, jonka id on parametrina annettu urakka-id
+    (tietoturva/vaadi-linkitys
+      db
+      ::h/hinnoittelu
+      ::h/id
+      (::kommentti/hinnoittelu-id tiedot)
+      ::h/urakka-id
+      urakka-id)
+
+    (assert (not (to-q/hinnoittelu-laskutettu? db (::h/id tiedot)))
+            "Hinnoittelu on jo laskutettu, eli tilaa ei voi enää muuttaa.")
+
+    (q/lisaa-kommentti! db
+                        user
+                        (::kommentti/tila tiedot)
+                        (::kommentti/kommentti tiedot)
+                        (::kommentti/laskutus-pvm tiedot)
+                        (::h/id tiedot))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
@@ -152,6 +190,13 @@
         (tallenna-toimenpiteelle-hinta! db user tiedot))
       {:kysely-spec ::h/tallenna-vv-toimenpiteen-hinta-kysely
        :vastaus-spec ::h/tallenna-vv-toimenpiteen-hinta-vastaus})
+
+    (julkaise-palvelu
+      http
+      :tallenna-hinnoittelun-kommentti
+      (fn [user tiedot]
+        (tallenna-hinnoittelun-kommentti! db user tiedot))
+      {:kysely-spec ::h/tallenna-hinnoittelun-kommentti-kysely})
 
     this)
 

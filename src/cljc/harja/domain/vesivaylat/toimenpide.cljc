@@ -300,9 +300,9 @@ reimari-toimenpidetyypit
 (s/def ::reimari-alus (s/keys :req [:harja.domain.vesivaylat.alus/r-tunnus :harja.domain.vesivaylat.alus/r-nimi]))
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
-(s/def ::tyolaji (set (vals reimari-tyolajit)))
-(s/def ::tyoluokka (set (vals reimari-tyoluokat)))
-(s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
+(s/def ::tyolaji (s/nilable (set (vals reimari-tyolajit))))
+(s/def ::tyoluokka (s/nilable (set (vals reimari-tyoluokat))))
+(s/def ::toimenpide (s/nilable (set (vals reimari-toimenpidetyypit))))
 ;; Reimarin työlaji/-luokka/toimenpide ovat tiettyjä string-koodiarvoja
 (s/def ::reimari-tyolaji (s/nilable (set (keys reimari-tyolajit))))
 (s/def ::reimari-tyoluokka (s/nilable (set (keys reimari-tyoluokat))))

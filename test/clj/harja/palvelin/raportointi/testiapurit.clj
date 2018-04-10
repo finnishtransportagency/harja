@@ -140,3 +140,15 @@
 
 (defmacro taulukko-otsikolla [raportti otsikko]
   `(elementti ~raportti [:taulukko {:otsikko ~otsikko} sarakkeet# rivit#]))
+
+(defmacro elementti? [raportti elementin-match]
+  `(let [loytynyt-elementti#
+         (some (fn [elementti#]
+                 (match elementti#
+                        ~elementin-match elementti#
+                        :else nil))
+               (drop 2 ~raportti))]
+     (some? loytynyt-elementti#)))
+
+(defmacro taulukko-otsikolla? [raportti otsikko]
+  `(elementti? ~raportti [:taulukko {:otsikko ~otsikko} sarakkeet# rivit#]))
