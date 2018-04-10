@@ -228,9 +228,6 @@ E'Sisältää ylläpitokohteen sähköpostilähetystiedot.';
 COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
 COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';
 
-COMMENT ON TABLE vv_turvalaite IS
-E'Vesiväyläurakoiden toimenpiteet kohdistuvat yleensä turvalaitteeseen. Turvalaitteiden tiedot haetaan Vatusta.';
-
 COMMENT ON TABLE kan_tyo IS
 E'Kun kanavaurakoiden toimenpiteitä hinnoitellaan, hinta koostuu vapaamuotoisista hinnoista, ja hintaluettelon perusteella koottavista työhinnoista. Suunnittelunäkymästä määritellään, kuinka monta euroa työnjohto maksaa tunnissa, ja täällä rivillä viitataan siihen tietoon, ja annetaan määrä.';
 
@@ -286,4 +283,4 @@ COMMENT ON VIEW vv_hyvaksytyt_hinnoittelut IS
 E'View, joka sisältää hyväksytyt hinnoittelut (tilaukset tai toimenpiteen omat), sekä missä kuussa ne laskutetaan';
 
 COMMENT ON VIEW vv_toimenpiteen_hinnoittelut IS
-E'View, jonka avulla toimenpiteen hinnoittelujen hakeminen helpottuu. Sisältää toimenpiteen id:n, tilauksen id:n, ja toimenpiteen oman hinnoittelun id:n.';
+E'View, jonka avulla toimenpiteen hinnoittelujen hakeminen helpottuu. Sisältää toimenpiteen id:n, tilauksen id:n, ja toimenpiteen oman hinnoittelun id:n.'
