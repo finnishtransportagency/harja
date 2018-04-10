@@ -1,0 +1,26 @@
+-- Lisää indeksi tarkastuksen ajalle
+CREATE INDEX tarkastus_ennen_2015_aika_idx ON tarkastus_ennen_2015 (aika);
+CREATE INDEX tarkastus_2015_q1_aika_idx ON tarkastus_2015_q1 (aika);
+CREATE INDEX tarkastus_2015_q2_aika_idx ON tarkastus_2015_q2 (aika);
+CREATE INDEX tarkastus_2015_q3_aika_idx ON tarkastus_2015_q3 (aika);
+CREATE INDEX tarkastus_2015_q4_aika_idx ON tarkastus_2015_q4 (aika);
+CREATE INDEX tarkastus_2016_q1_aika_idx ON tarkastus_2016_q1 (aika);
+CREATE INDEX tarkastus_2016_q2_aika_idx ON tarkastus_2016_q2 (aika);
+CREATE INDEX tarkastus_2016_q3_aika_idx ON tarkastus_2016_q3 (aika);
+CREATE INDEX tarkastus_2016_q4_aika_idx ON tarkastus_2016_q4 (aika);
+CREATE INDEX tarkastus_2017_q1_aika_idx ON tarkastus_2017_q1 (aika);
+CREATE INDEX tarkastus_2017_q2_aika_idx ON tarkastus_2017_q2 (aika);
+CREATE INDEX tarkastus_2017_q3_aika_idx ON tarkastus_2017_q3 (aika);
+CREATE INDEX tarkastus_2017_q4_aika_idx ON tarkastus_2017_q4 (aika);
+CREATE INDEX tarkastus_2018_q1_aika_idx ON tarkastus_2018_q1 (aika);
+CREATE INDEX tarkastus_2018_q2_aika_idx ON tarkastus_2018_q2 (aika);
+CREATE INDEX tarkastus_2018_q3_aika_idx ON tarkastus_2018_q3 (aika);
+CREATE INDEX tarkastus_2018_q4_aika_idx ON tarkastus_2018_q4 (aika);
+CREATE INDEX tarkastus_2019_q1_aika_idx ON tarkastus_2019_q1 (aika);
+CREATE INDEX tarkastus_2019_q2_aika_idx ON tarkastus_2019_q2 (aika);
+CREATE INDEX tarkastus_2019_q3_aika_idx ON tarkastus_2019_q3 (aika);
+CREATE INDEX tarkastus_2019_q4_aika_idx ON tarkastus_2019_q4 (aika);
+CREATE INDEX tarkastus_2020_q1_aika_idx ON tarkastus_2020_q1 (aika);
+CREATE INDEX tarkastus_2020_q2_aika_idx ON tarkastus_2020_q2 (aika);
+CREATE INDEX tarkastus_2020_q3_aika_idx ON tarkastus_2020_q3 (aika);
+CREATE INDEX tarkastus_2020_q4_aika_idx ON tarkastus_2020_q4 (aika);
