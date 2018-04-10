@@ -36,5 +36,5 @@
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Työmenetelmät"
        :kentta-params {:tyyppi :checkbox-group
-                       :vaihtoehdot #{:massapintaus :kuumennuspintaus :remix-pintaus}}
+                       :vaihtoehdot #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}}
        :arvo-atom (tyomenetelma-atomi :tyomenetelma)}]]))

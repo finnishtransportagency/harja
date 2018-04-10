@@ -105,7 +105,7 @@
         (assoc :nakymassa? true
                :paikkauksien-haku-kaynnissa? true
                :otsikkokomponentti otsikkokomponentti
-               :valinnat {:tyomenetelma #{:massapintaus :kuumennuspintaus :remix-pintaus}})))
+               :valinnat {:tyomenetelma #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}})))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))

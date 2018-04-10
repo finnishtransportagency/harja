@@ -104,7 +104,7 @@
 (s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
                               :date  #(instance? #?(:cljs js/Date
                                                     :clj  java.util.Date) %))))
-(s/def ::tyomenetelma #{:massapintaus :kuumennuspintaus :remix-pintaus})
+(s/def ::tyomenetelma #{"massapintaus" "kuumennuspintaus" "remix-pintaus"})
 (s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
 (s/def ::tr (s/nilable map?))

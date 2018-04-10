@@ -84,18 +84,20 @@
                                      (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
                                      kysely-params-aika)
         kysely-params-tyomenetelmat (if-let [tyomenetelmat (:tyomenetelma tiedot)]
-                                      (assoc kysely-params-tyomenetelmat ))
+                                      (assoc kysely-params-paikkaus-idt ::paikkaus/tyomenetelma (op/in tyomenetelmat))
+                                      kysely-params-paikkaus-idt)
         kysely-params (if kysely-params-tieosa
-                        (op/and kysely-params-paikkaus-idt
+                        (op/and kysely-params-tyomenetelmat
                                 kysely-params-tieosa)
-                        kysely-params-paikkaus-idt)]
+                        kysely-params-tyomenetelmat)]
     (q/hae-paikkaukset db kysely-params)))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
-                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil}]
+                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil
+                                :tyomenetelmat nil}]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
     ;; tarkoittaa se, että näkymään juuri tultiin ja ollaan suorittamassa ensimmäistä hakua. Tyhjä lista taasen, että
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
@@ -104,9 +106,12 @@
       []
       (q/hae-paikkaustoteumat-tierekisteriosoitteella db (assoc (merge kysely-params-template (:tr tiedot))
                                                            :urakka-id (::paikkaus/urakka-id tiedot)
-                                                           :paikkaus-idt (when (:paikkaus-idt tiedot) (str "{" (apply str (interpose "," (:paikkaus-idt tiedot))) "}"))
+                                                           :paikkaus-idt (when-let [paikkaus-idt (:paikkaus-idt tiedot)]
+                                                                           (konv/seq->array paikkaus-idt))
                                                            :alkuaika (first (:aikavali tiedot))
-                                                           :loppuaika (second (:aikavali tiedot)))))))
+                                                           :loppuaika (second (:aikavali tiedot))
+                                                           :tyomenetelmat (when-let [tyomenetelmat (:tyomenetelma tiedot)]
+                                                                            (konv/seq->array tyomenetelmat)))))))
 
 (defrecord Paikkaukset []
   component/Lifecycle
