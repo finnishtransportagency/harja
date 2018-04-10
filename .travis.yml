@@ -10,6 +10,8 @@ language: clojure
 jdk:
   - oraclejdk8
 before_install:
+  - yes | sudo env LEIN_ROOT=true lein upgrade 2.7.1
+  - lein version
   - sh tietokanta/travis.sh
   - "export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH"
   - "if [ $(phantomjs --version) != '2.1.1' ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
