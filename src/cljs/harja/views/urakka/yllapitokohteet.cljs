@@ -384,6 +384,31 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
+
+(defn indeksoi-kohdeosat [kohdeosat]
+  (into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) kohdeosat))))
+
+(defn kohdeosien-tallennusvirheet [virheet]
+  [:div
+   [:p "Virheet kohdeosien tiedoissa:"]
+   (into [:ul] (mapv (fn [virhe]
+                       [:li virhe])
+                     virheet))])
+
+(defn kohdeosat-tallennettu-onnistuneesti [kohdeosat-atom tallennettu-fn vastaus]
+  (let [yllapitokohteet (vals @kohdeosat-atom)
+        virheet (:validointivirheet vastaus)]
+    (if (empty? virheet)
+      (do (viesti/nayta! "Kohdeosat tallennettu!" :success)
+          (tallennettu-fn vastaus)
+          (reset! kohdeosat-atom
+                  (indeksoi-kohdeosat (yllapitokohteet-domain/jarjesta-yllapitokohteet yllapitokohteet))))
+      (do (viesti/nayta! "Kohdeosien tallennuksessa virheitä!" :danger)
+          (modal/nayta!
+            {:otsikko "Kohdeosien tallennus epäonnistui!"
+             :otsikko-tyyli :virhe}
+            (kohdeosien-tallennusvirheet virheet))))))
+
 (defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}]
   (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
@@ -393,11 +418,8 @@
                                  (validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta arvo rivi))
         tien-osat-riville (fn [rivi]
                             (get @osan-pituudet-teille (:tr-numero rivi)))
-        backilta-tulleiden-virheiden-validointi (fn [_ rivi _]
-                                                  (when (and (:paalekkain-oleva-kohde rivi)
-                                                             (tr/kohdeosat-paalekkain? (:paalekkain-oleva-kohde rivi) rivi))
-                                                    (:virhe-viesti rivi)))
-        kirjoitusoikeus? (case (:tyyppi urakka)
+        kirjoitusoikeus?
+        (case (:tyyppi urakka)
                            :paallystys
                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id urakka))
                            :paikkaus
@@ -405,39 +427,10 @@
                            false)
         hae-fn (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
         pituus (fn [osan-pituus tieosa]
-                 (tr/laske-tien-pituus osan-pituus tieosa))
-        skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
-                                             :muokattava-tie? muokattava-tie?
-                                             :validoi {:tr-numero (vec (concat [backilta-tulleiden-virheiden-validointi]
-                                                                               (:tr-numero validoinnit)))
-                                                       :tr-ajorata (vec (concat [backilta-tulleiden-virheiden-validointi [:ei-tyhja "Anna ajorata"]]
-                                                                                (:tr-ajorata validoinnit)))
-                                                       :tr-kaista (vec (concat [backilta-tulleiden-virheiden-validointi [:ei-tyhja "Anna kaista"]]
-                                                                               (:tr-kaista validoinnit)))
-                                                       :tr-alkuosa (vec (concat [backilta-tulleiden-virheiden-validointi (partial validoi-kohteen-osoite :tr-alkuosa)]
-                                                                                (:tr-alkuosa validoinnit)))
-                                                       :tr-alkuetaisyys (vec (concat [backilta-tulleiden-virheiden-validointi (partial validoi-kohteen-osoite :tr-alkuetaisyys)]
-                                                                                     (:tr-alkuetaisyys validoinnit)))
-                                                       :tr-loppuosa (vec (concat [backilta-tulleiden-virheiden-validointi (partial validoi-kohteen-osoite :tr-loppuosa)]
-                                                                                 (:tr-loppuosa validoinnit)))
-                                                       :tr-loppuetaisyys (vec (concat [backilta-tulleiden-virheiden-validointi (partial validoi-kohteen-osoite :tr-loppuetaisyys)]
-                                                                                      (:tr-loppuetaisyys validoinnit)))}
-                                             :hae-fn hae-fn})
-        muokkaa-kohdeosat! (fn [uudet-osat]
-                             (let [uudet-kohdeosat (if jarjesta-kun-kasketaan
-                                                     (vary-meta uudet-osat assoc :jarjesta-gridissa true)
-                                                     uudet-osat)
-                                   uudet-virheet (into {}
-                                                       (keep (fn [[id rivi]]
-                                                               (let [rivin-virheet (validointi/validoi-rivi
-                                                                                     uudet-kohdeosat rivi skeema)]
-                                                                 (when-not (empty? rivin-virheet)
-                                                                   [id rivin-virheet])))
-                                                             uudet-kohdeosat))]
-                               (reset! kohdeosat-atom uudet-kohdeosat)
-                               (reset! virheet uudet-virheet)))]
+                 (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
-                 jarjesta-avaimen-mukaan jarjesta-kun-kasketaan]}]
+                 muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
+                 jarjesta-kun-kasketaan]}]
       [grid/muokkaus-grid
        {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                           [:div
@@ -446,9 +439,10 @@
                                              [:div {:style {:display "inline-block"
                                                             :float "right"}}
                                               [napit/yleinen-ensisijainen "Lisää osa"
-                                               #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1))
+                                               #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1 yllapitokohde))
                                                {:ikoni (ikonit/livicon-arrow-down)
                                                 :luokka "btn-xs"}]])])
+        :rivinumerot? rivinumerot?
         :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
         :virhe-viesti virhe-viesti
         :muutos (fn [grid]
@@ -495,7 +489,7 @@
                                                              (pituus (get @osan-pituudet-teille (:tr-numero kohdeosa)) kohdeosa))
                                                            (vals (grid/hae-muokkaustila g)))))
                              "-")
-                           (when (= kohdetyyppi :sora)
+                           (when (= (:yllapitokohdetyyppi yllapitokohde) :sora)
                              [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
        (conj skeema
              {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 20
