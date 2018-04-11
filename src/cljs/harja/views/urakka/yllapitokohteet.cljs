@@ -531,14 +531,14 @@
                                {:ikoni (ikonit/livicon-arrow-down)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
-                                              (= yllapitokohdetyyppi :sora))
+                                              (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
                                {:ikoni (ikonit/livicon-trash)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
-                                              (= yllapitokohdetyyppi :sora))
+                                              (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                 :luokka "btn-xs"}]])})
        kohdeosat-atom])))
 
