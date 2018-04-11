@@ -459,7 +459,7 @@
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit-jarjestetty) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)
                                 vetolaatikko-colspan (if (or piilota-toiminnot? (nil? tallenna))
                                                        (count skeema)
