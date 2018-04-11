@@ -409,7 +409,8 @@
              :otsikko-tyyli :virhe}
             (kohdeosien-tallennusvirheet virheet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}]
+(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}
+                         muokattava-tie? muokattava-ajorata-ja-kaista?]
   (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
@@ -426,6 +427,22 @@
                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
                            false)
         hae-fn (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
+        skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
+                                             :muokattava-tie? muokattava-tie?
+                                             :validoi {:tr-numero (vec (:tr-numero validoinnit))
+                                                       :tr-ajorata (vec (concat [[:ei-tyhja "Anna ajorata"]]
+                                                                                (:tr-ajorata validoinnit)))
+                                                       :tr-kaista (vec (concat [[:ei-tyhja "Anna kaista"]]
+                                                                               (:tr-kaista validoinnit)))
+                                                       :tr-alkuosa (vec (concat [(partial validoi-kohteen-osoite :tr-alkuosa)]
+                                                                                (:tr-alkuosa validoinnit)))
+                                                       :tr-alkuetaisyys (vec (concat [(partial validoi-kohteen-osoite :tr-alkuetaisyys)]
+                                                                                     (:tr-alkuetaisyys validoinnit)))
+                                                       :tr-loppuosa (vec (concat [(partial validoi-kohteen-osoite :tr-loppuosa)]
+                                                                                 (:tr-loppuosa validoinnit)))
+                                                       :tr-loppuetaisyys (vec (concat [(partial validoi-kohteen-osoite :tr-loppuetaisyys)]
+                                                                                      (:tr-loppuetaisyys validoinnit)))}
+                                             :hae-fn hae-fn})
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
