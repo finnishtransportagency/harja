@@ -1,15 +1,12 @@
-(def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                    (.getHostName (java.net.InetAddress/getLocalHost))))
-
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.238"]
 		 [org.clojure/spec.alpha "0.1.143"]
+
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-beta4"]
-
                  [prismatic/schema "1.1.7"]
                  [org.clojure/core.async "0.3.443"] ; TODO Voisi päivittää, mutta ilmoitusten haku ym. testit failaa
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
@@ -117,6 +114,9 @@
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
 
+                 ;;Fronttitestien ajamiseen
+                 [clj-chrome-devtools "20180310"]
+
                  ;; Apache ANT core
                  [org.apache.ant/ant "1.10.1"]
 
@@ -154,7 +154,8 @@
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.3.3"]
                              [lein-eftest "0.5.0"]]
-                   :test2junit-run-ant ~(not jenkinsissa?)
+                   :test2junit-run-ant ~(not (= "harja-jenkins.solitaservices.fi"
+                                                (.getHostName (java.net.InetAddress/getLocalHost))))
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
                    }
@@ -194,9 +195,23 @@
                            :closure-output-charset "US-ASCII"
                            :recompile-dependents false
                            }}
+               ;; {:id "test-doo"
+               ;;  :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+               ;;                 "test/cljs" "test/doo" "test/shared-cljs"]
+               ;;  :compiler {:output-to "target/cljs/test/test.js"
+               ;;             :output-dir "target/cljs/test"
+               ;;             :optimizations :none
+               ;;             :pretty-print true
+               ;;             :source-map true
+               ;;                          ;:parallel-build false Failaa randomisti
+               ;;             :libs ["src/js/kuvataso.js"]
+               ;;             :closure-output-charset "US-ASCII"
+               ;;             :main harja.runner}
+               ;;  :notify-command ["./run-karma.sh"]}
+
                {:id "test"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
-                               "test/cljs" "test/doo" "test/shared-cljs"]
+                               "test/cljs" "test/chrome" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
                            :optimizations :none
@@ -205,8 +220,11 @@
                            ;:parallel-build false Failaa randomisti
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
-                           :main harja.runner}
-                :notify-command ["./run-karma.sh"]}
+                           ;; :main harja.runner
+                           }
+                ;; :notify-command ["./run-karma.sh"]
+                }
+
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
