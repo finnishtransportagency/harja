@@ -37,6 +37,7 @@
     (add-watch aikavali-atom
                :aikavali-haku
                (fn [_ _ vanha uusi]
+
                  (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                                 (pvm/sama-pvm? (second vanha) (second uusi)))
                    (paivita-valinnat-fn {:aikavali uusi}))))
@@ -53,7 +54,8 @@
                          :voi-valita-kartalta? voi-valita-trn-kartalta?}
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
-       [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka aikavali-atom {:otsikko aikavali-otsikko}]
+       [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka aikavali-atom {:otsikko aikavali-otsikko
+                                                                                   :vaihda-filtteri-urakan-paattyessa? false}]
        [:span.label-ja-kentta
         [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
         [:div.kentta

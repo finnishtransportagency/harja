@@ -70,10 +70,12 @@
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
-  ([urakka valittu-aikavali {:keys [otsikko] :as optiot}]
+  ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?] :as optiot}]
    (let [[valittu-aikavali-alku valittu-aikavali-loppu
           :as valittu-aikavali-nyt] @valittu-aikavali
-
+         vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
+                                              vaihda-filtteri-urakan-paattyessa?
+                                              true)
          alkuvalinta (or
                        (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
                        (and valittu-aikavali-alku
@@ -98,6 +100,9 @@
                          (reset! valittu-aikavali (aikavali-fn)))
                        ;; Käyttäjä haluaa asettaa itse aikavälin
                        (reset! vapaa-aikavali? true))))]
+     (when (and (not (u/urakka-kaynnissa? urakka))
+                (not vaihda-filtteri-urakan-paattyessa?))
+       (reset! valittu-aikavali [nil (:loppupvm urakka)]))
      (valitse urakka alkuvalinta)
      (komp/luo
        (komp/kun-muuttuu
@@ -106,7 +111,9 @@
 
        (fn [urakka valittu-aikavali]
          (if-not (u/urakka-kaynnissa? urakka)
-           [urakan-hoitokausi-ja-kuukausi urakka]
+           (if vaihda-filtteri-urakan-paattyessa?
+             [urakan-hoitokausi-ja-kuukausi urakka]
+             [valinnat/aikavali valittu-aikavali {:otsikko (or otsikko "Aikaväli")}])
            [:span.aikavali-nykypvm-taakse
             [:div.label-ja-alasveto
              [:span.alasvedon-otsikko (or otsikko "Aikaväli")]
