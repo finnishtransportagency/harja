@@ -682,8 +682,6 @@
              :voi-muokata? voi-muokata?
              :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")
              :kohdetyyppi kohdetyyppi}]
-           [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
-           [debug/debug @virheet {:otsikko "Kohteen virheet"}]
            [yllapitokohdeosat
             {:otsikko "Muut tierekisteriosoitteet"
              :urakka urakka
@@ -702,7 +700,6 @@
                            :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}
              :voi-muokata? voi-muokata?
              :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")}]
-           [debug/debug @muut-osat {:otsikko "Muut tierekisteriosoitteet"}]
            (when (= kohdetyyppi :paallystys)
              [maaramuutokset {:yllapitokohde-id (:id rivi)
                               :urakka-id (:id urakka)
