@@ -443,6 +443,19 @@
                                                        :tr-loppuetaisyys (vec (concat [(partial validoi-kohteen-osoite :tr-loppuetaisyys)]
                                                                                       (:tr-loppuetaisyys validoinnit)))}
                                              :hae-fn hae-fn})
+        muokkaa-kohdeosat! (fn [uudet-osat]
+                             (let [uudet-kohdeosat (if jarjesta-kun-kasketaan
+                                                     (vary-meta uudet-osat assoc :jarjesta-gridissa true)
+                                                     uudet-osat)
+                                   uudet-virheet (into {}
+                                                       (keep (fn [[id rivi]]
+                                                               (let [rivin-virheet (validointi/validoi-rivi
+                                                                                     uudet-kohdeosat rivi skeema)]
+                                                                 (when-not (empty? rivin-virheet)
+                                                                   [id rivin-virheet])))
+                                                             uudet-kohdeosat))]
+                               (reset! kohdeosat-atom uudet-kohdeosat)
+                               (reset! virheet uudet-virheet)))
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
