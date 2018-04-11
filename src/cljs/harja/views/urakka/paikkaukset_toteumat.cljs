@@ -142,7 +142,7 @@
                     "Paikkauksien toteumat")
          :salli-valiotsikoiden-piilotus? true
          :tunniste ::paikkaus/id
-         :sivuta grid/vakiosivutus
+         :sivuta 100
          :tyhja (if paikkauksien-haku-kaynnissa?
                   [yleiset/ajax-loader "Haku käynnissä"]
                   "Ei paikkauksia")
@@ -172,7 +172,7 @@
          {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
           :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
                                  (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-          :aikavali-otsikko "Alkuajan väli"
+          :aikavali-otsikko "Alkuaika"
           :voi-valita-trn-kartalta? true}]
         [paikkaukset e! app]]])))
 

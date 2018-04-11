@@ -38,7 +38,7 @@
                     "Paikkauksien yksikköhintaiset kustannukset")
          :tunniste :paikkaustoteuma-id
          :salli-valiotsikoiden-piilotus? true
-         :sivuta grid/vakiosivutus
+         :sivuta 50
          :tyhja "Ei yksikköhintaisia kustannuksia"}
         skeema
         yksikkohintaiset-grid]])))
@@ -62,7 +62,7 @@
                     "Paikkauksien kokonaishintaiset kustannukset")
          :salli-valiotsikoiden-piilotus? true
          :tunniste :paikkaustoteuma-id
-         :sivuta grid/vakiosivutus
+         :sivuta 50
          :tyhja "Ei kokonaishintaisia kustannuksia"}
         skeema
         kokonaishintaiset-grid]])))
@@ -81,7 +81,7 @@
         {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
          :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
                                 (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-         :aikavali-otsikko "Kirjauksen aika"
+         :aikavali-otsikko "Kirjausaika"
          :voi-valita-trn-kartalta? false}]
        [kokonaishintaiset-kustannukset e! app]
        [yksikkohintaiset-kustannukset e! app]])))

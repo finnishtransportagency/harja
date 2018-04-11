@@ -8,7 +8,8 @@
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
-            [harja.domain.paikkaus :as paikkaus])
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
@@ -30,7 +31,8 @@
         paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
                                    (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (get-in (first paikkaukset)
                                                                                                                 [::paikkaus/paikkauskohde ::paikkaus/id]))})
-                                         paikkaukset))
+                                         (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
+                                                  paikkaukset)))
                                  (group-by ::paikkaus/nimi kiinnostavat-tiedot))
         paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
                                      tulos)]

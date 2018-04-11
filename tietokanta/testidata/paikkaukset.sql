@@ -35,6 +35,7 @@ DO $$ DECLARE
   hoito_paikkauskohde_2_id INTEGER := (SELECT id FROM paikkauskohde WHERE "ulkoinen-id"=1337 LIMIT 1);
   hoito_paikkauskohde_22_id INTEGER := (SELECT id FROM paikkauskohde WHERE "ulkoinen-id"=221337 LIMIT 1);
   paallystys_paikkauskohde_id INTEGER := (SELECT id FROM paikkauskohde WHERE "ulkoinen-id"=7331 LIMIT 1);
+  tyomenetelmat TEXT [] := '{"massapintaus", "kuumennuspintaus", "remix-pintaus"}';
 BEGIN
 INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                      "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
@@ -72,6 +73,16 @@ INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id",
           (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
           224, NOW() - interval '1 day', NOW() + interval '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
           'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2');
+ --- Laitetaan iso kasa paikkauksia Muhoksen päällystysurakkaan. Näkee sivutuksen tällä tapaa.
+ FOR counter IN 1..250 LOOP
+   INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
+                     "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
+                     raekoko, kuulamylly)
+    VALUES (skanska_kayttaja, NOW(), NULL, NULL, NULL, FALSE, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id,
+          733 + counter, NOW(), NOW() + interval '20 day', ROW (20, 19, (50 + counter), 19, (51 + counter), NULL) :: TR_OSOITE,
+          tyomenetelmat [(counter % 3 + 1)], 'asfalttibetoni', 1.2, 4, 1, '2');
+ END LOOP;
+
 
  INSERT INTO paikkauksen_materiaali ("paikkaus-id", esiintyma, "kuulamylly-arvo", muotoarvo, sideainetyyppi, pitoisuus,
                                      "lisa-aineet")
