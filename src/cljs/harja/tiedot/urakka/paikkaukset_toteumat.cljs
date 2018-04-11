@@ -101,7 +101,7 @@
     (-> app
         (tt/post! :hae-urakan-paikkauskohteet
                   {::paikkaus/urakka-id @nav/valittu-urakka-id
-                   :aikavali (pvm/aikavali-nyt-miinus 7)}
+                   :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->PaikkauksetEiHaettu})
         (assoc :nakymassa? true
@@ -132,6 +132,8 @@
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
-    (reset! yhteiset-tiedot/paikkauskohde-id paikkauskohde-id)
+    (swap! yhteiset-tiedot/tila assoc
+           :paikkauskohde-id paikkauskohde-id
+           :aloitus-aikavali [nil nil])
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
     (assoc app :nakymassa? false)))

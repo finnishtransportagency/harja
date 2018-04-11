@@ -28,7 +28,7 @@
 
 (defn hakuehdot [{:keys [valinnat] :as app} {:keys [paivita-valinnat-fn paikkaus-valittu-fn aikavali-otsikko]}]
   (let [tr-atom (atom (:tr valinnat))
-        aikavali-atom (atom (:aikavali valinnat))
+        aikavali-atom (atom (:aloitus-aikavali @yhteinen-tiedot/tila))
         tyomenetelmat-atom (atom (:tyomenetelmat valinnat))]
     (add-watch tr-atom
                :tierekisteri-haku
@@ -44,7 +44,7 @@
                :tyomenetelmat-haku
                (fn [_ _ vanha uusi]
                  (paivita-valinnat-fn {:tyomenetelmat uusi})))
-    (fn [{:keys [valinnat] :as app} paivita-valinnat-fn paikkaus-valittu-fn]
+    (fn [{:keys [valinnat] :as app} {:keys [paivita-valinnat-fn paikkaus-valittu-fn aikavali-otsikko]}]
       [:span
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Tierekisteriosoite"

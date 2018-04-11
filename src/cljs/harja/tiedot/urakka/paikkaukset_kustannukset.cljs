@@ -69,9 +69,7 @@
                                                                                                                                         paikkaukset))
                                                                                                             :colspan {:yksikko 4 :yksikkohinta 1}
                                                                                                             :oikealle? #{:yksikko}
-                                                                                                            :yksikko "Yhteensä: "})
-                                       ;(cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (:paikkauskohde-id (first paikkaukset)))}) paikkaukset)
-                                       )
+                                                                                                            :yksikko "Yhteensä: "}))
                                      (group-by :nimi yksikkohintaiset-tiedot))
         yksikkohintaset-grid (conj yksikkohintaset-grid
                                    {:yhteenveto true
@@ -132,7 +130,7 @@
     (-> app
         (tt/post! :hae-paikkausurakan-kustannukset
                   {::paikkaus/urakka-id @nav/valittu-urakka-id
-                   :aikavali (pvm/aikavali-nyt-miinus 7)}
+                   :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->KustannuksetEiHaettu})
         (assoc :nakymassa? true
@@ -163,6 +161,8 @@
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryToimenpiteisiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
-    (reset! yhteiset-tiedot/paikkauskohde-id paikkauskohde-id)
+    (swap! yhteiset-tiedot/tila assoc
+           :paikkauskohde-id paikkauskohde-id
+           :aloitus-aikavali [nil nil])
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :toteumat)
     (assoc app :nakymassa? false)))
