@@ -103,12 +103,6 @@
                                       {:nimi ::tierekisteri/aet}
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}]
-        aika-formatteri #(when-not (nil? %)
-                           [:div
-                            [:span {:style {:width "100%"
-                                            :display "inline-block"}}
-                             (pvm/pvm %)]
-                            [:span (str "klo. " (pvm/aika %))]])
         skeema (into []
                      (concat
                        [{:tyyppi :vetolaatikon-tila :leveys 1}]
@@ -116,11 +110,11 @@
                        [{:otsikko "Alku\u00ADaika"
                          :leveys 10
                          :nimi ::paikkaus/alkuaika
-                         :fmt aika-formatteri}
+                         :fmt yhteinen-view/aika-formatteri}
                         {:otsikko "Loppu\u00ADaika"
                          :leveys 10
                          :nimi ::paikkaus/loppuaika
-                         :fmt aika-formatteri}
+                         :fmt yhteinen-view/aika-formatteri}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
                          :leveys 10
                          :nimi ::paikkaus/tyomenetelma}
@@ -175,9 +169,10 @@
        [:div
         [debug/debug app]
         [yhteinen-view/hakuehdot app
-         #(e! (tiedot/->PaivitaValinnat %))
-         (fn [paikkauskohde valittu?]
-           (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))]
+         {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
+          :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
+                                 (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+          :aikavali-otsikko "Alkuajan väli"}]
         [paikkaukset e! app]]])))
 
 (defn toteumat []

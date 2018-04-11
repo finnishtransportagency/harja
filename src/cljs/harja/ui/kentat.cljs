@@ -409,7 +409,7 @@
            coll-luokka (Math/ceil (/ 12 palstoja))
            checkbox (fn [vaihtoehto]
                       (let [valittu? (valitut vaihtoehto)]
-                        [:div.checkbox
+                        [:div.checkbox {:class (when nayta-rivina? "checkbox-rivina")}
                          [:label
                           [:input {:type "checkbox" :checked (boolean valittu?)
                                    :disabled (if disabloi

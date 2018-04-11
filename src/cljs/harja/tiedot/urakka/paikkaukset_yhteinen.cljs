@@ -1,26 +1,24 @@
 (ns harja.tiedot.urakka.paikkaukset-yhteinen
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [harja.pvm :as pvm]
+            [harja.domain.paikkaus :as paikkaus]))
 
 (defonce paikkauskohde-id (atom nil))
 
 (defn ensimmaisen-haun-kasittely
-  [{:keys [paikkauskohde-idn-polku paikkauskohde-nimen-polku kasittele-haettu-tulos tulos app]}]
+  [{:keys [paikkauskohde-idn-polku tuloksen-avain kasittele-haettu-tulos tulos app]}]
   (let [id @paikkauskohde-id
-        paikkauskohteet (reduce (fn [paikkaukset paikkaus]
-                                  (if (some #(= (:id %) (get-in paikkaus paikkauskohde-idn-polku))
-                                            paikkaukset)
-                                    paikkaukset
-                                    (conj paikkaukset
-                                          {:id (get-in paikkaus paikkauskohde-idn-polku)
-                                           :nimi (get-in paikkaus paikkauskohde-nimen-polku)
-                                           :valittu? (or (nil? id)
-                                                         (= id
-                                                            (get-in paikkaus paikkauskohde-idn-polku)))})))
-                                [] tulos)
+        paikkauskohteet (map #(identity
+                                {:id (::paikkaus/id %)
+                                :nimi (::paikkaus/nimi %)
+                                :valittu? (or (nil? id)
+                                              (= id
+                                                 (::paikkaus/id)))})
+                             (:paikkauskohteet tulos))
         naytettavat-tulokset (filter #(or (nil? id)
                                           (= id
                                              (get-in % paikkauskohde-idn-polku)))
-                                     tulos)
+                                     (tuloksen-avain tulos))
         naytettavat-tiedot (kasittele-haettu-tulos naytettavat-tulokset app)]
     (reset! paikkauskohde-id nil)
     (-> app

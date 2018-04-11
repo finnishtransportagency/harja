@@ -15,7 +15,8 @@
   [e! app]
   (let [skeema [{:otsikko "Kirjaus\u00ADaika"
                  :leveys 3
-                 :nimi :kirjattu}
+                 :nimi :kirjattu
+                 :fmt yhteinen-view/aika-formatteri}
                 {:otsikko "Selite"
                  :leveys 5
                  :nimi :selite}
@@ -45,7 +46,8 @@
 (defn kokonaishintaiset-kustannukset [e! app]
   (let [skeema [{:otsikko "Kirjaus\u00ADaika"
                  :leveys 5
-                 :nimi :kirjattu}
+                 :nimi :kirjattu
+                 :fmt yhteinen-view/aika-formatteri}
                 {:otsikko "Selite"
                  :leveys 5
                  :nimi :selite}
@@ -76,9 +78,10 @@
       [:div
        [debug/debug app]
        [yhteinen-view/hakuehdot app
-        #(e! (tiedot/->PaivitaValinnat %))
-        (fn [paikkauskohde valittu?]
-          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))]
+        {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
+         :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
+                                (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+         :aikavali-otsikko "Kirjauksen aika"}]
        [kokonaishintaiset-kustannukset e! app]
        [yksikkohintaiset-kustannukset e! app]])))
 

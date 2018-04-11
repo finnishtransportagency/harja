@@ -12,13 +12,12 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat nil}))
+                :valinnat {:tyomenetelmat #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}}}))
 
 (defn kiinnostavat-tiedot-grid [paikkaus]
-  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{:selite :yksikko :yksikkohinta :paikkaustoteuma-id
-                                                               :maara :hinta :tyyppi :paikkauskohde-id :nimi})
-        kirjausaika {:kirjattu (pvm/pvm (:kirjattu paikkaus))}]
-    (merge sellaisenaan-naytettavat-arvot kirjausaika)))
+  (select-keys paikkaus #{:selite :yksikko :yksikkohinta :paikkaustoteuma-id
+                          :maara :hinta :tyyppi :paikkauskohde-id :nimi
+                          :kirjattu}))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
@@ -86,13 +85,12 @@
     {:yksikkohintaiset-grid yksikkohintaset-grid
      :kokonaishintaiset-grid kokonaishintaiset-grid}))
 
-(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet :tyomenetelma])
 
 (extend-protocol tuck/Event
   PaivitaValinnat
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
-                                (select-keys u valintojen-avaimet))
+                                u)
           haku (tuck/send-async! ->HaeKustannukset)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -133,26 +131,26 @@
   (process-event [{otsikkokomponentti :otsikkokomponentti} app]
     (-> app
         (tt/post! :hae-paikkausurakan-kustannukset
-                  {::paikkaus/urakka-id @nav/valittu-urakka-id}
+                  {::paikkaus/urakka-id @nav/valittu-urakka-id
+                   :aikavali (pvm/aikavali-nyt-miinus 7)}
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->KustannuksetEiHaettu})
         (assoc :nakymassa? true
                :otsikkokomponentti otsikkokomponentti
-               :paikkauksien-haku-kaynnissa? true
-               :valinnat {:tyomenetelma #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}})))
+               :paikkauksien-haku-kaynnissa? true)))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
     (yhteiset-tiedot/ensimmaisen-haun-kasittely {:paikkauskohde-idn-polku [:paikkauskohde-id]
-                                                 :paikkauskohde-nimen-polku [:nimi]
+                                                 :tuloksen-avain :kustannukset
                                                  :kasittele-haettu-tulos kasittele-haettu-tulos
                                                  :tulos tulos
                                                  :app app}))
   KustannuksetHaettu
-  (process-event [{tulos :tulos} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos app)]
+  (process-event [{{kustannukset :kustannukset} :tulos} app]
+    (let [naytettavat-tiedot (kasittele-haettu-tulos kustannukset app)]
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false

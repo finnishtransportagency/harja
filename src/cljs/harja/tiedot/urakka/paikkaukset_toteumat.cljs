@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.paikkaukset-toteumat
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
+            [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
@@ -11,7 +12,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat nil}))
+                :valinnat {:tyomenetelmat #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}}}))
 
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
                                  :as paikkaus}]
@@ -54,13 +55,13 @@
           (fn [u]
             (e! (->PaivitaValinnat {polku u})))))
 
-(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet :tyomenetelma])
+(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet :tyomenetelmat])
 
 (extend-protocol tuck/Event
   PaivitaValinnat
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
-                                (select-keys u valintojen-avaimet))
+                                u)
           haku (tuck/send-async! ->HaePaikkaukset)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -99,26 +100,26 @@
   (process-event [{otsikkokomponentti :otsikkokomponentti} app]
     (-> app
         (tt/post! :hae-urakan-paikkauskohteet
-                  {::paikkaus/urakka-id @nav/valittu-urakka-id}
+                  {::paikkaus/urakka-id @nav/valittu-urakka-id
+                   :aikavali (pvm/aikavali-nyt-miinus 7)}
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->PaikkauksetEiHaettu})
         (assoc :nakymassa? true
                :paikkauksien-haku-kaynnissa? true
-               :otsikkokomponentti otsikkokomponentti
-               :valinnat {:tyomenetelma #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}})))
+               :otsikkokomponentti otsikkokomponentti)))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
     (yhteiset-tiedot/ensimmaisen-haun-kasittely {:paikkauskohde-idn-polku [::paikkaus/paikkauskohde ::paikkaus/id]
-                                                 :paikkauskohde-nimen-polku [::paikkaus/paikkauskohde ::paikkaus/nimi]
+                                                 :tuloksen-avain :paikkaukset
                                                  :kasittele-haettu-tulos kasittele-haettu-tulos
                                                  :tulos tulos
                                                  :app app}))
   PaikkauksetHaettu
-  (process-event [{tulos :tulos} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos app)]
+  (process-event [{{paikkaukset :paikkaukset} :tulos} app]
+    (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset app)]
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false
