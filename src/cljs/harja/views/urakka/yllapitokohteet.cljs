@@ -409,8 +409,8 @@
              :otsikko-tyyli :virhe}
             (kohdeosien-tallennusvirheet virheet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}
-                         muokattava-tie? muokattava-ajorata-ja-kaista?]
+(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?
+                                 muokattava-tie? muokattava-ajorata-ja-kaista? kohdeosat-atom jarjesta-kun-kasketaan]}]
   (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
