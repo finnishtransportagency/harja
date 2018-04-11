@@ -172,7 +172,8 @@
          {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
           :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
                                  (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-          :aikavali-otsikko "Alkuajan väli"}]
+          :aikavali-otsikko "Alkuajan väli"
+          :voi-valita-trn-kartalta? true}]
         [paikkaukset e! app]]])))
 
 (defn toteumat []

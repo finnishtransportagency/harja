@@ -44,12 +44,13 @@
                :tyomenetelmat-haku
                (fn [_ _ vanha uusi]
                  (paivita-valinnat-fn {:tyomenetelmat uusi})))
-    (fn [{:keys [valinnat] :as app} {:keys [paivita-valinnat-fn paikkaus-valittu-fn aikavali-otsikko]}]
+    (fn [{:keys [valinnat] :as app} {:keys [paivita-valinnat-fn paikkaus-valittu-fn aikavali-otsikko voi-valita-trn-kartalta?]}]
       [:span
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Tierekisteriosoite"
          :kentta-params {:tyyppi :tierekisteriosoite
-                         :tr-otsikot? false}
+                         :tr-otsikot? false
+                         :voi-valita-kartalta? voi-valita-trn-kartalta?}
          :arvo-atom tr-atom
          :tyylit {:width "fit-content"}}]
        [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka aikavali-atom {:otsikko aikavali-otsikko}]

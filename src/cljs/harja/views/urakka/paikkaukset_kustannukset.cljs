@@ -81,7 +81,8 @@
         {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
          :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
                                 (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-         :aikavali-otsikko "Kirjauksen aika"}]
+         :aikavali-otsikko "Kirjauksen aika"
+         :voi-valita-trn-kartalta? false}]
        [kokonaishintaiset-kustannukset e! app]
        [yksikkohintaiset-kustannukset e! app]])))
 

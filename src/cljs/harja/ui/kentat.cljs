@@ -965,9 +965,11 @@
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
                                                    sijainti pakollinen? tyhjennys-sallittu? piste? vaadi-vali?
-                                                   avaimet]} data]
+                                                   avaimet voi-valita-kartalta?]} data]
   (let [osoite-alussa @data
-
+        voi-valita-kartalta? (if (some? voi-valita-kartalta?)
+                               voi-valita-kartalta?
+                               true)
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
@@ -1037,16 +1039,17 @@
             (do (reset! alkuperainen-sijainti @sijainti)
                 (vreset! sijainti-atom sijainti)
                 (nayta-kartalla @sijainti)))))
-
-      (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
-                                                 (keskita-kartta! @sijainti-atom)))
+      (when voi-valita-kartalta?
+        (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
+                                                   (keskita-kartta! @sijainti-atom))))
 
       (komp/ulos #(do
                     (log "Lopetetaan TR sijaintipäivitys")
                     (async/close! tr-osoite-ch)
-                    (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
-                    (tasot/poista-geometria! :tr-valittu-osoite)
-                    (kartta/zoomaa-geometrioihin)))
+                    (when voi-valita-kartalta?
+                      (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                      (tasot/poista-geometria! :tr-valittu-osoite)
+                      (kartta/zoomaa-geometrioihin))))
 
       (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
@@ -1100,7 +1103,7 @@
             [tr-kentan-elementti lomake? muuta! blur
              "let" loppuetaisyys loppuetaisyys-avain @karttavalinta-kaynnissa?]
             tr-otsikot?
-            (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu?)
+            (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
               [napit/poista nil
                #(do (tasot/poista-geometria! :tr-valittu-osoite)
                     (reset! data {})
@@ -1109,28 +1112,29 @@
                {:luokka "nappi-tyhjenna"
                 :disabled (empty? @data)}])
 
-            (if-not @karttavalinta-kaynnissa?
-              [napit/yleinen-ensisijainen
-               (tr-valintanapin-teksti osoite-alussa osoite)
-               #(do
-                  (reset! osoite-ennen-karttavalintaa osoite)
-                  (when-let [sijainti @sijainti-atom]
-                    (reset! sijainti-ennen-karttavalintaa @sijainti))
-                  (reset! data {})
-                  (reset! karttavalinta-kaynnissa? true))
-               {:ikoni (ikonit/map-marker)}]
-              [tr/karttavalitsin
-               {:kun-peruttu #(do
-                                (reset! data @osoite-ennen-karttavalintaa)
-                                (when-let [sijainti @sijainti-atom]
-                                  (reset! sijainti @sijainti-ennen-karttavalintaa))
-                                (reset! karttavalinta-kaynnissa? false))
-                :paivita #(swap! data merge (normalisoi %))
-                :kun-valmis #(do
-                               (reset! data (normalisoi %))
-                               (reset! karttavalinta-kaynnissa? false)
-                               (log "Saatiin tr-osoite! " (pr-str %))
-                               (go (>! tr-osoite-ch %)))}])
+            (when voi-valita-kartalta?
+              (if-not @karttavalinta-kaynnissa?
+                [napit/yleinen-ensisijainen
+                 (tr-valintanapin-teksti osoite-alussa osoite)
+                 #(do
+                    (reset! osoite-ennen-karttavalintaa osoite)
+                    (when-let [sijainti @sijainti-atom]
+                      (reset! sijainti-ennen-karttavalintaa @sijainti))
+                    (reset! data {})
+                    (reset! karttavalinta-kaynnissa? true))
+                 {:ikoni (ikonit/map-marker)}]
+                [tr/karttavalitsin
+                 {:kun-peruttu #(do
+                                  (reset! data @osoite-ennen-karttavalintaa)
+                                  (when-let [sijainti @sijainti-atom]
+                                    (reset! sijainti @sijainti-ennen-karttavalintaa))
+                                  (reset! karttavalinta-kaynnissa? false))
+                  :paivita #(swap! data merge (normalisoi %))
+                  :kun-valmis #(do
+                                 (reset! data (normalisoi %))
+                                 (reset! karttavalinta-kaynnissa? false)
+                                 (log "Saatiin tr-osoite! " (pr-str %))
+                                 (go (>! tr-osoite-ch %)))}]))
 
             (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
