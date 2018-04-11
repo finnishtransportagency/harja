@@ -7,13 +7,15 @@
     [harja.domain.vesivaylat.hinta :as hinta]
     [harja.domain.urakka :as ur]
     [harja.domain.vesivaylat.tyo :as tyo]
+    [harja.domain.vesivaylat.kommentti :as kommentti]
     [clojure.set :as set]
     [specql.rel :as rel]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [harja.pvm :as pvm])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -89,13 +91,17 @@
 
 ;; Palvelut
 
+(s/def ::laskutus-pvm #?(:clj (s/nilable (comp pvm/pvm? pvm/joda-timeksi))
+                         :cljs (s/nilable pvm/pvm?)))
+(s/def ::laskutettu? boolean?)
+
 (s/def ::hae-hintaryhmat-kysely
   (s/keys
     :req [::ur/id]))
 
 (s/def ::hae-hintaryhmat-vastaus
   (s/coll-of
-    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja?])))
+    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja? ::laskutus-pvm ::laskutettu?])))
 
 (s/def ::luo-hinnoittelu-kysely
   (s/keys
@@ -144,3 +150,9 @@
 
 ;; Poistetut hintaryhmät-idt
 (s/def ::poista-tyhjat-hinnoittelut-vastaus (s/keys :req [::idt]))
+
+(s/def ::tallenna-hinnoittelun-kommentti-kysely (s/keys :req [::urakka-id
+                                                              ::kommentti/tila
+                                                              ::kommentti/kommentti
+                                                              ::id]))
+(s/def ::tallenna-hinnoittelun-kommentti-vastaus (s/keys :req []))

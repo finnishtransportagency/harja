@@ -3,17 +3,18 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [clojure.future :refer :all]
+            [clj-time.core :as t]
             [namespacefy.core :as namespacefy]
             [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert!]]
             [specql.op :as op]
             [specql.rel :as rel]
-            [taoensso.timbre :as log]
 
+            [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.vesivaylat.tyot :as tyot-q]
-            [harja.tyokalut.functor :refer [fmap]]
 
+            [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.liite :as liite]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
@@ -25,7 +26,12 @@
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
-            [harja.domain.urakka :as ur]))
+            [harja.domain.urakka :as ur]
+            [harja.pvm :as pvm]))
+
+;; Näitä kyselyitä käyttävien funktioiden pitäis ehkä ennemminkin olla kyselyt/hinnoittelussa,
+;; mutta tätä tarvittiin myös toimenpiteitä haettaessa, ja hinnoitteluista jo viitataan tähän namespaceen
+(defqueries "harja/kyselyt/vesivaylat/hinnoittelut.sql")
 
 (def toimenpiteet-xf
 
@@ -77,6 +83,69 @@
      {::vv-toimenpide/id (op/in toimenpide-idt)})
     toimenpide-idt
     urakka-id))
+
+(defn laskutuspvm-nyt-tai-tulevaisuudessa? [nyt pvm]
+  (let [kuukauden-alkuun #(-> %
+                              pvm/joda-timeksi
+                              pvm/suomen-aikavyohykkeeseen
+                              t/first-day-of-the-month
+                              t/with-time-at-start-of-day)]
+    (let [pvm (kuukauden-alkuun pvm)
+          nyt (kuukauden-alkuun nyt)]
+      (boolean
+        (or (t/after? pvm nyt)
+            (t/equal? pvm nyt))))))
+
+;; Pitäis ehkä ennemminkin olla kyselyt/hinnoittelussa,
+;; mutta tätä tarvittiin myös toimenpiteitä haettaessa, ja hinnoitteluista jo viitataan tähän namespaceen
+(defn- laskutetut-laskutusluvat
+  ([laskutusluvat]
+   (laskutetut-laskutusluvat laskutusluvat (t/now)))
+  ([laskutusluvat nyt]
+   (set (keep
+          (fn [{:keys [id laskutus-pvm]}]
+            (when (and laskutus-pvm (not (laskutuspvm-nyt-tai-tulevaisuudessa? nyt laskutus-pvm)))
+              id))
+          laskutusluvat))))
+
+;; Pitäis ehkä ennemminkin olla kyselyt/hinnoittelussa,
+;; mutta tätä tarvittiin myös toimenpiteitä haettaessa, ja hinnoitteluista jo viitataan tähän namespaceen
+(defn hinnoittelu-laskutettu? [db hinnoittelu-id]
+  (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
+        laskutetut (laskutetut-laskutusluvat laskutusluvat)]
+    (boolean (laskutetut hinnoittelu-id))))
+
+;; Pitäis ehkä ennemminkin olla kyselyt/hinnoittelussa,
+;; mutta tätä tarvittiin myös toimenpiteitä haettaessa, ja hinnoitteluista jo viitataan tähän namespaceen
+(defn liita-laskutuslupatiedot-hinnoitteluihin
+  ([db hinnoittelut] (liita-laskutuslupatiedot-hinnoitteluihin db hinnoittelut nil))
+  ([db hinnoittelut polku]
+   (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
+         laskutus-pvmt (into {} (map (juxt :id :laskutus-pvm) laskutusluvat))
+         laskutetut (laskutetut-laskutusluvat laskutusluvat)]
+     (mapv
+       (fn [h]
+         (let [id (if polku
+                    (get-in h (conj polku ::vv-hinnoittelu/id))
+                    (::vv-hinnoittelu/id h))]
+           (-> h
+               (assoc-in
+                 ;; Toimenpiteen tapauksessa hinnoittelutieto menee hieman eri polkuun,
+                 ;; kuin suoraan hintaryhmää käsiteltäessä
+                 (if polku
+                   (conj polku ::vv-hinnoittelu/laskutus-pvm)
+                   [::vv-hinnoittelu/laskutus-pvm])
+                 (laskutus-pvmt id))
+
+               (assoc-in
+                 (if polku
+                   (conj polku ::vv-hinnoittelu/laskutettu?)
+                   [::vv-hinnoittelu/laskutettu?])
+                 (boolean (laskutetut id))))))
+       hinnoittelut))))
+
+(defn liita-laskutuslupatiedot-toimenpiteisiin [db toimenpiteet]
+  (liita-laskutuslupatiedot-hinnoitteluihin db toimenpiteet [::vv-toimenpide/oma-hinnoittelu]))
 
 (defn- hinnoittelu-ilman-poistettuja-hintoja [hinnoittelu]
   (update hinnoittelu ::vv-hinnoittelu/hinnat #(remove ::m/poistettu? %)))
@@ -154,6 +223,7 @@
               (op/and
                 {::vv-toimenpide/id (op/in toimenpide-idt)}))
        hae-hinnoittelutiedot-toimenpiteille*
+       (liita-laskutuslupatiedot-toimenpiteisiin db)
        ;; Liitetään vielä mukaan työt (specql ei osannut joinia näitä suoraan)
        (toimenpiteet-tyotiedoilla db)))
 

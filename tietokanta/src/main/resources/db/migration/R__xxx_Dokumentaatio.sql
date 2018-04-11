@@ -227,3 +227,63 @@ COMMENT ON TABLE yllapitokohteen_sahkopostitiedot IS
 E'Sisältää ylläpitokohteen sähköpostilähetystiedot.';
 COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
 COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';
+
+COMMENT ON TABLE kan_tyo IS
+E'Kun kanavaurakoiden toimenpiteitä hinnoitellaan, hinta koostuu vapaamuotoisista hinnoista, ja hintaluettelon perusteella koottavista työhinnoista. Suunnittelunäkymästä määritellään, kuinka monta euroa työnjohto maksaa tunnissa, ja täällä rivillä viitataan siihen tietoon, ja annetaan määrä.';
+
+COMMENT ON TABLE kan_hinta IS
+E'Vapaamuotoisempaa kanavaurakan toimenpiteen hinnoittelua. Hinta voi olla täysin vapaatekstiä, tai se voi viitata materiaaliin. Joka tapauksessa, toisin kuin kan_tyo tapauksessa, loppusummaa ei koosteta hintaluettelon (suunnittelunäkymä) kautta';
+
+COMMENT ON TABLE kan_toimenpide_kommentti IS
+E'Toimenpiteitä hyväksytään laskulle (tila). Hyväksynnälle voi myös antaa kommentin.';
+
+COMMENT ON TABLE kan_sulku IS
+E'Integraatiolla harjaan luettavia tietoja suluista, jotka liittyvät kanavaurakoihin';
+
+COMMENT ON TABLE kan_silta IS
+E'Integraatiolla harjaan luettavia tietoja silloista';
+
+COMMENT ON TABLE kan_liikennetapahtuma_ketjutus IS
+E'Saimaan kanavalla liikennetapahtumia ketjutetaan, eli koska kohteilla on järjestys A<->B<->C, tiedetään, että kohteelta A ylöspäin menevä alus on kohta kohteella B, ja sen tiedot voidaan täyttää automaattisesti edellisestä tapahtumasta';
+
+COMMENT ON VIEW kan_laskutettavat_hinnoittelut IS
+E'View, joka sisältää hyväksytyt (kts. kan_toimenpide_kommentti) toimenpiteet';
+
+COMMENT ON table kan_kohde_urakka IS
+E'Linkkitaulu kohteen ja urakan liittämiseen. Urakkaan voi kuulua monta kohdetta, ja kohde voi kuulua useaan urakkaan';
+
+COMMENT ON TABLE reimari_sopimuslinkki IS
+E'Koska Reimari ei hae sopimustietoja Harjasta, täytyy Harjaan asettaa tieto, mikä Reimarin sopimus liittyy mihin Harjan sopiukseen';
+
+COMMENT ON TABLE reimari_toimenpide_liite IS
+E'Vesiväylien toimenpiteisiin liitettyjä liitteitä';
+
+COMMENT ON VIEW reimari_toimenpiteen_komponenttien_tilamuutokset IS
+E'Komponentin tila voi olla esim "poistetu käytöstä" tai "asennettu". Tässä taulussa säilytetään historiatietoja siitä, mitä muutoksia komponenteille on tehty toimenpiteissä.';
+
+COMMENT ON VIEW reimari_toimenpiteen_vika IS
+E'Viewiä käytetään luomaan viittaus reimari_toimenpiteen ja vv_vikailmoituksen välille integraatiossa';
+
+COMMENT ON TABLE vv_alus IS
+E'Urakoitsijan aluksia, joita seurataan AIS-seurannan avulla, käyttäen mmsi-numeroa';
+
+COMMENT ON TABLE vv_alus_sijainti IS
+E'AIS-seurannan kautta saatu aluksen sijainti. Historiatiedot säilytetään';
+
+COMMENT ON TABLE vv_alus_urakka IS
+E'Linkki vesiväyläurakan ja aluksen välillä. Alus voi kuulua moneen urakkaan, ja urakassa voi olla monta alusta';
+
+COMMENT ON VIEW vv_materiaalilistaus IS
+E'View joka kertoo urakan tietyn materiaalin alku- ja nykytilan.';
+
+COMMENT ON TABLE vv_hinnoittelu_kommentti IS
+E'Taulu kertoo,  onko hinnoittelu (tilaus tai toimenpiteen oma) hyväksytty laskutettavaksi, ja mille kuukaudelle se laskutetaan.';
+
+COMMENT ON VIEW vv_hyvaksytyt_hinnoittelut IS
+E'View, joka sisältää hyväksytyt hinnoittelut (tilaukset tai toimenpiteen omat), sekä missä kuussa ne laskutetaan';
+
+COMMENT ON VIEW vv_toimenpiteen_hinnoittelut IS
+E'View, jonka avulla toimenpiteen hinnoittelujen hakeminen helpottuu. Sisältää toimenpiteen id:n, tilauksen id:n, ja toimenpiteen oman hinnoittelun id:n.';
+
+-- COMMENT ON TABLE harja.public.vv_turvalaite IS
+-- E'vv_turvalaite-taulu korvattu vatu_turvalaite-taululla. vv_turvalaite-taulua ei poistettu migraatiolla, koska siitä täytyi kopioida reimari_toimenpide-tauluun liittyvät viittaukset vatu_turvalaite-tauluun ennen taulun poistamista. Migraatio ja taulun poisto tehtiin manuaalisesti, koska oli vaarana että tauluun liityvän proseduurin triggeröinti jumittaisi ja aiheuttaisi koko deploymentin epäonnistumisen.';
