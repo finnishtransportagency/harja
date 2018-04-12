@@ -391,7 +391,7 @@
            aikataulurivit)]]))
 
 (defn aikataulu-grid
-  [{:keys [urakka-id sopimus-id aikataulurivit urakkatyyppi
+  [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
            voi-tallentaa? saa-muokata? optiot saa-asettaa-valmis-takarajan?
            saa-merkita-valmiiksi? voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
@@ -684,6 +684,7 @@
                                  :voi-muokata-paallystys? voi-muokata-paallystys?
                                  :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
          [aikataulu-grid {:urakka-id urakka-id
+                          :urakka urakka
                           :sopimus-id sopimus-id
                           :aikataulurivit aikataulurivit
                           :urakkatyyppi urakkatyyppi

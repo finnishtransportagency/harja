@@ -186,7 +186,7 @@
 
           lisatieto (str "Käytetty kohteessa: " kohteen-nimi
                          (when kohteen-lisatieto (str ", Lisätietona: " kohteen-lisatieto)))
-          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto paivamaara) materiaali-kirjaukset)]
+          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto (::kanavatoimenpide/pvm tp)) materiaali-kirjaukset)]
       tallennettavat)))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
