@@ -236,7 +236,7 @@
          (map (fn [rivi-id]
                 (let [kenttien-virheet (get virheet rivi-id)
                       kenttien-avaimet (keys kenttien-virheet)
-                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päällekkäin osan"))]
+                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päällekkäin"))]
                   {rivi-id (apply merge (map (fn [kentan-avain]
                                                {kentan-avain (filter paallekkaisyysvirhe? (get kenttien-virheet kentan-avain))})
                                              kenttien-avaimet))}))
