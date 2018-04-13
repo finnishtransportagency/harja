@@ -498,7 +498,10 @@
                [napit/palvelinkutsu-nappi
                 [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
                 #(tallenna-fn (vals @kohdeosat-atom))
-                {:disabled (or (not (empty? @virheet))
+                {:disabled (or ;; FIXME Disabloitu tämä check toistaiseksi (HAR-7719)
+                               ;; Vaikuttaa siltä, että vanha päällekkäisyysvirhe jää välillä voimaan
+                               ;; ennen kuin kenttää kosketaan
+                             #_(not (empty? @virheet))
                                (not (every? #(and (:tr-numero %)
                                                   (:tr-alkuosa %)
                                                   (:tr-alkuetaisyys %)
