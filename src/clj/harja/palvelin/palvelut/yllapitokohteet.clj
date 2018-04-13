@@ -558,6 +558,8 @@
         (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
+              ;; TODO Aiemmin passatiin kaikki alikohteet -> rampit/tumpit hävisi. Testaa, ettei toistu
+              ;; tämän korjauksen jälkeen enää.
               korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde kohdeosat)]
           (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
