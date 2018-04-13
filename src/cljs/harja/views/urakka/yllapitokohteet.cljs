@@ -430,7 +430,7 @@
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
                  muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
-                 jarjesta-kun-kasketaan]}]
+                 jarjesta-kun-kasketaan esta-ainoan-osan-poisto?]}]
       (let [skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                                  :muokattava-tie? muokattava-tie?
                                                  :validoi {:tr-numero (vec (:tr-numero validoinnit))
@@ -537,7 +537,8 @@
                                  {:ikoni (ikonit/livicon-trash)
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
-                                                (= (count @kohdeosat-atom) 1) ; Viimeistä osaa ei saa poistaa
+                                                (and esta-ainoan-osan-poisto?
+                                                     (= (count @kohdeosat-atom) 1))
                                                 (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                   :luokka "btn-xs"}]])})
          kohdeosat-atom]))))
@@ -668,6 +669,7 @@
              :muokattava-tie? (constantly false)
              :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
              :kohdeosat-atom kohteen-osat
+             :esta-ainoan-osan-poisto? true
              :yllapitokohde rivi
              :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
              :tallennettu-fn tallennettu-fn
@@ -689,6 +691,7 @@
              :muokattava-tie? (constantly true)
              :muokattava-ajorata-ja-kaista? (constantly true)
              :kohdeosat-atom muut-osat
+             :esta-ainoan-osan-poisto? false
              :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
              :tallennettu-fn tallennettu-fn
              :jarjesta-avaimen-mukaan identity
