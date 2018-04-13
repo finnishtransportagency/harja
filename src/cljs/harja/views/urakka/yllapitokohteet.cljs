@@ -537,6 +537,7 @@
                                  {:ikoni (ikonit/livicon-trash)
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
+                                                (= (count @kohdeosat-atom) 1) ; Viimeistä osaa ei saa poistaa
                                                 (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                   :luokka "btn-xs"}]])})
          kohdeosat-atom]))))
