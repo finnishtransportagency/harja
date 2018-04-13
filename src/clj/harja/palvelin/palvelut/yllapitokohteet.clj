@@ -559,7 +559,7 @@
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
               ;; TODO Aiemmin passatiin kaikki alikohteet -> rampit/tumpit hävisi. Testaa, ettei toistu
-              ;; tämän korjauksen jälkeen enää.
+              ;; tämän korjauksen jälkeen enää (ilman tätä toistuu).
               paakohteen-tien-kohdeosat (filter #(= (:tr-numero %) (:tr-numero kohde)) kohdeosat)
               korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde paakohteen-tien-kohdeosat)]
           (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
