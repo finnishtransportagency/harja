@@ -303,7 +303,7 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat-sarakkeet [{:keys [yllapitokohdetyyppi kohdeosat muokkaa-kohdeosat! muokattava-tie?
+(defn yllapitokohdeosat-sarakkeet [{:keys [yllapitokohdetyyppi kohdeosat muokkaa-kohdeosat! muokattava-tie? esta-ainoan-osan-poisto?
                                            muokattava-ajorata-ja-kaista? kirjoitusoikeus? validoi hae-fn voi-muokata?]}]
   (remove nil?
           (concat
@@ -392,7 +392,8 @@
                                {:ikoni (ikonit/livicon-trash)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
-                                              (= (count kohdeosat) 1) ; Viimeistä osaa ei saa poistaa
+                                              (and esta-ainoan-osan-poisto?
+                                                   (= (count kohdeosat) 1))
                                               (= yllapitokohdetyyppi :sora))
                                 :luokka "btn-xs"}]])}])))
 
@@ -450,7 +451,7 @@
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
                  muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
-                 jarjesta-kun-kasketaan]}]
+                 jarjesta-kun-kasketaan esta-ainoan-osan-poisto?]}]
       [grid/muokkaus-grid
        {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                           [:div
@@ -526,6 +527,7 @@
                                      :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                      :muokattava-tie? muokattava-tie?
                                      :kirjoitusoikeus? kirjoitusoikeus?
+                                     :esta-ainoan-osan-poisto? esta-ainoan-osan-poisto?
                                      :validoi {:tr-numero (vec (:tr-numero validoinnit))
                                                :tr-ajorata (vec (concat [[:ei-tyhja "Anna ajorata"]]
                                                                         (:tr-ajorata validoinnit)))
@@ -669,6 +671,7 @@
              :muokattava-tie? (constantly false)
              :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
              :kohdeosat-atom kohteen-osat
+             :esta-ainoan-osan-poisto? true
              :yllapitokohde rivi
              :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
              :tallennettu-fn tallennettu-fn
@@ -692,6 +695,7 @@
              :muokattava-tie? (constantly true)
              :muokattava-ajorata-ja-kaista? (constantly true)
              :kohdeosat-atom muut-osat
+             :esta-ainoan-osan-poisto? false
              :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
              :tallennettu-fn tallennettu-fn
              :jarjesta-avaimen-mukaan identity
