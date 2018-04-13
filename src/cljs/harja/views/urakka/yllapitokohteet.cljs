@@ -392,6 +392,7 @@
                                {:ikoni (ikonit/livicon-trash)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
+                                              (= (count kohdeosat) 1) ; Viimeistä osaa ei saa poistaa
                                               (= yllapitokohdetyyppi :sora))
                                 :luokka "btn-xs"}]])}])))
 
@@ -501,7 +502,6 @@
                                               (:tr-loppuosa %)
                                               (:tr-loppuetaisyys %))
                                         (vals @kohdeosat-atom)))
-                           (= (count @kohdeosat-atom) 1) ; Viimeistä osaa ei saa poistaa
                            (not kirjoitusoikeus?)
                            (not voi-muokata?))
                :luokka "nappi-myonteinen grid-tallenna"
