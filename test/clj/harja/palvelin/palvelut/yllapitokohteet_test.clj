@@ -283,7 +283,9 @@
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
         "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
     (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
-        "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")))
+        "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")
+    (is (= (> (:pituus oulun-ramppi) 3000)))
+    (is (= (> (:pituus leppajarven-ramppi) 3000)))))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -319,7 +321,8 @@
     (is (true? (:yllapitokohteen-voi-poistaa? poistettava-yha-kohde))
         "Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
-        "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
+        "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")
+    (is (= (> (:pituus ei-yha-kohde) 3000)))))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2016
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
