@@ -354,7 +354,9 @@
                                        ;; kenttien virheet tyhjät.
                                        (or (empty? @yllapitokohde-virheet)
                                            (empty? (flatten (map vals (vals @yllapitokohde-virheet))))))
-            jarjestys-fn :id]
+            jarjestys-fn :id
+            paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata lomakedata-nyt)
+                                                          (:tr-kaista lomakedata-nyt)))]
         [:fieldset.lomake-osa
          [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
           {:otsikko "Päällystysilmoituksen täytön vihjeet"}
@@ -379,7 +381,16 @@
           {:urakka urakka
            :rivinumerot? true
            :muokattava-tie? (constantly true)
-           :muokattava-ajorata-ja-kaista? (constantly true)
+           :muokattava-ajorata-ja-kaista? (fn [rivi]
+                                            (let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
+                                              ;; Ei pääkohteen tiellä olevan kohdeosan ajorataa ja kaistaa saa muokata aina
+                                              ;; Pääkohteen tiellä olevan kohdeosan ajorataa ja kaistaa saa muokata vain
+                                              ;; jos pääkohteella ei ole ajorataa ja kaistaa.
+                                              (if paakohteella-ajorata-ja-kaista?
+                                                (if osan-tie-paakohteella?
+                                                  false
+                                                  true)
+                                                true)))
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet
            :jarjesta-kun-kasketaan first
