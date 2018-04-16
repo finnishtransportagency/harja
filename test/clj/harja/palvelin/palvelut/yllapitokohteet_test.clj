@@ -435,6 +435,8 @@
               :tr_loppuosa 1
               :tr_loppuetaisyys 2})
           "Pääkohdettä kutistettiin, saman tien kohdeosa kutistuu pääkohteen sisälle")
+      (is (some? vanha-eri-tien-kohdeosa-kannassa))
+      (is (some? paivittynyt-eri-tien-kohdeosa-kannassa))
       (is (= vanha-eri-tien-kohdeosa-kannassa paivittynyt-eri-tien-kohdeosa-kannassa)
           "Eri tien kohdeosiin ei koskettu")
       (is (= maara-ennen-lisaysta maara-lisayksen-jalkeen)))))
