@@ -161,7 +161,8 @@
           paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
           paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))
           muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
-      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
+      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet
+        db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)

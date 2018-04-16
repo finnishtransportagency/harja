@@ -113,7 +113,9 @@
         [{:koodi :viallisia-tieosia
           :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]))))
 
-(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
+(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet
+  "Tarkistaa, että kohteen ja alikohteiden arvot on annettu oikein ja osoitteet löytyvät Harjan tieverkolta"
+  [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
   (try+
     (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
