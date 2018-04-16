@@ -380,7 +380,11 @@
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
            :rivinumerot? true
-           :muokattava-tie? (constantly true)
+           :muokattava-tie? (fn [rivi]
+                              (let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
+                                (if osan-tie-paakohteella?
+                                  false
+                                  true)))
            :muokattava-ajorata-ja-kaista? (fn [rivi]
                                             (let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
                                               (if paakohteella-ajorata-ja-kaista?
