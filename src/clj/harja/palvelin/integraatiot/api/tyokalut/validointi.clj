@@ -194,7 +194,8 @@
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti "Käyttäjällä ei resurssiin."}]})))
 
-(defn tarkista-leikkaavatko-alikohteet-toisiaan [alikohteet]
+(defn tarkista-leikkaavatko-alikohteet-toisiaan
+  [alikohteet]
   (let [paallekkain? (fn [ensimmainen toinen]
                        (let [ensimmainen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti ensimmainen))
                              toinen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti toinen))]
