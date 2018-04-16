@@ -354,7 +354,9 @@
                                        ;; kenttien virheet tyhjät.
                                        (or (empty? @yllapitokohde-virheet)
                                            (empty? (flatten (map vals (vals @yllapitokohde-virheet))))))
-            jarjestys-fn :id]
+            jarjestys-fn :id
+            paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata lomakedata-nyt)
+                                                          (:tr-kaista lomakedata-nyt)))]
         [:fieldset.lomake-osa
          [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
           {:otsikko "Päällystysilmoituksen täytön vihjeet"}
@@ -378,8 +380,26 @@
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
            :rivinumerot? true
-           :muokattava-tie? (constantly true)
-           :muokattava-ajorata-ja-kaista? (constantly true)
+           :muokattava-tie? (fn [rivi]
+                              false
+                              ;; Alempi olisi luultavasti parempi, mutta aiheuttaa käytännössä ongelmia jos
+                              ;; tienumeroksi muokataan sama tie kuin pääkohteella --> kenttä disabloituu
+                              ;; Voitaneen ehkä hyväksyä, että kohdeosien tien muokkaus tapahtuu kohdeluettelossa.
+                              #_(let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
+                                (if osan-tie-paakohteella?
+                                  false
+                                  true)))
+           :muokattava-ajorata-ja-kaista? (fn [rivi]
+                                            (let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
+                                              (if paakohteella-ajorata-ja-kaista?
+                                                ;; Pääkohteella ajorata ja kaista, saman tien kohdeosien täytyy siis olla
+                                                ;; samalla ajoradalla ja kaistalla. Muiden teiden kohdeosat saa määrittää
+                                                ;; vapaasti.
+                                                (if osan-tie-paakohteella?
+                                                  false
+                                                  true)
+                                                ;; Pääkohteella ei ajorataa & kaistaa, saa muokata kohdeosille vapaasti
+                                                true)))
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet
            :jarjesta-kun-kasketaan first
