@@ -375,11 +375,15 @@
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
 
 (defn alikohteet-tayttamaan-kutistunut-paakohde
-  "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita seuraavasti: mikäli jokin alikohde on pidempi kuin
-   pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
+  "Ottaa pääkohteen ja sen SAMAN TIEN alikohteet. Muokkaa alikohteita seuraavasti:
+   mikäli jokin alikohde on pidempi kuin pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
 
-   Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
+   Palauttaa korjatut kohteet."
   ([paakohde alikohteet]
+   (assert (every? #(or (nil? %)
+                        (= % (:tr-numero paakohde)))
+                   (keep :tr-numero alikohteet))
+           (str "Kaikki alikohteet tulee olla samalla tiellä! Kohteen tie: " (:tr-numero paakohde) " ja alikohteiden tiet: " (vec (keep :tr-numero alikohteet))))
    (cond
      (empty? alikohteet)
      []
