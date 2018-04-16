@@ -383,13 +383,14 @@
            :muokattava-tie? (constantly true)
            :muokattava-ajorata-ja-kaista? (fn [rivi]
                                             (let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
-                                              ;; Ei pääkohteen tiellä olevan kohdeosan ajorataa ja kaistaa saa muokata aina
-                                              ;; Pääkohteen tiellä olevan kohdeosan ajorataa ja kaistaa saa muokata vain
-                                              ;; jos pääkohteella ei ole ajorataa ja kaistaa.
                                               (if paakohteella-ajorata-ja-kaista?
+                                                ;; Pääkohteella ajorata ja kaista, saman tien kohdeosien täytyy siis olla
+                                                ;; samalla ajoradalla ja kaistalla. Muiden teiden kohdeosat saa määrittää
+                                                ;; vapaasti.
                                                 (if osan-tie-paakohteella?
                                                   false
                                                   true)
+                                                ;; Pääkohteella ei ajorataa & kaistaa, saa muokata kohdeosille vapaasti
                                                 true)))
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet
