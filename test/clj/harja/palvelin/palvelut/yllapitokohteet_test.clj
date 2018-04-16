@@ -386,7 +386,8 @@
                                       tr_loppuosa,
                                       tr_loppuetaisyys
                                       FROM yllapitokohdeosa
-                                         WHERE yllapitokohde = " leppajarven-ramppi-id ";"))
+                                         WHERE yllapitokohde = " leppajarven-ramppi-id "
+                                         AND poistettu IS NOT TRUE;"))
         vanha-saman-tien-kohdeosa-kannassa (first (filter #(= (:tr_numero %) 20) vanhat-kohdeosat-kannassa))
         vanha-eri-tien-kohdeosa-kannassa (first (filter #(not= (:tr_numero %) 20) vanhat-kohdeosat-kannassa))]
 
@@ -415,7 +416,8 @@
                                                   tr_loppuosa,
                                                   tr_loppuetaisyys
                                                   FROM yllapitokohdeosa
-                                                     WHERE yllapitokohde = " leppajarven-ramppi-id ";"))
+                                                     WHERE yllapitokohde = " leppajarven-ramppi-id "
+                                                     AND poistettu IS NOT TRUE;"))
           paivittynyt-saman-tien-kohdeosa-kannassa (first (filter #(= (:tr_numero %) 20) paivittyneet-kohdeosat-kannassa))
           paivittynyt-eri-tien-kohdeosa-kannassa (first (filter #(not= (:tr_numero %) 20) paivittyneet-kohdeosat-kannassa))
           urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
