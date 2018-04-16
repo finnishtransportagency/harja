@@ -20,6 +20,13 @@
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
+(defn nayta-kentat? [kentat tielupa]
+  (let [kentat (->> tielupa
+                    kentat
+                    :skeemat
+                    (map #(or (:nimi %) (:hae %))))]
+    ((apply some-fn kentat) tielupa)))
+
 (defn hakijan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Hakijan tiedot"}
@@ -48,6 +55,8 @@
      :tyyppi :string
      :nimi ::tielupa/hakija-maakoodi}))
 
+(def nayta-hakijan-lomakekentat? (partial nayta-kentat? hakijan-lomakekentat))
+
 (defn urakoitsijan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Urakoitsijan tiedot"}
@@ -63,6 +72,8 @@
     {:otsikko "Sähköpostiosoite"
      :tyyppi :string
      :nimi ::tielupa/urakoitsija-sahkopostiosoite}))
+
+(def nayta-urakoitsijan-lomakekentat? (partial nayta-kentat? urakoitsijan-lomakekentat))
 
 (defn liikenneohjaajan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -80,7 +91,9 @@
      :tyyppi :string
      :nimi ::tielupa/liikenneohjaajan-sahkopostiosoite}))
 
-(defn tienpitoviranomaisen-tiedot [valittu-tielupa]
+(def nayta-liikenneohjaajan-lomakekentat? (partial nayta-kentat? liikenneohjaajan-lomakekentat))
+
+(defn tienpitoviranomaisen-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Tienpitoviranomaisen tiedot"}
     {:otsikko "Puhelinnumero"
@@ -95,6 +108,8 @@
     {:otsikko "Käsittelijä"
      :tyyppi :string
      :nimi ::tielupa/tienpitoviranomainen-kasittelija}))
+
+(def nayta-tienpitoviranomaisen-lomakekentat? (partial nayta-kentat? tienpitoviranomaisen-lomakekentat))
 
 (defn johtoluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -114,6 +129,8 @@
     {:otsikko "Silta-asennuksia"
      :tyyppi :string
      :nimi ::tielupa/johtolupa-silta-asennuksia}))
+
+(def nayta-johtoluvan-lomakekentat? (partial nayta-kentat? johtoluvan-lomakekentat))
 
 (defn liittymaluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -191,6 +208,8 @@
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-liittymaohje-lisaohjeet}))
 
+(def nayta-liittymaluvan-lomakekentat? (partial nayta-kentat? liittymaluvan-lomakekentat))
+
 (defn mainosluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Mainoslupa"}
@@ -215,6 +234,8 @@
     {:otsikko "Lisätiedot"
      :tyyppi :string
      :nimi ::tielupa/mainoslupa-lisatiedot}))
+
+(def nayta-mainosluvan-lomakekentat? (partial nayta-kentat? mainosluvan-lomakekentat))
 
 (defn opasteluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -262,6 +283,8 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-nykyinen-opastus}))
 
+(def nayta-opasteluvan-lomakekentat? (partial nayta-kentat? opasteluvan-lomakekentat))
+
 (defn suoja-aluerakentamisluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Suoja-aluerakentamislupa"}
@@ -287,6 +310,8 @@
      :tyyppi :string
      :nimi ::tielupa/suoja-aluerakentamislupa-kiinteisto-rn}))
 
+(def nayta-suoja-aluerakentamisluvan-lomakekentat? (partial nayta-kentat? suoja-aluerakentamisluvan-lomakekentat))
+
 (defn myyntiluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Myyntilupa"}
@@ -303,7 +328,9 @@
      :tyyppi :string
      :nimi ::tielupa/myyntilupa-opastusmerkit}))
 
-(defn liikennemerkkijarjestelyn-lomaketiedot [valittu-tielupa]
+(def nayta-myyntiluvan-lomakekentat? (partial nayta-kentat? myyntiluvan-lomakekentat))
+
+(defn liikennemerkkijarjestelyn-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Liikennemerkkijärjestely"}
     {:otsikko "Aihe"
@@ -322,7 +349,9 @@
      :tyyppi :string
      :nimi ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit}))
 
-(defn tyoluvan-lomaketiedot [valittu-tielupa]
+(def nayta-liikennemerkkijarjestelyn-lomakekentat? (partial nayta-kentat? liikennemerkkijarjestelyn-lomakekentat))
+
+(defn tyoluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Työlupa"}
     {:otsikko "Työn sisältö"
@@ -353,6 +382,8 @@
      :tyyppi :string
      :nimi ::tielupa/tyolupa-tieliikennekusksen-sahkopostiosoite}))
 
+(def nayta-tyoluvan-lomakekentat? (partial nayta-kentat? tyoluvan-lomakekentat))
+
 (defn vesihuoltoluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Vesihuoltolupa"}
@@ -366,6 +397,8 @@
      :tyyppi :string
      :nimi ::tielupa/vesihuoltolupa-silta-asennuksia}))
 
+(def nayta-vesihuoltoluvan-lomakekentat? (partial nayta-kentat? vesihuoltoluvan-lomakekentat))
+
 (defn valmistumisilmoituksen-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Valmistumisilmoitus"}
@@ -378,6 +411,8 @@
     {:otsikko "Valmistumisilmoitus"
      :tyyppi :string
      :nimi ::tielupa/valmistumisilmoitus}))
+
+(def nayta-valmistumisilmoituksen-lomakekentat? (partial nayta-kentat? valmistumisilmoituksen-lomakekentat))
 
 (defn tielupalomake [e! {:keys [valittu-tielupa] :as app}]
   (let [uusi? false]
@@ -429,33 +464,33 @@
        {:otsikko "Tien nimi"
         :tyyppi :string
         :nimi ::tielupa/tien-nimi}
-       (when (tiedot/nayta-hakijan-tiedot? valittu-tielupa)
+       (when (nayta-hakijan-lomakekentat? valittu-tielupa)
          (hakijan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-urakoitsijan-tiedot? valittu-tielupa)
+       (when (nayta-urakoitsijan-lomakekentat? valittu-tielupa)
          (urakoitsijan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-liikenneohjaajan-tiedot? valittu-tielupa)
+       (when (nayta-liikenneohjaajan-lomakekentat? valittu-tielupa)
          (liikenneohjaajan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-tienpitoviranomaisen-tiedot? valittu-tielupa)
-         (tienpitoviranomaisen-tiedot valittu-tielupa))
-       (when (tiedot/nayta-valmistumisilmoituksen-tiedot? valittu-tielupa)
+       (when (nayta-tienpitoviranomaisen-lomakekentat? valittu-tielupa)
+         (tienpitoviranomaisen-lomakekentat valittu-tielupa))
+       (when (nayta-valmistumisilmoituksen-lomakekentat? valittu-tielupa)
          (valmistumisilmoituksen-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-johtoluvan-tiedot? valittu-tielupa)
+       (when (nayta-johtoluvan-lomakekentat? valittu-tielupa)
          (johtoluvan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-liittymaluvan-tiedot? valittu-tielupa)
+       (when (nayta-liittymaluvan-lomakekentat? valittu-tielupa)
          (liittymaluvan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-mainosluvan-tiedot? valittu-tielupa)
+       (when (nayta-mainosluvan-lomakekentat? valittu-tielupa)
          (mainosluvan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-opasteluvan-tiedot? valittu-tielupa)
+       (when (nayta-opasteluvan-lomakekentat? valittu-tielupa)
          (opasteluvan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-suoja-aluerakentamisluvan-tiedot? valittu-tielupa)
+       (when (nayta-suoja-aluerakentamisluvan-lomakekentat? valittu-tielupa)
          (suoja-aluerakentamisluvan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-myyntiluvan-tiedot? valittu-tielupa)
+       (when (nayta-myyntiluvan-lomakekentat? valittu-tielupa)
          (myyntiluvan-lomakekentat valittu-tielupa))
-       (when (tiedot/nayta-liikennemerkkijarjestelyn-tiedot? valittu-tielupa)
-         (liikennemerkkijarjestelyn-lomaketiedot valittu-tielupa))
-       (when (tiedot/nayta-tyoluvan-tiedot? valittu-tielupa)
-         (tyoluvan-lomaketiedot valittu-tielupa))
-       (when (tiedot/nayta-vesihuoltoluvan-tiedot? valittu-tielupa)
+       (when (nayta-liikennemerkkijarjestelyn-lomakekentat? valittu-tielupa)
+         (liikennemerkkijarjestelyn-lomakekentat valittu-tielupa))
+       (when (nayta-tyoluvan-lomakekentat? valittu-tielupa)
+         (tyoluvan-lomakekentat valittu-tielupa))
+       (when (nayta-vesihuoltoluvan-lomakekentat? valittu-tielupa)
          (vesihuoltoluvan-lomakekentat valittu-tielupa))
        #_{:otsikko "Mainokset"
         :nimi ::tielupa/mainokset}

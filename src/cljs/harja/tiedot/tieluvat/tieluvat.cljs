@@ -65,49 +65,6 @@
 
     {}))
 
-(defn nayta-hakijan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-urakoitsijan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-liikenneohjaajan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-tienpitoviranomaisen-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-valmistumisilmoituksen-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-johtoluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-liittymaluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-mainosluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-opasteluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-suoja-aluerakentamisluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-myyntiluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-liikennemerkkijarjestelyn-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-tyoluvan-tiedot? [valittu-tielupa]
-  true)
-
-(defn nayta-vesihuoltoluvan-tiedot? [valittu-tielupa]
-  true)
-
-
 (def hakijahaku
   (reify protokollat/Haku
     (hae [_ teksti]
