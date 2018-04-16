@@ -222,7 +222,7 @@
                      #(e! (tiedot/->LisaaMateriaali))
                      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
 
-(defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat] :as app} kohteet]
+(defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat tallennus-kaynnissa?] :as app} kohteet]
   [:div
    [napit/takaisin "Takaisin häiriölistaukseen"
     #(e! (tiedot/->TyhjennaValittuHairiotilanne))]

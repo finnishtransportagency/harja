@@ -397,7 +397,7 @@
       {:reagent-render
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
-                    vetolaatikot uusi-id paneelikomponentit validoi-aina? disabloi-rivi? jarjesta-kun-kasketaan
+                    vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)

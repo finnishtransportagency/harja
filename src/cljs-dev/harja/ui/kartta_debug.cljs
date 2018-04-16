@@ -151,6 +151,8 @@
                                                                         (mapv (fn [mappi] (with-meta mappi {:ylin-taso? true})) arvo)
                                                                         (with-meta arvo {:ylin-taso? true}))])
                                                              @kartta/infopaneelin-linkkifunktiot))
+          ;; harja.views.kartta viittauksesta tulee warningia käännösvaiheessa,
+          ;; mutta ilmeisesti ajon aikana toimii
           metan-asettaminen-asioille-raaka #(update @harja.views.kartta/asiat-pisteessa :asiat (fn [asiat]
                                                                                                  (mapv (fn [asia]
                                                                                                          (with-meta asia {:ylin-taso? true}))
