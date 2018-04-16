@@ -437,10 +437,11 @@
   (jdbc/with-db-transaction [db db]
     (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
           muut-kohteet (filter #(not= (:tr-numero %) kohteen-tienumero) osat)]
-      (if-let [paallekkaiset-kohdeosat (yy/vaadi-etta-kohdeosat-eivat-mene-paallekkain db
-                                                                                       yllapitokohde-id
-                                                                                       vuosi
-                                                                                       muut-kohteet)]
+      (if-let [paallekkaiset-kohdeosat (yy/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+                                         db
+                                         yllapitokohde-id
+                                         vuosi
+                                         muut-kohteet)]
         {:validointivirheet paallekkaiset-kohdeosat}
 
         (do
