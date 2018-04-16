@@ -381,7 +381,11 @@
           {:urakka urakka
            :rivinumerot? true
            :muokattava-tie? (fn [rivi]
-                              (let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
+                              false
+                              ;; Alempi olisi luultavasti parempi, mutta aiheuttaa käytännössä ongelmia jos
+                              ;; tienumeroksi muokataan sama tie kuin pääkohteella --> kenttä disabloituu
+                              ;; Voitaneen ehkä hyväksyä, että kohdeosien tien muokkaus tapahtuu kohdeluettelossa.
+                              #_(let [osan-tie-paakohteella? (= (:tr-numero rivi) tie)]
                                 (if osan-tie-paakohteella?
                                   false
                                   true)))
