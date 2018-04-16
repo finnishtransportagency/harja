@@ -362,7 +362,7 @@ VALUES (666, (SELECT id
 INSERT INTO yllapitokohdeosa (id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
 VALUES (999, (SELECT id
               FROM yllapitokohde
-              WHERE nimi = 'Leppäjärven ramppi'), 'Leppäjärven toisen tien kohdeosa', 20, 1, 0, 3, 0, 1, 1, ST_GeomFromText(
+              WHERE nimi = 'Leppäjärven ramppi'), 'Leppäjärven toisen tien kohdeosa', 4, 101, 0, 582, 0, 1, 1, ST_GeomFromText(
     NULL));
 
 INSERT INTO yllapitokohdeosa (id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
