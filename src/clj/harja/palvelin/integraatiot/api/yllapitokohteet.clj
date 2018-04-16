@@ -67,6 +67,7 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
@@ -485,14 +486,14 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
-   {:palvelu :paivita-yllapitokohde
+   {:palvelu :paivita-yllapitokohde ;; TODO Lisää päällekkäisyysvalidointi + testi
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
     :tyyppi :PUT
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (paivita-yllapitokohde vkm db kayttaja parametrit data))}
-   {:palvelu :kirjaa-paallystysilmoitus
+   {:palvelu :kirjaa-paallystysilmoitus ;; TODO Lisää päällekkäisyysvalidointi + testi
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
