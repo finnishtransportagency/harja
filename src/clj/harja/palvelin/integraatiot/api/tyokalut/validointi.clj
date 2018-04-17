@@ -113,7 +113,9 @@
         [{:koodi :viallisia-tieosia
           :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]))))
 
-(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
+(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet
+  "Tarkistaa, että kohteen ja alikohteiden arvot on annettu oikein ja osoitteet löytyvät Harjan tieverkolta"
+  [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
   (try+
     (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
@@ -192,7 +194,8 @@
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti "Käyttäjällä ei resurssiin."}]})))
 
-(defn tarkista-leikkaavatko-alikohteet-toisiaan [alikohteet]
+(defn tarkista-leikkaavatko-alikohteet-toisiaan
+  [alikohteet]
   (let [paallekkain? (fn [ensimmainen toinen]
                        (let [ensimmainen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti ensimmainen))
                              toinen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti toinen))]

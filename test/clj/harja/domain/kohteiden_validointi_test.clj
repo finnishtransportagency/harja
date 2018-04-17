@@ -349,16 +349,16 @@
           odotettu-virhe [{:koodi "viallinen-alikohteen-sijainti",
                            :viesti "Alikohteen (tunniste: 2) ajorata (1) ei ole pääkohteen (tunniste: 666) kanssa sama (2)."}]]
       (is (= odotettu-virhe
-             (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
+             (yllapitokohteet/tarkista-alikohteiden-ajorata-ja-kaista 666 kohteen-sijainti alikohteet))
           "Kun pääkohteella on ajorata, pitää alikohteella sen olla sama"))
 
     (let [kohteen-sijainti (assoc kohteen-sijainti :kaista 11)
           odotettu-virhe [{:koodi "viallinen-alikohteen-sijainti",
                            :viesti "Alikohteen (tunniste: 2) kaista: (1) ei ole pääkohteen (tunniste: 666) kanssa sama (11)."}]]
       (is (= odotettu-virhe
-             (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
+             (yllapitokohteet/tarkista-alikohteiden-ajorata-ja-kaista 666 kohteen-sijainti alikohteet))
           "Kun pääkohteella on kaista, pitää alikohteilla sen olla sama"))
 
     (let [kohteen-sijainti (dissoc kohteen-sijainti :ajorata :kaista)]
-      (is (= [] (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
+      (is (= [] (yllapitokohteet/tarkista-alikohteiden-ajorata-ja-kaista 666 kohteen-sijainti alikohteet))
           "Kun pääkohteella ei ole ajorataa tai kaistaa, ei alikohteiden "))))
