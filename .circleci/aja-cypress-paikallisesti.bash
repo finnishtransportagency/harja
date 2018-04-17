@@ -25,6 +25,7 @@ if unzip -q -v "$jarfile" > /dev/null 2>&1; then
     tar -C $DIR/.. -cf $jardir/cypress.tar cypress.json cypress
     cp -v $DIR/aja-cypress-kontissa.bash $asetukset  $jardir/
     docker run --link harjadb:postgres -v "$jardir:/jar" --rm solita/harja-cypress /jar/aja-cypress-kontissa.bash
+    chmod go-rwxt $jardir
     test -d $jardir/screenshots && cp -rv $jardir/screenshots screenshots.$$
 else
     echo "huono jar"
