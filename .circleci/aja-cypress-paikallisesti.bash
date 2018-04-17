@@ -19,12 +19,13 @@ if unzip -q -v "$jarfile" > /dev/null 2>&1; then
     echo "ajetaan cypress jar-tiedostoa vasten"
     jardir=$DIR/jardir.$$
     mkdir -p $jardir
+    chmod a+rwxt $jardir
     trap "rm -vf $jardir/{harja.jar,aja-cypress-kontissa.bash,asetukset.edn,cypress.tar}; rmdir $jardir" EXIT
     cp -v $jarfile $jardir/harja.jar
     tar -C $DIR/.. -cf $jardir/cypress.tar cypress.json cypress
     cp -v $DIR/aja-cypress-kontissa.bash $asetukset  $jardir/
     docker run --link harjadb:postgres -v "$jardir:/jar" --rm solita/harja-cypress /jar/aja-cypress-kontissa.bash
-
+    test -d $jardir/screenshots && cp -rv $jardir/screenshots screenshots.$$
 else
     echo "huono jar"
     exit 1
