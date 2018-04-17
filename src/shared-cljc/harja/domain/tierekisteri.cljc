@@ -201,7 +201,7 @@
                     (if (nil? (:teksti-tie? optiot))
                       sana
                       (when (:teksti-tie? optiot) sana)))
-         tie (or (:numero tr) (:tr-numero tr) (:tie tr) (::tie tr))
+         tie (or (:numero tr) (:tienumero tr) (:tr-numero tr) (:tie tr) (::tie tr))
          alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr) (::aosa tr))
          alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr) (::aet tr))
          loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr) (::losa tr))
