@@ -104,11 +104,13 @@
 (s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
                               :date  #(instance? #?(:cljs js/Date
                                                     :clj  java.util.Date) %))))
-(s/def ::tyomenetelmat-set #{"massapintaus" "kuumennuspintaus" "remix-pintaus"})
+
+(def tyomenetelmat-set #{"massapintaus" "kuumennuspintaus" "remix-pintaus"})
+(s/def ::tyomenetelmat-set-spec tyomenetelmat-set)
 (s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
 (s/def ::tr (s/nilable map?))
-(s/def ::tyomenetelmat (s/nilable (s/coll-of ::tyomenetelmat-set :kind? set)))
+(s/def ::tyomenetelmat (s/nilable (s/coll-of ::tyomenetelmat-set-spec :kind? set)))
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))

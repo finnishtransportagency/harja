@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkaukset
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
+            [clojure.set :as clj-set]
             [specql.op :as op]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
@@ -86,7 +87,8 @@
                                      (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
                                      kysely-params-aika)
         kysely-params-tyomenetelmat (if tyomenetelmat
-                                      (assoc kysely-params-paikkaus-idt ::paikkaus/tyomenetelma (op/in tyomenetelmat))
+                                      (assoc kysely-params-paikkaus-idt ::paikkaus/tyomenetelma (op/in (clj-set/difference paikkaus/tyomenetelmat-set
+                                                                                                                           tyomenetelmat)))
                                       kysely-params-paikkaus-idt)
         kysely-params (if kysely-params-tieosa
                         (op/and kysely-params-tyomenetelmat
@@ -112,8 +114,9 @@
                                         (konv/seq->array paikkaus-idt))
                         :alkuaika (first (:aikavali tiedot))
                         :loppuaika (second (:aikavali tiedot))
-                        :tyomenetelmat (when-let [tyomenetelmat (:tyomenetelma tiedot)]
-                                         (konv/seq->array tyomenetelmat)))]
+                        :tyomenetelmat (when-let [tyomenetelmat (:tyomenetelmat tiedot)]
+                                         (konv/seq->array (clj-set/difference paikkaus/tyomenetelmat-set
+                                                                              tyomenetelmat))))]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
     ;; tarkoittaa se, että näkymään juuri tultiin ja ollaan suorittamassa ensimmäistä hakua. Tyhjä lista taasen, että
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
