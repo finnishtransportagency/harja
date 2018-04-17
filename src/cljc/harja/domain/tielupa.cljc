@@ -25,6 +25,9 @@
    {"luotu" ::muokkautiedot/luotu
     "muokattu" ::muokkautiedot/muokattu}])
 
+#?(:clj
+   (def kaikki-kentat (specql.core/columns ::tielupa)))
+
 (def perustiedot
   #{::id
     ::ulkoinen-tunniste

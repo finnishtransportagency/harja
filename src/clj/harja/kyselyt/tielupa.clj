@@ -117,13 +117,7 @@
   (->
     (fetch db
           ::tielupa/tielupa
-          (set/union
-            harja.domain.tielupa/perustiedot
-            harja.domain.tielupa/hakijan-tiedot
-            harja.domain.tielupa/urakoitsijan-tiedot
-            harja.domain.tielupa/liikenneohjaajan-tiedot
-            harja.domain.tielupa/tienpitoviranomaisen-tiedot
-            harja.domain.tielupa/johto-ja-kaapeliluvan-tiedot)
+          tielupa/kaikki-kentat
           (op/and
             (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
               {::tielupa/hakija-nimi nimi})
