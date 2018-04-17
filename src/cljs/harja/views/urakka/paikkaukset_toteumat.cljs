@@ -164,11 +164,13 @@
 
 (defn toteumat* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti
-                                                       "Siirry kustannuksiin"
-                                                       (fn [paikkauskohde-id]
-                                                         (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id))))))
-                      #(e! (tiedot/->NakymastaPois)))
+    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti
+                                                           "Siirry kustannuksiin"
+                                                           (fn [paikkauskohde-id]
+                                                             (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id))))))
+                           (reset! tiedot/taso-nakyvissa? true))
+                      #(do (e! (tiedot/->NakymastaPois))
+                           (reset! tiedot/taso-nakyvissa? false)))
     (fn [e! app]
       [:span
        [kartta/kartan-paikka]

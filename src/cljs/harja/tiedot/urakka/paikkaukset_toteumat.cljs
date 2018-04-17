@@ -8,10 +8,12 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
             [harja.domain.paikkaus :as paikkaus])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
                 :valinnat nil}))
+(def taso-nakyvissa? (atom false))
 
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
                                  :as paikkaus}]
@@ -35,6 +37,9 @@
                                      tulos)]
     {:paikkaukset-grid paikkaukset-grid
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
+
+(def toteumat-kartalla
+  (reaction (let [])))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
