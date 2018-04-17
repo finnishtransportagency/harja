@@ -19,10 +19,4 @@ describe('Ilmoitus-näkymä', function () {
         cy.contains("Tie on liukas ja urainen")
     })
 
-    // it("Urakkavalinta listan kautta toimii", function () {
-    //     cy.contains('.nappi-hakualasveto', 'Pohjois-Pohjanmaa').click()
-    //     cy.contains('.haku-lista-item', 'Oulu').click()
-    //     cy.contains('Oulun alueurakka')
-    // })
-
 })
