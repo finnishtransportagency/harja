@@ -29,6 +29,31 @@
       (when (and (some? kentat) (not-empty kentat))
        ((apply some-fn kentat) tielupa)))))
 
+(defn tr-grid-kentat []
+  [{:otsikko "Tierekisteriosoite"
+    :leveys 1
+    :hae #(-> %
+              ((juxt ::tielupa/tie
+                     ::tielupa/aosa
+                     ::tielupa/aet
+                     ::tielupa/losa
+                     ::tielupa/let))
+              (->>
+                (keep identity)
+                (str/join "/")))}
+   {:otsikko "Ajorata"
+    :leveys 1
+    :nimi ::tielupa/ajorata}
+   {:otsikko "Kaista"
+    :leveys 1
+    :nimi ::tielupa/kaista}
+   {:otsikko "Puoli"
+    :leveys 1
+    :nimi ::tielupa/puoli}
+   {:otsikko "Karttapvm"
+    :leveys 1
+    :nimi ::tielupa/karttapvm}])
+
 (defn hakijan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Hakijan tiedot"}
@@ -113,6 +138,52 @@
 
 (def nayta-tienpitoviranomaisen-lomakekentat? (partial nayta-kentat? tienpitoviranomaisen-lomakekentat))
 
+(defn johtoasennusten-lomakegrid [valittu-tielupa]
+  [grid/grid
+   {:tyhja "Ei johtoasennuksia"
+    :tunniste (fn [_] (rand-int 5000))}
+   (concat
+     [{:otsikko "Laite"
+       :leveys 1
+       :nimi ::tielupa/laite}
+      {:otsikko "Asennustyyppi"
+       :leveys 1
+       :nimi ::tielupa/asennustyyppi}
+      {:otsikko "Kommentit"
+       :leveys 1
+       :nimi ::tielupa/kommentit}]
+     (tr-grid-kentat))
+   (or (::tielupa/johtoasennukset valittu-tielupa) [])])
+
+(defn kaapelilupien-lomakegrid [valittu-tielupa]
+  [grid/grid
+   {:tyhja "Ei kaapeliasennuksia"
+    :tunniste (fn [_] (rand-int 5000))}
+   (concat
+     [{:otsikko "Laite"
+       :leveys 1
+       :nimi  ::tielupa/laite}
+      {:otsikko "Asennustyyppi"
+       :leveys 1
+       :nimi  ::tielupa/asennustyyppi}
+      {:otsikko "Kommentit"
+       :leveys 1
+       :nimi  ::tielupa/kommentit}
+      {:otsikko "Maakaapelia metreissä"
+       :leveys 1
+       :nimi  ::tielupa/maakaapelia-metreissa}
+      {:otsikko "Ilmakaapelia metreissä"
+       :leveys 1
+       :nimi  ::tielupa/ilmakaapelia-metreissa}
+      {:otsikko "Nopeusrajoitus"
+       :leveys 1
+       :nimi  ::tielupa/nopeusrajoitus}
+      {:otsikko "Liikenenmäärä"
+       :leveys 1
+       :nimi  ::tielupa/liikennemaara}]
+     (tr-grid-kentat))
+   (or (::tielupa/kaapeliasennukset valittu-tielupa) [])])
+
 (defn johtoluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Johtolupa"}
@@ -130,7 +201,19 @@
      :nimi ::tielupa/johtolupa-tienylityksia}
     {:otsikko "Silta-asennuksia"
      :tyyppi :string
-     :nimi ::tielupa/johtolupa-silta-asennuksia}))
+     :nimi ::tielupa/johtolupa-silta-asennuksia}
+    {:otsikko "Kaapeliasennukset"
+     :tyyppi :komponentti
+     :nimi :kaapeliasennukset
+     :palstoja 2
+     :komponentti (fn [{:keys [data]}]
+                   [kaapelilupien-lomakegrid data])}
+    {:otsikko "Johtoasennukset"
+     :tyyppi :komponentti
+     :palstoja 2
+     :nimi :johtoasennukset
+     :komponentti (fn [{:keys [data]}]
+                   [johtoasennusten-lomakegrid data])}))
 
 (def nayta-johtoluvan-lomakekentat? (partial nayta-kentat? johtoluvan-lomakekentat))
 
@@ -218,6 +301,13 @@
 
 (def nayta-liittymaluvan-liittymaohjeen-lomakekentat? (partial nayta-kentat? liittymaluvan-liittymaohjeen-lomakekentat))
 
+(defn mainosten-lomakegrid [valittu-tielupa]
+  [grid/grid
+   {:tyhja "Ei mainoksia"
+    :tunniste (fn [_] (rand-int 5000))}
+   (tr-grid-kentat)
+   (or (::tielupa/mainokset valittu-tielupa) [])])
+
 (defn mainosluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
     {:otsikko "Mainoslupa"}
@@ -241,9 +331,28 @@
      :nimi ::tielupa/mainoslupa-suoja-alueen-leveys}
     {:otsikko "Lisätiedot"
      :tyyppi :string
-     :nimi ::tielupa/mainoslupa-lisatiedot}))
+     :nimi ::tielupa/mainoslupa-lisatiedot}
+    {:otsikko "Mainokset"
+     :nimi :mainokset
+     :tyyppi :komponentti
+     :komponentti (fn [{:keys [data]}]
+                    [mainosten-lomakegrid data])}))
 
 (def nayta-mainosluvan-lomakekentat? (partial nayta-kentat? mainosluvan-lomakekentat))
+
+(defn opasteiden-lomakegrid [valittu-tielupa]
+  [grid/grid
+   {:tyhja "Ei opasteita"
+    :tunniste (fn [_] (rand-int 5000))}
+   (concat
+     [{:otsikko "Tulostenumero"
+       :leveys 1
+       :nimi ::tielupa/tulostenumero}
+      {:otsikko "Kuvaus"
+       :leveys 1
+       :nimi ::tielupa/kuvaus}]
+     (tr-grid-kentat))
+   (or (::tielupa/opasteet valittu-tielupa) [])])
 
 (defn opasteluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -289,7 +398,12 @@
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-loppupvm}
     {:otsikko "Nykyinen opastus"
      :tyyppi :string
-     :nimi ::tielupa/opastelupa-nykyinen-opastus}))
+     :nimi ::tielupa/opastelupa-nykyinen-opastus}
+    {:otsikko "Opasteet"
+     :tyyppi :komponentti
+     :nimi :opasteet
+     :komponentti (fn [{:keys [data]}]
+                    [opasteiden-lomakegrid data])}))
 
 (def nayta-opasteluvan-lomakekentat? (partial nayta-kentat? opasteluvan-lomakekentat))
 
@@ -337,6 +451,20 @@
      :nimi ::tielupa/myyntilupa-opastusmerkit}))
 
 (def nayta-myyntiluvan-lomakekentat? (partial nayta-kentat? myyntiluvan-lomakekentat))
+
+(defn liikennemerkkijarjestelyjen-lomakekentat [valittu-tielupa]
+  [grid/grid
+   {:tyhja "Ei liikennemerkkijärjestelyitä"
+    :tunniste (fn [_] (rand-int 5000))}
+   (concat
+     [{:otsikko "Alkuperäinen nopeusrajoitus"
+       :nimi ::tielupa/alkuperainen-nopeusrajoitus}
+      {:otsikko "Alennettu nopeusrajoitus"
+       :nimi ::tielupa/alennettu-nopeusrajoitus}
+      {:otsikko "Nopeusrajoituksen pituus"
+       :nimi ::tielupa/nopeusrajoituksen-pituus}]
+     (tr-grid-kentat))
+   (::tielupa/mainokset valittu-tielupa)])
 
 (defn liikennemerkkijarjestelyn-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -424,147 +552,6 @@
 
 (def nayta-valmistumisilmoituksen-lomakekentat? (partial nayta-kentat? valmistumisilmoituksen-lomakekentat))
 
-(defn tr-lomakekentat [avain valittu-tielupa]
-  (map-indexed
-    (fn [i _]
-      [{:otsikko "Tierekisteriosoite"
-        :nimi (str (name avain) "_" i "_" "Tierekisteriosoite")
-        :hae #(-> %
-                  avain
-                  (get i)
-                  ((juxt ::tielupa/tie
-                         ::tielupa/aosa
-                         ::tielupa/aet
-                         ::tielupa/losa
-                         ::tielupa/let))
-                  (->>
-                    (keep identity)
-                    (str/join "/")))}
-       {:otsikko "Ajorata"
-        :nimi (str (name avain) "_" i "_" "Ajorata")
-        :hae #(get-in % [avain i ::tielupa/ajorata])}
-       {:otsikko "Kaista"
-        :nimi (str (name avain) "_" i "_" "Kaista")
-        :hae #(get-in % [avain i ::tielupa/kaista])}
-       {:otsikko "Puoli"
-        :nimi (str (name avain) "_" i "_" "Puoli")
-        :hae #(get-in % [avain i ::tielupa/Puoli])}
-       {:otsikko "Karttapvm"
-        :nimi (str (name avain) "_" i "_" "Karttapvm")
-        :hae #(get-in % [avain i ::tielupa/karttapvm])}])
-    (avain valittu-tielupa)))
-
-(defn mainosten-lomakekentat [valittu-tielupa]
-  (apply
-    lomake/ryhma
-    {:otsikko "Mainokset"}
-    (apply
-      concat
-      (tr-lomakekentat ::tielupa/mainokset valittu-tielupa))))
-
-(def nayta-mainosten-lomakekentat? (partial nayta-kentat? mainosluvan-lomakekentat))
-
-(defn opasteiden-lomakekentat [valittu-tielupa]
-  (apply
-    lomake/ryhma
-    {:otsikko "Opasteet"}
-    (apply
-      concat
-      (interleave
-        (map-indexed
-          (fn [i _]
-            [{:otsikko "Tulostenumero"
-              :nimi (str "opasteet" "_" i "_" "Tulostenumero")
-              :hae #(get-in % [::tielupa/opasteet i ::tielupa/tulostenumero])}
-             {:otsikko "Kuvaus"
-              :nimi (str "opasteet" "_" i "_" "Kuvaus")
-              :hae #(get-in % [::tielupa/opasteet i ::tielupa/kuvaus])}])
-          (::tielupa/opasteet valittu-tielupa))
-        (tr-lomakekentat ::tielupa/opasteet valittu-tielupa)))))
-
-(def nayta-opasteiden-lomakekentat? (partial nayta-kentat? opasteiden-lomakekentat))
-
-(defn liikennemerkkijarjestelyjen-lomakekentat [valittu-tielupa]
-  (apply
-    lomake/ryhma
-    {:otsikko "Liikennemerkkijärjestelyt"}
-    (apply
-      concat
-      (interleave
-        (map-indexed
-          (fn [i _]
-            [{:otsikko "Alkuperäinen nopeusrajoitus"
-              :nimi (str "liikennemerkkijarjestelyt" "_" i "_" "Alkuperäinen")
-              :hae #(get-in % [::tielupa/liikennemerkkijarjestelyt i ::tielupa/alkuperainen-nopeusrajoitus])}
-             {:otsikko "Alennettu nopeusrajoitus"
-              :nimi (str "liikennemerkkijarjestelyt" "_" i "_" "Alennettu")
-              :hae #(get-in % [::tielupa/liikennemerkkijarjestelyt i ::tielupa/alennettu-nopeusrajoitus])}
-             {:otsikko "Nopeusrajoituksen pituus"
-              :nimi (str "liikennemerkkijarjestelyt" "_" i "_" "pituus")
-              :hae #(get-in % [::tielupa/liikennemerkkijarjestelyt i ::tielupa/nopeusrajoituksen-pituus])}])
-          (::tielupa/liikennemerkkijarjestelyt valittu-tielupa))
-        (tr-lomakekentat ::tielupa/liikennemerkkijarjestelyt valittu-tielupa)))))
-
-(def nayta-liikennemerkkijarjestelyjen-lomakekentat? (partial nayta-kentat? liikennemerkkijarjestelyjen-lomakekentat))
-
-(defn johtoasennusten-lomakekentat [valittu-tielupa]
-  (apply
-    lomake/ryhma
-    {:otsikko "Johtoasennukset"}
-    (apply
-      concat
-      (interleave
-        (map-indexed
-          (fn [i _]
-            [{:otsikko "Laite"
-              :nimi (str "johtoasennukset" "_" i "_" "Laite")
-              :hae #(get-in % [::tielupa/johtoasennukset i ::tielupa/laite])}
-             {:otsikko "Asennustyyppi"
-              :nimi (str "johtoasennukset" "_" i "_" "Asennustyyppi")
-              :hae #(get-in % [::tielupa/johtoasennukset i ::tielupa/asennustyyppi])}
-             {:otsikko "Kommentit"
-              :nimi (str "johtoasennukset" "_" i "_" "Kommentit")
-              :hae #(get-in % [::tielupa/johtoasennukset i ::tielupa/kommentit])}])
-          (::tielupa/johtoasennukset valittu-tielupa))
-        (tr-lomakekentat ::tielupa/johtoasennukset valittu-tielupa)))))
-
-(def nayta-johtoasennusten-lomakekentat? (partial nayta-kentat? johtoasennusten-lomakekentat))
-
-(defn kaapelilupien-lomakekentat [valittu-tielupa]
-  (apply
-    lomake/ryhma
-    {:otsikko "Kaapeliasennukset"}
-    (apply
-      concat
-      (interleave
-        (map-indexed
-          (fn [i _]
-            [{:otsikko "Laite"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Laite")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/laite])}
-             {:otsikko "Asennustyyppi"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Asennustyyppi")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/asennustyyppi])}
-             {:otsikko "Kommentit"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Kommentit")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/kommentit])}
-             {:otsikko "Maakaapelia metreissä"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Maakaapelia")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/maakaapelia-metreissa])}
-             {:otsikko "Ilmakaapelia metreissä"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Ilmakaapelia")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/ilmakaapelia-metreissa])}
-             {:otsikko "Nopeusrajoitus"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Nopeusrajoitus")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/nopeusrajoitus])}
-             {:otsikko "Liikenenmäärä"
-              :nimi  (str "kaapeliasennukset" "_" i "_" "Liikenenmäärä")
-              :hae #(get-in % [::tielupa/kaapeliasennukset i ::tielupa/liikennemaara])}])
-          (::tielupa/kaapeliasennukset valittu-tielupa))
-        (tr-lomakekentat ::tielupa/kaapeliasennukset valittu-tielupa)))))
-
-(def nayta-kaapelilupien-lomakekentat? (partial nayta-kentat? kaapelilupien-lomakekentat))
-
 (defn tielupalomake [e! {:keys [valittu-tielupa] :as app}]
   (let [uusi? false]
     [:div
@@ -629,10 +616,6 @@
 
        (when (nayta-johtoluvan-lomakekentat? valittu-tielupa)
          (johtoluvan-lomakekentat valittu-tielupa))
-       (when (nayta-johtoasennusten-lomakekentat? valittu-tielupa)
-         (johtoasennusten-lomakekentat valittu-tielupa))
-       (when (nayta-kaapelilupien-lomakekentat? valittu-tielupa)
-         (kaapelilupien-lomakekentat valittu-tielupa))
 
        (when (nayta-liittymaluvan-lomakekentat? valittu-tielupa)
          (liittymaluvan-lomakekentat valittu-tielupa))
@@ -642,13 +625,9 @@
 
        (when (nayta-mainosluvan-lomakekentat? valittu-tielupa)
          (mainosluvan-lomakekentat valittu-tielupa))
-       (when (nayta-mainosten-lomakekentat? valittu-tielupa)
-         (mainosten-lomakekentat valittu-tielupa))
 
        (when (nayta-opasteluvan-lomakekentat? valittu-tielupa)
          (opasteluvan-lomakekentat valittu-tielupa))
-       (when (nayta-opasteiden-lomakekentat? valittu-tielupa)
-         (opasteiden-lomakekentat valittu-tielupa))
 
        (when (nayta-suoja-aluerakentamisluvan-lomakekentat? valittu-tielupa)
          (suoja-aluerakentamisluvan-lomakekentat valittu-tielupa))
@@ -658,8 +637,6 @@
 
        (when (nayta-liikennemerkkijarjestelyn-lomakekentat? valittu-tielupa)
          (liikennemerkkijarjestelyn-lomakekentat valittu-tielupa))
-       (when (nayta-liikennemerkkijarjestelyjen-lomakekentat? valittu-tielupa)
-         (liikennemerkkijarjestelyjen-lomakekentat valittu-tielupa))
 
        (when (nayta-tyoluvan-lomakekentat? valittu-tielupa)
          (tyoluvan-lomakekentat valittu-tielupa))
