@@ -314,4 +314,4 @@
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
     (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Kohdeosa ei ole kohteen sisällä"))))
+           "Kohdeosat eivät kohteen sisällä: 20 / 1 / 1 / 3 / 2 ajorata 1 kaista 1"))))
