@@ -468,6 +468,10 @@
        :tyyppi :positiivinen-numero
        :tasaa :oikea
        :muokattava? (constantly false)}
+      {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
+       :tyyppi :positiivinen-numero
+       :tasaa :oikea
+       :muokattava? (constantly false)}
       {:otsikko "YP-lk"
        :nimi :yllapitoluokka :leveys 4 :tyyppi :string
        :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
@@ -514,7 +518,7 @@
          :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
       (when (= (:nakyma optiot) :tiemerkinta)
         {:otsikko "Pääl\u00ADlys\u00ADtys\u00ADurak\u00ADka"
-         :leveys 13
+         :leveys 12
          :nimi :paallystysurakka
          :tyyppi :string})
       {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
@@ -532,7 +536,7 @@
                        {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
                         :ikoni (ikonit/user)
                         :luokka "btn-xs"}])}
-      {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
+      {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 9
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
        :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
@@ -641,7 +645,7 @@
 
       (when (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
         {:otsikko "Tie\u00ADtyö\u00ADilmoi\u00ADtus"
-         :leveys 6
+         :leveys 5
          :nimi :tietyoilmoitus
          :tyyppi :komponentti
          :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id :as kohde}]

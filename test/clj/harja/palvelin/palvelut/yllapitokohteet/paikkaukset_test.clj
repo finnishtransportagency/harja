@@ -22,7 +22,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -32,22 +32,19 @@
                                     :hae-urakan-paikkauskohteet
                                     +kayttaja-jvh+
                                     {::paikkaus/urakka-id urakka-id})
-        paikkaukset-tr-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-urakan-paikkauskohteet
-                                                +kayttaja-jvh+
-                                                {::paikkaus/urakka-id urakka-id
-                                                 :tr {:numero 20, :alkuosa 1, :alkuetaisyys 1, :loppuosa 1}})
         testikohde-id (some #(when (= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi]))
                                (get-in % [::paikkaus/paikkauskohde ::paikkaus/id]))
-                            paikkaukset)
+                            (:paikkaukset paikkaukset))
         paikaukset-paikkauskohteet-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :hae-urakan-paikkauskohteet
                                                             +kayttaja-jvh+
                                                             {::paikkaus/urakka-id urakka-id
                                                              :paikkaus-idt #{testikohde-id}})]
-    (is (= (count paikkaukset) 8))
-    (is (= (count paikkaukset-tr-filtteri) 2))
-    (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) paikaukset-paikkauskohteet-filtteri)))))
+    (is (contains? paikkaukset :paikkaukset))
+    (is (contains? paikkaukset :paikkauskohteet))
+    (is (not (contains? paikaukset-paikkauskohteet-filtteri :paikkauskohteet)))
+    (is (= (count (:paikkaukset paikkaukset)) 8))
+    (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) (:paikkaukset paikaukset-paikkauskohteet-filtteri))))))
 
 (deftest hae-urakan-paikkauskohteet-ei-toimi-ilman-oikeuksia
   (let [urakka-id @oulun-alueurakan-2014-2019-id]
@@ -64,13 +61,13 @@
                                         {::paikkaus/urakka-id urakka-id
                                          :tr %})
         urakan-kaikkien-paikkauksine-osoitteet (map ::paikkaus/tierekisteriosoite
-                                                    (paikkaus-kutsu nil))
+                                                    (:paikkaukset (paikkaus-kutsu nil)))
         testaus-template (fn [ns-tr-avaimet tr-avaimet testaus-fn]
                            (let [ryhmittely (group-by (apply juxt ns-tr-avaimet) urakan-kaikkien-paikkauksine-osoitteet)
                                  _ (is (> (count (keys ryhmittely)) 1))
                                  tr-filtteri (zipmap tr-avaimet
                                                      (second (sort (keys ryhmittely))))
-                                 kutsun-vastaus (paikkaus-kutsu tr-filtteri)
+                                 kutsun-vastaus (:paikkaukset (paikkaus-kutsu tr-filtteri))
                                  arvojen-lkm (apply + (keep (fn [[avain arvo]]
                                                               (when (testaus-fn avain tr-filtteri)
                                                                 (count arvo)))
@@ -179,3 +176,47 @@
                           (= ryhma-tie numero)
                           (and (>= ryhma-aosa alkuosa)
                                (<= ryhma-losa loppuosa)))))))
+
+(deftest aikavali-filtteri
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        paikkaus-kutsu #(kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-urakan-paikkauskohteet
+                                        +kayttaja-jvh+
+                                        {::paikkaus/urakka-id urakka-id
+                                         :aikavali %})
+        urakan-kaikki-paikkaukset (:paikkaukset (paikkaus-kutsu nil))
+        testaus-template (fn [[alkuaika loppuaika :as aikavali]]
+                           (let [haetut-paikkaukset-valilta (:paikkaukset (paikkaus-kutsu aikavali))
+                                 paikkaukset-valilta (reduce (fn [tulos {paikkauksen-alkuaika ::paikkaus/alkuaika}]
+                                                               (cond
+                                                                 (or (and (nil? alkuaika)
+                                                                          (nil? loppuaika)
+                                                                          (not (nil? aikavali)))
+                                                                     (nil? aikavali)) (conj tulos paikkauksen-alkuaika)
+                                                                 (and (not (nil? alkuaika))
+                                                                      (nil? loppuaika)) (if (>= (.getTime paikkauksen-alkuaika)
+                                                                                                (.getTime alkuaika))
+                                                                                          (conj tulos paikkauksen-alkuaika)
+                                                                                          tulos)
+                                                                 (and (nil? alkuaika)
+                                                                      (not (nil? loppuaika))) (if (<= (.getTime paikkauksen-alkuaika)
+                                                                                                      (.getTime loppuaika))
+                                                                                                (conj tulos paikkauksen-alkuaika)
+                                                                                                tulos)
+                                                                 (and (not (nil? alkuaika))
+                                                                      (not (nil? loppuaika))) (if (and (>= (.getTime paikkauksen-alkuaika)
+                                                                                                           (.getTime alkuaika))
+                                                                                                       (<= (.getTime paikkauksen-alkuaika)
+                                                                                                           (.getTime loppuaika)))
+                                                                                                (conj tulos paikkauksen-alkuaika)
+                                                                                                tulos)))
+                                                             [] urakan-kaikki-paikkaukset)]
+                             (is (= (count haetut-paikkaukset-valilta)
+                                    (count paikkaukset-valilta)))))]
+    (testaus-template nil)
+    (testaus-template [nil nil])
+    (testaus-template [nil nil])
+    (testaus-template [(java.util.Date.) nil])
+    (testaus-template [nil (java.util.Date.)])
+    (testaus-template [(java.util.Date. (- (.getTime (java.util.Date.)) 86400000))
+                       (java.util.Date. (+ (.getTime (java.util.Date.)) (* 5 86400000)))])))

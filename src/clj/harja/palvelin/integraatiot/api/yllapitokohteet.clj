@@ -67,6 +67,7 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
@@ -158,13 +159,15 @@
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
           kohteen-sijainti (:sijainti kohde)
           paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
-          paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))
-          muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
-      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
+          alikohteet (:alikohteet kohde)
+          paakohteen-alikohteet (filter paakohteen-sisalla? alikohteet)
+          muut-alikohteet (filter (comp not paakohteen-sisalla?) alikohteet)]
+      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet
+        db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
-        (kasittely/paivita-alikohteet db kohde (concat paakohteen-alikohteet muut-alikohteet))
+        (kasittely/paivita-alikohteet db kohde alikohteet)
         (yy/paivita-yllapitourakan-geometria db urakka-id))
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
@@ -485,14 +488,14 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
-   {:palvelu :paivita-yllapitokohde
+   {:palvelu :paivita-yllapitokohde ;; TODO Lisää päällekkäisyysvalidointi + testi
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
     :tyyppi :PUT
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (paivita-yllapitokohde vkm db kayttaja parametrit data))}
-   {:palvelu :kirjaa-paallystysilmoitus
+   {:palvelu :kirjaa-paallystysilmoitus ;; TODO Lisää päällekkäisyysvalidointi + testi
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus

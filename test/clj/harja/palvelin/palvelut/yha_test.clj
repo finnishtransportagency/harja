@@ -314,4 +314,25 @@
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
     (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Kohdeosa ei ole kohteen sisällä"))))
+           "Kohdeosat eivät kohteen sisällä: 20 / 1 / 1 / 3 / 2 ajorata 1 kaista 1"))))
+
+(deftest tallenna-uudet-yha-kohteet-onnistuu
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 1
+                                                            :aet 100
+                                                            :losa 5
+                                                            :let 100}
+                                                           {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 3
+                                                            :aet 200
+                                                            :losa 4
+                                                            :let 200})})]
+    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 0))))

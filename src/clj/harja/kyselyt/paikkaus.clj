@@ -128,3 +128,11 @@
   (delete! db ::paikkaus/paikkaustoteuma {::muokkaustiedot/luoja-id kayttaja-id
                                           ::paikkaus/ulkoinen-id ulkoinen-id}))
 
+(defn hae-urakan-paikkauskohteet [db urakka-id]
+  (let [paikkauskohteet (fetch db
+                               ::paikkaus/paikkauskohde
+                               (conj paikkaus/paikkauskohteen-perustiedot
+                                     [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
+                               {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
+    (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
+

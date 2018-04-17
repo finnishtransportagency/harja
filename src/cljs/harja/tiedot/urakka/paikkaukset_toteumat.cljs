@@ -1,18 +1,20 @@
 (ns harja.tiedot.urakka.paikkaukset-toteumat
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
+            [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
-            [harja.domain.paikkaus :as paikkaus])
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat nil}))
+                :valinnat {:tyomenetelmat #{}}}))
 (def taso-nakyvissa? (atom false))
 
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
@@ -31,7 +33,8 @@
         paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
                                    (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (get-in (first paikkaukset)
                                                                                                                 [::paikkaus/paikkauskohde ::paikkaus/id]))})
-                                         paikkaukset))
+                                         (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
+                                                  paikkaukset)))
                                  (group-by ::paikkaus/nimi kiinnostavat-tiedot))
         paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
                                      tulos)]
@@ -59,13 +62,13 @@
           (fn [u]
             (e! (->PaivitaValinnat {polku u})))))
 
-(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet])
+(def valintojen-avaimet [:tr :aikavali :urakan-paikkauskohteet :tyomenetelmat])
 
 (extend-protocol tuck/Event
   PaivitaValinnat
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
-                                (select-keys u valintojen-avaimet))
+                                u)
           haku (tuck/send-async! ->HaePaikkaukset)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -104,7 +107,8 @@
   (process-event [{otsikkokomponentti :otsikkokomponentti} app]
     (-> app
         (tt/post! :hae-urakan-paikkauskohteet
-                  {::paikkaus/urakka-id @nav/valittu-urakka-id}
+                  {::paikkaus/urakka-id @nav/valittu-urakka-id
+                   :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->PaikkauksetEiHaettu})
         (assoc :nakymassa? true
@@ -116,13 +120,13 @@
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
     (yhteiset-tiedot/ensimmaisen-haun-kasittely {:paikkauskohde-idn-polku [::paikkaus/paikkauskohde ::paikkaus/id]
-                                                 :paikkauskohde-nimen-polku [::paikkaus/paikkauskohde ::paikkaus/nimi]
+                                                 :tuloksen-avain :paikkaukset
                                                  :kasittele-haettu-tulos kasittele-haettu-tulos
                                                  :tulos tulos
                                                  :app app}))
   PaikkauksetHaettu
-  (process-event [{tulos :tulos} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos app)]
+  (process-event [{{paikkaukset :paikkaukset} :tulos} app]
+    (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset app)]
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false
@@ -135,6 +139,8 @@
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
-    (reset! yhteiset-tiedot/paikkauskohde-id paikkauskohde-id)
+    (swap! yhteiset-tiedot/tila assoc
+           :paikkauskohde-id paikkauskohde-id
+           :aloitus-aikavali [nil nil])
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
     (assoc app :nakymassa? false)))

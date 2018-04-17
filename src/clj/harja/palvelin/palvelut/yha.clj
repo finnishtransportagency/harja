@@ -155,21 +155,42 @@
       (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)
             kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite-tieverkolla db (:tierekisteriosoitevali %))
                                        alikohteet)
-            kohdeosat-kohteen-sisalla? (every? true?
-                                               (map (partial tr-domain/kohdeosa-kohteen-sisalla? tierekisteriosoitevali)
-                                                    (map :tierekisteriosoitevali alikohteet)))]
+            kohdeosat-kohteen-sisalla-tiedot
+            (map #(-> {:arvo (boolean
+                               (and (= (:tienumero %) (:tienumero tierekisteriosoitevali))
+                                    (tr-domain/tr-vali-paakohteen-sisalla?
+                                      {:tr-alkuosa (:aosa tierekisteriosoitevali)
+                                       :tr-alkuetaisyys (:aet tierekisteriosoitevali)
+                                       :tr-loppuosa (:losa tierekisteriosoitevali)
+                                       :tr-loppuetaisyys (:let tierekisteriosoitevali)}
+                                      {:tr-alkuosa (:aosa %)
+                                       :tr-alkuetaisyys (:aet %)
+                                       :tr-loppuosa (:losa %)
+                                       :tr-loppuetaisyys (:let %)})))
+                       :osoite %})
+                 (map :tierekisteriosoitevali alikohteet))
+            kohdeosat-kohteen-sisalla? (every? #(true? (:arvo %)) kohdeosat-kohteen-sisalla-tiedot)]
         (assoc kohde :kohde-validi? (and (:ok? kohteen-validointi)
-                                          (every? #(true? (:ok? %)) kohdeosien-validointi)
-                                          kohdeosat-kohteen-sisalla?)
-                     :kohde-epavalidi-syy (first (remove nil?
-                                                   (concat [(:syy kohteen-validointi)]
-                                                           (map :syy kohdeosien-validointi)
-                                                           (when-not kohdeosat-kohteen-sisalla?
-                                                             ["Kohdeosa ei ole kohteen sisällä"])))))))
+                                         (every? #(true? (:ok? %)) kohdeosien-validointi)
+                                         kohdeosat-kohteen-sisalla?)
+                     :kohde-epavalidi-syy
+                     (first (remove nil?
+                                    (concat [(:syy kohteen-validointi)]
+                                            (map :syy kohdeosien-validointi)
+                                            (when-not kohdeosat-kohteen-sisalla?
+                                              [(str "Kohdeosat eivät kohteen sisällä: "
+                                                    (str/join
+                                                      ", "
+                                                      (map #(str (tr-domain/tierekisteriosoite-tekstina
+                                                                   %
+                                                                   {:teksti-tie? false})
+                                                                 " ajorata " (:ajorata %)
+                                                                 " kaista " (:kaista %))
+                                                           (map :osoite kohdeosat-kohteen-sisalla-tiedot))))])))))))
     kohteet))
 
 (defn- tallenna-uudet-yha-kohteet
-  "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
+  "Tallentaa YHA:sta tulleet ylläpitokohtetierekistet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)

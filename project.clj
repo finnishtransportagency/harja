@@ -13,8 +13,8 @@
                  [prismatic/schema "1.1.7"]
                  [org.clojure/core.async "0.3.443"] ; TODO Voisi päivittää, mutta ilmoitusten haku ym. testit failaa
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.243"]
-                 [com.cognitect/transit-clj "0.8.300"]
+                 [com.cognitect/transit-cljs "0.8.256"]
+                 [com.cognitect/transit-clj "0.8.309"]
 
                  [cljsjs/exif "2.1.1-1"]
 

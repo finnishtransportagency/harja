@@ -144,14 +144,16 @@ yllapitoluokkanimi->numero
 
 
 #?(:clj
-   (defn tarkista-alikohteiden-ajoradat-ja-kaistat [kohde-id kohteen-sijainti alikohteet]
+   (defn tarkista-alikohteiden-ajorata-ja-kaista
+     "Tarkistaa, että jos pääkohteelle on annettu ajorata / kaista, arvo on sama myös alikohteella."
+     [kohde-id kohteen-sijainti alikohteet]
      (let [ajorata #(or (:ajr %) (:tr-ajorata %) (:ajorata %))
            kaista #(or (:kaista %) (:tr-kaista %))
            paakohteen-ajorata (ajorata kohteen-sijainti)
            paakohteen-kaista (kaista kohteen-sijainti)]
        (if (and paakohteen-ajorata paakohteen-kaista)
          (mapv (fn [{:keys [tunnus tunniste sijainti]}]
-                 (if (and (not (nil? (ajorata sijainti)))
+                 (if (and (some? (ajorata sijainti))
                           (not= paakohteen-ajorata (ajorata sijainti)))
                    (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                               (format "Alikohteen (tunniste: %s) ajorata (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
@@ -160,7 +162,7 @@ yllapitoluokkanimi->numero
                                       kohde-id
                                       paakohteen-ajorata))
                    (when (and
-                           (not (nil? (kaista sijainti)))
+                           (some? (kaista sijainti))
                            (not= paakohteen-kaista (kaista sijainti)))
                      (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                                 (format "Alikohteen (tunniste: %s) kaista: (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
@@ -172,7 +174,9 @@ yllapitoluokkanimi->numero
          []))))
 
 #?(:clj
-   (defn tarkista-etteivat-alikohteet-mene-paallekkain [alikohteet]
+   (defn tarkista-etteivat-alikohteet-mene-paallekkain
+     "Tarkistaa, etteivät annetut alikohteet ole päällekäin toistensa kanssa."
+     [alikohteet]
      (let [alikohteet (sort-by (comp yllapitokohteen-jarjestys :sijainti) alikohteet)
            lisaa-virhe (fn [edellinen seuraava]
                          (conj
@@ -217,13 +221,12 @@ yllapitoluokkanimi->numero
        (concat
          (tarkista-alikohteiden-sijainnit alikohteet)
          (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteiden-ajoradat-ja-kaistat kohde-id kohteen-sijainti alikohteet)
+         (tarkista-alikohteiden-ajorata-ja-kaista kohde-id kohteen-sijainti alikohteet)
          (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
-     "Tekee yksinkertaisen tarkastuksen, jolloin kohde on validi ja alikohteet ovat sen sisällä ja muodostavat yhteinäisen
-     kokonaisuuden. Varsinainen validius tieverkon kannalta täytyy tarkistaa erikseen tietokantaa vasten."
+     "Tarkistaa, että annettu kohde on validi ja alikohteet ovat sen sen sisällä oikein."
      [kohde-id kohteen-sijainti alikohteet]
 
      (let [alikohteet (when alikohteet (sort-by (juxt #(get-in % [:sijainti :aosa]) #(get-in % [:sijainti :aet])) alikohteet))
