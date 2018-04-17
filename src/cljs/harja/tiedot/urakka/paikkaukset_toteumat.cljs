@@ -22,7 +22,7 @@
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
-                                                               ::paikkaus/paikkauskohde})
+                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti})
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
     (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi)))
 
@@ -37,7 +37,11 @@
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
 
 (def toteumat-kartalla
-  (reaction (let [])))
+  (reaction (let [paikkaukset (:paikkaukset-grid @app)]
+              (when (and paikkaukset @taso-nakyvissa?)
+                (mapv (fn [{sijainti ::paikkaus/sijainti}]
+                        {:alue sijainti})
+                      paikkaukset)))))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])

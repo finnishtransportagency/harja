@@ -43,3 +43,14 @@
   (transform-spec [_ input-spec]
     ;; Ei osata specata geometriatyyppejä, joten spec olkoon any?
     any?))
+
+(defrecord GeometryTierekisteri []
+  tx/Transform
+  (from-sql [_ geometry]
+    #?(:clj (geo/pg->clj geometry)
+       :cljs (identity geometry)))
+  (to-sql [_ geometry]
+    (identity geometry))
+  (transform-spec [_ input-spec]
+    ;; Ei osata specata geometriatyyppejä, joten spec olkoon any?
+    any?))

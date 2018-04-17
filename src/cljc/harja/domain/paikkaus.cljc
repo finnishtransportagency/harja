@@ -39,7 +39,7 @@
     ::materiaalit (specql.rel/has-many ::id
                                        ::paikkauksen_materiaali
                                        ::paikkaus-id)}
-   #?(:clj {::sijainti (specql.transform/transform (harja.kyselyt.specql/->Geometry))})]
+   #?(:clj {::sijainti (specql.transform/transform (harja.kyselyt.specql/->GeometryTierekisteri))})]
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta
    {"id" ::tienkohta-id}]
   ["paikkauksen_materiaali" ::paikkauksen_materiaali
