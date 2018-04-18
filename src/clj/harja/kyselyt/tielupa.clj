@@ -150,8 +150,8 @@
                 {::tielupa/myontamispvm (op/between alku loppu)}
 
                 :else nil))))
-    ((partial tielupien-liitteet db))
-    (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))))
+    (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))
+    ((partial tielupien-liitteet db))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
   (set
