@@ -137,6 +137,15 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
+
+
+(defn kanavaurakan-kohde+kaikki []
+  (valinnat/kanava-kohde u/valittu-kohde u/kanavaurakan-kohteet  u/valitse-kohde!)
+    (r/wrap (vec (concat [{:kohde "Kaikki"}]
+                         @u/kanavaurakan-kohteet))
+            identity)
+    u/valittu-kohde u/valitse-kohde!)
+
 (defn urakan-kokonaishintainen-tehtava+kaikki []
   (valinnat/urakan-kokonaishintainen-tehtava
     (r/wrap (vec (concat [{:nimi "Kaikki"}]

@@ -305,6 +305,24 @@
         @u/valittu-toimenpideinstanssi
         [valinnat/urakan-toimenpide+kaikki]))))
 
+
+(defmethod raportin-parametri "kanavaurakan-kohde" [p arvo]
+  (let [aseta-kohde (fn [kohde]
+                    (reset! arvo (if kohde
+                                   {:kohde-id (:id kohde)}
+                                   {:virhe "Ei kohdevalintaa"})))]
+    (komp/luo
+      (komp/watcher u/valittu-kohde
+                    (fn [_ _ kohde]
+                      (aseta-kohde kohde)))
+      (komp/piirretty #(reset! u/valittu-kohde {:kohde_nimi "Kaikki"}))
+
+      (fn [_ _]
+        @u/valittu-kohde
+        [valinnat/kanavaurakan-kohde+kaikki]))))
+
+
+
 (defonce urakoittain? (atom false))
 
 (defmethod raportin-parametri "urakoittain" [p arvo]

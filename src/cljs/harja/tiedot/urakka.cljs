@@ -85,6 +85,14 @@
           (valitse-toimenpideinstanssi-koodilla! nil))
         (valitse-toimenpideinstanssi-koodilla! koodi))))
 
+;; TODO: kanavaurakan kohde
+(defonce valittu-kohde
+         (reaction-writable
+           (let [koodi @valitun-toimenpideinstanssin-koodi
+                 toimenpideinstanssit @urakan-toimenpideinstanssit]
+             (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
+                 (first toimenpideinstanssit)))))
+
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)

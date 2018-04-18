@@ -314,8 +314,8 @@
    {:nimi :kanavien-muutos-ja-lisatyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                  ;;{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}
-                 ;;{:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Tehtävä"}
-                 ;;{:tyyppi "kohde", :konteksti nil, :pakollinen false, :nimi "Kohde"}
+                 {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Tehtävä"}
+                 ;;{:tyyppi "kanavaurakan-kohde", :konteksti nil, :pakollinen false, :nimi "Kohde"}
                  ]
     :konteksti #{"koko maa" "urakka"}
     :kuvaus "Muutos- ja lisätyöt"
