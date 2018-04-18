@@ -25,7 +25,7 @@
 
 (defn tr-grid-kentat []
   [{:otsikko "Tierekisteriosoite"
-    :leveys 1
+    :leveys 5
     :hae #(-> %
               ((juxt ::tielupa/tie
                      ::tielupa/aosa
@@ -45,7 +45,7 @@
     :leveys 1
     :nimi ::tielupa/puoli}
    {:otsikko "Karttapvm"
-    :leveys 1
+    :leveys 5
     :tyyppi :pvm-aika
     :fmt pvm/pvm-aika-opt
     :nimi ::tielupa/karttapvm}])
@@ -140,13 +140,13 @@
     :tunniste identity}
    (concat
      [{:otsikko "Laite"
-       :leveys 1
+       :leveys 6
        :nimi ::tielupa/laite}
       {:otsikko "Asennustyyppi"
-       :leveys 1
+       :leveys 6
        :nimi ::tielupa/asennustyyppi}
       {:otsikko "Kommentit"
-       :leveys 1
+       :leveys 10
        :nimi ::tielupa/kommentit}]
      (tr-grid-kentat))
    (or (::tielupa/johtoasennukset valittu-tielupa) [])])
@@ -157,25 +157,25 @@
     :tunniste identity}
    (concat
      [{:otsikko "Laite"
-       :leveys 1
+       :leveys 6
        :nimi  ::tielupa/laite}
       {:otsikko "Asennustyyppi"
-       :leveys 1
+       :leveys 6
        :nimi  ::tielupa/asennustyyppi}
       {:otsikko "Kommentit"
-       :leveys 1
+       :leveys 10
        :nimi  ::tielupa/kommentit}
       {:otsikko "Maakaapelia metreissä"
-       :leveys 1
+       :leveys 3
        :nimi  ::tielupa/maakaapelia-metreissa}
       {:otsikko "Ilmakaapelia metreissä"
-       :leveys 1
+       :leveys 3
        :nimi  ::tielupa/ilmakaapelia-metreissa}
       {:otsikko "Nopeusrajoitus"
-       :leveys 1
+       :leveys 2
        :nimi  ::tielupa/nopeusrajoitus}
       {:otsikko "Liikenenmäärä"
-       :leveys 1
+       :leveys 2
        :nimi  ::tielupa/liikennemaara}]
      (tr-grid-kentat))
    (or (::tielupa/kaapeliasennukset valittu-tielupa) [])])
@@ -351,10 +351,10 @@
     :tunniste identity}
    (concat
      [{:otsikko "Tulostenumero"
-       :leveys 1
+       :leveys 3
        :nimi ::tielupa/tulostenumero}
       {:otsikko "Kuvaus"
-       :leveys 1
+       :leveys 10
        :nimi ::tielupa/kuvaus}]
      (tr-grid-kentat))
    (or (::tielupa/opasteet valittu-tielupa) [])])
@@ -464,19 +464,22 @@
 
 (def nayta-myyntiluvan-lomakekentat? (partial tiedot/nayta-kentat? myyntiluvan-lomakekentat))
 
-(defn liikennemerkkijarjestelyjen-lomakekentat [valittu-tielupa]
+(defn liikennemerkkijarjestelyjen-lomakegrid [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei liikennemerkkijärjestelyitä"
     :tunniste identity}
    (concat
      [{:otsikko "Alkuperäinen nopeusrajoitus"
+       :leveys 3
        :nimi ::tielupa/alkuperainen-nopeusrajoitus}
       {:otsikko "Alennettu nopeusrajoitus"
+       :leveys 3
        :nimi ::tielupa/alennettu-nopeusrajoitus}
       {:otsikko "Nopeusrajoituksen pituus"
+       :leveys 3
        :nimi ::tielupa/nopeusrajoituksen-pituus}]
      (tr-grid-kentat))
-   (::tielupa/mainokset valittu-tielupa)])
+   (::tielupa/liikennemerkkijarjestelyt valittu-tielupa)])
 
 (defn liikennemerkkijarjestelyn-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -497,7 +500,12 @@
      :nimi ::tielupa/liikennemerkkijarjestely-lisatiedot-nopeusrajoituksesta}
     {:otsikko "Muut liikennemerkit"
      :tyyppi :string
-     :nimi ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit}))
+     :nimi ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit}
+    {:otsikko "Liikennemerkkijärjestelyt"
+     :tyyppi :komponentti
+     :nimi :jarjestelyt
+     :komponentti (fn [{data :data}]
+                    [liikennemerkkijarjestelyjen-lomakegrid data])}))
 
 (def nayta-liikennemerkkijarjestelyn-lomakekentat? (partial tiedot/nayta-kentat? liikennemerkkijarjestelyn-lomakekentat))
 
