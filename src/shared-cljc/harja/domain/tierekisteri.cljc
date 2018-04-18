@@ -178,16 +178,6 @@
            (>= etaisyys 0)))
     false))
 
-(defn kohdeosa-kohteen-sisalla? [kohde kohdeosa]
-  (and
-    (number? (:tienumero kohde))
-    (number? (:tienumero kohdeosa))
-    (= (:tienumero kohdeosa) (:tienumero kohde))
-    (>= (:aosa kohdeosa) (:aosa kohde))
-    (>= (:aet kohdeosa) (:aet kohde))
-    (<= (:losa kohdeosa) (:losa kohde))
-    (<= (:let kohdeosa) (:let kohde))))
-
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
@@ -201,7 +191,7 @@
                     (if (nil? (:teksti-tie? optiot))
                       sana
                       (when (:teksti-tie? optiot) sana)))
-         tie (or (:numero tr) (:tr-numero tr) (:tie tr) (::tie tr))
+         tie (or (:numero tr) (:tienumero tr) (:tr-numero tr) (:tie tr) (::tie tr))
          alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr) (::aosa tr))
          alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr) (::aet tr))
          loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr) (::losa tr))
@@ -260,7 +250,10 @@
     ;; Palautetaan korjattu tr-osoite. Jos mapissa oli muita avaimia, ne saa jäädä
     (merge tr-osoite kasvava-osoite)))
 
-(defn tr-vali-paakohteen-sisalla? [paakohde alikohde]
+(defn tr-vali-paakohteen-sisalla?
+  "Tarkistaa, että alikohde on kokonaisuudessaan pääkohteen sisällä.
+   Olettaa, että molemmat osoitteet ovat samalla tiellä."
+  [paakohde alikohde]
   (let [{paa-alkuosa :tr-alkuosa
          paa-alkuetaisyys :tr-alkuetaisyys
          paa-loppuosa :tr-loppuosa
@@ -375,11 +368,15 @@
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
 
 (defn alikohteet-tayttamaan-kutistunut-paakohde
-  "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita seuraavasti: mikäli jokin alikohde on pidempi kuin
-   pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
+  "Ottaa pääkohteen ja sen SAMAN TIEN alikohteet. Muokkaa alikohteita seuraavasti:
+   mikäli jokin alikohde on pidempi kuin pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
 
-   Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
+   Palauttaa korjatut kohteet."
   ([paakohde alikohteet]
+   (assert (every? #(or (nil? %)
+                        (= % (:tr-numero paakohde)))
+                   (keep :tr-numero alikohteet))
+           (str "Kaikki alikohteet tulee olla samalla tiellä! Kohteen tie: " (:tr-numero paakohde) " ja alikohteiden tiet: " (vec (keep :tr-numero alikohteet))))
    (cond
      (empty? alikohteet)
      []
