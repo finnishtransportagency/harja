@@ -137,7 +137,7 @@
 (defn johtoasennusten-lomakegrid [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei johtoasennuksia"
-    :tunniste (fn [_] (rand-int 5000))}
+    :tunniste identity}
    (concat
      [{:otsikko "Laite"
        :leveys 1
@@ -154,7 +154,7 @@
 (defn kaapelilupien-lomakegrid [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei kaapeliasennuksia"
-    :tunniste (fn [_] (rand-int 5000))}
+    :tunniste identity}
    (concat
      [{:otsikko "Laite"
        :leveys 1
@@ -305,7 +305,7 @@
 (defn mainosten-lomakegrid [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei mainoksia"
-    :tunniste (fn [_] (rand-int 5000))}
+    :tunniste identity}
    (tr-grid-kentat)
    (or (::tielupa/mainokset valittu-tielupa) [])])
 
@@ -348,7 +348,7 @@
 (defn opasteiden-lomakegrid [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei opasteita"
-    :tunniste (fn [_] (rand-int 5000))}
+    :tunniste identity}
    (concat
      [{:otsikko "Tulostenumero"
        :leveys 1
@@ -467,7 +467,7 @@
 (defn liikennemerkkijarjestelyjen-lomakekentat [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei liikennemerkkijärjestelyitä"
-    :tunniste (fn [_] (rand-int 5000))}
+    :tunniste identity}
    (concat
      [{:otsikko "Alkuperäinen nopeusrajoitus"
        :nimi ::tielupa/alkuperainen-nopeusrajoitus}
