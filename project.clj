@@ -185,7 +185,7 @@
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
                 :figwheel true
-                :compiler {:optimizations :none
+                :compiler {:optimizations :whitespace
                            :source-map true
                            ;:parallel-build false Failaa randomisti
                            ;;:preamble ["reagent/react.js"]
@@ -214,9 +214,9 @@
                                "test/cljs" "test/chrome" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
-                           :optimizations :none
+                           :optimizations :whitespace
                            :pretty-print true
-                           :source-map true
+                           ;; :source-map true
                            ;:parallel-build false Failaa randomisti
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
