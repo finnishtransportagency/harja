@@ -256,7 +256,6 @@
        :muokkaaja (:id kayttaja)
        :id kohde-id})
 
-    (log/debug "[DEBUG] PÄIVITÄ AIKATAULU")
     (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
       {:kayttaja kayttaja
        :fim fim
