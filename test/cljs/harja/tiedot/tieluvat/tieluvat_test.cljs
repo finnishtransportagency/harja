@@ -54,23 +54,23 @@
   (vaadi-async-kutsut
     #{tiedot/->TieluvatEiHaettu tiedot/->TieluvatHaettu}
     (is (= {:tielupien-haku-kaynnissa? true}
-           (e! (tiedot/->HaeTieluvat)))))
+           (e! (tiedot/->HaeTieluvat {} nil)))))
 
   (vaadi-async-kutsut
     #{}
     (is (= {:tielupien-haku-kaynnissa? true}
-           (e! (tiedot/->HaeTieluvat)
+           (e! (tiedot/->HaeTieluvat {} nil)
                {:tielupien-haku-kaynnissa? true})))))
 
 (deftest tielupia-ei-haettu
   (is (= {:tielupien-haku-kaynnissa? false
           :haetut-tieluvat []}
-         (e! (tiedot/->TieluvatEiHaettu {})))))
+         (e! (tiedot/->TieluvatEiHaettu {} nil)))))
 
 (deftest tielupia-ei-haettu
   (is (= {:tielupien-haku-kaynnissa? false
           :haetut-tieluvat [{:id 1}]}
-         (e! (tiedot/->TieluvatHaettu [{:id 1}])))))
+         (e! (tiedot/->TieluvatHaettu [{:id 1}] nil)))))
 
 (deftest tieluvan-valinta
   (is (= {:valittu-tielupa {:bar :baz}}
