@@ -400,15 +400,15 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-alkuperainen-lupanro}
     {:otsikko "Alkuperäisen luvan alkupäivämäärä"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-alkupvm}
     {:otsikko "Alkuperäisen luvan loppupäivämäärä"
      :tyyppi :pvm-aika
     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-loppupvm}
     {:otsikko "Nykyinen opastus"
-     :tyyppi :pvm-aika
-    :fmt pvm/pvm-aika-opt
+     :tyyppi :string
      :nimi ::tielupa/opastelupa-nykyinen-opastus}
     {:otsikko "Opasteet"
      :tyyppi :komponentti
@@ -504,6 +504,7 @@
     {:otsikko "Liikennemerkkijärjestelyt"
      :tyyppi :komponentti
      :nimi :jarjestelyt
+     :palstoja 2
      :komponentti (fn [{data :data}]
                     [liikennemerkkijarjestelyjen-lomakegrid data])}))
 
@@ -579,6 +580,13 @@
 
 (def nayta-valmistumisilmoituksen-lomakekentat? (partial tiedot/nayta-kentat? valmistumisilmoituksen-lomakekentat))
 
+(defn sijaintien-lomakegrid [valittu-tielupa]
+  [grid/grid
+   {:tyhja "Ei sijaintietoja"
+    :tunniste identity}
+   (tr-grid-kentat)
+   (::tielupa/sijainnit valittu-tielupa)])
+
 (defn tielupalomake [e! {:keys [valittu-tielupa] :as app}]
   [:div
    [napit/takaisin "Takaisin lupataulukkoon" #(e! (tiedot/->ValitseTielupa nil))]
@@ -644,6 +652,12 @@
       :tyyppi :komponentti
       :komponentti (fn [{tielupa :data}]
                      [liitteet/liitteet-ikonilistana (::tielupa/liitteet tielupa)])}
+     {:otsikko "Sijainnit"
+      :tyyppi :komponentti
+      :nimi :sijainnit
+      :palstoja 2
+      :komponentti (fn [{data :data}]
+                     [sijaintien-lomakegrid data])}
      (when (nayta-urakoitsijan-lomakekentat? valittu-tielupa)
        (urakoitsijan-lomakekentat valittu-tielupa))
 
@@ -725,7 +739,9 @@
   [:div
    [suodattimet e! app]
    [grid/grid
-    {:otsikko "Tienpidon luvat"
+    {:otsikko (if tielupien-haku-kaynnissa?
+                [ajax-loader-pieni "Päivitetään listaa.."]
+                "Tienpidon luvat")
      :tunniste ::tielupa/id
      :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTielupa %))
@@ -758,35 +774,23 @@
       :nimi ::tielupa/hakija-nimi}
      {:otsikko "Luvan numero"
       :leveys 2
-      :tyyppi :positiivinen-numero
-      :nimi ::tielupa/ulkoinen-tunniste}
-     {:otsikko "Tie"
-      :leveys 1
       :tyyppi :string
-      :nimi :tie
+      :nimi ::tielupa/paatoksen-diaarinumero}
+     {:otsikko "TR-osoitteet"
+      :tyyppi :string
+      :leveys 2
+      :nimi :tr-osoitteet
       :hae (fn [rivi]
              (let [sijainnit (::tielupa/sijainnit rivi)]
-               (str/join ", " (map ::tielupa/tie sijainnit))))}
-     {:otsikko "Alku"
-      :leveys 1
-      :tyyppi :string
-      :nimi :alkuosa
-      :hae (fn [rivi]
-             (let [sijainnit (::tielupa/sijainnit rivi)]
-               (str/join ", " (map (comp
-                                     (partial str/join "/")
-                                     (juxt ::tielupa/aosa ::tielupa/aet))
-                                   sijainnit))))}
-     {:otsikko "Loppu"
-      :leveys 1
-      :tyyppi :string
-      :nimi :loppuosa
-      :hae (fn [rivi]
-             (let [sijainnit (::tielupa/sijainnit rivi)]
-               (str/join ", " (map (comp
-                                     (partial str/join "/")
-                                     (juxt ::tielupa/losa ::tielupa/let))
-                                   sijainnit))))}]
+               (->> sijainnit
+                    (map (juxt ::tielupa/tie
+                               ::tielupa/aosa
+                               ::tielupa/aet
+                               ::tielupa/losa
+                               ::tielupa/let))
+                    (map (partial keep identity))
+                    (map (partial str/join "/"))
+                    (str/join "\n"))))}]
     haetut-tieluvat]])
 
 (defn tieluvat* [e! app]
