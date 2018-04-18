@@ -13,7 +13,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat {:tyomenetelmat #{}}}))
+                :valinnat {:tyomenetelmat #{}
+                           :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
 
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
                                  :as paikkaus}]
