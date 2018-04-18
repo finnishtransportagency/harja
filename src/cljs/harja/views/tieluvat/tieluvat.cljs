@@ -739,7 +739,9 @@
   [:div
    [suodattimet e! app]
    [grid/grid
-    {:otsikko "Tienpidon luvat"
+    {:otsikko (if tielupien-haku-kaynnissa?
+                [ajax-loader-pieni "Päivitetään listaa.."]
+                "Tienpidon luvat")
      :tunniste ::tielupa/id
      :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTielupa %))
