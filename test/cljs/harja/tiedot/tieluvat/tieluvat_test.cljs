@@ -50,7 +50,7 @@
 
 (deftest tielupien-haku
   (vaadi-async-kutsut
-    #{tiedot/->TieluvatEiHaettu tiedot/->TieluvatEiHaettu}
+    #{tiedot/->TieluvatEiHaettu tiedot/->TieluvatHaettu}
     (is (= {:tielupien-haku-kaynnissa? true}
            (e! (tiedot/->HaeTieluvat)))))
 
