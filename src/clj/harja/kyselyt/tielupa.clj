@@ -113,6 +113,15 @@
 
       tieluvat)))
 
+(defn tielupien-liitteet [db tieluvat]
+  (let [liitteet (hae-tielupien-liitteet db (map ::tielupa/id tieluvat))]
+    (mapcat
+      val
+      (merge-with
+        (fn [liitteet lupa]
+          [(assoc (first lupa) ::tielupa/liitteet liitteet)])
+        (group-by :tielupa liitteet) (group-by ::tielupa/id tieluvat)))))
+
 (defn hae-tieluvat-hakunakymaan [db hakuehdot]
   (->
     (fetch db
@@ -141,6 +150,7 @@
                 {::tielupa/myontamispvm (op/between alku loppu)}
 
                 :else nil))))
+    ((partial tielupien-liitteet db))
     (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
