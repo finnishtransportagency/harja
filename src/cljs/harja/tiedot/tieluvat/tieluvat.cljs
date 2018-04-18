@@ -27,9 +27,6 @@
 (defrecord TieluvatHaettu [tulos])
 (defrecord TieluvatEiHaettu [virhe])
 (defrecord ValitseTielupa [tielupa])
-(defrecord TallennaTielupa [lupa])
-(defrecord TielupaTallennettu [tulos])
-(defrecord TielupaEiTallennettu [virhe])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -65,14 +62,20 @@
 
     {}))
 
-(defn voi-tallentaa? [app]
-  true)
-
 (def hakijahaku
   (reify protokollat/Haku
     (hae [_ teksti]
       (go (let [vastaus (<! (k/post! :hae-tielupien-hakijat {:hakuteksti teksti}))]
             vastaus)))))
+
+(defn nayta-kentat? [kentat tielupa]
+  (let [kentat (->> tielupa
+                    kentat
+                    :skeemat
+                    (map #(or (:hae %) (:nimi %))))]
+    (boolean
+      (when (and (some? kentat) (not-empty kentat))
+        ((apply some-fn kentat) tielupa)))))
 
 (extend-protocol tuck/Event
 
@@ -114,17 +117,4 @@
 
   ValitseTielupa
   (process-event [{t :tielupa} app]
-    (assoc app :valittu-tielupa t))
-
-  TallennaTielupa
-  (process-event [{l :lupa} app]
-    app)
-
-  TielupaTallennettu
-  (process-event [{t :tulos} app]
-    (assoc app :tieluvan-tallennus-kaynnissa? false))
-
-  TielupaEiTallennettu
-  (process-event [_ app]
-    (viesti/nayta! "Tieluvan tallennus epäonnistui!" :danger)
-    (assoc app :tieluvan-tallennus-kaynnissa? false)))
+    (assoc app :valittu-tielupa t)))

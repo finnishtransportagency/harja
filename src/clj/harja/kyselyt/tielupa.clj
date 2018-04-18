@@ -113,17 +113,20 @@
 
       tieluvat)))
 
+(defn tielupien-liitteet [db tieluvat]
+  (let [liitteet (hae-tielupien-liitteet db (map ::tielupa/id tieluvat))]
+    (mapcat
+      val
+      (merge-with
+        (fn [liitteet lupa]
+          [(assoc (first lupa) ::tielupa/liitteet liitteet)])
+        (group-by :tielupa liitteet) (group-by ::tielupa/id tieluvat)))))
+
 (defn hae-tieluvat-hakunakymaan [db hakuehdot]
   (->
     (fetch db
           ::tielupa/tielupa
-          (set/union
-            harja.domain.tielupa/perustiedot
-            harja.domain.tielupa/hakijan-tiedot
-            harja.domain.tielupa/urakoitsijan-tiedot
-            harja.domain.tielupa/liikenneohjaajan-tiedot
-            harja.domain.tielupa/tienpitoviranomaisen-tiedot
-            harja.domain.tielupa/johto-ja-kaapeliluvan-tiedot)
+          tielupa/kaikki-kentat
           (op/and
             (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
               {::tielupa/hakija-nimi nimi})
@@ -147,7 +150,8 @@
                 {::tielupa/myontamispvm (op/between alku loppu)}
 
                 :else nil))))
-    (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))))
+    (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))
+    ((partial tielupien-liitteet db))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
   (set
