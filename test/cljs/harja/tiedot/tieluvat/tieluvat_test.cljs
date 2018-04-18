@@ -9,10 +9,12 @@
   (let [atomi (tiedot/valinta-wrap e! {:valinnat {:foo 1}} :foo)]
     (is (= 1 @atomi))
 
+    ;; Kun arvoa muutetaan, kutsutaan PaivitaValinnat, joka laukaisee haun
+    ;; Paluuarvoa ei oikeen saa testattua - pitäisi tehdä e!:stä versio, joka käyttää
+    ;; täältä annettua app-statea.
     (vaadi-async-kutsut
       #{tiedot/->HaeTieluvat}
-      (is (= {:valinnat {:foo 2}}
-             (reset! atomi 2))))))
+      (is (= 2 (reset! atomi 2))))))
 
 (deftest kenttien-nayttaminen
   (let [nayta? (partial
@@ -72,4 +74,4 @@
 
 (deftest tieluvan-valinta
   (is (= {:valittu-tielupa {:bar :baz}}
-         (e! (tiedot/ValitseTielupa {:bar :baz})))))
+         (e! (tiedot/->ValitseTielupa {:bar :baz})))))
