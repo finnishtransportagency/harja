@@ -24,7 +24,7 @@
     [harja.tyokalut.ui :refer [for*]]))
 
 (defn tr-grid-kentat []
-  [{:otsikko "Tierekisteriosoite"
+  [{:otsikko "Tie\u00ADre\u00ADkis\u00ADte\u00ADri\u00ADo\u00ADsoi\u00ADte"
     :leveys 5
     :hae #(-> %
               ((juxt ::tielupa/tie
@@ -35,16 +35,16 @@
               (->>
                 (keep identity)
                 (str/join "/")))}
-   {:otsikko "Ajorata"
+   {:otsikko "A\u00ADjo\u00ADra\u00ADta"
     :leveys 1
     :nimi ::tielupa/ajorata}
-   {:otsikko "Kaista"
+   {:otsikko "Kai\u00ADsta"
     :leveys 1
     :nimi ::tielupa/kaista}
-   {:otsikko "Puoli"
+   {:otsikko "Puo\u00ADli"
     :leveys 1
     :nimi ::tielupa/puoli}
-   {:otsikko "Karttapvm"
+   {:otsikko "Kart\u00ADta\u00ADpvm"
     :leveys 5
     :tyyppi :pvm-aika
     :fmt pvm/pvm-aika-opt
@@ -139,13 +139,13 @@
    {:tyhja "Ei johtoasennuksia"
     :tunniste identity}
    (concat
-     [{:otsikko "Laite"
+     [{:otsikko "Lai\u00ADte"
        :leveys 6
        :nimi ::tielupa/laite}
-      {:otsikko "Asennustyyppi"
+      {:otsikko "A\u00ADsen\u00ADnus\u00ADtyyp\u00ADpi"
        :leveys 6
        :nimi ::tielupa/asennustyyppi}
-      {:otsikko "Kommentit"
+      {:otsikko "Kom\u00ADmen\u00ADtit"
        :leveys 10
        :nimi ::tielupa/kommentit}]
      (tr-grid-kentat))
@@ -156,25 +156,25 @@
    {:tyhja "Ei kaapeliasennuksia"
     :tunniste identity}
    (concat
-     [{:otsikko "Laite"
+     [{:otsikko "Lai\u00ADte"
        :leveys 6
        :nimi  ::tielupa/laite}
-      {:otsikko "Asennustyyppi"
+      {:otsikko "A\u00ADsen\u00ADnus\u00ADtyyp\u00ADpi"
        :leveys 6
        :nimi  ::tielupa/asennustyyppi}
-      {:otsikko "Kommentit"
+      {:otsikko "Kom\u00ADmen\u00ADtit"
        :leveys 10
        :nimi  ::tielupa/kommentit}
-      {:otsikko "Maakaapelia metreissä"
+      {:otsikko "Maa\u00ADkaa\u00ADpe\u00ADli\u00ADa met\u00ADreis\u00ADsä"
        :leveys 3
        :nimi  ::tielupa/maakaapelia-metreissa}
-      {:otsikko "Ilmakaapelia metreissä"
+      {:otsikko "Il\u00ADma\u00ADkaa\u00ADpe\u00ADli\u00ADa met\u00ADreis\u00ADsä"
        :leveys 3
        :nimi  ::tielupa/ilmakaapelia-metreissa}
-      {:otsikko "Nopeusrajoitus"
+      {:otsikko "No\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtus"
        :leveys 2
        :nimi  ::tielupa/nopeusrajoitus}
-      {:otsikko "Liikenenmäärä"
+      {:otsikko "Lii\u00ADken\u00ADne\u00ADmää\u00ADrä"
        :leveys 2
        :nimi  ::tielupa/liikennemaara}]
      (tr-grid-kentat))
@@ -350,10 +350,10 @@
    {:tyhja "Ei opasteita"
     :tunniste identity}
    (concat
-     [{:otsikko "Tulostenumero"
+     [{:otsikko "Tu\u00ADlos\u00ADte\u00ADnu\u00ADme\u00ADro"
        :leveys 3
        :nimi ::tielupa/tulostenumero}
-      {:otsikko "Kuvaus"
+      {:otsikko "Ku\u00ADva\u00ADus"
        :leveys 10
        :nimi ::tielupa/kuvaus}]
      (tr-grid-kentat))
@@ -469,13 +469,13 @@
    {:tyhja "Ei liikennemerkkijärjestelyitä"
     :tunniste identity}
    (concat
-     [{:otsikko "Alkuperäinen nopeusrajoitus"
+     [{:otsikko "Al\u00ADku\u00ADpe\u00ADräi\u00ADnen no\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtus"
        :leveys 3
        :nimi ::tielupa/alkuperainen-nopeusrajoitus}
-      {:otsikko "Alennettu nopeusrajoitus"
+      {:otsikko "A\u00ADlen\u00ADnet\u00ADtu no\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtus"
        :leveys 3
        :nimi ::tielupa/alennettu-nopeusrajoitus}
-      {:otsikko "Nopeusrajoituksen pituus"
+      {:otsikko "No\u00ADpe\u00ADus\u00ADra\u00ADjoi\u00ADtuk\u00ADsen pi\u00ADtuus"
        :leveys 3
        :nimi ::tielupa/nopeusrajoituksen-pituus}]
      (tr-grid-kentat))
@@ -732,32 +732,32 @@
      :tyhja (if tielupien-haku-kaynnissa?
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
-    [{:otsikko "Myönnetty"
-      :leveys 1
+    [{:otsikko "Myön\u00ADnetty"
+      :leveys 2
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :nimi ::tielupa/myontamispvm}
-     {:otsikko "Voimassaolon alku"
-      :leveys 1
+     {:otsikko "Voi\u00ADmas\u00ADsaolon alku"
+      :leveys 2
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :nimi ::tielupa/voimassaolon-alkupvm}
-     {:otsikko "Voimassaolon loppu"
-      :leveys 1
+     {:otsikko "Voimas\u00ADsaolon loppu"
+      :leveys 2
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :nimi ::tielupa/voimassaolon-loppupvm}
-     {:otsikko "Lupatyyppi"
-      :leveys 1
+     {:otsikko "Lupa\u00ADtyyppi"
+      :leveys 2
       :tyyppi :string
       :nimi ::tielupa/tyyppi
       :fmt tielupa/tyyppi-fmt}
-     {:otsikko "Hakija"
-      :leveys 1
+     {:otsikko "Ha\u00ADkija"
+      :leveys 3
       :tyyppi :string
       :nimi ::tielupa/hakija-nimi}
      {:otsikko "Luvan numero"
-      :leveys 1
+      :leveys 2
       :tyyppi :positiivinen-numero
       :nimi ::tielupa/ulkoinen-tunniste}
      {:otsikko "Tie"
