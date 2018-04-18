@@ -52,7 +52,8 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test]
             [harja.tiedot.kanavat.urakka.liikenne-test]
             [harja.views.urakka.jarjestelma-asetukset-test]
-            [harja.tiedot.kanavat.kohteet-kartalla-test]))
+            [harja.tiedot.kanavat.kohteet-kartalla-test]
+            [harja.tiedot.tieluvat.tieluvat-test]))
 
 (doo-tests 'harja.pvm-test
            'harja.ui.dom-test
@@ -107,5 +108,6 @@
            'harja.tiedot.kanavat.urakka.liikenne-test
            'harja.views.urakka.jarjestelma-asetukset-test
            'harja.tiedot.kanavat.kohteet-kartalla-test
+           'harja.tiedot.tieluvat.tieluvat-test
            ;; uusi testi tähän
            )
