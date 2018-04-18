@@ -71,6 +71,15 @@
       (go (let [vastaus (<! (k/post! :hae-tielupien-hakijat {:hakuteksti teksti}))]
             vastaus)))))
 
+(defn nayta-kentat? [kentat tielupa]
+  (let [kentat (->> tielupa
+                    kentat
+                    :skeemat
+                    (map #(or (:hae %) (:nimi %))))]
+    (boolean
+      (when (and (some? kentat) (not-empty kentat))
+        ((apply some-fn kentat) tielupa)))))
+
 (extend-protocol tuck/Event
 
   Nakymassa?
