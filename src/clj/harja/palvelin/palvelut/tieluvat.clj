@@ -3,12 +3,15 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
 
             [harja.domain.tielupa :as tielupa]
-            [harja.kyselyt.tielupa :as q]))
+            [harja.kyselyt.tielupa :as q]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-tieluvat [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
   (q/hae-tieluvat-hakunakymaan db tiedot))
 
 (defn hae-tielupien-hakijat [db user hakuteksti]
+  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
   (q/hae-tielupien-hakijat db hakuteksti))
 
 (defrecord Tieluvat []
