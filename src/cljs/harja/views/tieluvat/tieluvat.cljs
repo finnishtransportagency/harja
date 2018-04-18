@@ -400,15 +400,15 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-alkuperainen-lupanro}
     {:otsikko "Alkuperäisen luvan alkupäivämäärä"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-alkupvm}
     {:otsikko "Alkuperäisen luvan loppupäivämäärä"
      :tyyppi :pvm-aika
     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-loppupvm}
     {:otsikko "Nykyinen opastus"
-     :tyyppi :pvm-aika
-    :fmt pvm/pvm-aika-opt
+     :tyyppi :string
      :nimi ::tielupa/opastelupa-nykyinen-opastus}
     {:otsikko "Opasteet"
      :tyyppi :komponentti
