@@ -7,11 +7,11 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-tieluvat [db user tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-tielupien-haku user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
   (q/hae-tieluvat-hakunakymaan db tiedot))
 
 (defn hae-tielupien-hakijat [db user hakuteksti]
-  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-tielupien-haku user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/tieluvat-haku user)
   (q/hae-tielupien-hakijat db hakuteksti))
 
 (defrecord Tieluvat []
