@@ -15,7 +15,8 @@
     [harja.domain.tielupa :as tielupa]
     [harja.ui.napit :as napit]
     [clojure.string :as str]
-    [harja.pvm :as pvm])
+    [harja.pvm :as pvm]
+    [harja.fmt :as fmt])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -52,6 +53,8 @@
     :nimi ::tielupa/puoli}
    {:otsikko "Karttapvm"
     :leveys 1
+    :tyyppi :pvm-aika
+    :fmt pvm/pvm-aika-opt
     :nimi ::tielupa/karttapvm}])
 
 (defn hakijan-lomakekentat [valittu-tielupa]
@@ -227,13 +230,15 @@
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-haettu-kayttotarkoitus}
     {:otsikko "Liittymän siirto?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/liittymalupa-liittyman-siirto}
     {:otsikko "Tarkoituksen kuvaus"
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-tarkoituksen-kuvaus}
     {:otsikko "Tilapäinen liittymälupa?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/liittymalupa-tilapainen}
     {:otsikko "Sijainnin kuvaus"
      :tyyppi :string
@@ -248,8 +253,9 @@
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-nykyisen-liittyman-numero}
     {:otsikko "Nykyisen liittymän päiväys"
-     :tyyppi :string
-     :nimi ::tielupa/liittymalupa-nykyisen-liittyman-paivays}
+     :nimi ::tielupa/liittymalupa-nykyisen-liittyman-paivays
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt}
     {:otsikko "Kiinteistö rekisterinumero"
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-kiinteisto-rn}
@@ -257,7 +263,8 @@
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-muut-kulkuyhteydet}
     {:otsikko "Valmistumisen takaraja"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/liittymalupa-valmistumisen-takaraja}
     {:otsikko "Kylä"
      :tyyppi :string
@@ -275,7 +282,8 @@
      :tyyppi :string
      :nimi ::tielupa/liittymalupa-liittymaohje-leveys-metreissa}
     {:otsikko "Rumpu?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/liittymalupa-liittymaohje-rumpu}
     {:otsikko "Rummun halkaisija (mm)"
      :tyyppi :string
@@ -317,14 +325,17 @@
     {:otsikko "Sijainnin kuvaus"
      :tyyppi :string
      :nimi ::tielupa/mainoslupa-sijainnin-kuvaus}
-    {:otsikko "Korvaava päätös"
-     :tyyppi :string
+    {:otsikko "Korvaava päätös?"
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/mainoslupa-korvaava-paatos}
-    {:otsikko "Tiedoksi ELY-keskukselle"
-     :tyyppi :string
+    {:otsikko "Tiedoksi ELY-keskukselle?"
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/mainoslupa-tiedoksi-elykeskukselle}
-    {:otsikko "Asemakaava alueella"
-     :tyyppi :string
+    {:otsikko "Asemakaava-alueella?"
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/mainoslupa-asemakaava-alueella}
     {:otsikko "Suoja-alueen leveys"
      :tyyppi :string
@@ -334,6 +345,7 @@
      :nimi ::tielupa/mainoslupa-lisatiedot}
     {:otsikko "Mainokset"
      :nimi :mainokset
+     :palstoja 2
      :tyyppi :komponentti
      :komponentti (fn [{:keys [data]}]
                     [mainosten-lomakegrid data])}))
@@ -360,14 +372,17 @@
     {:otsikko "Kohteen nimi"
      :tyyppi :string
      :nimi ::tielupa/opastelupa-kohteen-nimi}
-    {:otsikko "Palvelukohteen opastaulu"
-     :tyyppi :string
+    {:otsikko "Palvelukohteen opastaulu?"
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/opastelupa-palvelukohteen-opastaulu}
-    {:otsikko "Palvelukohteen osoiteviitta"
-     :tyyppi :string
+    {:otsikko "Palvelukohteen osoiteviitta?"
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/opastelupa-palvelukohteen-osoiteviitta}
-    {:otsikko "Osoiteviitta"
-     :tyyppi :string
+    {:otsikko "Osoiteviitta?"
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/opastelupa-osoiteviitta}
     {:otsikko "Ennakkomerkki"
      :tyyppi :string
@@ -385,7 +400,8 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-kohteen-url-osoite}
     {:otsikko "Jatkolupa?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/opastelupa-jatkolupa}
     {:otsikko "Alkuperäinen lupanumero"
      :tyyppi :string
@@ -394,14 +410,17 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-alkupvm}
     {:otsikko "Alkuperäisen luvan loppupäivämäärä"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+    :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/opastelupa-alkuperaisen-luvan-loppupvm}
     {:otsikko "Nykyinen opastus"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+    :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/opastelupa-nykyinen-opastus}
     {:otsikko "Opasteet"
      :tyyppi :komponentti
      :nimi :opasteet
+     :palstoja 2
      :komponentti (fn [{:keys [data]}]
                     [opasteiden-lomakegrid data])}))
 
@@ -496,22 +515,27 @@
      :tyyppi :string
      :nimi ::tielupa/tyolupa-tyon-sisalto}
     {:otsikko "Työn saa aloittaa"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/tyolupa-tyon-saa-aloittaa}
     {:otsikko "Viimeistelty oltava"
-     :tyyppi :string
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
      :nimi ::tielupa/tyolupa-viimeistely-oltava}
     {:otsikko "Ohjeet työn suorittamiseen"
      :tyyppi :string
      :nimi ::tielupa/tyolupa-ohjeet-tyon-suorittamiseen}
     {:otsikko "Loppuosa puuttuu?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/tyolupa-los-puuttuu}
     {:otsikko "Ilmoitus tieliikennekeskukseen?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/tyolupa-ilmoitus-tieliikennekeskukseen}
     {:otsikko "Tilapäinen nopeusrajoitus?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/tyolupa-tilapainen-nopeusrajoitus}
     {:otsikko "Loppuosa, lisätiedot"
      :tyyppi :string
@@ -541,10 +565,12 @@
   (lomake/ryhma
     {:otsikko "Valmistumisilmoitus"}
     {:otsikko "Valmistumisilmoitus vaaditaan?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/valmistumisilmoitus-vaaditaan}
     {:otsikko "Valmistumisilmoitus palautettu?"
-     :tyyppi :string
+     :tyyppi :checkbox
+     :fmt fmt/totuus
      :nimi ::tielupa/valmistumisilmoitus-palautettu}
     {:otsikko "Valmistumisilmoitus"
      :tyyppi :string
@@ -563,20 +589,28 @@
       [{:otsikko "Ulkoinen tunniste"
         :tyyppi :string
         :nimi ::tielupa/ulkoinen-tunniste}
+       {:otsikko "Lupatyyppi"
+        :tyyppi :string
+        :nimi ::tielupa/tyyppi
+        :fmt tielupa/tyyppi-fmt}
        {:otsikko "Diaarinumero"
         :tyyppi :string
         :nimi ::tielupa/paatoksen-diaarinumero}
        {:otsikko "Saapumispäivämäärä"
-        :tyyppi :string
+        :tyyppi :pvm-aika
+        :fmt pvm/pvm-aika-opt
         :nimi ::tielupa/saapumispvm}
        {:otsikko "Myöntämispäivämäärä"
-        :tyyppi :string
+        :tyyppi :pvm-aika
+        :fmt pvm/pvm-aika-opt
         :nimi ::tielupa/myontamispvm}
        {:otsikko "Voimassaolon alkupäivämäärä"
-        :tyyppi :string
+        :tyyppi :pvm-aika
+        :fmt pvm/pvm-aika-opt
         :nimi ::tielupa/voimassaolon-alkupvm}
        {:otsikko "Voimassaolon loppupäivämäärä"
-        :tyyppi :string
+        :tyyppi :pvm-aika
+        :fmt pvm/pvm-aika-opt
         :nimi ::tielupa/voimassaolon-loppupvm}
        {:otsikko "Otsikko"
         :tyyppi :string
@@ -645,17 +679,7 @@
          (vesihuoltoluvan-lomakekentat valittu-tielupa))
 
        (when (nayta-hakijan-lomakekentat? valittu-tielupa)
-         (hakijan-lomakekentat valittu-tielupa))
-       #_{:otsikko "Mainokset"
-        :nimi ::tielupa/mainokset}
-       #_{:otsikko "Liikennemerkkijärjestelyt"
-        :nimi ::tielupa/liikennemerkkijarjestelyt}
-       #_{:otsikko "Johtoasennukset"
-        :nimi ::tielupa/johtoasennukset}
-       #_{:otsikko "Kaapeliasennukset"
-        :nimi ::tielupa/kaapeliasennukset}
-       #_{:otsikko "Opasteet"
-        :nimi ::tielupa/opasteet}]
+         (hakijan-lomakekentat valittu-tielupa))]
       valittu-tielupa]]))
 
 (defn suodattimet [e! app]
