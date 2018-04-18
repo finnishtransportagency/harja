@@ -151,7 +151,7 @@
     (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
           kohteen-vuodet (into []
                                (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
-                               (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:yllapitokohde kohde-id}))
+                               (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id}))
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))

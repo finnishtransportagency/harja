@@ -995,4 +995,4 @@ WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
 -- name: hae-yllapitokohteen-vuodet
 -- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.
 SELECT vuodet FROM yllapitokohde
-WHERE yllapitokohde = :yllapitokohde;
+WHERE id = :id;
