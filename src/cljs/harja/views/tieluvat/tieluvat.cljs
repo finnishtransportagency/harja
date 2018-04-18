@@ -777,26 +777,58 @@
       :tyyppi :string
       :nimi ::tielupa/paatoksen-diaarinumero}
      {:otsikko "TR-osoitteet"
-      :tyyppi :string
+      :tyyppi :komponentti
       :leveys 2
       :nimi :tr-osoitteet
-      :hae (fn [rivi]
-             (let [sijainnit (::tielupa/sijainnit rivi)]
-               (->> sijainnit
-                    (map (juxt ::tielupa/tie
-                               ::tielupa/aosa
-                               ::tielupa/aet
-                               ::tielupa/losa
-                               ::tielupa/let))
-                    (map (partial keep identity))
-                    (map (partial str/join "/"))
-                    (str/join "\n"))))}]
-    haetut-tieluvat]])
+      :komponentti (fn [rivi]
+                     (let [sijainnit (::tielupa/sijainnit rivi)]
+                       [:div
+                        (doall
+                          (map-indexed
+                           (fn [i osoite]
+                             ^{:key (str i "_" osoite)}
+                             [:div osoite])
+                           (->> sijainnit
+                                (sort-by (juxt ::tielupa/tie
+                                               ::tielupa/aosa
+                                               ::tielupa/aet
+                                               ::tielupa/losa
+                                               ::tielupa/let))
+                                (map (juxt ::tielupa/tie
+                                           ::tielupa/aosa
+                                           ::tielupa/aet
+                                           ::tielupa/losa
+                                           ::tielupa/let))
+                                (map (partial keep identity))
+                                (map (partial str/join "/")))))]))}]
+    (sort-by
+      (juxt
+        ::tielupa/myontamispvm
+        ::tielupa/voimassaolon-alkupvm
+        ::tielupa/voimassaolon-loppupvm
+        ::tielupa/tyyppi
+        ::tielupa/hakija)
+      (fn [[myonto-a alku-a loppu-a :as a]
+           [myonto-b alku-b loppu-b :as b]]
+
+        (cond
+          (not= myonto-a myonto-b)
+          (pvm/jalkeen? myonto-a myonto-b)
+
+          (not= alku-a alku-b)
+          (pvm/jalkeen? alku-a alku-b)
+
+          (not= loppu-a loppu-b)
+          (pvm/jalkeen? loppu-a loppu-b)
+
+          :default
+          (compare a b)))
+      haetut-tieluvat)]])
 
 (defn tieluvat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeTieluvat)))
+                           (e! (tiedot/->HaeTieluvat (:valinnat app) nil)))
                       #(do (e! (tiedot/->Nakymassa? false))))
     (fn [e! app]
       [:div
