@@ -178,16 +178,6 @@
            (>= etaisyys 0)))
     false))
 
-(defn kohdeosa-kohteen-sisalla? [kohde kohdeosa]
-  (and
-    (number? (:tienumero kohde))
-    (number? (:tienumero kohdeosa))
-    (= (:tienumero kohdeosa) (:tienumero kohde))
-    (>= (:aosa kohdeosa) (:aosa kohde))
-    (>= (:aet kohdeosa) (:aet kohde))
-    (<= (:losa kohdeosa) (:losa kohde))
-    (<= (:let kohdeosa) (:let kohde))))
-
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
@@ -260,7 +250,10 @@
     ;; Palautetaan korjattu tr-osoite. Jos mapissa oli muita avaimia, ne saa jäädä
     (merge tr-osoite kasvava-osoite)))
 
-(defn tr-vali-paakohteen-sisalla? [paakohde alikohde]
+(defn tr-vali-paakohteen-sisalla?
+  "Tarkistaa, että alikohde on kokonaisuudessaan pääkohteen sisällä.
+   Olettaa, että molemmat osoitteet ovat samalla tiellä."
+  [paakohde alikohde]
   (let [{paa-alkuosa :tr-alkuosa
          paa-alkuetaisyys :tr-alkuetaisyys
          paa-loppuosa :tr-loppuosa
