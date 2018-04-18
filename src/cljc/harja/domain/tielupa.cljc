@@ -205,13 +205,14 @@
 
 (def lupatyyppi-vaihtoehdot (keys lupatyypit*))
 
+(s/def ::haettava-tr-osoite (s/keys :opt [::tie ::aet ::aosa ::losa ::let]))
 (s/def ::hae-tieluvat-kysely (s/keys :opt [::hakija-nimi
                                            ::tyyppi
-                                           ::ulkoinen-tunniste
+                                           ::paatoksen-diaarinumero
                                            ::voimassaolon-alkupvm
                                            ::voimassaolon-loppupvm
                                            ::myontamispvm
-                                           ::sijainnit]))
+                                           ::haettava-tr-osoite]))
 #?(:clj (s/def ::hae-tieluvat-vastaus (s/keys :opt [::liittymalupa-kyla
                                                     ::muokkaustiedot/muokattu
                                                     ::liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa
@@ -343,6 +344,7 @@
                                                     ::myyntilupa-alueen-nimi
                                                     ::liitteet])))
 
-(s/def ::hae-tielupien-hakijat-kysely (s/keys :req [::hakija-nimi]))
+(s/def ::hakuteksti ::hakija-nimi)
+(s/def ::hae-tielupien-hakijat-kysely (s/keys :req-un [::hakuteksti]))
 (s/def ::hae-tielupien-hakijat-vastaus (s/coll-of ::hakija-nimi))
 
