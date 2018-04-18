@@ -205,9 +205,15 @@
 
 (def lupatyyppi-vaihtoehdot (keys lupatyypit*))
 
-(s/def ::hae-tieluvat-kysely any?)
-(s/def ::hae-tieluvat-vastaus any?)
+(s/def ::hae-tieluvat-kysely (s/keys :opt [::hakija-nimi
+                                           ::tyyppi
+                                           ::ulkoinen-tunniste
+                                           ::voimassaolon-alkupvm
+                                           ::voimassaolon-loppupvm
+                                           ::myontamispvm
+                                           ::sijainnit]))
+#?(:clj (s/def ::hae-tieluvat-vastaus (s/keys :opt (conj (vec kaikki-kentat) ::liitteet))))
 
-(s/def ::hae-tielupien-hakijat-kysely any?)
-(s/def ::hae-tielupien-hakijat-vastaus any?)
+(s/def ::hae-tielupien-hakijat-kysely (s/keys :req [::hakija-nimi]))
+(s/def ::hae-tielupien-hakijat-vastaus (s/coll-of ::hakija-nimi))
 
