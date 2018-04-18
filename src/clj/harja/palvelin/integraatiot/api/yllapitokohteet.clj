@@ -149,9 +149,9 @@
     (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
-          kohteen-vuodet (into []
-                               (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
-                               (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id}))
+          kohteen-vuodet (map :vuodet (into []
+                                            (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
+                                            (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id})))
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
@@ -170,7 +170,7 @@
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (doseq [vuosi kohteen-vuodet]
         (log/debug "VAADI: " (yy/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
-                                           db kohde-id vuosi alikohteet)))
+                               db kohde-id vuosi alikohteet)))
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)
