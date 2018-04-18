@@ -378,7 +378,8 @@ reimari-toimenpidetyypit
     turvalaite
     urakka
     vayla
-    kiintio))
+    kiintio
+    vikailmoitus))
 
 (def perustiedot
   #{::id

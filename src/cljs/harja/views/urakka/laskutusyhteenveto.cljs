@@ -31,13 +31,15 @@
 (defonce laskutusyhteenvedon-parametrit
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
-                  nakymassa? @laskutusyhteenveto-nakyvissa?]
+                  nakymassa? @laskutusyhteenveto-nakyvissa?
+                  urakkatyyppi (:tyyppi ur)]
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
                  (:id ur)
                  :laskutusyhteenveto
-                 {:alkupvm  alkupvm
-                  :loppupvm loppupvm})))))
+                 {:alkupvm alkupvm
+                  :loppupvm loppupvm
+                  :urakkatyyppi urakkatyyppi})))))
 
 
 (defonce laskutusyhteenvedon-tiedot

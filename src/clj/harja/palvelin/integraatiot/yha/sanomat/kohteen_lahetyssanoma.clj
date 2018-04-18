@@ -25,8 +25,10 @@
    [:aet (:tr-alkuetaisyys osoite)]
    [:losa (:tr-loppuosa osoite)]
    [:let (:tr-loppuetaisyys osoite)]
-   [:ajorata (:tr-ajorata osoite)]
-   [:kaista (:tr-kaista osoite)]])
+   (when (:tr-ajorata osoite)
+     [:ajorata (:tr-ajorata osoite)])
+   (when (:tr-kaista osoite)
+     [:kaista (:tr-kaista osoite)])])
 
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
