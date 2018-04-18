@@ -437,10 +437,11 @@
   (jdbc/with-db-transaction [db db]
     (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
           muut-kohteet (filter #(not= (:tr-numero %) kohteen-tienumero) osat)]
-      (if-let [paallekkaiset-kohdeosat (yy/vaadi-etta-kohdeosat-eivat-mene-paallekkain db
-                                                                                       yllapitokohde-id
-                                                                                       vuosi
-                                                                                       muut-kohteet)]
+      (if-let [paallekkaiset-kohdeosat (yy/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+                                         db
+                                         yllapitokohde-id
+                                         vuosi
+                                         muut-kohteet)]
         {:validointivirheet paallekkaiset-kohdeosat}
 
         (do
@@ -558,11 +559,17 @@
         (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
-              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde kohdeosat)]
+              paakohteen-tien-kohdeosat (filter #(= (:tr-numero %) (:tr-numero kohde)) kohdeosat)
+              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde paakohteen-tien-kohdeosat)
+              korjatut+muut (map (fn [kohdeosa]
+                                   (if-let [korjattu (first (filter #(= (:id %) (:id kohdeosa)) korjatut-kohdeosat))]
+                                     korjattu
+                                     kohdeosa))
+                                 kohdeosat)]
           (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
                                                :yllapitokohde-id id
-                                               :osat korjatut-kohdeosat})))))
+                                               :osat korjatut+muut})))))
 
 (defn- validoi-tallennettavat-yllapitokohteet
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."

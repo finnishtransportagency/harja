@@ -238,8 +238,10 @@
                               (let [tr (:tierekisteriosoitevali kohde)]
                                 [:li
                                  "Nimi: " (:nimi kohde) ", "
-                                 "YHA id: " (:yha-id kohde) ", "
-                                 "tierekisteriosoiteväli: " (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr) ", "
+                                 "YHA-id: " (:yha-id kohde) ", "
+                                 "tierekisteriosoiteväli: "
+                                 (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)
+                                 " ajorata " (:ajorata tr) " kaista " (:kaista tr) ", "
                                  (when-let [syy (:kohde-epavalidi-syy kohde)]
                                    syy)]))]
     [:div
