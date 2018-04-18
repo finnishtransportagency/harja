@@ -194,8 +194,8 @@
    :mainosilmoitus "mainosilmoitus"
    :opastelupa "opastelupa"
    :suoja-aluerakentamislupa "suoja-aluerakentamislupa"
-   :tilapainen-myyntilupa "tilapäinen-myyntilupa"
-   :tilapainen-liikennemerkkijarjestely "tilapäinen-liikennemerkkijärjestely"
+   :tilapainen-myyntilupa "tilapäinen myyntilupa"
+   :tilapainen-liikennemerkkijarjestely "tilapäinen liikennemerkkijärjestely"
    :tietyolupa "tietyölupa"
    :vesihuoltolupa "vesihuoltolupa"})
 
