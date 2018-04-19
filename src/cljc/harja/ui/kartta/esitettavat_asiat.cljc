@@ -14,6 +14,7 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.tielupa :as tielupa]
             [clojure.set :as set]))
 
 
@@ -661,6 +662,18 @@
       :alue (maarittele-feature kohde
                                 kohde-valittu?
                                 ikoni))))
+
+(defmethod asia-kartalle :tielupa [tielupa valittu?]
+  (let [[teksti ikoni viivat] ["Tielupa" nil]]
+    (assoc tielupa
+     :type :tielupa
+     :nimi (str (::tielupa/tyyppi tielupa) " " (::tielupa/paatoksen-diaarinumero tielupa))
+     :selite {:teksti teksti
+              :img ikoni}
+     :alue (maarittele-feature tielupa
+                               valittu?
+                               ikoni
+                               viivat))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi

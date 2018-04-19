@@ -9,6 +9,7 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.hairiotilanne :as ht]
+            [harja.domain.tielupa :as tielupa]
             [harja.ui.kartta.varit :as varit]))
 
 (def +valitun-skaala+ 1.5)
@@ -509,3 +510,50 @@ tr-ikoni {:img (pinni-ikoni "musta")
   (if (= :valmis (::ht/korjauksen-tila hairio))
     [(pinni-ikoni "vihrea") "Korjattu häiriö"]
     [(pinni-ikoni "punainen") "Häiriötilanne"]))
+
+(defn tielupa [lupa]
+  (case (::tielupa/tyyppi lupa)
+    :liittymalupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :mainoslupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :mainosilmoitus
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :opastelupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :suoja-aluerakentamislupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :tilapainen-myyntilupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :tilapainen-liikennemerkkijarjestely
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :tietyolupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]
+
+    :vesihuoltolupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     {:color puhtaat/musta :width 8}]))
