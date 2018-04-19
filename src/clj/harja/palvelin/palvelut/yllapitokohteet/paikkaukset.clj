@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkaukset
   (:require [com.stuartsierra.component :as component]
+            [clojure.java.jdbc :as jdbc]
             [specql.op :as op]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
@@ -68,43 +69,63 @@
                     {::paikkaus/tierekisteriosoite %})
                  [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
 
-(defn hae-urakan-paikkauskohteet [db user tiedot]
+(defn hae-urakan-paikkauskohteet [db user {:keys [aikavali paikkaus-idt tyomenetelmat] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-urakka-id (select-keys tiedot #{::paikkaus/urakka-id})
         kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
                                (when (not (empty? tr))
                                  (muodosta-tr-ehdot tr)))
-        kysely-params-aika (if-let [aikavali (:aikavali tiedot)]
+        kysely-params-aika (if (and aikavali
+                                    (not (and (nil? (first aikavali)) (nil? (second aikavali)))))
                              (assoc kysely-params-urakka-id ::paikkaus/alkuaika (cond
                                                                                   (and (first aikavali) (not (second aikavali))) (op/>= (first aikavali))
                                                                                   (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
                                                                                   :else (apply op/between aikavali)))
                              kysely-params-urakka-id)
-        kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
+        kysely-params-paikkaus-idt (if paikkaus-idt
                                      (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
                                      kysely-params-aika)
+        kysely-params-tyomenetelmat (if (not-empty tyomenetelmat)
+                                      (assoc kysely-params-paikkaus-idt ::paikkaus/tyomenetelma (op/in tyomenetelmat))
+                                      kysely-params-paikkaus-idt)
         kysely-params (if kysely-params-tieosa
-                        (op/and kysely-params-paikkaus-idt
+                        (op/and kysely-params-tyomenetelmat
                                 kysely-params-tieosa)
-                        kysely-params-paikkaus-idt)]
-    (q/hae-paikkaukset db kysely-params)))
+                        kysely-params-tyomenetelmat)]
+    (if (nil? paikkaus-idt)
+      (jdbc/with-db-transaction [db db]
+        (let [paikkaukset (q/hae-paikkaukset db kysely-params)
+              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
+          {:paikkaukset paikkaukset
+           :paikkauskohteet paikkauskohteet}))
+      {:paikkaukset (q/hae-paikkaukset db kysely-params)})))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
-                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil}]
+                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil
+                                :tyomenetelmat nil}
+        kysely-params (assoc (merge kysely-params-template (:tr tiedot))
+                        :urakka-id (::paikkaus/urakka-id tiedot)
+                        :paikkaus-idt (when-let [paikkaus-idt (:paikkaus-idt tiedot)]
+                                        (konv/seq->array paikkaus-idt))
+                        :alkuaika (first (:aikavali tiedot))
+                        :loppuaika (second (:aikavali tiedot))
+                        :tyomenetelmat (when (not-empty (:tyomenetelmat tiedot))
+                                         (konv/seq->array (:tyomenetelmat tiedot))))]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
     ;; tarkoittaa se, että näkymään juuri tultiin ja ollaan suorittamassa ensimmäistä hakua. Tyhjä lista taasen, että
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
-    (if (and (not (nil? (:paikkaus-idt tiedot)))
-             (empty? (:paikkaus-idt tiedot)))
-      []
-      (q/hae-paikkaustoteumat-tierekisteriosoitteella db (assoc (merge kysely-params-template (:tr tiedot))
-                                                           :urakka-id (::paikkaus/urakka-id tiedot)
-                                                           :paikkaus-idt (when (:paikkaus-idt tiedot) (str "{" (apply str (interpose "," (:paikkaus-idt tiedot))) "}"))
-                                                           :alkuaika (first (:aikavali tiedot))
-                                                           :loppuaika (second (:aikavali tiedot)))))))
+    (cond
+      (and (not (nil? (:paikkaus-idt tiedot)))
+           (empty? (:paikkaus-idt tiedot))) {:kustannukset []}
+      (nil? (:paikkaus-idt tiedot)) (jdbc/with-db-transaction [db db]
+                                      (let [kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)
+                                            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
+                                        {:kustannukset kustannukset
+                                         :paikkauskohteet paikkauskohteet}))
+      :else {:kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)})))
 
 (defrecord Paikkaukset []
   component/Lifecycle

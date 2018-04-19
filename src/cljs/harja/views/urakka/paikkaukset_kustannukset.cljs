@@ -15,7 +15,8 @@
   [e! app]
   (let [skeema [{:otsikko "Kirjaus\u00ADaika"
                  :leveys 3
-                 :nimi :kirjattu}
+                 :nimi :kirjattu
+                 :fmt yhteinen-view/aika-formatteri}
                 {:otsikko "Selite"
                  :leveys 5
                  :nimi :selite}
@@ -37,7 +38,7 @@
                     "Paikkauksien yksikköhintaiset kustannukset")
          :tunniste :paikkaustoteuma-id
          :salli-valiotsikoiden-piilotus? true
-         :sivuta grid/vakiosivutus
+         :sivuta 50
          :tyhja "Ei yksikköhintaisia kustannuksia"}
         skeema
         yksikkohintaiset-grid]])))
@@ -45,7 +46,8 @@
 (defn kokonaishintaiset-kustannukset [e! app]
   (let [skeema [{:otsikko "Kirjaus\u00ADaika"
                  :leveys 5
-                 :nimi :kirjattu}
+                 :nimi :kirjattu
+                 :fmt yhteinen-view/aika-formatteri}
                 {:otsikko "Selite"
                  :leveys 5
                  :nimi :selite}
@@ -60,7 +62,7 @@
                     "Paikkauksien kokonaishintaiset kustannukset")
          :salli-valiotsikoiden-piilotus? true
          :tunniste :paikkaustoteuma-id
-         :sivuta grid/vakiosivutus
+         :sivuta 50
          :tyhja "Ei kokonaishintaisia kustannuksia"}
         skeema
         kokonaishintaiset-grid]])))
@@ -76,9 +78,11 @@
       [:div
        [debug/debug app]
        [yhteinen-view/hakuehdot app
-        #(e! (tiedot/->PaivitaValinnat %))
-        (fn [paikkauskohde valittu?]
-          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))]
+        {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
+         :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
+                                (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+         :aikavali-otsikko "Kirjausaika"
+         :voi-valita-trn-kartalta? false}]
        [kokonaishintaiset-kustannukset e! app]
        [yksikkohintaiset-kustannukset e! app]])))
 

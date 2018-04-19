@@ -27,9 +27,6 @@
 (defrecord TieluvatHaettu [tulos])
 (defrecord TieluvatEiHaettu [virhe])
 (defrecord ValitseTielupa [tielupa])
-(defrecord TallennaTielupa [lupa])
-(defrecord TielupaTallennettu [tulos])
-(defrecord TielupaEiTallennettu [virhe])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -42,13 +39,12 @@
       (spec-apurit/poista-nil-avaimet
         (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
                   ::tielupa/tyyppi (:lupatyyppi valinnat)
-                  ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
-                                                (when-not (js/isNaN numero) numero))
+                  ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
                   ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
                   ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
                   :myonnetty (:myonnetty valinnat)
 
-                  ::tielupa/sijainnit
+                  ::tielupa/haettava-tr-osoite
                   (let [tie (get-in valinnat [:tr :numero])
                         aosa (get-in valinnat [:tr :alkuosa])
                         aet (get-in valinnat [:tr :alkuetaisyys])
@@ -60,19 +56,25 @@
                      ::tielupa/losa (when (and losa let) losa)
                      ::tielupa/let (when (and losa let) let)
 
-                     ::tielupa/geometria (:sijainti valinnat)})))
+                     #_#_::tielupa/geometria (:sijainti valinnat)})))
       {})
 
     {}))
-
-(defn voi-tallentaa? [app]
-  true)
 
 (def hakijahaku
   (reify protokollat/Haku
     (hae [_ teksti]
       (go (let [vastaus (<! (k/post! :hae-tielupien-hakijat {:hakuteksti teksti}))]
             vastaus)))))
+
+(defn nayta-kentat? [kentat tielupa]
+  (let [kentat (->> tielupa
+                    kentat
+                    :skeemat
+                    (map #(or (:hae %) (:nimi %))))]
+    (boolean
+      (when (and (some? kentat) (not-empty kentat))
+        ((apply some-fn kentat) tielupa)))))
 
 (extend-protocol tuck/Event
 
@@ -114,17 +116,4 @@
 
   ValitseTielupa
   (process-event [{t :tielupa} app]
-    (assoc app :valittu-tielupa t))
-
-  TallennaTielupa
-  (process-event [{l :lupa} app]
-    app)
-
-  TielupaTallennettu
-  (process-event [{t :tulos} app]
-    (assoc app :tieluvan-tallennus-kaynnissa? false))
-
-  TielupaEiTallennettu
-  (process-event [_ app]
-    (viesti/nayta! "Tieluvan tallennus epäonnistui!" :danger)
-    (assoc app :tieluvan-tallennus-kaynnissa? false)))
+    (assoc app :valittu-tielupa t)))
