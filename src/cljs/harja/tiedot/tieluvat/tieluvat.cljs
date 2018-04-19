@@ -83,16 +83,18 @@
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys u valintojen-avaimet))
-          haku (tuck/send-async! ->HaeTieluvat)
           aikaleima (pvm/nyt)]
-      (log (pr-str u))
       (if-not (or
                 ;; Älä hae, jos myönnetystä tai voimassaolosta on annettu vain toinen
                 (and (:myonnetty u)
                      (= 1 (count (filter nil? (:myonnetty u)))))
                 (and (:voimassaolo u)
                      (= 1 (count (filter nil? (:voimassaolo u))))))
-        (do (haku uudet-valinnat aikaleima)
+        (do
+          ;; Testiapuri vaadi-async-kutsut seuraa send-async! käyttöä,
+          ;; ei varsinaisesti "käytetäänkö hakua oikeasti". Eli jos send-asyncin siirtää
+          ;; ylempään lettiin, testi failaa.
+          ((tuck/send-async! ->HaeTieluvat) uudet-valinnat aikaleima)
             (assoc app :valinnat uudet-valinnat
                        :tielupien-haku-kaynnissa? true
                        :nykyinen-haku aikaleima))
@@ -103,7 +105,6 @@
   (process-event [{valinnat :valinnat aikaleima :aikaleima} app]
     (let [parametrit (hakuparametrit valinnat)
           aikaleima (or aikaleima (pvm/nyt))]
-      (log "hakuparametrit" (pr-str parametrit))
       (-> app
           (tt/post! :hae-tieluvat
                     parametrit
@@ -121,7 +122,6 @@
 
   TieluvatHaettu
   (process-event [{t :tulos a :aikaleima} app]
-    (log "Haettu! " (pr-str a) " " (pr-str (:nykyinen-haku app)))
     (if (= a (:nykyinen-haku app))
       (assoc app :tielupien-haku-kaynnissa? false
                  :haetut-tieluvat t
