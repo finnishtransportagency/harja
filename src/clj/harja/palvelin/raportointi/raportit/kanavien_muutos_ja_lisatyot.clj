@@ -19,17 +19,21 @@
 (def hallintayksikko {:lyhenne "KAN"
                       :nimi "Kanavat ja avattavat sillat"})
 
-(defn urakat
+(defn- urakat
   "Palauttaa urakka id:t. Hakee id:t ryhmiteltyjen työrivien avaimesta."
   [tyot-ryhmiteltyna]
   (distinct (map #(get % :urakka) (keys tyot-ryhmiteltyna))))
 
-(defn hinnoittelu-ryhmat
+(defn- urakan-nimi
+  [db urakka-id]
+  (hae-urakan-nimi db [:urakkaid urakka-id]))
+
+(defn- hinnoittelu-ryhmat
   "Palauttaa hinnoitteluryhmien tunnukset. Hakee ne ryhmiteltyjen työrivien avaimesta."
   [tyot-ryhmiteltyna]
   (distinct (map #(get % :hinnoittelu_ryhma) (keys tyot-ryhmiteltyna))))
 
-(defn hinnoitteluryhman-nimi
+(defn- hinnoitteluryhman-nimi
   [hinnoitteluryhma]
   (case (keyword hinnoitteluryhma)
     :sopimushintainen-tyo-tai-materiaali "Sopimushintainen työ tai materiaali"
@@ -37,6 +41,28 @@
     :varaosat-ja-materiaalit "Varaosat ja materiaalit"
     :muu-tyo "Muut työt (ei indeksilaskentaa)"
     :muut-kulut "Muut"))
+
+
+(defn- urakan-hinnoitteluryhmakohtaiset-rivit
+  [db urakka tyot-ryhmiteltyna]
+  (let [urakan-nimi (urakan-nimi db urakka)]
+    (map (fn[hinnoitteluryhma tyot-ryhmiteltyna](urakan-hinnoitteluryhmakohtainen-summarivi
+            (tyot-ryhmiteltyna {:urakka urakka :hinnoittelu_ryhma (name hinnoitteluryhma)})))
+
+         (keys hinnoitteluryhman-nimi))
+    )
+
+  ;(get tyot-ryhmiteltyna {:urakka urakka :hinnoittelu_ryhma hinnoitteluryhma})
+  )
+
+(defn- urakan-hinnoitteluryhmakohtainen-summarivi
+  [tyot-suodatettuna]
+
+  (hash-map
+    :hinnoittelu ""
+    )
+  (reduce +  (keep #(* (get-in % [:maara])(get-in % [:summa])) tyot-suodatettuna))
+  )
 
 (defn- sarakkeet [tyyppi]
   (case tyyppi
