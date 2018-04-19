@@ -19,7 +19,8 @@
             [clojure.string :as str]
             [harja.ui.kentat :as kentat]
             [harja.transit :as transit]
-            [harja.asiakas.kommunikaatio :as k]))
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.istunto :as istunto]))
 
 
 (defn- urakka-valinnat [urakat]
@@ -505,7 +506,8 @@
                      :tyyppi :string
                      :pituus-max 32})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)
-      (when (::t/id ilmoitus)
+      (when (and (::t/id ilmoitus)
+                 (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
         (lomake/ryhma
           "Lähetys Tieliikennekeskukseen"
           {:nimi ::t/tila
