@@ -19,7 +19,8 @@
     [harja.fmt :as fmt]
     [harja.ui.liitteet :as liitteet]
     [reagent.core :as r]
-    [clojure.set :as set])
+    [clojure.set :as set]
+    [harja.views.kartta.tasot :as tasot])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -893,8 +894,12 @@
 (defn tieluvat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeTieluvat (:valinnat app) nil)))
-                      #(do (e! (tiedot/->Nakymassa? false))))
+                           (e! (tiedot/->HaeTieluvat (:valinnat app) nil))
+                           (tasot/taso-paalle! :tieluvat)
+                           (tasot/taso-pois! :organisaatio))
+                      #(do (e! (tiedot/->Nakymassa? false))
+                           (tasot/taso-pois! :tieluvat)
+                           (tasot/taso-paalle! :organisaatio)))
     (fn [e! app]
       [:div
        [kartta/kartan-paikka]
