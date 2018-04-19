@@ -521,7 +521,7 @@ SELECT
   u.id,
   u.hanke,
   u.nimi,
-  u.urakkanro AS alueurakkanro
+  lpad(cast(u.urakkanro as varchar), 4, '0') AS alueurakkanro
 FROM urakka u
 WHERE u.id IN (SELECT id
                FROM urakka

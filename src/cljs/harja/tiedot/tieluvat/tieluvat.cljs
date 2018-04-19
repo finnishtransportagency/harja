@@ -39,13 +39,12 @@
       (spec-apurit/poista-nil-avaimet
         (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
                   ::tielupa/tyyppi (:lupatyyppi valinnat)
-                  ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
-                                                (when-not (js/isNaN numero) numero))
+                  ::tielupa/paatoksen-diaarinumero (:luvan-numero valinnat)
                   ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
                   ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
                   :myonnetty (:myonnetty valinnat)
 
-                  ::tielupa/sijainnit
+                  ::tielupa/haettava-tr-osoite
                   (let [tie (get-in valinnat [:tr :numero])
                         aosa (get-in valinnat [:tr :alkuosa])
                         aet (get-in valinnat [:tr :alkuetaisyys])
@@ -57,7 +56,7 @@
                      ::tielupa/losa (when (and losa let) losa)
                      ::tielupa/let (when (and losa let) let)
 
-                     ::tielupa/geometria (:sijainti valinnat)})))
+                     #_#_::tielupa/geometria (:sijainti valinnat)})))
       {})
 
     {}))
