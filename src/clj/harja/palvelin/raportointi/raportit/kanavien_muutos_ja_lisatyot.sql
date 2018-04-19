@@ -518,12 +518,12 @@ SELECT nimi
 FROM kan_kohde
 WHERE id = :kohdeid;
 
---name: hae-kanavatoimenpiteen-nimi;
+--name: hae-kanavatoimenpiteen-nimi
 SELECT nimi
 FROM toimenpidekoodi
 WHERE id = :tehtavaid;
 
---name: hae-urakan-nimi;
+--name: hae-urakan-nimi
 SELECT nimi
 FROM urakka
 WHERE id = :urakkaid;

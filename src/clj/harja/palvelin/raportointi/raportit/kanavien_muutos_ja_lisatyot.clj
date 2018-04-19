@@ -19,25 +19,24 @@
 (def hallintayksikko {:lyhenne "KAN"
                       :nimi "Kanavat ja avattavat sillat"})
 
-(def urakkatyyppi {})
+(defn urakat
+  "Palauttaa urakka id:t. Hakee id:t ryhmiteltyjen työrivien avaimesta."
+  [tyot-ryhmiteltyna]
+  (distinct (map #(get % :urakka) (keys tyot-ryhmiteltyna))))
 
+(defn hinnoittelu-ryhmat
+  "Palauttaa hinnoitteluryhmien tunnukset. Hakee ne ryhmiteltyjen työrivien avaimesta."
+  [tyot-ryhmiteltyna]
+  (distinct (map #(get % :hinnoittelu_ryhma) (keys tyot-ryhmiteltyna))))
 
-(def ei-indeksilaskentaa-solu (info-solu "Ei indeksilaskentaa"))
-(def indeksi-puuttuu-info-solu (info-solu "Indeksi puuttuu"))
-(def ei-raha-summaa-info-solu (info-solu "Ei rahasummaa"))
-
-
-
-
-(defn kustannustyypin-nimi
-  [tyyppi]
-  (case tyyppi
-    "sopimushintainen-tyo-ja-materiaali" "Sopimushintainen työ ja materiaali"
-    "omakustanteinen-tyo" "Omakustanteinen työ ja materiaali"
-    "muu-tyo" "Yksikköhintainen työ"
-    "materiaali" "Yksikköhintainen materiaali"
-    "muu" "Muu kulu"))
-
+(defn hinnoitteluryhman-nimi
+  [hinnoitteluryhma]
+  (case (keyword hinnoitteluryhma)
+    :sopimushintainen-tyo-tai-materiaali "Sopimushintainen työ tai materiaali"
+    :omakustanteinen-tyo-tai-materiaali "Omakustanteinen työ tai materiaali"
+    :varaosat-ja-materiaalit "Varaosat ja materiaalit"
+    :muu-tyo "Muut työt (ei indeksilaskentaa)"
+    :muut-kulut "Muut"))
 
 (defn- sarakkeet [tyyppi]
   (case tyyppi
@@ -57,9 +56,22 @@
      {:leveys 5 :otsikko "Indeksi" :fmt :raha}]
     :yhteenveto))
 
+(def ei-indeksilaskentaa-solu (info-solu "Ei indeksilaskentaa"))
+(def indeksi-puuttuu-info-solu (info-solu "Indeksi puuttuu"))
+(def ei-raha-summaa-info-solu (info-solu "Ei rahasummaa"))
 
 
 
+
+(defn taulukko-hintaryhmakohtaiset-summarivit
+  [urakan-hintaryhmien-summarivit]
+
+  )
+
+(defn muodosta-hintaryhmakohtaiset-summarivit
+  [urakan-hinnoittelurivit]
+
+  )
 
 (defn- toimenpiteiden-summa [kentat]
   (reduce + (keep identity kentat)))
@@ -99,6 +111,7 @@
 
 (defn summarivit-tehtavat
   [konteksti muutos-ja-lisatyot]
+  (log/debug (println-str "muutos-ja-lisatyot " muutos-ja-lisatyot))
   (case (keyword konteksti)
     :muutos-ja-lisatyot-koko-maa
     (mapv #(rivi
@@ -121,6 +134,14 @@
 
 
 
+;(defn kustannustyyppikohtaiset-rivit
+;  [muutos-ja-lisatyot-ryhmiteltyna]
+;  (mapv #(rivi
+;           (hinnoitteluryhman-nimi (:hinnoittelu_ryhma %))
+;           (or (get-in % [:tehtava :summa]) ei-raha-summaa-info-solu)
+;           (or (:korotus %) indeksi-puuttuu-info-solu))
+;        (sort-by tyypin-sort-avain muutos-ja-lisatyot-ryhmiteltyna)))
+;
 
 ;(defn- summarivi [tietorivit tyyppi]
 ;  (let [kaikki-suunnitellut (kentan-summa tietorivit :suunniteltu-maara)
@@ -140,43 +161,45 @@
 ;    (tpi-kohtaiset-rivit tietorivit tyyppi)
 ;    (summarivi tietorivit tyyppi)))
 ;
-(defn- taulukko [otsikko tyyppi data]
+(defn- taulukko-urakka [otsikko data]
   (conj
     [:taulukko {:otsikko otsikko
                 :tyhja (when (empty? data) "Ei raportoitavaa.")
                 :sheet-nimi otsikko
                 :viimeinen-rivi-yhteenveto? false}
-     (sarakkeet tyyppi)
+     (sarakkeet :muutos-ja-lisatyot)
      ;(summarivit-tehtavat tyyppi data)
      ])
   )
 
 
-(defn- taulukko-koko-maa [otsikko tyyppi muutos-ja-lisatyot-ryhmiteltyna]
+(defn- taulukko-koko-maa [otsikko tyot-ryhmiteltyna]
+
+  ;;(def *u (distinct (map #(get % :urakka) (keys *mlr))))
+
+  (log/debug (println-str "urakan TYOT "   (urakat tyot-ryhmiteltyna)
+                          ))
+
+  (map #(println %)
+         ;(log/debug (println-str "URAKAT " %))
+         ;; Urakan nimi
+         ;; Laske kunkin hintaryhmän summa (kaikki-yhteensa)
+         ;; Kunkin hintaryhmän nimi ja summa
+
+       (urakat tyot-ryhmiteltyna))
 
 
-  (map (fn [urakan]
-
-          ;; Urakan nimi
-          ;; Laske kunkin hintaryhmän summa (kaikki-yhteensa)
-          ;; Kunkin hintaryhmän nimi ja summa
-
-
-
-         )muutos-ja-lisatyot-ryhmiteltyna)
-
-
-  (let [ei-hyva (map #(
-                                             (log/debug (println-str "NÄYTÄ URAKKA " %))
-                                                        ) muutos-ja-lisatyot-ryhmiteltyna)])
+  ;(let [ei-hyva (map #(log/debug (println-str "NÄYTÄ URAKKA " %)) muutos-ja-lisatyot-ryhmiteltyna)])
 
   (conj
     [:taulukko {:otsikko otsikko
-                :tyhja (when (empty? muutos-ja-lisatyot-ryhmiteltyna) "Ei raportoitavaa.") ;;TODO tämä on turha täällä, laita se vaan suorita-funktioon
+                :tyhja (when (empty? tyot-ryhmiteltyna) "Ei raportoitavaa.") ;;TODO tämä on turha täällä, laita se vaan suorita-funktioon
                 :sheet-nimi otsikko
                 :viimeinen-rivi-yhteenveto? false}
-     (sarakkeet tyyppi)
-     (summarivit-tehtavat tyyppi muutos-ja-lisatyot-ryhmiteltyna)
+     (sarakkeet :muutos-ja-lisatyot-koko-maa)
+
+
+     ;(summarivit-tehtavat :muutos-ja-lisatyot-koko-maa tyot-ryhmiteltyna)
      ])
   )
 
@@ -292,28 +315,27 @@
 
 (defn taulukko-urakoittain-hintaryhmat [muutos-ja-lisatyot-ryhmiteltyna]
 
-
   )
 
 
-(defn ryhmittele-rivit [konteksti rajaus muutos-ja-lisatyot]
+(defn ryhmittele-tyot [rajaus muutos-ja-lisatyot]
 
-  (case (keyword konteksti)
+  ;; (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) *ml)
+
+  (case (keyword rajaus)
     :urakka
-    :koko-maa
 
-    (let [muutos-ja-lisatyot-urakoittain (group-by :urakka muutos-ja-lisatyot)
-          urakoiden-tyot-hintaryhmittain (map (fn [urakka]
-                                                ;(log/debug(second urakka))
-                                                (group-by :hinnoittelu_ryhma (second urakka)))
-                                              muutos-ja-lisatyot-urakoittain)]
 
-    urakoiden-tyot-hintaryhmittain
+    :ei-rajausta
 
-    ;; Maarit. Doseq palauttaa tässä
-    ;;["sopimushintainen-tyo-tai-materiaali" [{:materiaali_id nil, :pvm #inst "2018-03-26T21:00:00.000-00:00", :kohde_id 3,
+    (let [muutos-ja-lisatyot-urakoittain (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot)]
 
-    )))
+      muutos-ja-lisatyot-urakoittain
+      ;;taulukko-hintaryhmakohtaiset-summarivit
+      ;; Maarit. Doseq palauttaa tässä
+      ;;["sopimushintainen-tyo-tai-materiaali" [{:materiaali_id nil, :pvm #inst "2018-03-26T21:00:00.000-00:00", :kohde_id 3,
+
+      )))
 
 
 
@@ -341,7 +363,6 @@
 
         muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db parametrit rajaus)
 
-
         ]
 
 
@@ -351,8 +372,12 @@
 
      (conj (when (not-empty muutos-ja-lisatyot)
              (if (= (keyword konteksti) :urakka)
-               (taulukko raportin-otsikko :muutos-ja-lisatyot muutos-ja-lisatyot)
-               (taulukko-koko-maa raportin-otsikko :muutos-ja-lisatyot-koko-maa (ryhmittele-rivit :koko-maa :ei-rajausta muutos-ja-lisatyot))))
+               (taulukko-urakka raportin-otsikko
+                                muutos-ja-lisatyot)
+               (taulukko-koko-maa raportin-otsikko
+                                  (ryhmittele-tyot rajaus muutos-ja-lisatyot))))
+
+
 
            [:taulukko {:otsikko "Kaikki yhteensä"
                        :tyhja (when (empty? muutos-ja-lisatyot) "Ei raportoitavaa.")
