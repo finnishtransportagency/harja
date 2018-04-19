@@ -10,7 +10,8 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
 
             [harja.domain.tielupa :as tielupa]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tila (atom {:valinnat nil
@@ -64,14 +65,60 @@
       (go (let [vastaus (<! (k/post! :hae-tielupien-hakijat {:hakuteksti teksti}))]
             vastaus)))))
 
-(defn nayta-kentat? [kentat tielupa]
+(defn nayta-kentat?
+  "Ottaa lomakkeen kenttäskeeman ja näytettävän datan.
+  Palauttaa true, jos edes jollekin skeeman kentälle data sisältää arvon, joka ei ole
+  nil tai tyhjä lista."
+  [kentat tielupa]
   (let [kentat (->> tielupa
                     kentat
                     :skeemat
                     (map #(or (:hae %) (:nimi %))))]
     (boolean
       (when (and (some? kentat) (not-empty kentat))
-        ((apply some-fn kentat) tielupa)))))
+        ((apply
+           some-fn
+           (map
+             (partial
+               comp
+               (fn [kentan-arvo]
+                 (if (coll? kentan-arvo)
+                   (not-empty kentan-arvo)
+                   (some? kentan-arvo))))
+             kentat))
+          tielupa)))))
+
+(defn pelkat-vapaat-sijainnit
+  "Tieluvalla on mainos-, johtoasennus- yms. tietoja, joilla on sijaintietoja.
+  Lisäksi tieluvalla on yleinen 'sijainnit'-taulukko. Nämä saattavat sisältää redundanttia tietoja,
+  datan eheydestä riippuen.
+
+  Funktio palauttaa vain ne 'sijainnit' listan arvot, jotka eivät löydy 'tarkemmista' listoista."
+  [valittu-tielupa]
+  (apply
+    set/difference
+    (map
+      (fn [osio]
+        (set
+          (map
+            (fn [sijainti]
+              (select-keys
+                sijainti
+                [::tielupa/tie
+                 ::tielupa/aosa
+                 ::tielupa/aet
+                 ::tielupa/losa
+                 ::tielupa/let
+                 ::tielupa/ajorata
+                 ::tielupa/kaista
+                 ::tielupa/puoli]))
+            osio)))
+      ((juxt ::tielupa/sijainnit
+             ::tielupa/mainokset
+             ::tielupa/liikennemerkkijarjestelyt
+             ::tielupa/johtoasennukset
+             ::tielupa/kaapeliasennukset)
+        valittu-tielupa))))
 
 (extend-protocol tuck/Event
 

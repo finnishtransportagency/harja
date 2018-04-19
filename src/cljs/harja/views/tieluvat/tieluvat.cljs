@@ -18,7 +18,8 @@
     [harja.pvm :as pvm]
     [harja.fmt :as fmt]
     [harja.ui.liitteet :as liitteet]
-    [reagent.core :as r])
+    [reagent.core :as r]
+    [clojure.set :as set])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -222,14 +223,14 @@
      :nimi ::tielupa/johtolupa-silta-asennuksia}
     {:otsikko (str "Kaapeliasennukset " (count (::tielupa/kaapeliasennukset valittu-tielupa)) "kpl")
      :tyyppi :komponentti
-     :nimi :kaapeliasennukset
+     :nimi ::tielupa/kaapeliasennukset
      :palstoja 2
      :komponentti (fn [{:keys [data]}]
                    [kaapelilupien-lomakegrid data])}
     {:otsikko (str "Johtoasennukset " (count (::tielupa/johtoasennukset valittu-tielupa)) "kpl")
      :tyyppi :komponentti
      :palstoja 2
-     :nimi :johtoasennukset
+     :nimi ::tielupa/johtoasennukset
      :komponentti (fn [{:keys [data]}]
                    [johtoasennusten-lomakegrid data])}))
 
@@ -368,7 +369,7 @@
      :tyyppi :string
      :nimi ::tielupa/mainoslupa-lisatiedot}
     {:otsikko (str "Mainokset " (count (::tielupa/mainokset valittu-tielupa)) "kpl")
-     :nimi :mainokset
+     :nimi ::tielupa/mainokset
      :palstoja 2
      :tyyppi :komponentti
      :komponentti (fn [{:keys [data]}]
@@ -453,7 +454,7 @@
      :nimi ::tielupa/opastelupa-nykyinen-opastus}
     {:otsikko (str "Opasteet " (count (::tielupa/opasteet valittu-tielupa)) "kpl")
      :tyyppi :komponentti
-     :nimi :opasteet
+     :nimi ::tielupa/opasteet
      :palstoja 2
      :komponentti (fn [{:keys [data]}]
                     [opasteiden-lomakegrid data])}))
@@ -554,7 +555,7 @@
      :nimi ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit}
     {:otsikko (str "Liikennemerkkijärjestelyt " (count (::tielupa/liikennemerkkijarjestelyt valittu-tielupa)) "kpl")
      :tyyppi :komponentti
-     :nimi :jarjestelyt
+     :nimi ::tielupa/liikennemerkkijarjestelyt
      :palstoja 2
      :komponentti (fn [{data :data}]
                     [liikennemerkkijarjestelyjen-lomakegrid data])}))
@@ -631,6 +632,9 @@
 
 (def nayta-valmistumisilmoituksen-lomakekentat? (partial tiedot/nayta-kentat? valmistumisilmoituksen-lomakekentat))
 
+(defn nayta-sijaintigrid? [valittu-tielupa]
+  (not-empty (tiedot/pelkat-vapaat-sijainnit valittu-tielupa)))
+
 (defn sijaintien-lomakegrid [valittu-tielupa]
   [grid/grid
    {:tyhja "Ei sijaintietoja"
@@ -645,7 +649,7 @@
            ::tielupa/ajorata
            ::tielupa/kaista
            ::tielupa/puoli)
-     (or (::tielupa/sijainnit valittu-tielupa) []))])
+     (or (tiedot/pelkat-vapaat-sijainnit valittu-tielupa) []))])
 
 (defn tielupalomake [e! {:keys [valittu-tielupa] :as app}]
   [:div
@@ -712,12 +716,13 @@
       :tyyppi :komponentti
       :komponentti (fn [{tielupa :data}]
                      [liitteet/liitteet-ikonilistana (::tielupa/liitteet tielupa)])}
-     {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
-      :tyyppi :komponentti
-      :nimi :sijainnit
-      :palstoja 2
-      :komponentti (fn [{data :data}]
-                     [sijaintien-lomakegrid data])}
+     (when (nayta-sijaintigrid? valittu-tielupa)
+       {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
+        :tyyppi :komponentti
+        :nimi :sijainnit
+        :palstoja 2
+        :komponentti (fn [{data :data}]
+                       [sijaintien-lomakegrid data])})
      (when (nayta-urakoitsijan-lomakekentat? valittu-tielupa)
        (urakoitsijan-lomakekentat valittu-tielupa))
 
