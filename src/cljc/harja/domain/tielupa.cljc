@@ -194,8 +194,8 @@
    :mainosilmoitus "mainosilmoitus"
    :opastelupa "opastelupa"
    :suoja-aluerakentamislupa "suoja-aluerakentamislupa"
-   :tilapainen-myyntilupa "tilapäinen-myyntilupa"
-   :tilapainen-liikennemerkkijarjestely "tilapäinen-liikennemerkkijärjestely"
+   :tilapainen-myyntilupa "tilapäinen myyntilupa"
+   :tilapainen-liikennemerkkijarjestely "tilapäinen liikennemerkkijärjestely"
    :tietyolupa "tietyölupa"
    :vesihuoltolupa "vesihuoltolupa"})
 
@@ -213,136 +213,7 @@
                                            ::voimassaolon-loppupvm
                                            ::myontamispvm
                                            ::haettava-tr-osoite]))
-#?(:clj (s/def ::hae-tieluvat-vastaus (s/keys :opt [::liittymalupa-kyla
-                                                    ::muokkaustiedot/muokattu
-                                                    ::liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa
-                                                    ::liikennemerkkijarjestely-lisatiedot-nopeusrajoituksesta
-                                                    ::tienpitoviranomainen-sahkopostiosoite
-                                                    ::liittymalupa-haettu-kayttotarkoitus
-                                                    ::opastelupa-palvelukohteen-osoiteviitta
-                                                    ::mainoslupa-asemakaava-alueella
-                                                    ::tyolupa-tieliikennekusksen-sahkopostiosoite
-                                                    ::liittymalupa-liittymaohje-liittymakaari
-                                                    ::tyolupa-ohjeet-tyon-suorittamiseen
-                                                    ::myyntilupa-opastusmerkit
-                                                    ::liittymalupa-liittymaohje-rummun-etaisyys-metreissa
-                                                    ::liittymalupa-nykyisen-liittyman-numero
-                                                    ::johtolupa-silta-asennuksia
-                                                    ::opastelupa-osoiteviitan-tunnus
-                                                    ::hakija-osasto
-                                                    ::myyntilupa-aihe
-                                                    ::opastelupa-alkuperainen-lupanro
-                                                    ::liittymalupa-valmistumisen-takaraja
-                                                    ::liikennemerkkijarjestely-nopeusrajoituksen-syy
-                                                    ::suoja-aluerakentamislupa-rakennettava-asia
-                                                    ::liittymalupa-liittymaohje-odotustila-metreissa
-                                                    ::liittymalupa-liittyman-siirto
-                                                    ::liittymalupa-liittymaohje-liikennemerkit
-                                                    ::tyolupa-los-puuttuu
-                                                    ::valmistumisilmoitus
-                                                    ::vesihuoltolupa-silta-asennuksia
-                                                    ::liittymalupa-tarkoituksen-kuvaus
-                                                    ::tienpitoviranomainen-lupapaallikko
-                                                    ::liittymalupa-sijainnin-kuvaus
-                                                    ::liittymalupa-liittymaohje-liittymisnakema
-                                                    ::liittymalupa-arvioitu-kokonaisliikenne
-                                                    ::opastelupa-lisatiedot
-                                                    ::kohde-postitoimipaikka
-                                                    ::opastelupa-kohteen-nimi
-                                                    ::valmistumisilmoitus-palautettu
-                                                    ::mainoslupa-lisatiedot
-                                                    ::johtoasennukset
-                                                    ::opastelupa-osoiteviitta
-                                                    ::liikenneohjaajan-sahkopostiosoite
-                                                    ::liittymalupa-liittymaohje-lisaohjeet
-                                                    ::mainoslupa-tiedoksi-elykeskukselle
-                                                    ::myyntilupa-aikaisempi-myyntilupa
-                                                    ::liikenneohjaajan-yhteyshenkilo
-                                                    ::mainoslupa-suoja-alueen-leveys
-                                                    ::suoja-aluerakentamislupa-suoja-alueen-leveys
-                                                    ::valmistumisilmoitus-vaaditaan
-                                                    ::tienpitoviranomainen-puhelinnumero
-                                                    ::voimassaolon-alkupvm
-                                                    ::muokkaustiedot/luotu
-                                                    ::liittymalupa-tilapainen
-                                                    ::tienpitoviranomainen-yhteyshenkilo
-                                                    ::suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta
-                                                    ::opastelupa-ennakkomerkki
-                                                    ::kunta
-                                                    ::kohde-lahiosoite
-                                                    ::opastelupa-alkuperaisen-luvan-loppupvm
-                                                    ::liikenneohjaajan-nimi
-                                                    ::paatoksen-diaarinumero
-                                                    ::hakija-tyyppi
-                                                    ::tyolupa-viimeistely-oltava
-                                                    ::liikennemerkkijarjestelyt
-                                                    ::urakka
-                                                    ::kaapeliasennukset
-                                                    ::mainoslupa-korvaava-paatos
-                                                    ::opastelupa-kohteen-url-osoite
-                                                    ::liikennemerkkijarjestely-tapahtuman-tiedot
-                                                    ::urakoitsija-sahkopostiosoite
-                                                    ::opastelupa-opasteen-teksti
-                                                    ::hakija-postinumero
-                                                    ::tyolupa-tyon-sisalto
-                                                    ::sijainnit
-                                                    ::liikennemerkkijarjestely-aihe
-                                                    ::mainokset
-                                                    ::tyolupa-tyon-saa-aloittaa
-                                                    ::johtolupa-ilmakaapelia-yhteensa
-                                                    ::vesihuoltolupa-tienalituksia
-                                                    ::urakoitsija-puhelinnumero
-                                                    ::liittymalupa-liittymaohje-leveys-metreissa
-                                                    ::mainoslupa-sijainnin-kuvaus
-                                                    ::liikennemerkkijarjestely-muut-liikennemerkit
-                                                    ::suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan
-                                                    ::otsikko
-                                                    ::hakija-postinosoite
-                                                    ::suoja-aluerakentamislupa-kiinteisto-rn
-                                                    ::opastelupa-alkuperaisen-luvan-alkupvm
-                                                    ::urakan-nimi
-                                                    ::ely
-                                                    ::johtolupa-maakaapelia-yhteensa
-                                                    ::kohde-postinumero
-                                                    ::id
-                                                    ::ulkoinen-tunniste
-                                                    ::hakija-maakoodi
-                                                    ::saapumispvm
-                                                    ::liittymalupa-kiinteisto-rn
-                                                    ::liikennemerkkijarjestely-sijainnin-kuvaus
-                                                    ::liikenneohjaajan-puhelinnumero
-                                                    ::opastelupa-nykyinen-opastus
-                                                    ::liittymalupa-nykyisen-liittyman-paivays
-                                                    ::katselmus-url
-                                                    ::liittymalupa-muut-kulkuyhteydet
-                                                    ::suoja-aluerakentamislupa-lisatiedot
-                                                    ::vesihuoltolupa-tienylityksia
-                                                    ::voimassaolon-loppupvm
-                                                    ::hakija-nimi
-                                                    ::myontamispvm
-                                                    ::opasteet
-                                                    ::tyolupa-los-lisatiedot
-                                                    ::tienpitoviranomainen-kasittelija
-                                                    ::tyyppi
-                                                    ::opastelupa-jatkolupa
-                                                    ::hakija-sahkopostiosoite
-                                                    ::hakija-puhelinnumero
-                                                    ::johtolupa-tienylityksia
-                                                    ::liittymalupa-liittymaohje-nakemapisteen-etaisyys
-                                                    ::tyolupa-ilmoitus-tieliikennekeskukseen
-                                                    ::tien-nimi
-                                                    ::tyolupa-tilapainen-nopeusrajoitus
-                                                    ::johtolupa-tienalituksia
-                                                    ::mainoslupa-mainostettava-asia
-                                                    ::liittymalupa-liittymaohje-rumpu
-                                                    ::urakoitsija-yhteyshenkilo
-                                                    ::liittymalupa-myonnetty-kayttotarkoitus
-                                                    ::urakoitsija-nimi
-                                                    ::suoja-aluerakentamislupa-sijoitus
-                                                    ::opastelupa-palvelukohteen-opastaulu
-                                                    ::liittymalupa-arvioitu-kuorma-autoliikenne
-                                                    ::myyntilupa-alueen-nimi
-                                                    ::liitteet])))
+(s/def ::hae-tieluvat-vastaus (s/coll-of ::tielupa))
 
 (s/def ::hakuteksti ::hakija-nimi)
 (s/def ::hae-tielupien-hakijat-kysely (s/keys :req-un [::hakuteksti]))
