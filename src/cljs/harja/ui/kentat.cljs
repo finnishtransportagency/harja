@@ -191,6 +191,12 @@
            :value @data
            :max-length pituus-max}])
 
+(defmethod tee-kentta :linkki [opts data]
+  [tee-kentta (assoc opts :tyyppi :string) data])
+
+(defmethod nayta-arvo :linkki [_ data]
+  [:a {:href @data} @data])
+
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa

@@ -226,13 +226,7 @@
      :nimi ::tielupa/kaapeliasennukset
      :palstoja 2
      :komponentti (fn [{:keys [data]}]
-                   [kaapelilupien-lomakegrid data])}
-    {:otsikko (str "Johtoasennukset " (count (::tielupa/johtoasennukset valittu-tielupa)) "kpl")
-     :tyyppi :komponentti
-     :palstoja 2
-     :nimi ::tielupa/johtoasennukset
-     :komponentti (fn [{:keys [data]}]
-                   [johtoasennusten-lomakegrid data])}))
+                   [kaapelilupien-lomakegrid data])}))
 
 (def nayta-johtoluvan-lomakekentat? (partial tiedot/nayta-kentat? johtoluvan-lomakekentat))
 
@@ -432,7 +426,7 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-lisatiedot}
     {:otsikko "URL"
-     :tyyppi :string
+     :tyyppi :linkki
      :nimi ::tielupa/opastelupa-kohteen-url-osoite}
     {:otsikko "Jatkolupa?"
      :tyyppi :checkbox
@@ -611,7 +605,13 @@
      :nimi ::tielupa/vesihuoltolupa-tienalituksia}
     {:otsikko "Silta-asennuksia"
      :tyyppi :string
-     :nimi ::tielupa/vesihuoltolupa-silta-asennuksia}))
+     :nimi ::tielupa/vesihuoltolupa-silta-asennuksia}
+    {:otsikko (str "Johtoasennukset " (count (::tielupa/johtoasennukset valittu-tielupa)) "kpl")
+     :tyyppi :komponentti
+     :palstoja 2
+     :nimi ::tielupa/johtoasennukset
+     :komponentti (fn [{:keys [data]}]
+                    [johtoasennusten-lomakegrid data])}))
 
 (def nayta-vesihuoltoluvan-lomakekentat? (partial tiedot/nayta-kentat? vesihuoltoluvan-lomakekentat))
 
@@ -690,7 +690,7 @@
       :tyyppi :string
       :nimi ::tielupa/otsikko}
      {:otsikko "Katselmus URL"
-      :tyyppi :string
+      :tyyppi :linkki
       :nimi ::tielupa/katselmus-url}
      {:otsikko "Urakka"
       :tyyppi :string
