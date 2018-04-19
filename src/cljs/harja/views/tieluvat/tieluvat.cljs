@@ -432,7 +432,7 @@
      :tyyppi :string
      :nimi ::tielupa/opastelupa-lisatiedot}
     {:otsikko "URL"
-     :tyyppi :string
+     :tyyppi :linkki
      :nimi ::tielupa/opastelupa-kohteen-url-osoite}
     {:otsikko "Jatkolupa?"
      :tyyppi :checkbox
@@ -690,7 +690,7 @@
       :tyyppi :string
       :nimi ::tielupa/otsikko}
      {:otsikko "Katselmus URL"
-      :tyyppi :string
+      :tyyppi :linkki
       :nimi ::tielupa/katselmus-url}
      {:otsikko "Urakka"
       :tyyppi :string
