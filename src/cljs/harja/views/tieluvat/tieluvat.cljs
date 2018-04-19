@@ -149,7 +149,18 @@
        :leveys 10
        :nimi ::tielupa/kommentit}]
      (tr-grid-kentat))
-   (or (::tielupa/johtoasennukset valittu-tielupa) [])])
+   (sort-by
+     (juxt ::tielupa/laite
+           ::tielupa/asennustyyppi
+           ::tielupa/tie
+           ::tielupa/aosa
+           ::tielupa/aet
+           ::tielupa/losa
+           ::tielupa/let
+           ::tielupa/ajorata
+           ::tielupa/kaista
+           ::tielupa/puoli)
+     (or (::tielupa/johtoasennukset valittu-tielupa) []))])
 
 (defn kaapelilupien-lomakegrid [valittu-tielupa]
   [grid/grid
@@ -178,7 +189,18 @@
        :leveys 2
        :nimi  ::tielupa/liikennemaara}]
      (tr-grid-kentat))
-   (or (::tielupa/kaapeliasennukset valittu-tielupa) [])])
+   (sort-by
+     (juxt ::tielupa/laite
+           ::tielupa/asennustyyppi
+           ::tielupa/tie
+           ::tielupa/aosa
+           ::tielupa/aet
+           ::tielupa/losa
+           ::tielupa/let
+           ::tielupa/ajorata
+           ::tielupa/kaista
+           ::tielupa/puoli)
+     (or (::tielupa/kaapeliasennukset valittu-tielupa) []))])
 
 (defn johtoluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -198,13 +220,13 @@
     {:otsikko "Silta-asennuksia"
      :tyyppi :string
      :nimi ::tielupa/johtolupa-silta-asennuksia}
-    {:otsikko "Kaapeliasennukset"
+    {:otsikko (str "Kaapeliasennukset " (count (::tielupa/kaapeliasennukset valittu-tielupa)) "kpl")
      :tyyppi :komponentti
      :nimi :kaapeliasennukset
      :palstoja 2
      :komponentti (fn [{:keys [data]}]
                    [kaapelilupien-lomakegrid data])}
-    {:otsikko "Johtoasennukset"
+    {:otsikko (str "Johtoasennukset " (count (::tielupa/johtoasennukset valittu-tielupa)) "kpl")
      :tyyppi :komponentti
      :palstoja 2
      :nimi :johtoasennukset
@@ -307,7 +329,16 @@
    {:tyhja "Ei mainoksia"
     :tunniste identity}
    (tr-grid-kentat)
-   (or (::tielupa/mainokset valittu-tielupa) [])])
+   (sort-by
+     (juxt ::tielupa/tie
+           ::tielupa/aosa
+           ::tielupa/aet
+           ::tielupa/losa
+           ::tielupa/let
+           ::tielupa/ajorata
+           ::tielupa/kaista
+           ::tielupa/puoli)
+     (or (::tielupa/mainokset valittu-tielupa) []))])
 
 (defn mainosluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -336,7 +367,7 @@
     {:otsikko "Lisätiedot"
      :tyyppi :string
      :nimi ::tielupa/mainoslupa-lisatiedot}
-    {:otsikko "Mainokset"
+    {:otsikko (str "Mainokset " (count (::tielupa/mainokset valittu-tielupa)) "kpl")
      :nimi :mainokset
      :palstoja 2
      :tyyppi :komponentti
@@ -357,7 +388,17 @@
        :leveys 10
        :nimi ::tielupa/kuvaus}]
      (tr-grid-kentat))
-   (or (::tielupa/opasteet valittu-tielupa) [])])
+   (sort-by
+     (juxt ::tielupa/tulostenumero
+           ::tielupa/tie
+           ::tielupa/aosa
+           ::tielupa/aet
+           ::tielupa/losa
+           ::tielupa/let
+           ::tielupa/ajorata
+           ::tielupa/kaista
+           ::tielupa/puoli)
+     (or (::tielupa/opasteet valittu-tielupa) []))])
 
 (defn opasteluvan-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -410,7 +451,7 @@
     {:otsikko "Nykyinen opastus"
      :tyyppi :string
      :nimi ::tielupa/opastelupa-nykyinen-opastus}
-    {:otsikko "Opasteet"
+    {:otsikko (str "Opasteet " (count (::tielupa/opasteet valittu-tielupa)) "kpl")
      :tyyppi :komponentti
      :nimi :opasteet
      :palstoja 2
@@ -479,7 +520,17 @@
        :leveys 3
        :nimi ::tielupa/nopeusrajoituksen-pituus}]
      (tr-grid-kentat))
-   (::tielupa/liikennemerkkijarjestelyt valittu-tielupa)])
+
+   (sort-by
+     (juxt ::tielupa/tie
+           ::tielupa/aosa
+           ::tielupa/aet
+           ::tielupa/losa
+           ::tielupa/let
+           ::tielupa/ajorata
+           ::tielupa/kaista
+           ::tielupa/puoli)
+     (or (::tielupa/liikennemerkkijarjestelyt valittu-tielupa) []))])
 
 (defn liikennemerkkijarjestelyn-lomakekentat [valittu-tielupa]
   (lomake/ryhma
@@ -501,7 +552,7 @@
     {:otsikko "Muut liikennemerkit"
      :tyyppi :string
      :nimi ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit}
-    {:otsikko "Liikennemerkkijärjestelyt"
+    {:otsikko (str "Liikennemerkkijärjestelyt " (count (::tielupa/liikennemerkkijarjestelyt valittu-tielupa)) "kpl")
      :tyyppi :komponentti
      :nimi :jarjestelyt
      :palstoja 2
@@ -585,7 +636,16 @@
    {:tyhja "Ei sijaintietoja"
     :tunniste identity}
    (tr-grid-kentat)
-   (::tielupa/sijainnit valittu-tielupa)])
+   (sort-by
+     (juxt ::tielupa/tie
+           ::tielupa/aosa
+           ::tielupa/aet
+           ::tielupa/losa
+           ::tielupa/let
+           ::tielupa/ajorata
+           ::tielupa/kaista
+           ::tielupa/puoli)
+     (or (::tielupa/sijainnit valittu-tielupa) []))])
 
 (defn tielupalomake [e! {:keys [valittu-tielupa] :as app}]
   [:div
@@ -652,7 +712,7 @@
       :tyyppi :komponentti
       :komponentti (fn [{tielupa :data}]
                      [liitteet/liitteet-ikonilistana (::tielupa/liitteet tielupa)])}
-     {:otsikko "Sijainnit"
+     {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
       :tyyppi :komponentti
       :nimi :sijainnit
       :palstoja 2
