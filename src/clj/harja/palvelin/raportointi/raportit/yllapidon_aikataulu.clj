@@ -8,7 +8,8 @@
             [harja.domain.tierekisteri :as tr]
             [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
-            [specql.core :refer [fetch]]))
+            [specql.core :refer [fetch]]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn- parametrit-urakan-tiedoilla
   "Hae urakan tyyppi ja pääsopimuksen id"
@@ -41,7 +42,7 @@
 
    {:otsikko "YP-lk"
     :nimi :yllapitoluokka :leveys 2 :tyyppi :string
-    ;;:fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
+    :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
     }
    (when (= urakkatyyppi :paallystys)
      {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 6 :nimi :aikataulu-kohde-alku

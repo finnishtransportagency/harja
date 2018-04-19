@@ -100,7 +100,8 @@
         aet (::tielupa/aet sijainnit)
         losa (::tielupa/losa sijainnit)
         let (::tielupa/let sijainnit)]
-    (if (and tie aosa aet)
+    (cond
+      (and tie aosa aet)
       (filterv
         ;; Tieluvalla voi (ilmeisesti) olla monta sijaintia.
         ;; Jos yhdenkään sijainnin tr-osoite osuu hakuvälille, palautetaan lupa
@@ -111,26 +112,39 @@
           ::tielupa/sijainnit)
         tieluvat)
 
+      (some? tie)
+      (filterv
+        (comp
+          (partial some
+                   (every-pred
+                     (partial sama-tie? tie)))
+          ::tielupa/sijainnit)
+        tieluvat)
+
+      :default
       tieluvat)))
+
+(defn tielupien-liitteet [db tieluvat]
+  (let [liitteet (hae-tielupien-liitteet db (map ::tielupa/id tieluvat))]
+    (mapcat
+      val
+      (merge-with
+        (fn [liitteet lupa]
+          [(assoc (first lupa) ::tielupa/liitteet liitteet)])
+        (group-by :tielupa liitteet) (group-by ::tielupa/id tieluvat)))))
 
 (defn hae-tieluvat-hakunakymaan [db hakuehdot]
   (->
     (fetch db
           ::tielupa/tielupa
-          (set/union
-            harja.domain.tielupa/perustiedot
-            harja.domain.tielupa/hakijan-tiedot
-            harja.domain.tielupa/urakoitsijan-tiedot
-            harja.domain.tielupa/liikenneohjaajan-tiedot
-            harja.domain.tielupa/tienpitoviranomaisen-tiedot
-            harja.domain.tielupa/johto-ja-kaapeliluvan-tiedot)
+          tielupa/kaikki-kentat
           (op/and
             (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
               {::tielupa/hakija-nimi nimi})
             (when-let [tyyppi (::tielupa/tyyppi hakuehdot)]
               {::tielupa/tyyppi tyyppi})
-            (when-let [tunniste (::tielupa/ulkoinen-tunniste hakuehdot)]
-              {::tielupa/ulkoinen-tunniste tunniste})
+            (when-let [tunniste (::tielupa/paatoksen-diaarinumero hakuehdot)]
+              {::tielupa/paatoksen-diaarinumero (op/ilike (str "%" tunniste "%"))})
             (let [alku (::tielupa/voimassaolon-alkupvm hakuehdot)
                   loppu (::tielupa/voimassaolon-loppupvm hakuehdot)]
               (cond
@@ -147,7 +161,8 @@
                 {::tielupa/myontamispvm (op/between alku loppu)}
 
                 :else nil))))
-    (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))))
+    (suodata-tieosoitteella (::tielupa/haettava-tr-osoite hakuehdot))
+    ((partial tielupien-liitteet db))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
   (set

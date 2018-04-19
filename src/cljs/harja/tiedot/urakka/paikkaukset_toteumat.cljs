@@ -16,6 +16,7 @@
 (def app (atom {:paikkauksien-haku-kaynnissa? false
                 :valinnat {:tyomenetelmat #{}
                            :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
+
 (def taso-nakyvissa? (atom false))
 
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
