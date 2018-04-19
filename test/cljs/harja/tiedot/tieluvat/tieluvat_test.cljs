@@ -27,11 +27,33 @@
     (is (true? (nayta? {:foo 1})))
     (is (true? (nayta? {:bar 1})))
     (is (true? (nayta? {:foo 1 :bar 1})))
+    (is (true? (nayta? {:foo 1 :bar nil})))
+    (is (true? (nayta? {:foo 1 :bar []})))
     (is (true? (nayta? {:bar 1 :ei-tama 1})))
     (is (true? (nayta? {:bar 1 :asd 1})))
 
+    (is (false? (nayta? {:foo nil})))
+    (is (false? (nayta? {:foo []})))
+    (is (false? (nayta? {:bar nil})))
+    (is (false? (nayta? {:bar []})))
+    (is (false? (nayta? {:bar [] :foo nil})))
+    (is (false? (nayta? {:bar [] :foo nil :ei-tama 1})))
+    (is (false? (nayta? {:bar [] :foo nil :hohoo 1})))
     (is (false? (nayta? {:ei-tama 1})))
     (is (false? (nayta? {:asd 1})))))
+
+(deftest vapaiden-sijaintien-suodattaminen
+  (let [data {::tielupa/sijainnit [{::tielupa/tie 1 ::tielupa/aosa 1 ::tielupa/aet 1}
+                                   {::tielupa/tie 2 ::tielupa/aosa 2 ::tielupa/aet 2}
+                                   {::tielupa/tie 3 ::tielupa/aosa 3 ::tielupa/aet 3}
+                                   {::tielupa/tie 4 ::tielupa/aosa 4 ::tielupa/aet 4}]
+              ::tielupa/mainokset [{::tielupa/tie 1 ::tielupa/aosa 1 ::tielupa/aet 1}]
+              ::tielupa/liikennemerkkijarjestelyt [{::tielupa/tie 2 ::tielupa/aosa 2 ::tielupa/aet 2}
+                                                   {::tielupa/tie 3 ::tielupa/aosa 3 ::tielupa/aet 3}]
+              ::tielupa/johtoasennukset []
+              ::tielupa/kaapeliasennukset [{::tielupa/tie 30 ::tielupa/aosa 30 ::tielupa/aet 30}]}]
+    (is (= #{{::tielupa/tie 4 ::tielupa/aosa 4 ::tielupa/aet 4}}
+           (tiedot/pelkat-vapaat-sijainnit data)))))
 
 (deftest nakymassa?
   (is (= {:nakymassa? true} (e! (tiedot/->Nakymassa? true))))
