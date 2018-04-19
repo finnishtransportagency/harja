@@ -53,7 +53,8 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kan-to]
             [harja.domain.kanavat.hairiotilanne :as ht]
-            [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
+            [harja.domain.kanavat.liikennetapahtuma :as liikenne]
+            [harja.domain.paikkaus :as paikkaus]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -734,6 +735,48 @@
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
             ", palautetaan tyhjä itemille " (pr-str x))
   nil)
+
+(defmethod infopaneeli-skeema :paikkaukset-toteumat [paikkaus]
+  (let [toteuman-kentta (fn [skeema avain]
+                          (when (-> paikkaus :infopaneelin-tiedot avain)
+                            skeema))]
+    {:data (:infopaneelin-tiedot paikkaus)
+     :otsikko "Paikkaus"
+     :jarjesta-fn ::paikkaus/alkuaika
+     :tyyppi :paikkaukset-toteumat
+     :tiedot [{:otsikko "Päällystyskohde" :nimi ::paikkaus/nimi}
+              {:otsikko "Tierekistetriosoite"
+               :tyyppi :string
+               :hae (hakufunktio #{::tr-domain/tie ::tr-domain/aosa ::tr-domain/aet ::tr-domain/losa ::tr-domain/let}
+                                 #(apply str (interpose ", "
+                                                        [(::tr-domain/tie %) (::tr-domain/aosa %) (::tr-domain/aet %)
+                                                         (::tr-domain/losa %) (::tr-domain/let %)])))}
+              (toteuman-kentta {:otsikko "Leveys" :nimi ::paikkaus/leveys}
+                               ::paikkaus/leveys)
+              (toteuman-kentta {:otsikko "Ajoura" :nimi ::paikkaus/ajourat}
+                               ::paikkaus/ajourat)
+              (toteuman-kentta {:otsikko "Ajorata" :nimi ::paikkaus/ajorata}
+                               ::paikkaus/ajorata)
+              (toteuman-kentta {:otsikko "Reuna"
+                                :tyyppi :string
+                                :hae (hakufunktio ::paikkaus/reunat #(apply str (interpose ", " (::paikkaus/reunat %))))}
+                               ::paikkaus/reunat)
+              (toteuman-kentta {:otsikko "Ajouravälit"
+                                :tyyppi :string
+                                :hae (hakufunktio ::paikkaus/ajouravalit #(apply str (interpose ", " (::paikkaus/ajouravalit %))))}
+                               ::paikkaus/ajouravalit)
+              (toteuman-kentta {:otsikko "Alkuaika" :nimi ::paikkaus/alkuaika :tyyppi :pvm-aika}
+                               ::paikkaus/alkuaika)
+              (toteuman-kentta {:otsikko "Loppuaika" :nimi ::paikkaus/loppuaika :tyyppi :pvm-aika}
+                               ::paikkaus/loppuaika)
+              (toteuman-kentta {:otsikko "Raekoko" :nimi ::paikkaus/raekoko}
+                               ::paikkaus/raekoko)
+              (toteuman-kentta {:otsikko "Massatyyppi" :nimi ::paikkaus/massatyyppi}
+                               ::paikkaus/massatyyppi)
+              (toteuman-kentta {:otsikko "Kuulamylly" :nimi ::paikkaus/kuulamylly}
+                               ::paikkaus/kuulamylly)
+              (toteuman-kentta {:otsikko "Massamenekki" :nimi ::paikkaus/massamenekki}
+                               ::paikkaus/massamenekki)]}))
 
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do

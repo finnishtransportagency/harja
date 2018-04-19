@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -23,8 +24,11 @@
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
                                                                ::paikkaus/paikkauskohde ::paikkaus/sijainti})
+        sijainti {::paikkaus/sijainti (-> (::paikkaus/sijainti paikkaus)
+                                          (assoc :type :moniviiva
+                                                 :viivat asioiden-ulkoasu/paikkaukset))}
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
-    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi)))
+    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti)))
 
 (defn kasittele-haettu-tulos
   [tulos _]
@@ -37,11 +41,28 @@
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
 
 (def toteumat-kartalla
-  (reaction (let [paikkaukset (:paikkaukset-grid @app)]
-              (when (and paikkaukset @taso-nakyvissa?)
-                (mapv (fn [{sijainti ::paikkaus/sijainti}]
-                        {:alue sijainti})
-                      paikkaukset)))))
+  (reaction (let [paikkaukset (remove #(= (type %) harja.ui.grid.protokollat/Otsikko)
+                                      (:paikkaukset-grid @app))
+                  paikkauksien-kohdat (:paikkauket-vetolaatikko @app)
+                  infopaneelin-tiedot-fn #(merge (select-keys % #{::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet
+                                                                  ::tierekisteri/losa ::tierekisteri/let ::paikkaus/alkuaika
+                                                                  ::paikkaus/loppuaika ::paikkaus/massatyyppi ::paikkaus/leveys
+                                                                  ::paikkaus/massamenekki ::paikkaus/raekoko ::paikkaus/kuulamylly})
+                                                 {::paikkaus/nimi (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])}
+                                                 (some (fn [paikkaus-kohta]
+                                                         (when (= (::paikkaus/id paikkaus-kohta) (::paikkaus/id %))
+                                                           (select-keys (first (::paikkaus/tienkohdat paikkaus-kohta)) #{::paikkaus/ajorata ::paikkaus/ajourat
+                                                                                                                         ::paikkaus/ajouravalit ::paikkaus/reunat})))
+                                                       paikkauksien-kohdat))]
+              (when (and (not-empty paikkaukset) @taso-nakyvissa?)
+                (with-meta (mapv (fn [paikkaus]
+                                   {:alue (::paikkaus/sijainti paikkaus)
+                                    :tyyppi-kartalla :paikkaukset-toteumat
+                                    :stroke {:width asioiden-ulkoasu/+normaali-leveys+}
+                                    :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})
+                                 paikkaukset)
+                           {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
+                                         :teksti "Paikkaukset"}]})))))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])

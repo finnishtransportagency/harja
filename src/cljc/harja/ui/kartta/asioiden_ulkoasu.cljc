@@ -453,6 +453,12 @@ tr-ikoni {:img (pinni-ikoni "musta")
     :dash [3 9]
     :width 3}])
 
+(def paikkaukset
+  [{:color puhtaat/musta
+    :width 8}
+   {:color puhtaat/vihrea
+    :width 6}])
+
 (defn tehtavan-viivat-tyokoneelle [viivat]
   (let [levein (or (apply max (map :width viivat)) +normaali-leveys+)]
     (concat
