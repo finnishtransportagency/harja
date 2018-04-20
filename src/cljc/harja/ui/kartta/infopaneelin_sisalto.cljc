@@ -740,7 +740,37 @@
    :tiedot [{:otsikko "Tyyppi" :nimi ::tielupa/tyyppi :fmt tielupa/tyyppi-fmt}
             {:otsikko "Voimassaolon alku" :nimi ::tielupa/voimassaolon-alkupvm :tyyppi :pvm-aika}
             {:otsikko "Voimassaolon loppu" :nimi ::tielupa/voimassaolon-loppupvm :tyyppi :pvm-aika}
-            {:otsikko "Hakija" :tyyppi :string :nimi ::tielupa/hakija-nimi}]
+            {:otsikko "Hakija" :tyyppi :string :nimi ::tielupa/hakija-tyyppi}
+            {:otsikko "Nimi" :tyyppi :string :nimi ::tielupa/hakija-nimi}
+            {:otsikko "Puhelinnumero" :tyyppi :string :nimi ::tielupa/hakija-puhelinnumero}
+            {:otsikko "Sähköpostiosoite" :tyyppi :string :nimi ::tielupa/hakija-sahkopostiosoite}
+            {:otsikko "TR-osoitteet"
+             :nimi ::tielupa/sijainnit
+             :tyyppi :komponentti
+             :komponentti
+             (fn []
+               (let [sijainnit (::tielupa/sijainnit lupa)]
+                 (into
+                   [:span
+                    {:style {:padding-right "55px"
+                             :float "right"}}]
+                   (map-indexed
+                     (fn [i osoite]
+                       ^{:key (str i "_" osoite)}
+                       [:div osoite])
+                     (->> sijainnit
+                          (sort-by (juxt ::tielupa/tie
+                                         ::tielupa/aosa
+                                         ::tielupa/aet
+                                         ::tielupa/losa
+                                         ::tielupa/let))
+                          (map (juxt ::tielupa/tie
+                                     ::tielupa/aosa
+                                     ::tielupa/aet
+                                     ::tielupa/losa
+                                     ::tielupa/let))
+                          (map (partial keep identity))
+                          (map (partial string/join "/")))))))}]
    :data lupa})
 
 (defmethod infopaneeli-skeema :default [x]
