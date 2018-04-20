@@ -515,45 +515,62 @@ tr-ikoni {:img (pinni-ikoni "musta")
   (case (::tielupa/tyyppi lupa)
     :liittymalupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "punainen")
+     (viiva-mustalla-rajalla puhtaat/punainen)
+     nil]
 
     :mainoslupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "oranssi")
+     (viiva-mustalla-rajalla puhtaat/oranssi)
+     nil]
 
     :mainosilmoitus
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "keltainen")
+     (viiva-mustalla-rajalla puhtaat/keltainen)
+     nil]
 
     :opastelupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "vihrea")
+     (viiva-mustalla-rajalla puhtaat/vihrea)
+     nil]
 
     :suoja-aluerakentamislupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "syaani")
+     (viiva-mustalla-rajalla puhtaat/syaani)
+     nil]
 
     :tilapainen-myyntilupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
      (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (viiva-mustalla-rajalla puhtaat/sininen)
+     nil]
 
     :tilapainen-liikennemerkkijarjestely
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "tummansininen")
+     (viiva-mustalla-rajalla puhtaat/tummansininen)
+     nil]
 
     :tietyolupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]
+     (pinni-ikoni "violetti")
+     (viiva-mustalla-rajalla puhtaat/violetti)
+     nil]
 
     :vesihuoltolupa
     [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
-     (pinni-ikoni "sininen")
-     {:color puhtaat/musta :width 8}]))
+     (pinni-ikoni "magenta")
+     (viiva-mustalla-rajalla puhtaat/magenta)
+     nil]
+
+    :johto-ja-kaapelilupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "pinkki")
+     (viiva-mustalla-rajalla puhtaat/pinkki)
+     nil]
+
+    [nil nil nil nil]))

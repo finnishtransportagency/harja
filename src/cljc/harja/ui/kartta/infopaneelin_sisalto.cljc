@@ -737,7 +737,10 @@
    :jarjesta-fn ::tielupa/myontamispvm
    :tunniste ::tielupa/id
    :otsikko (str (pvm/pvm (::tielupa/myontamispvm lupa)) " " (::tielupa/paatoksen-diaarinumero lupa))
-   :tiedot [{:otsikko "Tyyppi" :nimi ::tielupa/tyyppi :fmt tielupa/tyyppi-fmt}]
+   :tiedot [{:otsikko "Tyyppi" :nimi ::tielupa/tyyppi :fmt tielupa/tyyppi-fmt}
+            {:otsikko "Voimassaolon alku" :nimi ::tielupa/voimassaolon-alkupvm :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt}
+            {:otsikko "Voimassaolon loppu" :nimi ::tielupa/voimassaolon-loppupvm :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt}
+            {:otsikko "Hakija" :tyyppi :string :nimi ::tielupa/hakija-nimi}]
    :data lupa})
 
 (defmethod infopaneeli-skeema :default [x]
