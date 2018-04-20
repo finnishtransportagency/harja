@@ -327,6 +327,18 @@
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
+(deftest paallystysilmoituksen-paivittaminen-muiden-kohdeosien-paalle-ei-onnistu
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
+                                         kayttaja-paallystys portti
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus:kohdeosat_paallekkain.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))]
+
+    (is (not= 200 (:status vastaus)))
+    (is (not (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti.")))))
+
 (deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus)

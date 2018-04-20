@@ -71,6 +71,7 @@
   (let [paallystysilmoitus (:paallystysilmoitus data)
         alustatoimenpiteet (mapv #(assoc-in (:alustatoimenpide %) [:sijainti :numero] kohteen-tienumero)
                                  (:alustatoimenpiteet paallystysilmoitus))
+        ;; HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
         alikohteet (mapv #(assoc-in (:alikohde %)
                             [:sijainti :numero]
                             (get-in % [:alikohde :sijainti :numero]
