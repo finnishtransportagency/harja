@@ -24,7 +24,8 @@
             [harja.transit :as transit]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.istunto :as istunto]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -231,15 +232,16 @@
             :nimi :vaiheita
             :hae #(count (::t/tyovaiheet %))
             :leveys 1}
-           {:otsikko "Lähetys Tie\u00ADlii\u00ADken\u00ADne\u00ADkes\u00ADkuk\u00ADseen"
-            :nimi :lahetys
-            :tyyppi :komponentti
-            :komponentti #(case (::t/tila %)
-                            "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                            "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
-                            "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
-                            [:span "Ei lähetetty"])
-            :leveys 3}])
+           (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+             {:otsikko "Lähetys Tie\u00ADlii\u00ADken\u00ADne\u00ADkes\u00ADkuk\u00ADseen"
+              :nimi :lahetys
+              :tyyppi :komponentti
+              :komponentti #(case (::t/tila %)
+                              "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                              "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
+                              "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
+                              [:span "Ei lähetetty"])
+              :leveys 3})])
     haetut-ilmoitukset]])
 
 (defn hakulomake
