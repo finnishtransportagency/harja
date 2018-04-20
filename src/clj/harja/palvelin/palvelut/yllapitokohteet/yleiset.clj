@@ -251,8 +251,10 @@
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
-(defn vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa [db yllapitokohde-id vuosi kohdeosat]
-  (log/debug "VAADI NÄILLÄ: " (pr-str yllapitokohde-id vuosi kohdeosat))
+(defn paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
+  "Tarkistaa, etteivät annetut kohdeosat mene päällekkäin muiden saman vuoden kohdeosien kanssa.
+   Palauttaa kokoelman virheitä (string), mikäli niitä ilmenee."
+  [db yllapitokohde-id vuosi kohdeosat]
   (let [tiet (distinct (map :tr-numero kohdeosat))
         teiden-kohdeosat (group-by (juxt :tr-numero :tr-ajorata :tr-kaista)
                             (q/hae-yhden-vuoden-kohdeosat-teille db {:yllapitokohdeid yllapitokohde-id

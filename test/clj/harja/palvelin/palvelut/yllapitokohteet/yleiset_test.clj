@@ -7,7 +7,7 @@
   (let [db (luo-testitietokanta)]
     666
     (is (= ["Kohde: 'Testi 1' menee päällekkäin urakan: 'Muhoksen päällystysurakka' kohteen: 'Leppäjärven ramppi 2018' kohdeosan: 'Leppäjärven kohdeosa 2018' kanssa."]
-           (yleiset/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+           (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
              db
              666
              2018
@@ -22,7 +22,7 @@
         "Samana vuonna päällekkäin menevät kohteet huomataan")
 
     (is (nil?
-          (yleiset/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+          (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
             db
             666
             2018
@@ -38,7 +38,7 @@
         "Kun kohde on samalla tunnisteella, ei siitä aiheudu validointivirhettä")
 
     (is (nil?
-          (yleiset/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+          (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
             db
             666
             2018
@@ -52,7 +52,7 @@
               :tr-loppuetaisyys 100}]))
         "Kun kohde on eri ajoradalla tai kaistalla, ei siitä aiheudu validointivirhettä")
 
-    (is (nil? (yleiset/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+    (is (nil? (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
                 db
                 666
                 2018
@@ -68,7 +68,7 @@
 
 
     (is (= ["Kohde: 'Ei-validi' menee päällekkäin urakan: 'Muhoksen päällystysurakka' kohteen: 'Leppäjärven ramppi 2018' kohdeosan: 'Leppäjärven kohdeosa 2018' kanssa."]
-           (yleiset/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
+           (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
              db
              666
              2018
