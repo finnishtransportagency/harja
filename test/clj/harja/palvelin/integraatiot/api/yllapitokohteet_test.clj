@@ -644,12 +644,14 @@
 
 (deftest avoimen-yllapitokohteen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        kohde-id (hae-yllapitokohde-nakkilan-ramppi)
+        ;; Testiä varten tuhoa kohteen POT
+        _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
-        {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                  kayttaja-paallystys portti
                                                  payload)]
-    (is (= 200 status))
+    (is (= 200 (:status vastaus)))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
           oletettu-tr-osoite {:aet 1
