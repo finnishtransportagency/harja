@@ -804,7 +804,9 @@
 
 (deftest tarkastuksen-kirjaaminen-kohteelle-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        ;; Testiä varten poista POT
+        _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         hae-tarkastukset #(q-map "SELECT * FROM tarkastus WHERE yllapitokohde =" kohde-id)
         tarkastukset-ennen-kirjausta (hae-tarkastukset)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
