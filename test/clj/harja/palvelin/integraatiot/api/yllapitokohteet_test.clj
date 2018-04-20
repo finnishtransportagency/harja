@@ -264,8 +264,8 @@
                               :tekninen-toimenpide 1
                               :tr-alkuetaisyys 1
                               :tr-alkuosa 1
-                              :tr-loppuetaisyys 15
-                              :tr-loppuosa 5
+                              :tr-loppuetaisyys 5
+                              :tr-loppuosa 3
                               :verkkotyyppi 1
                               :verkon-sijainti 1
                               :verkon-tarkoitus 5}]
@@ -308,23 +308,23 @@
               :paallystetyyppi nil
               :raekoko nil
               :toimenpide nil
-              :tr_numero 20
-              :tr_alkuosa 1
               :tr_alkuetaisyys 1
-              :tr_loppuosa 5
-              :tr_loppuetaisyys 16
+              :tr_alkuosa 1
+              :tr_loppuetaisyys 0
+              :tr_loppuosa 2
+              :tr_numero 20
               :tyomenetelma nil
-              :yllapitokohde kohde-id}))
+              :yllapitokohde 1}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
              {:massamaara nil
               :nimi "2. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
               :toimenpide nil
-              :tr_alkuetaisyys 16
-              :tr_alkuosa 5
-              :tr_loppuetaisyys 16
-              :tr_loppuosa 5
+              :tr_alkuetaisyys 0
+              :tr_alkuosa 2
+              :tr_loppuetaisyys 5
+              :tr_loppuosa 3
               :tr_numero 20
               :tyomenetelma nil
               :yllapitokohde 1}))
