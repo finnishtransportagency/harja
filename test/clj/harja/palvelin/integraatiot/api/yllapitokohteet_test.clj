@@ -912,7 +912,9 @@
 
 (deftest osoitteiden-muunnos-vkmn-kanssa
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        ;; Testiä varten tuhoa POT
+        _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         vkm-vastaus (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.txt")]
     (with-fake-http [+testi-vkm+ vkm-vastaus
                      #".*api\/urakat.*" :allow]
@@ -920,7 +922,6 @@
             vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                             kayttaja-paallystys portti
                                             payload)]
-        (log/debug vastaus)
         (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
 
         (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
