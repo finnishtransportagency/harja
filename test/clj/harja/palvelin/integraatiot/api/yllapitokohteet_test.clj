@@ -210,8 +210,10 @@
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-kasiteltavaksi-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        ;; Poista päällystysilmoitus testiä varten
+        _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
@@ -221,7 +223,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tila on valmis
-    (let [tila (ffirst (q (str "SELECT tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))]
+    (let [tila (ffirst (q (str "SELECT tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))]
       (is (= tila "valmis")))))
 
 (deftest paallystysilmoituksen-paivittaminen-toimii
