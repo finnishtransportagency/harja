@@ -508,7 +508,7 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
-   {:palvelu :paivita-yllapitokohde ;; TODO Lisää päällekkäisyysvalidointi + testi
+   {:palvelu :paivita-yllapitokohde
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
     :tyyppi :PUT
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
