@@ -20,7 +20,8 @@
     [harja.ui.liitteet :as liitteet]
     [reagent.core :as r]
     [clojure.set :as set]
-    [harja.views.kartta.tasot :as tasot])
+    [harja.views.kartta.tasot :as tasot]
+    [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -896,10 +897,19 @@
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->HaeTieluvat (:valinnat app) nil))
                            (tasot/taso-paalle! :tieluvat)
-                           (tasot/taso-pois! :organisaatio))
+                           (tasot/taso-pois! :organisaatio)
+                           (kartta-tiedot/piilota-infopaneeli!)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit!
+                             {:tielupa {:toiminto (fn [lupa]
+                                                    ;; Koska ei olla täysin varmoja, että kartan tiedot
+                                                    ;; pysyy aina täysin oikeana (yksi tielupa on rikottu moneen palaan)
+                                                    (e! (tiedot/->AvaaTielupaPaneelista (::tielupa/id lupa))))
+                                        :teksti "Avaa tielupa"}}))
                       #(do (e! (tiedot/->Nakymassa? false))
                            (tasot/taso-pois! :tieluvat)
-                           (tasot/taso-paalle! :organisaatio)))
+                           (tasot/taso-paalle! :organisaatio)
+                           (kartta-tiedot/piilota-infopaneeli!)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [e! app]
       [:div
        [kartta/kartan-paikka]
