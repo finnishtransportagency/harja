@@ -169,6 +169,7 @@
         db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (doseq [vuosi kohteen-vuodet]
+        (log/debug "VAADI NÄILLÄ: " (pr-str kohde-id vuosi alikohteet))
         (log/debug "VAADI: " (yy/vaadi-kohdeosat-eivat-paallekkain-saman-vuoden-kohdeosien-kanssa
                                db kohde-id vuosi alikohteet)))
       (jdbc/with-db-transaction [db db]

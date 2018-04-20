@@ -672,6 +672,15 @@
         (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
             "Kaikilla alikohteilla on sijainti & tienumero")))))
 
+(deftest avoimen-yllapitokohteen-paivittaminen-paallekain-ei-onnistu
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-paallekkain-request.json")
+        {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                 kayttaja-paallystys portti
+                                                 payload)]
+    (is (not= 200 status))))
+
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
