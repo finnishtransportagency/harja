@@ -100,7 +100,9 @@
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        ;; Testiä varten tuhoa kohteen olemassa oleva POT, kirjataan siis uusi
+        _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
