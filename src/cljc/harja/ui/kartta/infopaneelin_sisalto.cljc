@@ -53,7 +53,8 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kan-to]
             [harja.domain.kanavat.hairiotilanne :as ht]
-            [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
+            [harja.domain.kanavat.liikennetapahtuma :as liikenne]
+            [harja.domain.tielupa :as tielupa]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -722,13 +723,55 @@
                   (if (fn suolatoteuma)
                     fn
                     (constantly false)))
-   :otsikko (str "Suolatoteuma" (when (:alkanut suolatoteuma)
-                                  (str " " (pvm/pvm (:alkanut suolatoteuma)))))
+   :otsikko (str (when (:alkanut suolatoteuma)
+                                  (str " " (pvm/pvm (:alkanut suolatoteuma))))
+                 "Suolatoteuma")
    :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
             {:otsikko "Määrä (t)" :nimi :maara}
             {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
             {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}]
    :data suolatoteuma})
+
+(defmethod infopaneeli-skeema :tielupa [lupa]
+  {:tyyppi :tielupa
+   :jarjesta-fn ::tielupa/myontamispvm
+   :tunniste ::tielupa/id
+   :otsikko (str (when-let [m (::tielupa/myontamispvm lupa)] (pvm/pvm-opt m)) " " (::tielupa/paatoksen-diaarinumero lupa))
+   :tiedot [{:otsikko "Tyyppi" :nimi ::tielupa/tyyppi :fmt tielupa/tyyppi-fmt}
+            {:otsikko "Voimassaolon alku" :nimi ::tielupa/voimassaolon-alkupvm :tyyppi :pvm-aika}
+            {:otsikko "Voimassaolon loppu" :nimi ::tielupa/voimassaolon-loppupvm :tyyppi :pvm-aika}
+            {:otsikko "Hakija" :tyyppi :string :nimi ::tielupa/hakija-tyyppi}
+            {:otsikko "Nimi" :tyyppi :string :nimi ::tielupa/hakija-nimi}
+            {:otsikko "Puhelinnumero" :tyyppi :string :nimi ::tielupa/hakija-puhelinnumero}
+            {:otsikko "Sähköpostiosoite" :tyyppi :string :nimi ::tielupa/hakija-sahkopostiosoite}
+            {:otsikko "TR-osoitteet"
+             :nimi ::tielupa/sijainnit
+             :tyyppi :komponentti
+             :komponentti
+             (fn []
+               (let [sijainnit (::tielupa/sijainnit lupa)]
+                 (into
+                   [:span
+                    {:style {:padding-right "55px"
+                             :float "right"}}]
+                   (map-indexed
+                     (fn [i osoite]
+                       ^{:key (str i "_" osoite)}
+                       [:div osoite])
+                     (->> sijainnit
+                          (sort-by (juxt ::tielupa/tie
+                                         ::tielupa/aosa
+                                         ::tielupa/aet
+                                         ::tielupa/losa
+                                         ::tielupa/let))
+                          (map (juxt ::tielupa/tie
+                                     ::tielupa/aosa
+                                     ::tielupa/aet
+                                     ::tielupa/losa
+                                     ::tielupa/let))
+                          (map (partial keep identity))
+                          (map (partial string/join "/")))))))}]
+   :data lupa})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
@@ -840,11 +883,29 @@
 (defn- skeema-ilman-tyhjia-riveja [skeema]
   (assoc skeema :tiedot (keep identity (:tiedot skeema))))
 
+(defn vain-uniikit
+  "Jos skeemalle on annettu :tunniste, ja samalla tunnisteella löytyy
+  monta riviä, palauttaa vain yhden riveistä."
+  [skeemat]
+  (let [[tunnisteelliset tunnisteettomat] ((juxt #(get % true) #(get % false))
+                                            (group-by (comp some? :tunniste) skeemat))]
+    (concat
+      (map
+        first
+        (mapcat
+          vals
+          (map
+            (fn [[tunniste rivit]]
+              (group-by (comp tunniste :data) rivit))
+            (group-by :tunniste tunnisteelliset))))
+      tunnisteettomat)))
+
 (defn skeemamuodossa
   ([asiat]
    (as-> asiat $
          (keep infopaneeli-skeema $)
          (map skeema-ilman-tyhjia-riveja $)
          (keep validoi-infopaneeli-skeema $)
+         (vain-uniikit $)
          (sort-by #((:jarjesta-fn %) (:data %)) jarjesta $)
          (vec $))))
