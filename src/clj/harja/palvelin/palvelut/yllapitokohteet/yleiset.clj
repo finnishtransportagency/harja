@@ -257,30 +257,27 @@
   [db yllapitokohde-id vuosi kohdeosat]
   (let [tiet (distinct (map :tr-numero kohdeosat))
         teiden-kohdeosat (group-by (juxt :tr-numero :tr-ajorata :tr-kaista)
-                            (q/hae-yhden-vuoden-kohdeosat-teille db {:yllapitokohdeid yllapitokohde-id
-                                                                     :vuosi vuosi
-                                                                     :tiet tiet}))
+                                   (q/hae-yhden-vuoden-kohdeosat-teille db {:yllapitokohdeid yllapitokohde-id
+                                                                            :vuosi vuosi
+                                                                            :tiet tiet}))
         virheet (map (fn [{tallennettava-id :id
                            :keys [tr-numero tr-ajorata tr-kaista]
                            :as tallennettava-kohde}]
                        (let [kohteet-samalta-sijainnilta (get teiden-kohdeosat [tr-numero tr-ajorata tr-kaista])]
-                         (map (fn [{olemassa-oleva-id :id
-                                    :keys [urakan-nimi
+                         (keep (fn [{olemassa-oleva-id :id
+                                     :keys [urakan-nimi
+                                            paakohteen-nimi
+                                            yllapitokohteen-nimi]
+                                     :as olemassaoleva-kohde}]
+                                 (when (and (not= olemassa-oleva-id tallennettava-id)
+                                            (tr/kohdeosat-paalekkain? olemassaoleva-kohde tallennettava-kohde))
+                                   (format "Kohde: '%s' menee päällekkäin urakan: '%s' kohteen: '%s' kohdeosan: '%s' kanssa."
+                                           (:nimi tallennettava-kohde)
+                                           urakan-nimi
                                            paakohteen-nimi
-                                           yllapitokohteen-nimi]
-                                    :as olemassaoleva-kohde}]
-                                (when (and (not= olemassa-oleva-id tallennettava-id)
-                                           (tr/kohdeosat-paalekkain? olemassaoleva-kohde tallennettava-kohde))
-                                  (format "Kohde: '%s' menee päällekkäin urakan: '%s' kohteen: '%s' kohdeosan: '%s' kanssa."
-                                          (:nimi tallennettava-kohde)
-                                          urakan-nimi
-                                          paakohteen-nimi
-                                          yllapitokohteen-nimi)))
-                              kohteet-samalta-sijainnilta)))
+                                           yllapitokohteen-nimi)))
+                               kohteet-samalta-sijainnilta)))
                      kohdeosat)]
-    (->> virheet
-      (apply concat)
-      (filter (comp not nil?))
-      (seq))))
+    (apply concat virheet)))
 
 

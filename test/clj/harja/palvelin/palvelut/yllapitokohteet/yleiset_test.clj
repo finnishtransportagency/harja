@@ -21,7 +21,7 @@
                :tr-loppuetaisyys 100}]))
         "Samana vuonna päällekkäin menevät kohteet huomataan")
 
-    (is (nil?
+    (is (empty?
           (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
             db
             666
@@ -37,7 +37,7 @@
               :tr-loppuetaisyys 100}]))
         "Kun kohde on samalla tunnisteella, ei siitä aiheudu validointivirhettä")
 
-    (is (nil?
+    (is (empty?
           (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
             db
             666
@@ -52,7 +52,7 @@
               :tr-loppuetaisyys 100}]))
         "Kun kohde on eri ajoradalla tai kaistalla, ei siitä aiheudu validointivirhettä")
 
-    (is (nil? (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
+    (is (empty? (yleiset/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
                 db
                 666
                 2018
