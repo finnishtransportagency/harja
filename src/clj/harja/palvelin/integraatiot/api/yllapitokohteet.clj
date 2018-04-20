@@ -169,22 +169,7 @@
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet
         db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
-      (doseq [vuosi kohteen-vuodet]
-        (let [paallekkaiset-osat (yy/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
-                                   db kohde-id vuosi (map #(-> {:nimi (:nimi %)
-                                                                :tr-numero (get-in % [:sijainti :numero])
-                                                                :tr-ajorata (get-in % [:sijainti :ajr])
-                                                                :tr-kaista (get-in % [:sijainti :kaista])
-                                                                :tr-alkuosa (get-in % [:sijainti :aosa])
-                                                                :tr-alkuetaisyys (get-in % [:sijainti :aet])
-                                                                :tr-loppuosa (get-in % [:sijainti :losa])
-                                                                :tr-loppuetaisyys (get-in % [:sijainti :let])})
-                                                          alikohteet))]
-          (when (not (empty? paallekkaiset-osat))
-            (virheet/heita-poikkeus
-              virheet/+viallinen-kutsu+
-              {:koodi virheet/+viallinen-kutsu+
-               :viesti (str/join ", " paallekkaiset-osat)}))))
+      (validointi/tarkista-alikohteiden-paallekkaisyys db kohde-id kohteen-vuodet alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)

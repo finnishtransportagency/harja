@@ -14,7 +14,9 @@
     [harja.domain.yllapitokohde :as kohteet]
     [harja.kyselyt.paallystys :as paallystys-q]
     [harja.domain.tierekisteri :as tierekisteri]
-    [cheshire.core :as cheshire])
+    [cheshire.core :as cheshire]
+    [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+    [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (declare tarkista-muut-alikohteet)
@@ -236,3 +238,21 @@
                   (tarkista-ovatko-tierekisterosoitteet-validit db muut-alikohteet))]
     (when (not (empty? virheet))
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet))))
+
+(defn- tarkista-alikohteiden-paallekkaisyys [db kohde-id kohteen-vuodet alikohteet]
+  (doseq [vuosi kohteen-vuodet]
+    (let [paallekkaiset-osat (yy/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
+                               db kohde-id vuosi (map #(-> {:nimi (:nimi %)
+                                                            :tr-numero (get-in % [:sijainti :numero])
+                                                            :tr-ajorata (get-in % [:sijainti :ajr])
+                                                            :tr-kaista (get-in % [:sijainti :kaista])
+                                                            :tr-alkuosa (get-in % [:sijainti :aosa])
+                                                            :tr-alkuetaisyys (get-in % [:sijainti :aet])
+                                                            :tr-loppuosa (get-in % [:sijainti :losa])
+                                                            :tr-loppuetaisyys (get-in % [:sijainti :let])})
+                                                      alikohteet))]
+      (when (not (empty? paallekkaiset-osat))
+        (virheet/heita-poikkeus
+          virheet/+viallinen-kutsu+
+          {:koodi virheet/+viallinen-kutsu+
+           :viesti (str/join ", " paallekkaiset-osat)})))))
