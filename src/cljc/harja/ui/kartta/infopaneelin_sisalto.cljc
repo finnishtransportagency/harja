@@ -853,11 +853,21 @@
 (defn- skeema-ilman-tyhjia-riveja [skeema]
   (assoc skeema :tiedot (keep identity (:tiedot skeema))))
 
-(defn vain-uniikit [skeemat]
+(defn vain-uniikit
+  "Jos skeemalle on annettu :tunniste, ja samalla tunnisteella löytyy
+  monta riviä, palauttaa vain yhden riveistä."
+  [skeemat]
   (let [[tunnisteelliset tunnisteettomat] ((juxt #(get % true) #(get % false))
                                             (group-by (comp some? :tunniste) skeemat))]
     (concat
-      (map first (vals (group-by :tunniste tunnisteelliset)))
+      (map
+        first
+        (mapcat
+          vals
+          (map
+            (fn [[tunniste rivit]]
+              (group-by (comp tunniste :data) rivit))
+            (group-by :tunniste tunnisteelliset))))
       tunnisteettomat)))
 
 (defn skeemamuodossa
