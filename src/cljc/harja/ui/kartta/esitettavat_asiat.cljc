@@ -169,10 +169,21 @@
          asia)
        (when (not (empty? koordinaatit))
          (cond
+           ;; {:type :multipoint, :coordinates [{:type :point, :coordinates [298069.5999999996 6702931.0030000005]}]}
+           (and (= :multipoint tyyppi) (= 1 (count koordinaatit)))
+           (when (or pisteen-ikoni merkit)
+             (merge
+              (maarittele-piste valittu? (or pisteen-ikoni merkit))
+              {:type :merkki
+               :coordinates (:coordinates (first koordinaatit))}))
+
+           (= :multipoint tyyppi)
+           nil
+
            ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
            ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
            (or (= :point tyyppi) (= 1 (count koordinaatit)))
-           (when merkit
+           (when (or pisteen-ikoni merkit)
              (merge
                (maarittele-piste valittu? (or pisteen-ikoni merkit))
                {:type :merkki
@@ -529,7 +540,6 @@
         kulma)))
 
 (defmethod asia-kartalle :tietyomaa [aita valittu?]
-  (log/info "Asia kartalle: tietyömaa: " (pr-str aita))
   (let [viivat ulkoasu/tietyomaa]
     (assoc aita
       :type :tietyomaa
@@ -664,16 +674,17 @@
                                 ikoni))))
 
 (defmethod asia-kartalle :tielupa [tielupa valittu?]
-  (let [[teksti ikoni viivat] ["Tielupa" nil]]
+  (let [[teksti ikoni viivat viivamerkit] (ulkoasu/tielupa tielupa)]
     (assoc tielupa
-     :type :tielupa
-     :nimi (str (::tielupa/tyyppi tielupa) " " (::tielupa/paatoksen-diaarinumero tielupa))
-     :selite {:teksti teksti
-              :img ikoni}
-     :alue (maarittele-feature tielupa
-                               valittu?
-                               ikoni
-                               viivat))))
+      :type :tielupa
+      :nimi (str (tielupa/tyyppi-fmt (::tielupa/tyyppi tielupa)) " " (::tielupa/paatoksen-diaarinumero tielupa))
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature tielupa
+                                valittu?
+                                viivamerkit
+                                viivat
+                                ikoni))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
