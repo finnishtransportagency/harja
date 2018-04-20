@@ -12,7 +12,8 @@
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
-            [harja.tyokalut.functor :refer [fmap]])
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat-kartalla])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -35,6 +36,7 @@
    :toteumat               #(assoc % :tyyppi-kartalla :toteuma)
    :tietyomaat    #(assoc % :tyyppi-kartalla :tietyomaa)
    :tietyoilmoitukset #(assoc % :tyyppi-kartalla :tietyoilmoitus)
+   :tieluvat #(assoc % :tyyppi-kartalla :tielupa)
    :varustetoteumat identity})
 
 (def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle,
@@ -50,6 +52,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    :toteumat               :tilannekuva-toteumat
    :tietyomaat    :tilannekuva-tietyomaat
    :tietyoilmoitukset :tilannekuva-tietyoilmoitukset
+   :tieluvat :tilanneluva-tieluvat
    :varustetoteumat :tilannekuva-varustetoteumat})
 
 (defmulti muodosta-karttataso (fn [taso uudet-asiat] taso))
@@ -70,6 +73,12 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
     "ind" (when-not (= :historiakuva @valittu-tila)
             ;; Historiakuvassa ei haluta indikaattoria
             (str indikaattori)))))
+
+(defmethod muodosta-karttataso :tieluvat [taso uudet-asiat]
+  (kartalla-esitettavaan-muotoon
+    (tieluvat-kartalla/hajota-tieluvat uudet-asiat)
+    (constantly false)
+    (map (lisaa-karttatyyppi-fn taso))))
 
 (defmethod muodosta-karttataso :toteumat [taso tason-tiedot]
   (let [indikaattori (:viimeisin-toteuma tason-tiedot)]
