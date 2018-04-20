@@ -343,9 +343,9 @@
 
 (deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus)
-        _ (assert kohde "Ei lukittua kohdetta. Onko testidatassa vikaa?")
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        _ (u "UPDATE paallystysilmoitus SET tila = 'lukittu' WHERE paallystyskohde = " kohde-id)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
