@@ -19,10 +19,10 @@
     },
     "yllapitokohde": {
       "sijainti": {
-        "aosa": 1,
-        "aet": 1,
-        "losa": 5,
-        "let": 16,
+        "aosa": 41,
+        "aet": 16,
+        "losa": 41,
+        "let": 18,
         "ajr": 1,
         "kaista": 1
       },
@@ -32,10 +32,10 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 1,
-              "aet": 1,
-              "losa": 5,
-              "let": 16,
+              "aosa": 41,
+              "aet": 16,
+              "losa": 41,
+              "let": 17,
               "ajr": 1,
               "kaista": 1
             },
@@ -67,10 +67,10 @@
             "nimi": "2. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 5,
-              "aet": 16,
-              "losa": 5,
-              "let": 16,
+              "aosa": 41,
+              "aet": 17,
+              "losa": 41,
+              "let": 18,
               "ajr": 1,
               "kaista": 1
             },
@@ -103,10 +103,10 @@
       {
         "alustatoimenpide": {
           "sijainti": {
-            "aosa": 1,
-            "aet": 1,
-            "losa": 5,
-            "let": 15
+            "aosa": 41,
+            "aet": 16,
+            "losa": 41,
+            "let": 18
           },
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1,
