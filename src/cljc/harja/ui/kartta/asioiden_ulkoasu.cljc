@@ -143,7 +143,7 @@
    "linjamerkki" "turkoosi"})
 
 (defn turvalaitteiden-varit [tyyppi kiintea?]
-  (or (let [vari (get vesivaylien-ikonien-varit (str/lower-case tyyppi))]
+  (or (let [vari (get vesivaylien-ikonien-varit (when tyyppi (str/lower-case tyyppi)))]
         (if (map? vari) (get vari kiintea?) vari))
       "musta"))
 
