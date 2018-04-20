@@ -332,7 +332,7 @@
         kohde-id (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
-                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus:kohdeosat_paallekkain.json"
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus_kohdeosat_paallekkain.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))]
 
