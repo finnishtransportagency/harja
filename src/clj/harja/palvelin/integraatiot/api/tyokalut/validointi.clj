@@ -239,7 +239,7 @@
     (when (not (empty? virheet))
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet))))
 
-(defn- tarkista-alikohteiden-paallekkaisyys [db kohde-id kohteen-vuodet alikohteet]
+(defn tarkista-alikohteiden-paallekkaisyys [db kohde-id kohteen-vuodet alikohteet]
   (doseq [vuosi kohteen-vuodet]
     (let [paallekkaiset-osat (yy/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
                                db kohde-id vuosi (map #(-> {:nimi (:nimi %)
