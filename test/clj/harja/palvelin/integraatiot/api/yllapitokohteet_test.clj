@@ -676,10 +676,11 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-paallekkain-request.json")
-        {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                  kayttaja-paallystys portti
                                                  payload)]
-    (is (not= 200 status))))
+    (is (not= 200 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "Kohde: 'Päällekkäinen testialikohde' menee päällekkäin urakan: 'Muhoksen päällystysurakka' kohteen: 'Leppäjärven ramppi' kohdeosan: 'Leppäjärven kohdeosa' kanssa"))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
