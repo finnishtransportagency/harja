@@ -108,17 +108,17 @@
                ::paikkaus/kuulamylly-arvo "1"
                ::paikkaus/muotoarvo "Muotoarvo"
                ::paikkaus/lisa-aineet "Lisäaineet"
-               ::paikkaus/materiaali-id 11
                ::paikkaus/pitoisuus 3.2M
                ::paikkaus/sideainetyyppi "Sideaine"}]
-             materiaalit)
+             [(dissoc (first materiaalit)
+                      ::paikkaus/materiaali-id)])
           "Oletetut materiaalit löytyvät")
       (is (= [{::paikkaus/ajourat [1 2]
                ::paikkaus/ajorata 1
                ::paikkaus/ajouravalit [1]
-               ::paikkaus/reunat [0]
-               ::paikkaus/tienkohta-id 10}]
-             tienkohdat)
+               ::paikkaus/reunat [0]}]
+             [(dissoc (first tienkohdat)
+                      ::paikkaus/tienkohta-id)])
           "Oletetut tienkohdat löytyvät"))))
 
 (deftest paivita-paikkaus
