@@ -75,7 +75,7 @@
                                                          (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
-      (when (:ensimmainen-haku-tehty? app)
+      (if (:ensimmainen-haku-tehty? app)
         [:div
          [debug/debug app]
          [yhteinen-view/hakuehdot app
@@ -85,7 +85,8 @@
            :aikavali-otsikko "Kirjausaika"
            :voi-valita-trn-kartalta? false}]
          [kokonaishintaiset-kustannukset e! app]
-         [yksikkohintaiset-kustannukset e! app]]))))
+         [yksikkohintaiset-kustannukset e! app]]
+        [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
 
 (defn kustannukset []
   [tuck/tuck tiedot/app kustannukset*])

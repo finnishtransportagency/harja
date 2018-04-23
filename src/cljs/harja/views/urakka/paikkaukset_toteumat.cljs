@@ -164,7 +164,7 @@
                                                          (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
-      (when (:ensimmainen-haku-tehty? app)
+      (if (:ensimmainen-haku-tehty? app)
         [:span
          [kartta/kartan-paikka]
          [:div
@@ -175,7 +175,8 @@
                                    (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
             :aikavali-otsikko "Alkuaika"
             :voi-valita-trn-kartalta? true}]
-          [paikkaukset e! app]]]))))
+          [paikkaukset e! app]]]
+        [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
 
 (defn toteumat []
   (fn []
