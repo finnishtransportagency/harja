@@ -176,3 +176,72 @@
                              (dissoc ::muokkaustiedot/luotu)
                              (assoc ::tielupa/sijainnit (map #(dissoc % ::tielupa/geometria) (::tielupa/sijainnit haettu-tielupa))))]
       (is (= odotettu haettu-tielupa)))))
+
+
+
+(deftest kirjaa-uusi-liittymalupalupa
+  (let [db (luo-testitietokanta)
+        tunniste 43858
+        tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-liittymalupa.json") "<TUNNISTE>" (str tunniste))
+        odotettu #:harja.domain.tielupa{:urakoitsija-yhteyshenkilo
+                         "Yrjänä Yhteyshenkilo",
+                         :tienpitoviranomainen-sahkopostiosoite
+                         "teijo.tienpitaja@example.com",
+                         :voimassaolon-alkupvm
+                         #inst "2020-09-21T21:00:00.000-00:00",
+                         :kohde-postitoimipaikka "Kiiminki",
+                         :kohde-lahiosoite "Tie 123",
+                         :liikenneohjaajan-yhteyshenkilo
+                         "Lilli Liikenteenohjaaja",
+                         :hakija-postinumero "90900",
+                         :kunta "Kiiminki",
+                         :liikenneohjaajan-sahkopostiosoite
+                         "lilli.liikenteenohjaaja@example.com",
+                         :urakoitsija-sahkopostiosoite
+                         "yrjana.yhteyshenkilo@example.com",
+                         :tienpitoviranomainen-yhteyshenkilo
+                         "Teijo Tienpitäjä",
+                         :tienpitoviranomainen-puhelinnumero
+                         "987-7889087",
+                         :sijainnit
+                         (#:harja.domain.tielupa{:tie 20,
+                                                 :aosa 6,
+                                                 :aet 2631,
+                                                 :ajorata 0,
+                                                 :kaista 1}),
+                         :hakija-tyyppi "kotitalous",
+                         :urakka 4,
+                         :kaapeliasennukset [],
+                         :liikenneohjaajan-nimi "Liikenneohjaus Oy",
+                         :paatoksen-diaarinumero "123456789",
+                         :saapumispvm
+                         #inst "2017-09-21T21:00:00.000-00:00",
+                         :otsikko
+                         "Lupa rakentaa uusi liittymä mökkitielle",
+                         :id 3,
+                         :ely 12,
+                         :katselmus-url "https://tilu.fi/1234",
+                         :urakan-nimi "Oulun alueurakka",
+                         :hakija-postinosoite "Liitintie 1",
+                         :urakoitsija-puhelinnumero "987-7889087",
+                         :kohde-postinumero "90900",
+                         :hakija-puhelinnumero "987-7889087",
+                         :ulkoinen-tunniste 43858,
+                         :liikenneohjaajan-puhelinnumero "987-7889087",
+                         :tien-nimi "Kuusamontie",
+                         :hakija-nimi "Henna Liittymä",
+                         :myontamispvm
+                         #inst "2018-09-21T21:00:00.000-00:00",
+                         :hakija-sahkopostiosoite
+                         "henna.hakija@example.com",
+                         :tyyppi :liittymalupa,
+                         :urakoitsija-nimi "Puulaaki Oy",
+                         :voimassaolon-loppupvm
+                         #inst "2020-09-21T21:00:00.000-00:00"}]
+    (api-tyokalut/post-kutsu ["/api/tieluvat"] kayttaja portti tielupa-json)
+    (let [haettu-tielupa (first (tielupa-q/hae-tieluvat db {::tielupa/ulkoinen-tunniste tunniste}))
+          _ (prn haettu-tielupa)
+          haettu-tielupa (-> haettu-tielupa
+                             (dissoc ::muokkaustiedot/luotu)
+                             (assoc ::tielupa/sijainnit (map #(dissoc % ::tielupa/geometria) (::tielupa/sijainnit haettu-tielupa))))]
+      (is (= "seppo" haettu-tielupa)))))
