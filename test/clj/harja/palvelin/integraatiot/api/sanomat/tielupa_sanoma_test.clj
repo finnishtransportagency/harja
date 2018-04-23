@@ -194,7 +194,7 @@
                :lisaohjeet ""
                :leveys-metreissa 4
                :liittymakaari 12}
-              :haettu-kayttotarkoitus "lomakiinteistolle-kulku"
+              :haettu-kayttotarkoitus {:lomakiinteistolle-kulkuun true}
               :arvioitu-kokonaisliikenne 22
               :arvioitu-kuorma-autoliikenne 5
               :kyla "Kiiminki"

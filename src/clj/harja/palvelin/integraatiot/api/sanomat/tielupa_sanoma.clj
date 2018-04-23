@@ -90,9 +90,26 @@
    ::tielupa/johtolupa-silta-asennuksia (:silta-asennuksia johto-ja-kaapelilupa)
    ::tielupa/kaapeliasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})
 
+(defn mapin-tosi-arvolliset-avaimet [m]
+  (for [k (keys m)
+        :let [v (k m)]]
+    (when (true? v) k)))
+
+(defn muunna-sanoman-kayttotarkoitus [m]
+  (let [sanoman-kt (first (mapin-tosi-arvolliset-avaimet m))
+        muunnokset {:lomakiinteistolle-kulkuun "lomakiinteistolle-kulku"
+                    :maa-ja-metsatalousajoon "maa-ja-metsatalousajo",
+                    :asuinkiinteistolle-kulkuun "asuinkiinteistolle-kulku",
+                    :liike-tai-teollisuuskiinteistolle-kulkuun "liike-tai-teollisuuskiinteistolle-kulku",
+                    :energiapuukuljetuksiin "energiapuukuljetukset",
+                    :jalankulku-tai-pyoraliikenteeseen "jalankulku-tai-pyoraliikenne",
+                    :moottorikelkkailuun "moottorikelkkailu",
+                    :muu "muu"}]
+    (get muunnokset sanoman-kt)))
+
 (defn liittymalupa [{liittymaohje :liittymaohje :as liittymalupa}]
   {::tielupa/liittymalupa-myonnetty-kayttotarkoitus (:myonnetty-kauttotarkoitus liittymalupa)
-   ::tielupa/liittymalupa-haettu-kayttotarkoitus (:haettu-kayttotarkoitus liittymalupa)
+   ::tielupa/liittymalupa-haettu-kayttotarkoitus (muunna-sanoman-kayttotarkoitus (:haettu-kayttotarkoitus liittymalupa))
    ::tielupa/liittymalupa-liittyman-siirto (:liittyman-siirto liittymalupa)
    ::tielupa/liittymalupa-tarkoituksen-kuvaus (:tarkoituksen-kuvaus liittymalupa)
    ::tielupa/liittymalupa-tilapainen (:tilapainen liittymalupa)
