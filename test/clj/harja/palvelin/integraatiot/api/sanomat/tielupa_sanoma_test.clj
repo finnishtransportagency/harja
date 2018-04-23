@@ -354,13 +354,13 @@
               :esitetty-etaisyys-tien-keskilinjaan 48
               :vahimmaisetaisyys-tien-keskilinjasta 48
               :suoja-alueen-leveys 4
-              :sijoitus "suoja-alue"
+              :sijoitus {:nakema-alue true}
               :kiinteisto-rn "12344"}
         odotettu {:harja.domain.tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan 48M
                   :harja.domain.tielupa/suoja-aluerakentamislupa-kiinteisto-rn "12344"
                   :harja.domain.tielupa/suoja-aluerakentamislupa-lisatiedot "Komia aiatta"
                   :harja.domain.tielupa/suoja-aluerakentamislupa-rakennettava-asia "Aitta"
-                  :harja.domain.tielupa/suoja-aluerakentamislupa-sijoitus "suoja-alue"
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-sijoitus "nakemisalue"
                   :harja.domain.tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys 4M
                   :harja.domain.tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta 48M}]
     (is (= (tielupa-sanoma/suoja-aluerakentamislupa data) odotettu))))

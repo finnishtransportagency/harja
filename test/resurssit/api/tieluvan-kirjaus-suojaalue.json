@@ -83,7 +83,7 @@
       "vahimmaisetaisyys-tien-keskilinjasta": 48,
       "suoja-alueen-leveys": 4,
       "sijoitus": {
-        "suoja-alue": "suoja-alue"
+          "nakema-alue": true
       },
       "kiinteisto-rn": "12344"
     }

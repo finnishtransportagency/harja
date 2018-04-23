@@ -157,13 +157,21 @@
    ::tielupa/opastelupa-nykyinen-opastus (:nykyinen-opastus opastelupa)
    ::tielupa/opasteet (opasteet (:opasteet opastelupa))})
 
+(defn muunna-sanoman-sijoitus [m]
+  (if (= true (:nakema-alue m))
+    "nakemisalue"
+    (when (= true (:suoja-alue m))
+      "suoja-alue")))
+
 (defn suoja-aluerakentamislupa [suoja-aluerakentamislupa]
   {::tielupa/suoja-aluerakentamislupa-rakennettava-asia (:rakennettava-asia suoja-aluerakentamislupa)
    ::tielupa/suoja-aluerakentamislupa-lisatiedot (:lisatiedot suoja-aluerakentamislupa)
    ::tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan (nil-turvallinen-bigdec (:esitetty-etaisyys-tien-keskilinjaan suoja-aluerakentamislupa))
    ::tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta (nil-turvallinen-bigdec (:vahimmaisetaisyys-tien-keskilinjasta suoja-aluerakentamislupa))
    ::tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys (nil-turvallinen-bigdec (:suoja-alueen-leveys suoja-aluerakentamislupa))
-   ::tielupa/suoja-aluerakentamislupa-sijoitus (:sijoitus suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-sijoitus (-> suoja-aluerakentamislupa
+                                                   :sijoitus
+                                                   muunna-sanoman-sijoitus)
    ::tielupa/suoja-aluerakentamislupa-kiinteisto-rn (:kiinteisto-rn suoja-aluerakentamislupa)})
 
 (defn tilapainen-myyntilupa [tilapainen-myyntilupa]
