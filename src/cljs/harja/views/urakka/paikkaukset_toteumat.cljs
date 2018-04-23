@@ -164,17 +164,18 @@
                                                          (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
-      [:span
-       [kartta/kartan-paikka]
-       [:div
-        [debug/debug app]
-        [yhteinen-view/hakuehdot app
-         {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
-          :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
-                                 (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-          :aikavali-otsikko "Alkuaika"
-          :voi-valita-trn-kartalta? true}]
-        [paikkaukset e! app]]])))
+      (when (:ensimmainen-haku-tehty? app)
+        [:span
+         [kartta/kartan-paikka]
+         [:div
+          [debug/debug app]
+          [yhteinen-view/hakuehdot app
+           {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
+            :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
+                                   (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+            :aikavali-otsikko "Alkuaika"
+            :voi-valita-trn-kartalta? true}]
+          [paikkaukset e! app]]]))))
 
 (defn toteumat []
   (fn []

@@ -26,5 +26,7 @@
            :aloitus-aikavali (pvm/aikavali-nyt-miinus 7))
     (-> app
         (merge naytettavat-tiedot)
-        (assoc :paikkauksien-haku-kaynnissa? false)
-        (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet))))
+        (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet)
+        (assoc-in [:valinnat :tyomenetelmat] (into #{} (:tyomenetelmat tulos)))
+        (assoc :paikkauksien-haku-kaynnissa? false
+               :ensimmainen-haku-tehty? true))))

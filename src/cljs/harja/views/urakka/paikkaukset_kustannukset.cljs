@@ -75,16 +75,17 @@
                                                          (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
-      [:div
-       [debug/debug app]
-       [yhteinen-view/hakuehdot app
-        {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
-         :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
-                                (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-         :aikavali-otsikko "Kirjausaika"
-         :voi-valita-trn-kartalta? false}]
-       [kokonaishintaiset-kustannukset e! app]
-       [yksikkohintaiset-kustannukset e! app]])))
+      (when (:ensimmainen-haku-tehty? app)
+        [:div
+         [debug/debug app]
+         [yhteinen-view/hakuehdot app
+          {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
+           :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
+                                  (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+           :aikavali-otsikko "Kirjausaika"
+           :voi-valita-trn-kartalta? false}]
+         [kokonaishintaiset-kustannukset e! app]
+         [yksikkohintaiset-kustannukset e! app]]))))
 
 (defn kustannukset []
   [tuck/tuck tiedot/app kustannukset*])
