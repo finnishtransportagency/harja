@@ -125,3 +125,25 @@
               (if-not (empty? (rest loput))
                 (recur nykyinen (first loput) (rest loput))
                 true)))))))
+
+(deftest suodata-uniikit
+  (is (= [{:tunniste :id
+           :data {:id 1}}
+          {:tunniste :id
+           :data {:id 2}}
+          {:tunniste :homma
+           :data {:homma 2}}
+          {:data {:id 3}}
+          {:data {:id 3}}]
+         (paneeli/vain-uniikit [{:tunniste :id
+                                 :data {:id 1}}
+                                {:tunniste :id
+                                 :data {:id 1}}
+                                {:tunniste :id
+                                 :data {:id 1}}
+                                {:tunniste :id
+                                 :data {:id 2}}
+                                {:tunniste :homma
+                                 :data {:homma 2}}
+                                {:data {:id 3}}
+                                {:data {:id 3}}]))))
