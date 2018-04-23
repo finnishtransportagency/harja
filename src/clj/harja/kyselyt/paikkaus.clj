@@ -2,8 +2,10 @@
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.paikkaus :as paikkaus]
-            [harja.pvm :as pvm]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.pvm :as pvm]
+            [harja.kyselyt.tieverkko :as q-tr]
             [harja.id :refer [id-olemassa?]]))
 
 (defqueries "harja/kyselyt/paikkaus.sql"
@@ -95,8 +97,13 @@
         paikkauskohde-id (hae-tai-tee-paikkauskohde db kayttaja-id (::paikkaus/paikkauskohde paikkaus))
         materiaalit (::paikkaus/materiaalit paikkaus)
         tienkohdat (::paikkaus/tienkohdat paikkaus)
+        tr-osoite (::paikkaus/tierekisteriosoite paikkaus)
+        sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (::tierekisteri/tie tr-osoite) :aosa (::tierekisteri/aosa tr-osoite)
+                                                       :aet (::tierekisteri/aet tr-osoite) :losa (::tierekisteri/losa tr-osoite)
+                                                       :loppuet (::tierekisteri/let tr-osoite)})
         uusi-paikkaus (dissoc (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                              ::muokkaustiedot/luoja-id kayttaja-id)
+                                              ::muokkaustiedot/luoja-id kayttaja-id
+                                              ::paikkaus/sijainti sijainti)
                               ::paikkaus/materiaalit
                               ::paikkaus/tienkohdat
                               ::paikkaus/paikkauskohde)

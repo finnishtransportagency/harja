@@ -158,11 +158,25 @@
 
 (defn toteumat* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti
-                                                       "Siirry kustannuksiin"
-                                                       (fn [paikkauskohde-id]
-                                                         (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id))))))
-                      #(e! (tiedot/->NakymastaPois)))
+    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymaan))
+                           (reset! tiedot/taso-nakyvissa? true))
+                      #(do (e! (tiedot/->NakymastaPois))
+                           (reset! tiedot/taso-nakyvissa? false)))
+    ;; Syy, että miksi tämmöinen erillinen otsikoiden lisäysfunktio on tässä sen sijaan, että
+    ;; tuo otsikko laitettaisiin samantein paikkallensa tiedot/kasittele-haettu-tulos funktiossa
+    ;; niinkuin se tehdään kustannusten puolella on se, että harja.ui.grid ns:n requiraaminen
+    ;; tiedot ns:ssa aiheuttaa circular dependencyn.
+    (komp/kun-muuttuu (fn [e! {haettu-uudet-paikkaukset? :haettu-uudet-paikkaukset?}]
+                        (when haettu-uudet-paikkaukset?
+                          (e! (tiedot/->LisaaOtsikotGridiin (fn [[otsikko paikkaukset]]
+                                                              (cons (grid/otsikko otsikko {:otsikkokomponentit (yhteinen-view/otsikkokomponentti
+                                                                                                                 "Siirry kustannuksiin"
+                                                                                                                 (fn [paikkauskohde-id]
+                                                                                                                   (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id)))
+                                                                                                                 (get-in (first paikkaukset)
+                                                                                                                         [::paikkaus/paikkauskohde ::paikkaus/id]))})
+                                                                    (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
+                                                                             paikkaukset))))))))
     (fn [e! app]
       [:span
        [kartta/kartan-paikka]
