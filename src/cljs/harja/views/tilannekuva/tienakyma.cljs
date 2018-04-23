@@ -93,6 +93,8 @@
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
   ;; Poistetaan TR-valinnan katkoviiva häiritsemästä
   (tasot/poista-geometria! :tr-valittu-osoite)
+  
+  (kartta-tiedot/piilota-infopaneeli!)
 
   (kartta-tiedot/nayta-kartan-kontrollit!
    :tienakyma-tulokset
