@@ -55,7 +55,8 @@
              [konversio :as konv]
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-             [tietyoilmoitukset :as tietyoilmoitukset-q]]
+             [tietyoilmoitukset :as tietyoilmoitukset-q]
+             [tielupa :as tielupa-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
@@ -72,6 +73,7 @@
             [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.roolit :as roolit]
+            [harja.domain.tielupa :as tielupa]
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
@@ -155,6 +157,11 @@
   (when (tk/valittu? tietyoilmoitukset tk/tietyoilmoitukset)
     (tietyoilmoitukset-q/hae-ilmoitukset-tilannekuvaan db (assoc tiedot :urakat urakat
                                                                         :tilaaja? (roolit/tilaajan-kayttaja? user)))))
+
+(defn- hae-tieluvat [db user {:keys [tieluvat alku loppu]}]
+  (when (tk/valittu? tieluvat tk/tieluvat)
+    (tielupa-q/hae-tieluvat-hakunakymaan db {::tielupa/voimassaolon-alkupvm alku
+                                             ::tielupa/voimassaolon-loppupvm loppu})))
 
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
@@ -395,7 +402,7 @@
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat
     :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :tietyomaat
-    :tietyoilmoitukset :varustetoteumat})
+    :tietyoilmoitukset :varustetoteumat :tieluvat})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
@@ -437,6 +444,11 @@
       :tietyoilmoitukset)
     (tulosta-tulos! "tietyoilmoitusta"
                     (hae-tietyoilmoitukset db user tiedot urakat))))
+
+(defmethod hae-osio :tieluvat [db user tiedot _ _]
+  (when (pko/ominaisuus-kaytossa? :tieluvat)
+    (tulosta-tulos! "tielupaa"
+                    (hae-tieluvat db user tiedot))))
 
 (defmethod hae-osio :varustetoteumat [db user tiedot urakat _]
   (tulosta-tulos!
