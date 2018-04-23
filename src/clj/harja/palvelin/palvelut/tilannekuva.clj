@@ -103,15 +103,37 @@
         (map (comp :nimi tk/suodattimet-idlla))
         s))
 
-(declare hae-kayttajan-urakat-alueittain)
-
 (defn- rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (let [kayttajan-urakka-idt (if (roolit/tilaajan-kayttaja? user)
+  (let [oikeus-nakyma (if (:nykytilanne? hakuargumentit)
+                        oikeudet/tilannekuva-nykytilanne
+                        oikeudet/tilannekuva-historia)
+        kayttajan-urakka-idt (cond
+                               (roolit/tilaajan-kayttaja? user)
                                (constantly true)
-                               ; fixme. hanskaa keissi jossa urakoitsija saa nähdä kaikkien urakkatyyppien tiedot omien urakoiden elyissä
-                               (set (map :id (q/urakat-joihin-oikeus
-                                               db {:organisaatio (get-in user [:organisaatio :id])}))))
+
+                               (roolit/urakoitsija? user)
+                               (let [urakat (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})]
+                                 (if (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
+                                   (set
+                                     (concat
+                                       (set (map :id urakat))
+                                       (set
+                                         (map
+                                           :id
+                                           (q/hallintayksikoiden-urakat
+                                             db
+                                             {:hallintayksikot (map
+                                                                 :hallintayksikko
+                                                                 (filter
+                                                                   (fn [urakka]
+                                                                     (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user))
+                                                                   urakat))})))))
+
+                                   (set (map :id urakat))))
+
+                               :else
+                               (set (map :id (q/hallintayksikoiden-urakat db {:hallintayksikot [(get-in user [:organisaatio :id])]}))))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
         oikeudelliset-urakat (set (filter kayttajan-urakka-idt (:urakat hakuargumentit)))]
     oikeudelliset-urakat))
@@ -462,58 +484,10 @@
       (tulosta-virhe! (name osio) e)
       nil)))
 
-(defn- maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
-  "Palauttaa mapin, joka kertoo, mihin käyttäjän omiin urakoihin käyttäjällä on erikoisoikeus
-   oman-urakan-ely. Erikoisoikeus antaa näkyvyyden urakan ELY-alueen muihin urakoihin.
-   Mapissa avaimet: :urakka-id, :hallintayksikko-id sekä tiedot oikeuksista"
-  [user oikeus-nakyma kayttajan-urakat-alueittain]
-  (vec (mapcat (fn [alue-ja-urakat]
-                 (let [hallintayksikko-id (get-in alue-ja-urakat [:hallintayksikko :id])]
-                   (map (fn [urakka]
-                          (-> {:urakka-id (:id urakka)
-                               :hallintayksikko-id hallintayksikko-id
-                               :oikeus-urakan-muihin-ely-urakoihin?
-                               (boolean (oikeudet/on-muu-oikeus? "oman-urakan-ely"
-                                                                 oikeus-nakyma
-                                                                 (:id urakka)
-                                                                 user))}))
-                        (:urakat alue-ja-urakat))))
-               kayttajan-urakat-alueittain)))
-
-(defn- lukuoikeus-urakkaan-lisaoikeudella?
-  "Tarkistaa, muodostuuko annettuun urakkaan oikeus jonkin
-  samalla ELY-alueella sijaitsevan urakan lisäoikeudella."
-  [db urakka-id lisaoikeudet]
-  (let [hallintayksikko-id (:hallintayksikko-id (first (urakat-q/urakan-hallintayksikko
-                                                         db
-                                                         {:id urakka-id})))
-        lisaoikeus-urakkaan? (boolean (some
-                                        (fn [lisaoikeus]
-                                          (and (:oikeus-urakan-muihin-ely-urakoihin? lisaoikeus)
-                                               (= (:hallintayksikko-id lisaoikeus) hallintayksikko-id)))
-                                        lisaoikeudet))]
-    lisaoikeus-urakkaan?))
-
 (defn hae-kayttajan-urakat-alueittain [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
                         oikeudet/tilannekuva-nykytilanne
                         oikeudet/tilannekuva-historia)
-        kayttajan-urakat-alueittain (->>
-                                      (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                       db user
-                                       (if (roolit/tilaajan-kayttaja? user)
-                                         (constantly true)
-                                         (fn [urakka-id kayttaja]
-                                           (oikeudet/voi-lukea? oikeus-nakyma
-                                                                urakka-id
-                                                                kayttaja)))
-                                       nil (:urakoitsija tiedot) nil
-                                       nil (:alku tiedot) (:loppu tiedot))
-                                      (map
-                                        (fn [alue]
-                                          (update alue :urakat
-                                                  (fn [urakat]
-                                                    (filter :urakkanro urakat))))))
         ;; Käyttäjällä voi olla omaan urakkaan erikoisoikeus oman-urakan-ely, mikä tarkoittaa,
         ;; että käyttäjä saa nähdä oman urakan ELY-alueen kaikkien urakoiden asiat.
         ;; Jos tällaisia erikoisoikeuksia omiin urakoihin löytyy, niin haetaan ko. urakoiden
@@ -527,27 +501,56 @@
 
         ;; Tilaajan käyttäjillä on oikeus kaikki urakoihin. Ei tarkastella silloin
         ;; lisäoikeuksia ollenkaan jotta ollaan nopeampia
-        lisaoikeudet (if (roolit/tilaajan-kayttaja? user)
-                       []
-                       (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
-                        user oikeus-nakyma
-                        kayttajan-urakat-alueittain))
-        lisaoikeuksien-urakat-alueittain (when-not (empty? lisaoikeudet)
-                                           (->>
-                                             (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                               db user (fn [urakka-id kayttaja]
-                                                         (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
-                                               nil (:urakoitsija tiedot) nil
-                                               nil (:alku tiedot) (:loppu tiedot))
-                                             (map
-                                               (fn [alue]
-                                                 (update alue :urakat
-                                                         (fn [urakat]
-                                                           (filter :urakkanro urakat)))))))
-        lopulliset-kayttajan-urakat-alueittain (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
-                                                 kayttajan-urakat-alueittain
-                                                 lisaoikeuksien-urakat-alueittain)]
-    lopulliset-kayttajan-urakat-alueittain))
+        urakat (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
+                 db user
+                 (constantly true)
+                 ;; :urakoitsija on murupolussa valittu urakoitsija (voi olla nil),
+                 ;; ei käyttäjän tieto!
+                 nil (:urakoitsija tiedot) nil
+                 nil (:alku tiedot) (:loppu tiedot))
+        saman-elyn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
+                            (->> (q/hallintayksikoiden-urakat
+                                   db {:hallintayksikot
+                                       (set
+                                         (map
+                                           (fn [alue]
+                                             (get-in alue [:hallintayksikko :id]))
+                                           urakat))})
+                                 (group-by :hallintayksikko)
+                                 (filter
+                                   (fn [[hy urakat]]
+                                     (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely"
+                                                                     oikeus-nakyma
+                                                                     (:id %)
+                                                                     user)
+                                           urakat)))
+                                 (into {})))
+        kayttajan-urakat-alueittain (->>
+                                      urakat
+                                      (map
+                                        (fn [alue]
+                                          (update
+                                            alue
+                                            :urakat
+                                            (fn [urakat]
+                                              (filter
+                                                (fn [urakka]
+                                                  (if (roolit/tilaajan-kayttaja? user)
+                                                    true
+
+                                                    (or
+                                                      (oikeudet/voi-lukea? oikeus-nakyma
+                                                                           (:id urakka)
+                                                                           user)
+                                                      (when-let [ely-urakat (get saman-elyn-urakat (get-in alue [:hallintayksikko :id]))]
+                                                        ((set (map :id ely-urakat)) (:id urakka))))))
+                                                urakat)))))
+                                      (map
+                                        (fn [alue]
+                                          (update alue :urakat
+                                                  (fn [urakat]
+                                                    (filter :urakkanro urakat))))))]
+    kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
   ([db user tiedot]
@@ -742,11 +745,11 @@ paallystyskohdeosan-tiedot-xf
            :as this}]
     ;; Tämä palvelu palauttaa tilannekuvaan asiat, jotka piirretään frontilla
     (julkaise-palvelu http :hae-tilannekuvaan
-                      (fn [user tiedot]
-                        (hae-tilannekuvaan db user tiedot)))
+                           (fn [user tiedot]
+                             (hae-tilannekuvaan db user tiedot)))
     (julkaise-palvelu http :hae-urakat-tilannekuvaan
-                      (fn [user tiedot]
-                        (hae-kayttajan-urakat-alueittain db user tiedot)))
+                           (fn [user tiedot]
+                             (hae-kayttajan-urakat-alueittain db user tiedot)))
 
     ;; Karttakuvat palauttaa tilannekuvaan asiat, jotka piirretään palvelimella valmiiksi
     ;; ja palautetaan frontille karttakuvina.
