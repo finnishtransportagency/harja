@@ -92,13 +92,13 @@
                         (op/and kysely-params-tyomenetelmat
                                 kysely-params-tieosa)
                         kysely-params-tyomenetelmat)]
-    (if (nil? paikkaus-idt)
-      (jdbc/with-db-transaction [db db]
+    (jdbc/with-db-transaction [db db]
+      (if (nil? paikkaus-idt)
         (let [paikkaukset (q/hae-paikkaukset db kysely-params)
               paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
           {:paikkaukset paikkaukset
-           :paikkauskohteet paikkauskohteet}))
-      {:paikkaukset (q/hae-paikkaukset db kysely-params)})))
+           :paikkauskohteet paikkauskohteet})
+        {:paikkaukset (q/hae-paikkaukset db kysely-params)}))))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")

@@ -71,23 +71,24 @@
     ::massamenekki
     ::raekoko
     ::kuulamylly
-    ::sijainti
-    [::paikkauskohde #{::nimi
-                       ::ulkoinen-id
-                       ::id}]
-    [::tienkohdat #{::tienkohta-id
-                    ::ajorata
-                    ::reunat
-                    ::ajourat
-                    ::ajouravalit
-                    ::keskisaumat}]
-    [::materiaalit #{::materiaali-id
-                     ::esiintyma
-                     ::kuulamylly-arvo
-                     ::muotoarvo
-                     ::sideainetyyppi
-                     ::pitoisuus
-                     ::lisa-aineet}]})
+    ::sijainti})
+
+(def tienkohta-perustiedot
+  #{::tienkohta-id
+    ::ajorata
+    ::reunat
+    ::ajourat
+    ::ajouravalit
+    ::keskisaumat})
+
+(def materiaalit-perustiedot
+  #{::materiaali-id
+    ::esiintyma
+    ::kuulamylly-arvo
+    ::muotoarvo
+    ::sideainetyyppi
+    ::pitoisuus
+    ::lisa-aineet})
 
 (def paikkaustoteuman-perustiedot
   #{::id

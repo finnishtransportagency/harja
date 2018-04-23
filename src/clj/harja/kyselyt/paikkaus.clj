@@ -12,10 +12,43 @@
             {:positional? true})
 
 (defn hae-paikkaukset [db hakuehdot]
-  (fetch db
-         ::paikkaus/paikkaus
-         paikkaus/paikkauksen-perustiedot
-         hakuehdot))
+  (let [paikkaus-materiaalit (fetch db
+                                    ::paikkaus/paikkaus
+                                    (conj paikkaus/paikkauksen-perustiedot
+                                          [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
+                                    (dissoc hakuehdot ::paikkaus/paikkauskohde ::paikkaus/tienkohdat))
+        paikkaus-paikkauskohde (fetch db
+                                      ::paikkaus/paikkaus
+                                      (conj paikkaus/paikkauksen-perustiedot
+                                            [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+                                      (dissoc hakuehdot ::paikkaus/tienkohdat ::paikkaus/materiaalit))
+        paikkaus-tienkohta (fetch db
+                                  ::paikkaus/paikkaus
+                                  (conj paikkaus/paikkauksen-perustiedot
+                                        [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
+                                  (dissoc hakuehdot ::paikkaus/paikkauskohde ::paikkaus/materiaalit))
+        yhdistetty (reduce (fn [kayty paikkaus]
+                             ;; jos kaikista hauista löytyy kyseinen id, se kuuluu silloin palauttaa
+                             (let [materiaali (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
+                                                       %)
+                                                    paikkaus-materiaalit)
+                                   paikkauskohde (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
+                                                          %)
+                                                       paikkaus-paikkauskohde)
+                                   tienkohta (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
+                                                      %)
+                                                   paikkaus-tienkohta)]
+                               (if (and materiaali paikkauskohde tienkohta)
+                                 (conj kayty (merge materiaali paikkauskohde tienkohta))
+                                 kayty)))
+                           [] (:paikkaukset (max-key :count
+                                              {:count (count paikkaus-materiaalit)
+                                               :paikkaukset paikkaus-materiaalit}
+                                              {:count (count paikkaus-paikkauskohde)
+                                               :paikkaukset paikkaus-paikkauskohde}
+                                              {:count (count paikkaus-tienkohta)
+                                               :paikkaukset paikkaus-tienkohta})))]
+    yhdistetty))
 
 (defn hae-paikkaustoteumat [db hakuehdot]
   (fetch db
