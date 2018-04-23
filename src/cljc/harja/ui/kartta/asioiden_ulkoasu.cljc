@@ -9,6 +9,7 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.hairiotilanne :as ht]
+            [harja.domain.tielupa :as tielupa]
             [harja.ui.kartta.varit :as varit]))
 
 (def +valitun-skaala+ 1.5)
@@ -142,7 +143,7 @@
    "linjamerkki" "turkoosi"})
 
 (defn turvalaitteiden-varit [tyyppi kiintea?]
-  (or (let [vari (get vesivaylien-ikonien-varit tyyppi)]
+  (or (let [vari (get vesivaylien-ikonien-varit (when tyyppi (str/lower-case tyyppi)))]
         (if (map? vari) (get vari kiintea?) vari))
       "musta"))
 
@@ -515,3 +516,67 @@ tr-ikoni {:img (pinni-ikoni "musta")
   (if (= :valmis (::ht/korjauksen-tila hairio))
     [(pinni-ikoni "vihrea") "Korjattu häiriö"]
     [(pinni-ikoni "punainen") "Häiriötilanne"]))
+
+(defn tielupa [lupa]
+  (case (::tielupa/tyyppi lupa)
+    :liittymalupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "punainen")
+     (viiva-mustalla-rajalla puhtaat/punainen)
+     nil]
+
+    :mainoslupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "oranssi")
+     (viiva-mustalla-rajalla puhtaat/oranssi)
+     nil]
+
+    :mainosilmoitus
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "keltainen")
+     (viiva-mustalla-rajalla puhtaat/keltainen)
+     nil]
+
+    :opastelupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "vihrea")
+     (viiva-mustalla-rajalla puhtaat/vihrea)
+     nil]
+
+    :suoja-aluerakentamislupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "syaani")
+     (viiva-mustalla-rajalla puhtaat/syaani)
+     nil]
+
+    :tilapainen-myyntilupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "sininen")
+     (viiva-mustalla-rajalla puhtaat/sininen)
+     nil]
+
+    :tilapainen-liikennemerkkijarjestely
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "tummansininen")
+     (viiva-mustalla-rajalla puhtaat/tummansininen)
+     nil]
+
+    :tietyolupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "violetti")
+     (viiva-mustalla-rajalla puhtaat/violetti)
+     nil]
+
+    :vesihuoltolupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "magenta")
+     (viiva-mustalla-rajalla puhtaat/magenta)
+     nil]
+
+    :johto-ja-kaapelilupa
+    [(tielupa/tyyppi-fmt (::tielupa/tyyppi lupa))
+     (pinni-ikoni "pinkki")
+     (viiva-mustalla-rajalla puhtaat/pinkki)
+     nil]
+
+    [nil nil nil nil]))

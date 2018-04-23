@@ -256,6 +256,11 @@ suodatinryhmat
          [yksittainen-suodatincheckbox "Tietyöilmoitukset"
           tiedot/suodattimet [:tietyoilmoitukset tk/tietyoilmoitukset]
           auki-oleva-checkbox-ryhma])
+       (when
+         (harja.tiedot.istunto/ominaisuus-kaytossa? :tieluvat)
+         [yksittainen-suodatincheckbox "Tieluvat"
+          tiedot/suodattimet [:tieluvat tk/tieluvat]
+          auki-oleva-checkbox-ryhma])
        ]
       [:div {:class "tk-suodatinryhmat"}
        (for*

@@ -28,6 +28,7 @@
 (defrecord TieluvatHaettu [tulos aikaleima])
 (defrecord TieluvatEiHaettu [virhe aikaleima])
 (defrecord ValitseTielupa [tielupa])
+(defrecord AvaaTielupaPaneelista [id])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -187,4 +188,8 @@
 
   ValitseTielupa
   (process-event [{t :tielupa} app]
-    (assoc app :valittu-tielupa t)))
+    (assoc app :valittu-tielupa t))
+
+  AvaaTielupaPaneelista
+  (process-event [{id :id} app]
+    (assoc app :valittu-tielupa (first (filter #(= id (::tielupa/id %)) (:haetut-tieluvat app))))))

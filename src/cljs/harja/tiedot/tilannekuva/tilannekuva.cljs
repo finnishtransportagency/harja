@@ -115,7 +115,8 @@ hakutiheys-historiakuva 1200000)
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
      :alueet oletusalueet
-     :varustetoteumat {tk/varustetoteumat false}}))
+     :varustetoteumat {tk/varustetoteumat false}
+     :tieluvat {tk/tieluvat false}}))
 
 (defn alueita-valittu?
   [suodattimet]
