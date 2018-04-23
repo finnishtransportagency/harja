@@ -38,7 +38,6 @@
                                                     ::paikkaus/muotoarvo "testi"
                                                     ::paikkaus/lisa-aineet "lisäaineet"
                                                     ::paikkaus/pitoisuus 1.2M
-                                                    ::paikkaus/materiaali-id 11
                                                     ::paikkaus/sideainetyyppi "20/30"}]
                            ::paikkaus/raekoko 1
                            ::paikkaus/ulkoinen-id 3453455
@@ -54,11 +53,9 @@
                                                    ::paikkaus/ajorata 1
                                                    ::paikkaus/keskisaumat [1 1]
                                                    ::paikkaus/ajouravalit [5 7]
-                                                   ::paikkaus/tienkohta-id 10
                                                    ::paikkaus/reunat [1]}]
                            ::paikkaus/kuulamylly "AN5"
                            ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
-                                                     ::paikkaus/id 5
                                                      ::paikkaus/nimi "Testipaikkauskohde"}
 
                            ::paikkaus/massamenekki 12}
@@ -66,12 +63,18 @@
                         ::paikkaus/ulkoinen-id 1231234}]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
-    (is (= odotettu-paikkaus (dissoc (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
-                                     ::paikkaus/id
-                                     ::paikkaus/sijainti
-                                     ::paikkaus/loppuaika
-                                     ::paikkaus/alkuaika
-                                     ::paikkaus/paikkauskohde-id)))
+    (is (= odotettu-paikkaus (-> (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
+                                 (dissoc ::paikkaus/id
+                                         ::paikkaus/sijainti
+                                         ::paikkaus/loppuaika
+                                         ::paikkaus/alkuaika
+                                         ::paikkaus/paikkauskohde-id)
+                                 (update ::paikkaus/tienkohdat (fn [tienkohdat]
+                                                                 [(dissoc (first tienkohdat) ::paikkaus/tienkohta-id)]))
+                                 (update ::paikkaus/materiaalit (fn [materiaalit]
+                                                                 [(dissoc (first materiaalit) ::paikkaus/materiaali-id)]))
+                                 (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
+                                                                    (dissoc paikkauskohde ::paikkaus/id))))))
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id)))))
