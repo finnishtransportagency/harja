@@ -108,7 +108,7 @@
 (s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
 (s/def ::tr (s/nilable map?))
-(s/def ::tyomenetelmat (s/nilable set?))
+(s/def ::tyomenetelmat (s/nilable sequential?))
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
@@ -117,7 +117,7 @@
                                                 :opt-un [::paikkauskohteet ::tyomenetelmat]))
 
 (s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
-                                                    :opt-un [::aikavali ::paikkaus-idt ::tr]))
+                                                    :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
 
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
                                                      :opt-un [::paikkauskohteet ::tyomenetelmat]))

@@ -215,7 +215,6 @@
                                     (count paikkaukset-valilta)))))]
     (testaus-template nil)
     (testaus-template [nil nil])
-    (testaus-template [nil nil])
     (testaus-template [(java.util.Date.) nil])
     (testaus-template [nil (java.util.Date.)])
     (testaus-template [(java.util.Date. (- (.getTime (java.util.Date.)) 86400000))
