@@ -816,11 +816,11 @@
         tarkastus (first tarkastukset-kirjauksen-jalkeen)]
 
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
-    (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
+    (is (.contains (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
     (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
         "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
 
-    (is (= 5 (:yllapitokohde tarkastus)) "Tarkastus on kirjattu oikealle ylläpitokohteelle")
+    (is (= kohde-id (:yllapitokohde tarkastus)) "Tarkastus on kirjattu oikealle ylläpitokohteelle")
     (is (= "katselmus" (:tyyppi tarkastus)) "Tarkastus on oikeaa tyyppiä")
     (is (= "Vanha päällyste on uusittava" (:havainnot tarkastus)) "Havainnot ovat oikein")
 
@@ -832,7 +832,7 @@
       (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
       (is (= (count tarkastukset-kirjauksen-jalkeen) (count tarkastukset-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
 
-      (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
+      (is (.contains (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
       (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))
 
     (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
