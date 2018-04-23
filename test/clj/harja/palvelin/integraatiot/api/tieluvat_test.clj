@@ -108,7 +108,7 @@
           haettu-tielupa (-> haettu-tielupa
                              (dissoc ::muokkaustiedot/luotu)
                              (assoc ::tielupa/sijainnit (map #(dissoc % ::tielupa/geometria) (::tielupa/sijainnit haettu-tielupa))))]
-      (is (= odotettu haettu-tielupa)))))
+      (tarkista-map-arvot odotettu haettu-tielupa))))
 
 
 (deftest kirjaa-uusi-suojaalue-lupa
@@ -175,7 +175,7 @@
           haettu-tielupa (-> haettu-tielupa
                              (dissoc ::muokkaustiedot/luotu)
                              (assoc ::tielupa/sijainnit (map #(dissoc % ::tielupa/geometria) (::tielupa/sijainnit haettu-tielupa))))]
-      (is (= odotettu haettu-tielupa)))))
+      (tarkista-map-arvot odotettu haettu-tielupa))))
 
 
 
@@ -204,11 +204,11 @@
                          :tienpitoviranomainen-puhelinnumero
                          "987-7889087",
                          :sijainnit
-                         (#:harja.domain.tielupa{:tie 20,
-                                                 :aosa 6,
-                                                 :aet 2631,
-                                                 :ajorata 0,
-                                                 :kaista 1}),
+                                        [#:harja.domain.tielupa {:tie 20,
+                                                                 :aosa 6,
+                                                                 :aet 2631,
+                                                                 :ajorata 0,
+                                                                 :kaista 1}],
                          :hakija-tyyppi "kotitalous",
                          :urakka 4,
                          :kaapeliasennukset [],
@@ -218,8 +218,6 @@
                          #inst "2017-09-21T21:00:00.000-00:00",
                          :otsikko
                          "Lupa rakentaa uusi liittymä mökkitielle",
-                         :id 3,
-                         :ely 12,
                          :katselmus-url "https://tilu.fi/1234",
                          :urakan-nimi "Oulun alueurakka",
                          :hakija-postinosoite "Liitintie 1",
@@ -237,11 +235,14 @@
                          :tyyppi :liittymalupa,
                          :urakoitsija-nimi "Puulaaki Oy",
                          :voimassaolon-loppupvm
-                         #inst "2020-09-21T21:00:00.000-00:00"}]
+                                        #inst "2020-09-21T21:00:00.000-00:00"
+                                        :haettu-kayttotarkoitus "lomakiinteistolle-kulku"}
+        ]
     (api-tyokalut/post-kutsu ["/api/tieluvat"] kayttaja portti tielupa-json)
     (let [haettu-tielupa (first (tielupa-q/hae-tieluvat db {::tielupa/ulkoinen-tunniste tunniste}))
-          _ (prn haettu-tielupa)
+          _ (prn "haettu-tielpa:" haettu-tielupa)
           haettu-tielupa (-> haettu-tielupa
                              (dissoc ::muokkaustiedot/luotu)
                              (assoc ::tielupa/sijainnit (map #(dissoc % ::tielupa/geometria) (::tielupa/sijainnit haettu-tielupa))))]
-      (is (= "seppo" haettu-tielupa)))))
+
+      (tarkista-map-arvot odotettu haettu-tielupa))))
