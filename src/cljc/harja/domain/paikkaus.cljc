@@ -105,21 +105,19 @@
                               :date  #(instance? #?(:cljs js/Date
                                                     :clj  java.util.Date) %))))
 
-(def tyomenetelmat-set #{"massapintaus" "kuumennuspintaus" "remix-pintaus"})
-(s/def ::tyomenetelmat-set-spec tyomenetelmat-set)
 (s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
 (s/def ::tr (s/nilable map?))
-(s/def ::tyomenetelmat (s/nilable (s/coll-of ::tyomenetelmat-set-spec :kind? set)))
+(s/def ::tyomenetelmat (s/nilable set?))
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
 
 (s/def ::urakan-paikkauskohteet-vastaus (s/keys :req-un [::paikkaukset]
-                                                :opt-un [::paikkauskohteet]))
+                                                :opt-un [::paikkauskohteet ::tyomenetelmat]))
 
 (s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
                                                     :opt-un [::aikavali ::paikkaus-idt ::tr]))
 
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
-                                                     :opt-un [::paikkauskohteet]))
+                                                     :opt-un [::paikkauskohteet ::tyomenetelmat]))

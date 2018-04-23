@@ -136,3 +136,10 @@
                                {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
     (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
 
+(defn hae-urakan-tyomenetelmat [db urakka-id]
+  (let [paikkauksien-tyomenetelmat (fetch db
+                                          ::paikkaus/paikkaus
+                                          #{::paikkaus/tyomenetelma}
+                                          {::paikkaus/urakka-id urakka-id})]
+    (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat))))
+

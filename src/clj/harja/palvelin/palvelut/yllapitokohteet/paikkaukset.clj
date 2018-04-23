@@ -95,9 +95,11 @@
     (if (nil? paikkaus-idt)
       (jdbc/with-db-transaction [db db]
         (let [paikkaukset (q/hae-paikkaukset db kysely-params)
-              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
+              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
+              tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
           {:paikkaukset paikkaukset
-           :paikkauskohteet paikkauskohteet}))
+           :paikkauskohteet paikkauskohteet
+           :tyomenetelmat tyomenetelmat}))
       {:paikkaukset (q/hae-paikkaukset db kysely-params)})))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
@@ -122,9 +124,11 @@
            (empty? (:paikkaus-idt tiedot))) {:kustannukset []}
       (nil? (:paikkaus-idt tiedot)) (jdbc/with-db-transaction [db db]
                                       (let [kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)
-                                            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
+                                            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
+                                            tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset
-                                         :paikkauskohteet paikkauskohteet}))
+                                         :paikkauskohteet paikkauskohteet
+                                         :tyomenetelmat tyomenetelmat}))
       :else {:kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)})))
 
 (defrecord Paikkaukset []
