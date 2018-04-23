@@ -303,7 +303,7 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc" "test/chrome" "test/shared-cljs"]
   :test-paths ["test/clj" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main
