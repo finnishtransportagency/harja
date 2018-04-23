@@ -21,21 +21,21 @@
       "sijainti": {
         "aosa": 1,
         "aet": 1,
-        "losa": 3,
-        "let": 5,
+        "losa": 5,
+        "let": 16,
         "ajr": 1,
         "kaista": 1
       },
       "alikohteet": [
         {
           "alikohde": {
-            "nimi": "1. testialikohde",
+            "nimi": "Päällekkäinen alikohde",
             "tunnus": "A",
             "sijainti": {
               "aosa": 1,
               "aet": 1,
-              "losa": 2,
-              "let": 0,
+              "losa": 5,
+              "let": 16,
               "ajr": 1,
               "kaista": 1
             },
@@ -61,43 +61,7 @@
               }
             ]
           }
-        },
-        {
-          "alikohde": {
-            "nimi": "2. testialikohde",
-            "tunnus": "A",
-            "sijainti": {
-              "aosa": 2,
-              "aet": 0,
-              "losa": 3,
-              "let": 5,
-              "ajr": 1,
-              "kaista": 1
-            },
-            "paallystetyyppi": "avoin asfaltti",
-            "raekoko": 12,
-            "massamenekki": 22,
-            "rc-prosentti": 54,
-            "tyomenetelma": "Uraremix",
-            "leveys": 1.2,
-            "kokonaismassamaara": 12.3,
-            "pinta-ala": 2.2,
-            "kuulamylly": "AN14",
-            "kivi-ja-sideaineet": [
-              {
-                "kivi-ja-sideaine": {
-                  "esiintyma": "testi2",
-                  "km-arvo": "testi2",
-                  "muotoarvo": "testi2",
-                  "sideainetyyppi": "20/30",
-                  "pitoisuus": 1.2,
-                  "lisa-aineet": "lisäaineet"
-                }
-              }
-            ]
-          }
-        }
-      ]
+        }]
     },
     "alustatoimenpiteet": [
       {
@@ -105,8 +69,8 @@
           "sijainti": {
             "aosa": 1,
             "aet": 1,
-            "losa": 3,
-            "let": 5
+            "losa": 5,
+            "let": 15
           },
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1,
