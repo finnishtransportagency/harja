@@ -32,6 +32,7 @@
   [urk :kysely "URK"]
 
   [tietyoilmoitukset :tietyoilmoitukset "Tietyöilmoitukset"]
+  [tieluvat :tieluvat "Tieluvat"]
 
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
