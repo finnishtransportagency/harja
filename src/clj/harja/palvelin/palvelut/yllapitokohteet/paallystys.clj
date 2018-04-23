@@ -235,11 +235,11 @@
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (try
             (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-             (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
-            (catch Exception e)
-            ;; Alustatoimenpiteelle lisättiin mahdollisuus antaa TR-numero, jolloin vanhat POT-ilmoitukset
-            ;; eivät ole enää skeeman mukaisia, mutta avautuvat kyllä UI:ssa.
-            (log/warn "Avattava päällystysilmoitus ei ole skeeman mukainen, parametrit: " urakka-id paallystyskohde-id))
+              (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
+            (catch Exception e
+              ;; Alustatoimenpiteelle lisättiin mahdollisuus antaa TR-numero, jolloin vanhat POT-ilmoitukset
+              ;; eivät ole enää skeeman mukaisia, mutta avautuvat kyllä UI:ssa.
+              (log/warn "Avattava päällystysilmoitus ei ole skeeman mukainen, parametrit: " urakka-id paallystyskohde-id)))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus (as-> paallystysilmoitus p
