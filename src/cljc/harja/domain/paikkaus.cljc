@@ -114,12 +114,13 @@
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
 (s/def ::tr (s/nilable map?))
 (s/def ::tyomenetelmat (s/nilable (s/coll-of ::tyomenetelmat-set-spec :kind? set)))
+(s/def ::teiden-pituudet (s/nilable map?))
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
 
 (s/def ::urakan-paikkauskohteet-vastaus (s/keys :req-un [::paikkaukset]
-                                                :opt-un [::paikkauskohteet]))
+                                                :opt-un [::paikkauskohteet ::teiden-pituudet]))
 
 (s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
                                                     :opt-un [::aikavali ::paikkaus-idt ::tr]))

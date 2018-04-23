@@ -7,6 +7,7 @@
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
+            [harja.kyselyt.tieverkko :as tv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn- muodosta-tr-ehdot
@@ -95,9 +96,17 @@
     (jdbc/with-db-transaction [db db]
       (if (nil? paikkaus-idt)
         (let [paikkaukset (q/hae-paikkaukset db kysely-params)
-              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
+              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
+              paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
+              teiden-pituudet (reduce (fn [kayty tie]
+                                        (assoc kayty tie (into {}
+                                                               (map (juxt :osa :pituus))
+                                                               (tv/hae-osien-pituudet db {:tie tie
+                                                                                          :aosa nil :losa nil}))))
+                                      {} paikkauksien-tiet)]
           {:paikkaukset paikkaukset
-           :paikkauskohteet paikkauskohteet})
+           :paikkauskohteet paikkauskohteet
+           :teiden-pituudet teiden-pituudet})
         {:paikkaukset (q/hae-paikkaukset db kysely-params)}))))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
