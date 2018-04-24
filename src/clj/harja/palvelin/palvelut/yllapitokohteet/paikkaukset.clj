@@ -73,9 +73,6 @@
 (defn hae-urakan-paikkauskohteet [db user {:keys [aikavali paikkaus-idt tyomenetelmat] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-urakka-id (select-keys tiedot #{::paikkaus/urakka-id})
-        kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
-                               (when (not (empty? tr))
-                                 (muodosta-tr-ehdot tr)))
         kysely-params-aika (if (and aikavali
                                     (not (and (nil? (first aikavali)) (nil? (second aikavali)))))
                              (assoc kysely-params-urakka-id ::paikkaus/alkuaika (cond
@@ -83,19 +80,47 @@
                                                                                   (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
                                                                                   :else (apply op/between aikavali)))
                              kysely-params-urakka-id)
-        kysely-params-paikkaus-idt (if paikkaus-idt
-                                     (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
-                                     kysely-params-aika)
-        kysely-params-tyomenetelmat (if (not-empty tyomenetelmat)
-                                      (assoc kysely-params-paikkaus-idt ::paikkaus/tyomenetelma (op/in tyomenetelmat))
-                                      kysely-params-paikkaus-idt)
-        kysely-params (if kysely-params-tieosa
-                        (op/and kysely-params-tyomenetelmat
-                                kysely-params-tieosa)
-                        kysely-params-tyomenetelmat)]
+        kysely-params (if (not-empty tyomenetelmat)
+                        (assoc kysely-params-aika ::paikkaus/tyomenetelma (op/in tyomenetelmat))
+                        kysely-params-aika)
+        kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
+                               (when (not (empty? tr))
+                                 (muodosta-tr-ehdot tr)))
+        kysely-params-paikkaus-idt (when paikkaus-idt
+                                     (assoc kysely-params ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)}))
+        hae-paikkaukset (fn [db]
+                          (let [paikkaus-materiaalit (q/hae-paikkaukset-materiaalit db kysely-params)
+                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohe db (if kysely-params-paikkaus-idt
+                                                                                            kysely-params-paikkaus-idt
+                                                                                            kysely-params))
+                                paikkaus-tienkohta (q/hae-paikkaukset-tienkohta db (if kysely-params-tieosa
+                                                                                     (op/and kysely-params
+                                                                                             kysely-params-tieosa)
+                                                                                     kysely-params))]
+                            (reduce (fn [kayty paikkaus]
+                                      ;; jos kaikista hauista löytyy kyseinen id, se kuuluu silloin palauttaa
+                                      (let [materiaali (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
+                                                                %)
+                                                             paikkaus-materiaalit)
+                                            paikkauskohde (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
+                                                                   %)
+                                                                paikkaus-paikkauskohde)
+                                            tienkohta (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
+                                                               %)
+                                                            paikkaus-tienkohta)]
+                                        (if (and materiaali paikkauskohde tienkohta)
+                                          (conj kayty (merge materiaali paikkauskohde tienkohta))
+                                          kayty)))
+                                    [] (:paikkaukset (max-key :count
+                                                              {:count (count paikkaus-materiaalit)
+                                                               :paikkaukset paikkaus-materiaalit}
+                                                              {:count (count paikkaus-paikkauskohde)
+                                                               :paikkaukset paikkaus-paikkauskohde}
+                                                              {:count (count paikkaus-tienkohta)
+                                                               :paikkaukset paikkaus-tienkohta})))))]
     (jdbc/with-db-transaction [db db]
       (if (nil? paikkaus-idt)
-        (let [paikkaukset (q/hae-paikkaukset db kysely-params)
+        (let [paikkaukset (hae-paikkaukset db)
               paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
               paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
               teiden-pituudet (reduce (fn [kayty tie]
@@ -107,7 +132,7 @@
           {:paikkaukset paikkaukset
            :paikkauskohteet paikkauskohteet
            :teiden-pituudet teiden-pituudet})
-        {:paikkaukset (q/hae-paikkaukset db kysely-params)}))))
+        {:paikkaukset (hae-paikkaukset db)}))))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
