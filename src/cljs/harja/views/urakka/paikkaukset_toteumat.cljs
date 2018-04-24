@@ -67,7 +67,7 @@
                              :nimi ::paikkaus/esiintyma}
                             {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
                              :leveys 2
-                             :nimi ::paikkaus/kuulamyllyarvo}
+                             :nimi ::paikkaus/kuulamylly-arvo}
                             {:otsikko "Muoto\u00ADarvo"
                              :leveys 2
                              :nimi ::paikkaus/muotoarvo}
