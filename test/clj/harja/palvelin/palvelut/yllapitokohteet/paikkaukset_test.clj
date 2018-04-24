@@ -31,7 +31,8 @@
         paikkaukset (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :hae-urakan-paikkauskohteet
                                     +kayttaja-jvh+
-                                    {::paikkaus/urakka-id urakka-id})
+                                    {::paikkaus/urakka-id urakka-id
+                                     :ensimmainen-haku? true})
         testikohde-id (some #(when (= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi]))
                                (get-in % [::paikkaus/paikkauskohde ::paikkaus/id]))
                             (:paikkaukset paikkaukset))
