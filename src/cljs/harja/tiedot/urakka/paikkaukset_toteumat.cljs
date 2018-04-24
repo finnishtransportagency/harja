@@ -7,44 +7,70 @@
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
-            [harja.ui.grid :as grid]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
                 :valinnat {:aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
+
+(def taso-nakyvissa? (atom false))
 
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
                                  :as paikkaus}]
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
-                                                               ::paikkaus/paikkauskohde})
+                                                               ::paikkaus/paikkauskohde ::paikkaus/sijainti})
+        sijainti {::paikkaus/sijainti (-> (::paikkaus/sijainti paikkaus)
+                                          (assoc :type :moniviiva
+                                                 :viivat asioiden-ulkoasu/paikkaukset))}
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
-    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi)))
+    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti)))
 
 (defn kasittele-haettu-tulos
-  [tulos {otsikkokomponentti :otsikkokomponentti}]
+  [tulos _]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
                                  tulos)
-        paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                   (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (get-in (first paikkaukset)
-                                                                                                                [::paikkaus/paikkauskohde ::paikkaus/id]))})
-                                         (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
-                                                  paikkaukset)))
-                                 (group-by ::paikkaus/nimi kiinnostavat-tiedot))
         paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
                                      tulos)]
-    {:paikkaukset-grid paikkaukset-grid
+    {:paikkaukset-grid kiinnostavat-tiedot
+     :haettu-uudet-paikkaukset? true
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
+
+(def toteumat-kartalla
+  (reaction (let [paikkaukset (remove #(= (type %) harja.ui.grid.protokollat/Otsikko)
+                                      (:paikkaukset-grid @app))
+                  paikkauksien-kohdat (:paikkauket-vetolaatikko @app)
+                  infopaneelin-tiedot-fn #(merge (select-keys % #{::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet
+                                                                  ::tierekisteri/losa ::tierekisteri/let ::paikkaus/alkuaika
+                                                                  ::paikkaus/loppuaika ::paikkaus/massatyyppi ::paikkaus/leveys
+                                                                  ::paikkaus/massamenekki ::paikkaus/raekoko ::paikkaus/kuulamylly})
+                                                 {::paikkaus/nimi (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])}
+                                                 (some (fn [paikkaus-kohta]
+                                                         (when (= (::paikkaus/id paikkaus-kohta) (::paikkaus/id %))
+                                                           (select-keys (first (::paikkaus/tienkohdat paikkaus-kohta)) #{::paikkaus/ajorata ::paikkaus/ajourat
+                                                                                                                         ::paikkaus/ajouravalit ::paikkaus/reunat})))
+                                                       paikkauksien-kohdat))]
+              (when (and (not-empty paikkaukset) @taso-nakyvissa?)
+                (with-meta (mapv (fn [paikkaus]
+                                   {:alue (::paikkaus/sijainti paikkaus)
+                                    :tyyppi-kartalla :paikkaukset-toteumat
+                                    :stroke {:width asioiden-ulkoasu/+normaali-leveys+}
+                                    :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})
+                                 paikkaukset)
+                           {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)
+                                         :teksti "Paikkaukset"}]})))))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
 (defrecord PaivitaValinnat [uudet])
-(defrecord Nakymaan [otsikkokomponentti])
+(defrecord Nakymaan [])
 (defrecord NakymastaPois [])
 (defrecord SiirryKustannuksiin [paikkauskohde-id])
+(defrecord LisaaOtsikotGridiin [otsikon-lisays-fn])
 ;; Haut
 (defrecord HaePaikkaukset [])
 (defrecord EnsimmainenHaku [tulos])
@@ -79,8 +105,8 @@
   (process-event [_ app]
     (if-not (:paikkauksien-haku-kaynnissa? app)
       (let [paikkauksien-idt (into #{} (keep #(when (:valittu? %)
-                                                  (:id %))
-                                               (get-in app [:valinnat :urakan-paikkauskohteet])))
+                                                (:id %))
+                                             (get-in app [:valinnat :urakan-paikkauskohteet])))
             params (-> (:valinnat app)
                        (dissoc :urakan-paikkauskohteet)
                        (assoc :paikkaus-idt paikkauksien-idt)
@@ -99,7 +125,7 @@
   (process-event [_ app]
     (assoc app :paikkauksien-haku-kaynnissa? true))
   Nakymaan
-  (process-event [{otsikkokomponentti :otsikkokomponentti} app]
+  (process-event [_ app]
     (-> app
         (tt/post! :hae-urakan-paikkauskohteet
                   {::paikkaus/urakka-id @nav/valittu-urakka-id
@@ -107,8 +133,7 @@
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->PaikkauksetEiHaettu})
         (assoc :nakymassa? true
-               :paikkauksien-haku-kaynnissa? true
-               :otsikkokomponentti otsikkokomponentti)))
+               :paikkauksien-haku-kaynnissa? true)))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))
@@ -138,4 +163,10 @@
            :paikkauskohde-id paikkauskohde-id
            :aloitus-aikavali [nil nil])
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
-    (assoc app :nakymassa? false)))
+    (assoc app :nakymassa? false))
+  LisaaOtsikotGridiin
+  (process-event [{otsikon-lisays-fn :otsikon-lisays-fn} app]
+    (assoc app
+           :paikkaukset-grid (mapcat otsikon-lisays-fn
+                                     (group-by ::paikkaus/nimi (:paikkaukset-grid app)))
+           :haettu-uudet-paikkaukset? false)))
