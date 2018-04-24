@@ -108,6 +108,8 @@
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
                                 :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil
                                 :tyomenetelmat nil}
+        _ (println "_----> TIEDOT")
+        _ (clojure.pprint/pprint tiedot)
         kysely-params (assoc (merge kysely-params-template (:tr tiedot))
                         :urakka-id (::paikkaus/urakka-id tiedot)
                         :paikkaus-idt (when-let [paikkaus-idt (:paikkaus-idt tiedot)]
@@ -119,6 +121,8 @@
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
     ;; tarkoittaa se, että näkymään juuri tultiin ja ollaan suorittamassa ensimmäistä hakua. Tyhjä lista taasen, että
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
+    (println "---->KYSELY PARAMS")
+    (clojure.pprint/pprint kysely-params)
     (cond
       (and (not (nil? (:paikkaus-idt tiedot)))
            (empty? (:paikkaus-idt tiedot))) {:kustannukset []}
