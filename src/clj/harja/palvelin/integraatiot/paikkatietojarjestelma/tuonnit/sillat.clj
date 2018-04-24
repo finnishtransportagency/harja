@@ -2,18 +2,32 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.siltatarkastukset :as s]
+            [harja.tyokalut.functor :as functor]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn luo-tai-paivita-silta [db silta]
-  (let [tyyppi (:siltatyy silta)
-        numero (int (:nro silta))
-        nimi (:nimi silta)
+(defn float-intiksi [v]
+  (if (float? v)
+    (int v)
+    v))
+
+(defn mapin-floatit-inteiksi [m]
+  (into {} (map (fn [[k v]]
+                  [k (float-intiksi v)])
+                silta-floateilla)))
+
+(defn luo-tai-paivita-silta [db silta-floateilla]
+  (let [silta (mapin-floatit-inteiksi silta-floateilla)
+        tyyppi (:siltaty silta)
+        numero (:siltanro silta)
+        nimi (:siltanimi silta)
         geometria (.toString (:the_geom silta))
         tie (:tie silta)
         alkuosa (:aosa silta)
         alkuetaisyys (:aet silta)
-        tunnus (:tunnus silta)
-        id (int (:silta_id silta))]
+        tunnus (:??? silta)
+        id (int (:siltaid silta))]
+    ;; XXX inspirestä puuttuu avassa ollut tunnus/siltatunnus (esim "SK-1843"),
+    ;; ja sen muodostamiseen siltanro:sta tarvittaisiin trex_prefix joka myöskin puuttuu
     (if (first (s/hae-silta-idlla db id))
       (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
       (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
