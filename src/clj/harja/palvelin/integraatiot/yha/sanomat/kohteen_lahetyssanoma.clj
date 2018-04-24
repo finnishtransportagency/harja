@@ -69,7 +69,7 @@
    [:tierekisteriosoitevali
     [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
     ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
-    ;; oletetaan kohdistuvan pääkohteen kanssa samalle tielle.
+    ;; oletetaan kohdistuvan pääkohteen kanssa samalle tielle eli käytetään pääkohteen tienumeroa.
     ;; Kaudella 2017 alustatoimenpiteelle ei kirjattu tienumeroa, mutta kaudella 2018 se kirjataan, koska
     ;; pääkohteen kanssa voidaan päällystää myös sellaisia alikohteita, jotka ovat eri tiellä kuin pääkohde
     [:tienumero (or tr-numero kohteen-tienumero)]
