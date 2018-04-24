@@ -260,7 +260,10 @@
     (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
 (def paallystysilmoitus-alustatoimet
-  [{:tr-numero schema/Int
+  [;; Kaudella 2017 ei ollut pakko olla tätä, koska kaikki toimet olivat pääkohteen tiellä
+   ;; Kaudella 2018 voi kirjata alustatoimenpiteitä kohdeosille, jotka ovat eri tiellä
+   ;; Hyväksytään molemmat mallit tässä skeemassa.
+   {(schema/optional-key :tr-numero) schema/Int
     :tr-alkuosa schema/Int
     :tr-alkuetaisyys schema/Int
     :tr-loppuosa schema/Int
