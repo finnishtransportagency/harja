@@ -213,7 +213,7 @@
    [modal/modal-container]
    [viesti-container]
    (when @nav/kartta-nakyvissa?
-     [kartta-layers])
+     [kartta-layers korkeus])
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,

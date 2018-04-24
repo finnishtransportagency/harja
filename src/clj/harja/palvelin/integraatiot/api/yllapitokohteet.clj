@@ -72,7 +72,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset])
+            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -149,6 +150,9 @@
     (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
+          kohteen-vuodet (map :vuodet (into []
+                                            (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
+                                            (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id})))
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
@@ -165,6 +169,7 @@
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet
         db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
+      (validointi/tarkista-alikohteiden-paallekkaisyys db kohde-id kohteen-vuodet alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)
@@ -179,9 +184,23 @@
                      kayttaja))
   (jdbc/with-db-transaction [db db]
     (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)]
+          kohde-id (Integer/parseInt kohde-id)
+          kohteen-vuodet (map :vuodet (into []
+                                            (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
+                                            (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id})))
+          paallystysilmoitus (:paallystysilmoitus data)
+          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
+          kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
+          ;; TODO HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
+          alikohteet (mapv #(assoc-in (:alikohde %)
+                                      [:sijainti :numero]
+                                      (get-in % [:alikohde :sijainti :numero]
+                                              (get-in % [:alikohde :sijainti :tie]
+                                                      kohteen-tienumero)))
+                           (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
+      (validointi/tarkista-alikohteiden-paallekkaisyys db kohde-id kohteen-vuodet alikohteet)
 
       (let [id (ilmoitus/kirjaa-paallystysilmoitus vkm db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
@@ -488,14 +507,14 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
-   {:palvelu :paivita-yllapitokohde ;; TODO Lisää päällekkäisyysvalidointi + testi
+   {:palvelu :paivita-yllapitokohde
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
     :tyyppi :PUT
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (paivita-yllapitokohde vkm db kayttaja parametrit data))}
-   {:palvelu :kirjaa-paallystysilmoitus ;; TODO Lisää päällekkäisyysvalidointi + testi
+   {:palvelu :kirjaa-paallystysilmoitus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus

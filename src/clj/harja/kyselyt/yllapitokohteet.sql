@@ -991,3 +991,8 @@ FROM yllapitokohdeosa ypko
 WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
       ypko.poistettu IS NOT TRUE AND
       ypko.tr_numero IN (:tiet);
+
+-- name: hae-yllapitokohteen-vuodet
+-- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.
+SELECT vuodet FROM yllapitokohde
+WHERE id = :id;

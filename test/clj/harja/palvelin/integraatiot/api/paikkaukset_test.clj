@@ -68,6 +68,7 @@
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
     (is (= odotettu-paikkaus (dissoc (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
                                      ::paikkaus/id
+                                     ::paikkaus/sijainti
                                      ::paikkaus/loppuaika
                                      ::paikkaus/alkuaika
                                      ::paikkaus/paikkauskohde-id)))
