@@ -8,8 +8,8 @@
             [harja.domain.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defonce tila (atom {:paikkauskohde-id nil
-                     :valinnat {:aikavali (pvm/aikavali-nyt-miinus 7)}}))
+(defonce tila (atom {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 7)
+                                :tyomenetelmat #{}}}))
 
 (defn alku-parametrit
   [{:keys [nakyma palvelukutsu-onnistui-fn]}]
@@ -18,14 +18,12 @@
                                    :aikavali-otsikko "Alkuaika"
                                    :voi-valita-trn-kartalta? true
                                    :palvelukutsu :hae-urakan-paikkauskohteet
-                                   :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan
-                                   :paikkauskohde-idn-polku [::paikkaus/paikkauskohde ::paikkaus/id]}
+                                   :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
                         :kustannukset {:itemit-avain :kustannukset
                                        :aikavali-otsikko "Kirjausaika"
                                        :voi-valita-trn-kartalta? false
                                        :palvelukutsu :hae-paikkausurakan-kustannukset
-                                       :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan
-                                       :paikkauskohde-idn-polku [:paikkauskohde-id]})]
+                                       :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
     (swap! tila #(merge % tilan-alustus {:palvelukutsu-onnistui-fn palvelukutsu-onnistui-fn}))))
 
 ;; Muokkaukset
@@ -39,41 +37,44 @@
 (defrecord HaeItemitKutsuLahetetty [])
 (defrecord EnsimmainenHaku [tulos])
 
+(defn filtterin-valinnat->kysely-params
+  [valinnat]
+  (let [paikkauksien-idt (when (:urakan-paikkauskohteet valinnat)
+                           (into #{} (keep #(when (:valittu? %)
+                                              (:id %))
+                                           (:urakan-paikkauskohteet valinnat))))]
+    (-> valinnat
+        (dissoc :urakan-paikkauskohteet)
+        (assoc :paikkaus-idt paikkauksien-idt)
+        (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id))))
+
 (extend-protocol tuck/Event
   Nakymaan
   (process-event [_ {:keys [palvelukutsu valinnat haku-kaynnissa?] :as app}]
     (-> app
         (tt/post! palvelukutsu
-                  {::paikkaus/urakka-id @nav/valittu-urakka-id
-                   :aikavali (get-in app [:valinnat :aikavali])}
+                  (merge (filtterin-valinnat->kysely-params valinnat)
+                         {:ensimmainen-haku? true})
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->ItemitEiHaettu})
         (assoc :paikkauksien-haku-kaynnissa? true)))
   EnsimmainenHaku
-  (process-event [{tulos :tulos} {:keys [palvelukutsu-onnistui-fn paikkauskohde-id paikkauskohde-idn-polku itemit-avain] :as app}]
-    (let [paikkauskohteet (map #(identity
-                                  {:id (::paikkaus/id %)
-                                   :nimi (::paikkaus/nimi %)
-                                   :valittu? (or (nil? paikkauskohde-id)
-                                                 (= paikkauskohde-id
-                                                    (::paikkaus/id %)))})
-                               (:paikkauskohteet tulos))
-          naytettavat-tulokset (filter #(or (nil? paikkauskohde-id)
-                                            (= paikkauskohde-id
-                                               (get-in % paikkauskohde-idn-polku)))
-                                       (itemit-avain tulos))]
-      (println "ENSIMMÄINEN TULOS")
-      (cljs.pprint/pprint tulos)
+  (process-event [{tulos :tulos} {:keys [palvelukutsu-onnistui-fn itemit-avain valinnat] :as app}]
+    (let [paikkauskohteet (or (:urakan-paikkauskohteet valinnat)
+                              (map #(identity
+                                      {:id (::paikkaus/id %)
+                                       :nimi (::paikkaus/nimi %)
+                                       :valittu? true})
+                                   (:paikkauskohteet tulos)))
+          naytettavat-tulokset (itemit-avain tulos)]
       (palvelukutsu-onnistui-fn tulos)
       (-> app
           (assoc :paikkauksien-haku-kaynnissa? false
                  :ensimmainen-haku-tehty? true
-                 :paikkauskohde-id nil)
+                 :urakan-tyomenetelmat (:tyomenetelmat tulos))
           (update :valinnat (fn [valinnat]
                               (assoc valinnat
-                                     :aikavali (pvm/aikavali-nyt-miinus 7)
-                                     :urakan-paikkauskohteet paikkauskohteet
-                                     :tyomenetelmat (:tyomenetelmat tulos)))))))
+                                     :urakan-paikkauskohteet paikkauskohteet))))))
   PaivitaValinnat
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
@@ -92,13 +93,7 @@
   HaeItemit
   (process-event [{:keys [uudet-valinnat]} {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
     (if-not haku-kaynnissa?
-      (let [paikkauksien-idt (into #{} (keep #(when (:valittu? %)
-                                                (:id %))
-                                             (:urakan-paikkauskohteet valinnat)))
-            params (-> uudet-valinnat
-                       (dissoc :urakan-paikkauskohteet)
-                       (assoc :paikkaus-idt paikkauksien-idt)
-                       (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id))]
+      (let [params (filtterin-valinnat->kysely-params uudet-valinnat)]
         (-> app
             (tt/post! palvelukutsu
                       params
@@ -114,8 +109,6 @@
     (assoc app :paikkauksien-haku-kaynnissa? true))
   ItemitHaettu
   (process-event [{tulos :tulos} {palvelukutsu-onnistui-fn :palvelukutsu-onnistui-fn :as app}]
-    (println "TULOS")
-    (cljs.pprint/pprint tulos)
     (palvelukutsu-onnistui-fn tulos)
     (assoc app
            :paikkauksien-haku-kaynnissa? false

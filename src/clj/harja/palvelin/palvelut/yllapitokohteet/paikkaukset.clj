@@ -92,7 +92,7 @@
                         (op/and kysely-params-tyomenetelmat
                                 kysely-params-tieosa)
                         kysely-params-tyomenetelmat)]
-    (if (nil? paikkaus-idt)
+    (if (:ensimmainen-haku? tiedot)
       (jdbc/with-db-transaction [db db]
         (let [paikkaukset (q/hae-paikkaukset db kysely-params)
               paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
@@ -108,8 +108,6 @@
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
                                 :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil
                                 :tyomenetelmat nil}
-        _ (println "_----> TIEDOT")
-        _ (clojure.pprint/pprint tiedot)
         kysely-params (assoc (merge kysely-params-template (:tr tiedot))
                         :urakka-id (::paikkaus/urakka-id tiedot)
                         :paikkaus-idt (when-let [paikkaus-idt (:paikkaus-idt tiedot)]
@@ -117,22 +115,23 @@
                         :alkuaika (first (:aikavali tiedot))
                         :loppuaika (second (:aikavali tiedot))
                         :tyomenetelmat (when (not-empty (:tyomenetelmat tiedot))
-                                         (konv/seq->array (:tyomenetelmat tiedot))))]
+                                         (konv/seq->array (:tyomenetelmat tiedot))))
+        haetaan-nollalla-paikkauksella? (and (not (nil? (:paikkaus-idt tiedot)))
+                                             (empty? (:paikkaus-idt tiedot)))]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
     ;; tarkoittaa se, että näkymään juuri tultiin ja ollaan suorittamassa ensimmäistä hakua. Tyhjä lista taasen, että
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
-    (println "---->KYSELY PARAMS")
-    (clojure.pprint/pprint kysely-params)
     (cond
-      (and (not (nil? (:paikkaus-idt tiedot)))
-           (empty? (:paikkaus-idt tiedot))) {:kustannukset []}
-      (nil? (:paikkaus-idt tiedot)) (jdbc/with-db-transaction [db db]
-                                      (let [kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)
+      (:ensimmainen-haku? tiedot) (jdbc/with-db-transaction [db db]
+                                      (let [kustannukset (if haetaan-nollalla-paikkauksella?
+                                                           []
+                                                           (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params))
                                             paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
                                             tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset
                                          :paikkauskohteet paikkauskohteet
                                          :tyomenetelmat tyomenetelmat}))
+      haetaan-nollalla-paikkauksella? {:kustannukset []}
       :else {:kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)})))
 
 (defrecord Paikkaukset []

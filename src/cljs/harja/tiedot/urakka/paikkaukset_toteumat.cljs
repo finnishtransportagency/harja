@@ -74,6 +74,7 @@
     (assoc app :nakymassa? true))
   NakymastaPois
   (process-event [_ app]
+    (swap! yhteiset-tiedot/tila assoc :ensimmainen-haku-tehty? false)
     (assoc app :nakymassa? false))
 
   PaikkauksetHaettu
@@ -82,10 +83,16 @@
       (merge app naytettavat-tiedot)))
   SiirryKustannuksiin
   (process-event [{paikkauskohde-id :paikkauskohde-id} app]
-    (swap! yhteiset-tiedot/tila (fn [tila-nyt]
-                                  (-> tila-nyt
-                                      (assoc :paikkauskohde-id paikkauskohde-id)
-                                      (assoc-in [:valinnat :aikavali] [nil nil]))))
+    (swap! yhteiset-tiedot/tila update :valinnat (fn [valinnat]
+                                                   (-> valinnat
+                                                       (assoc :aikavali [nil nil]
+                                                              :tyomenetelmat #{}
+                                                              :tr nil)
+                                                       (update :urakan-paikkauskohteet (fn [paikkauskohteet]
+                                                                                         (map #(if (= paikkauskohde-id (:id %))
+                                                                                                 %
+                                                                                                 (assoc % :valittu? false))
+                                                                                              paikkauskohteet))))))
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
     (assoc app :nakymassa? false))
   LisaaOtsikotGridiin

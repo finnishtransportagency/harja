@@ -4,6 +4,7 @@
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.ui.debug :as debug]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
@@ -29,11 +30,10 @@
        napin-teksti
        #(siirry-toimenpiteisiin-fn id)])}])
 
-(defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta?] :as yhteinen-tila}]
+(defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as yhteinen-tila}]
   (let [tr-atom (atom (:tr valinnat))
         aikavali-atom (atom (:aikavali valinnat))
-        tyomenetelmat-atom (atom #{})
-        urakan-tyomenetelmat (:tyomenetelmat valinnat)]
+        tyomenetelmat-atom (atom (:tyomenetelmat valinnat))]
     (add-watch tr-atom
                :tierekisteri-haku
                (fn [_ _ vanha uusi]
@@ -81,7 +81,9 @@
     (komp/sisaan #(e! (yhteiset-tiedot/->Nakymaan)))
     (fn [e! app]
       (if (:ensimmainen-haku-tehty? app)
-        [hakuehdot* e! app]
+        [:div
+         [debug/debug app {:otsikko "Hakuehtojen tila"}]
+         [hakuehdot* e! app]]
         [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
 
 (defn hakuehdot [optiot]
