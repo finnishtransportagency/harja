@@ -148,5 +148,5 @@
                                           ::paikkaus/paikkaus
                                           #{::paikkaus/tyomenetelma}
                                           {::paikkaus/urakka-id urakka-id})]
-    (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat))))
+    (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
 

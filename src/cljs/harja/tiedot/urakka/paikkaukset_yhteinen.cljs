@@ -27,6 +27,6 @@
     (-> app
         (merge naytettavat-tiedot)
         (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet)
-        (assoc-in [:valinnat :tyomenetelmat] (into #{} (:tyomenetelmat tulos)))
+        (assoc-in [:valinnat :tyomenetelmat] (:tyomenetelmat tulos))
         (assoc :paikkauksien-haku-kaynnissa? false
                :ensimmainen-haku-tehty? true))))
