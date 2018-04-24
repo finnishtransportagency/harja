@@ -626,7 +626,7 @@
                     :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
                    [{:otsikko "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
                      :pituus-max 256
-                     ;; TODO Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä?
+                     ;; TODO HAR-7831 Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä.
                      :validoi [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
                      :tasaa :oikea
                      :kokonaisluku? true}
