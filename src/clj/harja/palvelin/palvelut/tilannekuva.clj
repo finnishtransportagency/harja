@@ -113,7 +113,9 @@
                                (constantly true)
 
                                (roolit/urakoitsija? user)
-                               (let [urakat (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})]
+                               (let [urakat (filter
+                                              #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user)
+                                              (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])}))]
                                  (if (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
                                    (set
                                      (concat
@@ -133,7 +135,9 @@
                                    (set (map :id urakat))))
 
                                :else
-                               (set (map :id (q/hallintayksikoiden-urakat db {:hallintayksikot [(get-in user [:organisaatio :id])]}))))
+                               (set (map :id (filter
+                                               #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user)
+                                               (q/hallintayksikoiden-urakat db {:hallintayksikot [(get-in user [:organisaatio :id])]})))))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
         oikeudelliset-urakat (set (filter kayttajan-urakka-idt (:urakat hakuargumentit)))]
     oikeudelliset-urakat))
@@ -549,7 +553,8 @@
                                         (fn [alue]
                                           (update alue :urakat
                                                   (fn [urakat]
-                                                    (filter :urakkanro urakat))))))]
+                                                    (filter :urakkanro urakat)))))
+                                      (remove (comp empty? :urakat)))]
     kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
