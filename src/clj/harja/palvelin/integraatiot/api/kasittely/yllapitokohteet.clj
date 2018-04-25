@@ -57,8 +57,8 @@
                         :tr_alkuetaisyys (:aet sijainti)
                         :tr_loppuosa (:losa sijainti)
                         :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (:ajr sijainti)
-                        :tr_kaista (:kaista sijainti)
+                        :tr_ajorata (or (:ajr sijainti) (:tr-ajorata kohde))
+                        :tr_kaista (or (:kaista sijainti) (:tr-kaista kohde))
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
                                    db parametrit)))))
