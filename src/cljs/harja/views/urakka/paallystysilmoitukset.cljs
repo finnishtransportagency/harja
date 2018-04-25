@@ -624,28 +624,33 @@
                     :voi-kumota? false
                     :uusi-id (inc (count @alustalle-tehdyt-toimet))
                     :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
-                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
+                   [{:otsikko "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
                      :pituus-max 256
-                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     ;; TODO HAR-7831 Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä.
+                     :validoi [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
+                    {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
+                     :pituus-max 256
+                     :validoi [[:ei-tyhja "Alkuosa puuttuu"] #_tr-validaattori]
                      :tasaa :oikea
                      :kokonaisluku? true}
                     {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :validoi [[:ei-tyhja "Alkuetäisyys puuttuu"] #_tr-validaattori]
                      :tasaa :oikea
                      :kokonaisluku? true}
                     {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :validoi [[:ei-tyhja "Loppuosa puuttuu"] #_tr-validaattori]
                      :tasaa :oikea
                      :kokonaisluku? true}
                     {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                     :validoi [[:ei-tyhja "Loppuetäisyys puuttuu"] #_tr-validaattori]
                      :tasaa :oikea
                      :kokonaisluku? true}
                     {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                      :muokattava? (constantly false)
                      :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
-                     :validoi [[:ei-tyhja "Tieto puuttuu"]]
-                     }
+                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                     {:otsikko "Käsittely\u00ADmenetelmä"
                      :nimi :kasittelymenetelma
                      :tyyppi :valinta
@@ -660,8 +665,7 @@
                     {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
                      :tyyppi :positiivinen-numero :tasaa :oikea
                      :desimaalien-maara 0
-                     :validoi [[:ei-tyhja "Tieto puuttuu"]]
-                     }
+                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                     {:otsikko "Verkko\u00ADtyyppi"
                      :nimi :verkkotyyppi
                      :tyyppi :valinta

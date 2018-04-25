@@ -234,7 +234,7 @@
                                     :id))
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-            (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
+              (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus (as-> paallystysilmoitus p
@@ -484,7 +484,7 @@
                                                           :osoitteet
                                                           (filter (comp not :poistettu))))})]
 
-      
+
       (if (:validointivirheet paivitetyt-kohdeosat)
         paivitetyt-kohdeosat
 
