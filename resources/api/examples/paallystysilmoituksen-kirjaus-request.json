@@ -64,6 +64,7 @@
       {
         "alustatoimenpide": {
           "sijainti": {
+            "tie": 20,
             "aosa": 1,
             "aet": 1,
             "losa": 5,
