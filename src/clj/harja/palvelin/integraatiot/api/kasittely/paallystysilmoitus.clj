@@ -90,8 +90,9 @@
                           karttapvm muunnettava-kohde)
         ;; Lisää alustatoimenpiteille tienumero (alustakohteen oma tai pääkohteen tie)
         alustatoimenpiteet (map (fn [alustatoimenpide]
-                                  (assoc-in alustatoimenpide [:sijainti :tie]
-                                            (or (get-in alustatoimenpide [:sijainti :tie]) kohteen-tienumero)))
+                                  (assoc-in alustatoimenpide [:sijainti :numero]
+                                            (or (get-in alustatoimenpide [:sijainti :numero])
+                                                kohteen-tienumero)))
                                 alustatoimenpiteet)
         muunnetut-alustatoimenpiteet (tieosoitteet/muunna-alustatoimenpiteiden-tieosoitteet
                                        vkm
