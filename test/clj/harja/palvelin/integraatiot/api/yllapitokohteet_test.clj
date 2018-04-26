@@ -134,6 +134,7 @@
       (is (= ilmoitustiedot-kannassa {:alustatoimet [{:kasittelymenetelma 1
                                                       :paksuus 1
                                                       :tekninen-toimenpide 1
+                                                      :tr-numero 21
                                                       :tr-alkuetaisyys 1
                                                       :tr-alkuosa 1
                                                       :tr-loppuetaisyys 5
@@ -318,6 +319,7 @@
              {:alustatoimet [{:kasittelymenetelma 1
                               :paksuus 1
                               :tekninen-toimenpide 1
+                              :tr-numero 21
                               :tr-alkuetaisyys 1
                               :tr-alkuosa 1
                               :tr-loppuetaisyys 5

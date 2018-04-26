@@ -32,7 +32,7 @@
                                :paallystetyyppi "avoin asfaltti",
                                :id 36}]},
                             :alustatoimenpiteet
-                            [{:sijainti {:aosa 1, :aet 1, :losa 5, :let 15},
+                            [{:sijainti {:numero 666 :aosa 1, :aet 1, :losa 5, :let 15},
                               :kasittelymenetelma "Massanvaihto",
                               :paksuus 1,
                               :verkkotyyppi "Teräsverkko",
@@ -80,6 +80,7 @@
                        :alustatoimet [{:kasittelymenetelma 1
                                        :paksuus 1
                                        :tekninen-toimenpide 1
+                                       :tr-numero 666
                                        :tr-alkuetaisyys 1
                                        :tr-alkuosa 1
                                        :tr-loppuetaisyys 15
