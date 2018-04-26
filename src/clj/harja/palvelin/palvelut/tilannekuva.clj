@@ -111,7 +111,7 @@
         ;; Kasataan setti urakoita, joihin käyttäjällä on oikeus
         kayttajan-urakka-idt (cond
                                ;; Tilaajalla on oikeus kaikkiin urakoihin
-                               (roolit/tilaajan-kayttaja? user)
+                               (and (roolit/liikenneviraston-kayttaja? user) (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti)))
                                (constantly true)
 
                                (roolit/urakoitsija? user)
@@ -575,7 +575,7 @@
                                             (fn [urakat]
                                               (filter
                                                 (fn [urakka]
-                                                  (if (roolit/tilaajan-kayttaja? user)
+                                                  (if (and (roolit/liikenneviraston-kayttaja? user) (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti)))
                                                     ;; Tilaajalla on oikeus kaikkiin urakoihin..
                                                     true
 
