@@ -110,10 +110,10 @@
                                              slurp
                                              (.replace "__VALMIS__" (str false))))
         kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
         kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
@@ -134,6 +134,7 @@
       (is (= ilmoitustiedot-kannassa {:alustatoimet [{:kasittelymenetelma 1
                                                       :paksuus 1
                                                       :tekninen-toimenpide 1
+                                                      :tr-numero 21
                                                       :tr-alkuetaisyys 1
                                                       :tr-alkuosa 1
                                                       :tr-loppuetaisyys 5
@@ -179,8 +180,10 @@
               :paallystetyyppi nil
               :raekoko nil
               :toimenpide nil
+              :tr_ajorata 1
               :tr_alkuetaisyys 1
               :tr_alkuosa 1
+              :tr_kaista 1
               :tr_loppuetaisyys 0
               :tr_loppuosa 2
               :tr_numero 20
@@ -192,8 +195,10 @@
               :paallystetyyppi nil
               :raekoko nil
               :toimenpide nil
+              :tr_ajorata 1
               :tr_alkuetaisyys 0
               :tr_alkuosa 2
+              :tr_kaista 1
               :tr_loppuetaisyys 5
               :tr_loppuosa 3
               :tr_numero 20
@@ -207,6 +212,58 @@
             "Kaikilla alikohteilla on sijainti & tienumero"))
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
+
+(deftest uuden-paallystysilmoituksen-kirjaaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        ;; Testiä varten tuhoa kohteen olemassa oleva POT, kirjataan siis uusi
+        _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
+                                         kayttaja-paallystys portti
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus_ilman_alikohteen_ajorataa_ja_kaistaa.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))
+        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
+        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
+
+    (is (= 200 (:status vastaus)))
+    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
+
+    ;; Kohdeosille tallentui pääkohteen ajorata ja kaista
+    (is (= (dissoc kohdeosa-1-kannassa :id)
+           {:massamaara nil
+            :nimi "1. testialikohde"
+            :paallystetyyppi nil
+            :raekoko nil
+            :toimenpide nil
+            :tr_ajorata 1
+            :tr_alkuetaisyys 1
+            :tr_alkuosa 1
+            :tr_kaista 1
+            :tr_loppuetaisyys 0
+            :tr_loppuosa 2
+            :tr_numero 20
+            :tyomenetelma nil
+            :yllapitokohde 1}))
+    (is (= (dissoc kohdeosa-2-kannassa :id)
+           {:massamaara nil
+            :nimi "2. testialikohde"
+            :paallystetyyppi nil
+            :raekoko nil
+            :toimenpide nil
+            :tr_ajorata 1
+            :tr_alkuetaisyys 0
+            :tr_alkuosa 2
+            :tr_kaista 1
+            :tr_loppuetaisyys 5
+            :tr_loppuosa 3
+            :tr_numero 20
+            :tyomenetelma nil
+            :yllapitokohde 1}))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-kasiteltavaksi-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -241,7 +298,7 @@
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
-    ;; Tarkistetana, että tiedot tallentuivat oikein
+    ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
           ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
@@ -262,6 +319,7 @@
              {:alustatoimet [{:kasittelymenetelma 1
                               :paksuus 1
                               :tekninen-toimenpide 1
+                              :tr-numero 21
                               :tr-alkuetaisyys 1
                               :tr-alkuosa 1
                               :tr-loppuetaisyys 5

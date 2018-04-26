@@ -17,6 +17,27 @@
          paikkaus/paikkauksen-perustiedot
          hakuehdot))
 
+(defn hae-paikkaukset-materiaalit [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkaukset-paikkauskohe [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkaukset-tienkohta [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
+         hakuehdot))
+
 (defn hae-paikkaustoteumat [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaustoteuma
