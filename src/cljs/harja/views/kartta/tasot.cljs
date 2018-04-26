@@ -40,6 +40,7 @@
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot]
             [harja.tiedot.urakka.paikkaukset-toteumat :as paikkaukset-toteumat]
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat])
+  
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 

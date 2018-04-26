@@ -14,23 +14,39 @@
 
 (def taso-nakyvissa? (atom false))
 
+(defn suirun-pituus
+  [teiden-pituudet tierekisteriosoite]
+  (tierekisteri/laske-tien-pituus (get teiden-pituudet (::tierekisteri/tie tierekisteriosoite))
+                                  {:tr-alkuosa (::tierekisteri/aosa tierekisteriosoite)
+                                   :tr-alkuetaisyys (::tierekisteri/aet tierekisteriosoite)
+                                   :tr-loppuosa (::tierekisteri/losa tierekisteriosoite)
+                                   :tr-loppuetaisyys (::tierekisteri/let tierekisteriosoite)}))
+
 (defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
-                                 :as paikkaus}]
+                                 :as paikkaus} teiden-pituudet]
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
                                                                ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
                                                                ::paikkaus/paikkauskohde ::paikkaus/sijainti})
+        suirun-pituus (suirun-pituus teiden-pituudet tierekisteriosoite)
+        suirun-tiedot {:suirun-pituus suirun-pituus
+                       :suirun-pinta-ala (* suirun-pituus (::paikkaus/leveys paikkaus))}
         sijainti {::paikkaus/sijainti (-> (::paikkaus/sijainti paikkaus)
                                           (assoc :type :moniviiva
                                                  :viivat asioiden-ulkoasu/paikkaukset))}
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
-    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti)))
+    (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi sijainti suirun-tiedot)))
+
+(defn kiinnostavat-tiedot-vetolaatikko
+  [paikkaus teiden-pituudet]
+  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])]
+    sellaisenaan-naytettavat-arvot))
 
 (defn kasittele-haettu-tulos
-  [tulos _]
-  (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
+  [tulos {teiden-pituudet :teiden-pituudet}]
+  (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid % teiden-pituudet)
                                  tulos)
-        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
+        paikkauket-vetolaatikko (map #(kiinnostavat-tiedot-vetolaatikko % teiden-pituudet)
                                      tulos)]
     {:paikkaukset-grid kiinnostavat-tiedot
      :haettu-uudet-paikkaukset? true
@@ -76,7 +92,6 @@
   (process-event [_ app]
     (swap! yhteiset-tiedot/tila assoc :ensimmainen-haku-tehty? false)
     (assoc app :nakymassa? false))
-
   PaikkauksetHaettu
   (process-event [{{paikkaukset :paikkaukset} :tulos} app]
     (let [naytettavat-tiedot (kasittele-haettu-tulos paikkaukset app)]

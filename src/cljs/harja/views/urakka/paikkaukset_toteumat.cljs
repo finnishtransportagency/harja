@@ -5,6 +5,7 @@
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
             [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
@@ -47,7 +48,7 @@
                              :nimi ::paikkaus/esiintyma}
                             {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
                              :leveys 2
-                             :nimi ::paikkaus/kuulamyllyarvo}
+                             :nimi ::paikkaus/kuulamylly-arvo}
                             {:otsikko "Muoto\u00ADarvo"
                              :leveys 2
                              :nimi ::paikkaus/muotoarvo}
@@ -83,7 +84,9 @@
                                       {:nimi ::tierekisteri/aosa}
                                       {:nimi ::tierekisteri/aet}
                                       {:nimi ::tierekisteri/losa}
-                                      {:nimi ::tierekisteri/let}]
+                                      {:nimi ::tierekisteri/let}
+                                      {:nimi :suirun-pituus}]
+        desimaalien-maara 2
         skeema (into []
                      (concat
                        [{:tyyppi :vetolaatikon-tila :leveys 1}]
@@ -102,9 +105,13 @@
                         {:otsikko "Massa\u00ADtyyp\u00ADpi"
                          :leveys 10
                          :nimi ::paikkaus/massatyyppi}
-                        {:otsikko "Leveys"
+                        {:otsikko "Leveys\u00AD (m)"
                          :leveys 5
                          :nimi ::paikkaus/leveys}
+                        {:otsikko "Pinta-ala\u00AD (m\u00B2)"
+                         :leveys 5
+                         :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
+                         :nimi :suirun-pinta-ala}
                         {:otsikko "Massa\u00ADmenek\u00ADki"
                          :leveys 5
                          :nimi ::paikkaus/massamenekki}
