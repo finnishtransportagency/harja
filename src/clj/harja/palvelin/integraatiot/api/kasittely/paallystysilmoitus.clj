@@ -88,6 +88,11 @@
                           db
                           kohteen-tienumero
                           karttapvm muunnettava-kohde)
+        ;; Lisää alustatoimenpiteille tienumero (alustakohteen oma tai pääkohteen tie)
+        alustatoimenpiteet (map (fn [alustatoimenpide]
+                                  (assoc-in alustatoimenpide [:sijainti :tie]
+                                            (or kohteen-tienumero (get-in alustatoimenpide [:sijainti :tie]))))
+                                alustatoimenpiteet)
         muunnetut-alustatoimenpiteet (tieosoitteet/muunna-alustatoimenpiteiden-tieosoitteet
                                        vkm
                                        db
