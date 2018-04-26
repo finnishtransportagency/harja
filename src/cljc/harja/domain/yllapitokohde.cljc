@@ -326,7 +326,7 @@ yllapitoluokkanimi->numero
     :paikkaus-aloitettu :kesken
     :paikkaus-valmis :kesken
     :tiemerkinta-aloitettu :kesken
-    :tiemerkinta-valmis :kesken
+    :tiemerkinta-valmis :valmis
     :kohde-valmis :valmis))
 
 (defn kuvaile-kohteen-tila-kartalla [tila]
