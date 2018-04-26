@@ -69,7 +69,9 @@
 
 (defn pura-paallystysilmoitus [vkm db kohteen-tienumero data]
   (let [paallystysilmoitus (:paallystysilmoitus data)
-        alustatoimenpiteet (mapv #(assoc-in (:alustatoimenpide %) [:sijainti :numero] kohteen-tienumero)
+        alustatoimenpiteet (mapv #(assoc-in (:alustatoimenpide %) [:sijainti :numero]
+                                            (or (get-in % [:alustatoimenpide :sijainti :numero])
+                                                kohteen-tienumero))
                                  (:alustatoimenpiteet paallystysilmoitus))
         ;; TODO HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
         alikohteet (mapv #(assoc-in (:alikohde %)
@@ -88,12 +90,6 @@
                           db
                           kohteen-tienumero
                           karttapvm muunnettava-kohde)
-        ;; Lisää alustatoimenpiteille tienumero (alustakohteen oma tai pääkohteen tie)
-        alustatoimenpiteet (map (fn [alustatoimenpide]
-                                  (assoc-in alustatoimenpide [:sijainti :numero]
-                                            (or (get-in alustatoimenpide [:sijainti :numero])
-                                                kohteen-tienumero)))
-                                alustatoimenpiteet)
         muunnetut-alustatoimenpiteet (tieosoitteet/muunna-alustatoimenpiteiden-tieosoitteet
                                        vkm
                                        db
