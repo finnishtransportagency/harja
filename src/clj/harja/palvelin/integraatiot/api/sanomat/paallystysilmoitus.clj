@@ -31,7 +31,8 @@
   (mapv
     (fn [alustatoimi]
       (let [sijainti (:sijainti alustatoimi)]
-        {:tr-alkuosa (:aosa sijainti)
+        {:tr-numero (:numero sijainti)
+         :tr-alkuosa (:aosa sijainti)
          :tr-alkuetaisyys (:aet sijainti)
          :tr-loppuosa (:losa sijainti)
          :tr-loppuetaisyys (:let sijainti)
