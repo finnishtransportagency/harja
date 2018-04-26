@@ -124,10 +124,10 @@
                         {:otsikko "Massa\u00ADtyyp\u00ADpi"
                          :leveys 10
                          :nimi ::paikkaus/massatyyppi}
-                        {:otsikko "Leveys\u00AD(m)"
+                        {:otsikko "Leveys\u00AD (m)"
                          :leveys 5
                          :nimi ::paikkaus/leveys}
-                        {:otsikko "Pinta-ala\u00AD(m)"
+                        {:otsikko "Pinta-ala\u00AD (m\u00B2)"
                          :leveys 5
                          :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
                          :nimi :suirun-pinta-ala}
