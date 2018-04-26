@@ -164,14 +164,15 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 (add-watch haetut-asiat :paivita-tilannekuvatasot
            (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))
 
-(defn- organisaation-geometria [piirrettava]
+(defn- organisaation-geometria [piirrettava {stroke :stroke}]
   (let [alue (:alue piirrettava)]
     (when (map? alue)
       (assoc (update-in piirrettava
                   [:alue]
                   assoc
                   :fill false
-                  :stroke {:width 2}
+                  :stroke (merge {:width 2}
+                                 stroke)
                   :z-index 1)
         :type :ur
         :nimi nil))))
@@ -185,9 +186,13 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
             +koko-suomi-extent+)))
 
 (defn aseta-valitut-organisaatiot! [suodattimet]
-  (reset! tilannekuvan-organisaatiot (into []
-                                           (keep organisaation-geometria)
-                                           (domain/valitut-kentat suodattimet))))
+  (let [urakkatyypit-ilman-rajoja #{:paallystys}
+        urakkatyypit-rajoineen (apply dissoc suodattimet urakkatyypit-ilman-rajoja)
+        urakkatyypit-rajoitta (select-keys suodattimet urakkatyypit-ilman-rajoja)]
+    (reset! tilannekuvan-organisaatiot (vec (concat (keep #(organisaation-geometria % {})
+                                                          (domain/valitut-kentat urakkatyypit-rajoineen))
+                                                    (keep #(organisaation-geometria % {:stroke {:color (str "rgb(0, 0, 0, 0)")}})
+                                                          (domain/valitut-kentat urakkatyypit-rajoitta)))))))
 
 (defn seuraa-alueita! [suodattimet]
   (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet @suodattimet)))
