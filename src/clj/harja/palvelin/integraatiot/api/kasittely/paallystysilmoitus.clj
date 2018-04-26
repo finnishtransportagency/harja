@@ -91,7 +91,7 @@
         ;; Lisää alustatoimenpiteille tienumero (alustakohteen oma tai pääkohteen tie)
         alustatoimenpiteet (map (fn [alustatoimenpide]
                                   (assoc-in alustatoimenpide [:sijainti :tie]
-                                            (or kohteen-tienumero (get-in alustatoimenpide [:sijainti :tie]))))
+                                            (or (get-in alustatoimenpide [:sijainti :tie]) kohteen-tienumero)))
                                 alustatoimenpiteet)
         muunnetut-alustatoimenpiteet (tieosoitteet/muunna-alustatoimenpiteiden-tieosoitteet
                                        vkm
