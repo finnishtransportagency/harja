@@ -213,6 +213,10 @@
                                          :muokataan? false})
                       (if fmt
                         (fmt haettu-arvo)
+                        ;; FIXME Tässä annetaan skeema argumenttina nayta-arvo funktiolle. Valitettavasti tuo 'skeema' viittaa
+                        ;; koko skeemalistaan eikä yksittäisen sarakkeen skeemaan. Korjaus tähän voisi olla (get skeema i), mutta
+                        ;; sitä ei nyt tehdä, koska jotkut gridit hajoaa siitä. Esim. kanavapuolen suunnittelu. Tämä bugi
+                        ;; aiheuttaa sen, että nayta-arvo multimetodin :default metodi ajetaan aina.
                         [nayta-arvo skeema (vain-luku-atomina haettu-arvo)]))
                     (when huomio
                       (when-let [huomion-tiedot (huomio rivi)]

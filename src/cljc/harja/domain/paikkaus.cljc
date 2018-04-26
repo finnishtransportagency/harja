@@ -71,23 +71,24 @@
     ::massamenekki
     ::raekoko
     ::kuulamylly
-    ::sijainti
-    [::paikkauskohde #{::nimi
-                       ::ulkoinen-id
-                       ::id}]
-    [::tienkohdat #{::tienkohta-id
-                    ::ajorata
-                    ::reunat
-                    ::ajourat
-                    ::ajouravalit
-                    ::keskisaumat}]
-    [::materiaalit #{::materiaali-id
-                     ::esiintyma
-                     ::kuulamylly-arvo
-                     ::muotoarvo
-                     ::sideainetyyppi
-                     ::pitoisuus
-                     ::lisa-aineet}]})
+    ::sijainti})
+
+(def tienkohta-perustiedot
+  #{::tienkohta-id
+    ::ajorata
+    ::reunat
+    ::ajourat
+    ::ajouravalit
+    ::keskisaumat})
+
+(def materiaalit-perustiedot
+  #{::materiaali-id
+    ::esiintyma
+    ::kuulamylly-arvo
+    ::muotoarvo
+    ::sideainetyyppi
+    ::pitoisuus
+    ::lisa-aineet})
 
 (def paikkaustoteuman-perustiedot
   #{::id
@@ -113,12 +114,13 @@
 (s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
 (s/def ::tr (s/nilable map?))
 (s/def ::tyomenetelmat (s/nilable (s/coll-of ::tyomenetelmat-set-spec :kind? set)))
+(s/def ::teiden-pituudet (s/nilable map?))
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
 
 (s/def ::urakan-paikkauskohteet-vastaus (s/keys :req-un [::paikkaukset]
-                                                :opt-un [::paikkauskohteet]))
+                                                :opt-un [::paikkauskohteet ::teiden-pituudet]))
 
 (s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
                                                     :opt-un [::aikavali ::paikkaus-idt ::tr]))

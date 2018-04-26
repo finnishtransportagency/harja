@@ -74,6 +74,12 @@
 (defn hae-testipaikkaus [db]
   (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
 
+(defn hae-testipaikkauksen-materiaalit [db]
+  (first (paikkaus-q/hae-paikkaukset-materiaalit db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
+
+(defn hae-testipaikkauksen-tienkohta [db]
+  (first (paikkaus-q/hae-paikkaukset-tienkohta db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
+
 (defn hae-testipaikkaustoteuma [db]
   (first (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id})))
 
@@ -102,23 +108,23 @@
         "Kohteiden määrä on noussut yhdellä")
 
     (let [toteuma (hae-testipaikkaus db)
-          materiaalit (::paikkaus/materiaalit toteuma)
-          tienkohdat (::paikkaus/tienkohdat toteuma)]
+          materiaalit (::paikkaus/materiaalit (hae-testipaikkauksen-materiaalit db))
+          tienkohdat (::paikkaus/tienkohdat (hae-testipaikkauksen-tienkohta db))]
       (is (= [{::paikkaus/esiintyma "Testikivi"
                ::paikkaus/kuulamylly-arvo "1"
                ::paikkaus/muotoarvo "Muotoarvo"
                ::paikkaus/lisa-aineet "Lisäaineet"
-               ::paikkaus/materiaali-id 11
                ::paikkaus/pitoisuus 3.2M
                ::paikkaus/sideainetyyppi "Sideaine"}]
-             materiaalit)
+             [(dissoc (first materiaalit)
+                      ::paikkaus/materiaali-id)])
           "Oletetut materiaalit löytyvät")
       (is (= [{::paikkaus/ajourat [1 2]
                ::paikkaus/ajorata 1
                ::paikkaus/ajouravalit [1]
-               ::paikkaus/reunat [0]
-               ::paikkaus/tienkohta-id 10}]
-             tienkohdat)
+               ::paikkaus/reunat [0]}]
+             [(dissoc (first tienkohdat)
+                      ::paikkaus/tienkohta-id)])
           "Oletetut tienkohdat löytyvät"))))
 
 (deftest paivita-paikkaus
