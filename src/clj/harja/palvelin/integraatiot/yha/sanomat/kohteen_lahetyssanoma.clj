@@ -61,14 +61,18 @@
      (when pitoisuus [:sideainepitoisuus pitoisuus])
      [:lisa-aineet lisaaineet]]]])
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
                                               verkon-sijainti]}
-                                      tienumero karttapvm]
+                                      kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
    [:tierekisteriosoitevali
     [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
-    [:tienumero tienumero]
+    ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
+    ;; oletetaan kohdistuvan pääkohteen kanssa samalle tielle eli käytetään pääkohteen tienumeroa.
+    ;; Kaudella 2017 alustatoimenpiteelle ei kirjattu tienumeroa, mutta kaudella 2018 se kirjataan, koska
+    ;; pääkohteen kanssa voidaan päällystää myös sellaisia alikohteita, jotka ovat eri tiellä kuin pääkohde
+    [:tienumero (or tr-numero kohteen-tienumero)]
     [:aosa tr-alkuosa]
     [:aet tr-alkuetaisyys]
     [:losa tr-loppuosa]
