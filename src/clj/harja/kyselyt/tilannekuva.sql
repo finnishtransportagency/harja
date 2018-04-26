@@ -297,11 +297,20 @@ SELECT ypk.id,
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
-   AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
-                           (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+   AND ((:nykytilanne AND
+        date_part('year', now())=ANY(ypk.vuodet) AND
+        ((ypka.kohde_valmis IS NULL AND
+          ypka.tiemerkinta_loppu IS NULL) OR
+         (ypka.kohde_valmis IS NULL AND
+          ypka.tiemerkinta_loppu IS NOT NULL AND
+          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
+         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
-                            AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku))));
+                            AND ((ypka.kohde_valmis IS NULL AND
+                                  ypka.tiemerkinta_loppu IS NULL) OR
+                                 (ypka.kohde_valmis > :alku) OR
+                                 (ypka.tiemerkinta_loppu > :alku)))));
 
 -- name: hae-paallystysten-viimeisin-muokkaus
 -- single?: true
@@ -344,11 +353,20 @@ SELECT ypko.id,
  WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
-   AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
-                          (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+   AND ((:nykytilanne AND
+         date_part('year', now())=ANY(ypk.vuodet) AND
+         ((ypka.kohde_valmis IS NULL AND
+           ypka.tiemerkinta_loppu IS NULL) OR
+         (ypka.kohde_valmis IS NULL AND
+          ypka.tiemerkinta_loppu IS NOT NULL AND
+          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
+         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
-                            AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku))));
+                            AND ((ypka.kohde_valmis IS NULL AND
+                                  ypka.tiemerkinta_loppu IS NULL) OR
+                                 (ypka.kohde_valmis > :alku) OR
+                                 (ypka.tiemerkinta_loppu > :alku)))));
 
 -- name: hae-paikkaukset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki paikkauskohteet, jotka eivät ole valmiita tai ovat
