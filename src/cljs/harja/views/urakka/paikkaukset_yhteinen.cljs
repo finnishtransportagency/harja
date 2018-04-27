@@ -33,7 +33,8 @@
 (defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as yhteinen-tila}]
   (let [tr-atom (atom (:tr valinnat))
         aikavali-atom (atom (:aikavali valinnat))
-        tyomenetelmat-atom (atom (:tyomenetelmat valinnat))]
+        tyomenetelmat-atom (atom (:tyomenetelmat valinnat))
+        urakan-tyomenetelmat (:tyomenetelmat valinnat)]
     (add-watch tr-atom
                :tierekisteri-haku
                (fn [_ _ vanha uusi]

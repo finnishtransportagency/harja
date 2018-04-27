@@ -115,6 +115,7 @@
 (s/def ::ensimmainen-haku? boolean?)
 (s/def ::teiden-pituudet (s/nilable map?))
 
+
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat ::ensimmainen-haku?]))
 
