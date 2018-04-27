@@ -164,7 +164,7 @@
 (defn hairioilmoitus [hairiotiedot]
   (let [otsikko (case (::hairio/tyyppi hairiotiedot)
                   :tiedote "Tiedote"
-                  "Häiriö")
+                  "Häiriötiedote")
         tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
                         :tiedote "hairioilmoitin-tyyppi-tiedote"
                         "hairioilmoitin-tyyppi-hairio")]
