@@ -124,7 +124,6 @@
               paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
               tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
               paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
-              tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
               teiden-pituudet (reduce (fn [kayty tie]
                                         (assoc kayty tie (into {}
                                                                (map (juxt :osa :pituus))
