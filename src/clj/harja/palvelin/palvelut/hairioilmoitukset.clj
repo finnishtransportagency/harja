@@ -38,7 +38,7 @@
                   {::hairio/viesti (::hairio/viesti tiedot)
                    ::hairio/pvm (c/to-sql-date (t/now))
                    ::hairio/voimassa? true
-                   ::hairio/tyyppi (::hairio/tyyppi tiedot)})
+                   ::hairio/tyyppi (or (::hairio/tyyppi tiedot) :hairio)})
   (hae-kaikki-hairioilmoitukset db user false))
 
 (defrecord Hairioilmoitukset []
