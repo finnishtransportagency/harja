@@ -15,6 +15,8 @@
 (defn- listaa-hairioilmoitus [hairio]
   (str (fmt/pvm (::hairio/pvm hairio))
        " - "
+       (hairio/tyyppi-fmt (::hairio/tyyppi hairio))
+       " - "
        (::hairio/viesti hairio)))
 
 (defn- vanhat-hairioilmoitukset [hairiot tuorein-hairio]
