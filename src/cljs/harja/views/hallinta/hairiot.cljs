@@ -30,13 +30,15 @@
           [:li (listaa-hairioilmoitus hairio)]))])])
 
 (defn- aseta-hairioilmoitus []
+  ;; TODO Jos tähän tulee vielä lisää kenttiä, voisi muuttaa käyttään lomake-komponenttia
   [:div
    [:div
-    [kentat/tee-kentta {:tyyppi :text :nimi :viesti
-                       :pituus-max 1024
-                       :koko [80 5]}
-    (r/wrap (:teksti @tiedot/tuore-hairioilmoitus)
-            #(swap! tiedot/tuore-hairioilmoitus assoc :teksti %))]]
+    [kentat/tee-otsikollinen-kentta {:otsikko "Viesti"
+                                     :kentta-params {:tyyppi :text :nimi :viesti
+                                                     :pituus-max 1024
+                                                     :koko [80 5]}
+                                     :arvo-atom (r/wrap (:teksti @tiedot/tuore-hairioilmoitus)
+                                                        #(swap! tiedot/tuore-hairioilmoitus assoc :teksti %))}]]
    [:div
     [kentat/tee-otsikollinen-kentta {:otsikko "Tyyppi"
                                     :kentta-params {:tyyppi :valinta
@@ -44,6 +46,7 @@
                                                     :valinta-nayta hairio/tyyppi-fmt}
                                     :arvo-atom (r/wrap (:tyyppi @tiedot/tuore-hairioilmoitus)
                                                        #(swap! tiedot/tuore-hairioilmoitus assoc :tyyppi %))}]]
+   [:br]
    [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioilmoitus)
     {:disabled @tiedot/tallennus-kaynnissa?}]
    [napit/peruuta
