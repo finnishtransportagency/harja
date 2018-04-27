@@ -14,8 +14,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat {:tyomenetelmat #{}
-                           :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
+                :valinnat {:aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
 
 (def taso-nakyvissa? (atom false))
 

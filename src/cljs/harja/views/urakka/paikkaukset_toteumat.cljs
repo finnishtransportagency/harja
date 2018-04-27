@@ -185,17 +185,19 @@
                                                                     (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
                                                                              paikkaukset))))))))
     (fn [e! app]
-      [:span
-       [kartta/kartan-paikka]
-       [:div
-        [debug/debug app]
-        [yhteinen-view/hakuehdot app
-         {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
-          :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
-                                 (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-          :aikavali-otsikko "Alkuaika"
-          :voi-valita-trn-kartalta? true}]
-        [paikkaukset e! app]]])))
+      (if (:ensimmainen-haku-tehty? app)
+        [:span
+         [kartta/kartan-paikka]
+         [:div
+          [debug/debug app]
+          [yhteinen-view/hakuehdot app
+           {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
+            :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
+                                   (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+            :aikavali-otsikko "Alkuaika"
+            :voi-valita-trn-kartalta? true}]
+          [paikkaukset e! app]]]
+        [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
 
 (defn toteumat []
   (fn []

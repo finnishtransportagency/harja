@@ -12,8 +12,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat {:tyomenetelmat #{}
-                           :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
+                :valinnat {:aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
 
 (defn kiinnostavat-tiedot-grid [paikkaus]
   (select-keys paikkaus #{:selite :yksikko :yksikkohinta :paikkaustoteuma-id
