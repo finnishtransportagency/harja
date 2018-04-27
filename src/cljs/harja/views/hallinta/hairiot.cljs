@@ -59,7 +59,7 @@
      [:div
       [:p (if tuore-hairio
             (listaa-hairioilmoitus tuore-hairio)
-            "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa.")]
+            "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa. Ilmoituksen yhteydessä näytetään aina ilmoituksen päivämäärä, joten sitä ei tarvitse kirjoittaa erikseen.")]
 
       (when-not tuore-hairio
         [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
