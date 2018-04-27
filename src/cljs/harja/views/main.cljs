@@ -162,9 +162,7 @@
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn hairioilmoitus [hairiotiedot]
-  (let [otsikko (case (::hairio/tyyppi hairiotiedot)
-                  :tiedote "Tiedote"
-                  "Häiriötiedote")
+  (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
         tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
                         :tiedote "hairioilmoitin-tyyppi-tiedote"
                         "hairioilmoitin-tyyppi-hairio")]
