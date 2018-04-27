@@ -29,16 +29,25 @@
 
 (defn- aseta-hairioilmoitus []
   [:div
-   [kentat/tee-kentta {:tyyppi :text :nimi :viesti
+   [:div
+    [kentat/tee-kentta {:tyyppi :text :nimi :viesti
                        :pituus-max 1024
                        :koko [80 5]}
-    (r/wrap @tiedot/tuore-hairioviesti
-            #(reset! tiedot/tuore-hairioviesti %))]
-   [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioviesti)
+    (r/wrap (:teksti @tiedot/tuore-hairioilmoitus)
+            #(swap! tiedot/tuore-hairioilmoitus assoc :teksti %))]]
+   [:div
+    [kentat/tee-otsikollinen-kentta {:otsikko "Tyyppi"
+                                    :kentta-params {:tyyppi :valinta
+                                                    :valinnat [:hairio :tiedote]
+                                                    :valinta-nayta hairio/tyyppi-fmt}
+                                    :arvo-atom (r/wrap (:tyyppi @tiedot/tuore-hairioilmoitus)
+                                                       #(swap! tiedot/tuore-hairioilmoitus assoc :tyyppi %))}]]
+   [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioilmoitus)
     {:disabled @tiedot/tallennus-kaynnissa?}]
    [napit/peruuta
     #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
-         (reset! tiedot/tuore-hairioviesti nil))]])
+         (reset! tiedot/tuore-hairioilmoitus {:tyyppi :hairio
+                                              :teksti nil}))]])
 
 (defn- tuore-hairioilmoitus [tuore-hairio]
   [:div

@@ -16,6 +16,10 @@
   ["hairioilmoitus" ::hairioilmoitus
    {"voimassa" ::voimassa?}])
 
+(def tyyppi-fmt
+  {:hairio "Häiriö"
+   :tiedote "Tiedote"})
+
 (def sarakkeet #{::id ::viesti ::pvm ::voimassa? ::tyyppi})
 
 (defn tuorein-voimassaoleva-hairio [hairiot]

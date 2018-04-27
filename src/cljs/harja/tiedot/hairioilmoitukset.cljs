@@ -17,6 +17,7 @@
 (defn hae-tuorein-hairioilmoitus! []
   (go (let [vastaus (<! (k/post! :hae-tuorein-voimassaoleva-hairioilmoitus {}))]
         (when-not (k/virhe? vastaus)
+          (log "HAETTU UUSIN: " (pr-str vastaus))
           (reset! tuore-hairioilmoitus vastaus)))))
 
 (defn tarkkaile-hairioilmoituksia! []

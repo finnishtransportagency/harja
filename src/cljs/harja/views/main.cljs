@@ -16,7 +16,7 @@
             [harja.views.haku :as haku]
             [cljs.core.async :refer [put! close! chan timeout]]
 
-            ;; Nämä on pakko requirettaa, muuten frontin prod-käännös ei toimi (joku ongelma kääntämisjärjestyksessä?)
+    ;; Nämä on pakko requirettaa, muuten frontin prod-käännös ei toimi (joku ongelma kääntämisjärjestyksessä?)
             [harja.domain.vesivaylat.vatu-turvalaite :as vatu-turvalaite]
             [harja.domain.paikkaus :as paikkaus-domain]
 
@@ -162,10 +162,16 @@
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn hairioilmoitus [hairiotiedot]
-  [:div.hairioilmoitin
-   [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
-   [:div (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
-              (::hairio/viesti hairiotiedot))]])
+  (let [otsikko (case (::hairio/tyyppi hairiotiedot)
+                  :tiedote "Tiedote"
+                  "Häiriö")
+        tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
+                        :tiedote "hairioilmoitin-tyyppi-tiedote"
+                        "hairioilmoitin-tyyppi-hairio")]
+    [:div.hairioilmoitin {:class tyyppi-luokka}
+     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+     [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+                (::hairio/viesti hairiotiedot))]]))
 
 (defn paasisalto [sivu korkeus]
   [:div
