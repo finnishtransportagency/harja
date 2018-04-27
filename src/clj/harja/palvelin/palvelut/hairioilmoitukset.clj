@@ -37,7 +37,8 @@
   (specql/insert! db ::hairio/hairioilmoitus
                   {::hairio/viesti (::hairio/viesti tiedot)
                    ::hairio/pvm (c/to-sql-date (t/now))
-                   ::hairio/voimassa? true})
+                   ::hairio/voimassa? true
+                   ::hairio/tyypp (::hairio/tyyppi tiedot)})
   (hae-kaikki-hairioilmoitukset db user false))
 
 (defrecord Hairioilmoitukset []
