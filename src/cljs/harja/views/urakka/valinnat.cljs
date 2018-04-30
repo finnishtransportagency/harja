@@ -138,13 +138,19 @@
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 
+;;TODO: tätä ei käytetä?
+(defn urakan-tehtava []
+  (valinnat/urakan-tehtava u/urakan-tehtavat u/valittu-tehtava u/valitse-tehtava!))
 
-(defn kanavaurakan-kohde+kaikki []
-  (valinnat/kanava-kohde u/valittu-kohde u/kanavaurakan-kohteet  u/valitse-kohde!)
-    (r/wrap (vec (concat [{:kohde "Kaikki"}]
-                         @u/kanavaurakan-kohteet))
+;; TODO: tämä on neljännen tason toimenpiteille, jotka ovat muutoshintaisia
+;; Tämä tasojen sotkeminen on vähän huono homma? Onko tämä  uudelleenkäytettävä
+(defn urakan-tehtava+kaikki []
+  (valinnat/urakan-tehtava
+    (r/wrap (vec (concat [{:t4_nimi "Kaikki"}]
+                         @u/urakan-tehtavat))
             identity)
-    u/valittu-kohde u/valitse-kohde!)
+    u/valittu-tehtava u/valitse-tehtava!))
+
 
 (defn urakan-kokonaishintainen-tehtava+kaikki []
   (valinnat/urakan-kokonaishintainen-tehtava

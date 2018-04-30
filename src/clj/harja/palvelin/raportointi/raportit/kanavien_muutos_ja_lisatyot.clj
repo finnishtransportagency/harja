@@ -28,41 +28,64 @@
   [db urakka-id]
   (hae-urakan-nimi db [:urakkaid urakka-id]))
 
+(defn- urakan-tyot
+  "Palauttaa urakkaan liittyvät työrivit."
+  [urakka-id tyot-ryhmiteltyna]
+  (filter #(= urakka-id (:urakka (key %))) tyot-ryhmiteltyna))
+
 (defn- hinnoittelu-ryhmat
   "Palauttaa hinnoitteluryhmien tunnukset. Hakee ne ryhmiteltyjen työrivien avaimesta."
   [tyot-ryhmiteltyna]
   (distinct (map #(get % :hinnoittelu_ryhma) (keys tyot-ryhmiteltyna))))
 
-(defn- hinnoitteluryhman-nimi
+(defn hinnoitteluryhman-nimi
   [hinnoitteluryhma]
   (case (keyword hinnoitteluryhma)
     :sopimushintainen-tyo-tai-materiaali "Sopimushintainen työ tai materiaali"
     :omakustanteinen-tyo-tai-materiaali "Omakustanteinen työ tai materiaali"
     :varaosat-ja-materiaalit "Varaosat ja materiaalit"
     :muu-tyo "Muut työt (ei indeksilaskentaa)"
-    :muut-kulut "Muut"))
+    :muut-kulut "Muut"
+    "Hinnoitteluryhmän nimi puuttuu."))
 
+(defn- hinnoitteluryhman-tyot
+  "Palauttaa hintaryhmään (= hinnoitteluryhmään) liittyvät työrivit.
+  Rajaa urakka ennen funktion kutsumista, jos haluat vain yksittäisen urakan hinnoitteluryhmäerittelyn."
+  [hinnoitteluryhma tyot-ryhmiteltyna]
+  (filter #(= hinnoitteluryhma (:hinnoittelu_ryhma (key %))) tyot-ryhmiteltyna))
 
-(defn- urakan-hinnoitteluryhmakohtaiset-rivit
-  [db urakka tyot-ryhmiteltyna]
-  (let [urakan-nimi (urakan-nimi db urakka)]
-    (map (fn[hinnoitteluryhma tyot-ryhmiteltyna](urakan-hinnoitteluryhmakohtainen-summarivi
-            (tyot-ryhmiteltyna {:urakka urakka :hinnoittelu_ryhma (name hinnoitteluryhma)})))
+(defn- hinnoitteryhman-tyot-urakassa
+  "Palauttaa urakkaan ja hintaryhmään liittyvät työrivit."
+  [urakka-id hinnoitteluryhma tyot-ryhmiteltyna]
+  (filter #(and
+             (= hinnoitteluryhma (:hinnoittelu_ryhma (key %)))
+             (= urakka-id (:urakka (key %)))) tyot-ryhmiteltyna))
 
-         (keys hinnoitteluryhman-nimi))
-    )
+(defn- summien-summa
+  "Palauttaa valmiiksi suodatettujen rivien yhteissumman rivien :summa-tiedoista."
+  [suodatetut-tyot]
+  (reduce + (merge-with + (map #(get % :summa) (first (vals suodatetut-tyot))))))
 
-  ;(get tyot-ryhmiteltyna {:urakka urakka :hinnoittelu_ryhma hinnoitteluryhma})
-  )
-
-(defn- urakan-hinnoitteluryhmakohtainen-summarivi
-  [tyot-suodatettuna]
-
+(defn- muodosta-rivi-hinnoitteluryhmalle
+  [hinnoitteluryhman-tyot-urakassa]
   (hash-map
-    :hinnoittelu ""
-    )
-  (reduce +  (keep #(* (get-in % [:maara])(get-in % [:summa])) tyot-suodatettuna))
-  )
+    :hinnoittelu (hinnoitteluryhman-nimi
+                   (:hinnoittelu_ryhma (first hinnoitteluryhman-tyot-urakassa)))
+    :summa (summien-summa hinnoitteluryhman-tyot-urakassa)
+    :indeksi nil))
+
+(defn- muodosta-erittely-urakan-hinnoitteluryhmille
+  "Koko maa, urakkakohtainen erittely. Data taulukkoa varten."
+  [urakka-id tyot-ryhmiteltyna]
+  (let [urakan-tyot (urakan-tyot urakka-id tyot-ryhmiteltyna)]
+    (map (fn [ryhma] (muodosta-rivi-hinnoitteluryhmalle
+                       (hinnoitteluryhman-tyot ryhma urakan-tyot)))
+         (hinnoittelu-ryhmat urakan-tyot))))
+
+(defn kokeilu
+  [tyot-ryhmiteltyna]
+  (map #(println (keyword %)) hinnoitteluryhman-nimi))
+
 
 (defn- sarakkeet [tyyppi]
   (case tyyppi
@@ -88,220 +111,121 @@
 
 
 
+(defn- summa [arvot]
+  (reduce + (keep identity arvot)))
 
-(defn taulukko-hintaryhmakohtaiset-summarivit
-  [urakan-hintaryhmien-summarivit]
-
-  )
-
-(defn muodosta-hintaryhmakohtaiset-summarivit
-  [urakan-hinnoittelurivit]
-
-  )
-
-(defn- toimenpiteiden-summa [kentat]
-  (reduce + (keep identity kentat)))
-
-(defn- kentan-summa [tietorivit kentta]
-  (toimenpiteiden-summa (map kentta tietorivit)))
-
-(defn- tpi-kohtaiset-rivit [tietorivit tyyppi]
-  (into []
-        (concat
-          (for [rivi tietorivit]
-            [rivi]
-            ;[(:tpi-nimi rivi)
-            ; (if (sopimus-tai-yksikkohintainen? tyyppi)
-            ;   (or (:suunniteltu-maara rivi) 0)
-            ;   "")
-            ; (or (:toteutunut-maara rivi) 0)
-            ; (if (sopimus-tai-yksikkohintainen? tyyppi)
-            ;   (- (or (:suunniteltu-maara rivi) 0)
-            ;      (or (:toteutunut-maara rivi) 0))
-            ;   "")]
-
-            ))))
+(defn- rivien-summa [rivit yhteenlaskettava-tieto]
+  (summa (map yhteenlaskettava-tieto rivit)))
 
 
-(defn hintaryhman-otsikko
-  [hintaryhma]
-  (case (keyword hintaryhma)
-    :sopimushintainen-tyo-tai-materiaali "Sopimushintaiset työt ja materiaalit"
-    :omakustanteinen-tyo-tai-materiaali "Omakustannushintaiset työt ja materiaalit"
-    :muu-tyo "Muut työt (ei indeksilaskesntaa)"
-    :varaosat-ja-materiaalit "Varaosat ja materiaalit"
-    :muut-kulut "Muut"
-    "Hintaryhmän nimi puuttuu"))
+(defn- muodosta-summarivi [konteksti yhteenlaskettavat-tyot]
+
+  (let [summien-summa (reduce + 0 (keep :summa yhteenlaskettavat-tyot))
+        indeksien-summa (reduce + 0 (keep :indeksi yhteenlaskettavat-tyot))]
+
+    (case (keyword konteksti)
+      :muutos-ja-lisatyot-koko-maa
+      ["Yhteensä" summien-summa indeksien-summa]
+      :muutos-ja-lisatyot
+      ["" "" "" "" "" "" "Yhteensä" summien-summa indeksien-summa])
+    ))
 
 
+(defn- summa-rivit-yhteensa [konteksti muutos-ja-lisatyot]
 
-(defn summarivit-tehtavat
-  [konteksti muutos-ja-lisatyot]
-  (log/debug (println-str "muutos-ja-lisatyot " muutos-ja-lisatyot))
-  (case (keyword konteksti)
+  (case konteksti
     :muutos-ja-lisatyot-koko-maa
-    (mapv #(rivi
-             (hintaryhman-otsikko (:hinnoittelu_ryhma %))
-             (or (:summa %) ei-raha-summaa-info-solu)
-             (or 0 indeksi-puuttuu-info-solu))              ;; TODO
-          muutos-ja-lisatyot)
+    (let [yhteensa-rivi ["Yhteensä"
+                         ""
+                         (reduce + 0 (keep :summa muutos-ja-lisatyot))
+                         (reduce + 0 (keep :indeksi muutos-ja-lisatyot))]]
+      yhteensa-rivi)
     :muutos-ja-lisatyot
-    (mapv #(rivi
-             (pvm/pvm (:pvm %))
-             (:tehtava %)
-             (:kohde %)
-             (:kohteenosa %)
-             (:huoltokohde %)
-             (str (or (:otsikko %) " ") (or (:lisatieto %) " "))
-             (hintaryhman-otsikko (:hinnoittelu_ryhma %))
-             (or (:summa %) ei-raha-summaa-info-solu)
-             (or 0 indeksi-puuttuu-info-solu))              ;; TODO
-          muutos-ja-lisatyot)))
-
-
-
-;(defn kustannustyyppikohtaiset-rivit
-;  [muutos-ja-lisatyot-ryhmiteltyna]
-;  (mapv #(rivi
-;           (hinnoitteluryhman-nimi (:hinnoittelu_ryhma %))
-;           (or (get-in % [:tehtava :summa]) ei-raha-summaa-info-solu)
-;           (or (:korotus %) indeksi-puuttuu-info-solu))
-;        (sort-by tyypin-sort-avain muutos-ja-lisatyot-ryhmiteltyna)))
-;
-
-;(defn- summarivi [tietorivit tyyppi]
-;  (let [kaikki-suunnitellut (kentan-summa tietorivit :suunniteltu-maara)
-;        kaikki-toteutuneet (kentan-summa tietorivit :toteutunut-maara)]
-;    ["Yhteensä" (if (sopimus-tai-yksikkohintainen? tyyppi)
-;                  kaikki-suunnitellut
-;                  "")
-;     kaikki-toteutuneet
-;     (if (sopimus-tai-yksikkohintainen? tyyppi)
-;       (- kaikki-suunnitellut
-;          kaikki-toteutuneet)
-;       "")]))
-;
-
-;(defn- kulutyypin-rivit [tietorivit tyyppi]
-;  (conj
-;    (tpi-kohtaiset-rivit tietorivit tyyppi)
-;    (summarivi tietorivit tyyppi)))
-;
-(defn- taulukko-urakka [otsikko data]
-  (conj
-    [:taulukko {:otsikko otsikko
-                :tyhja (when (empty? data) "Ei raportoitavaa.")
-                :sheet-nimi otsikko
-                :viimeinen-rivi-yhteenveto? false}
-     (sarakkeet :muutos-ja-lisatyot)
-     ;(summarivit-tehtavat tyyppi data)
-     ])
-  )
-
-
-(defn- taulukko-koko-maa [otsikko tyot-ryhmiteltyna]
-
-  ;;(def *u (distinct (map #(get % :urakka) (keys *mlr))))
-
-  (log/debug (println-str "urakan TYOT "   (urakat tyot-ryhmiteltyna)
-                          ))
-
-  (map #(println %)
-         ;(log/debug (println-str "URAKAT " %))
-         ;; Urakan nimi
-         ;; Laske kunkin hintaryhmän summa (kaikki-yhteensa)
-         ;; Kunkin hintaryhmän nimi ja summa
-
-       (urakat tyot-ryhmiteltyna))
-
-
-  ;(let [ei-hyva (map #(log/debug (println-str "NÄYTÄ URAKKA " %)) muutos-ja-lisatyot-ryhmiteltyna)])
-
-  (conj
-    [:taulukko {:otsikko otsikko
-                :tyhja (when (empty? tyot-ryhmiteltyna) "Ei raportoitavaa.") ;;TODO tämä on turha täällä, laita se vaan suorita-funktioon
-                :sheet-nimi otsikko
-                :viimeinen-rivi-yhteenveto? false}
-     (sarakkeet :muutos-ja-lisatyot-koko-maa)
-
-
-     ;(summarivit-tehtavat :muutos-ja-lisatyot-koko-maa tyot-ryhmiteltyna)
-     ])
-  )
-
-
-(defn- summa-rivit-yhteensa [muutos-ja-lisatyot]
-  (let [yhteensa-rivi ["Yhteensä"
-                       ""
-                       (reduce + 0 (keep :summa muutos-ja-lisatyot))
-                       ""]]
-    yhteensa-rivi))
-
+    (let [yhteensa-rivi ["Yhteensä"
+                         "" "" "" "" "" ""
+                         (reduce + 0 (keep :summa muutos-ja-lisatyot))
+                         (reduce + 0 (keep :indeksi muutos-ja-lisatyot))]]
+      yhteensa-rivi)
+    ))
 
 (defn- kaikki-yhteensa [muutos-ja-lisatyot]
   (log/debug (println-str "Laske summa " muutos-ja-lisatyot))
   ["" "" "" "" "" "" "" (reduce + 0 (keep :summa muutos-ja-lisatyot))])
 
 
-;
-;(defn- summat-ryhmiteltyna [kaikki-muutos-ja-lisatyo-rivit ryhmittelyperuste]
-;  (let [rivit-ryhmiteltyna (group-by ryhmittelyperuste kaikki-muutos-ja-lisatyo-rivit)
-;        summarivit (conj
-;                     (into []
-;                           (concat
-;                             (for [ryhman-rivit rivit-ryhmiteltyna]
-;                               [(key ryhman-rivit)
-;                                ""
-;                                #((conj (reduce + 0 (keep :summa (val ryhman-rivit)))
-;                                        (taulukko (key ryhman-rivit) :muutos-ja-lisatyot ryhman-rivit)
-;                                        (log/debug (println-str "" (taulukko (key ryhman-rivit) :muutos-ja-lisatyot ryhman-rivit)))))
-;                                ""]
-;                               )))
-;
-;                     ["Yhteensä:"
-;                      ""
-;                      (reduce + 0 (keep :summa kaikki-muutos-ja-lisatyo-rivit))
-;                      ""])]
-;    summarivit))
-;
-;
-;
-;
-;(defn summarivit
-;  [konteksti-ja-ryhmittely tyot]
-;  (case (keyword konteksti-ja-ryhmittely)
-;    :muutos-ja-lisatyot-koko-maa-urakoittain
-;    (conj
-;      (summat-ryhmiteltyna tyot :urakka)
-;      (summarivi-kaikki-yhteensa tyot))
-;    :muutos-ja-lisatyot-koko-maa-tehtavittain
-;    (conj
-;      (summat-ryhmiteltyna tyot :tehtava)
-;      (summarivi-kaikki-yhteensa tyot))
-;    :muutos-ja-lisatyot-koko-maa-hintaryhmittain
-;    (conj
-;      (summat-ryhmiteltyna tyot :hintaryhma)
-;      (summarivi-kaikki-yhteensa tyot))
-;    :muutos-ja-lisatyot
-;    (summarivi-kaikki-yhteensa tyot)
-;    :muutos-ja-lisatyot-tehtavittain
-;    (conj
-;      (summat-ryhmiteltyna tyot :tehtava)
-;      (summarivi-kaikki-yhteensa tyot))
-;    :muutos-ja-lisatyot-hintaryhmittain
-;    (conj
-;      (summat-ryhmiteltyna tyot :hintaryhma)
-;      (summarivi-kaikki-yhteensa tyot))
-;    :muutos-ja-lisatyot-kohteittain
-;    (conj
-;      (summat-ryhmiteltyna tyot :kohde)
-;      (summarivi-kaikki-yhteensa tyot))))
+(defn muodosta-rivikokonaisuus
+  [konteksti otsikko tyot]
+
+  (log/debug (pr-str "TYÖTTYÖTTYÖT" tyot))
+  (log/debug (pr-str "KONTEKSTIKONTEKSTI" konteksti))
+  (case (keyword konteksti)
+
+    :muutos-ja-lisatyot-koko-maa
+    ;;  (conj
+    [:taulukko {:otsikko otsikko
+                :sheet-nimi otsikko
+                :viimeinen-rivi-yhteenveto? false}
+     (sarakkeet :muutos-ja-lisatyot-koko-maa)
+     (mapv (fn [urakan-tyot-ryhmiteltyna] (conj
+                                            (rivi
+                                              (hinnoitteluryhman-nimi (:hinnoittelu_ryhma
+                                                                        urakan-tyot-ryhmiteltyna))
+                                              (or (:summa urakan-tyot-ryhmiteltyna) ei-raha-summaa-info-solu)
+                                              (or (:indeksi urakan-tyot-ryhmiteltyna) indeksi-puuttuu-info-solu))
+                                            (muodosta-summarivi konteksti urakan-tyot-ryhmiteltyna)))
+           (muodosta-erittely-urakan-hinnoitteluryhmille (:urakka (key (first tyot))) tyot))
+     (muodosta-summarivi :muutos-ja-lisatyot-koko-maa tyot)]
+    ;;)
+
+    :muutos-ja-lisatyot
+
+    (conj
+      [:taulukko {:otsikko otsikko
+                  :sheet-nimi otsikko
+                  :viimeinen-rivi-yhteenveto? false}
+       (sarakkeet :muutos-ja-lisatyot)
+       (mapv (fn [urakan-tyot-ryhmiteltyna] (conj (rivi
+                                                    (or (pvm/pvm (:pvm urakan-tyot-ryhmiteltyna)) " ")
+                                                    (:tehtava urakan-tyot-ryhmiteltyna)
+                                                    (:kohde urakan-tyot-ryhmiteltyna)
+                                                    (or (:kohteenosa urakan-tyot-ryhmiteltyna) " ")
+                                                    (:huoltokohde urakan-tyot-ryhmiteltyna)
+                                                    (str (or (:otsikko urakan-tyot-ryhmiteltyna) " ") " " (or (:lisatieto urakan-tyot-ryhmiteltyna) " "))
+                                                    (hinnoitteluryhman-nimi (:hinnoittelu_ryhma urakan-tyot-ryhmiteltyna))
+                                                    (or (:summa urakan-tyot-ryhmiteltyna) ei-raha-summaa-info-solu)
+                                                    (or (:indeksi urakan-tyot-ryhmiteltyna) indeksi-puuttuu-info-solu)) ;; TODO
+                                                  )) (sort-by :tehtava tyot))
+       (muodosta-summarivi :muutos-ja-lisatyot-koko-maa tyot)
+       ])))
 
 
 
 
-;; TODO: kohde rajattu + tehtävä rajattu, kokomaan tehtävällä rajatut jne. tarkista kombinaatiot
-;; TODo: oikeustarkistus?
+
+(defn- taulukko-urakka [otsikko tyot]
+  (conj
+    (muodosta-rivikokonaisuus :muutos-ja-lisatyot otsikko tyot)
+    (muodosta-summarivi :muutos-ja-lisatyot tyot)))
+
+(defn- taulukko-koko-maa [otsikko tyot-ryhmiteltyna]
+  (conj
+    (first (map (fn [urakka-id]
+                  (muodosta-rivikokonaisuus :muutos-ja-lisatyot-koko-maa
+                                            otsikko
+                                            (urakan-tyot urakka-id tyot-ryhmiteltyna)))
+                (urakat tyot-ryhmiteltyna)))))
+
+(defn rajaus
+  [urakka-id kohde-id tehtava-id]
+  (if (and urakka-id tehtava-id kohde-id)
+    :urakka-kohde-ja-tehtava
+    (if (and urakka-id tehtava-id)
+      :urakka-ja-tehtava
+      (if (and urakka-id kohde-id)
+        :urakka-ja-kohde
+        (if urakka-id
+          :urakka
+          :ei-rajausta)))))
 
 (defn hae-kanavien-muutos-ja-lisatyot-raportille
   [db {:keys [alkupvm loppupvm urakka-id kohde-id tehtava-id] :as parametrit} rajaus]
@@ -326,47 +250,6 @@
       (hae-kanavien-muutos-ja-lisatyot db hakuparametrit)
       )))
 
-(defn rajaus
-  [urakka-id kohde-id tehtava-id]
-  (if (and urakka-id tehtava-id kohde-id)
-    :urakka-kohde-ja-tehtava
-    (if (and urakka-id tehtava-id)
-      :urakka-ja-tehtava
-      (if (and urakka-id kohde-id)
-        :urakka-ja-kohde
-        (if urakka-id
-          :urakka
-          :ei-rajausta)))))
-
-
-(defn taulukko-urakoittain-hintaryhmat [muutos-ja-lisatyot-ryhmiteltyna]
-
-  )
-
-
-(defn ryhmittele-tyot [rajaus muutos-ja-lisatyot]
-
-  ;; (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) *ml)
-
-  (case (keyword rajaus)
-    :urakka
-
-
-    :ei-rajausta
-
-    (let [muutos-ja-lisatyot-urakoittain (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot)]
-
-      muutos-ja-lisatyot-urakoittain
-      ;;taulukko-hintaryhmakohtaiset-summarivit
-      ;; Maarit. Doseq palauttaa tässä
-      ;;["sopimushintainen-tyo-tai-materiaali" [{:materiaali_id nil, :pvm #inst "2018-03-26T21:00:00.000-00:00", :kohde_id 3,
-
-      )))
-
-
-
-
-
 (defn suorita
   [db user {:keys [alkupvm loppupvm urakka-id kohde-id tehtava-id] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -385,61 +268,23 @@
         tehtava-nimi (if tehtava-id
                        (:nimi (first (hae-kanavatoimenpiteen-nimi db {:tehtavaid tehtava-id}))
                          "Kaikki toimenpiteet"))
-
-
         muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db parametrit rajaus)
-
-        ]
+        raportin-alaotsikko (str/join ", " (remove str/blank? [raportin-kontekstin-nimi kohde-nimi tehtava-nimi]))]
 
 
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
+     (conj
+       (when (not-empty muutos-ja-lisatyot)
+         (if (= (keyword konteksti) :urakka)
+           (taulukko-urakka raportin-alaotsikko muutos-ja-lisatyot)
+           (taulukko-koko-maa raportin-alaotsikko
+                              (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot))))
+       [:taulukko {:otsikko "Kaikki yhteensä"
+                   :tyhja (when (empty? muutos-ja-lisatyot) "Ei raportoitavaa.")
+                   :sheet-nimi "Yhteensä"
+                   :viimeinen-rivi-yhteenveto? true}
+        (kaikki-yhteensa muutos-ja-lisatyot)])]))
 
-     (conj (when (not-empty muutos-ja-lisatyot)
-             (if (= (keyword konteksti) :urakka)
-               (taulukko-urakka raportin-otsikko
-                                muutos-ja-lisatyot)
-               (taulukko-koko-maa raportin-otsikko
-                                  (ryhmittele-tyot rajaus muutos-ja-lisatyot))))
-
-
-
-           [:taulukko {:otsikko "Kaikki yhteensä"
-                       :tyhja (when (empty? muutos-ja-lisatyot) "Ei raportoitavaa.")
-                       :sheet-nimi "Yhteensä"
-                       :viimeinen-rivi-yhteenveto? false}
-            (sarakkeet :yhteenveto)
-            (kaikki-yhteensa muutos-ja-lisatyot)
-            ;(summarivi-kaikki-yhteensa muutos-ja-lisatyot)
-            ])]))
-
-
-
-
-
-
-
-;;sarakkeet
-;;toimenpiderivit
-
-
-
-;; Konteksti: koko maa
-;; Ryhmittelys: urakka
-;; Järjestys: tehtävä
-;; Summa: hintaryhmä
-;; Yhteissumma: hintaryhmien summat yhteensä
-
-
-;; Konteksti: urakka
-;; Ryhmittely: -
-;; Rajaus: kohde
-;; Järjestys;
-
-;; Konteksti: urakka
-;; Ryhmittely: -
-;; Järjestys: pvm
-;; Summa: yksittäinen tehtävä
-;; Yhteissumma: urakan yksittäisten tehtävien summat yhteensä
 

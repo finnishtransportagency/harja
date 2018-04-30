@@ -34,12 +34,21 @@
      4)      ; kaikki muut sen jälkeen
    nimi])
 
+;; TODO: esimerkki käytetäänkö täät
 (defn hae-urakan-toimenpiteet
   "Hakee urakan toimenpiteet (3. taso) urakan id:llä."
   [urakka-id]
   (go
     (vec (sort-by toimenpideinstanssin-sort-avain
                   (<! (k/post! :urakan-toimenpiteet urakka-id))))))
+
+;; TODO: käytetäänkö tätä pitäiskö käyttää
+(defn hae-urakan-tehtavat
+  "Hakee urakan toimenpiteet (4. taso) urakan id:llä."
+  [urakka-id]
+  (go
+    (vec (<! (k/post! :urakan-tehtavat urakka-id)))))
+
 
 ;; yleisiä pikkuapureita
 (defn toimenpideinstanssin-tehtavat [tpi-id tp-instanssit tehtavat-tasoineen]

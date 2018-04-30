@@ -8,6 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko vihje] :as yleiset]
@@ -290,6 +291,7 @@
                                              (reset! arvo {:tienumero uusi})
                                              (reset! tienumero uusi)))]))
 
+;; TODO: ESIMERKKI
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
   (let [aseta-tpi (fn [tpi]
                     (reset! arvo (if tpi
@@ -306,20 +308,39 @@
         [valinnat/urakan-toimenpide+kaikki]))))
 
 
+;;TODO:
+(defmethod raportin-parametri "urakan-tehtava" [p arvo]
+  (let [aseta-tpk (fn [tpk]
+                    (reset! arvo (if tpk
+                                   {:tehtava-id (:t4_id tpk)}
+                                   {:virhe "Ei tehtävävalintaa"})))]
+    (komp/luo
+      (komp/watcher u/valittu-tehtava
+                    (fn [_ _ tpk]
+                      (aseta-tpk tpk)))
+      (komp/piirretty #(reset! u/valittu-tehtava {:t4_nimi "Kaikki"}))
+
+      (fn [_ _]
+        @u/valittu-tehtava
+        [valinnat/urakan-tehtava+kaikki]))))
+
+
+;;TODO:
 (defmethod raportin-parametri "kanavaurakan-kohde" [p arvo]
   (let [aseta-kohde (fn [kohde]
                     (reset! arvo (if kohde
                                    {:kohde-id (:id kohde)}
                                    {:virhe "Ei kohdevalintaa"})))]
     (komp/luo
-      (komp/watcher u/valittu-kohde
+      (komp/watcher ku/valittu-kohde
                     (fn [_ _ kohde]
                       (aseta-kohde kohde)))
-      (komp/piirretty #(reset! u/valittu-kohde {:kohde_nimi "Kaikki"}))
+      (komp/piirretty #(reset! ku/valittu-kohde {:kohde_nimi "Kaikki"}))
 
       (fn [_ _]
-        @u/valittu-kohde
-        [valinnat/kanavaurakan-kohde+kaikki]))))
+        @ku/valittu-kohde
+        [ku/kanavaurakan-kohde+kaikki]))))
+
 
 
 

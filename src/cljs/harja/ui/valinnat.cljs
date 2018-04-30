@@ -151,13 +151,14 @@
                (fn [uusi-arvo]
                  (reset! valittu-numerovali-atom [(first @valittu-numerovali-atom) uusi-arvo])
                  (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]]]))
-
+;;TODO: esimerkki
 (defn- toimenpideinstanssi-fmt
   [tpi]
   (if-let [tpi-nimi (:tpi_nimi tpi)]
     (clojure.string/replace tpi-nimi #"alueurakka" "AU")
     "Ei toimenpidettä"))
 
+;; TODO: esimerkki
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
   (when (not (some
@@ -172,6 +173,7 @@
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
 
+;; TODO: potentiaalinen esimerkki
 (defn urakan-kokonaishintainen-tehtava
   [urakan-kokonaishintaiset-tehtavat-atom
    valittu-kokonaishintainen-tehtava-atom
@@ -196,7 +198,31 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot] :as optiot}]
+
+;;TODO: kanavaurakan tehtvät
+(defn urakan-tehtava
+  [urakan-tehtavat-atom
+   valittu-urakan-tehtava-atom
+   valitse-urakan-tehtava-fn]
+  (when (not (some
+               #(= % @valittu-urakan-tehtava-atom)
+               @urakan-tehtavat-atom))
+    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+    (reset! valittu-urakan-tehtava-atom (first @urakan-tehtavat-atom)))
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Tehtävä"]
+   [livi-pudotusvalikko {:valinta @valittu-urakan-tehtava-atom
+                         :format-fn #(if % (str (:t4_nimi %)) "Ei muutoshintaista tehtävää")
+                         :valitse-fn valitse-urakan-tehtava-fn}
+    @urakan-tehtavat-atom]])
+
+
+;;TODO: lisätty tehtävät tänne, onko turha
+
+;;(when-let [{:keys [urakan-tehtavat-atom valittu-tehtava-atom valitse-tehtava-fn]} tehtava]
+ ;; [urakan-tehtava urakan-tehtavat-atom valittu-tehtava-atom valitse-tehtava-fn])
+
+(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot tehtava] :as optiot}]
   [:span
    (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])
