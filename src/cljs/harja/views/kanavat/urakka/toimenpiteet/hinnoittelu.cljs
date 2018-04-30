@@ -255,26 +255,27 @@
 
 (defn- materiaali-hinnoittelurivi
   [e! materiaali-hinta materiaalit]
-  [:tr
-   [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
-          (::hinta/otsikko materiaali-hinta)
-          [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
-   [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
-                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
-   [:td.tasaa-oikealle (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
-                         (::hinta/maara materiaali-hinta)
-                         [kentta-hinnalle e! materiaali-hinta ::hinta/maara
-                          {:tyyppi :positiivinen-numero}])]
-   [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
-          (::hinta/yksikko materiaali-hinta)
-          [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
-           {:tyyppi :string}])]
-   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
-   [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
-   [:td.keskita
-    (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
-      ""
-      [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))])]])
+  (let [toimenpiteelle? (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)]
+    [:tr
+     [:td (if toimenpiteelle?
+            (::hinta/otsikko materiaali-hinta)
+            [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
+     [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
+                          {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
+     [:td.tasaa-oikealle (if toimenpiteelle?
+                           (::hinta/maara materiaali-hinta)
+                           [kentta-hinnalle e! materiaali-hinta ::hinta/maara
+                            {:tyyppi :positiivinen-numero}])]
+     [:td (if toimenpiteelle?
+            (::hinta/yksikko materiaali-hinta)
+            [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
+             {:tyyppi :string}])]
+     [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
+     [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
+     [:td.keskita
+      (if toimenpiteelle?
+        ""
+        [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))])]]))
 
 (defn- materiaalit [e! app*]
   (let [materiaali-hinnat (tiedot/materiaalit app*)]
