@@ -87,7 +87,7 @@
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
        {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}
-       {:otsikko "Poikkeamaraportti" :nimi :sisaltaa-poikkeamaraportin? :fmt fmt/totuus :tasaa :keskita :leveys 1}]
+       {:otsikko "Poik\u00ADkeama\u00ADraport\u00ADti" :nimi :sisaltaa-poikkeamaraportin? :fmt fmt/totuus :tasaa :keskita :leveys 1}]
       poikkeamat]]))
 
 (defn paatos?

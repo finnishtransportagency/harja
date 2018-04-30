@@ -29,7 +29,8 @@
 (defn hakuehdot [{:keys [valinnat] :as app} {:keys [paivita-valinnat-fn paikkaus-valittu-fn aikavali-otsikko]}]
   (let [tr-atom (atom (:tr valinnat))
         aikavali-atom (atom (:aloitus-aikavali @yhteinen-tiedot/tila))
-        tyomenetelmat-atom (atom (:tyomenetelmat valinnat))]
+        tyomenetelmat-atom (atom #{})
+        urakan-tyomenetelmat (:tyomenetelmat valinnat)]
     (add-watch tr-atom
                :tierekisteri-haku
                (fn [_ _ vanha uusi]
@@ -67,6 +68,6 @@
         {:otsikko "Työmenetelmät"
          :tyylit {:width "fit-content"}
          :kentta-params {:tyyppi :checkbox-group
-                         :vaihtoehdot #{"massapintaus" "kuumennuspintaus" "remix-pintaus"}
+                         :vaihtoehdot urakan-tyomenetelmat
                          :nayta-rivina? true}
          :arvo-atom tyomenetelmat-atom}]])))

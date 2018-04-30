@@ -12,8 +12,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat {:tyomenetelmat #{}
-                           :aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
+                :valinnat {:aikavali (:aloitus-aikavali @yhteiset-tiedot/tila)}}))
 
 (defn kiinnostavat-tiedot-grid [paikkaus]
   (select-keys paikkaus #{:selite :yksikko :yksikkohinta :paikkaustoteuma-id
@@ -156,7 +155,7 @@
                  :paikkauksien-haku-tulee-olemaan-kaynnissa? false))))
   KustannuksetEiHaettu
   (process-event [_ app]
-    (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
+    (viesti/nayta! "Paikkauksien haku epäonnistui! " :danger)
     (assoc app
            :paikkauksien-haku-kaynnissa? false
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
