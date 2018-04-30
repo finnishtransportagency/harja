@@ -473,11 +473,6 @@
 
 (def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
-(def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
-+vientimuodot+
-  [[(ikonit/save) "Tallenna Excel" "raporttixls" (k/excel-url :raportointi)]
-   [(ikonit/print) "Tallenna PDF" "raporttipdf" (k/pdf-url :raportointi)]])
-
 (defn- vie-raportti [v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
   (let [aseta-parametrit! (fn [id]
                             (let [input (-> js/document
@@ -497,7 +492,7 @@
                                     (tr/clj->transit parametrit))
                               true))]
     [:span
-     (for [[ikoni teksti id url] +vientimuodot+]
+     (for [[ikoni teksti id url] yleiset/+raportin-vientimuodot+]
        ^{:key id}
        [:form {:target "_blank" :method "POST" :id id
                :style {:display "inline"}

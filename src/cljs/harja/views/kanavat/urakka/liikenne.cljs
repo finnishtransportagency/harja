@@ -408,7 +408,8 @@
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
      :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
               [ajax-loader "Haku käynnissä"]
-              "Ei liikennetapahtumia")}
+              "Ei liikennetapahtumia")
+     :raporttivienti #{:excel :pdf}}
     [{:otsikko "Aika"
       :leveys 3
       :nimi ::lt/aika

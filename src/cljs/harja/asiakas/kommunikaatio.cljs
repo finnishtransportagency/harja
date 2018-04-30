@@ -240,6 +240,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
        (yhdista-parametrit parametrit)))
 
 (defn excel-url [tyyppi & parametrit]
+  (log "excel url: " (pr-str tyyppi) " parametrit " (pr-str parametrit))
   (str (polku) "excel?_=" (name tyyppi) "&"
        (yhdista-parametrit parametrit)))
 
