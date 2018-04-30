@@ -17,6 +17,7 @@
 (def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo") ;; UHA: jvh
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
 (def tilaajan-rakennuttajakonsultti    "tilaajan rakennuttajakonsultti")
+(def ely-rakennuttajakonsultti         "rakennuttajakonsultti")
 (def urakanvalvoja                     "urakanvalvoja") ;; UHA: uv
 ;;(def vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
 (def hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo") ;; UHA: vk
