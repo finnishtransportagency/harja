@@ -50,11 +50,12 @@
 
 (defn muunna-alustatoimenpiteiden-tieosoitteet [vkm db kohteen-tienumero karttapvm alustatoimenpiteet]
   (if karttapvm
-    (let [muunnettevat-alustatoimenpiteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
-                                                         (assoc alikohde
-                                                           :vkm-id (str "alustatoimenpide-" i)
-                                                           :sijainti (assoc sijainti :tie kohteen-tienumero)))
-                                                       alustatoimenpiteet)
+    (let [muunnettevat-alustatoimenpiteet (map-indexed
+                                            (fn [i {sijainti :sijainti :as alikohde}]
+                                              (assoc alikohde
+                                                :vkm-id (str "alustatoimenpide-" i)
+                                                :sijainti (assoc sijainti :tie (:tie sijainti))))
+                                            alustatoimenpiteet)
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
                                 muunnettevat-alustatoimenpiteet
