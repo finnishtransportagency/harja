@@ -262,10 +262,8 @@
             [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
      [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
                           {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
-     [:td.tasaa-oikealle (if toimenpiteelle?
-                           (::hinta/maara materiaali-hinta)
-                           [kentta-hinnalle e! materiaali-hinta ::hinta/maara
-                            {:tyyppi :positiivinen-numero}])]
+     [:td.tasaa-oikealle
+      [kentta-hinnalle e! materiaali-hinta ::hinta/maara {:tyyppi :positiivinen-numero}]]
      [:td (if toimenpiteelle?
             (::hinta/yksikko materiaali-hinta)
             [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
