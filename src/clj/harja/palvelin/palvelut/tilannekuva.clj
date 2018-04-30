@@ -111,7 +111,9 @@
         ;; Kasataan setti urakoita, joihin käyttäjällä on oikeus
         kayttajan-urakka-idt (cond
                                ;; Tilaajalla on oikeus kaikkiin urakoihin
-                               (roolit/tilaajan-kayttaja? user)
+                               (and (roolit/tilaajan-kayttaja? user)
+                                    (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
+                                    (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
                                (constantly true)
 
                                (roolit/urakoitsija? user)
@@ -144,7 +146,7 @@
                                    (set (map :id urakat))))
 
                                :else
-                               ;; Elylläiset näkevät oman hallintayksikkönsä urakat, joihin heille
+                               ;; Rakennuttajakonsultit näkevät oman hallintayksikkönsä urakat, joihin heille
                                ;; on merkitty lukuoikeus
                                (let [urakat (q/hallintayksikoiden-urakat db {:hallintayksikot [(get-in user [:organisaatio :id])]})]
                                  ;; Jos käyttäjällä on rooli, jolla on oman-urakan-ely oikeus..
@@ -575,7 +577,9 @@
                                             (fn [urakat]
                                               (filter
                                                 (fn [urakka]
-                                                  (if (roolit/tilaajan-kayttaja? user)
+                                                  (if (and (roolit/tilaajan-kayttaja? user)
+                                                           (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
+                                                           (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
                                                     ;; Tilaajalla on oikeus kaikkiin urakoihin..
                                                     true
 

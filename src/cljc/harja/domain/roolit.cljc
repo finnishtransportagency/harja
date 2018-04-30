@@ -16,6 +16,8 @@
 ;; Roolit kätevämpää käyttöä varten
 (def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo") ;; UHA: jvh
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
+(def tilaajan-rakennuttajakonsultti    "tilaajan rakennuttajakonsultti")
+(def ely-rakennuttajakonsultti         "rakennuttajakonsultti")
 (def urakanvalvoja                     "urakanvalvoja") ;; UHA: uv
 ;;(def vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
 (def hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo") ;; UHA: vk
@@ -202,6 +204,12 @@ rooleista."
 (defn tilaajan-kayttaja?
   [kayttaja]
   (= :tilaaja (osapuoli kayttaja)))
+
+(defn liikenneviraston-kayttaja? [kayttaja]
+  (= "liikennevirasto" (get-in kayttaja [:organisaatio :tyyppi])))
+
+(defn ely-kayttaja? [kayttaja]
+  (= "hallintayksikko" (get-in kayttaja [:organisaatio :tyyppi])))
 
 (defn urakoitsija?
   [kayttaja]
