@@ -26,7 +26,8 @@
             [cljs-time.core :as t]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as tr])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]
@@ -245,19 +246,31 @@
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste skeema nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                raporttivienti]}]
+                                raporttivienti raporttiparametrit]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
       ;; Raporttiviennin napit (jos annettu optiona)
       (let [raporttivienti (or raporttivienti #{})
+            raporttiparametrit (or raporttiparametrit {})
+            _ (log "GRID raporttiparametrit: " (pr-str raporttiparametrit))
             excel-nappi (yleiset/tallenna-excel-nappi (k/excel-url :raportointi))
             pdf-nappi (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi))
             valitut-raportin-vientimuodot (sorted-set
                                             (when (raporttivienti :excel)
                                               excel-nappi)
                                             (when (raporttivienti :pdf)
-                                              pdf-nappi))]
+                                              pdf-nappi))
+            aseta-parametrit! (fn [id]
+                                (log "grid aseta parametrit kutsuttu, id: " (pr-str id) " raporttiparametrit" (pr-str raporttiparametrit))
+                                (let [input (-> js/document
+                                                (.getElementById id)
+                                                (aget "parametrit"))
+                                      parametrit raporttiparametrit]
+                                  (set! (.-value input)
+                                        (tr/clj->transit parametrit))
+                                  true)
+                                )]
 
         (if (not (empty? raporttivienti))
           [:span.raporttiviennit
@@ -272,7 +285,7 @@
                             {:type "submit"
                              :class (when (or (not= idx (- (count valitut-raportin-vientimuodot) 1))
                                               tallenna) "margin-rightia")
-                             :on-click #(log "lähetäpä pyyntö: " (pr-str id))}
+                             :on-click #(aseta-parametrit! id)}
                             ikoni " " teksti]])
                         valitut-raportin-vientimuodot)]))
       ;; Muokkaa nappi
@@ -636,14 +649,16 @@
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
   :voi-muokata-rivia?                   predikaattifunktio, jolla voidaan määrittää jolla voidaan määrittää kaikille
                                         riveille yhteinen sääntö milloin rivejä saa muokata
-  :raporttivienti                       Setti mitä raporttivientejä gridistä mahdollistetaan. Tuetut: :pdf ja :excel"
+  :raporttivienti                       Setti mitä raporttivientejä gridistä mahdollistetaan. Tuetut: :pdf ja :excel
+  :raporttiparametrit                   Mäpissä raporttiparametrit, usein esim. nimi ja aikaväli ja urakkatyyppi"
 
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota?
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
-           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia? raporttivienti] :as opts} skeema tiedot]
+           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
+           raporttivienti raporttiparametrit] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -984,7 +999,7 @@
                              :peruuta peruuta :otsikko otsikko
                              :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
-                             :raporttivienti raporttivienti
+                             :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
                              :validoi-fn validoi-fn})
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
@@ -1070,7 +1085,8 @@
                                 :peruuta peruuta :otsikko otsikko
                                 :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
-                                :validoi-fn validoi-fn :raporttivienti raporttivienti})])
+                                :validoi-fn validoi-fn
+                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit})])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
 
 ;; Yleisiä apureita gridiin

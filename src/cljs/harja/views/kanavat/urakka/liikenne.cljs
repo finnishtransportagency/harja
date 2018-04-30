@@ -21,6 +21,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
+            [harja.tiedot.raportit :as raporttitiedot]
             [harja.views.urakka.valinnat :as suodattimet]
 
             [harja.domain.kayttaja :as kayttaja]
@@ -32,7 +33,8 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
-            [harja.domain.kanavat.kohteenosa :as osa])
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.tiedot.raportit :as raportit])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -393,9 +395,70 @@
        "Kirjaa liikennetapahtuma"
        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
+(def liikennetapahtumat-sarakkeet
+  [{:otsikko "Aika"
+    :leveys 3
+    :nimi ::lt/aika
+    :fmt pvm/pvm-aika-opt}
+   {:otsikko "Kohde"
+    :leveys 3
+    :nimi ::lt/kohde
+    :fmt kohde/fmt-kohteen-nimi}
+   {:otsikko "Tyyppi"
+    :leveys 3
+    :nimi :toimenpide
+    :hae tiedot/toimenpide->str}
+   {:otsikko "Sil\u00ADlan ava\u00ADus"
+    :leveys 1
+    :nimi :sillan-avaus?
+    :hae tiedot/silta-avattu?
+    :fmt totuus-ikoni}
+   {:otsikko "Pal\u00ADvelu\u00ADmuoto"
+    :leveys 3
+    :nimi :palvelumuoto-ja-lkm
+    :hae tiedot/palvelumuoto->str}
+   {:otsikko "Suun\u00ADta"
+    :leveys 2
+    :nimi ::lt-alus/suunta
+    :fmt lt/suunta->str}
+   {:otsikko "Alus"
+    :leveys 3
+    :nimi ::lt-alus/nimi}
+   {:otsikko "Alus\u00ADlaji"
+    :leveys 2
+    :nimi ::lt-alus/laji
+    :fmt lt-alus/aluslaji->laji-str}
+   {:otsikko "Aluk\u00ADsia"
+    :leveys 1
+    :nimi ::lt-alus/lkm}
+   {:otsikko "Mat\u00ADkus\u00ADta\u00ADji\u00ADa"
+    :leveys 1
+    :nimi ::lt-alus/matkustajalkm}
+   {:otsikko "Nip\u00ADpu\u00ADja"
+    :leveys 1
+    :nimi ::lt-alus/nippulkm}
+   {:otsikko "Ylä\u00ADvesi"
+    :leveys 2
+    :nimi ::lt/vesipinta-ylaraja}
+   {:otsikko "Ala\u00ADvesi"
+    :leveys 2
+    :nimi ::lt/vesipinta-alaraja}
+   {:otsikko "Lisä\u00ADtiedot"
+    :leveys 5
+    :nimi ::lt/lisatieto}
+   {:otsikko "Kuit\u00ADtaaja"
+    :leveys 3
+    :nimi ::lt/kuittaaja
+    :fmt kayttaja/kayttaja->str}])
+
+(defn- arvot-raportille [rivit avaimet]
+  )
+
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
+(log "liikennetapahtumataulukko app :valinnat " (pr-str (:valinnat app)))
+  (log "liikennetapahtumataulukko tapahtumarivit" (pr-str tapahtumarivit))
   [:div
    [debug app]
    [valinnat e! app kohteet]
@@ -409,61 +472,18 @@
      :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")
-     :raporttivienti #{:excel :pdf}}
-    [{:otsikko "Aika"
-      :leveys 3
-      :nimi ::lt/aika
-      :fmt pvm/pvm-aika-opt}
-     {:otsikko "Kohde"
-      :leveys 3
-      :nimi ::lt/kohde
-      :fmt kohde/fmt-kohteen-nimi}
-     {:otsikko "Tyyppi"
-      :leveys 3
-      :nimi :toimenpide
-      :hae tiedot/toimenpide->str}
-     {:otsikko "Sil\u00ADlan ava\u00ADus"
-      :leveys 1
-      :nimi :sillan-avaus?
-      :hae tiedot/silta-avattu?
-      :fmt totuus-ikoni}
-     {:otsikko "Pal\u00ADvelu\u00ADmuoto"
-      :leveys 3
-      :nimi :palvelumuoto-ja-lkm
-      :hae tiedot/palvelumuoto->str}
-     {:otsikko "Suun\u00ADta"
-      :leveys 2
-      :nimi ::lt-alus/suunta
-      :fmt lt/suunta->str}
-     {:otsikko "Alus"
-      :leveys 3
-      :nimi ::lt-alus/nimi}
-     {:otsikko "Alus\u00ADlaji"
-      :leveys 2
-      :nimi ::lt-alus/laji
-      :fmt lt-alus/aluslaji->laji-str}
-     {:otsikko "Aluk\u00ADsia"
-      :leveys 1
-      :nimi ::lt-alus/lkm}
-     {:otsikko "Mat\u00ADkus\u00ADta\u00ADji\u00ADa"
-      :leveys 1
-      :nimi ::lt-alus/matkustajalkm}
-     {:otsikko "Nip\u00ADpu\u00ADja"
-      :leveys 1
-      :nimi ::lt-alus/nippulkm}
-     {:otsikko "Ylä\u00ADvesi"
-      :leveys 2
-      :nimi ::lt/vesipinta-ylaraja}
-     {:otsikko "Ala\u00ADvesi"
-      :leveys 2
-      :nimi ::lt/vesipinta-alaraja}
-     {:otsikko "Lisä\u00ADtiedot"
-      :leveys 5
-      :nimi ::lt/lisatieto}
-     {:otsikko "Kuit\u00ADtaaja"
-      :leveys 3
-      :nimi ::lt/kuittaaja
-      :fmt kayttaja/kayttaja->str}]
+     :raporttivienti #{:excel :pdf}
+     :raporttiparametrit (raporttitiedot/urakkaraportin-parametrit
+                           (some #(when (:valittu? %) (:id %)) (get-in app [:valinnat :kayttajan-urakat]))
+                           :kanavien-liikennetapahtumat
+                           {:alkupvm (first (get-in app [:valinnat :aikavali]))
+                            :loppupvm (second (get-in app [:valinnat :aikavali]))
+                            :urakoiden-nimet (map :nimi (get-in app [:valinnat :kayttajan-urakat]))
+                            :urakkatyyppi :vesivayla-kanavien-hoito
+                            :sarakkeet (map #(select-keys % [:otsikko :leveys])
+                                            liikennetapahtumat-sarakkeet)
+                            :rivit (arvot-raportille (tiedot/jarjesta-tapahtumat tapahtumarivit))})}
+    liikennetapahtumat-sarakkeet
     (tiedot/jarjesta-tapahtumat tapahtumarivit)]])
 
 (defn liikenne* [e! app valinnat]
