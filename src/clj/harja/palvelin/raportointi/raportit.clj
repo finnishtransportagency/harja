@@ -312,7 +312,6 @@
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
 
    {:nimi :kanavien-liikennetapahtumat
-    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{}
     :kuvaus "Liikennetapahtumat"
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita

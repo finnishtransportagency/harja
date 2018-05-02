@@ -245,49 +245,69 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
-                                peruuta otsikko validoi-fn tunniste skeema nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                raporttivienti raporttiparametrit]}]
+                                peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                                raporttivienti raporttiparametrit]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
       ;; Raporttiviennin napit (jos annettu optiona)
-      (let [raporttivienti (or raporttivienti #{})
-            raporttiparametrit (or raporttiparametrit {})
-            _ (log "GRID raporttiparametrit: " (pr-str raporttiparametrit))
-            excel-nappi (yleiset/tallenna-excel-nappi (k/excel-url :raportointi))
-            pdf-nappi (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi))
-            valitut-raportin-vientimuodot (sorted-set
-                                            (when (raporttivienti :excel)
-                                              excel-nappi)
-                                            (when (raporttivienti :pdf)
-                                              pdf-nappi))
-            aseta-parametrit! (fn [id]
-                                (log "grid aseta parametrit kutsuttu, id: " (pr-str id) " raporttiparametrit" (pr-str raporttiparametrit))
-                                (let [input (-> js/document
-                                                (.getElementById id)
-                                                (aget "parametrit"))
-                                      parametrit raporttiparametrit]
-                                  (set! (.-value input)
-                                        (tr/clj->transit parametrit))
-                                  true)
-                                )]
+      (when raporttivienti
+        (assert (or (raporttivienti :pdf) (raporttivienti :excel))
+                "Anna setissä tuettuja formaatteja: :pdf ja :excel")
+        (assert raporttiparametrit "Anna myös raporttiparametrit.")
+        (let [raporttiparametrit (or raporttiparametrit {})
+              otsikot-ja-leveydet (mapv
+                                    #(select-keys % [:otsikko :leveys])
+                                    skeema)
+              rivit-raportille (mapv (fn [tietorivi]
+                                       (for [sarake skeema
+                                             :let [arvo (if (:hae sarake)
+                                                          ((:hae sarake) tietorivi)
+                                                          ((:nimi sarake) tietorivi))
+                                                   fmt (:fmt sarake)
+                                                   arvo (if fmt
+                                                          (fmt arvo)
+                                                          arvo)]]
+                                         arvo))
+                                     tiedot)
+              raporttiparametrit (assoc raporttiparametrit
+                                   :parametrit
+                                   (merge raporttiparametrit
+                                          {:sarakkeet otsikot-ja-leveydet
+                                           :rivit rivit-raportille}))
+              excel-nappi (yleiset/tallenna-excel-nappi (k/excel-url :raportointi))
+              pdf-nappi (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi))
+              valitut-raportin-vientimuodot (sorted-set
+                                              (when (raporttivienti :excel)
+                                                excel-nappi)
+                                              (when (raporttivienti :pdf)
+                                                pdf-nappi))
+              aseta-parametrit! (fn [id]
+                                  (log "grid aseta parametrit kutsuttu, id: " (pr-str id) " raporttiparametrit" (pr-str raporttiparametrit))
+                                  (let [input (-> js/document
+                                                  (.getElementById id)
+                                                  (aget "parametrit"))
+                                        parametrit raporttiparametrit]
+                                    (set! (.-value input)
+                                          (tr/clj->transit parametrit))
+                                    true))]
 
-        (if (not (empty? raporttivienti))
-          [:span.raporttiviennit
-           (map-indexed (fn [idx [ikoni teksti id url]]
-                          ^{:key (str id nayta-otsikko?)}
-                          [:form {:target "_blank" :method "POST" :id id
-                                  :style {:display "inline"}
-                                  :action url}
-                           [:input {:type "hidden" :name "parametrit"
-                                    :value ""}]
-                           [:button.nappi-ensisijainen
-                            {:type "submit"
-                             :class (when (or (not= idx (- (count valitut-raportin-vientimuodot) 1))
-                                              tallenna) "margin-rightia")
-                             :on-click #(aseta-parametrit! id)}
-                            ikoni " " teksti]])
-                        valitut-raportin-vientimuodot)]))
+          (if (not (empty? raporttivienti))
+            [:span.raporttiviennit
+             (map-indexed (fn [idx [ikoni teksti id url]]
+                            ^{:key (str id nayta-otsikko?)}
+                            [:form {:target "_blank" :method "POST" :id id
+                                    :style {:display "inline"}
+                                    :action url}
+                             [:input {:type "hidden" :name "parametrit"
+                                      :value ""}]
+                             [:button.nappi-ensisijainen
+                              {:type "submit"
+                               :class (when (or (not= idx (- (count valitut-raportin-vientimuodot) 1))
+                                                tallenna) "margin-rightia")
+                               :on-click #(aseta-parametrit! id)}
+                              ikoni " " teksti]])
+                          valitut-raportin-vientimuodot)])))
       ;; Muokkaa nappi
       (let [muokkaa-nappi [:button.nappi-ensisijainen
                            {:disabled (or (= :ei-mahdollinen tallenna)
@@ -1000,7 +1020,9 @@
                              :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
-                             :validoi-fn validoi-fn})
+                             :validoi-fn validoi-fn}
+                            skeema
+                            tiedot)
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
@@ -1086,7 +1108,9 @@
                                 :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn
-                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit})])
+                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit}
+                               skeema
+                               tiedot)])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
 
 ;; Yleisiä apureita gridiin

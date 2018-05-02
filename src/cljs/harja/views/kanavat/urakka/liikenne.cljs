@@ -451,14 +451,10 @@
     :nimi ::lt/kuittaaja
     :fmt kayttaja/kayttaja->str}])
 
-(defn- arvot-raportille [rivit avaimet]
-  )
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
-(log "liikennetapahtumataulukko app :valinnat " (pr-str (:valinnat app)))
-  (log "liikennetapahtumataulukko tapahtumarivit" (pr-str tapahtumarivit))
   [:div
    [debug app]
    [valinnat e! app kohteet]
@@ -479,10 +475,7 @@
                            {:alkupvm (first (get-in app [:valinnat :aikavali]))
                             :loppupvm (second (get-in app [:valinnat :aikavali]))
                             :urakoiden-nimet (map :nimi (get-in app [:valinnat :kayttajan-urakat]))
-                            :urakkatyyppi :vesivayla-kanavien-hoito
-                            :sarakkeet (map #(select-keys % [:otsikko :leveys])
-                                            liikennetapahtumat-sarakkeet)
-                            :rivit (arvot-raportille (tiedot/jarjesta-tapahtumat tapahtumarivit))})}
+                            :urakkatyyppi :vesivayla-kanavien-hoito})}
     liikennetapahtumat-sarakkeet
     (tiedot/jarjesta-tapahtumat tapahtumarivit)]])
 
