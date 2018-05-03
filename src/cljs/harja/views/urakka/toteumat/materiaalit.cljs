@@ -33,7 +33,9 @@
   (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
                sopimusnumero (first @u/valittu-sopimusnumero)
                [alku loppu] @valittu-aikavali
-               ur @nav/valittu-urakka]
+               ur @nav/valittu-urakka
+               _ @u/valittu-hoitokauden-kuukausi
+               _ @u/valittu-hoitokausi]
               {:nil-kun-haku-kaynnissa? true}
               (when (and nakymassa? sopimusnumero alku loppu ur)
                 (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit
