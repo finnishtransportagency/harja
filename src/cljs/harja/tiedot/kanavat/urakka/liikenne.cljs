@@ -169,7 +169,9 @@
                :kanavien-liikennetapahtumat
                {:alkupvm (first (:aikavali (:valinnat app)))
                 :loppupvm (second (:aikavali (:valinnat app)))
-                :urakoiden-nimet (map :nimi (:kayttajan-urakat (:valinnat app)))
+                :urakoiden-nimet (keep #(when (:valittu? %)
+                                            (:nimi %))
+                                         (:kayttajan-urakat (:valinnat app)))
                 :urakkatyyppi :vesivayla-kanavien-hoito}))))
 
 (defn tallennusparametrit [t]
