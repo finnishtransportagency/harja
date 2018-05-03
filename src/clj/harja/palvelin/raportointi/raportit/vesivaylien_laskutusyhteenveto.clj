@@ -37,13 +37,15 @@
    (:summa tiedot)
    ""])
 
-(defn- yks-hint-hinnoittelurivit [tiedot vaylatyyppi]
-  (mapv yks-hint-hinnoittelurivi (filter #((:vaylatyyppi %) vaylatyyppi) tiedot)))
+(defn- yks-hint-hinnoittelurivit [tiedot pred]
+  (mapv yks-hint-hinnoittelurivi (filter pred tiedot)))
 
 (defn yhdista-yks-hint-rivit
   [hintaryhmat omat-hinnoittelut]
-  (let [omat-hinnoittelut-kauppamerenkulku (filter #((:vaylatyyppi %) "kauppamerenkulku") omat-hinnoittelut)
-        omat-hinnoittelut-muu-vesi (filter #((:vaylatyyppi %) "muu") omat-hinnoittelut)
+  (let [omat-hinnoittelut-kauppamerenkulku (filter #(= (:vaylatyyppi %) #{"kauppamerenkulku"}) omat-hinnoittelut)
+        omat-hinnoittelut-muu-vesi (filter #(= (:vaylatyyppi %) #{"muu"}) omat-hinnoittelut)
+        omat-hinnoittelut-molemmat (filter #(or (empty? (:vaylatyyppi %))
+                                                (= (:vaylatyyppi %) #{"muu" "kauppamerenkulku"})) omat-hinnoittelut)
         vaylatyypin-omat-hinnoittelut-summattuna (fn [hinnoittelut]
                                                    {:hinnoittelu "Yksittäiset toimenpiteet ilman tilausta"
                                                     :summa (->> hinnoittelut
@@ -55,7 +57,9 @@
                    (when-not (empty? omat-hinnoittelut-kauppamerenkulku)
                      [(vaylatyypin-omat-hinnoittelut-summattuna omat-hinnoittelut-kauppamerenkulku)])
                    (when-not (empty? omat-hinnoittelut-muu-vesi)
-                     [(vaylatyypin-omat-hinnoittelut-summattuna omat-hinnoittelut-muu-vesi)])))))
+                     [(vaylatyypin-omat-hinnoittelut-summattuna omat-hinnoittelut-muu-vesi)])
+                   (when-not (empty? omat-hinnoittelut-molemmat)
+                     [(vaylatyypin-omat-hinnoittelut-summattuna omat-hinnoittelut-molemmat)])))))
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   (let [hintaryhmat (into []
@@ -72,19 +76,21 @@
                                   db
                                   {:urakkaid urakka-id
                                    :alkupvm alkupvm
-                                   :loppupvm loppupvm}))]
-    {:yksikkohintaiset (yhdista-yks-hint-rivit hintaryhmat omat-hinnoittelut)
-     :kokonaishintaiset {:kauppamerenkulku
-                         (first (hae-kokonaishintaiset-toimenpiteet db
-                                                                    {:urakkaid urakka-id
+                                   :loppupvm loppupvm}))
+        kauppamerenkulku-kok (hae-kokonaishintaiset-toimenpiteet db
+                                                                 {:urakkaid urakka-id
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm
+                                                                  :vaylatyyppi "kauppamerenkulku"})
+        muu-vesiliikenne-kok (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                      :alkupvm alkupvm
                                                                      :loppupvm loppupvm
-                                                                     :vaylatyyppi "kauppamerenkulku"}))
+                                                                     :vaylatyyppi "muu"})]
+    {:yksikkohintaiset (yhdista-yks-hint-rivit hintaryhmat omat-hinnoittelut)
+     :kokonaishintaiset {:kauppamerenkulku
+                         (first kauppamerenkulku-kok)
                          :muu
-                         (first (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
-                                                                        :alkupvm alkupvm
-                                                                        :loppupvm loppupvm
-                                                                        :vaylatyyppi "muu"}))}
+                         (first muu-vesiliikenne-kok)}
      :sanktiot (:summa (first (hae-sanktiot db {:urakkaid urakka-id
                                                 :alkupvm alkupvm
                                                 :loppupvm loppupvm})))
@@ -94,11 +100,14 @@
 
 
 
-(defn- vaylatyypin-summa [tiedot vaylatyyppi]
-  (reduce + 0
-          (concat
-            (map :summa (filter #((:vaylatyyppi %) vaylatyyppi) (:yksikkohintaiset tiedot)))
-            [(:toteutunut-maara ((keyword vaylatyyppi) (:kokonaishintaiset tiedot)))])))
+(defn- vaylatyypin-summa
+  ([tiedot vaylatyyppi]
+   (vaylatyypin-summa tiedot #((:vaylatyyppi %) vaylatyyppi) vaylatyyppi))
+  ([tiedot pred vaylatyyppi]
+   (reduce + 0
+           (concat
+             (map :summa (filter pred (:yksikkohintaiset tiedot)))
+             (when vaylatyyppi [(:toteutunut-maara ((keyword vaylatyyppi) (:kokonaishintaiset tiedot)))])))))
 
 (defn- hinnoittelu-yhteensa-rivi [summa]
   ["Yhteensä" "" summa ""])
@@ -107,8 +116,10 @@
   [otsikko summa])
 
 (defn- kaikki-yhteensa-rivit [tiedot]
-  [(kaikki-yhteensa-rivi "Toimenpiteet" (+ (vaylatyypin-summa tiedot "kauppamerenkulku")
-                                           (vaylatyypin-summa tiedot "muu")))
+  [(kaikki-yhteensa-rivi "Toimenpiteet" (+ (vaylatyypin-summa tiedot #(= (:vaylatyyppi %) #{"kauppamerenkulku"}) "kauppamerenkulku")
+                                           (vaylatyypin-summa tiedot #(= (:vaylatyyppi %) #{"muu"}) "muu")
+                                           (vaylatyypin-summa tiedot #(or (empty? (:vaylatyyppi %))
+                                                                          (= (:vaylatyyppi %) #{"muu" "kauppamerenkulku"})) nil)))
    (kaikki-yhteensa-rivi "Sanktiot" (:sanktiot tiedot))
    (kaikki-yhteensa-rivi "Erilliskustannukset" (:erilliskustannukset tiedot))
    (kaikki-yhteensa-rivi "Kaikki yhteensä"
@@ -146,18 +157,10 @@
 
         ;; Summaillaan ja liitetään eri urakoiden tiedot yhteen
         yksikkohintaiset (apply concat (reduce conj [] (keep #(:yksikkohintaiset %) urakoiden-tiedot)))
-        kokonaishintaiset (reduce (fn [kokonaishintaiset jotain]
-                                    (let [{{suunniteltu-maara-k :suunniteltu-maara
-                                            toteutunut-maara-k :toteutunut-maara}
-                                           :kauppamerenkulku
-                                           {suunniteltu-maara-muu :suunniteltu-maara
-                                            toteutunut-maara-muu :toteutunut-maara}
-                                           :muu} kokonaishintaiset]
-
-                                      {:kauppamerenkulku {:suunniteltu-maara suunniteltu-maara-k
-                                                          :toteutunut-maara toteutunut-maara-k}
-                                       :muu {:suunniteltu-maara suunniteltu-maara-muu
-                                             :toteutunut-maara toteutunut-maara-muu}}))
+        kokonaishintaiset (reduce (fn [a b]
+                                    (merge-with
+                                      (partial merge-with +)
+                                      a b))
                                   {:kauppamerenkulku {:suunniteltu-maara 0M
                                                       :toteutunut-maara 0M}
                                    :muu {:suunniteltu-maara 0M
@@ -183,9 +186,9 @@
                                                      (:kauppamerenkulku (:kokonaishintaiset raportin-tiedot)))
                    kauppamerenkulku-yks-hint-rivit (yks-hint-hinnoittelurivit
                                                      (:yksikkohintaiset raportin-tiedot)
-                                                     "kauppamerenkulku")
+                                                     #(= (:vaylatyyppi %) #{"kauppamerenkulku"}))
                    kauppamerenkulku-yht-rivit (hinnoittelu-yhteensa-rivi
-                                                (vaylatyypin-summa raportin-tiedot "kauppamerenkulku"))]
+                                                (vaylatyypin-summa raportin-tiedot #(= (:vaylatyyppi %) #{"kauppamerenkulku"}) "kauppamerenkulku"))]
                [:taulukko {:otsikko "Kauppamerenkulku"
                            :tyhja (if (empty? kauppamerenkulku-kok-hint-rivit) "Ei raportoitavaa.")
                            :sheet-nimi raportin-nimi
@@ -199,9 +202,9 @@
                                              (:muu (:kokonaishintaiset raportin-tiedot)))
                    muu-vesi-yks-hint-rivit (yks-hint-hinnoittelurivit
                                              (:yksikkohintaiset raportin-tiedot)
-                                             "muu")
+                                             #(= (:vaylatyyppi %) #{"muu"}))
                    muu-vesi-yht-rivit (hinnoittelu-yhteensa-rivi
-                                        (vaylatyypin-summa raportin-tiedot "muu"))]
+                                        (vaylatyypin-summa raportin-tiedot #(= (:vaylatyyppi %) #{"muu"}) "muu"))]
                [:taulukko {:otsikko "Muu vesiliikenne"
                            :tyhja (if (empty? muu-vesi-yht-rivit) "Ei raportoitavaa.")
                            :sheet-nimi raportin-nimi
@@ -210,6 +213,23 @@
                 (concat muu-vesi-kok-hint-rivit
                         muu-vesi-yks-hint-rivit
                         [muu-vesi-yht-rivit])])
+
+             ;; Joihinkin tilauksiin voi kuulua toimenpiteitä molemmista väylätyypeistä
+             (let [molemmat-yks-hint-rivit (yks-hint-hinnoittelurivit
+                                             (:yksikkohintaiset raportin-tiedot)
+                                             #(or (empty? (:vaylatyyppi %))
+                                                  (= (:vaylatyyppi %) #{"kauppamerenkulku" "muu"})))
+                   molemmat-summa (vaylatyypin-summa raportin-tiedot #(or (empty? (:vaylatyyppi %))
+                                                                          (= (:vaylatyyppi %) #{"kauppamerenkulku" "muu"})) nil)
+                   molemmat-yht-rivit (hinnoittelu-yhteensa-rivi molemmat-summa)]
+               (when-not (= 0M molemmat-summa)
+                 [:taulukko {:otsikko "Molemmat väylätyypit, tai ei väylätyyppiä"
+                             :tyhja (if (empty? molemmat-yht-rivit) "Ei raportoitavaa.")
+                             :sheet-nimi raportin-nimi
+                             :viimeinen-rivi-yhteenveto? true}
+                  hinnoittelusarakkeet
+                  (concat molemmat-yks-hint-rivit
+                          [molemmat-yht-rivit])]))
 
              (let [kaikki-yht-rivit (kaikki-yhteensa-rivit raportin-tiedot)]
                [:taulukko {:otsikko "Yhteenveto"

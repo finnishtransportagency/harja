@@ -43,13 +43,13 @@
   (let [osoite (or osoite {})
         ks (fn [& avaimet]
              (some osoite avaimet))]
-    {tie-avain (ks ::tie :numero :tr-numero :tie)
-     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :aosa)
-     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
-     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :losa)
-     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)
-     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata)
-     kaista-avain (ks ::kaista :kaista)}))
+    {tie-avain (ks ::tie :numero :tr-numero :tr_numero :tie)
+     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :tr_alkuosa :aosa)
+     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :tr_alkuetaisyys :aet)
+     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :tr_loppuosa :losa)
+     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :tr_loppuetaisyys :let)
+     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata :tr-ajorata :tr_ajorata)
+     kaista-avain (ks ::kaista :kaista :tr-kaista :tr_kaista)}))
 
 (defn normalisoi
   "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
@@ -178,16 +178,6 @@
            (>= etaisyys 0)))
     false))
 
-(defn kohdeosa-kohteen-sisalla? [kohde kohdeosa]
-  (and
-    (number? (:tienumero kohde))
-    (number? (:tienumero kohdeosa))
-    (= (:tienumero kohdeosa) (:tienumero kohde))
-    (>= (:aosa kohdeosa) (:aosa kohde))
-    (>= (:aet kohdeosa) (:aet kohde))
-    (<= (:losa kohdeosa) (:losa kohde))
-    (<= (:let kohdeosa) (:let kohde))))
-
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
@@ -201,7 +191,7 @@
                     (if (nil? (:teksti-tie? optiot))
                       sana
                       (when (:teksti-tie? optiot) sana)))
-         tie (or (:numero tr) (:tr-numero tr) (:tie tr) (::tie tr))
+         tie (or (:numero tr) (:tienumero tr) (:tr-numero tr) (:tie tr) (::tie tr))
          alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr) (::aosa tr))
          alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr) (::aet tr))
          loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr) (::losa tr))
@@ -260,7 +250,10 @@
     ;; Palautetaan korjattu tr-osoite. Jos mapissa oli muita avaimia, ne saa jäädä
     (merge tr-osoite kasvava-osoite)))
 
-(defn tr-vali-paakohteen-sisalla? [paakohde alikohde]
+(defn tr-vali-paakohteen-sisalla?
+  "Tarkistaa, että alikohde on kokonaisuudessaan pääkohteen sisällä.
+   Olettaa, että molemmat osoitteet ovat samalla tiellä."
+  [paakohde alikohde]
   (let [{paa-alkuosa :tr-alkuosa
          paa-alkuetaisyys :tr-alkuetaisyys
          paa-loppuosa :tr-loppuosa
@@ -373,6 +366,59 @@
             :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
          ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
+
+(defn alikohteet-tayttamaan-kutistunut-paakohde
+  "Ottaa pääkohteen ja sen SAMAN TIEN alikohteet. Muokkaa alikohteita seuraavasti:
+   mikäli jokin alikohde on pidempi kuin pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
+
+   Palauttaa korjatut kohteet."
+  ([paakohde alikohteet]
+   (assert (every? #(or (nil? %)
+                        (= % (:tr-numero paakohde)))
+                   (keep :tr-numero alikohteet))
+           (str "Kaikki alikohteet tulee olla samalla tiellä! Kohteen tie: " (:tr-numero paakohde) " ja alikohteiden tiet: " (vec (keep :tr-numero alikohteet))))
+   (cond
+     (empty? alikohteet)
+     []
+
+     (pistemainen? paakohde)
+     ;; Tunkataan ensimmäinen alikohde pistemäiseksi.
+     ;; Mikäli alikohteita on ollut useita, niin muiden tiedot häviää.
+     ;; Tälle ei oikein voi mitään, mikäli pätkäkohde muokataan pistemäiseksi
+     [(assoc (first alikohteet)
+        :tr-alkuosa (:tr-alkuosa paakohde)
+        :tr-alkuetaisyys (:tr-alkuetaisyys paakohde)
+        :tr-loppuosa (:tr-loppuosa paakohde)
+        :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
+
+     ;;  Oletuskeissi, jossa pääkohde on reitillinen. Muokkaus tehdään seuraavasti:
+     ;; - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
+     ;; - Tämän jälkeen varmistetaan, että jokainen alikohde on pääkohteen sisällä. Mikäli menee jommasta
+     ;; kummasta päästä yli, kutistetaan kohteen sisälle.
+     :default
+     (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
+           alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
+           alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
+           leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)]
+
+       (map (fn [alikohde]
+              (cond-> alikohde
+                      (< (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                      (assoc :tr-alkuosa (:tr-alkuosa paakohde)
+                             :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+
+                      (and (= (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                           (< (:tr-alkuetaisyys alikohde) (:tr-alkuetaisyys paakohde)))
+                      (assoc :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+
+                      (> (:tr-loppuosa alikohde) (:tr-loppuosa paakohde))
+                      (assoc :tr-loppuosa (:tr-loppuosa paakohde)
+                             :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
+
+                      (and (= (:tr-loppuosa alikohde) (:tr-loppuosa paakohde))
+                           (> (:tr-loppuetaisyys alikohde) (:tr-loppuetaisyys paakohde)))
+                      (assoc :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))))
+            leikkaavat-alikohteet)))))
 
 (defn tieosilla-maantieteellinen-jatkumo?
   "Palauttaa true, mikäli kahdella tieosalla on maantieteellinen jatkumo.

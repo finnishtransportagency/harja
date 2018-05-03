@@ -61,64 +61,70 @@
 (defn aikavali []
   (valinnat/aikavali u/valittu-aikavali))
 
-(defn- aikavali-nyt-miinus [paivia]
-  (let [nyt (pvm/nyt)]
-    [(t/minus nyt (t/days paivia)) nyt]))
-
-(def aikavali-valinnat [["Edellinen viikko" #(aikavali-nyt-miinus 7)]
-                        ["Edelliset 2 viikkoa" #(aikavali-nyt-miinus 14)]
-                        ["Edelliset 3 viikkoa" #(aikavali-nyt-miinus 21)]
+(def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
+                        ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
+                        ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]
                         ["Valittu aikaväli" nil]])
 
 (defn aikavali-nykypvm-taakse
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
-  [urakka valittu-aikavali]
-  (let [[valittu-aikavali-alku valittu-aikavali-loppu
-         :as valittu-aikavali-nyt] @valittu-aikavali
+  ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
+  ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?] :as optiot}]
+   (let [[valittu-aikavali-alku valittu-aikavali-loppu
+          :as valittu-aikavali-nyt] @valittu-aikavali
+         vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
+                                              vaihda-filtteri-urakan-paattyessa?
+                                              true)
+         alkuvalinta (or
+                       (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
+                       (and valittu-aikavali-alku
+                            valittu-aikavali-loppu
+                            (some (fn [[nimi aikavali-fn :as valinta]]
+                                    (when aikavali-fn
+                                      (let [[alku loppu] (aikavali-fn)]
+                                        (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
+                                                   (pvm/sama-pvm? loppu valittu-aikavali-loppu))
+                                          valinta)))) aikavali-valinnat))
+                       (last aikavali-valinnat))
+         [_ aikavali-fn] alkuvalinta
+         valinta (r/atom alkuvalinta)
+         vapaa-aikavali? (r/atom false)
+         valitse (fn [urakka v]
+                   (when (u/urakka-kaynnissa? urakka)
+                     (reset! valinta v)
+                     (if-let [aikavali-fn (second v)]
+                       ;; Esiasetettu laskettava aikaväli
+                       (do
+                         (reset! vapaa-aikavali? false)
+                         (reset! valittu-aikavali (aikavali-fn)))
+                       ;; Käyttäjä haluaa asettaa itse aikavälin
+                       (reset! vapaa-aikavali? true))))]
 
-        alkuvalinta (or
-                      (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
-                      (and valittu-aikavali-alku
-                           valittu-aikavali-loppu
-                           (some (fn [[nimi aikavali-fn :as valinta]]
-                                   (when aikavali-fn
-                                     (let [[alku loppu] (aikavali-fn)]
-                                       (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
-                                                  (pvm/sama-pvm? loppu valittu-aikavali-loppu))
-                                         valinta)))) aikavali-valinnat))
-                      (last aikavali-valinnat))
-        [_ aikavali-fn] alkuvalinta
-        valinta (r/atom alkuvalinta)
-        vapaa-aikavali? (r/atom false)
-        valitse (fn [urakka v]
-                  (when (u/urakka-kaynnissa? urakka)
-                    (reset! valinta v)
-                    (if-let [aikavali-fn (second v)]
-                      ;; Esiasetettu laskettava aikaväli
-                      (do
-                        (reset! vapaa-aikavali? false)
-                        (reset! valittu-aikavali (aikavali-fn)))
-                      ;; Käyttäjä haluaa asettaa itse aikavälin
-                      (reset! vapaa-aikavali? true))))]
-    (valitse urakka alkuvalinta)
-    (komp/luo
-      (komp/kun-muuttuu
-        (fn [urakka _]
-          (valitse urakka @valinta)))
+     (valitse urakka alkuvalinta)
+     (komp/luo
+         (komp/kun-muuttuu
+           (fn [urakka _]
+             (valitse urakka @valinta)))
 
-      (fn [urakka valittu-aikavali]
-        (if-not (u/urakka-kaynnissa? urakka)
-          [urakan-hoitokausi-ja-kuukausi urakka]
-          [:span.aikavali-nykypvm-taakse
-           [:div.label-ja-alasveto
-            [:span.alasvedon-otsikko "Aikaväli"]
-            [livi-pudotusvalikko {:valinta @valinta
-                                  :format-fn first
-                                  :valitse-fn (partial valitse urakka)}
-             aikavali-valinnat]]
-           (when @vapaa-aikavali?
-             [valinnat/aikavali valittu-aikavali])])))))
+       (fn [urakka valittu-aikavali]
+         (when-not (u/urakka-kaynnissa? urakka)
+           (reset! valittu-aikavali
+                   (or @u/valittu-hoitokauden-kuukausi
+                       @u/valittu-hoitokausi)))
+         (if-not (u/urakka-kaynnissa? urakka)
+           (if vaihda-filtteri-urakan-paattyessa?
+             [urakan-hoitokausi-ja-kuukausi urakka]
+             [valinnat/aikavali valittu-aikavali {:otsikko (or otsikko "Aikaväli")}])
+           [:span.aikavali-nykypvm-taakse
+            [:div.label-ja-alasveto
+             [:span.alasvedon-otsikko (or otsikko "Aikaväli")]
+             [livi-pudotusvalikko {:valinta @valinta
+                                   :format-fn first
+                                   :valitse-fn (partial valitse urakka)}
+              aikavali-valinnat]]
+            (when @vapaa-aikavali?
+              [valinnat/aikavali valittu-aikavali])]))))))
 
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))

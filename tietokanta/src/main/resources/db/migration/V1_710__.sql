@@ -1,0 +1,1 @@
+ALTER TABLE paikkaus ADD COLUMN sijainti geometry;

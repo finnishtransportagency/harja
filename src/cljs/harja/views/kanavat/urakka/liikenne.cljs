@@ -323,11 +323,7 @@
       valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! {{:keys [kayttajan-urakat]} :valinnat :as app} kohteet]
-  (let [aikavali-atomi (partial tiedot/valinta-wrap e! app)
-        kohde-atomi (partial tiedot/valinta-wrap e! app)
-        aluslaji-atomi (partial tiedot/valinta-wrap e! app)
-        toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)
-        aluksen-nimi-atomi (partial tiedot/valinta-wrap e! app)]
+  (let [atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
@@ -352,15 +348,15 @@
                             :on-change #(let [valittu? (-> % .-target .-checked)]
                                           (e! (tiedot/->UrakkaValittu urakka valittu?)))}]])
                 kayttajan-urakat)]]]
-       [valinnat/aikavali (aikavali-atomi :aikavali)]
+       [valinnat/aikavali (atomi :aikavali)]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Aluksen nimi"
          :kentta-params {:tyyppi :string}
-         :arvo-atom (aluksen-nimi-atomi ::lt-alus/nimi)}]]
+         :arvo-atom (atomi ::lt-alus/nimi)}]]
 
       [:div
        [valinnat/kanava-kohde
-        (kohde-atomi ::lt/kohde)
+        (atomi ::lt/kohde)
         (into [nil] kohteet)
         #(let [nimi (kohde/fmt-kohteen-nimi %)]
            (if-not (empty? nimi)
@@ -372,7 +368,7 @@
                          :palstoja 2
                          :vaihtoehdot lt-alus/aluslajit
                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-         :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]
+         :arvo-atom (atomi ::lt-alus/aluslajit)}]
        ]
       [:div
        [kentat/tee-otsikollinen-kentta
@@ -380,18 +376,18 @@
          :kentta-params {:tyyppi :valinta
                          :valinnat (into [nil] lt/suunta-vaihtoehdot)
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-         :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
+         :arvo-atom (atomi ::lt-alus/suunta)}]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Uittoniput"
          :kentta-params {:tyyppi :checkbox
                          :teksti "Näytä vain uittoniput"}
-         :arvo-atom (kohde-atomi :niput?)}]
+         :arvo-atom (atomi :niput?)}]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Toimenpidetyyppi"
          :kentta-params {:tyyppi :checkbox-group
                          :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
                          :vaihtoehto-nayta lt/sulku-toimenpide->str}
-         :arvo-atom (toimenpidetyyppi-atomi ::toiminto/toimenpiteet)}]]]
+         :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
        "Kirjaa liikennetapahtuma"

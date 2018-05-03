@@ -5,6 +5,7 @@
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.tilannekuva.tienakyma :as tienakyma]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
+            [harja.views.tieluvat.tieluvat :as tielupa-view]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
@@ -25,7 +26,9 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.ely :as ely]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu])
+            [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu]
+            [harja.ui.modal :as modal]
+            [harja.domain.tielupa :as tielupa])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]
                    [harja.tyokalut.ui :refer [for*]]))
@@ -256,6 +259,11 @@ suodatinryhmat
          [yksittainen-suodatincheckbox "Tietyöilmoitukset"
           tiedot/suodattimet [:tietyoilmoitukset tk/tietyoilmoitukset]
           auki-oleva-checkbox-ryhma])
+       (when
+         (harja.tiedot.istunto/ominaisuus-kaytossa? :tieluvat)
+         [yksittainen-suodatincheckbox "Tieluvat"
+          tiedot/suodattimet [:tieluvat tk/tieluvat]
+          auki-oleva-checkbox-ryhma])
        ]
       [:div {:class "tk-suodatinryhmat"}
        (for*
@@ -348,9 +356,18 @@ suodatinryhmat
 
     ;; Näytä vain, jos käyttäjällä oikeus urakan varustetoteumiin
     :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}
+
    :ilmoitus
-    {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
-     :teksti "Näytä kuittaukset"}})
+   {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
+    :teksti "Näytä kuittaukset"}
+
+   :tielupa
+   {:toiminto (fn [lupa]
+                (modal/nayta!
+                 {:otsikko (str (tielupa/tyyppi-fmt (::tielupa/tyyppi lupa)) " " (::tielupa/paatoksen-diaarinumero lupa))
+                  :luokka "tilannekuva-tielupa-modal"}
+                 [tielupa-view/tielupalomake (constantly lupa) {:valittu-tielupa lupa}]))
+    :teksti "Näytä tarkemmat tiedot"}})
 
 (defn tilannekuva []
   (komp/luo

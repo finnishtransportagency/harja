@@ -57,11 +57,7 @@
     "tyomenetelma": {
       "id": "urn:harja/paikkaukset/0/paikkaus/tyomenetelma",
       "required": true,
-      "enum": [
-        "massapintaus",
-        "kuumennuspintaus",
-        "remix-pintaus"
-      ]
+      "type": "string"
     },
     "massatyyppi": {
       "id": "urn:harja/paikkaukset/0/paikkaus/massatyyppi",
@@ -89,11 +85,11 @@
       "enum": [
         "AN5",
         "AN7",
-        "N10",
-        "N14",
-        "N19",
-        "N30",
-        "N22"
+        "AN10",
+        "AN14",
+        "AN19",
+        "AN30",
+        "AN22"
       ]
     },
     "kivi-ja-sideaineet": {

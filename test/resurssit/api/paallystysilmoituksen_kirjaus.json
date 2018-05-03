@@ -21,8 +21,8 @@
       "sijainti": {
         "aosa": 1,
         "aet": 1,
-        "losa": 5,
-        "let": 16,
+        "losa": 3,
+        "let": 5,
         "ajr": 1,
         "kaista": 1
       },
@@ -34,8 +34,8 @@
             "sijainti": {
               "aosa": 1,
               "aet": 1,
-              "losa": 5,
-              "let": 16,
+              "losa": 2,
+              "let": 0,
               "ajr": 1,
               "kaista": 1
             },
@@ -47,7 +47,7 @@
             "leveys": 1.2,
             "kokonaismassamaara": 12.3,
             "pinta-ala": 2.2,
-            "kuulamylly": "N14",
+            "kuulamylly": "AN14",
             "kivi-ja-sideaineet": [
               {
                 "kivi-ja-sideaine": {
@@ -67,10 +67,10 @@
             "nimi": "2. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 5,
-              "aet": 16,
-              "losa": 5,
-              "let": 16,
+              "aosa": 2,
+              "aet": 0,
+              "losa": 3,
+              "let": 5,
               "ajr": 1,
               "kaista": 1
             },
@@ -82,7 +82,7 @@
             "leveys": 1.2,
             "kokonaismassamaara": 12.3,
             "pinta-ala": 2.2,
-            "kuulamylly": "N14",
+            "kuulamylly": "AN14",
             "kivi-ja-sideaineet": [
               {
                 "kivi-ja-sideaine": {
@@ -103,10 +103,11 @@
       {
         "alustatoimenpide": {
           "sijainti": {
+            "numero": 21,
             "aosa": 1,
             "aet": 1,
-            "losa": 5,
-            "let": 15
+            "losa": 3,
+            "let": 5
           },
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1,

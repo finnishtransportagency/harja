@@ -37,7 +37,10 @@
             [harja.tiedot.urakka.toteumat.suola :as suolatoteumat]
             [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kan-toimenpiteet-kartalla :as kan-toimenpiteet]
-            [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot])
+            [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot]
+            [harja.tiedot.urakka.paikkaukset-toteumat :as paikkaukset-toteumat]
+            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat])
+  
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -72,7 +75,9 @@
     :suolatoteumat
     :kan-kohteet
     :kan-toimenpiteet
-    :kan-hairiot})
+    :kan-hairiot
+    :paikkaukset-toteumat
+    :tieluvat})
 
 (def
   ^{:doc
@@ -240,7 +245,9 @@
    :kan-kohteet kan-kohteet/kohteet-kartalla
    :kan-toimenpiteet kan-toimenpiteet/toimenpiteet-kartalla
    :kan-hairiot kan-hairiot/hairiot-kartalla
-   :suolatoteumat suolatoteumat/suolatoteumat-kartalla})
+   :suolatoteumat suolatoteumat/suolatoteumat-kartalla
+   :paikkaukset-toteumat paikkaukset-toteumat/toteumat-kartalla
+   :tieluvat tieluvat/tieluvat-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -308,6 +315,8 @@
        :kan-toimenpiteet (taso :kan-toimenpiteet)
        :kan-hairiot (taso :kan-hairiot)
        :suolatoteumat (taso :suolatoteumat)
+       :paikkaukset-toteumat (taso :paikkaukset-toteumat)
+       :tieluvat (taso :tieluvat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -349,6 +358,8 @@
    :kan-toimenpiteet kan-toimenpiteet/karttataso-toimenpiteet-vapaassa-sijainnissa
    :kan-hairiot kan-hairiot/karttataso-hairiotilanteet-vapaassa-sijainnissa
    :suolatoteumat suolatoteumat/karttataso-suolatoteumat
+   :paikkaukset-toteumat paikkaukset-toteumat/taso-nakyvissa?
+   :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 

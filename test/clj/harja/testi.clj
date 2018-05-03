@@ -352,6 +352,8 @@
 (def muhoksen-paikkausurakan-id (atom nil))
 (def muhoksen-paikkausurakan-paasopimuksen-id (atom nil))
 
+(def yit-rakennus-id (atom nil))
+
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
@@ -470,29 +472,30 @@
   ([]
    (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla {}))
   ([{:keys [limit] :as optiot}]
-   (ffirst (q (str "SELECT id FROM reimari_toimenpide
+   (q (str "SELECT id FROM reimari_toimenpide
                     WHERE
                     \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
-                   (when limit
-                     (str " LIMIT " limit))
-                   ";")))))
+           (when limit
+             (str " LIMIT " limit))
+           ";"))))
 
 (defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla
   ([]
    (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {}))
   ([{:keys [hintaryhma?] :as optiot}]
-   (ffirst (q (str "SELECT id FROM reimari_toimenpide
+   (let [tulos (q (str "SELECT id FROM reimari_toimenpide
                     WHERE
                     \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND id IN (SELECT \"toimenpide-id\"
                                FROM vv_hinnoittelu_toimenpide AS ht
                                INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                                WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
-                               AND ht.\"toimenpide-id\" NOT IN (" (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla) ")"
-                   (when (some? hintaryhma?)
-                     (str " AND hintaryhma = " hintaryhma?))
-                   ") LIMIT 1;")))))
+                               AND ht.\"toimenpide-id\" NOT IN (" (str/join ", " (mapv first (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla))) ")"
+                 (when (some? hintaryhma?)
+                   (str " AND hintaryhma = " hintaryhma?))
+                 ");"))]
+     (ffirst tulos))))
 
 (defn hae-kiintio-id-nimella [nimi]
   (ffirst (q (str "SELECT id
@@ -569,6 +572,9 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
+
+(defn hae-yit-rakennus-id []
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
 
 (defn hae-kajaanin-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -751,19 +757,6 @@
                    tr_numero = 20
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
-(defn hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   tr_numero = 20
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id
-                                                                      AND tila = 'lukittu');"))))
-
-(defn hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   tr_numero = 20
-                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
-
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE urakka != " urakka-id ";"))))
@@ -887,6 +880,7 @@
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
+  (reset! yit-rakennus-id (hae-yit-rakennus-id))
   (testit)
   (reset! oulun-alueurakan-2005-2010-id nil)
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id nil)
@@ -918,9 +912,18 @@
 (defn oulun-2014-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit #{}, :id 17, :etunimi "Yitin",
-   :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaatio {:id @yit-rakennus-id, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :organisaatioroolit {}
    :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"vastuuhenkilo"}}})
+
+(defn oulun-2014-urakan-urakoitsijan-laadunvalvoja []
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id @yit-rakennus-id, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"laadunvalvoja"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

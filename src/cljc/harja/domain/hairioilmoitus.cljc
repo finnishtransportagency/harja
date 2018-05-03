@@ -12,10 +12,15 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
+  ["hairioilmoitus_tyyppi" ::hairioilmoitus-tyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["hairioilmoitus" ::hairioilmoitus
    {"voimassa" ::voimassa?}])
 
-(def sarakkeet #{::id ::viesti ::pvm ::voimassa?})
+(def tyyppi-fmt
+  {:hairio "Häiriöilmoitus"
+   :tiedote "Tiedote"})
+
+(def sarakkeet #{::id ::viesti ::pvm ::voimassa? ::tyyppi})
 
 (defn tuorein-voimassaoleva-hairio [hairiot]
   (->> hairiot

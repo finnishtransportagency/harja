@@ -3,6 +3,7 @@
     [clojure.spec.alpha :as s]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
+    [harja.pvm :as pvm]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -20,7 +21,7 @@
                                        ::paikkaus
                                        ::paikkauskohde-id)
     ::kustannukset (specql.rel/has-many ::id
-                                        ::paikkauskustannus
+                                        ::paikkaustoteuma
                                         ::paikkauskohde-id)}]
   ["paikkaus" ::paikkaus
    {"luoja-id" ::muokkaustiedot/luoja-id
@@ -37,9 +38,12 @@
                                       ::paikkaus-id)
     ::materiaalit (specql.rel/has-many ::id
                                        ::paikkauksen_materiaali
-                                       ::paikkaus-id)}]
-  ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
-  ["paikkauksen_materiaali" ::paikkauksen_materiaali]
+                                       ::paikkaus-id)}
+   #?(:clj {::sijainti (specql.transform/transform (harja.kyselyt.specql/->GeometryTierekisteri))})]
+  ["paikkauksen_tienkohta" ::paikkauksen-tienkohta
+   {"id" ::tienkohta-id}]
+  ["paikkauksen_materiaali" ::paikkauksen_materiaali
+   {"id" ::materiaali-id}]
   ["paikkaustoteuma" ::paikkaustoteuma
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
@@ -67,19 +71,24 @@
     ::massamenekki
     ::raekoko
     ::kuulamylly
-    [::paikkauskohde #{::nimi
-                       ::ulkoinen-id}]
-    [::tienkohdat #{::ajorata
-                    ::reunat
-                    ::ajourat
-                    ::ajouravalit
-                    ::keskisaumat}]
-    [::materiaalit #{::esiintyma
-                     ::kuulamylly-arvo
-                     ::muotoarvo
-                     ::sideainetyyppi
-                     ::pitoisuus
-                     ::lisa-aineet}]})
+    ::sijainti})
+
+(def tienkohta-perustiedot
+  #{::tienkohta-id
+    ::ajorata
+    ::reunat
+    ::ajourat
+    ::ajouravalit
+    ::keskisaumat})
+
+(def materiaalit-perustiedot
+  #{::materiaali-id
+    ::esiintyma
+    ::kuulamylly-arvo
+    ::muotoarvo
+    ::sideainetyyppi
+    ::pitoisuus
+    ::lisa-aineet})
 
 (def paikkaustoteuman-perustiedot
   #{::id
@@ -94,3 +103,26 @@
     ::yksikko
     ::yksikkohinta
     ::maara})
+
+(s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
+                              :date  #(instance? #?(:cljs js/Date
+                                                    :clj  java.util.Date) %))))
+
+(s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
+(s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
+(s/def ::tr (s/nilable map?))
+(s/def ::tyomenetelmat (s/nilable set?))
+(s/def ::teiden-pituudet (s/nilable map?))
+
+
+(s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
+                                               :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
+
+(s/def ::urakan-paikkauskohteet-vastaus (s/keys :req-un [::paikkaukset]
+                                                :opt-un [::paikkauskohteet ::teiden-pituudet ::tyomenetelmat]))
+
+(s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
+                                                    :opt-un [::aikavali ::paikkaus-idt ::tr ::tyomenetelmat]))
+
+(s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
+                                                     :opt-un [::paikkauskohteet ::tyomenetelmat]))

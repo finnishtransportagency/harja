@@ -1,12 +1,13 @@
 (ns harja.domain.tielupa
   (:require
     [clojure.spec.alpha :as s]
-    [harja.domain.muokkaustiedot :as muokkautiedot]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [clojure.string :as str])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj
@@ -21,8 +22,11 @@
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
   ["suoja_alue_rakenteen_sijoitus" ::suoja-alue-rakenteen-sijoitus]
   ["tielupa" ::tielupa
-   {"luotu" ::muokkautiedot/luotu
-    "muokattu" ::muokkautiedot/muokattu}])
+   {"luotu" ::muokkaustiedot/luotu
+    "muokattu" ::muokkaustiedot/muokattu}])
+
+#?(:clj
+   (def kaikki-kentat (specql.core/columns ::tielupa)))
 
 (def perustiedot
   #{::id
@@ -44,8 +48,8 @@
     ::kohde-postitoimipaikka
     ::tien-nimi
     ::sijainnit
-    ::muokkautiedot/luotu
-    ::muokkautiedot/muokattu})
+    ::muokkaustiedot/luotu
+    ::muokkaustiedot/muokattu})
 
 (def hakijan-tiedot
   #{::hakija-nimi
@@ -182,4 +186,36 @@
     ::vesihuoltolupa-silta-asennuksia
     ::johtoasennukset})
 
+(def lupatyypit*
+  ^{:private true}
+  {:johto-ja-kaapelilupa "johto- ja kaapelilupa"
+   :liittymalupa "liittymälupa"
+   :mainoslupa "mainoslupa"
+   :mainosilmoitus "mainosilmoitus"
+   :opastelupa "opastelupa"
+   :suoja-aluerakentamislupa "suoja-aluerakentamislupa"
+   :tilapainen-myyntilupa "tilapäinen myyntilupa"
+   :tilapainen-liikennemerkkijarjestely "tilapäinen liikennemerkkijärjestely"
+   :tietyolupa "tietyölupa"
+   :vesihuoltolupa "vesihuoltolupa"})
+
+(defn tyyppi-fmt [tyyppi]
+  (when-let [tyyppi (get lupatyypit* tyyppi)]
+    (str/capitalize tyyppi)))
+
+(def lupatyyppi-vaihtoehdot (keys lupatyypit*))
+
+(s/def ::haettava-tr-osoite (s/keys :opt [::tie ::aet ::aosa ::losa ::let]))
+(s/def ::hae-tieluvat-kysely (s/keys :opt [::hakija-nimi
+                                           ::tyyppi
+                                           ::paatoksen-diaarinumero
+                                           ::voimassaolon-alkupvm
+                                           ::voimassaolon-loppupvm
+                                           ::myontamispvm
+                                           ::haettava-tr-osoite]))
+(s/def ::hae-tieluvat-vastaus (s/coll-of ::tielupa))
+
+(s/def ::hakuteksti ::hakija-nimi)
+(s/def ::hae-tielupien-hakijat-kysely (s/keys :req-un [::hakuteksti]))
+(s/def ::hae-tielupien-hakijat-vastaus (s/coll-of ::hakija-nimi))
 

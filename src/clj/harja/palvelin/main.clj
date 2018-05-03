@@ -50,6 +50,7 @@
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
+    [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as paikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
@@ -109,6 +110,8 @@
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
+
+    [harja.palvelin.palvelut.tieluvat :as tieluvat]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -367,6 +370,9 @@
       :paikkaus (component/using
                   (paikkaus/->Paikkaus)
                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :paikkaukset (component/using
+                     (paikkaukset/->Paikkaukset)
+                     [:http-palvelin :db])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
@@ -614,9 +620,14 @@
                       (api-tieluvat/->Tieluvat)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
+
       :api-paikkaukset (component/using
         (api-paikkaukset/->Paikkaukset)
         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+
+      :tieluvat (component/using
+                  (tieluvat/->Tieluvat)
+                  [:http-palvelin :db])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

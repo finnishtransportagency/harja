@@ -70,11 +70,11 @@
 (def +kuulamyllyt+
   [{:nimi "AN5" :koodi 1}
    {:nimi "AN7" :koodi 2}
-   {:nimi "N10" :koodi 3}
-   {:nimi "N14" :koodi 4}
-   {:nimi "N19" :koodi 5}
-   {:nimi "N30" :koodi 6}
-   {:nimi "N22" :koodi 7}])
+   {:nimi "AN10" :koodi 3}
+   {:nimi "AN14" :koodi 4}
+   {:nimi "AN19" :koodi 5}
+   {:nimi "AN30" :koodi 6}
+   {:nimi "AN22" :koodi 7}])
 
 (def +kyylamyllyt-ja-nil+
   (conj +kuulamyllyt+ {:nimi "Ei kuulamyllyä" :koodi nil}))
@@ -134,15 +134,15 @@
    {:nimi "11" :koodi 11}
    {:nimi "12" :koodi 12}
    {:nimi "13" :koodi 13}
+   {:nimi "21" :koodi 21}
+   {:nimi "22" :koodi 22}
+   {:nimi "23" :koodi 23}
    {:nimi "14" :koodi 14}
    {:nimi "15" :koodi 15}
    {:nimi "16" :koodi 16}
    {:nimi "17" :koodi 17}
    {:nimi "18" :koodi 18}
    {:nimi "19" :koodi 19}
-   {:nimi "21" :koodi 21}
-   {:nimi "22" :koodi 22}
-   {:nimi "23" :koodi 23}
    {:nimi "24" :koodi 24}
    {:nimi "25" :koodi 25}
    {:nimi "26" :koodi 26}
@@ -260,7 +260,11 @@
     (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
 (def paallystysilmoitus-alustatoimet
-  [{:tr-alkuosa schema/Int
+  [;; Kaudella 2017 ei ollut pakko olla tätä, koska kaikki toimet olivat pääkohteen tiellä
+   ;; Kaudella 2018 voi kirjata alustatoimenpiteitä kohdeosille, jotka ovat eri tiellä
+   ;; Hyväksytään molemmat mallit tässä skeemassa.
+   {(schema/optional-key :tr-numero) (schema/maybe schema/Int)
+    :tr-alkuosa schema/Int
     :tr-alkuetaisyys schema/Int
     :tr-loppuosa schema/Int
     :tr-loppuetaisyys schema/Int

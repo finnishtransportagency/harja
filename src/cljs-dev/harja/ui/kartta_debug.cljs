@@ -151,6 +151,8 @@
                                                                         (mapv (fn [mappi] (with-meta mappi {:ylin-taso? true})) arvo)
                                                                         (with-meta arvo {:ylin-taso? true}))])
                                                              @kartta/infopaneelin-linkkifunktiot))
+          ;; harja.views.kartta viittauksesta tulee warningia käännösvaiheessa,
+          ;; mutta ilmeisesti ajon aikana toimii
           metan-asettaminen-asioille-raaka #(update @harja.views.kartta/asiat-pisteessa :asiat (fn [asiat]
                                                                                                  (mapv (fn [asia]
                                                                                                          (with-meta asia {:ylin-taso? true}))
@@ -180,25 +182,46 @@
                                 (varita-mappi (metan-asettaminen-asioille-kasitelty) :asiat-kasitelty))}
         (str "Asiat Pisteessä (käsitelty)")]])))
 
+(defn kartta-layers*
+  [korkeus app]
+  (let [kartta-containerin-top (try (-> (dom/elementti-idlla "kartta-container") .-style .-top)
+                                    (catch :default e nil))
+        kartta-containerin-left (try (-> (dom/elementti-idlla "kartta-container") .-style .-left (+ 30))
+                                     (catch :default e nil))
+        asetettava-left (or kartta-containerin-left (:left app))
+        asetettava-top (or kartta-containerin-top (- korkeus))]
+    (swap! tila assoc
+           :top asetettava-top
+           :left asetettava-left)
+    (fn [_ {:keys [nayta-kartan-debug? top left]}]
+      (when nayta-kartan-debug?
+        [:div#kartta-debug {:style {:position "absolute"
+                                    :z-index "901"
+                                    :top top
+                                    :left left
+                                    :pointer-events "none"}}
+         [:div {:style {:height "inherit"
+                        :pointer-events "none"
+                        :display "flex"
+                        :overflow (if @nav/kartta-nakyvissa?
+                                    "visible"
+                                    "hidden")}}
+          [nayta-asetukset]
+          [nayta-layersit]
+          [nayta-infopaneelin-tiedot]]]))))
+
 (defn kartta-layers
-  []
-  (when (:nayta-kartan-debug? @tila)
-    [:div#kartta-debug {:style {:position "absolute"
-                                :z-index "901"
-                                :pointer-events "none"}}
-     [:div {:style {:height "inherit"
-                    :pointer-events "none"
-                    :display "flex"
-                    :overflow (if @nav/kartta-nakyvissa?
-                                "visible"
-                                "hidden")}}
-      [nayta-asetukset]
-      [nayta-layersit]
-      [nayta-infopaneelin-tiedot]]]))
+  [korkeus]
+  [kartta-layers* korkeus @tila])
 
 (defn aseta-kartta-debug-sijainti
   [x y w h naulattu?]
-  (swap! tila assoc :kartan-paikka [x y w h naulattu?])
+  (swap! tila assoc
+         :kartan-paikka [x y w h naulattu?]
+         :top (if (:nayta-kartan-ylaosassa? @tila)
+                    y
+                    (+ y h))
+         :left (fmt/pikseleina (+ x 30)))
   (when (:nayta-kartan-debug? @tila)
     (when-let
       [karttasailio (dom/elementti-idlla "kartta-debug")]
@@ -207,19 +230,11 @@
         (if naulattu?
           (do
             (set! (.-position tyyli) "fixed")
-            (set! (.-left tyyli) (fmt/pikseleina (+ x 30)))
-            (set! (.-top tyyli) (fmt/pikseleina (if (:nayta-kartan-ylaosassa? @tila)
-                                                  y
-                                                  (+ y h))))
             (set! (.-height tyyli) (fmt/pikseleina h)))
           (do
             (set! (.-position tyyli) "absolute")
-            (set! (.-left tyyli) (fmt/pikseleina (+ x 30)))
-            (set! (.-top tyyli) (fmt/pikseleina (if (:nayta-kartan-ylaosassa? @tila)
-                                                  y
-                                                  (+ y h))))
             (set! (.-height tyyli) (fmt/pikseleina h))))
-        (set! (.-position tyyli) (-> "kartta-container" dom/elementti-idlla .-style .-position str))
+        (set! (.-position tyyli) (-> "kartta-debug" dom/elementti-idlla .-style .-position str))
         (when (= :S @nav/kartan-koko)
           (set! (.-left tyyli) "")
           (set! (.-right tyyli) (fmt/pikseleina 20)))))))

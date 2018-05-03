@@ -48,7 +48,11 @@
                             :epaonnistui-fn #(viesti/nayta! "Tallentaminen epäonnistui"
                                                             :warning viesti/viestin-nayttoaika-lyhyt)}))
                        :ei-mahdollinen)}
-          [{:otsikko "Liittyy kohteeseen" :leveys 7 :nimi :yllapitokohde-id :tyyppi :valinta
+          [{:otsikko "Pvm"
+            :nimi :paivamaara :tyyppi :pvm :leveys 3
+            :validoi [[:ei-tyhja "Anna päivämäärä"]]
+            :fmt pvm/pvm-opt}
+           {:otsikko "Liittyy kohteeseen" :leveys 7 :nimi :yllapitokohde-id :tyyppi :valinta
             :valinnat (conj (map :id paallystysurakan-kohteet) nil)
             :valinta-nayta #(if % (yllapitokohde-domain/yllapitokohde-tekstina
                                     (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %))
@@ -109,11 +113,7 @@
             :valinta-nayta #(case %
                               :suunnitelma "Suunnitelma"
                               :toteuma "Toteuma"
-                              "- valitse -")}
-           {:otsikko "Päivä\u00ADmäärä"
-            :nimi :paivamaara :tyyppi :pvm :leveys 3
-            :validoi [[:ei-tyhja "Anna päivämäärä"]]
-            :fmt pvm/pvm-opt}]
+                              "- valitse -")}]
           (yllapitokohteet-domain/jarjesta-yllapitokohteet @tiemerkinnan-toteumat-atom)]]))))
 
 (defn- paallystysurakan-kohteet-vetolaatikko [kohdeosat]

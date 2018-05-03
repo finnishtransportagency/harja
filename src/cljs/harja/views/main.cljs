@@ -28,6 +28,7 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.views.tierekisteri :as tierekisteri]
+            [harja.views.tieluvat.tieluvat :as tieluvat]
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
@@ -101,6 +102,11 @@
       [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
        [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
+    (when (and (oikeudet/tieluvat)
+               (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
+      [:li {:role "presentation" :class (when (= s :tienpidon-luvat) "active")}
+       [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
+
     (when (oikeudet/hallinta)
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
        [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
@@ -156,10 +162,14 @@
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn hairioilmoitus [hairiotiedot]
-  [:div.hairioilmoitin
-   [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
-   [:div (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
-              (::hairio/viesti hairiotiedot))]])
+  (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
+        tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
+                        :tiedote "hairioilmoitin-tyyppi-tiedote"
+                        "hairioilmoitin-tyyppi-hairio")]
+    [:div.hairioilmoitin {:class tyyppi-luokka}
+     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+     [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+                (::hairio/viesti hairiotiedot))]]))
 
 (defn paasisalto [sivu korkeus]
   [:div
@@ -196,6 +206,7 @@
         :urakat [urakat/urakat]
         :raportit [raportit/raportit]
         :ilmoitukset [ilmoitukset/ilmoitukset]
+        :tienpidon-luvat [tieluvat/tieluvat]
         :hallinta [hallinta/hallinta]
         :tilannekuva [tilannekuva/tilannekuva]
         :about [about/about]
@@ -206,7 +217,7 @@
    [modal/modal-container]
    [viesti-container]
    (when @nav/kartta-nakyvissa?
-     [kartta-layers])
+     [kartta-layers korkeus])
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,

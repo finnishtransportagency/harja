@@ -244,12 +244,40 @@
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
                                                        :aosa tr-alkuosa
                                                        :losa tr-loppuosa})
-        _ (log/debug "LASKE PITUUS " osien-pituudet {:tie tr-numero
-                                                     :aosa tr-alkuosa
-                                                     :losa tr-loppuosa})
         pituus (tr/laske-tien-pituus osien-pituudet kohde)]
     (assoc kohde :pituus pituus)))
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
+
+(defn paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
+  "Tarkistaa, etteivät annetut kohdeosat mene päällekkäin muiden saman vuoden kohdeosien kanssa.
+   Palauttaa kokoelman virheitä (string), mikäli niitä ilmenee."
+  [db yllapitokohde-id vuosi kohdeosat]
+  (let [tiet (distinct (map :tr-numero kohdeosat))
+        teiden-kohdeosat (group-by (juxt :tr-numero :tr-ajorata :tr-kaista)
+                                   (q/hae-yhden-vuoden-kohdeosat-teille db {:yllapitokohdeid yllapitokohde-id
+                                                                            :vuosi vuosi
+                                                                            :tiet tiet}))
+        virheet (map (fn [{tallennettava-id :id
+                           :keys [tr-numero tr-ajorata tr-kaista]
+                           :as tallennettava-kohde}]
+                       (let [kohteet-samalta-sijainnilta (get teiden-kohdeosat [tr-numero tr-ajorata tr-kaista])]
+                         (keep (fn [{olemassa-oleva-id :id
+                                     :keys [urakan-nimi
+                                            paakohteen-nimi
+                                            yllapitokohteen-nimi]
+                                     :as olemassaoleva-kohde}]
+                                 (when (and (not= olemassa-oleva-id tallennettava-id)
+                                            (tr/kohdeosat-paalekkain? olemassaoleva-kohde tallennettava-kohde))
+                                   (format "Kohde: '%s' menee päällekkäin urakan: '%s' kohteen: '%s' kohdeosan: '%s' kanssa."
+                                           (:nimi tallennettava-kohde)
+                                           urakan-nimi
+                                           paakohteen-nimi
+                                           yllapitokohteen-nimi)))
+                               kohteet-samalta-sijainnilta)))
+                     kohdeosat)]
+    (apply concat virheet)))
+
+
