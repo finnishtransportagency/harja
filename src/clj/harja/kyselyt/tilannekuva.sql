@@ -627,20 +627,23 @@ SELECT t.id,
        JOIN urakka u ON t.urakka = u.id
  WHERE t.urakka IN (:urakat)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu))
+        (t.paattynyt BETWEEN :alku AND :loppu));
 
 
--- name: urakat-joihin-oikeus
--- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
--- tai urakat joissa annettu urakoitsija on urakoitsijana.
+-- name: urakoitsijan-urakat
 -- TODO? erillisoikeudet urakoihin UNION:lla mukaan. Rooli-excelissäkin tähän liittyvä oikeus.
 SELECT
-  u.id
+  u.id, u.hallintayksikko
+FROM urakka u
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE urk.id = :organisaatio;
+
+-- name: hallintayksikoiden-urakat
+SELECT
+  u.id, u.hallintayksikko
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
-WHERE urk.id = :organisaatio
-      OR hal.id = :organisaatio;
+WHERE hal.id IN (:hallintayksikot);
 
 -- name: hae-valittujen-urakoiden-viimeisin-toteuma
 -- single?: true
