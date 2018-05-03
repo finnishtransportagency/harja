@@ -283,7 +283,6 @@
                                               (when (raporttivienti :pdf)
                                                 pdf-nappi))
               aseta-parametrit! (fn [id]
-                                  (log "grid aseta parametrit kutsuttu, id: " (pr-str id) " raporttiparametrit" (pr-str raporttiparametrit))
                                   (let [input (-> js/document
                                                   (.getElementById id)
                                                   (aget "parametrit"))

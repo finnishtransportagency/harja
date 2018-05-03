@@ -5,15 +5,11 @@
             [harja.kyselyt.urakat :as urakat-q]))
 
 
-(defn suorita [db user {:keys [urakoiden-nimet alkupvm loppupvm
-                               sarakkeet rivit] :as parametrit}]
-  (println " SUORITA LIIKENNETAPAHTUMAT " parametrit)
-  (let [raportin-nimi "Liikennetapahtumat"
-        raportin-otsikko (raportin-otsikko urakoiden-nimet raportin-nimi alkupvm loppupvm)
-        _ (println " sarakkeet " sarakkeet)
-        _ (println " rivit " rivit)]
-    (log/debug "Kanavien Liikennetapahtumat, suorita: " parametrit)
+(defn suorita [db user {:keys [parametrit sarakkeet rivit] :as kaikki-parametrit}]
 
+  (let [{:keys [urakoiden-nimet alkupvm loppupvm]} parametrit
+        raportin-nimi "Liikennetapahtumat"
+        raportin-otsikko (raportin-otsikko urakoiden-nimet raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
 
