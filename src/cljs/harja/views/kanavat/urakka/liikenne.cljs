@@ -21,7 +21,6 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
-            [harja.tiedot.raportit :as raporttitiedot]
             [harja.views.urakka.valinnat :as suodattimet]
 
             [harja.domain.kayttaja :as kayttaja]
@@ -453,7 +452,8 @@
 
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
-                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
+                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?
+                                            raporttiparametrit] :as app}
                                  kohteet]
   [:div
    [debug app]
@@ -469,13 +469,7 @@
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")
      :raporttivienti #{:excel :pdf}
-     :raporttiparametrit (raporttitiedot/urakkaraportin-parametrit
-                           (some #(when (:valittu? %) (:id %)) (get-in app [:valinnat :kayttajan-urakat]))
-                           :kanavien-liikennetapahtumat
-                           {:alkupvm (first (get-in app [:valinnat :aikavali]))
-                            :loppupvm (second (get-in app [:valinnat :aikavali]))
-                            :urakoiden-nimet (map :nimi (get-in app [:valinnat :kayttajan-urakat]))
-                            :urakkatyyppi :vesivayla-kanavien-hoito})}
+     :raporttiparametrit raporttiparametrit}
     liikennetapahtumat-sarakkeet
     (tiedot/jarjesta-tapahtumat tapahtumarivit)]])
 

@@ -16,6 +16,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.hallintayksikot :as hallintayksikot]
+            [harja.tiedot.raportit :as raporttitiedot]
 
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
@@ -35,6 +36,7 @@
                  :tallennus-kaynnissa? false
                  :valittu-liikennetapahtuma nil
                  :tapahtumarivit nil
+                 :raporttiparametrit {}
                  :valinnat {:kayttajan-urakat '()
                             :aikavali nil
                             ::lt/kohde nil
@@ -160,7 +162,15 @@
       (assoc :liikennetapahtumien-haku-kaynnissa? false)
       (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
       (assoc :haetut-tapahtumat tulos)
-      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))))
+      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
+      (assoc :raporttiparametrit
+             (raporttitiedot/urakkaraportin-parametrit
+               (some #(when (:valittu? %) (:id %)) (:kayttajan-urakat (:valinnat app)))
+               :kanavien-liikennetapahtumat
+               {:alkupvm (first (:aikavali (:valinnat app)))
+                :loppupvm (second (:aikavali (:valinnat app)))
+                :urakoiden-nimet (map :nimi (:kayttajan-urakat (:valinnat app)))
+                :urakkatyyppi :vesivayla-kanavien-hoito}))))
 
 (defn tallennusparametrit [t]
   (-> t
