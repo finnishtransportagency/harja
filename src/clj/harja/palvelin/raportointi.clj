@@ -16,8 +16,10 @@
             [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
             [harja.transit :as t]
+            [harja.fmt :as fmt]
             [slingshot.slingshot :refer [throw+]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [harja.fmt :as fmt]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -39,8 +41,8 @@
 (def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus :tyomaakokous})
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
-                                                  hallintayksikko-id]
-                                           :as parametrit} raportti]
+                                                  hallintayksikko-id parametrit]
+                                           :as kaikki-parametrit} raportti]
   (assoc-in raportti
             [1 :tietoja]
             (as-> [["Kohde" (case konteksti
@@ -74,7 +76,13 @@
                 t)
 
               (if (= "koko maa" konteksti)
-                (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))])
+                (if (and (:urakkatyyppi parametrit)
+                         ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
+                         (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
+                  (conj t [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
+                           (count (urakat-q/hae-kaynnissa-olevat-urakkatyypin-urakat db
+                                                                                     {:urakkatyyppi (name (:urakkatyyppi parametrit))}))])
+                  (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))]))
                 t))))
 
 (defmacro max-n-samaan-aikaan [n lkm-atomi tulos-jos-ruuhkaa & body]
