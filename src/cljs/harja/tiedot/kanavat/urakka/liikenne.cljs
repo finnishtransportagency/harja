@@ -164,14 +164,13 @@
       (assoc :haetut-tapahtumat tulos)
       (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
       (assoc :raporttiparametrit
-             (raporttitiedot/urakkaraportin-parametrit
-               (some #(when (:valittu? %) (:id %)) (:kayttajan-urakat (:valinnat app)))
+             (raporttitiedot/usean-urakan-raportin-parametrit
+               (keep #(when (:valittu? %)
+                        (:nimi %))
+                     (:kayttajan-urakat (:valinnat app)))
                :kanavien-liikennetapahtumat
                {:alkupvm (first (:aikavali (:valinnat app)))
                 :loppupvm (second (:aikavali (:valinnat app)))
-                :urakoiden-nimet (keep #(when (:valittu? %)
-                                            (:nimi %))
-                                         (:kayttajan-urakat (:valinnat app)))
                 :urakkatyyppi :vesivayla-kanavien-hoito}))))
 
 (defn tallennusparametrit [t]

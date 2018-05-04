@@ -5,9 +5,10 @@
             [harja.kyselyt.urakat :as urakat-q]))
 
 
-(defn suorita [db user {:keys [parametrit sarakkeet rivit] :as kaikki-parametrit}]
+(defn suorita [db user {:keys [urakoiden-nimet sarakkeet rivit parametrit]
+                        :as kaikki-parametrit}]
 
-  (let [{:keys [urakoiden-nimet alkupvm loppupvm]} parametrit
+  (let [{:keys [alkupvm loppupvm]} parametrit
         raportin-nimi "Liikennetapahtumat"
         raportin-otsikko (raportin-otsikko urakoiden-nimet raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
