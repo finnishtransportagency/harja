@@ -516,8 +516,8 @@
                                tapahtuma2
                                {::lt-alus/suunta :ylos
                                 ::lt-alus/nimi "Ronsu"})]
-            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "urakka", :urakka-id nil,
-                                 :parametrit {:alkupvm nil, :loppupvm nil, :urakoiden-nimet (),
+            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "monta-urakkaa", :urakoiden-nimet () :urakka-id nil,
+                                 :parametrit {:alkupvm nil, :loppupvm nil,
                                               :urakkatyyppi :vesivayla-kanavien-hoito}}}
            (e! (tiedot/->LiikennetapahtumatHaettu [tapahtuma1 tapahtuma2]))))))
 
@@ -726,8 +726,8 @@
                                tapahtuma2
                                {::lt-alus/suunta :ylos
                                 ::lt-alus/nimi "Ronsu"})]
-            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "urakka", :urakka-id nil,
-                                 :parametrit {:alkupvm nil, :loppupvm nil, :urakoiden-nimet (),
+            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "monta-urakkaa", :urakoiden-nimet () :urakka-id nil,
+                                 :parametrit {:alkupvm nil, :loppupvm nil,
                                               :urakkatyyppi :vesivayla-kanavien-hoito}}}
            (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
 
