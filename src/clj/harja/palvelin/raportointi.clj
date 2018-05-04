@@ -67,12 +67,19 @@
                 t)
 
               (if (= "hallintayksikko" konteksti)
-                (concat t [["Hallintayksikkö"
-                            (:nimi (first (organisaatiot-q/hae-organisaatio db
-                                                                            hallintayksikko-id)))]
-                           ["Urakoita käynnissä"
-                            (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
-                                    db hallintayksikko-id))]])
+                  (concat t [["Hallintayksikkö"
+                             (:nimi (first (organisaatiot-q/hae-organisaatio db
+                                                                             hallintayksikko-id)))]
+                             (if (and (:urakkatyyppi parametrit)
+                                      ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
+                                      (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
+                               [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
+                                (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
+                                         db {:hal hallintayksikko-id
+                                             :urakkatyyppi (name (:urakkatyyppi parametrit))}))]
+                               ["Urakoita käynnissä"
+                             (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
+                                      db hallintayksikko-id))])])
                 t)
 
               (if (= "koko maa" konteksti)
