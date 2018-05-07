@@ -255,24 +255,34 @@
 
 (defn- materiaali-hinnoittelurivi
   [e! materiaali-hinta materiaalit]
-  (let [toimenpiteelle? (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)]
+  (let [;; materiaalisaldo = materiaalitiedot ko materiaalille, jos suunniteltu/varastosaldo tiedetään,
+        ;; nil jos annetulla nimelllä ei löydy tietoja ja tämä rivi kirjataan vain sellaisenaan
+        materiaalisaldo (tiedot/materiaalisaldo-hinnalle materiaali-hinta materiaalit)
+        materiaali-hinta (if materiaalisaldo
+                           (assoc materiaali-hinta ::hinta/yksikko (::materiaali/yksikko materiaalisaldo))
+                           ;; else
+                           materiaali-hinta)]
+
     [:tr
-     [:td (if toimenpiteelle?
+     [:td (if materiaalisaldo
             (::hinta/otsikko materiaali-hinta)
+            ;; else
             [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
      [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
                           {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
      [:td.tasaa-oikealle
       [kentta-hinnalle e! materiaali-hinta ::hinta/maara {:tyyppi :positiivinen-numero}]]
-     [:td (if toimenpiteelle?
-            (::hinta/yksikko materiaali-hinta)
+     [:td (if materiaalisaldo
+            [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko {:tyyppi :string}]
+            ;; else
             [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
              {:tyyppi :string}])]
      [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
      [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
      [:td.keskita
-      (if toimenpiteelle?
+      (if materiaalisaldo
         ""
+        ;; else
         [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))])]]))
 
 (defn- materiaalit [e! app*]
