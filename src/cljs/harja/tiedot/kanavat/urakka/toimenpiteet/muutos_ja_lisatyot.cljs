@@ -187,8 +187,10 @@
 (defn materiaalisaldo-hinnalle
   [materiaali-hinta materiaalit]
   (some (fn [materiaali]
-          (when  (= (::materiaalit/nimi materiaali)
-                    (::hinta/otsikko materiaali-hinta))
+          (when  (and
+                  (= "materiaali" (::hinta/ryhma materiaali-hinta))
+                  (= (::materiaalit/nimi materiaali)
+                     (::hinta/otsikko materiaali-hinta)))
             materiaali))
         materiaalit))
 
