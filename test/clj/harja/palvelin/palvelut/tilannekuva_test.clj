@@ -408,8 +408,7 @@
 
     (is (= (count elynumerot) 0))))
 
-; TODO: kunnes lisäoikeudet mukana logiikassa
-#_(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
+(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
     ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
     ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
     (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
@@ -420,8 +419,7 @@
       (is (every? #(= % eka-ely) elynumerot)
           "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
 
-; TODO: kunnes lisäoikeudet mukana logiikassa
-#_(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
+(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
     ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
     (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
       (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
@@ -441,25 +439,28 @@
                             :urakkanro "1238"
                             :alue nil}}}])))))
 
-; TODO: kunnes lisäoikeudet mukana logiikassa
-#_(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
-    (let [vastaus-ilman-lisaoikeutta
+(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
+    (let [urakat-ilman-lisaoikeutta
           ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
           (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
-            (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))
-          vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
-          (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+            (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))
+          urakat-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+          (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)))]
 
       ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
 
-      (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
-             (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
+      (is (> (count urakat-lisaoikeudella) (count urakat-ilman-lisaoikeutta))
+          "Lisäoikeudella pitää löytyä enemmän urakkavaihtoehtoja")
 
-      (is (> (count (:toteumat vastaus-lisaoikeudella))
-             (count (:toteumat vastaus-ilman-lisaoikeutta))))
+      (let [vastaus-ilman-lisaoikeutta
+            ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
+            (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+              (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella))
+            vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+            (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella)]
 
-      (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
-             (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
+        (is (> (reduce + 0 (map (comp count val) vastaus-lisaoikeudella))
+               (reduce + 0 (map (comp count val) vastaus-ilman-lisaoikeutta)))))))
 
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-liikaa-urakoita
   ;; Pyydetään hakemaan asiat tilannekuvaan kaikista urakoista, mutta saamme saman vastauksen kuin
@@ -468,9 +469,11 @@
   (let [hyokkaus-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava)
                                  hakuargumentit-laaja-historia
                                  (map :id (q-map "SELECT id FROM urakka")))
-        normaali-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+        normaali-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia
+                                 (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))]
 
-    (is (= normaali-vastaus hyokkaus-vastaus))))
+    (is (= (reduce + 0 (map (comp count val) hyokkaus-vastaus))
+           (reduce + 0 (map (comp count val) normaali-vastaus))))))
 
 (deftest hae-tilaajan-laadunvalvonta
   (let [vastaus-tilaajalle

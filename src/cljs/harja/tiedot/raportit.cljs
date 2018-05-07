@@ -23,6 +23,12 @@
    :konteksti "urakka"
    :urakka-id urakka-id
    :parametrit parametrit})
+
+(defn usean-urakan-raportin-parametrit [urakoiden-nimet nimi parametrit]
+  {:nimi nimi
+   :konteksti "monta-urakkaa"
+   :urakoiden-nimet urakoiden-nimet
+   :parametrit parametrit})
   
 (defn suorita-raportti-urakka
   "Suorittaa raportin annetun urakan kontekstissa."

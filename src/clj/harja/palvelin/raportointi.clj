@@ -38,12 +38,16 @@
 
 (def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus :tyomaakokous})
 
-(defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
+(defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
+                                                  hallintayksikko-id]
                                            :as parametrit} raportti]
   (assoc-in raportti
             [1 :tietoja]
             (as-> [["Kohde" (case konteksti
                               "urakka" "Urakka"
+                              "monta-urakkaa" (if (> (count urakoiden-nimet) 1)
+                                                "Monta urakkaa"
+                                                "Urakka")
                               "hallintayksikko" "Hallintayksikkö"
                               "koko maa" "Koko maa")]] t
               (if (= "urakka" konteksti)
@@ -51,6 +55,13 @@
                   (concat t [["Urakka" (:nimi ur)]
                              ["Urakoitsija" (:urakoitsija_nimi ur)]]))
 
+                t)
+
+              (if (= "monta-urakkaa" konteksti)
+                (concat t [[(if (> (count urakoiden-nimet) 1)
+                              "Urakat"
+                              "Urakka")
+                            (clojure.string/join ", " urakoiden-nimet)]])
                 t)
 
               (if (= "hallintayksikko" konteksti)
@@ -157,6 +168,8 @@
              (condp = konteksti
                "urakka" (assoc parametrit
                                :urakka-id (:urakka-id suorituksen-tiedot))
+               "monta-urakkaa" (assoc parametrit
+                                 :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
                "hallintayksikko" (assoc parametrit
                                         :hallintayksikko-id
                                         (:hallintayksikko-id suorituksen-tiedot))
