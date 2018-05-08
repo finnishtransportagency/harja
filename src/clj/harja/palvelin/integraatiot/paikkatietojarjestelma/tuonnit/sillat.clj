@@ -27,22 +27,26 @@
         ely-lyhenne (:ely_lyhenne silta)
         tunnus (when (not-empty ely-lyhenne)
                  (str ely-lyhenne "-" numero))
-        id (int (:silta_id silta))]
-    (if (first (s/hae-silta-idlla db id))
-      (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
-      (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
+        id (when :silta_id silta
+                 (int (:silta_id silta)))]
+    #_(log/debug "silta luettu tl261-tietueesta:" tyyppi, numero, nimi, tie, alkuosa, alkuetaisyys, tunnus, id)
+    (when (and id tunnus)
+      (if (first (s/hae-silta-idlla db id))
+        (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
+        (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)))))
 
 (defn vie-silta-entry [db silta]
-  (if (:the_geom silta)
-    (luo-tai-paivita-silta db silta)
-    (log/warn "Siltaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error silta))))
+  (let [pakolliset-avaimet [:the_geom :ely_lyhenne :silta_id]]
+    (if (every? some? (mapv silta pakolliset-avaimet))
+      (luo-tai-paivita-silta db silta)
+      #_(log/debug "Siltaa ei voida tuoda ilman geometriaa, ely-lyhennettä ja silta-id:tä. Virheviesti: " (:loc_error silta) "Silta-map:" silta))))
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (do
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
-        (doseq [silta (shapefile/tuo shapefile)]
+        (doseq [silta (take 10 (shapefile/tuo shapefile))]
           (vie-silta-entry db silta)))
       (s/paivita-urakoiden-sillat db)
       (log/debug "Siltojen tuonti kantaan valmis."))
