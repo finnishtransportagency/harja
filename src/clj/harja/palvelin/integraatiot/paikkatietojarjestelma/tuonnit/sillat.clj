@@ -13,7 +13,7 @@
 (defn mapin-floatit-inteiksi [m]
   (into {} (map (fn [[k v]]
                   [k (float-intiksi v)])
-                silta-floateilla)))
+                m)))
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
@@ -24,10 +24,10 @@
         tie (:tie silta)
         alkuosa (:aosa silta)
         alkuetaisyys (:aet silta)
-        tunnus (:??? silta)
+        ely-lyhenne (:ely_lyhenne silta)
+        tunnus (when (not-empty ely-lyhenne)
+                 (str ely-lyhenne "-" siltanro))
         id (int (:siltaid silta))]
-    ;; XXX inspirestä puuttuu avassa ollut tunnus/siltatunnus (esim "SK-1843"),
-    ;; ja sen muodostamiseen siltanro:sta tarvittaisiin trex_prefix joka myöskin puuttuu
     (if (first (s/hae-silta-idlla db id))
       (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
       (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
