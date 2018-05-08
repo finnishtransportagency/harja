@@ -122,6 +122,7 @@
       (if (nil? paikkaus-idt)
         (let [paikkaukset (hae-paikkaukset db)
               paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
+              tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
               paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
               teiden-pituudet (reduce (fn [kayty tie]
                                         (assoc kayty tie (into {}
@@ -131,6 +132,7 @@
                                       {} paikkauksien-tiet)]
           {:paikkaukset paikkaukset
            :paikkauskohteet paikkauskohteet
+           :tyomenetelmat tyomenetelmat
            :teiden-pituudet teiden-pituudet})
         {:paikkaukset (hae-paikkaukset db)}))))
 
@@ -156,9 +158,11 @@
            (empty? (:paikkaus-idt tiedot))) {:kustannukset []}
       (nil? (:paikkaus-idt tiedot)) (jdbc/with-db-transaction [db db]
                                       (let [kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)
-                                            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))]
+                                            paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
+                                            tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset
-                                         :paikkauskohteet paikkauskohteet}))
+                                         :paikkauskohteet paikkauskohteet
+                                         :tyomenetelmat tyomenetelmat}))
       :else {:kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)})))
 
 (defrecord Paikkaukset []

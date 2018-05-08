@@ -155,6 +155,10 @@
           [:fo:table-row
            (for [i (range (count sarakkeet))
                  :let [arvo-datassa (nth rivi i)
+                       ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
+                       arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
+                                      "X"
+                                      arvo-datassa)
                        sarake (nth sarakkeet i)
                        fmt (formatoija-fmt-mukaan (:fmt sarake))
                        naytettava-arvo (or

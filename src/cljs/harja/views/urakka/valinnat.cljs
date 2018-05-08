@@ -100,16 +100,18 @@
                          (reset! valittu-aikavali (aikavali-fn)))
                        ;; Käyttäjä haluaa asettaa itse aikavälin
                        (reset! vapaa-aikavali? true))))]
-     (when (and (not (u/urakka-kaynnissa? urakka))
-                (not vaihda-filtteri-urakan-paattyessa?))
-       (reset! valittu-aikavali [nil (:loppupvm urakka)]))
+
      (valitse urakka alkuvalinta)
      (komp/luo
-       (komp/kun-muuttuu
-         (fn [urakka _]
-           (valitse urakka @valinta)))
+         (komp/kun-muuttuu
+           (fn [urakka _]
+             (valitse urakka @valinta)))
 
        (fn [urakka valittu-aikavali]
+         (when-not (u/urakka-kaynnissa? urakka)
+           (reset! valittu-aikavali
+                   (or @u/valittu-hoitokauden-kuukausi
+                       @u/valittu-hoitokausi)))
          (if-not (u/urakka-kaynnissa? urakka)
            (if vaihda-filtteri-urakan-paattyessa?
              [urakan-hoitokausi-ja-kuukausi urakka]

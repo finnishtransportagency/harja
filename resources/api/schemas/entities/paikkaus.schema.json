@@ -57,11 +57,7 @@
     "tyomenetelma": {
       "id": "urn:harja/paikkaukset/0/paikkaus/tyomenetelma",
       "required": true,
-      "enum": [
-        "massapintaus",
-        "kuumennuspintaus",
-        "remix-pintaus"
-      ]
+      "type": "string"
     },
     "massatyyppi": {
       "id": "urn:harja/paikkaukset/0/paikkaus/massatyyppi",
