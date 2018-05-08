@@ -47,6 +47,7 @@
    :valittu-ilmoitus nil
    :tallennus-kaynnissa? false
    :haku-kaynnissa? false
+   :aloitetaan-uusi-tietyoilmoitus? false
    :tietyoilmoitukset nil
    :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
               :luotu-alkuaika (pvm/tuntia-sitten 24)
@@ -311,7 +312,7 @@
     (let [tulos! (tuck/send-async! ->UusiTietyoilmoitus)]
       (go
         (tulos! (esitayta-tietyoilmoitus (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id))))))
-    app)
+    (assoc app :aloitetaan-uusi-tietyoilmoitus? true))
 
   AloitaUusiTyovaiheilmoitus
   (process-event [{tietyoilmoitus :tietyoilmoitus} app]
@@ -324,7 +325,8 @@
 
   UusiTietyoilmoitus
   (process-event [{esitaytetyt-tiedot :esitaytetyt-tiedot} app]
-    (assoc app :valittu-ilmoitus esitaytetyt-tiedot))
+    (assoc app :valittu-ilmoitus esitaytetyt-tiedot
+               :aloitetaan-uusi-tietyoilmoitus? false))
 
   UrakkaValittu
   (process-event [{urakka-id :urakka-id} app]

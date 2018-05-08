@@ -2,8 +2,10 @@
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.paikkaus :as paikkaus]
-            [harja.pvm :as pvm]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.pvm :as pvm]
+            [harja.kyselyt.tieverkko :as q-tr]
             [harja.id :refer [id-olemassa?]]))
 
 (defqueries "harja/kyselyt/paikkaus.sql"
@@ -13,6 +15,27 @@
   (fetch db
          ::paikkaus/paikkaus
          paikkaus/paikkauksen-perustiedot
+         hakuehdot))
+
+(defn hae-paikkaukset-materiaalit [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkaukset-paikkauskohe [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkaukset-tienkohta [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
          hakuehdot))
 
 (defn hae-paikkaustoteumat [db hakuehdot]
@@ -95,8 +118,13 @@
         paikkauskohde-id (hae-tai-tee-paikkauskohde db kayttaja-id (::paikkaus/paikkauskohde paikkaus))
         materiaalit (::paikkaus/materiaalit paikkaus)
         tienkohdat (::paikkaus/tienkohdat paikkaus)
+        tr-osoite (::paikkaus/tierekisteriosoite paikkaus)
+        sijainti (q-tr/tierekisteriosoite-viivaksi db {:tie (::tierekisteri/tie tr-osoite) :aosa (::tierekisteri/aosa tr-osoite)
+                                                       :aet (::tierekisteri/aet tr-osoite) :losa (::tierekisteri/losa tr-osoite)
+                                                       :loppuet (::tierekisteri/let tr-osoite)})
         uusi-paikkaus (dissoc (assoc paikkaus ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                              ::muokkaustiedot/luoja-id kayttaja-id)
+                                              ::muokkaustiedot/luoja-id kayttaja-id
+                                              ::paikkaus/sijainti sijainti)
                               ::paikkaus/materiaalit
                               ::paikkaus/tienkohdat
                               ::paikkaus/paikkauskohde)
@@ -135,4 +163,11 @@
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
                                {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
     (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
+
+(defn hae-urakan-tyomenetelmat [db urakka-id]
+  (let [paikkauksien-tyomenetelmat (fetch db
+                                          ::paikkaus/paikkaus
+                                          #{::paikkaus/tyomenetelma}
+                                          {::paikkaus/urakka-id urakka-id})]
+    (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
 

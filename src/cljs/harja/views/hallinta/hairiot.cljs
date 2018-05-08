@@ -15,6 +15,8 @@
 (defn- listaa-hairioilmoitus [hairio]
   (str (fmt/pvm (::hairio/pvm hairio))
        " - "
+       (hairio/tyyppi-fmt (::hairio/tyyppi hairio))
+       " - "
        (::hairio/viesti hairio)))
 
 (defn- vanhat-hairioilmoitukset [hairiot tuorein-hairio]
@@ -28,17 +30,29 @@
           [:li (listaa-hairioilmoitus hairio)]))])])
 
 (defn- aseta-hairioilmoitus []
+  ;; TODO Jos tähän tulee vielä lisää kenttiä, voisi muuttaa käyttään lomake-komponenttia
   [:div
-   [kentat/tee-kentta {:tyyppi :text :nimi :viesti
-                       :pituus-max 1024
-                       :koko [80 5]}
-    (r/wrap @tiedot/tuore-hairioviesti
-            #(reset! tiedot/tuore-hairioviesti %))]
-   [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioviesti)
+   [:div
+    [kentat/tee-otsikollinen-kentta {:otsikko "Viesti"
+                                     :kentta-params {:tyyppi :text :nimi :viesti
+                                                     :pituus-max 1024
+                                                     :koko [80 5]}
+                                     :arvo-atom (r/wrap (:teksti @tiedot/tuore-hairioilmoitus)
+                                                        #(swap! tiedot/tuore-hairioilmoitus assoc :teksti %))}]]
+   [:div
+    [kentat/tee-otsikollinen-kentta {:otsikko "Tyyppi"
+                                    :kentta-params {:tyyppi :valinta
+                                                    :valinnat [:hairio :tiedote]
+                                                    :valinta-nayta hairio/tyyppi-fmt}
+                                    :arvo-atom (r/wrap (:tyyppi @tiedot/tuore-hairioilmoitus)
+                                                       #(swap! tiedot/tuore-hairioilmoitus assoc :tyyppi %))}]]
+   [:br]
+   [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioilmoitus)
     {:disabled @tiedot/tallennus-kaynnissa?}]
    [napit/peruuta
     #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
-         (reset! tiedot/tuore-hairioviesti nil))]])
+         (reset! tiedot/tuore-hairioilmoitus {:tyyppi :hairio
+                                              :teksti nil}))]])
 
 (defn- tuore-hairioilmoitus [tuore-hairio]
   [:div
@@ -48,7 +62,7 @@
      [:div
       [:p (if tuore-hairio
             (listaa-hairioilmoitus tuore-hairio)
-            "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa.")]
+            "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa. Ilmoituksen yhteydessä näytetään aina ilmoituksen päivämäärä, joten sitä ei tarvitse kirjoittaa erikseen.")]
 
       (when-not tuore-hairio
         [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"

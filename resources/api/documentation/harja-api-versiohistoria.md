@@ -2,6 +2,8 @@
 <b>Julkaistu: 29.03.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.35 Julkaistu 27.4.2018
+    - Päällystysilmoituksen kirjauksessa voi nyt kirjata alustatoimenpiteillä tienumeron. Jos tienumeroa ei anna, käytetään pääkohteen tienumeroa.
 - Versionumero: 1.0.34 Julkaistu: 29.3.2018: 
     - Kuulamyllyarvojen etuliitteet oikaistu.  
         - N10 -> AN10

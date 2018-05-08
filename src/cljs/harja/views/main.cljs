@@ -162,10 +162,14 @@
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn hairioilmoitus [hairiotiedot]
-  [:div.hairioilmoitin
-   [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
-   [:div (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
-              (::hairio/viesti hairiotiedot))]])
+  (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
+        tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
+                        :tiedote "hairioilmoitin-tyyppi-tiedote"
+                        "hairioilmoitin-tyyppi-hairio")]
+    [:div.hairioilmoitin {:class tyyppi-luokka}
+     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+     [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+                (::hairio/viesti hairiotiedot))]]))
 
 (defn paasisalto [sivu korkeus]
   [:div
@@ -213,7 +217,7 @@
    [modal/modal-container]
    [viesti-container]
    (when @nav/kartta-nakyvissa?
-     [kartta-layers])
+     [kartta-layers korkeus])
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,

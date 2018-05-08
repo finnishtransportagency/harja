@@ -39,48 +39,54 @@ DO $$ DECLARE
 BEGIN
 INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                      "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
-                     raekoko, kuulamylly)
+                     raekoko, kuulamylly, sijainti)
   VALUES -- 20 tien paikkaukset
           (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
           6661, NOW() + interval '1 day', NOW() + interval '10 day', ROW (20, 1, 1, 1, 100, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 1, 1, 1, 100))),
 
           (destia_kayttaja, NOW() + time '00:01:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
           6662, NOW() + interval '5 day', NOW() + interval '15 day', ROW (20, 1, 50, 1, 150, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.4, 3, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.4, 3, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150))),
 
           (destia_kayttaja, NOW() + time '00:02:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
           6663, NOW() + interval '10 day', NOW() + interval '20 day', ROW (20, 3, 1, 3, 200, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.2, 4, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.2, 4, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 3, 1, 3, 200))),
+          (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
+          6664, NOW() - interval '1 day', NOW() + interval '9 day', ROW (20, 1, 50, 1, 150, NULL) :: TR_OSOITE,
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 1, 50, 1, 150))),
+          (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_id,
+          6665, NOW() - interval '1 day', NOW() + interval '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
 
           (destia_kayttaja, NOW() + time '00:03:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_2_id,
           133, NOW() + interval '10 day', NOW() + interval '20 day', ROW (20, 3, 200, 3, 300, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.2, 4, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.2, 4, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 3, 200, 3, 300))),
 
           (skanska_kayttaja, NOW(), NULL, NULL, NULL, FALSE, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id,
           733, NOW(), NOW() + interval '20 day', ROW (20, 19, 1, 19, 50, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.2, 4, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.2, 4, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 19, 1, 19, 50))),
           -- 22 tien paikkaukset
           (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
           221, NOW() - interval '1 day', NOW() + interval '9 day', ROW (22, 3, 1, 3, 100, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(22, 3, 1, 3, 100))),
           (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
           222, NOW() - interval '1 day', NOW() + interval '9 day', ROW (22, 3, 200, 3, 300, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(22, 3, 200, 3, 300))),
           (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
           223, NOW() - interval '1 day', NOW() + interval '9 day', ROW (22, 3, 400, 3, 450, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2'),
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(22, 3, 400, 3, 450))),
           (destia_kayttaja, NOW(), NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_22_id,
           224, NOW() - interval '1 day', NOW() + interval '9 day', ROW (22, 4, 1, 5, 1, NULL) :: TR_OSOITE,
-          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2');
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, '2', (SELECT tierekisteriosoitteelle_viiva(22, 4, 1, 5, 1)));
  --- Laitetaan iso kasa paikkauksia Muhoksen päällystysurakkaan. Näkee sivutuksen tällä tapaa.
  FOR counter IN 1..250 LOOP
    INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id", poistettu, "urakka-id", "paikkauskohde-id",
                      "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite, tyomenetelma, massatyyppi, leveys, massamenekki,
-                     raekoko, kuulamylly)
+                     raekoko, kuulamylly, sijainti)
     VALUES (skanska_kayttaja, NOW(), NULL, NULL, NULL, FALSE, muhoksen_paallystysurakan_id, paallystys_paikkauskohde_id,
           733 + counter, NOW(), NOW() + interval '20 day', ROW (20, 19, (50 + counter), 19, (51 + counter), NULL) :: TR_OSOITE,
-          tyomenetelmat [(counter % 3 + 1)], 'asfalttibetoni', 1.2, 4, 1, '2');
+          tyomenetelmat [(counter % 3 + 1)], 'asfalttibetoni', 1.2, 4, 1, '2', (SELECT tierekisteriosoitteelle_viiva(20, 19, (50 + counter), 19, (51 + counter))));
  END LOOP;
 
 
@@ -94,6 +100,10 @@ INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id",
          ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6662 LIMIT 1), 'Testikivi', '1', 'Muotoarvo', 'Sideaine', 3.3,
          'Lisäaineet'),
          ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6663 LIMIT 1), 'Testikivi', '1', 'Muotoarvo', 'Sideaine', 3.1,
+         'Lisäaineet'),
+         ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6664 LIMIT 1), 'Testikivi', '1', 'Muotoarvo', 'Sideaine', 3.2,
+         'Lisäaineet'),
+         ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6665 LIMIT 1), 'Testikivi', '1', 'Muotoarvo', 'Sideaine', 3.2,
          'Lisäaineet'),
          ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 133 LIMIT 1), 'Testikivi', '1', 'Muotoarvo', 'Sideaine', 3.1,
          'Lisäaineet'),
@@ -111,9 +121,11 @@ INSERT INTO paikkaus("luoja-id", luotu, "muokkaaja-id", muokattu, "poistaja-id",
 
  INSERT INTO paikkauksen_tienkohta ("paikkaus-id", ajorata, reunat, ajourat, ajouravalit, keskisaumat)
  VALUES  -- 20 tien paikkaukset
-        ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6661 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
-        ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6662 LIMIT 1), 2, ARRAY [0], ARRAY [1, 2], ARRAY [1], NULL),
+        ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6661 LIMIT 1), 1, ARRAY [0], ARRAY [1], ARRAY [1], NULL),
+        ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6662 LIMIT 1), 2, ARRAY [0], ARRAY [1], ARRAY [1], NULL),
         ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6663 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
+        ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6664 LIMIT 1), 2, ARRAY [0], ARRAY [2], NULL, NULL),
+        ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 6665 LIMIT 1), 1, ARRAY [0], ARRAY [2], NULL, NULL),
         ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 133 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
         ((SELECT id FROM paikkaus WHERE "ulkoinen-id" = 733 LIMIT 1), 1, ARRAY [0], ARRAY [1, 2], ARRAY [1], ARRAY [1]),
          -- 22 tien paikkaukset

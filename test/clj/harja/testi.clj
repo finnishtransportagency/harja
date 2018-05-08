@@ -352,6 +352,8 @@
 (def muhoksen-paikkausurakan-id (atom nil))
 (def muhoksen-paikkausurakan-paasopimuksen-id (atom nil))
 
+(def yit-rakennus-id (atom nil))
+
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
@@ -570,6 +572,9 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
+
+(defn hae-yit-rakennus-id []
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
 
 (defn hae-kajaanin-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -875,6 +880,7 @@
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
+  (reset! yit-rakennus-id (hae-yit-rakennus-id))
   (testit)
   (reset! oulun-alueurakan-2005-2010-id nil)
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id nil)
@@ -906,9 +912,18 @@
 (defn oulun-2014-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit #{}, :id 17, :etunimi "Yitin",
-   :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaatio {:id @yit-rakennus-id, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :organisaatioroolit {}
    :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"vastuuhenkilo"}}})
+
+(defn oulun-2014-urakan-urakoitsijan-laadunvalvoja []
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id @yit-rakennus-id, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"laadunvalvoja"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
