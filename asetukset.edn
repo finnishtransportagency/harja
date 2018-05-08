@@ -205,6 +205,9 @@
                  :paivittainen-tarkistusaika [13 17 00]
                  :paivitysvali-paivissa 60}
 
+ :tieverkon-sillat {:geometria-url "https://julkinen.liikennevirasto.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
+                    :paivittainen-tarkistusaika [13 17 00]
+                    :paivitysvali-paivissa 60}
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
 
