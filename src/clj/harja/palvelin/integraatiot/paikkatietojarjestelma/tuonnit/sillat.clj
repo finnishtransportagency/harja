@@ -17,7 +17,7 @@
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
-        tyyppi (:siltaty silta)
+        tyyppi (:rakennety silta)
         numero (:siltanro silta)
         nimi (:siltanimi silta)
         geometria (.toString (:the_geom silta))
@@ -26,8 +26,8 @@
         alkuetaisyys (:aet silta)
         ely-lyhenne (:ely_lyhenne silta)
         tunnus (when (not-empty ely-lyhenne)
-                 (str ely-lyhenne "-" siltanro))
-        id (int (:siltaid silta))]
+                 (str ely-lyhenne "-" numero))
+        id (int (:silta_id silta))]
     (if (first (s/hae-silta-idlla db id))
       (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
       (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
