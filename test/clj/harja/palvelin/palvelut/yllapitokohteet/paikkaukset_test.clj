@@ -43,7 +43,7 @@
     (is (contains? paikkaukset :paikkaukset))
     (is (contains? paikkaukset :paikkauskohteet))
     (is (not (contains? paikaukset-paikkauskohteet-filtteri :paikkauskohteet)))
-    (is (= (count (:paikkaukset paikkaukset)) 8))
+    (is (= (count (:paikkaukset paikkaukset)) 10))
     (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) (:paikkaukset paikaukset-paikkauskohteet-filtteri))))))
 
 (deftest hae-urakan-paikkauskohteet-ei-toimi-ilman-oikeuksia
@@ -214,7 +214,6 @@
                              (is (= (count haetut-paikkaukset-valilta)
                                     (count paikkaukset-valilta)))))]
     (testaus-template nil)
-    (testaus-template [nil nil])
     (testaus-template [nil nil])
     (testaus-template [(java.util.Date.) nil])
     (testaus-template [nil (java.util.Date.)])

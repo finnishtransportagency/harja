@@ -625,3 +625,12 @@
       (if (= lyhyt-s s)
         s
         (str lyhyt-s "[...]")))))
+
+(defn urakkatyyppi-fmt [urakkatyyppi]
+  (case urakkatyyppi
+    (:hoito :valaistus :paikkaus :siltakorjaus) (name urakkatyyppi)
+    :paallystys "päällystys"
+    :tiemerkinta  "tiemerkintä"
+    :tekniset-laitteet "tekniset laitteet"
+
+    "Ei vielä formatointia ko. urakkatyypille"))

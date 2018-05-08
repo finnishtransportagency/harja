@@ -17,6 +17,27 @@
          paikkaus/paikkauksen-perustiedot
          hakuehdot))
 
+(defn hae-paikkaukset-materiaalit [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkaukset-paikkauskohe [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/paikkauskohde paikkaus/paikkauskohteen-perustiedot])
+         hakuehdot))
+
+(defn hae-paikkaukset-tienkohta [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaus
+         (conj paikkaus/paikkauksen-perustiedot
+               [::paikkaus/tienkohdat paikkaus/tienkohta-perustiedot])
+         hakuehdot))
+
 (defn hae-paikkaustoteumat [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaustoteuma
@@ -142,4 +163,11 @@
                                      [::paikkaus/paikkaukset #{::paikkaus/urakka-id}])
                                {::paikkaus/paikkaukset {::paikkaus/urakka-id urakka-id}})]
     (mapv #(dissoc % ::paikkaus/paikkaukset) paikkauskohteet)))
+
+(defn hae-urakan-tyomenetelmat [db urakka-id]
+  (let [paikkauksien-tyomenetelmat (fetch db
+                                          ::paikkaus/paikkaus
+                                          #{::paikkaus/tyomenetelma}
+                                          {::paikkaus/urakka-id urakka-id})]
+    (into #{} (distinct (map ::paikkaus/tyomenetelma paikkauksien-tyomenetelmat)))))
 

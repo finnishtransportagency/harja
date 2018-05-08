@@ -9,7 +9,8 @@
             [harja.ui.dom :as dom]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -649,3 +650,16 @@ jatkon."
 (defn totuus-ikoni [arvo]
   (when arvo
     (ikonit/livicon-check)))
+
+(defn tallenna-excel-nappi
+  [url]
+  [(ikonit/save) "Tallenna Excel" "raporttixls" url])
+
+(defn tallenna-pdf-nappi
+  [url]
+  [(ikonit/print) "Tallenna PDF" "raporttipdf" url])
+
+(def ^{:doc "Mahdolliset raportin vientimuodot"}
++raportin-vientimuodot+
+  [(tallenna-excel-nappi (k/excel-url :raportointi))
+   (tallenna-pdf-nappi (k/pdf-url :raportointi))])

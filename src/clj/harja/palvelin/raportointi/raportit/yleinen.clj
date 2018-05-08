@@ -5,6 +5,7 @@
              [format :as tf]
              [local :as l]]
             [harja.pvm :as pvm]
+            [clojure.string :as str]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.fmt :as fmt]
@@ -14,12 +15,16 @@
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
-  (let [kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-        kkna-ja-vuonna (pvm/kuukautena-ja-vuonna (l/to-local-date-time alkupvm))]
+  (let [kk-vali? (and (and alkupvm loppupvm)
+                      (pvm/kyseessa-kk-vali? alkupvm loppupvm))
+        konteksti (if (sequential? konteksti)
+                    (str/join ", " konteksti)
+                    konteksti)]
     (if kk-vali?
-      (str konteksti ", " nimi " " kkna-ja-vuonna)
-      (str konteksti ", " nimi " ajalta "
-           (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))
+      (str konteksti ", " nimi " " (pvm/kuukautena-ja-vuonna (l/to-local-date-time alkupvm)))
+      (str konteksti ", " nimi
+           (when (and alkupvm loppupvm)
+             (str " ajalta " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))))
 
 (defn ryhmittele-tulokset-raportin-taulukolle
   "rivit                   ryhmiteltävät rivit
