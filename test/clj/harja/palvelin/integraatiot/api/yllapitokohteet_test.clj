@@ -91,12 +91,12 @@
                                         "Erkki Esimerkki"
                                         portti)]
     (is (= 403 (:status vastaus)))
-    (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
+    (is (str/includes? (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-tuntemattomalle-urakalle
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja-paallystys portti)]
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "tuntematon-urakka"))))
+    (is (str/includes? (:body vastaus) "tuntematon-urakka"))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -117,7 +117,7 @@
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila, id
@@ -213,7 +213,6 @@
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
-;; WIP
 (deftest uuden-paallystysilmoituksen-kirjaaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
@@ -232,7 +231,7 @@
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Kohdeosille tallentui pääkohteen ajorata ja kaista
     (tarkista-map-arvot
@@ -280,7 +279,7 @@
                                              (.replace "__VALMIS__" (str true))))]
 
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tila on valmis
     (let [tila (ffirst (q (str "SELECT tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))]
@@ -299,7 +298,7 @@
                                              (.replace "__VALMIS__" (str false))))]
 
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
@@ -402,7 +401,7 @@
                                              (.replace "__VALMIS__" (str false))))]
 
     (is (not= 200 (:status vastaus)))
-    (is (not (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti.")))))
+    (is (not (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti.")))))
 
 (deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -415,7 +414,7 @@
                                              (.replace "__VALMIS__" (str false))))]
 
     (is (= 500 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystysilmoitus on lukittu"))))
+    (is (str/includes? (:body vastaus) "Päällystysilmoitus on lukittu"))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -444,8 +443,8 @@
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))))
+    (is (str/includes? (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))))
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-paivittyy
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
@@ -533,8 +532,8 @@
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))))
+    (is (str/includes? (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (not (str/includes? (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))))
 
 (deftest aikataulun-kirjaaminen-paallystysurakan-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -547,8 +546,8 @@
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
+    (is (str/includes? (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
 
     (let [aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
@@ -573,8 +572,8 @@
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
+    (is (str/includes? (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (not (str/includes? (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
 
     (let [aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
@@ -615,7 +614,7 @@
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
 
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
+    (is (str/includes? (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest paallystyksen-aikataulun-kirjaus-ei-onnistu-tiemerkintaurakalle
   (let [urakka (hae-oulun-tiemerkintaurakan-id)
@@ -625,7 +624,7 @@
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
 
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
+    (is (str/includes? (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkintapvm-vaarin
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -636,8 +635,8 @@
     (is (= 400 (:status vastaus)))
     (is (or
           ; ko. payload feilauttaa kaksi eri validointia. Riittää napata toinen kiinni.
-          (.contains (:body vastaus) "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio")
-          (.contains (:body vastaus) "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu.")))))
+          (str/includes? (:body vastaus) "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio")
+          (str/includes? (:body vastaus) "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu.")))))
 
 (deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-paallystyksen-valmispvm-vaarin
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -647,7 +646,7 @@
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_paallystys_valmis_ilman_paallystyksen_alkua.json"))]
 
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystystä ei voi merkitä valmiiksi, aloitus puuttuu."))))
+    (is (str/includes? (:body vastaus) "Päällystystä ei voi merkitä valmiiksi, aloitus puuttuu."))))
 
 (deftest tiemerkinnan-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkinnan-valmispvm-vaarin
   (let [urakka (hae-oulun-tiemerkintaurakan-id)
@@ -657,7 +656,7 @@
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus_viallinen_tiemerkinta_valmis_ilman_alkua.json"))]
 
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."))))
+    (is (str/includes? (:body vastaus) "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."))))
 
 (deftest aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -666,7 +665,7 @@
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu.json"))]
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio"))))
+    (is (str/includes? (:body vastaus) "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio"))))
 
 (deftest aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu
   (let [urakka (hae-oulun-tiemerkintaurakan-id)
@@ -676,7 +675,7 @@
                                          (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu.json"))]
 
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Kun annetaan tiemerkinnän aloitusaika, anna myös tiemerkinnän valmistumisen aika tai aika-arvio"))))
+    (is (str/includes? (:body vastaus) "Kun annetaan tiemerkinnän aloitusaika, anna myös tiemerkinnän valmistumisen aika tai aika-arvio"))))
 
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -685,7 +684,7 @@
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+    (is (str/includes? (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-paallystyskayttajana
   ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
@@ -830,7 +829,7 @@
         maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
 
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
-    (is (.contains (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
+    (is (str/includes? (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
     (is (= (+ 1 (count maaramuutokset-ennen-kirjausta)) (count maaramuutokset-kirjauksen-jalkeen))
         "Vain yksi uusi määrämuutos on kirjautunut")
 
@@ -839,7 +838,7 @@
           maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
 
       (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
-      (is (.contains (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
+      (is (str/includes? (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
       (is (= (+ 1 (count maaramuutokset-ennen-kirjausta)) (count maaramuutokset-kirjauksen-jalkeen))
           "Vain yksi uusi määrämuutos on kirjautunut")
 
@@ -861,7 +860,7 @@
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)]
     (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "tuntematon-yllapitokohde"))))
+    (is (str/includes? (:body vastaus) "tuntematon-yllapitokohde"))))
 
 (deftest tarkastuksen-kirjaaminen-kohteelle-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -877,7 +876,7 @@
         tarkastus (first tarkastukset-kirjauksen-jalkeen)]
 
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
-    (is (.contains (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
+    (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
     (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
         "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
 
@@ -893,7 +892,7 @@
       (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
       (is (= (count tarkastukset-kirjauksen-jalkeen) (count tarkastukset-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
 
-      (is (.contains (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
+      (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
       (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))
 
     (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
@@ -904,7 +903,7 @@
           vastaus (api-tyokalut/delete-kutsu polku kayttaja-paallystys portti kutsudata)
           poistettu? (:poistettu (first (hae-tarkastukset)))]
       (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
-      (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
+      (is (str/includes? (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
       (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
 
 (deftest useamman-tarkastuksen-kirjaamisessa-transaktio-toimii
@@ -942,7 +941,7 @@
         toteuma (first (filter #(= ulkoinen-id (:ulkoinen_id %)) toteumat-kirjauksen-jalkeen))]
 
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
-    (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
+    (is (str/includes? (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
     (is (= (+ 1 (count toteumat-ennen-kirjausta)) (count toteumat-kirjauksen-jalkeen))
         "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
 
@@ -958,7 +957,7 @@
 
       (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
       (is (= (count toteumat-kirjauksen-jalkeen) (count toteumat-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
-      (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
+      (is (str/includes? (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
       (is (= 666.00M (:hinta paivitetty-toteuma)) "Hinta on päivittynyt oikein"))
 
     (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tiemerkintatoteuma"]
@@ -969,7 +968,7 @@
           vastaus (api-tyokalut/delete-kutsu polku kayttaja-tiemerkinta portti kutsudata)
           poistettu? (:poistettu (first (filter #(= ulkoinen-id (:ulkoinen_id %)) (hae-toteumat))))]
       (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
-      (is (.contains (:body vastaus) "Toteumat poistettu onnistuneesti. Poistettiin: 1 toteumaa."))
+      (is (str/includes? (:body vastaus) "Toteumat poistettu onnistuneesti. Poistettiin: 1 toteumaa."))
       (is poistettu? "Toteuma on merkitty poistetuksi onnistuneesti."))))
 
 
