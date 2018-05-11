@@ -184,9 +184,9 @@
               :tr_alkuetaisyys 1
               :tr_alkuosa 1
               :tr_kaista 1
-              :tr_loppuetaisyys 0
-              :tr_loppuosa 2
-              :tr_numero 20
+              :tr_loppuetaisyys 15
+              :tr_loppuosa 1
+              :tr_numero 22
               :tyomenetelma nil
               :yllapitokohde 1}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
@@ -213,6 +213,7 @@
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
+;; WIP
 (deftest uuden-paallystysilmoituksen-kirjaaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
@@ -234,36 +235,38 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Kohdeosille tallentui pääkohteen ajorata ja kaista
-    (is (= (dissoc kohdeosa-1-kannassa :id)
-           {:massamaara nil
-            :nimi "1. testialikohde"
-            :paallystetyyppi nil
-            :raekoko nil
-            :toimenpide nil
-            :tr_ajorata 1
-            :tr_alkuetaisyys 1
-            :tr_alkuosa 1
-            :tr_kaista 1
-            :tr_loppuetaisyys 0
-            :tr_loppuosa 2
-            :tr_numero 20
-            :tyomenetelma nil
-            :yllapitokohde 1}))
-    (is (= (dissoc kohdeosa-2-kannassa :id)
-           {:massamaara nil
-            :nimi "2. testialikohde"
-            :paallystetyyppi nil
-            :raekoko nil
-            :toimenpide nil
-            :tr_ajorata 1
-            :tr_alkuetaisyys 0
-            :tr_alkuosa 2
-            :tr_kaista 1
-            :tr_loppuetaisyys 5
-            :tr_loppuosa 3
-            :tr_numero 20
-            :tyomenetelma nil
-            :yllapitokohde 1}))))
+    (tarkista-map-arvot
+     {:massamaara nil
+      :nimi "1. testialikohde"
+      :paallystetyyppi nil
+      :raekoko nil
+      :toimenpide nil
+      :tr_ajorata 1
+      :tr_alkuetaisyys 1
+      :tr_alkuosa 101
+      :tr_kaista 1
+      :tr_loppuetaisyys 15
+      :tr_loppuosa 101
+      :tr_numero 4
+      :tyomenetelma nil
+      :yllapitokohde 1}
+     (dissoc kohdeosa-1-kannassa :id))
+    (tarkista-map-arvot
+     {:massamaara nil
+      :nimi "2. testialikohde"
+      :paallystetyyppi nil
+      :raekoko nil
+      :toimenpide nil
+      :tr_ajorata 1
+      :tr_alkuetaisyys 0
+      :tr_alkuosa 2
+      :tr_kaista 1
+      :tr_loppuetaisyys 5
+      :tr_loppuosa 3
+      :tr_numero 20
+      :tyomenetelma nil
+      :yllapitokohde 1}
+     (dissoc kohdeosa-2-kannassa :id))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-kasiteltavaksi-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
