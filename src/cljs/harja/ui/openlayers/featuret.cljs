@@ -204,6 +204,13 @@ pienemmällä zindexillä." :const true}
       (.appendPolygon multi (ol.geom.Polygon. (clj->js [(:coordinates polygon)]))))
     multi))
 
+(defmethod luo-feature :multipolygon [{:keys [stroke] :as geom}]
+  (doto (ol.Feature. #js {:geometry (luo-geometria geom)})
+    (.setStyle (ol.style.Style.
+                 #js {:stroke (ol.style.Stroke.
+                                #js {:width (or (:width stroke) 1)
+                                     :color (or (:color stroke) "black")})}))))
+
 (defmethod luo-geometria :multiline [{lines :lines}]
   (ol.geom.MultiLineString. (clj->js (mapv :points lines))))
 
