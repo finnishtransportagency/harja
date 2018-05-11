@@ -87,7 +87,9 @@
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (or (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
-                (kayttajat-q/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+                (kayttajat-q/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja))
+                (kayttajat-q/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja)))
+
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (format "Käyttäjällä: %s ei ole oikeuksia urakan: %s päivystäjätietoihin."
