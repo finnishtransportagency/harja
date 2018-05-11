@@ -131,79 +131,82 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot-kannassa {:alustatoimet [{:kasittelymenetelma 1
-                                                      :paksuus 1
-                                                      :tekninen-toimenpide 1
-                                                      :tr-numero 21
-                                                      :tr-alkuetaisyys 1
-                                                      :tr-alkuosa 1
-                                                      :tr-loppuetaisyys 5
-                                                      :tr-loppuosa 3
-                                                      :verkkotyyppi 1
-                                                      :verkon-sijainti 1
-                                                      :verkon-tarkoitus 5}]
-                                      :osoitteet [{:esiintyma "testi"
-                                                   :km-arvo "testi"
-                                                   :kohdeosa-id 14
-                                                   :kokonaismassamaara 12.3
-                                                   :kuulamylly 4
-                                                   :leveys 1.2
-                                                   :lisaaineet "lisäaineet"
-                                                   :massamenekki 22
-                                                   :muotoarvo "testi"
-                                                   :paallystetyyppi 11
-                                                   :pinta-ala 2.2
-                                                   :pitoisuus 1.2
-                                                   :raekoko 12
-                                                   :rc% 54
-                                                   :sideainetyyppi 1
-                                                   :tyomenetelma 72}
-                                                  {:esiintyma "testi2"
-                                                   :km-arvo "testi2"
-                                                   :kohdeosa-id 15
-                                                   :kokonaismassamaara 12.3
-                                                   :kuulamylly 4
-                                                   :leveys 1.2
-                                                   :lisaaineet "lisäaineet"
-                                                   :massamenekki 22
-                                                   :muotoarvo "testi2"
-                                                   :paallystetyyppi 11
-                                                   :pinta-ala 2.2
-                                                   :pitoisuus 1.2
-                                                   :raekoko 12
-                                                   :rc% 54
-                                                   :sideainetyyppi 1
-                                                   :tyomenetelma 72}]}))
-      (is (= (dissoc kohdeosa-1-kannassa :id)
-             {:massamaara nil
-              :nimi "1. testialikohde"
-              :paallystetyyppi nil
-              :raekoko nil
-              :toimenpide nil
-              :tr_ajorata 1
-              :tr_alkuetaisyys 1
-              :tr_alkuosa 1
-              :tr_kaista 1
-              :tr_loppuetaisyys 15
-              :tr_loppuosa 1
-              :tr_numero 22
-              :tyomenetelma nil
-              :yllapitokohde 1}))
-      (is (= (dissoc kohdeosa-2-kannassa :id)
-             {:massamaara nil
-              :nimi "2. testialikohde"
-              :paallystetyyppi nil
-              :raekoko nil
-              :toimenpide nil
-              :tr_ajorata 1
-              :tr_alkuetaisyys 0
-              :tr_alkuosa 2
-              :tr_kaista 1
-              :tr_loppuetaisyys 5
-              :tr_loppuosa 3
-              :tr_numero 20
-              :tyomenetelma nil
-              :yllapitokohde 1}))
+      (tarkista-map-arvot  {:alustatoimet [{:kasittelymenetelma 1
+                                            :paksuus 1
+                                            :tekninen-toimenpide 1
+                                            :tr-numero 21
+                                            :tr-alkuetaisyys 1
+                                            :tr-alkuosa 1
+                                            :tr-loppuetaisyys 5
+                                            :tr-loppuosa 3
+                                            :verkkotyyppi 1
+                                            :verkon-sijainti 1
+                                            :verkon-tarkoitus 5}]
+                            :osoitteet [{:esiintyma "testi"
+                                         :km-arvo "testi"
+                                         :kohdeosa-id 14
+                                         :kokonaismassamaara 12.3
+                                         :kuulamylly 4
+                                         :leveys 1.2
+                                         :lisaaineet "lisäaineet"
+                                         :massamenekki 22
+                                         :muotoarvo "testi"
+                                         :paallystetyyppi 11
+                                         :pinta-ala 2.2
+                                         :pitoisuus 1.2
+                                         :raekoko 12
+                                         :rc% 54
+                                         :sideainetyyppi 1
+                                         :tyomenetelma 72}
+                                        {:esiintyma "testi2"
+                                         :km-arvo "testi2"
+                                         :kohdeosa-id 15
+                                         :kokonaismassamaara 12.3
+                                         :kuulamylly 4
+                                         :leveys 1.2
+                                         :lisaaineet "lisäaineet"
+                                         :massamenekki 22
+                                         :muotoarvo "testi2"
+                                         :paallystetyyppi 11
+                                         :pinta-ala 2.2
+                                         :pitoisuus 1.2
+                                         :raekoko 12
+                                         :rc% 54
+                                         :sideainetyyppi 1
+                                         :tyomenetelma 72}]}
+                           ilmoitustiedot-kannassa )
+      (tarkista-map-arvot
+                          {:massamaara nil
+                           :nimi "1. testialikohde"
+                           :paallystetyyppi nil
+                           :raekoko nil
+                           :toimenpide nil
+                           :tr_ajorata 1
+                           :tr_alkuetaisyys 1
+                           :tr_alkuosa 1
+                           :tr_kaista 1
+                           :tr_loppuetaisyys 0
+                           :tr_loppuosa 2
+                           :tr_numero 20
+                           :tyomenetelma nil
+                           :yllapitokohde 1}
+                          (dissoc kohdeosa-1-kannassa :id))
+      (tarkista-map-arvot
+       {:massamaara nil
+        :nimi "2. testialikohde"
+        :paallystetyyppi nil
+        :raekoko nil
+        :toimenpide nil
+        :tr_ajorata 1
+        :tr_alkuetaisyys 0
+        :tr_alkuosa 2
+        :tr_kaista 1
+        :tr_loppuetaisyys 5
+        :tr_loppuosa 3
+        :tr_numero 20
+        :tyomenetelma nil
+        :yllapitokohde 1}
+       (dissoc kohdeosa-2-kannassa :id))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
