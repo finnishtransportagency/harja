@@ -31,6 +31,7 @@
 
 (def viimeisin-haettu-id (atom nil))
 
+
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
         tyyppi (:rakennety silta)
@@ -41,17 +42,21 @@
         alkuosa (:aosa silta)
         alkuetaisyys (:aet silta)
         ely-lyhenne (:ely_lyhenn silta)
+        ely-numero (:ely silta)
         laani-lyhenne (get elytunnuksen-laani ely-lyhenne)
         tunnus (when (not-empty laani-lyhenne)
                  (str laani-lyhenne "-" numero))
         id (when :silta_id silta
                  (int (:silta_id silta)))]
 
-    (log/debug "silta luettu tl261-tietueesta:" tyyppi, numero, nimi, tie, alkuosa, alkuetaisyys, ely-lyhenne, tunnus, id)
+    ;; (log/debug "silta luettu tl261-tietueesta:" tyyppi, numero, nimi, tie, alkuosa, alkuetaisyys, ely-lyhenne, ely-numero tunnus, id)
     (when (and id tunnus)
       (reset! viimeisin-haettu-id id)
-      (if (first (s/hae-silta-idlla db id))
-        (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
+      ;; huom - tämä on tietokannan "siltaid" -kenttä, ei "id"-kenttä.
+      ;; id-kenttää ei kai käytetä mihinkään vaan se on itse keksitty id
+      (if-let [vanha-silta (first (s/hae-silta-idlla db id))]
+        (do
+          (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))
         (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))
       true)))
 
@@ -65,13 +70,16 @@
 (defn vie-silta-entry [db silta]
   (if (spec/valid? ::silta-shp-spec silta)
     (luo-tai-paivita-silta db silta)
-    (log/debug "Siltaa ei voida tuoda ilman geometriaa, ely-lyhennettä ja silta-id:tä. Virheviesti: " (:loc_error silta) "Validointi:" (with-out-str (spec/explain ::silta-shp-spec silta)))))
+    (log/debug "Siltaa ei voida tuoda ilman geometriaa, ely-lyhennettä ja silta-id:tä. Validointi:" (with-out-str (spec/explain ::silta-shp-spec silta)))))
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (let [kpl (atom 0)
           siltatietueet-shapefilesta (shapefile/tuo shapefile)
-          siltatietueet-shapefilesta (take 200 siltatietueet-shapefilesta)
+          ;; siltatietueet-shapefilesta (take 200 siltatietueet-shapefilesta)
+          siltaid-kentalliset-siltatietueet  (filter :silta_id siltatietueet-shapefilesta)
+          _ (log/debug "montako siltaa joilla silta_id? -> " (count siltaid-kentalliset-siltatietueet))
+          _ (log/debug "montako uniikkia silta_id:ta? -> " (count (set (map :silta_id siltaid-kentalliset-siltatietueet))))
           ]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
