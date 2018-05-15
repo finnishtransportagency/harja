@@ -98,32 +98,6 @@
                          kayttajatunnus
                          salasana)))))
 
-
-(defn maarittele-siltojen-paivitystehtava [paivitystunnus
-                                  url-avain
-                                  tuontikohdepolku-avain
-                                  shapefile-avain
-                                  paivitys]
-  (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [db (:db this)
-          url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
-          tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
-          shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
-          kayttajatunnus nil
-          salasana nil]
-      (when (and tuontivali
-                 url
-                 tuontikohdepolku
-                 shapefile)
-        (ajasta-paivitys this
-                         paivitystunnus
-                         tuontivali
-                         url
-                         tuontikohdepolku
-                         (fn [] (paivitys (:db this) shapefile))
-                         kayttajatunnus
-                         salasana)))))
-
 (defn maarittele-paikallinen-paivitystehtava [paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
     (let [db (:db this)
@@ -144,6 +118,13 @@
                 (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus (harja.pvm/nyt)))
               (catch Exception e
                 (log/debug e (format "Paikallisessa geometriapäivityksessä %s tapahtui poikkeus." paivitystunnus))))))))))
+
+;; käyttö replissä esim :
+#_(let [db (:db harja.palvelin.main/harja-jarjestelma)
+        shapefile "file://shp/Sillat/PTV.tl261_H.shp"]
+    (siltojen-tuonti/vie-sillat-kantaan db shapefile))
+
+
 
 (def tee-tieverkon-paivitystehtava
   (maarittele-paivitystehtava
@@ -178,7 +159,7 @@
     pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan))
 
 (def tee-siltojen-paivitystehtava
-  (maarittele-siltojen-paivitystehtava
+  (maarittele-paivitystehtava
     "sillat"
     :siltojen-osoite
     :siltojen-tuontikohde
