@@ -52,7 +52,9 @@
                      :uimasalmen-rata [2621 "SK"]
                      :palli [1399 "KaS"]
                      :rattijarvi [1401 "KaS"]
-                     :sarkijarvi [1402 "KaS"]})
+                     :sarkijarvi [1402 "KaS"]
+                     :pielisjoki-rata [2622 "SK"]})
+
 
 (def poistetut-siltatilat {:poistettu "poistettu"
                            :purettu "purettu"
