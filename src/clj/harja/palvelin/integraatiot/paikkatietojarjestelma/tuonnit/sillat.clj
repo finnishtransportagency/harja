@@ -29,8 +29,6 @@
    "Lap" "L" ;; lappi
    })
 
-(def viimeisin-haettu-id (atom nil))
-
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
@@ -43,6 +41,7 @@
         alkuetaisyys (:aet silta)
         ely-lyhenne (:ely_lyhenn silta)
         ely-numero (:ely silta)
+        loppupvm (:loppupvm silta)
         laani-lyhenne (get elytunnuksen-laani ely-lyhenne)
         tunnus (when (not-empty laani-lyhenne)
                  (str laani-lyhenne "-" numero))
@@ -50,8 +49,7 @@
                  (int (:silta_id silta)))]
 
     ;; (log/debug "silta luettu tl261-tietueesta:" tyyppi, numero, nimi, tie, alkuosa, alkuetaisyys, ely-lyhenne, ely-numero tunnus, id)
-    (when (and id tunnus)
-      (reset! viimeisin-haettu-id id)
+    (when (and id tunnus (empty? loppupvm))
       ;; huom - tämä on tietokannan "siltaid" -kenttä, ei "id"-kenttä.
       ;; id-kenttää ei kai käytetä mihinkään vaan se on itse keksitty id
       (if-let [vanha-silta (first (s/hae-silta-idlla db id))]
@@ -72,6 +70,7 @@
     (luo-tai-paivita-silta db silta)
     (log/debug "Siltaa ei voida tuoda ilman geometriaa, ely-lyhennettä ja silta-id:tä. Validointi:" (with-out-str (spec/explain ::silta-shp-spec silta)))))
 
+
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (let [kpl (atom 0)
@@ -80,6 +79,7 @@
           siltaid-kentalliset-siltatietueet  (filter :silta_id siltatietueet-shapefilesta)
           _ (log/debug "montako siltaa joilla silta_id? -> " (count siltaid-kentalliset-siltatietueet))
           _ (log/debug "montako uniikkia silta_id:ta? -> " (count (set (map :silta_id siltaid-kentalliset-siltatietueet))))
+          _ (log/debug "montako ei-tyhjää loppupvm:aa? -> " (count (filter #(not-empty (:loppupvm %)) siltaid-kentalliset-siltatietueet)))
           ]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
