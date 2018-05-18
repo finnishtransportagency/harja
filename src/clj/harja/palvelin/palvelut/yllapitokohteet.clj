@@ -643,7 +643,7 @@
                       :tiemerkinta (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
                                                  db {:id yllapitokohde-id}))))
           fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim urakka-id)
-          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user urakka-id)]
+          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user urakka-id true)]
       {:fim-kayttajat (vec fim-kayttajat)
        :yhteyshenkilot (vec yhteyshenkilot)})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
