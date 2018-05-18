@@ -206,8 +206,8 @@
           :paivittainen-tarkistusaika [12 22 00]
           :paivitysvali-paivissa 60}
 
- :kanavasillat {:geometria-url "http://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/1.2/rakenteet?sivu=%1&tuloksia-per-sivu=1000"
-                 :paivittainen-tarkistusaika [13 17 00]
+ :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
+                 :paivittainen-tarkistusaika [12 17 00]
                  :paivitysvali-paivissa 60}
 
 

@@ -26,7 +26,7 @@ WHERE kayttaja = :kayttaja;
 SELECT
   u.id,
   u.nimi
-FROM urakka u;
+FROM urakka u ORDER BY u.nimi;
 
 -- name: poista-jarjestelmatunnus!
 UPDATE kayttaja
