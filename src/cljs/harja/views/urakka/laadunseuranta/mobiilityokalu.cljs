@@ -14,7 +14,7 @@
    [:ul
     [:li "Android-tabletti tai iPad"]
     [:li "GPS-yhteys"]
-    [:li "Internet-yhteys (ainoastaan tarkastusajon aloittamista ja päättämistä varten)"]
+    [:li "Mobiilidatayhteys SIM-kortin avulla mahdollistaa nopeamman GPS–sijainnin löytämisen, internet-yhteyttä tarvitaan tarkastusajon aloittamista ja päättämistä varten)"]
     [:li "Selain: Chrome (53 tai uudempi), Firefox (49 tai uudempi), iPad Safari (9.3 tai uudempi)"]]
 
    [:p "Kaikkien merkintöjen tallentumiseksi sovellus tulee pitää koko ajan näkyvissä. On myös suositeltavaa asettaa laitteen automaattilukitus pois päältä tai viive mahdollisimman suureksi tarkastusajon ajaksi:"
@@ -22,6 +22,8 @@
     [:br] "- Androidissa Asetukset -> Näyttö -> Näytön aikakatkaisu -> Pois"]
 
    [:h3 "Käyttö"]
+   [:p "Sisäänkirjautuminen kannattaa tehdä mahdollisuuksien mukaan jo toimistolla ennen ajoa jotta tien päällä ei joudu enää näpyttämään salasanaa."]
+   [:p "Ennen kuin aloitat tarkastusajon, odota autossa paikallaan kunnes tarkka GPS-sijainti löytyy ja on nähtävissä kartalta."]
    [:a {:href "https://extranet.liikennevirasto.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry Mobiiliin laadunseurantatyökaluun")]
