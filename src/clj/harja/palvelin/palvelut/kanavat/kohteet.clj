@@ -24,6 +24,14 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kanavakohteet user)
     (q/hae-urakan-kohteet db user urakka-id)))
 
+;; TODO: omaa
+(defn hae-urakan-kohteet-mukaanlukien-poistetut
+  [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kanavakohteet user)
+  (into []
+        (q/hae-urakan-kohteet-mukaanlukien-poistetut db user urakka-id)))
+
+
 (defn liita-kohteet-urakkaan! [db user {:keys [liitokset] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (doseq [linkki (keys liitokset)]
@@ -75,6 +83,11 @@
         (hae-urakan-kohteet db user tiedot))
       {:kysely-spec ::kok/hae-urakan-kohteet-kysely
        :vastaus-spec ::kok/hae-urakan-kohteet-vastaus})
+    (julkaise-palvelu
+      http
+      :hae-kaikki-urakan-kohteet
+      (fn [user urakka-id]
+        (hae-urakan-kohteet-mukaanlukien-poistetut db user urakka-id)))
     (julkaise-palvelu
       http
       :tallenna-kohdekokonaisuudet

@@ -1,6 +1,7 @@
 (ns harja.views.urakka.valinnat
   "Yleiset urakkaan liittyvät valintakomponentit."
   (:require [harja.tiedot.urakka :as u]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
@@ -151,6 +152,7 @@
 ;; TODO: tämä on neljännen tason toimenpiteille, jotka ovat muutoshintaisia
 ;; Tämä tasojen sotkeminen on vähän huono homma? Onko tämä  uudelleenkäytettävä
 (defn urakan-tehtava+kaikki []
+  (log (prn-str "*** URAKAN TEHTÄVÄT " @u/urakan-tehtavat))
   (valinnat/urakan-tehtava
     (r/wrap (vec (concat [{:t4_nimi "Kaikki"}]
                          @u/urakan-tehtavat))
@@ -173,6 +175,21 @@
             identity)
     u/valittu-yksikkohintainen-tehtava
     u/valitse-yksikkohintainen-tehtava!))
+
+
+
+
+; TODO: siirrä tämä pois täältä urakasta paitsi circular ref
+;; Voisko hyödyntää kuitenkin kanava-kohde funktiota. Nyt tulee räsähdys jos näin tehdään
+(defn kanavaurakan-kohde+kaikki []
+  (log (prn-str "*** URAKAN KOHTEET " @ku/kanavakohteet))
+
+  (valinnat/kanavaurakan-kohde
+    (r/wrap (vec (concat [{:kohde "Kaikki"}]
+                         @ku/kanavakohteet))
+            identity)
+    ku/valittu-kohde ku/valitse-kohde!))
+
 
 
 ;; Komponentit, jotka käyttävät hoitokautta, joutuvat resetoimaan valitun aikavälin eksplisiittisesti
@@ -249,3 +266,6 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
        (merge-with merge
                    (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot])
                    optiot)))))
+
+
+

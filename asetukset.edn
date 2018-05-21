@@ -113,9 +113,9 @@
                         :soratien-hoitoluokkien-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl149.shz"
                         :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
-                        :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV_silta.shz"
-                        :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
+                        :siltojen-shapefile "file://shp/Sillat/PTV.tl261_H.shp"
+                        :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV.tl261_H.shz"
+                        :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
                         :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"

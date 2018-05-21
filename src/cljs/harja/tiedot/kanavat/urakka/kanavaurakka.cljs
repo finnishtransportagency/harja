@@ -11,7 +11,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavaurakan-toimenpiteet]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.valinnat :as valinnat]
+
             [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
@@ -28,31 +28,21 @@
 
 ;; TODO: kanavaurakan kohde
 ;; TODO: reaction-writable - huono pattern
+
+(def kanavakohteet-mukaanlukien-poistetut
+  (reaction<!
+    [urakka @nav/valittu-urakka]
+    (when (and urakka
+               (urakka/kanavaurakka? urakka))
+      (k/post! :hae-kaikki-urakan-kohteet (:id urakka)))))
+
 (defonce valittu-kohde
          (reaction-writable
-           (let [id @valitun-kanavakohteen-id
-                 kohteet @kanavakohteet]
+           (let [id @valitun-kanavakohteen-id ;; vai pitäikö olla @valittu-kohde-atom
+                 kohteet @kanavakohteet-mukaanlukien-poistetut]
              (or (and id (first (filter #(= (:id %) id) kohteet)))
                  (first kohteet)))))
 
 ;; TODO: toimiiko, tarviiko muuta?
 (defn valitse-kohde! [{id :id :as kohde}]
   (reset! valittu-kohde kohde))
-
-;; TODO: siirrä tämä pois täältä urakasta
-(defn kanavaurakan-kohde+kaikki []
-  (valinnat/kanava-kohde valittu-kohde kanavakohteet valitse-kohde!)
-  (r/wrap (vec (concat [{:kohde "Kaikki"}]
-                       @kanavakohteet))
-          identity)
-  valittu-kohde valitse-kohde!
-
-  (log (prn-str "VALITTU KOHDE " valittu-kohde))
-  (log (prn-str "VALITTU kanavakohteet " kanavakohteet))
-  [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko "Kohde"]
-   ]
-
-
-  ) ;;Todo: tämä on testi
-

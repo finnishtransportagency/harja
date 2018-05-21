@@ -314,14 +314,14 @@
 
    {:nimi :kanavien-muutos-ja-lisatyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
-                 ;;{:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
-                 ;;{:tyyppi "urakan-tehtava", :konteksti nil, :pakollinen false, :nimi "Tehtävä"}
-                 ;;{:tyyppi "kanavaurakan-kohde", :konteksti nil, :pakollinen false, :nimi "Kohde"}
+                 {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
+                 {:tyyppi "urakan-tehtava", :konteksti nil, :pakollinen false, :nimi "Tehtävä"}
+                 {:tyyppi "kanavaurakan-kohde", :konteksti nil, :pakollinen false, :nimi "Kohde"}
                  ]
     :konteksti #{"koko maa" "urakka"}
     :kuvaus "Muutos- ja lisätyöt"
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
-    :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}
 
    {:nimi :kanavien-liikennetapahtumat
     :konteksti #{}

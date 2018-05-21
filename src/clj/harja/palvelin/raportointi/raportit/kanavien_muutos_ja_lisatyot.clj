@@ -40,6 +40,7 @@
 
 (defn hinnoitteluryhman-nimi
   [hinnoitteluryhma]
+  (log/debug (println-str "Hinnoitteluryhmä " hinnoitteluryhma))
   (case (keyword hinnoitteluryhma)
     :sopimushintainen-tyo-tai-materiaali "Sopimushintainen työ tai materiaali"
     :omakustanteinen-tyo-tai-materiaali "Omakustanteinen työ tai materiaali"

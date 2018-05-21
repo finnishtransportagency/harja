@@ -217,6 +217,19 @@
     @urakan-tehtavat-atom]])
 
 
+(defn kanavaurakan-kohde
+  [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
+  ;(log (prn-str "KANAVA KOHTEET  " kohteet))
+  (log (prn-str "**** kanavaurakan-kohde " valittu-kohde-atom))
+
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Kohde ff"]
+   [livi-pudotusvalikko {:valinta @valittu-kohde-atom
+                         :format-fn #(if % (str (:kohde %)) "Ei kohteita")
+                         :valitse-fn #(reset! valittu-kohde-atom %)}
+    @kohteet-atom]])
+
+
 ;;TODO: lisätty tehtävät tänne, onko turha
 
 ;;(when-let [{:keys [urakan-tehtavat-atom valittu-tehtava-atom valitse-tehtava-fn]} tehtava]
@@ -376,8 +389,12 @@
                          :valitse-fn #(reset! valittu-paikallinen-kaytto-atom %)}
     valinnat]])
 
+;; TODO: oli jo olemassa, yritetään käyttää
 (defn kanava-kohde
   [valittu-kohde-atom kohteet format-fn]
+  ;(log (prn-str "KANAVA KOHTEET  " kohteet))
+  (log (prn-str "KANAVA KOHDE " valittu-kohde-atom))
+
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Kohde"]
    [livi-pudotusvalikko {:valinta @valittu-kohde-atom

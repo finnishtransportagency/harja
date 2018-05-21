@@ -325,21 +325,22 @@
         [valinnat/urakan-tehtava+kaikki]))))
 
 
-;;TODO:
+;;TODO: varmista ettei tämä käsittele samaa atomia kuin se toinen
 (defmethod raportin-parametri "kanavaurakan-kohde" [p arvo]
   (let [aseta-kohde (fn [kohde]
+                      (log (prn-str "**** KOHDE-ID " (:harja.domain.kanavat.kohde/id kohde)))
                     (reset! arvo (if kohde
-                                   {:kohde-id (:id kohde)}
+                                   {:kohde-id (:harja.domain.kanavat.kohde/id kohde)}
                                    {:virhe "Ei kohdevalintaa"})))]
     (komp/luo
       (komp/watcher ku/valittu-kohde
                     (fn [_ _ kohde]
                       (aseta-kohde kohde)))
-      (komp/piirretty #(reset! ku/valittu-kohde {:kohde_nimi "Kaikki"}))
+      (komp/piirretty #(reset! ku/valittu-kohde {:harja.domain.kanavat.kohde/nimi "Kaikki"}))
 
       (fn [_ _]
         @ku/valittu-kohde
-        [ku/kanavaurakan-kohde+kaikki]))))
+        [valinnat/kanavaurakan-kohde+kaikki]))))
 
 
 

@@ -513,6 +513,12 @@ UNION
    (ktp.pvm >= :alkupvm AND ktp.pvm <= :loppupvm)
  ORDER BY ktp.urakka, ktp."kohde-id", ktp.toimenpideinstanssi, ktp.toimenpidekoodi);
 
+
+-- name: hae-urakan-kohteet-mukaanlukien-poistetut
+SELECT k.id as id, k.nimi as nimi
+FROM kan_kohde k, kan_kohde_urakka u
+WHERE k.id = u."kohde-id" AND u."urakka-id" = :urakkaid; -- Huom. palauttaa myös poistetut kohteet. Raportilla voidaan tarvita.
+
 -- name: hae-kanavakohteen-nimi
 SELECT nimi
 FROM kan_kohde

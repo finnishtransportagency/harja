@@ -21,7 +21,6 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.oikeudet :as oikeudet]))
 
-;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
 
 (defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
@@ -221,3 +220,5 @@
                       (dissoc kohde ::kohde/id ::kohde/kohteenosat))))]
       (doseq [osa osat]
         (lisaa-kohteelle-osa! db user osa kohde)))))
+
+
