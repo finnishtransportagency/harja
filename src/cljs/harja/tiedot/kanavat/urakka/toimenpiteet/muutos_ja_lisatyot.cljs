@@ -150,8 +150,21 @@
 (defn muut-hinnat [app]
   (hintaryhman-tyot app "muu"))
 
+(declare materiaalisaldo-hinnalle)
+
+(defn liita-yksikot-materiaalihintaan [app materiaali-hinta]
+  (let [urakan-materiaalit (:urakan-materiaalit app)
+        materiaalisaldo (materiaalisaldo-hinnalle materiaali-hinta urakan-materiaalit)]
+    (if materiaalisaldo
+      (assoc materiaali-hinta ::hinta/yksikko (::materiaalit/yksikko materiaalisaldo))
+      ;; else
+      materiaali-hinta)))
+
 (defn materiaalit [app]
   (hintaryhman-tyot app "materiaali"))
+
+(defn liita-hintoihin-saldojen-yksikot [app hinnat]
+  (mapv (partial liita-yksikot-materiaalihintaan app) hinnat))
 
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
   (etsi-eka-map hinnat ::hinta/otsikko otsikkokriteeri))
@@ -170,11 +183,15 @@
                  (::materiaalit/muutokset materiaali)))
          materiaalit)))
 
-(defn kaytto-merkattu-toimenpiteelle?
+
+(defn materiaalisaldo-hinnalle
   [materiaali-hinta materiaalit]
   (some (fn [materiaali]
-          (= (::materiaalit/nimi materiaali)
-             (::hinta/otsikko materiaali-hinta)))
+          (when  (and
+                  (= "materiaali" (::hinta/ryhma materiaali-hinta))
+                  (= (::materiaalit/nimi materiaali)
+                     (::hinta/otsikko materiaali-hinta)))
+            materiaali))
         materiaalit))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
@@ -513,7 +530,7 @@
             :tallenna-kanavatoimenpiteen-hinnoittelu
             {::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
              ::toimenpide/id (get-in app [:hinnoittele-toimenpide ::toimenpide/id])
-             ::hinta/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
+             ::hinta/tallennettavat-hinnat (liita-hintoihin-saldojen-yksikot app (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
              ::tyo/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::tyo/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})

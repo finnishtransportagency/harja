@@ -10,21 +10,19 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
 
   "paallystysilmoitus": {
     "perustiedot": {
-      "takuupvm": "2015-02-15T12:00:00Z"
+      "takuupvm": "2015-02-15T12:00:00+02:00"
     },
     "yllapitokohde": {
       "sijainti": {
         "aosa": 1,
         "aet": 1,
-        "losa": 3,
-        "let": 5,
-        "ajr": 1,
-        "kaista": 1
+        "losa": 5,
+        "let": 16
       },
       "alikohteet": [
         {
@@ -32,11 +30,11 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
-                "numero": 4,
-                "aosa": 101,
-                "aet": 1,
-                "losa": 101,
-                "let": 15
+              "numero": 20,
+              "aosa": 1,
+              "aet": 1,
+              "losa": 5,
+              "let": 16
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -60,39 +58,6 @@
               }
             ]
           }
-        },
-        {
-          "alikohde": {
-            "nimi": "2. testialikohde",
-            "tunnus": "A",
-            "sijainti": {
-              "aosa": 2,
-              "aet": 0,
-              "losa": 3,
-              "let": 5
-            },
-            "paallystetyyppi": "avoin asfaltti",
-            "raekoko": 12,
-            "massamenekki": 22,
-            "rc-prosentti": 54,
-            "tyomenetelma": "Uraremix",
-            "leveys": 1.2,
-            "kokonaismassamaara": 12.3,
-            "pinta-ala": 2.2,
-            "kuulamylly": "AN14",
-            "kivi-ja-sideaineet": [
-              {
-                "kivi-ja-sideaine": {
-                  "esiintyma": "testi2",
-                  "km-arvo": "testi2",
-                  "muotoarvo": "testi2",
-                  "sideainetyyppi": "20/30",
-                  "pitoisuus": 1.2,
-                  "lisa-aineet": "lisäaineet"
-                }
-              }
-            ]
-          }
         }
       ]
     },
@@ -100,10 +65,11 @@
       {
         "alustatoimenpide": {
           "sijainti": {
+            "numero": 21,
             "aosa": 1,
             "aet": 1,
-            "losa": 3,
-            "let": 5
+            "losa": 5,
+            "let": 15
           },
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1,
@@ -114,6 +80,5 @@
         }
       }
     ]
-  },
-  "valmis-kasiteltavaksi": __VALMIS__
+  }
 }

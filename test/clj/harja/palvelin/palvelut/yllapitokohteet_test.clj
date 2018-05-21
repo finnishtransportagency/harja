@@ -1393,9 +1393,12 @@
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
     (with-fake-http
       [+testi-fim+ fim-vastaus]
-      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
-        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :yllapitokohteen-urakan-yhteyshenkilot
-                                               +kayttaja-ulle+
-                                               {:yllapitokohde-id leppajarven-ramppi-id
-                                                :urakkatyyppi :paallystys})))))))
+      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            yhteyshenkilot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :yllapitokohteen-urakan-yhteyshenkilot
+                                           +kayttaja-ulle+
+                                           {:yllapitokohde-id leppajarven-ramppi-id
+                                            :urakkatyyppi :paallystys})]
+        (is (map? yhteyshenkilot) "Yhteyshenkilöt palautuivat")
+        (is (= 3 (count (:fim-kayttajat yhteyshenkilot))) "FIM käyttäjäin lkm")
+        (is (= 2 (count (:yhteyshenkilot yhteyshenkilot))) "Yhteyshenkilöiden lkm")))))

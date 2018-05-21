@@ -40,7 +40,7 @@
 
      :hae-urakan-yhteyshenkilot
      (fn [user urakka-id]
-       (hae-urakan-yhteyshenkilot (:db this) user urakka-id))
+       (hae-urakan-yhteyshenkilot (:db this) user urakka-id false))
 
      :hae-urakan-paivystajat
      (fn [user urakka-id]
@@ -86,9 +86,12 @@
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
 
-(defn hae-urakan-yhteyshenkilot [db user urakka-id]
+(defn hae-urakan-yhteyshenkilot [db user urakka-id salli-ristiinnakeminen?]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+  ;; HAR-7872 Tilannekuvasta on kyettävä näkemään dialogissa eri urakoiden yhteystietoja
+  (if salli-ristiinnakeminen?
+    (oikeudet/ei-oikeustarkistusta!)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id))
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
         yhteyshenkilot
         (into []
@@ -149,7 +152,7 @@
             (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
 
       ;; kaikki ok
-      (hae-urakan-yhteyshenkilot c user urakka-id))))
+      (hae-urakan-yhteyshenkilot c user urakka-id false))))
 
 
 

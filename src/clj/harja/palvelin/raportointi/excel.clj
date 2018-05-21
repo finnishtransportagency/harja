@@ -184,6 +184,10 @@
                                          (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
                        arvo-datassa (nth data sarake-nro)
+                       ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
+                       arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
+                                      "X"
+                                      arvo-datassa)
                        formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta?)

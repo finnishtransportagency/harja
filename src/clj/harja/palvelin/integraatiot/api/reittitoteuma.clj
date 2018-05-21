@@ -176,9 +176,18 @@ maksimi-linnuntien-etaisyys 200)
                          [data]
                          (:reittitoteumat data))
         materiaaleja-hyotykuormassa? (some #(get-in % [:reittitoteuma :toteuma :materiaalit])
-                                           reittitoteumat)]
+                                           reittitoteumat)
+        suolauksen-toimenpidekoodi (:id (first (materiaalit/hae-suolauksen-toimenpidekoodi db)))
+        tehtavissa-suolausta? (some #(some
+                                       (fn [tehtava]
+                                         (= (get-in tehtava [:tehtava :id]) suolauksen-toimenpidekoodi))
+                                       (get-in % [:reittitoteuma :toteuma :tehtavat]))
+                                    reittitoteumat)]
     (assert (integer? urakka-id) "Oltava urakka-id kun päivitetään materiaalicachet.")
-    (when materiaaleja-hyotykuormassa?
+    ;; HAR-7896 urakoitsijat joskus "poistavat" materiaalitoteumia lähettämällä toteuman uudestaan
+    ;; tehtävänä suolaus mutta kokonaan ilman materiaalit-payloadia. Tämä siksi käsiteltävä erikseen
+    ;; ja varmuuden vuoksi päivitettävä silloinkin materiaalicachet
+    (when (or materiaaleja-hyotykuormassa? tehtavissa-suolausta?)
       (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))
             ensimmainen-toteuma-alkanut-str (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut])
             viimeinen-toteuma (last reittitoteumat)
