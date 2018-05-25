@@ -26,7 +26,8 @@
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clojure.core.async :as async]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -80,7 +81,26 @@
   (oikeudet/ei-oikeustarkistusta!)
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
-(defn tallenna-tietyoilmoitus [tloik db user ilmoitus]
+(defn laheta-tietyoilmoituksen-pdf-sahkopostitse
+  "Lähettää tietyöilmoituksen PDF:n sähköpostitse"
+  [{:keys [email muu-vastaanottaja viestin-otsikko viestin-vartalo tietyoilmoitus-id] :as params}]
+  (println " Palvelu: laheta-tietyoilmoituksen-pdf-sahkopostitse, params " params)
+  (try
+    (let []
+      (sahkoposti/laheta-viesti!
+        email
+        (sahkoposti/vastausosoite email)
+        muu-vastaanottaja
+        (str "Harja: " viestin-otsikko)
+        viestin-vartalo))
+
+    (catch Exception e
+      (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä sähköpostitse T-LOIK:n tapahtui poikkeus." tietyoilmoitus-id))
+      ;; FIXME: palauteltava frontille asti tieto kun mailin lähetys feilaa
+      )))
+
+(defn tallenna-tietyoilmoitus [tloik db email user ilmoitus laheta-sahkoposti?]
+  (println "PALVELU: Tallenna tietyöilmoitus" ilmoitus  " laheta-sahkoposti? " laheta-sahkoposti? " email " email)
   (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
     (if (::t/urakka-id ilmoitus)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
@@ -103,8 +123,15 @@
                                  {::t/urakoitsija-id org}
                                  {::t/tilaaja-id org}
                                  {::t/urakka-id (op/in kayttajan-urakat)}))]
-      (when (and tloik (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
+      (when laheta-sahkoposti?
+        (println "yritän lähettää sähköpostin step 1")
         (async/thread
+          (println "yritän lähettää sähköpostin step 2")
+          (laheta-tietyoilmoituksen-pdf-sahkopostitse {:email email
+                                                       :muu-vastaanottaja "jarno.vayrynen@solita.fi"
+                                                       :viestin-otsikko " Testi otsikko"
+                                                       :viestin-sisalto "TESTI"
+                                                       :tietyoilmoitus-id (::t/id tallennettu)})
           (tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))))
       tallennettu)))
 
@@ -190,6 +217,7 @@
            http :http-palvelin
            pdf :pdf-vienti
            fim :fim
+           email :sonja-sahkoposti
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
@@ -200,10 +228,12 @@
                         (hae-tietyoilmoitus db user tietyoilmoitus-id))
                       {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
-                      (fn [user ilmoitus]
-                        (tallenna-tietyoilmoitus tloik db user ilmoitus))
-                      {:kysely-spec ::t/ilmoitus
-                       :vastaus-spec ::t/ilmoitus})
+                      (fn [user ilmoitus laheta-sahkoposti?]
+                        (println ":tallenna-tietyoilmoitus" ilmoitus " laheta-sahkoposti? " laheta-sahkoposti?)
+                        (tallenna-tietyoilmoitus tloik db email user ilmoitus laheta-sahkoposti?))
+                      #_{:kysely-spec ::t/ilmoitus
+                       :vastaus-spec ::t/ilmoitus}
+                      )
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
                         (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot))

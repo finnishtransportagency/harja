@@ -15,7 +15,9 @@
             [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
             [harja.domain.tietyoilmoitus :as t]
+            [harja.domain.tietyoilmoituksen-email :as e]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.kayttaja :as ka]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
@@ -115,7 +117,23 @@
     :leveys 4}
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae t/ilmoittaja->str
-    :leveys 7}
+    :leveys 6}
+   {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
+    :tyyppi :string
+    :hae (fn [t]
+           (if (empty? (::t/email-lahetykset t))
+             "Ei lähetetty"
+             (str
+               (s/join "; "
+                       (for [l (sort-by ::e/lahetetty > (::t/email-lahetykset t))]
+                         (str (get-in l [::e/lahettaja ::ka/etunimi])
+                              " "
+                              (get-in l [::e/lahettaja ::ka/sukunimi])
+                              ": " (pvm/pvm-aika-opt (get-in l [::e/lahetetty]))
+                              (if (::e/kuitattu l)
+                                (str ", kuitattu: " (pvm/pvm-aika-opt (::e/kuitattu l)) ".")
+                                ", ei kuitattu.")))))))
+    :leveys 6}
    {:otsikko " "
     :leveys 2
     :nimi :vie-pdf

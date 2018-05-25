@@ -427,7 +427,7 @@
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
-                           [:tloik :http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim])
+                           [:tloik :http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim :sonja-sahkoposti])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)

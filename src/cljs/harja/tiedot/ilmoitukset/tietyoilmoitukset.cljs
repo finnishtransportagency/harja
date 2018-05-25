@@ -165,8 +165,8 @@
 (defrecord PaivitaNopeusrajoitukset [nopeusrajoitukset])
 (defrecord PaivitaTienPinnat [tienpinnat avain])
 (defrecord PaivitaTyoajat [tyoajat virheita?])
-(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf?])
-(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
+(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf? laheta-sahkoposti?])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf? laheta-sahkoposti?])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
@@ -264,7 +264,9 @@
         (assoc-in [:valittu-ilmoitus :komponentissa-virheita? :tyoajat] virheita?)))
 
   TallennaIlmoitus
-  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus
+                   avaa-pdf? :avaa-pdf? laheta-sahkoposti? :laheta-sahkoposti?} app]
+    (log "TallennaIlmoitus event, ilmoitus" (pr-str ilmoitus) " laheta sahkoposti?" laheta-sahkoposti?)
     (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus avaa-pdf?)
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
@@ -282,6 +284,7 @@
                 vastaus-kanava (k/post! :tallenna-tietyoilmoitus ilmoitus)
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
+            (log "TallennaIlmoitus vastaus:" (pr-str vastaus))
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))

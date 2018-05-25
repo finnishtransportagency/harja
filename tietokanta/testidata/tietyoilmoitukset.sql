@@ -302,3 +302,15 @@ VALUES (1,
         (SELECT ytunnus
          FROM organisaatio
          WHERE nimi ILIKE '%YIT Rakennus Oy%'));
+
+INSERT INTO tietyoilmoituksen_email_lahetys
+(tietyoilmoitus, tiedostonimi, lahetetty, lahettaja, kuitattu)
+    VALUES
+      ((SELECT id FROM tietyoilmoitus WHERE "alkusijainnin-kuvaus" = 'Kuusamontien alussa'),
+      'Tietyöilmoitus-22.05.2018-26.05.2018-Kuusamontie',
+        '2018-05-19 11:01:01', (SELECT id FROM harja.public.kayttaja WHERE kayttajanimi = 'jvh'),
+       '2018-05-19 11:02:06'),
+      ((SELECT id FROM tietyoilmoitus WHERE "alkusijainnin-kuvaus" = 'Kuusamontien alussa'),
+       'Tietyöilmoitus-24.05.2018-28.05.2018-Kuusamontie',
+       '2018-05-21 12:01:01', (SELECT id FROM harja.public.kayttaja WHERE kayttajanimi = 'jvh'),
+       '2018-05-21 12:02:16');

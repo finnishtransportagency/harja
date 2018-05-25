@@ -268,12 +268,21 @@
      [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]
      [napit/tallenna
       "Tallenna ilmoitus"
-      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf? false))
       {:disabled (or tallennus-kaynnissa?
                      (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
                      (not (lomake/voi-tallentaa? ilmoitus)))
        :tallennus-kaynnissa? tallennus-kaynnissa?
-       :ikoni (ikonit/tallenna)}]]))
+       :ikoni (ikonit/tallenna)}]
+
+     [napit/tallenna
+      "Tallenna ilmoitus ja lähetä PDF sähköpostitse Tieliikennekeskukseen"
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf? true))
+      {:disabled (or tallennus-kaynnissa?
+                     (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
+                     (not (lomake/voi-tallentaa? ilmoitus)))
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :ikoni (ikonit/envelope)}]]))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div

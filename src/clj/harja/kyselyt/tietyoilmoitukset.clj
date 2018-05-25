@@ -9,8 +9,10 @@
             [clojure.spec.alpha :as s]
             [harja.kyselyt.specql :as specql]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.tietyoilmoituksen-email :as e]
             [clojure.future :refer :all]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.domain.kayttaja :as kayttaja]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -39,6 +41,9 @@
     ::t/tyovaiheet (rel/has-many ::t/id
                                  ::t/ilmoitus
                                  ::t/paatietyoilmoitus)
+    ::t/email-lahetykset (rel/has-many ::t/id
+                                       ::e/email-lahetys
+                                       ::e/tietyoilmoitus-id)
     "luoja" ::m/luoja-id
     "luotu" ::m/luotu
     "muokkaaja" ::m/muokkaaja-id
@@ -63,12 +68,9 @@
 (s/def ::t/max-pituus number?)
 (s/def ::t/max-leveys number?)
 
-(def tloik-integraatio-kentat
-  #{::t/lahetetty ::t/tila})
 
 (def kaikki-ilmoituksen-kentat
   (into
-   tloik-integraatio-kentat
    #{::t/id
      ::t/tloik-id
      ::t/paatietyoilmoitus
@@ -124,10 +126,16 @@
 ;; Hakee pääilmoituksen kaikki kentät, sekä siihen liittyvät työvaiheet
 (def kaikki-ilmoituksen-kentat-ja-tyovaiheet
   (conj kaikki-ilmoituksen-kentat
-        [::t/tyovaiheet kaikki-ilmoituksen-kentat]))
+        [::t/tyovaiheet kaikki-ilmoituksen-kentat]
+        [::t/email-lahetykset #{::e/id
+                                ::e/tietyoilmoitus-id
+                                ::e/tiedostonimi
+                                ::e/lahetetty
+                                [::e/lahettaja kayttaja/perustiedot]
+                                ::e/kuitattu}]))
 
 (def ilmoitus-pdf-kentat
-  (let [pdf-kentat (set/difference kaikki-ilmoituksen-kentat tloik-integraatio-kentat)]
+  (let [pdf-kentat kaikki-ilmoituksen-kentat]
     (conj pdf-kentat
           ::t/pituus
           [::t/paailmoitus (conj pdf-kentat ::t/pituus)])))
@@ -254,6 +262,3 @@
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
                 {::t/id tietyoilmoitus-id})))
-
-(defn lahetetty? [db id]
-  (:lahetetty? (first (lahetetty db {:id id}))))
