@@ -5,7 +5,9 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
+            [harja.views.ilmoitukset.tietyoilmoitukset-yhteinen :as tietyo-yhteiset]
             [harja.domain.tietyoilmoitus :as t]
+            [harja.domain.tietyoilmoituksen-email :as e]
             [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [muokkaus-grid] :as grid]
@@ -20,7 +22,8 @@
             [harja.ui.kentat :as kentat]
             [harja.transit :as transit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
 (defn- urakka-valinnat [urakat]
@@ -515,21 +518,8 @@
                      :tyyppi :string
                      :pituus-max 32})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)
-      (when (and (::t/id ilmoitus)
-                 (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
-        (lomake/ryhma
-          "Lähetys Tieliikennekeskukseen"
-          {:nimi ::t/tila
-           :otsikko "Tila"
-           :muokattava? (constantly false)
-           :tyyppi :komponentti
-           :komponentti #(case (get-in % [:data ::t/tila])
-                           "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                           "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
-                           "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
-                           [:span "Ei lähetetty"])}
-          {:nimi ::t/lahetetty
-           :otsikko "Aika"
-           :tyyppi :pvm-aika
-           :muokattava? (constantly false)}))]
+      {:nimi :email-lahetykset-tloikiin
+       :otsikko "PDF:n sähköpostilähetykset Harjasta Tieliikennekeskuksen sähköpostiin"
+       :tyyppi :komponentti
+       :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))}]
      ilmoitus]]])

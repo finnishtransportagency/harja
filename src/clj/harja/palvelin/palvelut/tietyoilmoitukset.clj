@@ -228,12 +228,10 @@
                         (hae-tietyoilmoitus db user tietyoilmoitus-id))
                       {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
-                      (fn [user ilmoitus laheta-sahkoposti?]
-                        (println ":tallenna-tietyoilmoitus" ilmoitus " laheta-sahkoposti? " laheta-sahkoposti?)
+                      (fn [user {:keys [ilmoitus laheta-sahkoposti?] :as tiedot}]
                         (tallenna-tietyoilmoitus tloik db email user ilmoitus laheta-sahkoposti?))
-                      #_{:kysely-spec ::t/ilmoitus
-                       :vastaus-spec ::t/ilmoitus}
-                      )
+                      {:kysely-spec ::t/ilmoitus
+                       :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
                         (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot))

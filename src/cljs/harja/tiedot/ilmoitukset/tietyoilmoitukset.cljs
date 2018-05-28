@@ -10,6 +10,8 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitus :as t]
+            [harja.domain.tietyoilmoituksen-email :as e]
+            [harja.domain.kayttaja :as ka]
             [harja.domain.tierekisteri :as tr]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
@@ -274,6 +276,7 @@
           (let [ilmoitus (-> ilmoitus
                              (dissoc ::t/tyovaiheet
                                      ::t/kohteen-aikataulu
+                                     ::t/email-lahetykset
                                      :urakan-kohteet
                                      :komponentissa-virheita?
                                      :aihe
@@ -281,7 +284,8 @@
                                      :alue)
                              (update ::t/tyoajat
                                      (partial remove :poistettu)))
-                vastaus-kanava (k/post! :tallenna-tietyoilmoitus ilmoitus)
+                vastaus-kanava (k/post! :tallenna-tietyoilmoitus {:ilmoitus ilmoitus
+                                                                  :laheta-sahkoposti? laheta-sahkoposti?})
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
             (log "TallennaIlmoitus vastaus:" (pr-str vastaus))

@@ -5,6 +5,7 @@
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
+            [harja.views.ilmoitukset.tietyoilmoitukset-yhteinen :as tietyo-yhteiset]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [tarkkaile! log]]
@@ -27,7 +28,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -119,20 +121,8 @@
     :hae t/ilmoittaja->str
     :leveys 6}
    {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
-    :tyyppi :string
-    :hae (fn [t]
-           (if (empty? (::t/email-lahetykset t))
-             "Ei lähetetty"
-             (str
-               (s/join "; "
-                       (for [l (sort-by ::e/lahetetty > (::t/email-lahetykset t))]
-                         (str (get-in l [::e/lahettaja ::ka/etunimi])
-                              " "
-                              (get-in l [::e/lahettaja ::ka/sukunimi])
-                              ": " (pvm/pvm-aika-opt (get-in l [::e/lahetetty]))
-                              (if (::e/kuitattu l)
-                                (str ", kuitattu: " (pvm/pvm-aika-opt (::e/kuitattu l)) ".")
-                                ", ei kuitattu.")))))))
+    :tyyppi :komponentti
+    :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti %)
     :leveys 6}
    {:otsikko " "
     :leveys 2
