@@ -62,7 +62,7 @@
   (case tila
     "lahetetty" [:span.tila-lahetetty (str "Onnistunut: " (pvm/pvm-aika lahetetty))]
     "virhe" [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika lahetetty))]
-    [:span "Ei lähetetty"]))
+    [:span.tila-odottaa-vastausta "Ei lähetetty"]))
 
 (defn toteumataulukko [e! toteumat]
   [:span
@@ -303,7 +303,10 @@
                         #(varustetiedot/tallenna-varustetoteuma valinnat toteuma)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
-                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-onnistuu #(do (e! (v/->VarustetoteumaTallennettu %))
+                                            (viesti/nayta! "Varustetta lähetetään tierekisteriin..."
+                                                           :info
+                                                           viesti/viestin-nayttoaika-keskipitka))
                          :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
