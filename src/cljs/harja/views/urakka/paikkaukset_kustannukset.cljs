@@ -84,5 +84,8 @@
        [kokonaishintaiset-kustannukset e! app]
        [yksikkohintaiset-kustannukset e! app]])))
 
-(defn kustannukset []
-  [tuck/tuck tiedot/app kustannukset*])
+(defn kustannukset [ur]
+  (komp/luo
+    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (fn [_]
+      [tuck/tuck tiedot/app kustannukset*])))

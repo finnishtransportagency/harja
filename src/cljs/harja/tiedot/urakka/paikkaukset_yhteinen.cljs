@@ -8,8 +8,7 @@
             [harja.domain.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defonce tila (atom {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 7)
-                                :tyomenetelmat #{}}}))
+(defonce tila (atom nil))
 
 (defn alku-parametrit
   [{:keys [nakyma palvelukutsu-onnistui-fn]}]
@@ -25,6 +24,15 @@
                                        :palvelukutsu :hae-paikkausurakan-kustannukset
                                        :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
     (swap! tila #(merge % tilan-alustus {:palvelukutsu-onnistui-fn palvelukutsu-onnistui-fn}))))
+
+(defn nakyman-urakka
+  "Saman urakan sisällä kun vaihdetaan toteumista kustannuksiin, ei resetoida hakuehtoja. Mutta jos urakka
+   vaihtuu, tulee hakuehdot resetoida."
+  [ur]
+  (when (not= (:urakka @tila) ur)
+    (reset! tila {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 7)
+                             :tyomenetelmat #{}}
+                  :urakka ur})))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])

@@ -175,5 +175,8 @@
           :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
         [paikkaukset e! app]]])))
 
-(defn toteumat []
-  [tuck/tuck tiedot/app toteumat*])
+(defn toteumat [ur]
+  (komp/luo
+    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (fn [_]
+      [tuck/tuck tiedot/app toteumat*])))

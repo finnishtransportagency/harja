@@ -87,6 +87,7 @@
         [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
 
 (defn hakuehdot [optiot]
-  (yhteiset-tiedot/alku-parametrit optiot)
-  (fn [_]
-    [tuck/tuck yhteiset-tiedot/tila hakuehdot-pohja]))
+  (komp/luo
+    (komp/sisaan #(yhteiset-tiedot/alku-parametrit optiot))
+    (fn [_]
+      [tuck/tuck yhteiset-tiedot/tila hakuehdot-pohja])))
