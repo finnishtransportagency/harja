@@ -2,6 +2,7 @@
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -75,18 +76,16 @@
                                                          (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
-      (if (:ensimmainen-haku-tehty? app)
-        [:div
-         [debug/debug app]
-         [yhteinen-view/hakuehdot app
-          {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
-           :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
-                                  (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-           :aikavali-otsikko "Kirjausaika"
-           :voi-valita-trn-kartalta? false}]
-         [kokonaishintaiset-kustannukset e! app]
-         [yksikkohintaiset-kustannukset e! app]]
-        [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
+      [:div
+       [debug/debug app]
+       [yhteinen-view/hakuehdot
+        {:nakyma :kustannukset
+         :palvelukutsu-onnistui-fn #(e! (tiedot/->KustannuksetHaettu %))}]
+       [kokonaishintaiset-kustannukset e! app]
+       [yksikkohintaiset-kustannukset e! app]])))
 
-(defn kustannukset []
-  [tuck/tuck tiedot/app kustannukset*])
+(defn kustannukset [ur]
+  (komp/luo
+    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (fn [_]
+      [tuck/tuck tiedot/app kustannukset*])))

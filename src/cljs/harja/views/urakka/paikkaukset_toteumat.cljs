@@ -4,6 +4,7 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
@@ -18,26 +19,6 @@
             [harja.ui.yleiset :as yleiset]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
-(defn hakuehdot [e! {:keys [valinnat] :as app}]
-  (let [tr-atomi (partial tiedot/valinta-wrap e! app)
-        aikavali-atomi (partial tiedot/valinta-wrap e! app)]
-    [:span
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Tierekisteriosoite"
-       :kentta-params {:tyyppi :tierekisteriosoite
-                       :tr-otsikot? false}
-       :arvo-atom (tr-atomi :tr)
-       :tyylit {:width "fit-content"}}]
-     [valinnat/aikavali (aikavali-atomi :aikavali)]
-     [:span.label-ja-kentta
-      [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
-      [:div.kentta
-       [valinnat/checkbox-pudotusvalikko
-        (:urakan-paikkauskohteet valinnat)
-        (fn [paikkauskohde valittu?]
-          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-        [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn paikkaukset-vetolaatikko
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
@@ -185,20 +166,17 @@
                                                                     (sort-by (juxt ::tierekisteri/tie ::tierekisteri/aosa ::tierekisteri/aet ::tierekisteri/losa ::tierekisteri/let)
                                                                              paikkaukset))))))))
     (fn [e! app]
-      (if (:ensimmainen-haku-tehty? app)
-        [:span
-         [kartta/kartan-paikka]
-         [:div
-          [debug/debug app]
-          [yhteinen-view/hakuehdot app
-           {:paivita-valinnat-fn #(e! (tiedot/->PaivitaValinnat %))
-            :paikkaus-valittu-fn (fn [paikkauskohde valittu?]
-                                   (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-            :aikavali-otsikko "Alkuaika"
-            :voi-valita-trn-kartalta? true}]
-          [paikkaukset e! app]]]
-        [yleiset/ajax-loader "Haetaan paikkauksia.."]))))
+      [:span
+       [kartta/kartan-paikka]
+       [:div
+        [debug/debug app]
+        [yhteinen-view/hakuehdot
+         {:nakyma :toteumat
+          :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]
+        [paikkaukset e! app]]])))
 
-(defn toteumat []
-  (fn []
-    [tuck/tuck tiedot/app toteumat*]))
+(defn toteumat [ur]
+  (komp/luo
+    (komp/sisaan #(yhteiset-tiedot/nakyman-urakka ur))
+    (fn [_]
+      [tuck/tuck tiedot/app toteumat*])))

@@ -187,7 +187,7 @@
   (let [kartta-containerin-top (try (-> (dom/elementti-idlla "kartta-container") .-style .-top)
                                     (catch :default e nil))
         tilannekuvan-valinnat-leveys (try (-> (.getElementsByClassName js/document "haitari-tilannekuva") (aget 0) .-clientWidth)
-                                          (catch :default e (println "EI LÖYTYNY HAITARIA") 0))
+                                          (catch :default e 0))
         kartta-containerin-left (try (-> (dom/elementti-idlla "kartta-container") .-style .-left (+ 30) tilannekuvan-valinnat-leveys)
                                      (catch :default e nil))
         asetettava-top (or kartta-containerin-top top (- korkeus))
@@ -228,7 +228,7 @@
                     y
                     (+ y h))
          :left (fmt/pikseleina (+ x 30 (try (-> (.getElementsByClassName js/document "haitari-tilannekuva") (aget 0) .-clientWidth)
-                                            (catch :default e (println "EI LÖYTYNY HAITARIA") 0)))))
+                                            (catch :default e 0)))))
   (when (:nayta-kartan-debug? @tila)
     (when-let
       [karttasailio (dom/elementti-idlla "kartta-debug")]
