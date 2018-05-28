@@ -85,6 +85,16 @@ FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
       (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
+-- name: hae-kaynnissa-olevat-urakkatyypin-urakat
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi
+FROM urakka u
+WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
+      (u.loppupvm IS NULL OR u.loppupvm >= current_date) AND
+      (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi);
+
 -- name: hae-kaynnissa-olevat-ja-tulevat-urakat
 SELECT
   u.id,
@@ -539,6 +549,17 @@ FROM urakka
 WHERE hallintayksikko = :hal
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date);
+
+-- name: hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
+-- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakkatyypin urakoista
+SELECT
+  id,
+  nimi
+FROM urakka
+WHERE hallintayksikko = :hal
+      AND (alkupvm IS NULL OR alkupvm <= current_date)
+      AND (loppupvm IS NULL OR loppupvm >= current_date)
+      AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi);
 
 -- name: onko-urakalla-tehtavaa
 SELECT EXISTS(

@@ -297,11 +297,20 @@ SELECT ypk.id,
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
-   AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
-                           (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+   AND ((:nykytilanne AND
+        date_part('year', now())=ANY(ypk.vuodet) AND
+        ((ypka.kohde_valmis IS NULL AND
+          ypka.tiemerkinta_loppu IS NULL) OR
+         (ypka.kohde_valmis IS NULL AND
+          ypka.tiemerkinta_loppu IS NOT NULL AND
+          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
+         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
-                            AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku))));
+                            AND ((ypka.kohde_valmis IS NULL AND
+                                  ypka.tiemerkinta_loppu IS NULL) OR
+                                 (ypka.kohde_valmis > :alku) OR
+                                 (ypka.tiemerkinta_loppu > :alku)))));
 
 -- name: hae-paallystysten-viimeisin-muokkaus
 -- single?: true
@@ -344,11 +353,20 @@ SELECT ypko.id,
  WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
-   AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
-                          (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+   AND ((:nykytilanne AND
+         date_part('year', now())=ANY(ypk.vuodet) AND
+         ((ypka.kohde_valmis IS NULL AND
+           ypka.tiemerkinta_loppu IS NULL) OR
+         (ypka.kohde_valmis IS NULL AND
+          ypka.tiemerkinta_loppu IS NOT NULL AND
+          (now() - ypka.tiemerkinta_loppu) < INTERVAL '7 days') OR
+         (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR
         (:historiakuva AND (ypka.kohde_alku < :loppu
-                            AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku))));
+                            AND ((ypka.kohde_valmis IS NULL AND
+                                  ypka.tiemerkinta_loppu IS NULL) OR
+                                 (ypka.kohde_valmis > :alku) OR
+                                 (ypka.tiemerkinta_loppu > :alku)))));
 
 -- name: hae-paikkaukset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki paikkauskohteet, jotka eivät ole valmiita tai ovat
@@ -627,20 +645,23 @@ SELECT t.id,
        JOIN urakka u ON t.urakka = u.id
  WHERE t.urakka IN (:urakat)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu))
+        (t.paattynyt BETWEEN :alku AND :loppu));
 
 
--- name: urakat-joihin-oikeus
--- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
--- tai urakat joissa annettu urakoitsija on urakoitsijana.
+-- name: urakoitsijan-urakat
 -- TODO? erillisoikeudet urakoihin UNION:lla mukaan. Rooli-excelissäkin tähän liittyvä oikeus.
 SELECT
-  u.id
+  u.id, u.hallintayksikko
+FROM urakka u
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE urk.id = :organisaatio;
+
+-- name: hallintayksikoiden-urakat
+SELECT
+  u.id, u.hallintayksikko
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
-WHERE urk.id = :organisaatio
-      OR hal.id = :organisaatio;
+WHERE hal.id IN (:hallintayksikot);
 
 -- name: hae-valittujen-urakoiden-viimeisin-toteuma
 -- single?: true

@@ -306,3 +306,8 @@ SELECT
   nimi,
   yksikko
 FROM materiaalikoodi;
+
+-- name: hae-suolauksen-toimenpidekoodi
+SELECT id
+  FROM toimenpidekoodi
+ WHERE nimi = 'Suolaus' AND taso = 4;

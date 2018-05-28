@@ -15,7 +15,7 @@
             [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-(declare aseta-kartta-debug-sijainti)
+(declare aseta-kartta-debug-sijainti pakota-paivitys)
 
 (defonce tila (atom {:nayta-kartan-debug? false
                      :nayta-kaikki-layerit? false
@@ -183,36 +183,42 @@
         (str "Asiat Pisteessä (käsitelty)")]])))
 
 (defn kartta-layers*
-  [korkeus app]
+  [korkeus {:keys [nayta-kartan-debug? top left]}]
   (let [kartta-containerin-top (try (-> (dom/elementti-idlla "kartta-container") .-style .-top)
                                     (catch :default e nil))
-        kartta-containerin-left (try (-> (dom/elementti-idlla "kartta-container") .-style .-left (+ 30))
+        tilannekuvan-valinnat-leveys (try (-> (.getElementsByClassName js/document "haitari-tilannekuva") (aget 0) .-clientWidth)
+                                          (catch :default e (println "EI LÖYTYNY HAITARIA") 0))
+        kartta-containerin-left (try (-> (dom/elementti-idlla "kartta-container") .-style .-left (+ 30) tilannekuvan-valinnat-leveys)
                                      (catch :default e nil))
-        asetettava-left (or kartta-containerin-left (:left app))
-        asetettava-top (or kartta-containerin-top (- korkeus))]
-    (swap! tila assoc
-           :top asetettava-top
-           :left asetettava-left)
-    (fn [_ {:keys [nayta-kartan-debug? top left]}]
-      (when nayta-kartan-debug?
-        [:div#kartta-debug {:style {:position "absolute"
-                                    :z-index "901"
-                                    :top top
-                                    :left left
-                                    :pointer-events "none"}}
-         [:div {:style {:height "inherit"
-                        :pointer-events "none"
-                        :display "flex"
-                        :overflow (if @nav/kartta-nakyvissa?
-                                    "visible"
-                                    "hidden")}}
-          [nayta-asetukset]
-          [nayta-layersit]
-          [nayta-infopaneelin-tiedot]]]))))
+        asetettava-top (or kartta-containerin-top top (- korkeus))
+        asetettava-left (or kartta-containerin-left left)]
+    (when nayta-kartan-debug?
+      [:div#kartta-debug {:style {:position "absolute"
+                                  :z-index "901"
+                                  :top asetettava-top
+                                  :left asetettava-left
+                                  :pointer-events "none"}}
+       [:div {:style {:height "inherit"
+                      :pointer-events "none"
+                      :display "flex"
+                      :overflow (if @nav/kartta-nakyvissa?
+                                  "visible"
+                                  "hidden")}}
+        [nayta-asetukset]
+        [nayta-layersit]
+        [nayta-infopaneelin-tiedot]]])))
 
 (defn kartta-layers
   [korkeus]
-  [kartta-layers* korkeus @tila])
+  (r/create-class
+    {:reagent-render (fn [korkeus]
+                       [kartta-layers* korkeus @tila])
+
+     ;; Tämä manuaalinen on-click käsittelijän lisäys on valitettavasti pakko tehdä,
+     ;; koska ol3/React eventtien käsittelyeroista johtuen :on-click asetetut
+     ;; handlerit eivät koskaan laukea kontrollien stopevent parentin takia.
+     :component-did-mount (fn [this]
+                            (swap! tila assoc :komponentti this))}))
 
 (defn aseta-kartta-debug-sijainti
   [x y w h naulattu?]
@@ -221,7 +227,8 @@
          :top (if (:nayta-kartan-ylaosassa? @tila)
                     y
                     (+ y h))
-         :left (fmt/pikseleina (+ x 30)))
+         :left (fmt/pikseleina (+ x 30 (try (-> (.getElementsByClassName js/document "haitari-tilannekuva") (aget 0) .-clientWidth)
+                                            (catch :default e (println "EI LÖYTYNY HAITARIA") 0)))))
   (when (:nayta-kartan-debug? @tila)
     (when-let
       [karttasailio (dom/elementti-idlla "kartta-debug")]
@@ -238,6 +245,10 @@
         (when (= :S @nav/kartan-koko)
           (set! (.-left tyyli) "")
           (set! (.-right tyyli) (fmt/pikseleina 20)))))))
+
+(defn pakota-paivitys []
+  (println "PÄIVITETÄÄN")
+  (r/force-update (:komponentti @tila) true))
 
 (defn nayta-kartan-debug []
   (swap! tila assoc :nayta-kartan-debug? true)

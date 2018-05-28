@@ -244,7 +244,7 @@
       "Järjestä kohteet"
       {:valinta jarjestys
        :valitse-fn tiedot/jarjesta-kohteet!
-       :format-fn {:aika "Aloistusajan mukaan"
+       :format-fn {:aika "Aloitusajan mukaan"
                    :kohdenumero "Kohdenumeron mukaan"
                    :tr "Tieosoitteen mukaan"}}
       [:aika :kohdenumero :tr]]

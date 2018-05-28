@@ -85,13 +85,11 @@ kohteiden-sahkopostitiedot (atom nil))
                 (let [kohteet (yllapitokohteet/suodata-yllapitokohteet aikataulurivit
                                                                        {:tienumero tienumero
                                                                         :kohdenumero kohdenumero})]
-                  (if (= :aika jarjestys)
-                    kohteet
                     (sort-by (case jarjestys
                                :tr tr-domain/tieosoitteen-jarjestys
-                               :kohdenumero #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)))
-                             kohteet)))))))
-
+                               :kohdenumero #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+                               :aika (juxt #(nil? (:aikataulu-paallystys-alku %)) :aikataulu-paallystys-alku ))
+                             kohteet))))))
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                nakymassa? @aikataulu-nakymassa?]

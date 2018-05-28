@@ -104,6 +104,129 @@
    :poistettu false
    :tarkastaja "TESTIKAYTTAJA"})
 
+(defn paivittava-tarkastus [id]
+  {:id id
+   :uudet-liitteet nil, :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+   :kohteet {7 ["D" ""], 20 ["B" ""], 1 ["D" ""], 24 ["C" ""], 4 ["D" ""], 15 ["B" ""],
+             21 ["B" ""], 13 ["D" ""], 22 ["C" ""], 6 ["B" ""], 17 ["B" ""], 3 ["D" ""],
+             12 ["D" ""], 2 ["D" ""], 23 ["C" ""], 19 ["C" ""], 11 ["D" ""], 9 ["B" ""],
+             5 ["B" ""], 14 ["D" ""], 16 ["D" ""], 10 ["B" ""], 18 ["B" ""], 8 ["B" ""]},
+   :silta-id (hae-oulujoen-sillan-id),
+   :liitteet [],
+   :tarkastusaika #inst "2017-07-30T21:34:49.000-00:00",
+   :poistettu false
+   :tarkastaja "TESTIKAYTTAJA"})
+
+(defn uusi-tarkastus-josta-puuttuu-kohteita []
+  {:uudet-liitteet nil, :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+   :kohteet {1 ["A" ""]},
+   :silta-id (hae-oulujoen-sillan-id),
+   :liitteet [],
+   :tarkastusaika #inst "2017-07-28T11:34:49.000-00:00",
+   :poistettu false
+   :tarkastaja "TESTIKAYTTAJA"})
+
+
+(deftest tarkastuksen-paivitys-oulujoen-sillalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        silta-id (hae-oulujoen-sillan-id)
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+
+                               (uusi-tarkastus))
+        tarkastukset-eka-kutsun-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                         {:urakka-id urakka-id
+                                                          :silta-id silta-id})
+        paivitettava-tarkastus-eka-kutsun-jalkeen (first
+                                                    (filter (fn [tarkastus]
+                                                              (= (:tarkastusaika (uusi-tarkastus)
+                                                                   (:tarkastusaika tarkastus))))
+                                                            tarkastukset-eka-kutsun-jalkeen))
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+
+                               (paivittava-tarkastus (:id paivitettava-tarkastus-eka-kutsun-jalkeen)))
+        tarkastukset-paivityksen-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                             {:urakka-id urakka-id
+                                                              :silta-id silta-id})
+        paivitetty-tarkastus (first
+                               (filter (fn [tarkastus]
+                                         (= (:tarkastusaika (paivittava-tarkastus (:id paivitettava-tarkastus-eka-kutsun-jalkeen))
+                                              (:tarkastusaika tarkastus))))
+                                       tarkastukset-paivityksen-jalkeen))]
+    (is (not= paivitettava-tarkastus-eka-kutsun-jalkeen paivitetty-tarkastus) "päivitetty siltatarkastus ei sama kuin alkuperäinen")
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) "B") "siltatarkastuksen kohde 20 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) "B") "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) "A") "siltatarkastuksen kohde 7 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) "D") "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")))
+
+(deftest tarkastuksen-paivitys-oulujoen-sillalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        silta-id (hae-oulujoen-sillan-id)
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+
+                               (uusi-tarkastus))
+        tarkastukset-eka-kutsun-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                             {:urakka-id urakka-id
+                                                              :silta-id silta-id})
+        paivitettava-tarkastus-eka-kutsun-jalkeen (first
+                                                    (filter (fn [tarkastus]
+                                                              (= (:tarkastusaika (uusi-tarkastus)
+                                                                   (:tarkastusaika tarkastus))))
+                                                            tarkastukset-eka-kutsun-jalkeen))
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+
+                               (paivittava-tarkastus (:id paivitettava-tarkastus-eka-kutsun-jalkeen)))
+        tarkastukset-paivityksen-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                              {:urakka-id urakka-id
+                                                               :silta-id silta-id})
+        paivitetty-tarkastus (first
+                               (filter (fn [tarkastus]
+                                         (= (:tarkastusaika (paivittava-tarkastus (:id paivitettava-tarkastus-eka-kutsun-jalkeen))
+                                              (:tarkastusaika tarkastus))))
+                                       tarkastukset-paivityksen-jalkeen))]
+    (is (not= paivitettava-tarkastus-eka-kutsun-jalkeen paivitetty-tarkastus) "päivitetty siltatarkastus ei sama kuin alkuperäinen")
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) "A") "siltatarkastuksen kohde 7 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) "D") "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) "B") "siltatarkastuksen kohde 20 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) "B") "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")))
+
+(deftest tarkastuksen-paivitys-kun-ensimmaisesta-tarkastuksesta-puuttuu-kohteita
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        silta-id (hae-oulujoen-sillan-id)
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+
+                               (uusi-tarkastus-josta-puuttuu-kohteita))
+        tarkastukset-eka-kutsun-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                             {:urakka-id urakka-id
+                                                              :silta-id silta-id})
+        paivitettava-tarkastus-eka-kutsun-jalkeen (first
+                                                    (filter (fn [tarkastus]
+                                                              (= (:tarkastusaika (uusi-tarkastus-josta-puuttuu-kohteita)
+                                                                   (:tarkastusaika tarkastus))))
+                                                            tarkastukset-eka-kutsun-jalkeen))
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+
+                               (paivittava-tarkastus (:id paivitettava-tarkastus-eka-kutsun-jalkeen)))
+        tarkastukset-paivityksen-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                              {:urakka-id urakka-id
+                                                               :silta-id silta-id})
+        paivitetty-tarkastus (first
+                               (filter (fn [tarkastus]
+                                         (= (:tarkastusaika (paivittava-tarkastus (:id paivitettava-tarkastus-eka-kutsun-jalkeen))
+                                              (:tarkastusaika tarkastus))))
+                                       tarkastukset-paivityksen-jalkeen))]
+    (is (not= paivitettava-tarkastus-eka-kutsun-jalkeen paivitetty-tarkastus) "päivitetty siltatarkastus ei sama kuin alkuperäinen")
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) nil) "siltatarkastuksen kohde 7 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) "D") "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) nil) "siltatarkastuksen kohde 20 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) "B") "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")))
+
+
 (deftest tarkastuksen-tallennus-oulujoen-sillalle
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         silta-id (hae-oulujoen-sillan-id)
