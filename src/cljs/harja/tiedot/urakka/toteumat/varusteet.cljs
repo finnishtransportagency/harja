@@ -26,7 +26,12 @@
 (defonce valinnat
          (reaction {:urakka-id (:id @nav/valittu-urakka)
                     :sopimus-id (first @urakka/valittu-sopimusnumero)
-                    :aikavali @urakka/valittu-aikavali}))
+                    :aikavali @urakka/valittu-aikavali
+                    :tietolaji (map-indexed (fn [index tietolaji]
+                                              {:id index
+                                               :nimi tietolaji
+                                               :valittu? true})
+                                            (vals varusteet/tietolaji->selitys))}))
 
 (defonce varusteet
          (atom {:nakymassa? false
