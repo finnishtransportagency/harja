@@ -842,6 +842,7 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
+      AND vt.tietolaji IN(:tietolajit)
 ORDER BY vt.luotu DESC
 LIMIT 501;
 

@@ -118,12 +118,12 @@
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko "Tietolaji"]
      [valinnat/checkbox-pudotusvalikko
-      (:tietolaji valinnat)
+      (:tietolajit valinnat)
       (fn [tietolaji valittu?]
-        (e! (v/->YhdistaValinnat {:tietolaji (map #(if (= (:id tietolaji) (:id %))
+        (e! (v/->YhdistaValinnat {:tietolajit (map #(if (= (:id tietolaji) (:id %))
                                                      (assoc % :valittu? valittu?)
                                                      %)
-                                                  (:tietolaji valinnat))})))
+                                                  (:tietolajit valinnat))})))
       [" tietolaji valittu" " tietolajia valittu"]]]]])
 
 (defn varustetoteuman-tiedot [muokattava? varustetoteuma]

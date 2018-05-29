@@ -36,6 +36,27 @@
    "tl524" "Viherkuviot"
    "tl523" "Tekninen piste"})
 
+(def selitys->tietolaji
+  {"Kaiteet" "tl501"
+   "Portaat" "tl517"
+   "Bussipysäkin varusteet" "tl507"
+   "Bussipysäkin katos" "tl508"
+   "Liikennemerkki" "tl506"
+   "Reunakivet" "tl522"
+   "Reunapaalut" "tl513"
+   "Puomit ja kulkuaukot" "tl519"
+   "Jätehuolto" "tl505"
+   "WC" "tl504"
+   "Kivetyt alueet" "tl518"
+   "Melurakenteet" "tl514"
+   "Rummut" "tl509"
+   "Aidat" "tl515"
+   "Levähdysalueiden varusteet" "tl503"
+   "Viemärit" "tl512"
+   "Hiekkalaatikot" "tl516"
+   "Viherkuviot" "tl524"
+   "Tekninen piste" "tl523"})
+
 (defn tien-puolet [tietolaji]
   (case tietolaji
     "tl523" [1 2 3]
