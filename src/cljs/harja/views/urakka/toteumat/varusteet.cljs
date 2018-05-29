@@ -62,13 +62,15 @@
   (case tila
     "lahetetty" [:span.tila-lahetetty (str "Onnistunut: " (pvm/pvm-aika lahetetty))]
     "virhe" [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika lahetetty))]
-    [:span "Ei lähetetty"]))
+    [:span.tila-odottaa-vastausta "Ei lähetetty"]))
 
 (defn toteumataulukko [e! toteumat]
   [:span
    [grid/grid
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+     :virhe-viesti (when (some :lahetysvirhe toteumat)
+                     [:div "Tierekisterin palauttamat validontivirheet on korjattava kirjauksen viimeistelemiseksi. Valitse varuste, jonka lähetys on epäonnistunut, nähdäksesi virheen syy."])
      :tunniste :id
      :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
@@ -146,7 +148,7 @@
          :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
       (when (:lahetysvirhe varustetoteuma)
         {:nimi :lahetysvirhe
-         :otsikko "Lähetysvirhe"
+         :otsikko [:span.tila-virhe "Lähetysvirhe"]
          :tyyppi :string
          :muokattava? (constantly false)})
       (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
@@ -175,6 +177,7 @@
          :muokattava? (constantly false)})
       {:nimi :tietolaji
        :otsikko "Varusteen tyyppi"
+       :uusi-rivi? true
        :tyyppi :valinta
        :valinnat (sort-by second (vec (tierekisteri-varusteet/muokattavat-tietolajit)))
        :valinta-nayta second
@@ -193,6 +196,7 @@
         (when (and muokattava? (geo/geolokaatio-tuettu?))
           {:nimi :kayttajan-sijainti
            :otsikko "GPS-sijainti"
+           :uusi-rivi? true
            :tyyppi :sijaintivalitsin
            :karttavalinta? false
            :paikannus-onnistui-fn #(e! (v/->HaeSijainninOsoite %))
@@ -303,7 +307,10 @@
                         #(varustetiedot/tallenna-varustetoteuma valinnat toteuma)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
-                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-onnistuu #(do (e! (v/->VarustetoteumaTallennettu %))
+                                            (viesti/nayta! "Varuste lähetetään tierekisteriin. Tarkista tulos lähetyksen jälkeen."
+                                                           :info
+                                                           viesti/viestin-nayttoaika-keskipitka))
                          :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
