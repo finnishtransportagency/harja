@@ -487,9 +487,10 @@
           :voi-kumota? false
           :uusi-rivi (fn [rivi]
                        ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
-                       (assoc rivi :tr-numero (:tr-numero yllapitokohde)
-                                   :tr-ajorata (:tr-ajorata yllapitokohde)
-                                   :tr-kaista (:tr-kaista yllapitokohde)))
+                       (assoc rivi
+                              :tr-numero (:tr-numero yllapitokohde)
+                              :tr-ajorata (:tr-ajorata yllapitokohde)
+                              :tr-kaista (:tr-kaista yllapitokohde)))
           :luomisen-jalkeen (fn [grid-state]
                               (hae-osan-pituudet grid-state osan-pituudet-teille))
           :paneelikomponentit
@@ -498,18 +499,16 @@
                [napit/palvelinkutsu-nappi
                 [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
                 #(tallenna-fn (vals @kohdeosat-atom))
-                {:disabled (or ;; FIXME Disabloitu tämä check toistaiseksi (HAR-7719)
-                               ;; Vaikuttaa siltä, että vanha päällekkäisyysvirhe jää välillä voimaan
-                               ;; ennen kuin kenttää kosketaan
-                             #_(not (empty? @virheet))
-                               (not (every? #(and (:tr-numero %)
-                                                  (:tr-alkuosa %)
-                                                  (:tr-alkuetaisyys %)
-                                                  (:tr-loppuosa %)
-                                                  (:tr-loppuetaisyys %))
-                                            (vals @kohdeosat-atom)))
-                               (not kirjoitusoikeus?)
-                               (not voi-muokata?))
+                {:disabled (or
+                             (not (empty? (apply concat (mapcat vals (vals @virheet)))))
+                             (not (every? #(and (:tr-numero %)
+                                                (:tr-alkuosa %)
+                                                (:tr-alkuetaisyys %)
+                                                (:tr-loppuosa %)
+                                                (:tr-loppuetaisyys %))
+                                          (vals @kohdeosat-atom)))
+                             (not kirjoitusoikeus?)
+                             (not voi-muokata?))
                  :luokka "nappi-myonteinen grid-tallenna"
                  :virheviesti "Tallentaminen epäonnistui."
                  :kun-onnistuu (partial kohdeosat-tallennettu-onnistuneesti kohdeosat-atom tallennettu-fn)}]))]
