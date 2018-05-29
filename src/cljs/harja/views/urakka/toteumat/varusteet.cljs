@@ -321,16 +321,16 @@
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
   [:span
-   [:div.sisalto-container
-    [:h1 "Varustekirjaukset Harjassa"]
-    [valinnat e! nykyiset-valinnat]
-    [toteumataulukko e! naytettavat-toteumat]]
    (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when (oikeus-varusteiden-muokkaamiseen?)
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
-      [varustehaku e! app]])])
+      [varustehaku e! app]])
+   [:div.sisalto-container
+    [:h1 "Varustekirjaukset Harjassa"]
+    [valinnat e! nykyiset-valinnat]
+    [toteumataulukko e! naytettavat-toteumat]]])
 
 (defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste naytettava-varuste]}]
   (when uudet-varustetoteumat
