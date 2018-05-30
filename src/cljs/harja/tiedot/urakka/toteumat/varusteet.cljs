@@ -311,7 +311,7 @@
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
                               :arvot (merge (or (:arvot tiedot) {}) koordinaatit)
-                              :valikkojen-jarjestys :numero)]
+                              :valikkojen-jarjestys (or (:valikkojen-jarjestys nykyinen-toteuma) :numero))]
 
       (hae-ajoradat nykyinen-toteuma
                     uusi-toteuma
