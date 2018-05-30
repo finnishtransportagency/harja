@@ -36,35 +36,11 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
             [harja.ui.leijuke :as leijuke]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.fmt :as fmt]
             [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-(defn modal-muut-vastaanottajat [muut-vastaanottajat tila-atom]
-  {:otsikko "Muut vastaanottajat"
-   :nimi :muut-vastaanottajat
-   :uusi-rivi? true
-   :palstoja 2
-   :tyyppi :komponentti
-   :komponentti (fn [_]
-                  [grid/muokkaus-grid
-                   {:tyhja "Ei vastaanottajia."
-                    :voi-muokata? true
-                    :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                    :muutos #(swap! tila-atom assoc-in [:lomakedata :muut-vastaanottajat]
-                                    (grid/hae-muokkaustila %))}
-                   [{:otsikko "Sähköpostiosoite"
-                     :nimi :sahkoposti
-                     :tyyppi :email
-                     :leveys 1}]
-                   (atom muut-vastaanottajat)])})
-(def modal-saateviesti {:otsikko "Vapaaehtoinen saateviesti, joka liitetään sähköpostiin"
-                        :koko [90 8]
-                        :nimi :saate :palstoja 3 :tyyppi :text})
-(def modal-sahkopostikopio {:teksti "Lähetä sähköpostiini kopio viestistä"
-                            :nayta-rivina? true :palstoja 3
-                            :nimi :kopio-itselle? :tyyppi :checkbox})
 
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
@@ -122,9 +98,9 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        (modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/valmis-tiemerkintaan-modal-data)
-        modal-saateviesti
-        modal-sahkopostikopio]
+        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/valmis-tiemerkintaan-modal-data)
+        varmista-kayttajalta/modal-saateviesti
+        varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
 
 (defn tiemerkinta-valmis
@@ -175,9 +151,9 @@
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
-       [(modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/tiemerkinta-valmis-modal-data)
-        modal-saateviesti
-        modal-sahkopostikopio]
+       [(varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/tiemerkinta-valmis-modal-data)
+        varmista-kayttajalta/modal-saateviesti
+        varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
 
 (defn- paallystys-aloitettu-validointi
