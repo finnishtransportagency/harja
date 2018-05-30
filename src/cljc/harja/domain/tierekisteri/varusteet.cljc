@@ -219,11 +219,12 @@
      :clj  (Integer/parseInt s)))
 
 (defmulti varusteominaisuus->skeema
-          "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
-          Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
-          (comp :tietotyyppi :ominaisuus))
+  "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
+  Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
+  (fn [ominaisuus _ _]
+    ((comp :tietotyyppi :ominaisuus) ominaisuus)))
 
-(defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
+(defn- varusteominaisuus-skeema-perus [ominaisuus muokattava? _]
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (and muokattava? (:pakollinen ominaisuus))
    :nimi (keyword (:kenttatunniste ominaisuus))
@@ -246,7 +247,7 @@
     true))
 
 (defmethod varusteominaisuus->skeema :koodisto
-  [{ominaisuus :ominaisuus} muokattava?]
+  [{ominaisuus :ominaisuus} muokattava? valikkojen-jarjestys]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
                                 :koodi (str (:koodi %)))
                       (:koodisto ominaisuus))
@@ -257,14 +258,19 @@
         hae-selite (fn [arvo]
                      (some #(when (= (:koodi %) arvo)
                               (str (:koodi %) " " (:selite %)))
-                           koodisto))]
-    (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
+                           koodisto))
+        jarjestys-fn (case valikkojen-jarjestys
+                       (nil :numero) #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
+                                           #?(:clj  (catch Exception e
+                                                      1)
+                                              :cljs (catch :default e
+                                                      1)))
+                       :aakkos #(if-let [loytyi (re-find #" [a-äA-Ä]*" %)]
+                                  [loytyi] [nil %])
+                       identity)]
+    (merge (varusteominaisuus-skeema-perus ominaisuus muokattava? nil)
            {:tyyppi :valinta
-            :valinnat (sort-by #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
-                                     #?(:clj (catch Exception e
-                                               1)
-                                        :cljs (catch :default e
-                                                1)))
+            :valinnat (sort-by (comp jarjestys-fn hae-selite)
                                (map :koodi koodisto))
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo
@@ -281,8 +287,8 @@
                        arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
-  [{{:keys [pakollinen pituus alaraja ylaraja] :as ominaisuus} :ominaisuus} muokattava?]
-  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
+  [{{:keys [pakollinen pituus alaraja ylaraja] :as ominaisuus} :ominaisuus} muokattava? _]
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava? nil)
          {:tyyppi :string
           :regex (re-pattern (str "-?\\d*"))
           :validoi [#(cond
@@ -292,8 +298,8 @@
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default
-  [{ominaisuus :ominaisuus} muokattava?]
-  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
+  [{ominaisuus :ominaisuus} muokattava? _]
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava? nil)
          {:tyyppi :string
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
                     1

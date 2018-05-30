@@ -181,7 +181,8 @@
       :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
       :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :tierekisteriosoite (varusteen-osoite varuste)
-      :sijainti (:sijainti varuste)})))
+      :sijainti (:sijainti varuste)
+      :valikkojen-jarjestys :numero})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (reverse
@@ -309,7 +310,8 @@
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
-                         :arvot (merge (or (:arvot tiedot) {}) koordinaatit))]
+                              :arvot (merge (or (:arvot tiedot) {}) koordinaatit)
+                              :valikkojen-jarjestys :numero)]
 
       (hae-ajoradat nykyinen-toteuma
                     uusi-toteuma
@@ -409,7 +411,13 @@
                                         :alkuetaisyys (:aet osoite)
                                         :loppuosa (:losa osoite)
                                         :loppuetaisyys (:let osoite)})]
-      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))))))
+      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot))))))
+
+  v/MuutaJarjestysta
+  (process-event [_ app]
+    (update app :varustetoteuma (fn [{jarjestys :valikkojen-jarjestys :as varustetoteuma}]
+                                  (assoc varustetoteuma :valikkojen-jarjestys (if (= jarjestys :numero)
+                                                                                :aakkos :numero))))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

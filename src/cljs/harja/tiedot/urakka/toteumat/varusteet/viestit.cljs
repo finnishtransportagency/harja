@@ -53,3 +53,5 @@
 
 (defrecord SijanninOsoiteHaettu [osoite])
 
+(defrecord MuutaJarjestysta [])
+

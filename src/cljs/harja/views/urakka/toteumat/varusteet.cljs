@@ -233,7 +233,27 @@
        :tyyppi :string
        :muokattava? (constantly muokattava?)})))
 
-(defn varusteen-ominaisuudet [muokattava? ominaisuudet arvot]
+(defn varusteominaisuuksien-optiot [e! muokattava? {jarjestys :valikkojen-jarjestys}]
+  (lomake/ryhma
+    "Pudotusvalikkojen asetukset"
+    {:nimi :jarjestys
+     :otsikko "Järjestys"
+     :tyyppi :komponentti
+     :komponentti (fn [_]
+                    [:nav.livi-grid-pagination {:style {:margin-top "0px"}}
+                     [:ul.pagination.justify-content-end {:style {:margin-top "0px"}}
+                      [:li.page-item (merge {:on-click #(e! (v/->MuutaJarjestysta))
+                                             :disabled (not muokattava?)}
+                                            (when (= :numero jarjestys)
+                                              {:class "active"}))
+                       [:a.page-link.klikattava "N"]]
+                      [:li.page-item (merge {:on-click #(e! (v/->MuutaJarjestysta))
+                                             :disabled (not muokattava?)}
+                                            (when (= :aakkos jarjestys)
+                                              {:class "active"}))
+                       [:a.page-link.klikattava "Aa"]]]])}))
+
+(defn varusteen-ominaisuudet [muokattava? ominaisuudet {:keys [arvot valikkojen-jarjestys]}]
   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
@@ -241,7 +261,7 @@
                          ominaisuudet)
           virheet (:virhe arvot)]
       (if (empty? virheet)
-        (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet))
+        (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava? valikkojen-jarjestys) ominaisuudet))
         (lomake/ryhma
           "Varusteen ominaisuudet"
           {:otsikko "Varusteen ominaisuuksia ei voida lukea." :nimi :virhe
@@ -315,7 +335,8 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
+       (varusteominaisuuksien-optiot e! muokattava? varustetoteuma)
+       (varusteen-ominaisuudet muokattava? ominaisuudet varustetoteuma)
        (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
 
