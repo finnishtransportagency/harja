@@ -254,10 +254,18 @@
         koodisto (if muokattava?
                    (filter tietolajin-koodi-voimassa? koodisto)
                    koodisto)
-        hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
+        hae-selite (fn [arvo]
+                     (some #(when (= (:koodi %) arvo)
+                              (str (:koodi %) " " (:selite %)))
+                           koodisto))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
-            :valinnat (map :koodi koodisto)
+            :valinnat (sort-by #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
+                                     #?(:clj (catch Exception e
+                                               1)
+                                        :cljs (catch :default e
+                                                1)))
+                               (map :koodi koodisto))
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo
                                (let [selite (hae-selite arvo)]
