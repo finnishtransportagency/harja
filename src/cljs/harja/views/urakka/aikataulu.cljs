@@ -98,7 +98,9 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/valmis-tiemerkintaan-modal-data)
+        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
+                                                        #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
+                                                                (grid/hae-muokkaustila %)))
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))
@@ -151,7 +153,9 @@
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
-       [(varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/tiemerkinta-valmis-modal-data)
+       [(varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
+                                                        #(swap! tiedot/tiemerkinta-valmis-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
+                                                                (grid/hae-muokkaustila %)))
         varmista-kayttajalta/modal-saateviesti
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]]]))

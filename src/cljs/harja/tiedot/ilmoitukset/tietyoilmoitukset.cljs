@@ -23,6 +23,19 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def tieliikennekeskusten-sahkopostiosoitteet
+  (if (k/kehitysymparistossa?)
+    [["Helsinki" "helsinki.liikennekeskus_TESTI@example.org"]
+     ["Oulu" "oulu.liikennekeskus_TESTI@example.org"]
+     ["Tampere" "tampere.liikennekeskus_TESTI@example.org"]
+     ["Turku" "turku.liikennekeskus_TESTI@example.org"]]
+
+    ;; Tuotantoversion osoitteet
+    [["Helsinki" "helsinki.liikennekeskus@liikennevirasto.fi"]
+    ["Oulu" "oulu.liikennekeskus@liikennevirasto.fi"]
+    ["Tampere" "tampere.liikennekeskus@liikennevirasto.fi"]
+    ["Turku" "turku.liikennekeskus@liikennevirasto.fi"]]))
+
 (def luonti-aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
                        {:nimi "1 päivän ajalta" :tunteja 24}
                        {:nimi "1 viikon ajalta" :tunteja 168}
@@ -51,6 +64,12 @@
    :haku-kaynnissa? false
    :aloitetaan-uusi-tietyoilmoitus? false
    :tietyoilmoitukset nil
+   :sahkopostilahetyksen-modal-data {:nakyvissa? false
+                                     :avaa-pdf? false
+                                     :ilmoitus nil
+                                     :lomakedata {:vastaanottaja nil
+                                                  :muut-vastaanottajat #{}
+                                                  :kopio-itselle? false}}
    :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
               :luotu-alkuaika (pvm/tuntia-sitten 24)
               :luotu-loppuaika (pvm/nyt)
@@ -167,9 +186,13 @@
 (defrecord PaivitaNopeusrajoitukset [nopeusrajoitukset])
 (defrecord PaivitaTienPinnat [tienpinnat avain])
 (defrecord PaivitaTyoajat [tyoajat virheita?])
-(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf? laheta-sahkoposti?])
-(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf? laheta-sahkoposti?])
+(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf? sahkopostitiedot])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf? sahkopostitiedot])
 (defrecord IlmoitusEiTallennettu [virhe])
+(defrecord AvaaSahkopostinLahetysModal [ilmoitus avaa-pdf?])
+(defrecord SuljeSahkopostinLahetysModal [])
+(defrecord SahkopostiModalinLomakettaMuokattu [lomakedata])
+(defrecord SahkopostinMuitaVastaanottajiaMuokattu [muut-vastaanottajat])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
@@ -177,6 +200,7 @@
 (defrecord UrakanTiedotHaettu [urakka])
 (defrecord ValitseYllapitokohde [yllapitokohde])
 (defrecord YllapitokohdeValittu [yllapitokohde])
+
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
@@ -267,8 +291,7 @@
 
   TallennaIlmoitus
   (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus
-                   avaa-pdf? :avaa-pdf? laheta-sahkoposti? :laheta-sahkoposti?} app]
-    (log "TallennaIlmoitus event, ilmoitus" (pr-str ilmoitus) " laheta sahkoposti?" laheta-sahkoposti?)
+                   avaa-pdf? :avaa-pdf? sahkopostitiedot :sahkopostitiedot} app]
     (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus avaa-pdf?)
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
@@ -285,10 +308,9 @@
                              (update ::t/tyoajat
                                      (partial remove :poistettu)))
                 vastaus-kanava (k/post! :tallenna-tietyoilmoitus {:ilmoitus ilmoitus
-                                                                  :laheta-sahkoposti? laheta-sahkoposti?})
+                                                                  :sahkopostitiedot sahkopostitiedot})
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
-            (log "TallennaIlmoitus vastaus:" (pr-str vastaus))
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -313,6 +335,32 @@
                    :danger)
     (assoc app
       :tallennus-kaynnissa? false))
+
+  AvaaSahkopostinLahetysModal
+  (process-event [{ilmoitus :ilmoitus
+                   avaa-pdf? :avaa-pdf?} app]
+    (assoc app
+      :sahkopostilahetyksen-modal-data {:nakyvissa? true
+                                        :avaa-pdf? avaa-pdf?
+                                        :ilmoitus ilmoitus
+                                        :lomakedata {}}))
+
+  SuljeSahkopostinLahetysModal
+  (process-event [_ app]
+    (assoc-in app
+              [:sahkopostilahetyksen-modal-data :nakyvissa?] false))
+
+  SahkopostiModalinLomakettaMuokattu
+  (process-event [{lomakedata :lomakedata} app]
+    (log "SahkopostiModalinLomakettaMuokattu, lomakedata: " (pr-str lomakedata))
+    (assoc-in app
+              [:sahkopostilahetyksen-modal-data :lomakedata] lomakedata))
+
+  SahkopostinMuitaVastaanottajiaMuokattu
+  (process-event [{muut-vastaanottajat :muut-vastaanottajat} app]
+    (log "SahkopostinMuitaVastaanottajiaMuokattu, muut-vastaanottajat: " (pr-str muut-vastaanottajat))
+    (assoc-in app
+              [:sahkopostilahetyksen-modal-data :lomakedata :muut-vastaanottajat] muut-vastaanottajat))
 
   AloitaUusiTietyoilmoitus
   (process-event [{urakka-id :urakka-id} app]

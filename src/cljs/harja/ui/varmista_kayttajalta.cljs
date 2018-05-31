@@ -33,7 +33,7 @@
                                   {:key (str "varmistus-nappi-" tyyppi)})))]}
                   sisalto)))
 
-(defn modal-muut-vastaanottajat [muut-vastaanottajat tila-atom]
+(defn modal-muut-vastaanottajat [muut-vastaanottajat muutos-fn]
   {:otsikko "Muut vastaanottajat"
    :nimi :muut-vastaanottajat
    :uusi-rivi? true
@@ -44,8 +44,7 @@
                    {:tyhja "Ei vastaanottajia."
                     :voi-muokata? true
                     :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                    :muutos #(swap! tila-atom assoc-in [:lomakedata :muut-vastaanottajat]
-                                    (grid/hae-muokkaustila %))}
+                    :muutos muutos-fn}
                    [{:otsikko "Sähköpostiosoite"
                      :nimi :sahkoposti
                      :tyyppi :email

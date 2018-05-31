@@ -116,7 +116,7 @@
 (defn lomake-mock-komponentti [e! app]
   (let [valittu-ilmoitus (:valittu-ilmoitus app)
         kayttajan-urakat [5]]
-    [tietyoilmoituslomake-view/lomake e! false valittu-ilmoitus kayttajan-urakat]))
+    [tietyoilmoituslomake-view/lomake e! app false valittu-ilmoitus kayttajan-urakat]))
 
 
 (defn query-selector [q]

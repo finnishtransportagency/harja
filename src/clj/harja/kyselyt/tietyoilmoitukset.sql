@@ -38,3 +38,37 @@ FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
   JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE u.id = :urakkaid;
+
+-- TODO: Tästä alaspäin on ns. vanhaa koodia, kenttiin joita ei enää olemassa
+-- kuitenkin siivotaan näitä sitten kun uusi liitteen lähetysjono on olemassa,
+-- tiedetään paremmin mitä vanhaa koodia oikeasti vielä voidaan uudelleenkäyttää
+-- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
+UPDATE tietyoilmoitus
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta', lahetetty = current_timestamp
+WHERE id = :id;
+
+-- name: merkitse-tietyoilmoitus-lahetetyksi!
+UPDATE tietyoilmoitus
+SET lahetetty = current_timestamp, tila = 'lahetetty'
+WHERE lahetysid = :lahetysid;
+
+-- name: merkitse-tietyoilmoitukselle-lahetysvirhe!
+UPDATE tietyoilmoitus
+SET tila = 'virhe'
+WHERE id = :id;
+
+-- name: hae-lahettamattomat-tietyoilmoitukset
+SELECT id
+FROM tietyoilmoitus
+WHERE
+  (tila IS NULL OR tila = 'virhe');
+
+-- name: lahetetty
+SELECT tila = 'lahetetty' as "lahetetty?"
+FROM tietyoilmoitus
+WHERE id = :id;
+
+-- name: merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla!
+UPDATE tietyoilmoitus
+SET tila = 'virhe'
+WHERE lahetysid = :lahetysid;

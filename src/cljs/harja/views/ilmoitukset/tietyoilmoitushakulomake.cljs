@@ -116,10 +116,10 @@
     :leveys 2}
    {:otsikko "Työn tyyppi" :nimi ::t/tyotyypit
     :hae t/tyotyypit->str
-    :leveys 4}
+    :leveys 3}
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae t/ilmoittaja->str
-    :leveys 6}
+    :leveys 5}
    {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
     :tyyppi :komponentti
     :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti %)
