@@ -28,6 +28,7 @@ CREATE TABLE tietyoilmoituksen_email_lahetys  (
   lahetetty TIMESTAMP NOT NULL,
   lahetysid VARCHAR(255), -- JMS Message ID
   lahettaja INTEGER REFERENCES kayttaja (id) NOT NULL,
-  kuitattu TIMESTAMP
+  kuitattu TIMESTAMP,
+  lahetysvirhe TIMESTAMP -- mahdollisen lähetysvirheen aikaleima, toivottavasti usein tyhjä
 );
 

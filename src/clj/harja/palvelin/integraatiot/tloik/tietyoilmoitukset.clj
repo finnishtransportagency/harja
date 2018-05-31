@@ -20,12 +20,10 @@
                                                       :tr-loppuetaisyys (::tierekisteri-d/let osoite)})))
 
 (defn hae [db id]
-  (let [uusi? true                                          ;; FIXME uuteen malliin (not (tietyoilmoitukset/lahetetty? db id))
-        karttapvm (geometriapaivitykset/harjan-verkon-pvm db)
+  (let [karttapvm (geometriapaivitykset/harjan-verkon-pvm db)
         tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
         pituus (laske-pituus db tietyoilmoitus)
         tietyoilmoitus (assoc tietyoilmoitus
-                         :uusi? uusi?
                          :karttapvm karttapvm
                          :pituus pituus)]
     tietyoilmoitus))
@@ -36,7 +34,7 @@
         muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)
-      ; FIXME uuteen malliin (tietyoilmoitukset/merkitse-tietyoilmoitus-odottamaan-vastausta! db {:id id :lahetysid viesti-id})
+      (tietyoilmoitukset/lisaa-tietyoilmoituksen-email-lahetys! db {:id id :lahetysid viesti-id})
       (log/debug (format "Tietyöilmoituksen (id: %s) lähetys T-LOIK:n onnistui." id))
       (catch Exception e
         (log/error e (format "Tietyöilmoituksen (id: %s) lähetys T-LOIK:n epäonnistui." id))
@@ -50,24 +48,11 @@
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
       (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db {:id id}))))
 
-(defn laheta-lahettamattomat-tietyoilmoitukset [tietyoilmoitus-jms-lahettaja db]
-  (lukko/yrita-ajaa-lukon-kanssa
-    db
-    "tloik-tti-uudelleenlahetys"
-    #(do
-       (log/debug "Lähetetään lähettämättömät tietyöilmoitukset T-LOIK:n.")
-       (let [idt (mapv :id (tietyoilmoitukset/hae-lahettamattomat-tietyoilmoitukset db))]
-         (doseq [id idt]
-           (try
-             (laheta-tietyoilmoitus tietyoilmoitus-jms-lahettaja db id)
-             (catch Exception _))))
-       (log/debug "Tietyöilmoitusten lähettäminen T-LOIK:n valmis."))))
-
 (defn vastaanota-kuittaus [db viesti-id onnistunut]
   (if onnistunut
     (do
       (log/debug (format "Tietyöilmoitus kuitattiin T-LOIK:sta onnistuneeksi viesti-id:llä: %s" viesti-id))
-      (tietyoilmoitukset/merkitse-tietyoilmoitus-lahetetyksi! db {:lahetysid viesti-id}))
+      (tietyoilmoitukset/merkitse-tietyoilmoituksen-sahkopostilahetys-kuitatuksi! db {:lahetysid viesti-id}))
 
     (do
       (log/error (format "Tietyöilmoitus kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
