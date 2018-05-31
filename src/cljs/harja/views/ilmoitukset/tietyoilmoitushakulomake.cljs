@@ -240,17 +240,7 @@
           [{:otsikko "Vai\u00ADhei\u00ADta"
             :nimi :vaiheita
             :hae #(count (::t/tyovaiheet %))
-            :leveys 1}
-           (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
-             {:otsikko "Lähetys Tie\u00ADlii\u00ADken\u00ADne\u00ADkes\u00ADkuk\u00ADseen"
-              :nimi :lahetys
-              :tyyppi :komponentti
-              :komponentti #(case (::t/tila %)
-                              "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                              "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
-                              "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
-                              [:span "Ei lähetetty"])
-              :leveys 3})])
+            :leveys 1}])
     haetut-ilmoitukset]])
 
 (defn hakulomake
