@@ -7,7 +7,7 @@ ALTER TABLE tietyoilmoitus
   DROP COLUMN lahetetty,
   DROP COLUMN lahetysid,
   DROP COLUMN tila;
-s
+
 
 -- Luodaan uusi taulu johon kerätään kaikki email lähetykset sekä niiden kuittaukset
 CREATE TABLE tietyoilmoituksen_email_lahetys  (
