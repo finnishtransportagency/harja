@@ -318,7 +318,14 @@
             (log "poikkeus lomakkeen tallennuksessa: " (pr-str e))
             (fail! nil)
             (throw e)))))
-    (assoc app :tallennus-kaynnissa? true))
+    (assoc app :tallennus-kaynnissa? true
+               ;; suljetaan ja resetoidaan tallennuksen jälkeen modaali
+               :sahkopostilahetyksen-modal-data {:nakyvissa? false
+                                                 :avaa-pdf? false
+                                                 :ilmoitus nil
+                                                 :lomakedata {:vastaanottaja nil
+                                                              :muut-vastaanottajat #{}
+                                                              :kopio-itselle? false}}))
 
   IlmoitusTallennettu
   (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
