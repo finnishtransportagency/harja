@@ -39,10 +39,11 @@ FROM urakka u
   JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE u.id = :urakkaid;
 
--- TODO: Tästä alaspäin on ns. vanhaa koodia, kenttiin joita ei enää olemassa
+
+-- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
+-- TODO Tästä alaspäin on ns. vanhaa koodia, kenttiin joita ei enää olemassa
 -- kuitenkin siivotaan näitä sitten kun uusi liitteen lähetysjono on olemassa,
 -- tiedetään paremmin mitä vanhaa koodia oikeasti vielä voidaan uudelleenkäyttää
--- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
 UPDATE tietyoilmoitus
 SET lahetysid = :lahetysid, tila = 'odottaa_vastausta', lahetetty = current_timestamp
 WHERE id = :id;
