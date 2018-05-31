@@ -119,7 +119,7 @@
                                                               {:count (count paikkaus-tienkohta)
                                                                :paikkaukset paikkaus-tienkohta})))))]
     (jdbc/with-db-transaction [db db]
-      (if (nil? paikkaus-idt)
+      (if (:ensimmainen-haku? tiedot)
         (let [paikkaukset (hae-paikkaukset db)
               paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
               tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
@@ -149,20 +149,23 @@
                         :alkuaika (first (:aikavali tiedot))
                         :loppuaika (second (:aikavali tiedot))
                         :tyomenetelmat (when (not-empty (:tyomenetelmat tiedot))
-                                         (konv/seq->array (:tyomenetelmat tiedot))))]
+                                         (konv/seq->array (:tyomenetelmat tiedot))))
+        haetaan-nollalla-paikkauksella? (and (not (nil? (:paikkaus-idt tiedot)))
+                                             (empty? (:paikkaus-idt tiedot)))]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
     ;; tarkoittaa se, että näkymään juuri tultiin ja ollaan suorittamassa ensimmäistä hakua. Tyhjä lista taasen, että
     ;; käyttäjä on ottanut kaikki paikkauskohteet pois.
     (cond
-      (and (not (nil? (:paikkaus-idt tiedot)))
-           (empty? (:paikkaus-idt tiedot))) {:kustannukset []}
-      (nil? (:paikkaus-idt tiedot)) (jdbc/with-db-transaction [db db]
-                                      (let [kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)
+      (:ensimmainen-haku? tiedot) (jdbc/with-db-transaction [db db]
+                                      (let [kustannukset (if haetaan-nollalla-paikkauksella?
+                                                           []
+                                                           (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params))
                                             paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
                                             tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset
                                          :paikkauskohteet paikkauskohteet
                                          :tyomenetelmat tyomenetelmat}))
+      haetaan-nollalla-paikkauksella? {:kustannukset []}
       :else {:kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)})))
 
 (defrecord Paikkaukset []

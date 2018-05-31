@@ -246,7 +246,7 @@
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                raporttivienti raporttiparametrit]} skeema tiedot]
+                                raporttivienti raporttiparametrit virhe-viesti]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -377,7 +377,8 @@
                        (when peruuta (peruuta))
                        nil)}
          [ikonit/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
-   (when nayta-otsikko? [:h6.panel-title otsikko])])
+   (when nayta-otsikko? [:h6.panel-title otsikko])
+   (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
 (defn- otsikkorivi [{:keys [opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna]}]
   [:thead
@@ -677,7 +678,7 @@
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota?
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
-           raporttivienti raporttiparametrit] :as opts} skeema tiedot]
+           raporttivienti raporttiparametrit virhe-viesti] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -974,7 +975,7 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
-                    validoi-fn voi-kumota? raporttivienti raporttiparametrit] :as opts}
+                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1019,7 +1020,7 @@
                              :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
-                             :validoi-fn validoi-fn}
+                             :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
                             skeema
                             tiedot)
            [:div.panel-body
@@ -1107,7 +1108,8 @@
                                 :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn
-                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit}
+                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
+                                :virhe-viesti virhe-viesti}
                                skeema
                                tiedot)])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
