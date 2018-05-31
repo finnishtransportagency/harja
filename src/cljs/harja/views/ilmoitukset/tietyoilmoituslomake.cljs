@@ -341,15 +341,16 @@
        :tallennus-kaynnissa? tallennus-kaynnissa?
        :ikoni (ikonit/tallenna)}]
 
-     [napit/yleinen-toissijainen
-      "Tallenna ilmoitus ja lähetä PDF sähköpostitse Tieliikennekeskukseen"
-      #(e! (tiedot/->AvaaSahkopostinLahetysModal (lomake/ilman-lomaketietoja ilmoitus)
-                                                 @avaa-pdf?))
-      {:disabled (or tallennus-kaynnissa?
-                     (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
-                     (not (lomake/voi-tallentaa? ilmoitus)))
-       :tallennus-kaynnissa? tallennus-kaynnissa?
-       :ikoni (ikonit/envelope)}]]))
+     (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+       [napit/yleinen-toissijainen
+        "Tallenna ilmoitus ja lähetä PDF sähköpostitse Tieliikennekeskukseen"
+        #(e! (tiedot/->AvaaSahkopostinLahetysModal (lomake/ilman-lomaketietoja ilmoitus)
+                                                   @avaa-pdf?))
+        {:disabled (or tallennus-kaynnissa?
+                       (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
+                       (not (lomake/voi-tallentaa? ilmoitus)))
+         :tallennus-kaynnissa? tallennus-kaynnissa?
+         :ikoni (ikonit/envelope)}])]))
 
 (defn lomake [e! app tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
@@ -582,9 +583,12 @@
                      :tyyppi :string
                      :pituus-max 32})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)
-      {:nimi :email-lahetykset-tloikiin
-       :otsikko "PDF:n sähköpostilähetykset Harjasta Tieliikennekeskuksen sähköpostiin"
-       :tyyppi :komponentti
-       :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))}]
+      (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+        {:nimi :email-lahetykset-tloikiin
+         :otsikko "PDF:n sähköpostilähetykset Harjasta Tieliikennekeskuksen sähköpostiin"
+         :tyyppi :komponentti
+         :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))})]
      ilmoitus]]
-   [pdf-sahkopostilahetyksen-modal e! app]])
+
+   (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+     [pdf-sahkopostilahetyksen-modal e! app])])

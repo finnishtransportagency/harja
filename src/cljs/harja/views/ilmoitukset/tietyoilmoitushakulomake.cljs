@@ -120,10 +120,11 @@
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae t/ilmoittaja->str
     :leveys 5}
-   {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
-    :tyyppi :komponentti
-    :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti %)
-    :leveys 6}
+   (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+     {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
+      :tyyppi :komponentti
+      :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti %)
+      :leveys 6})
    {:otsikko " "
     :leveys 2
     :nimi :vie-pdf
