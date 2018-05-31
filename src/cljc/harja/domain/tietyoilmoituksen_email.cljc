@@ -19,6 +19,7 @@
     "tietyoilmoitus" ::tietyoilmoitus-id
     "tiedostonimi" ::tiedostonimi
     "lahetetty" ::lahetetty
+    "lahetysid" ::lahetysid
     "lahettaja" ::lahettaja-id
     ::lahettaja (specql.rel/has-one ::lahettaja-id
                                     :harja.domain.kayttaja/kayttaja

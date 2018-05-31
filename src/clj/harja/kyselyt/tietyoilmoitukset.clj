@@ -131,6 +131,7 @@
                                 ::e/tietyoilmoitus-id
                                 ::e/tiedostonimi
                                 ::e/lahetetty
+                                ::e/lahetysid
                                 [::e/lahettaja kayttaja/perustiedot]
                                 ::e/kuitattu}]))
 

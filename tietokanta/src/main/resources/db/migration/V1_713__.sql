@@ -26,6 +26,7 @@ CREATE TABLE tietyoilmoituksen_email_lahetys  (
   tietyoilmoitus INTEGER REFERENCES tietyoilmoitus (id),
   tiedostonimi TEXT,
   lahetetty TIMESTAMP NOT NULL,
+  lahetysid VARCHAR(255), -- JMS Message ID
   lahettaja INTEGER REFERENCES kayttaja (id) NOT NULL,
   kuitattu TIMESTAMP
 );
