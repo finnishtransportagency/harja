@@ -24,4 +24,5 @@
     ::lahettaja (specql.rel/has-one ::lahettaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)
-    "kuitattu" ::kuitattu}])
+    "kuitattu" ::kuitattu
+    "lahetysvirhe" ::lahetysvirhe}])
