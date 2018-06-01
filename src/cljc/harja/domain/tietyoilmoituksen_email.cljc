@@ -1,5 +1,5 @@
 (ns harja.domain.tietyoilmoituksen-email
-  "Määrittelee tietyöilmoituksen emailin"
+  "Määrittelee tietyöilmoituksen email-lähetysten tiedot"
   #?@(:clj [
             (:require [clojure.spec.alpha :as s]
                       [harja.id :refer [id-olemassa?]]

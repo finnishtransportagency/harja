@@ -144,7 +144,7 @@
         ilm-tallennettu (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :tallenna-tietyoilmoitus +kayttaja-jvh+
                                         {:ilmoitus ilm-ennen
-                                         :laheta-sahkoposti? false})
+                                         :sahkopostitiedot {}})
         lkm-jalkeen (count (fetch db ::t/ilmoitus #{::t/id} {}))]
     (is (some? (::t/id ilm-tallennettu)))
     (is (= lkm-jalkeen (inc lkm-ennen)))

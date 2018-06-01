@@ -187,7 +187,7 @@
 (defrecord PaivitaTienPinnat [tienpinnat avain])
 (defrecord PaivitaTyoajat [tyoajat virheita?])
 (defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf? sahkopostitiedot])
-(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf? sahkopostitiedot])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AvaaSahkopostinLahetysModal [ilmoitus avaa-pdf?])
 (defrecord SuljeSahkopostinLahetysModal [])
