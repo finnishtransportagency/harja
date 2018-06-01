@@ -13,7 +13,3 @@ ALTER TABLE silta
   ADD COLUMN muokattu TIMESTAMP;
 
 CREATE UNIQUE INDEX  uniikki_trex_oid ON silta (trex_oid);
-
-
-
-drop column
