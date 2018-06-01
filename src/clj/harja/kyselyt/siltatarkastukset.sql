@@ -282,11 +282,10 @@ WHERE id = :id
 
 -- name: paivita-siltatarkastuksen-kohteet!
 -- Päivittää olemassaolevan siltatarkastuksen kohteet
-UPDATE siltatarkastuskohde
-SET tulos = :tulos, lisatieto = :lisatieto
-WHERE siltatarkastus = :siltatarkastus
-      AND kohde = :kohde
-      AND (SELECT urakka FROM siltatarkastus WHERE id = :siltatarkastus) = :urakka;
+INSERT INTO siltatarkastuskohde (tulos, lisatieto, siltatarkastus, kohde)
+     VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde)
+ON CONFLICT ON CONSTRAINT uniikki_tarkastuskohde
+  DO UPDATE SET tulos = :tulos, lisatieto = :lisatieto;
 
 -- name: luo-siltatarkastuksen-kohde<!
 -- Luo siltatarkastukselle uuden kohteet
