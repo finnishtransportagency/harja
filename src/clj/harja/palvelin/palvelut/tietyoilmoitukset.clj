@@ -87,7 +87,7 @@
   [{:keys [email vastaanottaja muut-vastaanottajat kopio-itselle?
            viestin-otsikko viestin-vartalo saate
            tietyoilmoitus-id ilmoittaja] :as params}]
-  (println " Palvelu: laheta-tietyoilmoituksen-pdf-sahkopostitse, params " params)
+  (log/debug " Palvelu: laheta-tietyoilmoituksen-pdf-sahkopostitse, params " params)
   ;; TODO: huom: Koko jono minne liitteen sisältävä sähköposti läheteään, tehdään
   ;; uutena, samoin sen kuittausjono (ACK). Eli olemassaolevia sähköpostinlähetys-
   ;; palveluita ei voi käyttää sellaisenaan vaan pitää kytkeytyä tulevaan jonoon
@@ -100,7 +100,7 @@
         vastaanottaja
         (str "Harja: " viestin-otsikko)
         viestin-vartalo)
-      (println " Lähetys tieliikennekeskukseen tehty")
+      (log/debug " Lähetys tieliikennekeskukseen tehty")
 
       ;; lähetys mahdollisille muille vastaanottajille
       (doseq [muu-vastaanottaja muut-vastaanottajat]
@@ -114,7 +114,7 @@
           (catch Exception e
             (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                                muu-vastaanottaja (pr-str e))))))
-      (println " Lähetys muille vastaanottajille tehty, muut: " muut-vastaanottajat)
+      (log/debug " Lähetys muille vastaanottajille tehty, muut: " muut-vastaanottajat)
 
       ;; kopio mailitsta itselle
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
@@ -124,14 +124,14 @@
            :sahkoposti (:sahkoposti ilmoittaja)
            :viesti-otsikko viestin-otsikko
            :viesti-body viestin-vartalo})
-        (println " Lähetys itselle tehty osoitteeseen " (:sahkoposti ilmoittaja))))
+        (log/debug " Lähetys itselle tehty osoitteeseen " (:sahkoposti ilmoittaja))))
 
     (catch Exception e
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä sähköpostitse T-LOIK:n tapahtui poikkeus." tietyoilmoitus-id))
       :sahkopostilahetys-epaonnistui)))
 
 (defn tallenna-tietyoilmoitus [tloik db email user ilmoitus sahkopostitiedot]
-  (println "PALVELU: Tallenna tietyöilmoitus" ilmoitus  " sahkopostitiedot " sahkopostitiedot " email " email)
+  (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus  " sahkopostitiedot " sahkopostitiedot " email " email)
   (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
     (if (::t/urakka-id ilmoitus)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
@@ -155,9 +155,9 @@
                                  {::t/tilaaja-id org}
                                  {::t/urakka-id (op/in kayttajan-urakat)}))]
       (when-not (empty? sahkopostitiedot)
-        (println "yritän lähettää sähköpostin step 1 sahkopostitiedot: " sahkopostitiedot)
+        (log/debug "yritän lähettää sähköpostin step 1 sahkopostitiedot: " sahkopostitiedot)
         (async/thread
-          (println "yritän lähettää sähköpostin step 2")
+          (log/debug "yritän lähettää sähköpostin step 2")
           (laheta-tietyoilmoituksen-pdf-sahkopostitse {:email email
                                                        :vastaanottaja (:vastaanottaja sahkopostitiedot)
                                                        :muut-vastaanottajat (:muut-vastaanottajat sahkopostitiedot)
