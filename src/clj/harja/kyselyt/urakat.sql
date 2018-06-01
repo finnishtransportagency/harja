@@ -608,15 +608,16 @@ st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
-INSERT INTO alueurakka (alueurakkanro, alue, elynumero)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);
+INSERT INTO alueurakka (alueurakkanro, alue, elynumero, "ely-nimi", nimi)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero, :elynimi, :nimi);
 
 -- name: paivita-alueurakka!
 UPDATE alueurakka
 SET alue    = ST_GeomFromText(:alue) :: GEOMETRY,
-elynumero = :elynumero
+elynumero = :elynumero,
+"ely-nimi" = :elynimi,
+nimi = :nimi
 WHERE alueurakkanro = :alueurakkanro;
-
 -- name: hae-alueurakka-numerolla
 SELECT *
 FROM alueurakka
