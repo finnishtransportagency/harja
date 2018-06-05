@@ -242,7 +242,7 @@
        :tyyppi :string
        :muokattava? (constantly muokattava?)})))
 
-(defn varusteen-ominaisuudet [muokattava? ominaisuudet {:keys [arvot valikkojen-jarjestys]}]
+(defn varusteen-ominaisuudet [muokattava? ominaisuudet arvot]
   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
@@ -250,7 +250,7 @@
                          ominaisuudet)
           virheet (:virhe arvot)]
       (if (empty? virheet)
-        (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava? valikkojen-jarjestys) ominaisuudet))
+        (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet))
         (lomake/ryhma
           "Varusteen ominaisuudet"
           {:otsikko "Varusteen ominaisuuksia ei voida lukea." :nimi :virhe
@@ -324,7 +324,7 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet varustetoteuma)
+       (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
        (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
 
