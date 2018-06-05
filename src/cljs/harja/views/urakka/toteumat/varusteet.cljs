@@ -243,24 +243,21 @@
        :muokattava? (constantly muokattava?)})))
 
 (defn varusteominaisuuksien-optiot [e! muokattava? {jarjestys :valikkojen-jarjestys}]
-  (lomake/ryhma
-    "Pudotusvalikkojen asetukset"
-    {:nimi :jarjestys
-     :otsikko "Järjestys"
-     :tyyppi :komponentti
-     :komponentti (fn [_]
-                    [:nav.livi-grid-pagination {:style {:margin-top "0px"}}
-                     [:ul.pagination.justify-content-end {:style {:margin-top "0px"}}
-                      [:li.page-item (merge {:on-click #(e! (v/->MuutaJarjestysta))
-                                             :disabled (not muokattava?)}
-                                            (when (= :numero jarjestys)
-                                              {:class "active"}))
-                       [:a.page-link.klikattava "N"]]
-                      [:li.page-item (merge {:on-click #(e! (v/->MuutaJarjestysta))
-                                             :disabled (not muokattava?)}
-                                            (when (= :aakkos jarjestys)
-                                              {:class "active"}))
-                       [:a.page-link.klikattava "Aa"]]]])}))
+  [:div.sisalto-container
+   [:h1 "Pudotusvalikkojen järjestys"]
+   [:nav.livi-grid-pagination {:style {:margin-top "0px"}}
+    [:ul.pagination.justify-content-end {:style {:margin-top "0px"}}
+     [:li.page-item (merge {:on-click #(e! (v/->MuutaJarjestysta))
+                            :disabled (not muokattava?)}
+                           (when (= :numero jarjestys)
+                             {:class "active"}))
+      [:a.page-link.klikattava "N"]]
+     [:li.page-item (merge {:on-click #(e! (v/->MuutaJarjestysta))
+                            :disabled (not muokattava?)}
+                           (when (= :aakkos jarjestys)
+                             {:class "active"}))
+      [:a.page-link.klikattava "Aa"]]]]
+   [yleiset/vihje "Koskee vain \"Varusteen ominaisuudet\" osiota"]])
 
 (defn varusteen-ominaisuudet [muokattava? ominaisuudet {:keys [arvot valikkojen-jarjestys]}]
   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
@@ -319,6 +316,7 @@
       [:a {:href tietolajien-sisaltojen-kuvaukset-url
            :target "_blank"}
        "Tietolajien sisältöjen kuvaukset"]]
+     [varusteominaisuuksien-optiot e! muokattava? varustetoteuma]
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
@@ -344,7 +342,6 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteominaisuuksien-optiot e! muokattava? varustetoteuma)
        (varusteen-ominaisuudet muokattava? ominaisuudet varustetoteuma)
        (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
