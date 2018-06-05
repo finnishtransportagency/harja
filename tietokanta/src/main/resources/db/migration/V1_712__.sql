@@ -11,7 +11,7 @@ CREATE UNIQUE INDEX lahdetunnus_etuliite_tyyppi_unique_index
 UPDATE geometriapaivitys SET viimeisin_paivitys = NULL where nimi in ('kanavat', 'kanavasillat');
 
 
--- P R O S E D U U R I T   K O H D E T A U L U J E N   V1_712__.sql P Ä I V I T T Ä M I S E E N
+-- P R O S E D U U R I T   K O H D E T A U L U J E N    P Ä I V I T T Ä M I S E E N
 
 -- K A N A V A S U L U T
 CREATE OR REPLACE FUNCTION lisaa_tai_paivita_kanavasulku_kohdetietoihin()
