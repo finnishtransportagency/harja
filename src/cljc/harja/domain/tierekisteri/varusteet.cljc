@@ -240,9 +240,10 @@
      :clj  (Integer/parseInt s)))
 
 (defmulti varusteominaisuus->skeema
-          "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
-          Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
-          (comp :tietotyyppi :ominaisuus))
+  "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
+  Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
+  (fn [ominaisuus _]
+    ((comp :tietotyyppi :ominaisuus) ominaisuus)))
 
 (defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
   {:otsikko (str/capitalize (:selite ominaisuus))
@@ -275,10 +276,19 @@
         koodisto (if muokattava?
                    (filter tietolajin-koodi-voimassa? koodisto)
                    koodisto)
-        hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
+        hae-selite (fn [arvo]
+                     (some #(when (= (:koodi %) arvo)
+                              (str (:koodi %) " " (:selite %)))
+                           koodisto))
+        jarjestys-fn #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
+                           #?(:clj  (catch Exception e
+                                      1)
+                              :cljs (catch :default e
+                                      1)))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
-            :valinnat (map :koodi koodisto)
+            :valinnat (sort-by (comp jarjestys-fn hae-selite)
+                               (map :koodi koodisto))
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo
                                (let [selite (hae-selite arvo)]
