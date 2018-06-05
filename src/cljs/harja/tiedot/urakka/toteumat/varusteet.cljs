@@ -25,10 +25,10 @@
                     :sopimus-id (first @urakka/valittu-sopimusnumero)
                     :aikavali @urakka/valittu-aikavali
                     :tietolajit (map-indexed (fn [index tietolaji]
-                                              {:id index
-                                               :nimi tietolaji
-                                               :valittu? true})
-                                            (vals varusteet-domain/tietolaji->selitys))}))
+                                               {:id index
+                                                :nimi tietolaji
+                                                :valittu? true})
+                                             (sort (vals varusteet-domain/tietolaji->selitys)))}))
 
 (defonce varusteet
          (atom {:nakymassa? false
