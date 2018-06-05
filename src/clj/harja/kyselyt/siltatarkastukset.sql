@@ -316,25 +316,6 @@ WHERE ulkoinen_id::integer IN (:ulkoiset-idt)
 DELETE FROM siltatarkastuskohde
 WHERE siltatarkastus = :siltatarkastus;
 
--- name: luo-silta!
-INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys, siltatunnus, siltaid)
-VALUES (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria) :: GEOMETRY, :numero, :aosa, :aet, :tunnus, :siltaid);
-
--- name: paivita-silta-idlla!
-UPDATE silta
-SET tyyppi        = :tyyppi,
-  siltanro        = :siltanro,
-  siltanimi       = :nimi,
-  alue            = ST_GeomFromText(:geometria) :: GEOMETRY,
-  tr_numero       = :numero,
-  tr_alkuosa      = :aosa,
-  tr_alkuetaisyys = :aet,
-  siltatunnus     = :tunnus
-WHERE siltaid = :siltaid;
-
--- name: paivita-urakoiden-sillat
-SELECT paivita_sillat_alueurakoittain();
-
 -- name: onko-olemassa?
 -- single?: true
 SELECT exists(SELECT id

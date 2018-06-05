@@ -11,22 +11,24 @@
             [harja.geo :as geo]
             [tuck.core :as t]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
-            [reagent.core :as r]
             [harja.domain.tierekisteri.varusteet :as varusteet-domain]
             [harja.tyokalut.functor :as functor]
-            [harja.tyokalut.vkm :as vkm]
-            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
-            [clojure.walk :as walk]
-            [clojure.string :as str]
             [harja.tyokalut.tuck :as tuck-tyokalut]
-            [harja.domain.tierekisteri.varusteet :as varusteet])
+            [harja.tyokalut.vkm :as vkm]
+            [clojure.walk :as walk]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valinnat
          (reaction {:urakka-id (:id @nav/valittu-urakka)
                     :sopimus-id (first @urakka/valittu-sopimusnumero)
-                    :aikavali @urakka/valittu-aikavali}))
+                    :aikavali @urakka/valittu-aikavali
+                    :tietolajit (map-indexed (fn [index tietolaji]
+                                               {:id index
+                                                :nimi tietolaji
+                                                :valittu? true})
+                                             (sort (vals varusteet-domain/tietolaji->selitys)))}))
 
 (defonce varusteet
          (atom {:nakymassa? false
@@ -56,7 +58,7 @@
 
                 ;; Tierekisterin varusteiden hakuehdot ja tulokset
                 :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
-                                                      :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))
+                                                      :tietolaji (ffirst (vec varusteet-domain/tietolaji->selitys))
                                                       :varusteiden-haun-tila :sijainnilla
                                                       :voimassaolopvm (pvm/nyt)}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
@@ -147,7 +149,7 @@
                  :loppupvm loppupvm
                  :uusi-liite uusi-liite}
 
-        toteuma (if (varusteet/tien-puolellinen-tietolaji? tietolaji)
+        toteuma (if (varusteet-domain/tien-puolellinen-tietolaji? tietolaji)
                   (assoc toteuma :puoli puoli)
                   toteuma)
 
@@ -171,7 +173,7 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto {tietue :tietue :as varuste}]
-   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst (varusteet/muokattavat-tietolajit)))]
+   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst (varusteet-domain/muokattavat-tietolajit)))]
      {:toiminto toiminto
       :tietolaji tietolaji
       :alkupvm (or (:alkupvm tietue) (pvm/nyt))
@@ -239,14 +241,18 @@
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
+    (let [{:keys [urakka-id sopimus-id aikavali tienumero tietolajit]} valinnat]
       (-> app
           (tuck-tyokalut/post! :urakan-varustetoteumat
                                {:urakka-id urakka-id
-                                       :sopimus-id sopimus-id
-                                       :alkupvm (first aikavali)
-                                       :loppupvm (second aikavali)
-                                       :tienumero tienumero}
+                                :sopimus-id sopimus-id
+                                :alkupvm (first aikavali)
+                                :loppupvm (second aikavali)
+                                :tienumero tienumero
+                                :tietolajit (into #{}
+                                                  (keep #(when (:valittu? %)
+                                                           (varusteet-domain/selitys->tietolaji (:nimi %)))
+                                                        tietolajit))}
                                {:onnistui v/->VarusteToteumatHaettu
                                        :epaonnistui (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe")})
           (assoc :toteumahaku-id nil))))

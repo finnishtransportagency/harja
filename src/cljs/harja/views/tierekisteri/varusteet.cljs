@@ -25,7 +25,8 @@
                              tr-osoite :tierekisteriosoite
                              varusteentunniste :tunniste
                              varusteiden-haun-tila :varusteiden-haun-tila
-                             :as hakuehdot}]
+                             :as hakuehdot}
+                         varusteita-haettu?]
   (let [tr-ok? (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
                  (and numero alkuosa alkuetaisyys loppuosa loppuetaisyys))]
     [lomake/lomake
@@ -39,6 +40,9 @@
                                     (and (not (tr-ok? tr-osoite))
                                          (str/blank? varusteentunniste)))
                       :ikoni (ikonit/livicon-search)}]
+                    [napit/poista "Tyhjennä hakutulokset"
+                     #(e! (v/->TyhjennaHakutulokset))
+                     {:disabled (not varusteita-haettu?)}]
                     [yleiset/vihje "Hakua tehdessä käytetään joko tyyppiä ja tunnistetta, tai tyyppiä ja tr-osoitetta. Jos kaikki kolme on syötetty, käytetään haussa tyyppiä ja tunnistetta."]
                     (when haku?
                       [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
@@ -177,7 +181,7 @@
   sekä haun tulokset."
   [e! {{:keys [hakuehdot listaus-skeema varusteet tarkastus]} :tierekisterin-varusteet :as app}]
   [:div.varustehaku
-   [varustehaku-ehdot e! hakuehdot]
+   [varustehaku-ehdot e! hakuehdot (not (empty? varusteet))]
 
    (when tarkastus
      [varustetarkastuslomake e! tarkastus])
