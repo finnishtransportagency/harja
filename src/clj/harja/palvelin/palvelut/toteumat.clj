@@ -565,19 +565,20 @@
                  (assoc % :arvot {:virhe virheet})))))
      (map konv/alaviiva->rakenne))))
 
-(defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
+(defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero tietolajit] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
                        (varustetoteuma-xf tierekisteri)
                        (toteumat-q/hae-urakan-varustetoteumat
                          db
-                         urakka-id
-                         sopimus-id
-                         (konv/sql-date alkupvm)
-                         (konv/sql-date loppupvm)
-                         (boolean tienumero)
-                         tienumero))
+                         {:urakka urakka-id
+                          :sopimus sopimus-id
+                          :alkupvm (konv/sql-date alkupvm)
+                          :loppupvm (konv/sql-date loppupvm)
+                          :rajaa_tienumerolla (boolean tienumero)
+                          :tienumero tienumero
+                          :tietolajit tietolajit}))
         toteumat (konv/sarakkeet-vektoriin
                    toteumat
                    {:reittipiste :reittipisteet
