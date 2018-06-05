@@ -245,7 +245,7 @@
   (fn [ominaisuus _ _]
     ((comp :tietotyyppi :ominaisuus) ominaisuus)))
 
-(defn- varusteominaisuus-skeema-perus [ominaisuus muokattava? _]
+(defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (and muokattava? (:pakollinen ominaisuus))
    :nimi (keyword (:kenttatunniste ominaisuus))
@@ -289,7 +289,7 @@
                        :aakkos #(if-let [loytyi (re-find #" [a-äA-Ä]*" %)]
                                   [loytyi] [nil %])
                        identity)]
-    (merge (varusteominaisuus-skeema-perus ominaisuus muokattava? nil)
+    (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
             :valinnat (sort-by (comp jarjestys-fn hae-selite)
                                (map :koodi koodisto))
@@ -309,7 +309,7 @@
 
 (defmethod varusteominaisuus->skeema :numeerinen
   [{{:keys [pakollinen pituus alaraja ylaraja] :as ominaisuus} :ominaisuus} muokattava? _]
-  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava? nil)
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
           :regex (re-pattern (str "-?\\d*"))
           :validoi [#(cond
@@ -320,7 +320,7 @@
 
 (defmethod varusteominaisuus->skeema :default
   [{ominaisuus :ominaisuus} muokattava? _]
-  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava? nil)
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
                     1
