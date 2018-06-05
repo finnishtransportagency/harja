@@ -119,6 +119,13 @@
               (catch Exception e
                 (log/debug e (format "Paikallisessa geometriapäivityksessä %s tapahtui poikkeus." paivitystunnus))))))))))
 
+;; käyttö replissä esim :
+#_(let [db (:db harja.palvelin.main/harja-jarjestelma)
+        shapefile "file://shp/Sillat/PTV.tl261_H.shp"]
+    (siltojen-tuonti/vie-sillat-kantaan db shapefile))
+
+
+
 (def tee-tieverkon-paivitystehtava
   (maarittele-paivitystehtava
     "tieverkko"
