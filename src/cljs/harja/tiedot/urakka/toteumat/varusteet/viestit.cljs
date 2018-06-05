@@ -52,6 +52,3 @@
 (defrecord HaeSijainninOsoite [sijainti])
 
 (defrecord SijanninOsoiteHaettu [osoite])
-
-(defrecord MuutaJarjestysta [])
-

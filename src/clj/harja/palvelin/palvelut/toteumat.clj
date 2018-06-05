@@ -578,7 +578,8 @@
                           :loppupvm (konv/sql-date loppupvm)
                           :rajaa_tienumerolla (boolean tienumero)
                           :tienumero tienumero
-                          :tietolajit tietolajit}))
+                          :tietolajit (when tietolajit
+                                        (konv/seq->array tietolajit))}))
         toteumat (konv/sarakkeet-vektoriin
                    toteumat
                    {:reittipiste :reittipisteet

@@ -242,7 +242,7 @@
 (defmulti varusteominaisuus->skeema
   "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
   Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
-  (fn [ominaisuus _ _]
+  (fn [ominaisuus _]
     ((comp :tietotyyppi :ominaisuus) ominaisuus)))
 
 (defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
@@ -268,7 +268,7 @@
     true))
 
 (defmethod varusteominaisuus->skeema :koodisto
-  [{ominaisuus :ominaisuus} muokattava? valikkojen-jarjestys]
+  [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
                                 :koodi (str (:koodi %)))
                       (:koodisto ominaisuus))
@@ -280,15 +280,11 @@
                      (some #(when (= (:koodi %) arvo)
                               (str (:koodi %) " " (:selite %)))
                            koodisto))
-        jarjestys-fn (case valikkojen-jarjestys
-                       (nil :numero) #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
-                                           #?(:clj  (catch Exception e
-                                                      1)
-                                              :cljs (catch :default e
-                                                      1)))
-                       :aakkos #(if-let [loytyi (re-find #" [a-äA-Ä]*" %)]
-                                  [loytyi] [nil %])
-                       identity)]
+        jarjestys-fn #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
+                           #?(:clj  (catch Exception e
+                                      1)
+                              :cljs (catch :default e
+                                      1)))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
             :valinnat (sort-by (comp jarjestys-fn hae-selite)
@@ -308,7 +304,7 @@
                        arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
-  [{{:keys [pakollinen pituus alaraja ylaraja] :as ominaisuus} :ominaisuus} muokattava? _]
+  [{{:keys [pakollinen pituus alaraja ylaraja] :as ominaisuus} :ominaisuus} muokattava?]
   (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
           :regex (re-pattern (str "-?\\d*"))
@@ -319,7 +315,7 @@
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default
-  [{ominaisuus :ominaisuus} muokattava? _]
+  [{ominaisuus :ominaisuus} muokattava?]
   (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))

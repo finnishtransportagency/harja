@@ -183,8 +183,7 @@
       :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
       :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :tierekisteriosoite (varusteen-osoite varuste)
-      :sijainti (:sijainti varuste)
-      :valikkojen-jarjestys :numero})))
+      :sijainti (:sijainti varuste)})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (reverse
@@ -315,9 +314,11 @@
                                 (first (:points (first (:lines tiedot)))))
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
+          arvot (if (or tietolaji-muuttui? (nil? (:arvot tiedot)))
+                  {}
+                  (:arvot tiedot))
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
-                              :arvot (merge (or (:arvot tiedot) {}) koordinaatit)
-                              :valikkojen-jarjestys (or (:valikkojen-jarjestys nykyinen-toteuma) :numero))]
+                              :arvot (merge arvot koordinaatit))]
 
       (hae-ajoradat nykyinen-toteuma
                     uusi-toteuma
@@ -417,13 +418,7 @@
                                         :alkuetaisyys (:aet osoite)
                                         :loppuosa (:losa osoite)
                                         :loppuetaisyys (:let osoite)})]
-      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot))))))
-
-  v/MuutaJarjestysta
-  (process-event [_ app]
-    (update app :varustetoteuma (fn [{jarjestys :valikkojen-jarjestys :as varustetoteuma}]
-                                  (assoc varustetoteuma :valikkojen-jarjestys (if (= jarjestys :numero)
-                                                                                :aakkos :numero))))))
+      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
