@@ -272,7 +272,6 @@
   [e! app]
   (let [{:keys [avaa-pdf? ilmoitus
                 lomakedata nakyvissa?] :as data} (:sahkopostilahetyksen-modal-data app)
-        muut-vastaanottajat-atom (atom {})
         voi-lahettaa? (some? (:vastaanottaja lomakedata))]
     [modal/modal
      {:otsikko "Tietyöilmoituksen PDF:n sähköpostilähetys"
