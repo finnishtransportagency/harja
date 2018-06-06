@@ -48,26 +48,26 @@
        ;;                         ]}
        }
 
- :sonja
- {:url "tcp://localhost:61616"
-  :kayttaja "harja"
-  :salasana "harjaxx"
-  :tyyppi :activemq}
-
-
- :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
-         :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
-         :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
-         :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
-         :paivittainen-lahetysaika nil}
- :tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
-         :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
-         :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
-         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
-         :tietyoilmoitusviestijono "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Msg"
-         :tietyoilmoituskuittausjono "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Ack"
-         :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
-         :uudelleenlahetysvali-minuuteissa 30}
+ ;:sonja
+ ;{:url "tcp://localhost:61616"
+ ; :kayttaja "harja"
+ ; :salasana "harjaxx"
+ ; :tyyppi :activemq}
+ ;
+ ;
+ ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
+ ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
+ ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
+ ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
+ ;        :paivittainen-lahetysaika nil}
+ ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
+ ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
+ ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
+ ;        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+ ;        :tietyoilmoitusviestijono "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Msg"
+ ;        :tietyoilmoituskuittausjono "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Ack"
+ ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
+ ;        :uudelleenlahetysvali-minuuteissa 30}
 
  :turi {:turvallisuuspoikkeamat-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/poikkeamaTuonti"
         :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
@@ -113,9 +113,14 @@
                         :soratien-hoitoluokkien-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl149.shz"
                         :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
-                        :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV_silta.shz"
-                        :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
+                        :siltojen-shapefile "file://shp/Sillat/PTV.tl261_H.shp"
+                        :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV.tl261_H.shz"
+                        :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
+
+                       ; Inspire-asetukset
+                       ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
+                       ; :siltojen-osoite "https://julkinen.liikennevirasto.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
+                       ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
                         :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"

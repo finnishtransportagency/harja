@@ -36,6 +36,27 @@
    "tl524" "Viherkuviot"
    "tl523" "Tekninen piste"})
 
+(def selitys->tietolaji
+  {"Kaiteet" "tl501"
+   "Portaat" "tl517"
+   "Bussipysäkin varusteet" "tl507"
+   "Bussipysäkin katos" "tl508"
+   "Liikennemerkki" "tl506"
+   "Reunakivet" "tl522"
+   "Reunapaalut" "tl513"
+   "Puomit ja kulkuaukot" "tl519"
+   "Jätehuolto" "tl505"
+   "WC" "tl504"
+   "Kivetyt alueet" "tl518"
+   "Melurakenteet" "tl514"
+   "Rummut" "tl509"
+   "Aidat" "tl515"
+   "Levähdysalueiden varusteet" "tl503"
+   "Viemärit" "tl512"
+   "Hiekkalaatikot" "tl516"
+   "Viherkuviot" "tl524"
+   "Tekninen piste" "tl523"})
+
 (defn tien-puolet [tietolaji]
   (case tietolaji
     "tl523" [1 2 3]
@@ -219,9 +240,10 @@
      :clj  (Integer/parseInt s)))
 
 (defmulti varusteominaisuus->skeema
-          "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
-          Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
-          (comp :tietotyyppi :ominaisuus))
+  "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
+  Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
+  (fn [ominaisuus _]
+    ((comp :tietotyyppi :ominaisuus) ominaisuus)))
 
 (defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
   {:otsikko (str/capitalize (:selite ominaisuus))
@@ -254,10 +276,19 @@
         koodisto (if muokattava?
                    (filter tietolajin-koodi-voimassa? koodisto)
                    koodisto)
-        hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
+        hae-selite (fn [arvo]
+                     (some #(when (= (:koodi %) arvo)
+                              (str (:koodi %) " " (:selite %)))
+                           koodisto))
+        jarjestys-fn #(try (#?(:clj Float. :cljs js/parseFloat) (re-find #"^\d*" %))
+                           #?(:clj  (catch Exception e
+                                      1)
+                              :cljs (catch :default e
+                                      1)))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
-            :valinnat (map :koodi koodisto)
+            :valinnat (sort-by (comp jarjestys-fn hae-selite)
+                               (map :koodi koodisto))
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo
                                (let [selite (hae-selite arvo)]
