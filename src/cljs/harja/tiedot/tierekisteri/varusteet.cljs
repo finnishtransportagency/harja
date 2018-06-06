@@ -62,6 +62,7 @@
 (defrecord AsetaVarusteidenHakuehdot [hakuehdot])
 ;; Suorittaa haun
 (defrecord HaeVarusteita [])
+(defrecord TyhjennaHakutulokset [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
 (defrecord VarusteHakuEpaonnistui [virhe])
 (defrecord LisaaLiitetiedosto [liite])
@@ -100,6 +101,12 @@
       (-> app
           (assoc-in [:tierekisterin-varusteet :varusteet] nil)
           (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] true))))
+
+  TyhjennaHakutulokset
+  (process-event [_ app]
+    (-> app
+        (assoc-in [:tierekisterin-varusteet :varusteet] nil)
+        (update :tierekisterin-varusteet #(dissoc % :listaus-skeema))))
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]

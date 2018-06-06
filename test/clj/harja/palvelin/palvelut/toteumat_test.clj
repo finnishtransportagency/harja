@@ -11,7 +11,8 @@
             [taoensso.timbre :as log]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]))
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.domain.tierekisteri.varusteet :as varusteet-domain]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
@@ -342,7 +343,8 @@
                                         {:urakka-id @oulun-alueurakan-2005-2010-id
                                          :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
                                          :alkupvm alkupvm
-                                         :loppupvm loppupvm})]
+                                         :loppupvm loppupvm
+                                         :tietolajit (into #{} (keys varusteet-domain/tietolaji->selitys))})]
     (is (>= (count varustetoteumat) 3))
     (is (contains? (first varustetoteumat) :sijainti))))
 
