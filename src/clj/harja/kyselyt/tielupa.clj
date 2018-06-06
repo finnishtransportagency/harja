@@ -94,6 +94,7 @@
         false))))
 
 
+;; TODO: entä tiesoitteettomat luvat?
 (defn suodata-tieosoitteella [tieluvat sijainnit]
   (let [tie (::tielupa/tie sijainnit)
         aosa (::tielupa/aosa sijainnit)
@@ -103,7 +104,7 @@
     (cond
       (and tie aosa aet)
       (filterv
-        ;; Tieluvalla voi (ilmeisesti) olla monta sijaintia.
+        ;; Tieluvalla voi olla monta sijaintia. On tielupia joissa ei ole tieosoitetta (alueurakka kuitenkin löytyy).
         ;; Jos yhdenkään sijainnin tr-osoite osuu hakuvälille, palautetaan lupa
         (comp
           (partial some
