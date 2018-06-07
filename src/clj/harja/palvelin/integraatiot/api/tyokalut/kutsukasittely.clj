@@ -155,7 +155,7 @@
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
-  (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
+  (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str (str/join (take 10000 kutsu)))))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 

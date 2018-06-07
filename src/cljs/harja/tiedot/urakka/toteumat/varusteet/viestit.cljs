@@ -52,4 +52,3 @@
 (defrecord HaeSijainninOsoite [sijainti])
 
 (defrecord SijanninOsoiteHaettu [osoite])
-
