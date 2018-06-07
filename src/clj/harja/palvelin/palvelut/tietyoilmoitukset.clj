@@ -154,7 +154,10 @@
                                  {::t/urakoitsija-id org}
                                  {::t/tilaaja-id org}
                                  {::t/urakka-id (op/in kayttajan-urakat)}))]
-      (when-not (empty? sahkopostitiedot)
+      (when (and (not (empty? sahkopostitiedot))
+                 ;; TODO: Kun sähköpostin lähetys otetaan käyttöön, niin tuo ominaisuus käytössä pitää muistaa jättää
+                 ;; (tloik/laheta-tietyoilmoitus tloik (::t/id tallennettu)) funktiokutsulle.
+                 (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
         (log/debug "yritän lähettää sähköpostin step 1 sahkopostitiedot: " sahkopostitiedot)
         (async/thread
           (log/debug "yritän lähettää sähköpostin step 2")
@@ -169,7 +172,8 @@
                                                        :pdf :todo
                                                        :tietyoilmoitus-id (::t/id tallennettu)
                                                        :ilmoittaja user})
-          (tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))))
+          ;(tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))
+          ))
       tallennettu)))
 
 (defn tietyoilmoitus-pdf [db user params]

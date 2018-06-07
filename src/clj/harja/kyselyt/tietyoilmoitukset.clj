@@ -1,18 +1,19 @@
 (ns harja.kyselyt.tietyoilmoitukset
   (:require [jeesql.core :refer [defqueries]]
-            [harja.domain.tietyoilmoitus :as t]
-            [harja.domain.tierekisteri :as tr]
             [specql.core :refer [fetch]]
-            [harja.kyselyt.specql-db :refer [define-tables]]
             [specql.op :as op]
             [specql.rel :as rel]
+            [clojure.future :refer :all]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [harja.kyselyt.specql :as specql]
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoituksen-email :as e]
-            [clojure.future :refer :all]
-            [clojure.set :as set]
-            [harja.domain.kayttaja :as kayttaja]))
+            [harja.domain.tietyoilmoitus :as t]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -126,14 +127,17 @@
 ;; Hakee pääilmoituksen kaikki kentät, sekä siihen liittyvät työvaiheet
 (def kaikki-ilmoituksen-kentat-ja-tyovaiheet
   (conj kaikki-ilmoituksen-kentat
-        [::t/tyovaiheet kaikki-ilmoituksen-kentat]
-        [::t/email-lahetykset #{::e/id
-                                ::e/tietyoilmoitus-id
-                                ::e/tiedostonimi
-                                ::e/lahetetty
-                                ::e/lahetysid
-                                [::e/lahettaja kayttaja/perustiedot]
-                                ::e/kuitattu}]))
+        [::t/tyovaiheet kaikki-ilmoituksen-kentat]))
+
+(def kaikki-ilmoituksen-email-lahetykset
+  #{::t/id
+    [::t/email-lahetykset #{::e/id
+                            ::e/tietyoilmoitus-id
+                            ::e/tiedostonimi
+                            ::e/lahetetty
+                            ::e/lahetysid
+                            [::e/lahettaja kayttaja/perustiedot]
+                            ::e/kuitattu}]})
 
 (def ilmoitus-pdf-kentat
   (let [pdf-kentat kaikki-ilmoituksen-kentat]
@@ -213,28 +217,36 @@
                                   organisaatio
                                   kayttaja-id
                                   sijainti]}]
-
-  (let [ilmoitukset (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
-                           (op/and
-                             (merge {::t/paatietyoilmoitus op/null?}
-                                    (when (and luotu-alku luotu-loppu)
-                                      {::m/luotu (op/between luotu-alku luotu-loppu)})
-                                    (when kayttaja-id
-                                      {::m/luoja-id kayttaja-id})
-                                    (when sijainti
-                                      {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
-                             (if (and kaynnissa-alku kaynnissa-loppu)
-                               (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu)
-                               {::t/id op/not-null?})
-                             (if (empty? urakat)
-                               (if organisaatio
-                                 {::t/urakoitsija-id organisaatio}
+  (jdbc/with-db-transaction [db db]
+    (let [ilmoitukset (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+                             (op/and
+                               (merge {::t/paatietyoilmoitus op/null?}
+                                      (when (and luotu-alku luotu-loppu)
+                                        {::m/luotu (op/between luotu-alku luotu-loppu)})
+                                      (when kayttaja-id
+                                        {::m/luoja-id kayttaja-id})
+                                      (when sijainti
+                                        {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
+                               (if (and kaynnissa-alku kaynnissa-loppu)
+                                 (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu)
                                  {::t/id op/not-null?})
-                               {::t/urakka-id
-                                (if urakattomat?
-                                  (op/or op/null? (op/in urakat))
-                                  (op/in urakat))})))]
-    ilmoitukset))
+                               (if (empty? urakat)
+                                 (if organisaatio
+                                   {::t/urakoitsija-id organisaatio}
+                                   {::t/id op/not-null?})
+                                 {::t/urakka-id
+                                  (if urakattomat?
+                                    (op/or op/null? (op/in urakat))
+                                    (op/in urakat))})))
+          haettujen-ilmoitusten-idt (into #{} (map ::t/id ilmoitukset))
+          ilmoituksien-emailit (fetch db ::t/ilmoitus kaikki-ilmoituksen-email-lahetykset
+                                      {::t/id (op/in haettujen-ilmoitusten-idt)})]
+      (map (fn [ilmoitus]
+             (let [ilmoituksen-emailit (some #(when (= (::t/id %) (::t/id ilmoitus))
+                                                (dissoc % ::t/id))
+                                             ilmoituksien-emailit)]
+               (merge ilmoitus ilmoituksen-emailit)))
+           ilmoitukset))))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
                                                 tilaaja?

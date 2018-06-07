@@ -1,17 +1,16 @@
 (ns harja.domain.tietyoilmoituksen-email
   "Määrittelee tietyöilmoituksen email-lähetysten tiedot"
-  #?@(:clj [
-            (:require [clojure.spec.alpha :as s]
-                      [harja.id :refer [id-olemassa?]]
-                      [harja.kyselyt.specql-db :refer [define-tables]]
-                      [clojure.future :refer :all]
-                      [specql.rel :as rel])]
-      :cljs [(:require [clojure.spec.alpha :as s]
-               [harja.id :refer [id-olemassa?]]
+  (:require [clojure.spec.alpha :as s]
+            [harja.id :refer [id-olemassa?]]
+    #?@(:clj  [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]
+            [specql.rel :as rel]]
+        :cljs [
                [specql.impl.registry]
-               [specql.data-types])
-             (:require-macros
-               [harja.kyselyt.specql-db :refer [define-tables]])]))
+               [specql.data-types]]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
   ["tietyoilmoituksen_email_lahetys" ::email-lahetys
