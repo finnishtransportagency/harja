@@ -10,7 +10,7 @@
 (defn tietyoilmoituksen-lahetystiedot-komponentti
   [ilmoitus]
   [grid/muokkaus-grid
-   {:otsikko ""
+   {:muokkauspaneeli? false
     :tyhja "Ei lähetetty"
     :voi-lisata? false
     :voi-muokata? false

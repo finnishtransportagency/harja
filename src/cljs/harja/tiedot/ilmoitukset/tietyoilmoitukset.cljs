@@ -310,7 +310,7 @@
                 vastaus-kanava (k/post! :tallenna-tietyoilmoitus {:ilmoitus ilmoitus
                                                                   :sahkopostitiedot sahkopostitiedot})
                 vastaus (when vastaus-kanava
-                          (<! vastaus-kanava))]
+                          (async/<! vastaus-kanava))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -373,7 +373,7 @@
   (process-event [{urakka-id :urakka-id} app]
     (let [tulos! (tuck/send-async! ->UusiTietyoilmoitus)]
       (go
-        (tulos! (esitayta-tietyoilmoitus (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id))))))
+        (tulos! (esitayta-tietyoilmoitus (async/<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id))))))
     (assoc app :aloitetaan-uusi-tietyoilmoitus? true))
 
   AloitaUusiTyovaiheilmoitus
@@ -394,7 +394,7 @@
   (process-event [{urakka-id :urakka-id} app]
     (let [tulos! (tuck/send-async! ->UrakanTiedotHaettu)]
       (go
-        (tulos! (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))))
+        (tulos! (async/<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))))
     app)
 
   UrakanTiedotHaettu
@@ -405,7 +405,7 @@
   (process-event [{yllapitokohde :yllapitokohde} app]
     (let [tulos! (tuck/send-async! ->YllapitokohdeValittu)]
       (go
-        (<! (async/timeout 1))
+        (async/<! (async/timeout 1))
         (tulos! (yllapitokohteen-tiedot-tietyoilmoituksella yllapitokohde))))
     app)
 
@@ -417,8 +417,8 @@
   [tietyoilmoitus-id yllapitokohde]
   (go
     (let [tietyoilmoitus (if tietyoilmoitus-id
-                           (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
+                           (async/<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
                            (esitayta-tietyoilmoitus
-                             (<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
+                             (async/<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
       (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
                                          :tallennus-kaynnissa? false)))))

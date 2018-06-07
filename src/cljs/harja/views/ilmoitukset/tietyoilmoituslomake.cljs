@@ -283,7 +283,7 @@
                 "Peruuta"
                 #(e! (tiedot/->SuljeSahkopostinLahetysModal))]
 
-               [napit/palvelinkutsu-nappi
+               [napit/yleinen-ensisijainen
                 "Lähetä PDF sähköpostitse"
                 #(e!
                    (tiedot/->TallennaIlmoitus
@@ -295,11 +295,7 @@
 
                 {:disabled (not voi-lahettaa?)
                  :luokka "nappi-myonteinen"
-                 :ikoni (ikonit/envelope)
-                 :kun-onnistuu (fn [vastaus]
-                                 ;; tähän vahvistus
-                                 (log "Tietyöilmoitus lähetetty onnistuneesti: " (pr-str vastaus))
-                                 #(e! (tiedot/->SuljeSahkopostinLahetysModal)))}]]}
+                 :ikoni (ikonit/envelope)}]]}
 
      [:div
       [vihje "Olet lähettämässä tietyöilmoituksen PDF:n Harjasta valitsemasi Tieliikennekeskuksen sähköpostiosoitteeseen."]
