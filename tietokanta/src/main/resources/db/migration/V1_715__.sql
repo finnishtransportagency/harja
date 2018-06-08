@@ -66,10 +66,3 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
-
-select aseta_tieluvalle_urakka(2);
-
-select id, urakka, ely, alueurakka, sijainnit from tielupa;
-
-select * from urakka where urakkanro = '1250'
-select * from urakka where nimi like ('Oulu')

@@ -40,7 +40,7 @@
    ::tielupa/urakoitsija-puhelinnumero "987-7889087"
    ::tielupa/otsikko "Testilupa mainosten pystyttämiseen"
    ::tielupa/hakija-postinosoite "Liitintie 1"
-   ::tielupa/urakan-nimi "Oulun alueurakka"
+   ::tielupa/urakan-nimi "Oulu"
    ::tielupa/ely 12
    ::tielupa/kohde-postinumero "90900"
    ::tielupa/ulkoinen-tunniste testiluvan-ulkoinen-tunniste
@@ -256,3 +256,11 @@
                                  ::tielupa/aosa 1
                                  ::tielupa/aet 1}]}])
       "Tielupa, jonka yksikään sijainti osuu halutulle välille, pitää palauttaa"))
+
+
+(deftest paattele-alueurakka
+
+  ;; Sanomassa tr-osoite
+  ;; Sanomassa ei tr-osoitetta
+
+  )

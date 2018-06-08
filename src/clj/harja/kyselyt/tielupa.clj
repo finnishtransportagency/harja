@@ -105,7 +105,7 @@
       (and tie aosa aet)
       (filterv
         ;; Tieluvalla voi olla monta sijaintia. On tielupia joissa ei ole tieosoitetta (alueurakka kuitenkin löytyy).
-        ;; Jos yhdenkään sijainnin tr-osoite osuu hakuvälille, palautetaan lupa
+        ;; Jos yhdenkään sijainnin tr-osoite osuu hakuvälille, palautetaan lupa.
         (comp
           (partial some
                    (every-pred (partial valilla? [aosa aet] [losa let])
@@ -124,6 +124,11 @@
 
       :default
       tieluvat)))
+
+(defn suodata-urakalla [urakkaid]
+
+;; Hae alueurakka [harja.kyselyt.urakat :as u]
+  )
 
 (defn tielupien-liitteet [db tieluvat]
   (let [liitteet (hae-tielupien-liitteet db (map ::tielupa/id tieluvat))]
