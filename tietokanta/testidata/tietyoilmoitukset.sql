@@ -309,10 +309,10 @@ INSERT INTO tietyoilmoituksen_email_lahetys
       ((SELECT id FROM tietyoilmoitus WHERE "alkusijainnin-kuvaus" = 'Kuusamontien alussa'),
       'Tietyöilmoitus-22.05.2018-26.05.2018-Kuusamontie',
         '2018-05-19 11:01:01', 'testi-jms-id-124321-523-523523-235-2353',
-       (SELECT id FROM harja.public.kayttaja WHERE kayttajanimi = 'jvh'),
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'),
        '2018-05-19 11:02:06'),
       ((SELECT id FROM tietyoilmoitus WHERE "alkusijainnin-kuvaus" = 'Kuusamontien alussa'),
        'Tietyöilmoitus-24.05.2018-28.05.2018-Kuusamontie',
        '2018-05-21 12:01:01', 'testi-jms-id-124321-523-523523-235-2354',
-       (SELECT id FROM harja.public.kayttaja WHERE kayttajanimi = 'jvh'),
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'),
        '2018-05-21 12:02:16');
