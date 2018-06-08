@@ -5,6 +5,7 @@
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
+            [harja.views.ilmoitukset.tietyoilmoitukset-yhteinen :as tietyo-yhteiset]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [tarkkaile! log]]
@@ -15,7 +16,9 @@
             [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
             [harja.domain.tietyoilmoitus :as t]
+            [harja.domain.tietyoilmoituksen-email :as e]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.kayttaja :as ka]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
@@ -25,7 +28,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -112,10 +116,15 @@
     :leveys 2}
    {:otsikko "Työn tyyppi" :nimi ::t/tyotyypit
     :hae t/tyotyypit->str
-    :leveys 4}
+    :leveys 3}
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae t/ilmoittaja->str
-    :leveys 7}
+    :leveys 5}
+   (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+     {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
+      :tyyppi :komponentti
+      :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti %)
+      :leveys 6})
    {:otsikko " "
     :leveys 2
     :nimi :vie-pdf
@@ -231,17 +240,7 @@
           [{:otsikko "Vai\u00ADhei\u00ADta"
             :nimi :vaiheita
             :hae #(count (::t/tyovaiheet %))
-            :leveys 1}
-           (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
-             {:otsikko "Lähetys Tie\u00ADlii\u00ADken\u00ADne\u00ADkes\u00ADkuk\u00ADseen"
-              :nimi :lahetys
-              :tyyppi :komponentti
-              :komponentti #(case (::t/tila %)
-                              "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                              "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
-                              "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
-                              [:span "Ei lähetetty"])
-              :leveys 3})])
+            :leveys 1}])
     haetut-ilmoitukset]])
 
 (defn hakulomake

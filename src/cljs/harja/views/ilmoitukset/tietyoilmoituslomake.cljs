@@ -1,11 +1,13 @@
 (ns harja.views.ilmoitukset.tietyoilmoituslomake
-  (:require [reagent.core :as r]
+  (:require [reagent.core :as r :refer [atom]]
             [harja.ui.lomake :as lomake]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
+            [harja.views.ilmoitukset.tietyoilmoitukset-yhteinen :as tietyo-yhteiset]
             [harja.domain.tietyoilmoitus :as t]
+            [harja.domain.tietyoilmoituksen-email :as e]
             [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [muokkaus-grid] :as grid]
@@ -14,13 +16,16 @@
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
-                                                  kuvaus-ja-avainarvopareja]]
+                                                  kuvaus-ja-avainarvopareja vihje]]
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.ui.kentat :as kentat]
             [harja.transit :as transit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.modal :as modal]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
 (defn- urakka-valinnat [urakat]
@@ -261,6 +266,62 @@
               :tyyppi :string
               :pituus-max 128}])))
 
+
+(defn pdf-sahkopostilahetyksen-modal
+  "Modaali, jossa valitaan Tieliikennekeskus minne tietyöilmoituslähetetään."
+  [e! app]
+  (let [{:keys [avaa-pdf? ilmoitus
+                lomakedata nakyvissa?] :as data} (:sahkopostilahetyksen-modal-data app)
+        voi-lahettaa? (some? (:vastaanottaja lomakedata))]
+    [modal/modal
+     {:otsikko "Tietyöilmoituksen PDF:n sähköpostilähetys"
+      :luokka "tietyoilmoituspdfn-sahkopostilahetyksen-modal"
+      :nakyvissa? nakyvissa?
+      :sulje-fn #(e! (tiedot/->SuljeSahkopostinLahetysModal))
+      :footer [:div
+               [napit/peruuta
+                "Peruuta"
+                #(e! (tiedot/->SuljeSahkopostinLahetysModal))]
+
+               [napit/yleinen-ensisijainen
+                "Lähetä PDF sähköpostitse"
+                #(e!
+                   (tiedot/->TallennaIlmoitus
+                     (lomake/ilman-lomaketietoja ilmoitus) true avaa-pdf?
+                     {:vastaanottaja (:vastaanottaja lomakedata)
+                      :muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                      :kopio-itselle? (:kopio-itselle? lomakedata)
+                      :saate (:saate lomakedata)}))
+
+                {:disabled (not voi-lahettaa?)
+                 :luokka "nappi-myonteinen"
+                 :ikoni (ikonit/envelope)}]]}
+
+     [:div
+      [vihje "Olet lähettämässä tietyöilmoituksen PDF:n Harjasta valitsemasi Tieliikennekeskuksen sähköpostiosoitteeseen."]
+      [lomake/lomake {:otsikko ""
+                      :muokkaa! (fn [uusi-data]
+                                  (e! (tiedot/->SahkopostiModalinLomakettaMuokattu uusi-data)))}
+
+       [{:nimi :vastaanottaja
+         :otsikko "Tieliikennekeskus minne sähköposti lähetetään"
+         :tyyppi :valinta
+         :pakollinen? true
+         :valinnat tiedot/tieliikennekeskusten-sahkopostiosoitteet
+         :valinta-nayta #(if (nil? %) "- valitse -" (first %))
+         :valinta-arvo second}
+        {:nimi :infokentta :tyyppi :string :otsikko ""
+         :hae #(if (:vastaanottaja lomakedata)
+                 (:vastaanottaja lomakedata))
+         :muokattava? (constantly false)}
+        (varmista-kayttajalta/modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata)
+                                                        #(do
+                                                           (e! (tiedot/->SahkopostinMuitaVastaanottajiaMuokattu
+                                                                 (grid/hae-muokkaustila %)))))
+        varmista-kayttajalta/modal-saateviesti
+        varmista-kayttajalta/modal-sahkopostikopio]
+       lomakedata]]]))
+
 (defn- lomaketoiminnot [e! kayttajan-urakat tallennus-kaynnissa? ilmoitus]
   (r/with-let [avaa-pdf? (r/atom false)]
     [:div
@@ -268,14 +329,25 @@
      [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]
      [napit/tallenna
       "Tallenna ilmoitus"
-      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf? {}))
       {:disabled (or tallennus-kaynnissa?
                      (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
                      (not (lomake/voi-tallentaa? ilmoitus)))
        :tallennus-kaynnissa? tallennus-kaynnissa?
-       :ikoni (ikonit/tallenna)}]]))
+       :ikoni (ikonit/tallenna)}]
 
-(defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
+     (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+       [napit/yleinen-toissijainen
+        "Tallenna ilmoitus ja lähetä PDF sähköpostitse Tieliikennekeskukseen"
+        #(e! (tiedot/->AvaaSahkopostinLahetysModal (lomake/ilman-lomaketietoja ilmoitus)
+                                                   @avaa-pdf?))
+        {:disabled (or tallennus-kaynnissa?
+                       (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
+                       (not (lomake/voi-tallentaa? ilmoitus)))
+         :tallennus-kaynnissa? tallennus-kaynnissa?
+         :ikoni (ikonit/envelope)}])]))
+
+(defn lomake [e! app tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
@@ -506,21 +578,12 @@
                      :tyyppi :string
                      :pituus-max 32})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)
-      (when (and (::t/id ilmoitus)
-                 (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
-        (lomake/ryhma
-          "Lähetys Tieliikennekeskukseen"
-          {:nimi ::t/tila
-           :otsikko "Tila"
-           :muokattava? (constantly false)
-           :tyyppi :komponentti
-           :komponentti #(case (get-in % [:data ::t/tila])
-                           "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                           "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
-                           "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
-                           [:span "Ei lähetetty"])}
-          {:nimi ::t/lahetetty
-           :otsikko "Aika"
-           :tyyppi :pvm-aika
-           :muokattava? (constantly false)}))]
-     ilmoitus]]])
+      (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+        {:nimi :email-lahetykset-tloikiin
+         :otsikko "PDF:n sähköpostilähetykset Harjasta Tieliikennekeskuksen sähköpostiin"
+         :tyyppi :komponentti
+         :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))})]
+     ilmoitus]]
+
+   (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+     [pdf-sahkopostilahetyksen-modal e! app])])

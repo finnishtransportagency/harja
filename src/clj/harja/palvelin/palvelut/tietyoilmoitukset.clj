@@ -26,7 +26,9 @@
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clojure.core.async :as async]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.palvelin.palvelut.viestinta :as viestinta]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -80,7 +82,56 @@
   (oikeudet/ei-oikeustarkistusta!)
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
-(defn tallenna-tietyoilmoitus [tloik db user ilmoitus]
+(defn laheta-tietyoilmoituksen-pdf-sahkopostitse
+  "Lähettää tietyöilmoituksen PDF:n sähköpostitse"
+  [{:keys [email vastaanottaja muut-vastaanottajat kopio-itselle?
+           viestin-otsikko viestin-vartalo saate
+           tietyoilmoitus-id ilmoittaja] :as params}]
+  (log/debug " Palvelu: laheta-tietyoilmoituksen-pdf-sahkopostitse, params " params)
+  ;; TODO: huom: Koko jono minne liitteen sisältävä sähköposti läheteään, tehdään
+  ;; uutena, samoin sen kuittausjono (ACK). Eli olemassaolevia sähköpostinlähetys-
+  ;; palveluita ei voi käyttää sellaisenaan vaan pitää kytkeytyä tulevaan jonoon
+  (try
+    (let [viestin-vartalo (str saate "\n" viestin-vartalo)]
+      ;; varsinainen lähetys Tieliikennekeskukseen
+      (sahkoposti/laheta-viesti!
+        email
+        (sahkoposti/vastausosoite email)
+        vastaanottaja
+        (str "Harja: " viestin-otsikko)
+        viestin-vartalo)
+      (log/debug " Lähetys tieliikennekeskukseen tehty")
+
+      ;; lähetys mahdollisille muille vastaanottajille
+      (doseq [muu-vastaanottaja muut-vastaanottajat]
+        (try
+          (sahkoposti/laheta-viesti!
+            email
+            (sahkoposti/vastausosoite email)
+            muu-vastaanottaja
+            (str "Harja: " viestin-otsikko)
+            viestin-vartalo)
+          (catch Exception e
+            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                               muu-vastaanottaja (pr-str e))))))
+      (log/debug " Lähetys muille vastaanottajille tehty, muut: " muut-vastaanottajat)
+
+      ;; kopio mailitsta itselle
+      (when (and kopio-itselle? (:sahkoposti ilmoittaja))
+        (viestinta/laheta-sahkoposti-itselle
+          {:email email
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
+           :sahkoposti (:sahkoposti ilmoittaja)
+           :viesti-otsikko viestin-otsikko
+           :viesti-body viestin-vartalo})
+        (log/debug " Lähetys itselle tehty osoitteeseen " (:sahkoposti ilmoittaja))))
+
+    (catch Exception e
+      (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä sähköpostitse T-LOIK:n tapahtui poikkeus." tietyoilmoitus-id))
+      :sahkopostilahetys-epaonnistui)))
+
+(defn tallenna-tietyoilmoitus [tloik db email user ilmoitus sahkopostitiedot]
+  (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus  " sahkopostitiedot " sahkopostitiedot " email " email)
   (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
     (if (::t/urakka-id ilmoitus)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
@@ -103,9 +154,26 @@
                                  {::t/urakoitsija-id org}
                                  {::t/tilaaja-id org}
                                  {::t/urakka-id (op/in kayttajan-urakat)}))]
-      (when (and tloik (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
+      (when (and (not (empty? sahkopostitiedot))
+                 ;; TODO: Kun sähköpostin lähetys otetaan käyttöön, niin tuo ominaisuus käytössä pitää muistaa jättää
+                 ;; (tloik/laheta-tietyoilmoitus tloik (::t/id tallennettu)) funktiokutsulle.
+                 (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
+        (log/debug "yritän lähettää sähköpostin step 1 sahkopostitiedot: " sahkopostitiedot)
         (async/thread
-          (tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))))
+          (log/debug "yritän lähettää sähköpostin step 2")
+          (laheta-tietyoilmoituksen-pdf-sahkopostitse {:email email
+                                                       :vastaanottaja (:vastaanottaja sahkopostitiedot)
+                                                       :muut-vastaanottajat (:muut-vastaanottajat sahkopostitiedot)
+                                                       :kopio-itselle? (:kopio-itselle? sahkopostitiedot)
+                                                       :saate (:saate sahkopostitiedot)
+                                                       :viestin-otsikko "TODO: tähän esim. PDF:n nimi"
+                                                       :viestin-sisalto "TODO: viestin sisältö"
+
+                                                       :pdf :todo
+                                                       :tietyoilmoitus-id (::t/id tallennettu)
+                                                       :ilmoittaja user})
+          ;(tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))
+          ))
       tallennettu)))
 
 (defn tietyoilmoitus-pdf [db user params]
@@ -190,6 +258,7 @@
            http :http-palvelin
            pdf :pdf-vienti
            fim :fim
+           email :sonja-sahkoposti
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
@@ -200,8 +269,8 @@
                         (hae-tietyoilmoitus db user tietyoilmoitus-id))
                       {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
-                      (fn [user ilmoitus]
-                        (tallenna-tietyoilmoitus tloik db user ilmoitus))
+                      (fn [user {:keys [ilmoitus sahkopostitiedot] :as tiedot}]
+                        (tallenna-tietyoilmoitus tloik db email user ilmoitus sahkopostitiedot))
                       {:kysely-spec ::t/ilmoitus
                        :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
