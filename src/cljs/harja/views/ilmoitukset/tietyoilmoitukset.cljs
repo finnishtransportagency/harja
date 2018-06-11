@@ -45,5 +45,5 @@
        [ui-debug/debug @tiedot/tietyoilmoitukset]
        [kartta/kartan-paikka]
        (if valittu-ilmoitus
-         [tietyoilmoituslomake/lomake e! tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]
+         [tietyoilmoituslomake/lomake e! app tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]
          [tietyoilmoitushakulomake/hakulomake e! app])])))

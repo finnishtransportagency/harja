@@ -2,7 +2,8 @@
   "Modaali jossa käyttäjältä varmistetaan tehdäänkö toiminto"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit]
+            [harja.ui.grid :as grid]))
 
 (defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy napit]}]
   "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
@@ -31,3 +32,29 @@
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]}
                   sisalto)))
+
+(defn modal-muut-vastaanottajat [muut-vastaanottajat muutos-fn]
+  {:otsikko "Muut vastaanottajat"
+   :nimi :muut-vastaanottajat
+   :uusi-rivi? true
+   :palstoja 2
+   :tyyppi :komponentti
+   :komponentti (fn [_]
+                  [grid/muokkaus-grid
+                   {:tyhja "Ei vastaanottajia."
+                    :voi-muokata? true
+                    :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
+                    :muutos muutos-fn}
+                   [{:otsikko "Sähköpostiosoite"
+                     :nimi :sahkoposti
+                     :tyyppi :email
+                     :leveys 1}]
+                   (atom muut-vastaanottajat)])})
+
+(def modal-saateviesti {:otsikko "Vapaaehtoinen saateviesti, joka liitetään sähköpostiin"
+                        :koko [90 8]
+                        :nimi :saate :palstoja 3 :tyyppi :text})
+
+(def modal-sahkopostikopio {:teksti "Lähetä sähköpostiini kopio viestistä"
+                            :nayta-rivina? true :palstoja 3
+                            :nimi :kopio-itselle? :tyyppi :checkbox})
