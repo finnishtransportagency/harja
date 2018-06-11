@@ -124,7 +124,11 @@
                                                      (assoc % :valittu? valittu?)
                                                      %)
                                                   (:tietolajit valinnat))})))
-      [" tietolaji valittu" " tietolajia valittu"]]]]])
+      [" tietolaji valittu" " tietolajia valittu"]
+      {:kaikki-valinta-fn (fn []
+                            (let [valitse-kaikki? (some :valittu? (:tietolajit valinnat))]
+                              (e! (v/->YhdistaValinnat {:tietolajit (map #(assoc % :valittu? (not valitse-kaikki?))
+                                                                         (:tietolajit valinnat))}))))}]]]])
 
 (defn varustetoteuman-tiedot [muokattava? varustetoteuma]
   (when (or (not muokattava?)
