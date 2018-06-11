@@ -613,7 +613,8 @@
                                       {:keys [id urakka-id arvot sijainti puoli
                                               ajorata tierekisteriosoite lisatieto
                                               tietolaji toiminto
-                                              alkupvm loppupvm kuntoluokitus uusi-liite]
+                                              alkupvm loppupvm kuntoluokitus uusi-liite
+                                              tunniste]
                                        :as toteuma}]
   (jdbc/with-db-transaction [db db]
     (let [nyt (pvm/nyt)
@@ -623,9 +624,9 @@
             (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
             :else nil)
           toiminto (name toiminto)
-          tunniste (if (and (= toiminto "lisatty") (not (:tunniste arvot)))
+          tunniste (if (and (= toiminto "lisatty") (not tunniste))
                      (livitunnisteet/hae-seuraava-livitunniste db)
-                     (:tunniste arvot))
+                     tunniste)
           arvot (functor/fmap str (assoc arvot :tunniste tunniste))
           arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
 
