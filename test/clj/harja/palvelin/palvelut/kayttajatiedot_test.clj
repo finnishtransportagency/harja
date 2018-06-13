@@ -29,8 +29,7 @@
                               :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
     (println "vastaanottajat:" tulos)
 
-    (is (or (= (count tulos) 8)
-            (= (count tulos) 9))) ;; riippuen asetusten sähke-headereista
+    (is (= (count tulos) 10))
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain
