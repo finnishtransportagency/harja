@@ -369,23 +369,23 @@
                                                        (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
                                            :teksti "Valitse varustetoteuma"}
                           :varuste [{:teksti "Tarkasta"
-                                     :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
+                                     :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste tie]}]
                                                  (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
-                                                   (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji))
+                                                   (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji tie))
                                                    (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
                                                                   :warning
                                                                   viesti/viestin-nayttoaika-keskipitka)))}
                                     {:teksti "Muokkaa"
-                                     :toiminto (fn [{:keys [tunniste tietolajin-tunniste]}]
+                                     :toiminto (fn [{:keys [tunniste tietolajin-tunniste tie] :as data}]
                                                  (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
-                                                   (e! (tv/->AloitaVarusteenMuokkaus tunniste))
+                                                   (e! (tv/->AloitaVarusteenMuokkaus tunniste tie))
                                                    (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
                                                                   :warning
                                                                   viesti/viestin-nayttoaika-keskipitka)))}
                                     {:teksti "Poista"
-                                     :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
+                                     :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste tie]}]
                                                  (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
-                                                   (view/poista-varuste e! tietolaji tunniste)
+                                                   (view/poista-varuste e! tietolaji tunniste tie)
                                                    (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
                                                                   :warning
                                                                   viesti/viestin-nayttoaika-keskipitka)))}]})
