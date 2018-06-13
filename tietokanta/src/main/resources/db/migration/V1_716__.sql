@@ -58,7 +58,7 @@ BEGIN
 
   RAISE NOTICE 'Sijainnit %', sijainnit_;
 
-  IF (sijainnit_ IS NOT NULL)
+  IF (sijainnit_ IS NOT NULL AND sijainnit_[1].tie IS NOT NULL)
   THEN
 
     FOREACH sijainti_ IN ARRAY sijainnit_
