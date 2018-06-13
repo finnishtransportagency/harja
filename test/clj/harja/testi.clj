@@ -789,8 +789,8 @@
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
 (defn hae-testi-kayttajan-tiedot [{:keys [etunimi sukunimi roolit]}]
-  (let [kayttajan-tiedot (zipmap [:id :etunimi :sukunimi :kayttajanimi :organisaatio]
-                                 (first (q (str "SELECT id, etunimi, sukunimi, kayttajanimi, organisaatio FROM kayttaja WHERE etunimi='" etunimi "' AND sukunimi='" sukunimi "';"))))
+  (let [kayttajan-tiedot (zipmap [:id :etunimi :sukunimi :kayttajanimi :organisaatio :sahkoposti]
+                                 (first (q (str "SELECT id, etunimi, sukunimi, kayttajanimi, organisaatio, sahkoposti FROM kayttaja WHERE etunimi='" etunimi "' AND sukunimi='" sukunimi "';"))))
         kayttajan-organisaation-tiedot (when (:organisaatio kayttajan-tiedot)
                                          (zipmap [:id :tyyppi :nimi]
                                                  (first (q (str "SELECT id, tyyppi, nimi FROM organisaatio WHERE id=" (:organisaatio kayttajan-tiedot) ";")))))
