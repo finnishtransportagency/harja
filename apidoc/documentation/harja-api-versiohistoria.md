@@ -1,7 +1,24 @@
-<b>Nykyinen versio: 1.0.29</b>  
-<b>Julkaistu: 3.11.2017</b>
+<b>Nykyinen versio: 1.0.34</b>  
+<b>Julkaistu: 29.03.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.35 Julkaistu 27.4.2018
+    - Päällystysilmoituksen kirjauksessa voi nyt kirjata alustatoimenpiteillä tienumeron. Jos tienumeroa ei anna, käytetään pääkohteen tienumeroa.
+- Versionumero: 1.0.34 Julkaistu: 29.3.2018: 
+    - Kuulamyllyarvojen etuliitteet oikaistu.  
+        - N10 -> AN10
+        - N14 -> AN14
+        - N19 -> AN19 
+        - N30 -> AN30 
+        - N2 -> AN2 
+- Versionumero: 1.0.33 Julkaistu: 20.3.2018: 
+    - Päällystyskohteilta poistettu hypyt. Jatkossa hypyt voi antaa yksinkertaisesti jättämällä alikohteiden väliin tyhjää. 
+- Versionumero: 1.0.32 Julkaistu: 28.2.2018:
+    - Ylläpitokohteiden ja päällystysilmoituksen päivitys ottaa nyt vastaan uuden, vapaaehtoisen hyppy-kentän alikohteelle. Jos sen arvo on true, merkitään alikohde hypyksi. Urakan kohteiden haku palauttaa tiedon, onko kyseessä hyppy-alikohde.
+- Versionumero: 1.0.31 Julkaistu: 1.2.2018:
+    - Lisätty uudet rajapinnat paikkauksille sekä niiden hinnoitteluille
+- Versionumero: 1.0.30 Julkaistu: 27.11.2017:
+    - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan
 - Versionumero: 1.0.29 Julkaistu: 3.11.2017:
     - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille. 
 - Versionumero: 1.0.28 Julkaistu: 21.9.2017:
