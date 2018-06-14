@@ -82,14 +82,14 @@
          :pakollinen? (= :tunnisteella varusteiden-haun-tila)})]
      hakuehdot]))
 
-(defn poista-varuste [e! tietolaji tunniste]
+(defn poista-varuste [e! tietolaji tunniste tie]
   (varmista-kayttajalta/varmista-kayttajalta
     {:otsikko "Varusteen poistaminen Tierekisteristä"
      :sisalto [:div "Haluatko varmasti poistaa tietolajin: "
                [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
                [:b tunniste] "."]
      :hyvaksy "Poista"
-     :toiminto-fn (fn [] (e! (v/->PoistaVaruste tunniste)))}))
+     :toiminto-fn (fn [] (e! (v/->PoistaVaruste tunniste tie)))}))
 
 (def kuntoluokka->selite {"1" "Ala-arvoinen"
                           "2" "Merkittäviä puutteita"
@@ -112,6 +112,7 @@
     [modal/modal
      {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
       :nakyvissa? true
+      :sulje-fn #(e! (v/->PeruutaVarusteenTarkastus))
       :footer [:span
                [:button.nappi-toissijainen {:type "button"
                                             :on-click #(e! (v/->PeruutaVarusteenTarkastus))}
@@ -153,14 +154,15 @@
                      :leveys 3.5
                      :komponentti (fn [{varuste :varuste}]
                                     (let [tunniste (:tunniste varuste)
+                                          tie (get-in varuste [:tietue :sijainti :tie])
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       (if (varusteet/muokkaaminen-sallittu? tietolaji)
                                         [:div
-                                         (when (varusteet/tarkastaminen-sallittu? tietolaji) [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus tunniste tietolaji))])
-                                         [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus tunniste))]
-                                         [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste)]]
+                                         (when (varusteet/tarkastaminen-sallittu? tietolaji) [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus tunniste tietolaji tie))])
+                                         [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus tunniste tie))]
+                                         [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste tie)]]
                                         [:div
-                                         [napit/avaa "Avaa" #(e! (v/->AvaaVaruste tunniste))]])))}]
+                                         [napit/avaa "Avaa" #(e! (v/->AvaaVaruste tunniste tie))]])))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))
 
@@ -187,4 +189,4 @@
      [varustetarkastuslomake e! tarkastus])
 
    (when (and listaus-skeema varusteet)
-     [varustehaku-varusteet e! listaus-skeema varusteet tarkastus])])
+     [varustehaku-varusteet e! listaus-skeema varusteet])])

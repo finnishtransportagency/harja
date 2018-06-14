@@ -613,7 +613,8 @@
                                       {:keys [id urakka-id arvot sijainti puoli
                                               ajorata tierekisteriosoite lisatieto
                                               tietolaji toiminto
-                                              alkupvm loppupvm kuntoluokitus uusi-liite]
+                                              alkupvm loppupvm kuntoluokitus uusi-liite
+                                              tunniste]
                                        :as toteuma}]
   (jdbc/with-db-transaction [db db]
     (let [nyt (pvm/nyt)
@@ -623,30 +624,47 @@
             (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
             :else nil)
           toiminto (name toiminto)
-          tunniste (if (and (= toiminto "lisatty") (not (:tunniste arvot)))
+          tunniste (if (and (= toiminto "lisatty") (not tunniste))
                      (livitunnisteet/hae-seuraava-livitunniste db)
-                     (:tunniste arvot))
+                     tunniste)
           arvot (functor/fmap str (assoc arvot :tunniste tunniste))
           arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
 
           elynro (:elynumero (first (urakat-q/hae-urakan-ely db urakka-id)))
           sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
           karttapvm (or (geometriat-q/hae-karttapvm db) nyt)
-          toteuma-id (:id (toteumat-q/luo-toteuma<!
-                            db
-                            urakka-id
-                            sopimus-id
-                            nyt
-                            nyt
-                            "kokonaishintainen"
-                            (:id user)
-                            (str (:etunimi user) " " (:sukunimi user))
-                            (get-in user [:organisaatio :ytunnus])
-                            lisatieto
-                            nil
-                            sijainti
-                            nil nil nil nil nil
-                            "harja-ui"))
+          toteuma-id (when id (:toteuma (first (toteumat-q/hae-varustetoteuma db {:id id}))))
+          toteuma-id (if (and id toteuma-id)
+                       (:id (toteumat-q/paivita-toteuma<! db
+                                                          {:alkanut nyt
+                                                           :paattynyt nyt
+                                                           :tyyppi "kokonaishintainen"
+                                                           :kayttaja (:id user)
+                                                           :suorittaja (str (:etunimi user) " " (:sukunimi user))
+                                                           :ytunnus (get-in user [:organisaatio :ytunnus])
+                                                           :lisatieto lisatieto
+                                                           :numero nil
+                                                           :alkuosa nil
+                                                           :alkuetaisyys nil
+                                                           :loppuosa nil
+                                                           :loppuetaisyys nil
+                                                           :id toteuma-id
+                                                           :urakka urakka-id}))
+                       (:id (toteumat-q/luo-toteuma<!
+                                   db
+                                   urakka-id
+                                   sopimus-id
+                                   nyt
+                                   nyt
+                                   "kokonaishintainen"
+                                   (:id user)
+                                   (str (:etunimi user) " " (:sukunimi user))
+                                   (get-in user [:organisaatio :ytunnus])
+                                   lisatieto
+                                   nil
+                                   sijainti
+                                   nil nil nil nil nil
+                                   "harja-ui")))
           varustetoteuma {:id id
                           :tunniste tunniste
                           :toteuma toteuma-id

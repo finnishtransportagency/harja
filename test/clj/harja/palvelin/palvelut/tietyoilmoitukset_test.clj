@@ -120,7 +120,7 @@
    ::t/viivastys-normaali-liikenteessa 15,
    ::t/tyotyypit [{::t/tyyppi "Tienrakennus",
                    ::t/kuvaus "Rakennetaan tietä"}]
-   ::m/luoja-id 2,
+   ::m/luoja-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi='jvh'")),
    ::t/urakoitsijan-nimi "YIT Rakennus Oy",
    ::t/osoite {::tr/aosa 1,
                ::tr/losa 5,

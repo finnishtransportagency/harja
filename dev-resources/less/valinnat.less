@@ -28,12 +28,23 @@
   background-color: unset;
 }
 
-.checkbox-label-valikko {
-  width: 100%;
-  padding: 0px 8px 2px 8px;
+.checkbox-pudotusvalikko {
+  .checkbox-label-valikko {
+    width: 100%;
+    padding: 0px 8px 2px 8px;
 
-  input {
+    input {
+      display: inline-block;
+      float: right;
+    }
+  }
+  .pudotusvalikko {
     display: inline-block;
-    float: right;
+    margin-right: 8px;
+    width: calc(5 * @valintakontrollin-leveys / 8 - 8px);
+  }
+  .valinta-nappi {
+    width: 3 * @valintakontrollin-leveys / 8;
+    margin: 0px;
   }
 }
