@@ -39,33 +39,21 @@ FROM urakka u
   JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE u.id = :urakkaid;
 
--- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
-UPDATE tietyoilmoitus
-SET lahetysid = :lahetysid, tila = 'odottaa_vastausta', lahetetty = current_timestamp
-WHERE id = :id;
+-- name: lisaa-tietyoilmoituksen-email-lahetys!
+INSERT INTO tietyoilmoituksen_email_lahetys (tietyoilmoitus, lahetysid, lahetetty)
+     VALUES (:id, :lahetysid, current_timestamp);
 
--- name: merkitse-tietyoilmoitus-lahetetyksi!
-UPDATE tietyoilmoitus
-SET lahetetty = current_timestamp, tila = 'lahetetty'
+-- name: merkitse-tietyoilmoituksen-sahkopostilahetys-kuitatuksi!
+UPDATE tietyoilmoituksen_email_lahetys
+SET kuitattu = current_timestamp
 WHERE lahetysid = :lahetysid;
 
 -- name: merkitse-tietyoilmoitukselle-lahetysvirhe!
-UPDATE tietyoilmoitus
-SET tila = 'virhe'
-WHERE id = :id;
-
--- name: hae-lahettamattomat-tietyoilmoitukset
-SELECT id
-FROM tietyoilmoitus
-WHERE
-  (tila IS NULL OR tila = 'virhe');
-
--- name: lahetetty
-SELECT tila = 'lahetetty' as "lahetetty?"
-FROM tietyoilmoitus
-WHERE id = :id;
+UPDATE tietyoilmoituksen_email_lahetys
+SET lahetysvirhe = current_timestamp
+WHERE tietyoilmoitus = :id;
 
 -- name: merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla!
-UPDATE tietyoilmoitus
-SET tila = 'virhe'
+UPDATE tietyoilmoituksen_email_lahetys
+SET lahetysvirhe = current_timestamp
 WHERE lahetysid = :lahetysid;

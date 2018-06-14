@@ -9,39 +9,37 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
+            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat :refer [tee-kentta]]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.liitteet :as liitteet]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.valinnat :as valinnat]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.ui.komponentti :as komp]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.ikonit :as ikonit]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.napit :as napit]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [tuck.core :as t :refer [tuck]]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.debug :refer [debug]]
             [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.debug :as debug]
-            [harja.ui.liitteet :as liitteet]
             [harja.tiedot.tierekisteri.varusteet :as tv]
-            [harja.ui.yleiset :as y]
             [harja.geo :as geo])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -62,13 +60,15 @@
   (case tila
     "lahetetty" [:span.tila-lahetetty (str "Onnistunut: " (pvm/pvm-aika lahetetty))]
     "virhe" [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika lahetetty))]
-    [:span "Ei lähetetty"]))
+    [:span.tila-odottaa-vastausta "Ei lähetetty"]))
 
 (defn toteumataulukko [e! toteumat]
   [:span
    [grid/grid
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+     :virhe-viesti (when (some :lahetysvirhe toteumat)
+                     [:div "Tierekisterin palauttamat validontivirheet on korjattava kirjauksen viimeistelemiseksi. Valitse varuste, jonka lähetys on epäonnistunut, nähdäksesi virheen syy."])
      :tunniste :id
      :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
@@ -113,7 +113,18 @@
 
    [harja.ui.valinnat/varustetoteuman-tyyppi
     (r/wrap (:tyyppi valinnat)
-            #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
+            #(e! (v/->ValitseVarusteToteumanTyyppi %)))]
+   [:span
+    [:div.label-ja-alasveto
+     [:span.alasvedon-otsikko "Tietolaji"]
+     [valinnat/checkbox-pudotusvalikko
+      (:tietolajit valinnat)
+      (fn [tietolaji valittu?]
+        (e! (v/->YhdistaValinnat {:tietolajit (map #(if (= (:id tietolaji) (:id %))
+                                                     (assoc % :valittu? valittu?)
+                                                     %)
+                                                  (:tietolajit valinnat))})))
+      [" tietolaji valittu" " tietolajia valittu"]]]]])
 
 (defn varustetoteuman-tiedot [muokattava? varustetoteuma]
   (when (or (not muokattava?)
@@ -146,7 +157,7 @@
          :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
       (when (:lahetysvirhe varustetoteuma)
         {:nimi :lahetysvirhe
-         :otsikko "Lähetysvirhe"
+         :otsikko [:span.tila-virhe "Lähetysvirhe"]
          :tyyppi :string
          :muokattava? (constantly false)})
       (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
@@ -175,6 +186,7 @@
          :muokattava? (constantly false)})
       {:nimi :tietolaji
        :otsikko "Varusteen tyyppi"
+       :uusi-rivi? true
        :tyyppi :valinta
        :valinnat (sort-by second (vec (tierekisteri-varusteet/muokattavat-tietolajit)))
        :valinta-nayta second
@@ -193,6 +205,7 @@
         (when (and muokattava? (geo/geolokaatio-tuettu?))
           {:nimi :kayttajan-sijainti
            :otsikko "GPS-sijainti"
+           :uusi-rivi? true
            :tyyppi :sijaintivalitsin
            :karttavalinta? false
            :paikannus-onnistui-fn #(e! (v/->HaeSijainninOsoite %))
@@ -303,7 +316,10 @@
                         #(varustetiedot/tallenna-varustetoteuma valinnat toteuma)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
-                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-onnistuu #(do (e! (v/->VarustetoteumaTallennettu %))
+                                            (viesti/nayta! "Varuste lähetetään tierekisteriin. Tarkista tulos lähetyksen jälkeen."
+                                                           :info
+                                                           viesti/viestin-nayttoaika-keskipitka))
                          :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
@@ -314,16 +330,16 @@
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
   [:span
-   [:div.sisalto-container
-    [:h1 "Varustekirjaukset Harjassa"]
-    [valinnat e! nykyiset-valinnat]
-    [toteumataulukko e! naytettavat-toteumat]]
    (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when (oikeus-varusteiden-muokkaamiseen?)
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
-      [varustehaku e! app]])])
+      [varustehaku e! app]])
+   [:div.sisalto-container
+    [:h1 "Varustekirjaukset Harjassa"]
+    [valinnat e! nykyiset-valinnat]
+    [toteumataulukko e! naytettavat-toteumat]]])
 
 (defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste naytettava-varuste]}]
   (when uudet-varustetoteumat

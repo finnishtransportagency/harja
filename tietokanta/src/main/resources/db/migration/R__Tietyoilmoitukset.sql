@@ -17,3 +17,4 @@ CREATE VIEW tietyoilmoitus_pituus AS
                 AS pituus FROM tietyoilmoitus tti;
 
 -- 27.7.2017 muutettu, jotta tti view päivittyy
+-- 31.5.2018 muutettu, jotta tti view päivittyy

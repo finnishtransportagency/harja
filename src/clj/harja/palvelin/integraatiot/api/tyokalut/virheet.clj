@@ -27,6 +27,7 @@
 (def +tuntematon-maksuera+ "tuntematon-maksuera")
 (def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
 (def +tuntematon-ely+ "tuntematon-ely")
+(def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
@@ -43,6 +44,7 @@
 (def +paallystysilmoitus-lukittu+ "paallystysilmoitus-lukittu")
 (def +ominaisuus-ei-kaytossa+ "ominaisuus-ei-kaytossa")
 (def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
+(def +puutteellinen-paikkatietoaineisto+ "puutteellinen-paikkatietoaineisto")
 
 (defn heita-poikkeus [tyyppi virheet]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)

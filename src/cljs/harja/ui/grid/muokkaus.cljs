@@ -262,11 +262,13 @@
   :virheet-ylos?                  Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
                                   avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?
   :virhe-viesti                   String, joka näytetään gridin otsikon oikealla puolella punaisella.
-  :luomisen-jalkeen               Funktio, joka ajetaan heti taulukon luomisen jälkeen. Saa argumentikseen Gridin tilan"
+  :luomisen-jalkeen               Funktio, joka ajetaan heti taulukon luomisen jälkeen. Saa argumentikseen Gridin tilan
+  :muokkauspaneeli?               Tämä on sitä varten, ettei gridin päälle jää tyhjää tilaa muokkauspaneelista laittamalla
+                                  tämä falseksi."
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen] :as opts}
+           virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -391,7 +393,8 @@
                                                                            :muokatut-atom muokatut}))]
                           (reset! muokatut (with-meta jarjestetyt-arvot
                                              (:arvot @meta-atom)))
-                          (swap! meta-atom :paivita? false)))]
+                          (swap! meta-atom :paivita? false)))
+        muokkauspaneeli? (if (some? muokkauspaneeli?) muokkauspaneeli? true)]
     (r/create-class
 
       {:reagent-render
@@ -417,11 +420,12 @@
             {:class (str (str/join " " luokat)
                          (if voi-muokata? " nappeja"))
              :id (:id opts)}
-            (muokkauspaneeli {:otsikko otsikko :voi-muokata? voi-muokata? :historia historia
-                              :voi-kumota? voi-kumota? :muokatut muokatut :virheet virheet-atom
-                              :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
-                              :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
-                              :virhe-viesti virhe-viesti})
+            (when muokkauspaneeli?
+              (muokkauspaneeli {:otsikko otsikko :voi-muokata? voi-muokata? :historia historia
+                                :voi-kumota? voi-kumota? :muokatut muokatut :virheet virheet-atom
+                                :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
+                                :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
+                                :virhe-viesti virhe-viesti}))
             [:div.panel-body
              [:table.grid
               [:thead

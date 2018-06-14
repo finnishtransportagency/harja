@@ -1,0 +1,10 @@
+ALTER TABLE tielupa
+  ADD COLUMN "ely-nimi" TEXT;
+
+ALTER TABLE alueurakka
+  ADD COLUMN nimi TEXT,
+  ADD COLUMN "ely-nimi" TEXT,
+  ADD COLUMN luotu TIMESTAMP,
+  ADD COLUMN luoja INTEGER,
+  ADD COLUMN muokattu TIMESTAMP,
+  ADD COLUMN muokkaaja INTEGER;
