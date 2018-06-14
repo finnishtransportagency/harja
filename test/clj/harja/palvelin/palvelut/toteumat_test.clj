@@ -348,13 +348,15 @@
 (deftest varustetoteumat-haettu-oikein
   (let [alkupvm (pvm/luo-pvm 2005 9 1)
         loppupvm (pvm/luo-pvm 2017 10 30)
-        varustetoteumat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :urakan-varustetoteumat +kayttaja-jvh+
-                                        {:urakka-id @oulun-alueurakan-2005-2010-id
-                                         :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                         :alkupvm alkupvm
-                                         :loppupvm loppupvm
-                                         :tietolajit (into #{} (keys varusteet-domain/tietolaji->selitys))})]
+        hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
+        varustetoteumat (with-fake-http [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml]
+                                        (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :urakan-varustetoteumat +kayttaja-jvh+
+                                                        {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                         :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+                                                         :alkupvm alkupvm
+                                                         :loppupvm loppupvm
+                                                         :tietolajit (into #{} (keys varusteet-domain/tietolaji->selitys))}))]
     (is (>= (count varustetoteumat) 3))
     (is (contains? (first varustetoteumat) :sijainti))))
 
