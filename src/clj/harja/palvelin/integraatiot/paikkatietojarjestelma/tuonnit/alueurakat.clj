@@ -2,12 +2,21 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.urakat :as u]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+
+(defn string-intiksi [str]
+  (if (string? str)
+    (let [ei-numeeriset-poistettu (re-find #"\d+" str)]
+      (if (nil? ei-numeeriset-poistettu)
+        nil
+        (Integer. ei-numeeriset-poistettu)))
+    str))
 
 (defn luo-tai-paivita-urakka [db urakka]
   (let [urakkanumero (str (:gridcode urakka))
         geometria (.toString (:the_geom urakka))
-        piirinumero (int (:piirinro urakka))
+        piirinumero (string-intiksi (:piirinro urakka))
         elynimi (if (:elyn_nimi urakka) (:elyn_nimi urakka) "")
         nimi (if (:urakka_nim urakka) (:urakka_nim urakka) "") ]
     (if (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))
@@ -16,9 +25,11 @@
     (u/paivita-alue-urakalle! db geometria urakkanumero)))
 
 (defn vie-urakka-entry [db urakka]
-  (if (and (:the_geom urakka) (:piirinro urakka))
+  (if (:the_geom urakka)
     (luo-tai-paivita-urakka db urakka)
-    (log/warn "Alueurakkaa ei voida tuoda ilman geometriaa ja piirinumeroa. Virheviesti: " (:loc_error urakka))))
+    (virheet/heita-poikkeus virheet/+puutteellinen-paikkatietoaineisto+
+                    [{:koodi virheet/+puuttuva-geometria-alueurakassa+
+                              :viesti (format "Alueurakasta (id: %s.) puuttuu geometria. Tarkista aineisto. Alueurakoita ei päivitetä lainkaan." (:urakka_nimi urakka))}])))
 
 (defn vie-urakat-kantaan [db shapefile]
   (if shapefile
