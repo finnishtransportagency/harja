@@ -442,7 +442,7 @@
     (is (= (tielupa-sanoma/vesihuoltolupa data) odotettu))))
 
 
-(deftest lupa-ilman-sijaintia
+(deftest mainoslupa-ilman-sijaintia
   (let [data {:sijainnin-kuvaus "Sijainti jota ei ole ilmoitettu tr-osoitteella."
               :tiedoksi-elykeskukselle true
               :asemakaava-alueella true
@@ -452,7 +452,7 @@
                 {:sijainti {}}}]}
         odotettu {:harja.domain.tielupa/mainoslupa-mainostettava-asia nil
                   :harja.domain.tielupa/mainoslupa-sijainnin-kuvaus
-                  "Kiimingin keskustasta 10 km pohjoiseen."
+                  "Sijainti jota ei ole ilmoitettu tr-osoitteella."
                   :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
                   :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
                   :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
