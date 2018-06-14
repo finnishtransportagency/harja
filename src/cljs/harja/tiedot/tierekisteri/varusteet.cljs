@@ -18,7 +18,7 @@
    (varustetoteuma tiedot toiminto nil nil nil))
   ([tiedot toiminto kuntoluokitus lisatieto]
    (varustetoteuma tiedot toiminto kuntoluokitus lisatieto nil))
-  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto uusi-liite]
+  ([{:keys [tietue tunniste]} toiminto kuntoluokitus lisatieto uusi-liite]
    (let [tr-osoite (get-in tietue [:sijainti :tie])]
      {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :puoli (:puoli tr-osoite)
@@ -35,7 +35,8 @@
       :loppupvm (:loppupvm tietue)
       :kuntoluokitus kuntoluokitus
       :lisatieto lisatieto
-      :uusi-liite uusi-liite})))
+      :uusi-liite uusi-liite
+      :tunniste tunniste})))
 
 (defn hakutulokset
   ([app] (hakutulokset app nil nil))
