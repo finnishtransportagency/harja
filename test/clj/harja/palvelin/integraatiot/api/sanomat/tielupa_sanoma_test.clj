@@ -458,5 +458,12 @@
                   :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
                   :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M
                   :harja.domain.tielupa/mainokset
-                  [{}]}]
+                  [{:harja.domain.tielupa/tie nil
+                    :harja.domain.tielupa/aosa nil
+                    :harja.domain.tielupa/aet nil
+                    :harja.domain.tielupa/losa nil
+                    :harja.domain.tielupa/let nil
+                    :harja.domain.tielupa/ajorata nil
+                    :harja.domain.tielupa/kaista nil
+                    :harja.domain.tielupa/puoli nil}]}]
     (is (= (tielupa-sanoma/mainoslupa data) odotettu))))
