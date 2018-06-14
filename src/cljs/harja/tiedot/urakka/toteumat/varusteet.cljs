@@ -317,7 +317,8 @@
                                 (first (:points (first (:lines tiedot)))))
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
-          arvot (if (or tietolaji-muuttui? (nil? (:arvot tiedot)))
+          arvot (if (and (not (nil? nykyinen-toteuma))
+                         (or tietolaji-muuttui? (nil? (:arvot tiedot))))
                   {}
                   (:arvot tiedot))
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
