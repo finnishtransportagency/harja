@@ -56,8 +56,6 @@ BEGIN
   FROM tielupa
   WHERE id = tielupa_id;
 
-  RAISE NOTICE 'Sijainnit %', sijainnit_;
-
   IF (sijainnit_ IS NOT NULL AND sijainnit_[1].tie IS NOT NULL)
   THEN
 
@@ -74,8 +72,6 @@ BEGIN
 
   END IF;
 
-  RAISE NOTICE 'Alueurakkanumero 1 %', alueurakkanro_;
-
   IF (alueurakkanro_ IS NULL)
   THEN
 
@@ -88,10 +84,6 @@ BEGIN
     WHERE nimi = alueurakkanimi_;
 
   END IF;
-
-  RAISE NOTICE 'Alueurakkanimi %', alueurakkanimi_;
-  RAISE NOTICE 'Alueurakkanumero 2 %', alueurakkanro_;
-
 
   SELECT INTO urakka_id_ id
   FROM urakka
