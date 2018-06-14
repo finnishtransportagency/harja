@@ -20,4 +20,3 @@ CREATE TABLE tietyoilmoituksen_email_lahetys  (
   kuitattu TIMESTAMP,
   lahetysvirhe TIMESTAMP -- mahdollisen lähetysvirheen aikaleima, toivottavasti usein tyhjä
 );
-

@@ -17,7 +17,7 @@
                             :tunniste {:id 1234}
                             :tien-nimi "Kuusamontie"
                             :myontamispvm "2020-09-22T12:00:00+02:00"
-                            :alueurakka "Oulun alueurakka"
+                            :alueurakka "Oulu"
                             :tyyppi "tietyolupa"
                             :voimassaolon-loppupvm "2020-09-22T12:00:00+02:00"}}
         odotettu {:harja.domain.tielupa/kohde-postitoimipaikka "Kiiminki"
@@ -27,7 +27,7 @@
                   :harja.domain.tielupa/paatoksen-diaarinumero "123456789"
                   :harja.domain.tielupa/hakija-postinumero 90900
                   :harja.domain.tielupa/otsikko "Lupa tehdä töitä"
-                  :harja.domain.tielupa/urakan-nimi "Oulun alueurakka"
+                  :harja.domain.tielupa/urakan-nimi "Oulu"
                   :harja.domain.tielupa/kohde-postinumero 90900
                   :harja.domain.tielupa/ulkoinen-tunniste 1234
                   :harja.domain.tielupa/saapumispvm #inst "2020-09-22T10:00:00.000-00:00"
@@ -440,3 +440,30 @@
                     :harja.domain.tielupa/kaista nil}]}]
 
     (is (= (tielupa-sanoma/vesihuoltolupa data) odotettu))))
+
+
+(deftest mainoslupa-ilman-sijaintia
+  (let [data {:sijainnin-kuvaus "Sijainti jota ei ole ilmoitettu tr-osoitteella."
+              :tiedoksi-elykeskukselle true
+              :asemakaava-alueella true
+              :suoja-alueen-leveys 1.2M
+              :mainokset
+              [{:mainos
+                {:sijainti {}}}]}
+        odotettu {:harja.domain.tielupa/mainoslupa-mainostettava-asia nil
+                  :harja.domain.tielupa/mainoslupa-sijainnin-kuvaus
+                  "Sijainti jota ei ole ilmoitettu tr-osoitteella."
+                  :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
+                  :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
+                  :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M
+                  :harja.domain.tielupa/mainokset
+                  [{:harja.domain.tielupa/tie nil
+                    :harja.domain.tielupa/aosa nil
+                    :harja.domain.tielupa/aet nil
+                    :harja.domain.tielupa/losa nil
+                    :harja.domain.tielupa/let nil
+                    :harja.domain.tielupa/ajorata nil
+                    :harja.domain.tielupa/kaista nil
+                    :harja.domain.tielupa/puoli nil}]}]
+    (is (= (tielupa-sanoma/mainoslupa data) odotettu))))
