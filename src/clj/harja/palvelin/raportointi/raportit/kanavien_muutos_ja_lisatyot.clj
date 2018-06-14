@@ -36,6 +36,7 @@
 (defn- hinnoittelu-ryhmat
   "Palauttaa hinnoitteluryhmien tunnukset. Hakee ne ryhmiteltyjen työrivien avaimesta."
   [tyot-ryhmiteltyna]
+  (log/debug (prn-str "BBBBBBB" tyot-ryhmiteltyna))
   (distinct (map #(get % :hinnoittelu_ryhma) (keys tyot-ryhmiteltyna))))
 
 (defn hinnoitteluryhman-nimi
@@ -47,7 +48,7 @@
     :varaosat-ja-materiaalit "Varaosat ja materiaalit"
     :muu-tyo "Muut työt (ei indeksilaskentaa)"
     :muut-kulut "Muut"
-    "Hinnoitteluryhmän nimi puuttuu."))
+    "Hinnoittelematon työ tai puuttuva hinnoitteluryhmä."))
 
 (defn- hinnoitteluryhman-tyot
   "Palauttaa hintaryhmään (= hinnoitteluryhmään) liittyvät työrivit.
@@ -69,6 +70,7 @@
 
 (defn- muodosta-rivi-hinnoitteluryhmalle
   [hinnoitteluryhman-tyot-urakassa]
+  (log/debug (prn-str "HINNOITTELURYHMÄN TYÖT " hinnoitteluryhman-tyot-urakassa))
   (hash-map
     :hinnoittelu (hinnoitteluryhman-nimi
                    (:hinnoittelu_ryhma (first hinnoitteluryhman-tyot-urakassa)))
@@ -167,7 +169,10 @@
                 :sheet-nimi otsikko
                 :viimeinen-rivi-yhteenveto? false}
      (sarakkeet :muutos-ja-lisatyot-koko-maa)
-     (mapv (fn [urakan-tyot-ryhmiteltyna] (conj
+     (mapv (fn [urakan-tyot-ryhmiteltyna]
+             (log/debug (prn-str "KOKO MAAurakan-tyot-ryhmiteltyna TYÖT " urakan-tyot-ryhmiteltyna))
+
+             (conj
                                             (rivi
                                               (hinnoitteluryhman-nimi (:hinnoittelu_ryhma
                                                                         urakan-tyot-ryhmiteltyna))
@@ -185,7 +190,10 @@
                   :sheet-nimi otsikko
                   :viimeinen-rivi-yhteenveto? false}
        (sarakkeet :muutos-ja-lisatyot)
-       (mapv (fn [urakan-tyot-ryhmiteltyna] (conj (rivi
+       (mapv (fn [urakan-tyot-ryhmiteltyna]
+               (log/debug (prn-str "URAKKA urakan-tyot-ryhmiteltyna TYÖT " urakan-tyot-ryhmiteltyna))
+
+               (conj (rivi
                                                     (or (pvm/pvm (:pvm urakan-tyot-ryhmiteltyna)) " ")
                                                     (:tehtava urakan-tyot-ryhmiteltyna)
                                                     (:kohde urakan-tyot-ryhmiteltyna)

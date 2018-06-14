@@ -325,10 +325,10 @@
         [valinnat/urakan-tehtava+kaikki]))))
 
 
-;;TODO: varmista ettei tämä käsittele samaa atomia kuin se toinen
+;;TODO: varmista ettei tämä käsittele samaa atomia kuin se toinen MIKÄ TOINEN?
 (defmethod raportin-parametri "kanavaurakan-kohde" [p arvo]
   (let [aseta-kohde (fn [kohde]
-                      (log (prn-str "**** KOHDE-ID " (:harja.domain.kanavat.kohde/id kohde)))
+                      (log (prn-str "**** KOHDE-NIMI " (:harja.domain.kanavat.kohde/nimi kohde)))
                     (reset! arvo (if kohde
                                    {:kohde-id (:harja.domain.kanavat.kohde/id kohde)}
                                    {:virhe "Ei kohdevalintaa"})))]

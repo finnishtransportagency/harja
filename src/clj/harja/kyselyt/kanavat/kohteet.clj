@@ -100,6 +100,16 @@
     (hae-kohteiden-urakkatiedot db user urakka-id)
     (remove (comp empty? ::kohde/urakat))))
 
+(defn hae-urakan-kohteet-mukaanlukien-poistetut [db user urakka-id]
+  (->>
+    (sort-by :harja.domain.kanavat.kohde/nimi (specql/fetch db
+                  ::kohde/kohde
+                  (set/union
+                    kohde/perustiedot)
+                  {}))
+    (hae-kohteiden-urakkatiedot db user urakka-id)
+    (remove (comp empty? ::kohde/urakat))))
+
 (defn liita-kohde-urakkaan! [db user kohde-id urakka-id poistettu?]
   (jdbc/with-db-transaction [db db]
     (let [olemassa? (-> (specql/fetch

@@ -219,13 +219,10 @@
 
 (defn kanavaurakan-kohde
   [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
-  ;(log (prn-str "KANAVA KOHTEET  " kohteet))
-  (log (prn-str "**** kanavaurakan-kohde " valittu-kohde-atom))
-
   [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko "Kohde ff"]
+   [:span.alasvedon-otsikko "Kohde"]
    [livi-pudotusvalikko {:valinta @valittu-kohde-atom
-                         :format-fn #(if % (str (:kohde %)) "Ei kohteita")
+                         :format-fn #(if % (str (:harja.domain.kanavat.kohde/nimi %)) "Ei kohteita")
                          :valitse-fn #(reset! valittu-kohde-atom %)}
     @kohteet-atom]])
 
