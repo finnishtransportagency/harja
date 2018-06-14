@@ -886,6 +886,7 @@ WHERE
 -- name: hae-varustetoteuma
 SELECT
   vt.toimenpide,
+  vt.toteuma,
   vt.karttapvm,
   vt.tunniste,
   vt.alkupvm,

@@ -18,7 +18,7 @@
    (varustetoteuma tiedot toiminto nil nil nil))
   ([tiedot toiminto kuntoluokitus lisatieto]
    (varustetoteuma tiedot toiminto kuntoluokitus lisatieto nil))
-  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto uusi-liite]
+  ([{:keys [tietue tunniste]} toiminto kuntoluokitus lisatieto uusi-liite]
    (let [tr-osoite (get-in tietue [:sijainti :tie])]
      {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :puoli (:puoli tr-osoite)
@@ -35,7 +35,8 @@
       :loppupvm (:loppupvm tietue)
       :kuntoluokitus kuntoluokitus
       :lisatieto lisatieto
-      :uusi-liite uusi-liite})))
+      :uusi-liite uusi-liite
+      :tunniste tunniste})))
 
 (defn hakutulokset
   ([app] (hakutulokset app nil nil))
@@ -51,8 +52,9 @@
                          (:ominaisuudet tietolaji)))
          (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false)))))
 
-(defn hae-varuste [app tunniste]
-  (let [arvot (first (filter #(= tunniste (get-in % [:varuste :tunniste]))
+(defn hae-varuste [app tunniste tie]
+  (let [arvot (first (filter #(and (= tunniste (get-in % [:varuste :tunniste]))
+                                   (= tie (get-in % [:varuste :tietue :sijainti :tie])))
                              (get-in app [:tierekisterin-varusteet :varusteet])))]
     (assoc (:varuste arvot) :sijainti (:sijainti arvot))))
 
@@ -69,13 +71,13 @@
 (defrecord PoistaUusiLiitetiedosto [liite])
 
 ;; Toimenpiteet Tierekisteriin
-(defrecord PoistaVaruste [tunniste])
-(defrecord AloitaVarusteenTarkastus [tunniste tietolaji])
+(defrecord PoistaVaruste [tunniste tie])
+(defrecord AloitaVarusteenTarkastus [tunniste tietolaji tie])
 (defrecord PeruutaVarusteenTarkastus [])
 (defrecord AsetaVarusteTarkastuksenTiedot [tiedot])
 (defrecord TallennaVarustetarkastus [varuste tarkastus])
-(defrecord AloitaVarusteenMuokkaus [tunniste])
-(defrecord AvaaVaruste [tunniste])
+(defrecord AloitaVarusteenMuokkaus [tunniste tie])
+(defrecord AvaaVaruste [tunniste tie])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus viesti])
 
@@ -138,8 +140,8 @@
         (assoc :uudet-varustetoteumat vastaus)))
 
   PoistaVaruste
-  (process-event [{:keys [tunniste]} app]
-    (let [varuste (hae-varuste app tunniste)
+  (process-event [{:keys [tunniste tie]} app]
+    (let [varuste (hae-varuste app tunniste tie)
           tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
@@ -154,8 +156,8 @@
     app)
 
   AloitaVarusteenTarkastus
-  (process-event [{:keys [tunniste tietolaji]} app]
-    (let [varuste (hae-varuste app tunniste)]
+  (process-event [{:keys [tunniste tietolaji tie]} app]
+    (let [varuste (hae-varuste app tunniste tie)]
       (assoc-in app [:tierekisterin-varusteet :tarkastus] {:varuste varuste :tunniste tunniste :tietolaji tietolaji})))
 
   PeruutaVarusteenTarkastus
@@ -185,13 +187,13 @@
     (assoc-in app [:tierekisterin-varusteet :tarkastus] (assoc tarkastus :tiedot uudet-tiedot)))
 
   AloitaVarusteenMuokkaus
-  (process-event [{:keys [tunniste]} app]
-    (let [varuste (hae-varuste app tunniste)]
+  (process-event [{:keys [tunniste tie]} app]
+    (let [varuste (hae-varuste app tunniste tie)]
       (assoc app :muokattava-varuste varuste)))
 
   AvaaVaruste
-  (process-event [{:keys [tunniste]} app]
-    (let [varuste (hae-varuste app tunniste)]
+  (process-event [{:keys [tunniste tie]} app]
+    (let [varuste (hae-varuste app tunniste tie)]
       (assoc app :naytettava-varuste varuste)))
 
   LisaaLiitetiedosto

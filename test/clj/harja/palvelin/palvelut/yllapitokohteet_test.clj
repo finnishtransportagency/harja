@@ -1396,7 +1396,7 @@
       (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             yhteyshenkilot (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :yllapitokohteen-urakan-yhteyshenkilot
-                                           +kayttaja-ulle+
+                                           +kayttaja-vastuuhlo-muhos+
                                            {:yllapitokohde-id leppajarven-ramppi-id
                                             :urakkatyyppi :paallystys})]
         (is (map? yhteyshenkilot) "Yhteyshenkilöt palautuivat")

@@ -9,6 +9,9 @@ INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id F
 INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_uuvh'), 'urakoitsijan urakan vastuuhenkilo');
 INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_uuvh'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'urakoitsijan urakan vastuuhenkilo');
 INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_uuvh'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'urakoitsijan urakan vastuuhenkilo');
+INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='antero'), (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka'), 'vastuuhenkilo');
+
+INSERT INTO kayttaja_organisaatio_rooli (kayttaja, organisaatio, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='ulle'), (SELECT organisaatio FROM kayttaja WHERE kayttajanimi='ulle'), 'Kayttaja');
 
 -- Erillisoikeudet urakoihin
 
