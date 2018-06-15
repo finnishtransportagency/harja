@@ -14,6 +14,7 @@
             [goog.events.EventType :as EventType]
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
+            [harja.ui.napit :as napit]
             [harja.ui.dom :as dom]
             [harja.domain.urakka :as u-domain]
             [harja.loki :as log])
@@ -464,29 +465,40 @@
     ryhma4]])
 
 (defn checkbox-pudotusvalikko
-  [valinnat on-change teksti]
-  (let [idn-alku-label (gensym "label")
-        idn-alku-cb (gensym "cb")]
-    (fn [valinnat on-change teksti]
-      [livi-pudotusvalikko
-       {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? valinnat))
-                               paikkaukohteiden-maara (count valinnat)]
-                           (str valittujen-paikkauskohteiden-maara (case valittujen-paikkauskohteiden-maara
-                                                                     paikkaukohteiden-maara "Kaikki"
-                                                                     1 (first teksti)
-                                                                     (second teksti))))
-        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
-        :itemit-komponentteja? true}
-       (map (fn [{:keys [id nimi valittu?] :as valinta}]
-              [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
-                                              :id (str idn-alku-label id)}
-               nimi
-               [:input {:id (str idn-alku-cb id)
-                        :type "checkbox"
-                        :checked valittu?
-                        :on-change #(let [valittu? (-> % .-target .-checked)]
-                                      (on-change valinta valittu?))}]])
-            valinnat)])))
+  ([valinnat on-change teksti] (checkbox-pudotusvalikko valinnat on-change teksti {}))
+  ([valinnat on-change teksti asetukset]
+   (let [idn-alku-label (gensym "label")
+         idn-alku-cb (gensym "cb")]
+     (fn [valinnat on-change teksti {kaikki-valinta-fn :kaikki-valinta-fn}]
+       [:div.checkbox-pudotusvalikko
+        [livi-pudotusvalikko
+         (merge
+           {:naytettava-arvo (let [valittujen-valintojen-maara (count (filter :valittu? valinnat))
+                                   valintojen-maara (count valinnat)
+                                   naytettava-teksti (cond
+                                                       (= valittujen-valintojen-maara valintojen-maara) "Kaikki valittu"
+                                                       (= valittujen-valintojen-maara 1) (str "1" (first teksti))
+                                                       :else (str valittujen-valintojen-maara (second teksti)))]
+                               naytettava-teksti)
+            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}
+            :itemit-komponentteja? true}
+           (when kaikki-valinta-fn
+             {:class "pudotusvalikko"}))
+         (map (fn [{:keys [id nimi valittu?] :as valinta}]
+                [:label.checkbox-label-valikko {:on-click #(.stopPropagation %)
+                                                :id (str idn-alku-label id)}
+                 nimi
+                 [:input {:id (str idn-alku-cb id)
+                          :type "checkbox"
+                          :checked valittu?
+                          :on-change #(let [valittu? (-> % .-target .-checked)]
+                                        (on-change valinta valittu?))}]])
+              valinnat)]
+        (when kaikki-valinta-fn
+          [napit/yleinen-ensisijainen (if (some :valittu? valinnat)
+                                        "Poista valinnat"
+                                        "Valitse kaikki")
+           kaikki-valinta-fn {:luokka "valinta-nappi"}])]))))
 
 (defn materiaali-valikko
   "Pudotusvalikko materiaaleille. Ottaa mapin, jolle täytyy antaa parametrit valittu-materiaali ja

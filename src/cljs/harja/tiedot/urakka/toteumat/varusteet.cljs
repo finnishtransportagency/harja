@@ -128,6 +128,7 @@
                                        tietolaji
                                        toiminto
                                        toimenpide
+                                       tunniste
                                        tierekisteriosoite
                                        alkupvm
                                        loppupvm
@@ -147,7 +148,8 @@
                                   (js/parseInt (:kuntoluokitus arvot)))
                  :alkupvm alkupvm
                  :loppupvm loppupvm
-                 :uusi-liite uusi-liite}
+                 :uusi-liite uusi-liite
+                 :tunniste tunniste}
 
         toteuma (if (varusteet-domain/tien-puolellinen-tietolaji? tietolaji)
                   (assoc toteuma :puoli puoli)
@@ -183,7 +185,8 @@
       :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
       :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :tierekisteriosoite (varusteen-osoite varuste)
-      :sijainti (:sijainti varuste)})))
+      :sijainti (:sijainti varuste)
+      :tunniste (:tunniste varuste)})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (reverse
@@ -314,7 +317,8 @@
                                 (first (:points (first (:lines tiedot)))))
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
-          arvot (if (or tietolaji-muuttui? (nil? (:arvot tiedot)))
+          arvot (if (and (not (nil? nykyinen-toteuma))
+                         (or tietolaji-muuttui? (nil? (:arvot tiedot))))
                   {}
                   (:arvot tiedot))
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)

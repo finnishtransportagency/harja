@@ -148,7 +148,7 @@
 (deftest tarkista-toteuman-tallentaminen-ilman-oikeuksia
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] (:kayttajanimi +kayttaja-tero+) portti
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] "LX123456789" portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))

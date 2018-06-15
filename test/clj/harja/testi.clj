@@ -492,9 +492,9 @@
                                INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                                WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
                                AND ht.\"toimenpide-id\" NOT IN (" (str/join ", " (mapv first (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla))) ")"
-                 (when (some? hintaryhma?)
-                   (str " AND hintaryhma = " hintaryhma?))
-                 ");"))]
+                       (when (some? hintaryhma?)
+                         (str " AND hintaryhma = " hintaryhma?))
+                       ");"))]
      (ffirst tulos))))
 
 (defn hae-kiintio-id-nimella [nimi]
@@ -788,53 +788,49 @@
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
+(defn hae-testi-kayttajan-tiedot [{:keys [etunimi sukunimi roolit]}]
+  (let [kayttajan-tiedot (zipmap [:id :etunimi :sukunimi :kayttajanimi :organisaatio :sahkoposti]
+                                 (first (q (str "SELECT id, etunimi, sukunimi, kayttajanimi, organisaatio, sahkoposti FROM kayttaja WHERE etunimi='" etunimi "' AND sukunimi='" sukunimi "';"))))
+        kayttajan-organisaation-tiedot (when (:organisaatio kayttajan-tiedot)
+                                         (zipmap [:id :tyyppi :nimi]
+                                                 (first (q (str "SELECT id, tyyppi, nimi FROM organisaatio WHERE id=" (:organisaatio kayttajan-tiedot) ";")))))
+        kayttajan-urakkaroolit (when (:id kayttajan-tiedot)
+                                 (reduce (fn [tulos [urakka rooli]]
+                                           (update tulos urakka #(if %
+                                                                   (conj % rooli)
+                                                                   #{rooli})))
+                                         {} (q (str "SELECT urakka, rooli FROM kayttaja_urakka_rooli WHERE kayttaja=" (:id kayttajan-tiedot) ";"))))
+        kayttajan-organisaatioroolit (when (:id kayttajan-tiedot)
+                                       (reduce (fn [tulos [organisaatio rooli]]
+                                                 (update tulos organisaatio #(if %
+                                                                               (conj % rooli)
+                                                                               #{rooli})))
+                                               {} (q (str "SELECT organisaatio, rooli FROM kayttaja_organisaatio_rooli WHERE kayttaja=" (:id kayttajan-tiedot) ";"))))
+        organisaation-urakat (when (:organisaatio kayttajan-tiedot)
+                               (into #{} (apply concat (q (str "SELECT id FROM urakka WHERE urakoitsija=" (:organisaatio kayttajan-tiedot))))))]
+    (assoc kayttajan-tiedot :organisaatio (or kayttajan-organisaation-tiedot {})
+                            :roolit (or roolit #{})
+                            :urakkaroolit (or kayttajan-urakkaroolit {})
+                            :organisaatioroolit (or kayttajan-organisaatioroolit {})
+                            :organisaation-urakat (or organisaation-urakat #{}))))
+
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ {:id 1
-                      :etunimi "Tero"
-                      :sukunimi "Toripolliisi"
-                      :kayttajanimi "LX123456789"
-                      :organisaatio {:id 9 :tyyppi "hallintayksikko" :nimi "Pop"}
-                      :roolit #{"ELY_Urakanvalvoja"}
-                      :organisaation-urakat #{}})
+
+(def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}}))
 
 ;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
-                     :etunimi "Jalmari" :urakka-roolit []
-                     :organisaatio {:id 1 :nimi "Liikennevirasto",
-                                    :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
-                     :organisaation-urakat #{}
-                     :urakkaroolit {}
-                     :organisaatioroolit {}})
 
-(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
-                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
-                          :roolit #{}
-                          :urakkaroolit {}
-                          :organisaatioroolit {14 #{"Kayttaja"}}
-                          :organisaation-urakat #{1 4 20 22}})
+(def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
-(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
-                      :roolit #{}
-                      :urakkaroolit {}
-                      :organisaatioroolit {16 #{"Kayttaja"}}
-                      :organisaation-urakat #{2 21}})
+(def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"}))
 
-(def +kayttaja-vastuuhlo-muhos+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                                 :organisaatio {:id 21 :nimi "Skanska Asfaltti Oy" :tyyppi "urakoitsija"}
-                                 :roolit #{}
-                                 :urakkaroolit {5 #("vastuuhenkilo")}
-                                 :organisaatioroolit {}
-                                 :organisaation-urakat #{5}})
+(def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"}))
+
+(def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
-(def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
-                       :organisaatio nil
-                       :roolit #{}
-                       :urakkaroolit {}
-                       :organisaatioroolit {}
-                       :organisaation-urakat #{}})
+
+(def +kayttaja-seppo+ (hae-testi-kayttajan-tiedot {:etunimi "Seppo" :sukunimi "Taalasmalli"}))
 
 (def +livi-jarjestelma-kayttaja+
   {:id 14

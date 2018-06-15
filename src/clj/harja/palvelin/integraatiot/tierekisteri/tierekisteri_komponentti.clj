@@ -113,6 +113,12 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" (str/join (map :viesti virheet)) varustetoteuma-id)
       (log/error (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))
+    (catch [:type :tietueen-lisays-epaonnistui] {:keys [virheet]}
+      (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" (str/join (map :viesti virheet)) varustetoteuma-id)
+      (log/error (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))
+    (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
+      (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" (str/join (map :viesti virheet)) varustetoteuma-id)
+      (log/error (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))
     (catch Exception e
       (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" nil varustetoteuma-id)
       (log/error e (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))))
