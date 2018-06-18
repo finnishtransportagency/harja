@@ -220,6 +220,11 @@
 
 (defn kanavaurakan-kohde
   [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
+  (when (not (some
+               #(= % @valittu-kohde-atom)
+               @kohteet-atom))
+    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+    (reset! valittu-kohde-atom (first @kohteet-atom)))
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Kohde"]
    [livi-pudotusvalikko {:valinta @valittu-kohde-atom
