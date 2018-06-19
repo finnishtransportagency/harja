@@ -50,5 +50,5 @@
 (deftest hae-urakan-1-toimenpiteet-ja-tehtavat
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         response (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             +kayttaja-jvh+ urakka-id)]
+                                 :urakan-toimenpiteet-ja-tehtavat  +kayttaja-jvh+ urakka-id)]
     (is (not (nil? response)))))

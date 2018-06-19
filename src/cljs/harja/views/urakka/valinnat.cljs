@@ -182,8 +182,6 @@
 ; TODO: siirrä tämä pois täältä urakasta paitsi circular ref
 ;; Voisko hyödyntää kuitenkin kanava-kohde funktiota. Nyt tulee räsähdys jos näin tehdään
 (defn kanavaurakan-kohde+kaikki []
-  (log (prn-str "*** URAKAN KOHTEET " @ku/kanavakohteet-mukaanlukien-poistetut))
-
   (valinnat/kanavaurakan-kohde
     (r/wrap (vec (concat [{:harja.domain.kanavat.kohde/nimi "Kaikki"}]
                          @ku/kanavakohteet-mukaanlukien-poistetut))

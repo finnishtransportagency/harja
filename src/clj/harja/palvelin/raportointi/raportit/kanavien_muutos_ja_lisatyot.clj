@@ -94,7 +94,7 @@
   (case tyyppi
     :muutos-ja-lisatyot
     [{:leveys 5 :otsikko "Pvm"}
-     {:leveys 8 :otsikko "Tehtava"}
+     {:leveys 8 :otsikko "Tehtävä"}
      {:leveys 8 :otsikko "Kohde"}
      {:leveys 8 :otsikko "Kohteen osa"}
      {:leveys 8 :otsikko "Huoltokohde"}
