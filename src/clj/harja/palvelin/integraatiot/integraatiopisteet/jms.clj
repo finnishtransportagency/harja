@@ -36,7 +36,7 @@
    (log/debug (format "Lähetetään JMS jonoon: %s viesti: %s." jono viesti))
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
-     (try
+     (try+
        (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
          (do
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
@@ -44,8 +44,16 @@
            jms-viesti-id)
          (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti)))
-       (catch Exception poikkeus
-         (let [virheviesti(format "Tapahtui poikkeus lähettäessä JMS jonoon: %s epäonnistui." jono)]
+       (catch [:type :jms-yhteysvirhe] {:keys [virheet]}
+         (log/error (str "Viestiä: " viesti " ei voitu lähettää. "
+                         (-> virheet first :viesti))))
+       (catch [:type :puutteelliset-multipart-parametrit] {:keys [virheet]}
+         (log/error (apply str
+                           (str "Viestiä: " viesti " ei voitu lähettää. ")
+                           (map :viesti virheet))))
+       (catch Object _
+         (let [poikkeus (:throwable &throw-context)
+               virheviesti(format "Tapahtui poikkeus lähettäessä JMS jonoon: %s epäonnistui." jono)]
            (log/error poikkeus virheviesti)
            (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti)))))))
 

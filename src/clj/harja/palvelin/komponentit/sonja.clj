@@ -8,6 +8,7 @@
             [hiccup.core :refer [html]]
             [clojure.string :as str])
   (:import (javax.jms Session ExceptionListener)
+           (javax.activation DataHandler)
            (java.lang.reflect Proxy InvocationHandler))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -24,7 +25,24 @@
   String
   (luo-viesti [s istunto]
     (doto (.createTextMessage istunto)
-      (.setText s))))
+      (.setText s)))
+  ;; Luodaan multipart viesti
+  clojure.lang.PersistentHashMap
+  (luo-viesti [{:keys [xml-viesti pdf-liite]} istunto]
+    (if (and xml-viesti pdf-liite)
+      (let [mp (.createMultipartMessage istunto)
+            viesti-osio (.createMessagePart (luo-viesti xml-viesti istunto))
+            liite-osio (.createPart mp (DataHandler. pdf-liite "application/pdf"))]
+        (doto mp
+          (.addPart viesti-osio)
+          (.addPart liite-osio)))
+      (throw+ {:type :puutteelliset-multipart-parametrit
+               :virheet [(when-not xml-viesti
+                           {:koodi :ei-xml-viestia
+                            :viesti "XML-viestiä ei annettu"})
+                         (when-not pdf-liite
+                           {:koodi :ei-pdf-liitetta
+                            :viest "PDF-liitettä ei annettu"})]}))))
 
 (defprotocol Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
@@ -163,6 +181,7 @@
   (if-let [jono (get-in jonot [jonon-nimi :queue])]
     jono
     (let [q (.createQueue istunto jonon-nimi)]
+      (log/debug "EI LÖYTYNYT JONOA. LUODAAN UUSI! " jonon-nimi)
       ;; todo: Näyttää epäilyttävälle. Paluuarvoa ei käytetä mihinkään.
       (assoc-in jonot [jonon-nimi :queue] q)
       q)))

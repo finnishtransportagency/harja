@@ -85,7 +85,7 @@
 (defn laheta-tietyoilmoituksen-pdf-sahkopostitse
   "Lähettää tietyöilmoituksen PDF:n sähköpostitse"
   [{:keys [email vastaanottaja muut-vastaanottajat kopio-itselle?
-           viestin-otsikko viestin-vartalo saate
+           viestin-otsikko viestin-vartalo pdf saate
            tietyoilmoitus-id ilmoittaja] :as params}]
   (log/debug " Palvelu: laheta-tietyoilmoituksen-pdf-sahkopostitse, params " params)
   ;; TODO: huom: Koko jono minne liitteen sisältävä sähköposti läheteään, tehdään
@@ -94,12 +94,13 @@
   (try
     (let [viestin-vartalo (str saate "\n" viestin-vartalo)]
       ;; varsinainen lähetys Tieliikennekeskukseen
-      (sahkoposti/laheta-viesti!
+      (sahkoposti/laheta-viesti-ja-liite!
         email
         (sahkoposti/vastausosoite email)
         vastaanottaja
         (str "Harja: " viestin-otsikko)
-        viestin-vartalo)
+        {:viesti viestin-vartalo
+         :pdf-liite pdf})
       (log/debug " Lähetys tieliikennekeskukseen tehty")
 
       ;; lähetys mahdollisille muille vastaanottajille
@@ -129,6 +130,12 @@
     (catch Exception e
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä sähköpostitse T-LOIK:n tapahtui poikkeus." tietyoilmoitus-id))
       :sahkopostilahetys-epaonnistui)))
+
+(defn tietyoilmoitus-pdf [db user params]
+  (pdf/tietyoilmoitus-pdf
+    (first (fetch db ::t/ilmoitus+pituus
+                  q-tietyoilmoitukset/ilmoitus-pdf-kentat
+                  {::t/id (:id params)}))))
 
 (defn tallenna-tietyoilmoitus [tloik db email user ilmoitus sahkopostitiedot]
   (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus  " sahkopostitiedot " sahkopostitiedot " email " email)
@@ -167,20 +174,13 @@
                                                        :kopio-itselle? (:kopio-itselle? sahkopostitiedot)
                                                        :saate (:saate sahkopostitiedot)
                                                        :viestin-otsikko "TODO: tähän esim. PDF:n nimi"
-                                                       :viestin-sisalto "TODO: viestin sisältö"
-
-                                                       :pdf :todo
+                                                       :viestin-vartalo "TODO: viestin sisältö"
+                                                       :pdf (tietyoilmoitus-pdf db user {:id (::t/id ilmoitus)})
                                                        :tietyoilmoitus-id (::t/id tallennettu)
                                                        :ilmoittaja user})
           ;(tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))
           ))
       tallennettu)))
-
-(defn tietyoilmoitus-pdf [db user params]
-  (pdf/tietyoilmoitus-pdf
-    (first (fetch db ::t/ilmoitus+pituus
-                  q-tietyoilmoitukset/ilmoitus-pdf-kentat
-                  {::t/id (:id params)}))))
 
 (defn hae-yhteyshenkilo-roolissa [rooli kayttajat]
   (first (filter (fn [k] (and

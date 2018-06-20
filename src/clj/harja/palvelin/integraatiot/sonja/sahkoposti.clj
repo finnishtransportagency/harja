@@ -25,10 +25,13 @@
                        (log/error e "Sähköpostin vastaanotossa tapahtui poikkeus"))))
     (constantly nil)))
 
-(defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono]
+(defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono jono-tunniste]
   (if (not (empty? sahkoposti-ulos-kuittausjono))
-    (let [integraatio (q/integraation-id db "sonja" "sahkoposti-lahetys")]
-      (jms/kuittausjonokuuntelija (lokittaja this "sahkoposti-lahetys") sonja sahkoposti-ulos-kuittausjono
+    (let [integraatiotunniste (case jono-tunniste
+                                 :sahkoposti "sahkoposti-lahetys"
+                                 :sahkoposti-ja-liite "sahkoposti-ja-liite-lahetys")
+          integraatio (q/integraation-id db "sonja" integraatiotunniste)]
+      (jms/kuittausjonokuuntelija (lokittaja this integraatiotunniste) sonja sahkoposti-ulos-kuittausjono
                                   sanomat/lue-kuittaus :viesti-id :onnistunut
                                   (fn [viesti viesti-id onnistunut]
                                     (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))))
@@ -39,10 +42,14 @@
   (start [{sonja :sonja :as this}]
     (assoc this
       :saapuva (tee-vastaanottokuuntelija this (:sahkoposti-sisaan-jono jonot) kuuntelijat)
-      :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot))
+      :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot) :sahkoposti)
       :jms-lahettaja (jms/jonolahettaja (lokittaja this "sahkoposti-lahetys")
                                         sonja
-                                        (:sahkoposti-ulos-jono jonot))))
+                                        (:sahkoposti-ulos-jono jonot))
+      :jms-lahettaja-sahkoposti-ja-liite (jms/jonolahettaja (lokittaja this "sahkoposti-ja-liite-lahetys")
+                                                            sonja
+                                                            (:sahkoposti-ja-liite-ulos-jono jonot))
+      :lahteva-sahkoposti-ja-liite-kuittauskuuntelija (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ja-liite-ulos-kuittausjono jonot) :sahkoposti-ja-liite)))
 
   (stop [this]
     ((:saapuva this))
@@ -59,6 +66,12 @@
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
       (jms-lahettaja viesti viesti-id)))
+
+  (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
+    (let [viesti-id (str (UUID/randomUUID))
+          sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko (:viesti sisalto))
+          viesti (xml/tee-xml-sanoma sahkoposti)]
+      (jms-lahettaja {:xml-viesti viesti :pdf-liite (:pdf-liite sisalto)} viesti-id)))
 
   (vastausosoite [this]
     vastausosoite))
