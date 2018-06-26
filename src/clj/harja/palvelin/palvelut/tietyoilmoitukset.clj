@@ -106,12 +106,13 @@
       ;; lähetys mahdollisille muille vastaanottajille
       (doseq [muu-vastaanottaja muut-vastaanottajat]
         (try
-          (sahkoposti/laheta-viesti!
+          (sahkoposti/laheta-viesti-ja-liite!
             email
             (sahkoposti/vastausosoite email)
             muu-vastaanottaja
             (str "Harja: " viestin-otsikko)
-            viestin-vartalo)
+            {:viesti viestin-vartalo
+             :pdf-liite pdf})
           (catch Exception e
             (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                                muu-vastaanottaja (pr-str e))))))
@@ -124,7 +125,8 @@
            :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
            :sahkoposti (:sahkoposti ilmoittaja)
            :viesti-otsikko viestin-otsikko
-           :viesti-body viestin-vartalo})
+           :viesti-body viestin-vartalo
+           :liite? pdf})
         (log/debug " Lähetys itselle tehty osoitteeseen " (:sahkoposti ilmoittaja))))
 
     (catch Exception e
@@ -137,8 +139,8 @@
                   q-tietyoilmoitukset/ilmoitus-pdf-kentat
                   {::t/id (:id params)}))))
 
-(defn tallenna-tietyoilmoitus [tloik db email user ilmoitus sahkopostitiedot]
-  (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus  " sahkopostitiedot " sahkopostitiedot " email " email)
+(defn tallenna-tietyoilmoitus [tloik db email pdf user ilmoitus sahkopostitiedot]
+  (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus " sahkopostitiedot " sahkopostitiedot " email " email)
   (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
     (if (::t/urakka-id ilmoitus)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
@@ -175,7 +177,7 @@
                                                        :saate (:saate sahkopostitiedot)
                                                        :viestin-otsikko "TODO: tähän esim. PDF:n nimi"
                                                        :viestin-vartalo "TODO: viestin sisältö"
-                                                       :pdf (tietyoilmoitus-pdf db user {:id (::t/id ilmoitus)})
+                                                       :pdf (pdf-vienti/luo-pdf pdf :tietyoilmoitus user {:id (::t/id tallennettu)})
                                                        :tietyoilmoitus-id (::t/id tallennettu)
                                                        :ilmoittaja user})
           ;(tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))
@@ -270,7 +272,7 @@
                       {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
                       (fn [user {:keys [ilmoitus sahkopostitiedot] :as tiedot}]
-                        (tallenna-tietyoilmoitus tloik db email user ilmoitus sahkopostitiedot))
+                        (tallenna-tietyoilmoitus tloik db email pdf user ilmoitus sahkopostitiedot))
                       {:kysely-spec ::t/ilmoitus
                        :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle

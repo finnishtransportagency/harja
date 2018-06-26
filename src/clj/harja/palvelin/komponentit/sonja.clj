@@ -27,20 +27,22 @@
     (doto (.createTextMessage istunto)
       (.setText s)))
   ;; Luodaan multipart viesti
-  clojure.lang.PersistentHashMap
+  clojure.lang.PersistentArrayMap
   (luo-viesti [{:keys [xml-viesti pdf-liite]} istunto]
     (if (and xml-viesti pdf-liite)
-      (let [mp (.createMultipartMessage istunto)
-            viesti-osio (.createMessagePart (luo-viesti xml-viesti istunto))
-            liite-osio (.createPart mp (DataHandler. pdf-liite "application/pdf"))]
-        (doto mp
+      (let [mm (.createMultipartMessage istunto)
+            viesti-osio (.createMessagePart mm (luo-viesti xml-viesti istunto))
+            liite-osio (.createPart mm (DataHandler. pdf-liite "application/octet-stream"))]
+        (doto mm
           (.addPart viesti-osio)
           (.addPart liite-osio)))
       (throw+ {:type :puutteelliset-multipart-parametrit
-               :virheet [(when-not xml-viesti
+               :virheet [(if xml-viesti
+                           "XML viesti annettu"
                            {:koodi :ei-xml-viestia
                             :viesti "XML-viestiä ei annettu"})
-                         (when-not pdf-liite
+                         (if pdf-liite
+                           "PDF liite annettu"
                            {:koodi :ei-pdf-liitetta
                             :viest "PDF-liitettä ei annettu"})]}))))
 

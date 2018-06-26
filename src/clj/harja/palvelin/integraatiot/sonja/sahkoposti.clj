@@ -67,7 +67,7 @@
           viesti (xml/tee-xml-sanoma sahkoposti)]
       (jms-lahettaja viesti viesti-id)))
 
-  (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottaja otsikko sisalto]
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko (:viesti sisalto))
           viesti (xml/tee-xml-sanoma sahkoposti)]

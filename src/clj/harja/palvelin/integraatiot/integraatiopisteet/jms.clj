@@ -67,7 +67,14 @@
     (sonja/kuuntele sonja jono
                     (fn [viesti]
                       (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
-                      (let [viestin-sisalto (.getText viesti)
+                      (let [multipart-viesti? (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
+                            viestin-sisalto (if multipart-viesti?
+                                              ;; Oletuksena on, että multipartvastaus sisältää vain yhden osan
+                                              (-> viesti
+                                                (.getPart 0)
+                                                (.getContentBytes)
+                                                (String.))
+                                              (.getText viesti))
                             data (viestiparseri viestin-sisalto)
                             viesti-id (viesti->id data)
                             onnistunut (onnistunut? data)]
