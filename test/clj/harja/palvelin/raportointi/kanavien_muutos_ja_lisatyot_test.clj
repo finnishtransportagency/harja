@@ -12,6 +12,7 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.raportointi.raportit :refer :all]
             [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
@@ -45,147 +46,21 @@
                                 {:nimi       :kanavien-muutos-ja-lisatyot
                                  :konteksti  "urakka"
                                  :urakka-id  (hae-saimaan-kanavaurakan-id)
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})
-        nurkkasumman-teksti (last (last vastaus))]
+                                 :kohde-id  nil
+                                 :tehtava-id  nil
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2018 1 1))
+                                              :loppupvm (c/to-date (t/local-date 2018 12 31))}})]
+
     (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Pvm"}
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Toimenpide"}
-                                          {:otsikko "Tehtävä"}
-                                          {:otsikko "Lisätieto"}
-                                          {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}
-                                          {:otsikko "Ind.korotus €"}))))
-
-
-(deftest raportin-suoritus-urakka-kohde
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi       :kanavien-muutos-ja-lisatyot
-                                 :konteksti  "urakka"
-                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))
-                                              :kohde (hae-kohde-soskua)}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Pvm"}
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Toimenpide"}
-                                          {:otsikko "Tehtävä"}
-                                          {:otsikko "Lisätieto"}
-                                          {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}
-                                          {:otsikko "Ind.korotus €"}))))
-
-
-hae-kohde-soskua
-
-
-
-(deftest raportin-suoritus-urakka-tehtava
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi       :kanavien-muutos-ja-lisatyot
-                                 :konteksti  "urakka"
-                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Pvm"}
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Toimenpide"}
-                                          {:otsikko "Tehtävä"}
-                                          {:otsikko "Lisätieto"}
-                                          {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}
-                                          {:otsikko "Ind.korotus €"}))))
-
-(deftest raportin-suoritus-urakka-kohde-ja-tehtava
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi       :kanavien-muutos-ja-lisatyot
-                                 :konteksti  "urakka"
-                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))
-                                              :kohde (hae-kohde-soskua)}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Pvm"}
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Toimenpide"}
-                                          {:otsikko "Tehtävä"}
-                                          {:otsikko "Lisätieto"}
-                                          {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}
-                                          {:otsikko "Ind.korotus €"}))))
-
-
-
-(deftest raportin-suoritus-kokomaa-hoitokausi
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi               :kanavien-muutos-ja-lisatyot
-                                 :konteksti          "koko maa"
-                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
-                                                      :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi :hoito
-                                                      :urakoittain? true}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 63 563,65 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "KOKO MAA, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Urakka"}
-                                          {:otsikko "Pvm"}
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Toimenpide"}
-                                          {:otsikko "Tehtävä"}
-                                          {:otsikko "Lisätieto"}
-                                          {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}
-                                          {:otsikko "Ind.korotus €"}))))
-
-(deftest raportin-suoritus-kokomaa-hoitokausi
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi               :kanavien-muutos-ja-lisatyot
-                                 :konteksti          "koko maa"
-                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
-                                                      :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi :hoito
-                                                      :urakoittain? false}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 63 570,46 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "KOKO MAA, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Summa €"}
-                                          {:otsikko "Ind.korotus €"}))))
+    ;(let [otsikko "Saimaan kanava, Kaikki kohteet"
+    ;      taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+    ;  (apurit/tarkista-taulukko-sarakkeet taulukko
+    ;                                      {:otsikko "Pvm"}
+    ;                                      {:otsikko "Tyyppi"}
+    ;                                      {:otsikko "Toimenpide"}
+    ;                                      {:otsikko "Tehtävä"}
+    ;                                      {:otsikko "Lisätieto"}
+    ;                                      {:otsikko "Määrä"}
+    ;                                      {:otsikko "Summa €"}
+    ;                                      {:otsikko "Ind.korotus €"}))
+    ))

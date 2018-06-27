@@ -307,8 +307,6 @@
         @u/valittu-toimenpideinstanssi
         [valinnat/urakan-toimenpide+kaikki]))))
 
-
-;;TODO:
 (defmethod raportin-parametri "urakan-tehtava" [p arvo]
   (let [aseta-tpk (fn [tpk]
                     (reset! arvo (if tpk
@@ -324,8 +322,6 @@
         @u/valittu-tehtava
         [valinnat/urakan-tehtava+kaikki]))))
 
-
-;;TODO: varmista ettei tämä käsittele samaa atomia kuin se toinen MIKÄ TOINEN?
 (defmethod raportin-parametri "kanavaurakan-kohde" [p arvo]
   (let [aseta-kohde (fn [kohde]
                       (log (prn-str "**** KOHDE-NIMI " (:harja.domain.kanavat.kohde/nimi kohde)))
@@ -341,9 +337,6 @@
       (fn [_ _]
         @ku/valittu-kohde
         [valinnat/kanavaurakan-kohde+kaikki]))))
-
-
-
 
 (defonce urakoittain? (atom false))
 

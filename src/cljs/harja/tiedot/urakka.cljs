@@ -45,7 +45,6 @@
 (defn valitse-sopimusnumero-kaikki! []
   (reset! valittu-sopimusnumero [nil "Kaikki"]))
 
-;TODO: esimerkki
 (defonce urakan-toimenpideinstanssit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)]
               {:nil-kun-haku-kaynnissa? true}
@@ -53,19 +52,15 @@
                          (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                 (urakan-toimenpiteet/hae-urakan-toimenpiteet urakka-id))))
 
-;TODO: esimerkki
 (defonce valitun-toimenpideinstanssin-koodi (atom nil))
 
-;;TODO: tästä alkaa
 (defonce valittu-toimenpideinstanssi
   (reaction-writable
     (let [koodi @valitun-toimenpideinstanssin-koodi
           toimenpideinstanssit @urakan-toimenpideinstanssit]
-      (log (prn-str "URAKAN TPI " toimenpideinstanssit))
       (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
           (first toimenpideinstanssit)))))
 
-;;TODO: muuta hakemaan urakan tehtävät
 (defonce urakan-tehtavat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)]
                      {:nil-kun-haku-kaynnissa? true}
@@ -73,18 +68,14 @@
                                 (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                        (urakan-toimenpiteet/hae-urakan-tehtavat urakka-id))))
 
-;;TODO:
 (defonce valitun-tehtavan-koodi (atom nil))
 
-;; TODO: urakan-tehtava Muuta tasolle ::t4_koodi
 (defonce valittu-tehtava
          (reaction-writable
            (let [koodi @valitun-tehtavan-koodi
                  toimenpidekoodit @urakan-tehtavat]
-             (log (prn-str "URAKAN TPK " toimenpidekoodit))
              (or (and koodi (first (filter #(= (:t4_id %) koodi) toimenpidekoodit)))
                  (first toimenpidekoodit)))))
-
 
 (defn- urakan-toimenpideinstanssi-avaimella [avain arvo]
   (first (filter #(= arvo (avain %)) @urakan-toimenpideinstanssit)))
@@ -97,14 +88,11 @@
   (have integer? tpi)
   (urakan-toimenpideinstanssi-avaimella :tpi_id tpi))
 
-
-;;TODO: esimerkki
 (defn valitse-toimenpideinstanssi-koodilla!
   "Valitsee urakan toimenpideinstanssin 3. tason SAMPO koodin perusteella."
   [koodi]
   (reset! valitun-toimenpideinstanssin-koodi koodi))
 
-;;TODO: esimerkki
 (defn valitse-toimenpideinstanssi! [{koodi :t3_koodi :as tpi}]
   (if-not koodi
     ;; Kooditon erikoisvalinta, kuten "Kaikki" tai "Muut"
@@ -114,15 +102,10 @@
           (valitse-toimenpideinstanssi-koodilla! nil))
         (valitse-toimenpideinstanssi-koodilla! koodi))))
 
-
-;; TODO: ÄLÄ KÄYTÄ SAMPOKOODIA KOSKA SITÄ EI OLE. KÄYTÄ ID:tä
-;; TODO: muuta käyttämään tasoa 4
 (defn valitse-tehtava-koodilla!
-  "Valitsee urakan toimenpidekoodin 4. tason SAMPO koodin perusteella."
   [koodi]
   (reset! valitun-tehtavan-koodi koodi))
 
-;; TODO: muuta käyttämään tasoa 4
 (defn valitse-tehtava! [{koodi :t4_id :as tpk}]
   (if-not koodi
     ;; Kooditon erikoisvalinta, kuten "Kaikki" tai "Muut"

@@ -144,8 +144,6 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
-
-;;TODO: tätä ei käytetä?
 (defn urakan-tehtava []
   (valinnat/urakan-tehtava u/urakan-tehtavat u/valittu-tehtava u/valitse-tehtava!))
 
@@ -176,18 +174,12 @@
     u/valittu-yksikkohintainen-tehtava
     u/valitse-yksikkohintainen-tehtava!))
 
-
-
-
-; TODO: siirrä tämä pois täältä urakasta paitsi circular ref
-;; Voisko hyödyntää kuitenkin kanava-kohde funktiota. Nyt tulee räsähdys jos näin tehdään
 (defn kanavaurakan-kohde+kaikki []
   (valinnat/kanavaurakan-kohde
     (r/wrap (vec (concat [{:harja.domain.kanavat.kohde/nimi "Kaikki"}]
                          @ku/kanavakohteet-mukaanlukien-poistetut))
             identity)
     ku/valittu-kohde ku/valitse-kohde!))
-
 
 
 ;; Komponentit, jotka käyttävät hoitokautta, joutuvat resetoimaan valitun aikavälin eksplisiittisesti

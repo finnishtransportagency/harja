@@ -152,14 +152,13 @@
                (fn [uusi-arvo]
                  (reset! valittu-numerovali-atom [(first @valittu-numerovali-atom) uusi-arvo])
                  (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]]]))
-;;TODO: esimerkki
+
 (defn- toimenpideinstanssi-fmt
   [tpi]
   (if-let [tpi-nimi (:tpi_nimi tpi)]
     (clojure.string/replace tpi-nimi #"alueurakka" "AU")
     "Ei toimenpidettä"))
 
-;; TODO: esimerkki
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
   (when (not (some
@@ -174,7 +173,6 @@
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
 
-;; TODO: potentiaalinen esimerkki
 (defn urakan-kokonaishintainen-tehtava
   [urakan-kokonaishintaiset-tehtavat-atom
    valittu-kokonaishintainen-tehtava-atom
@@ -199,8 +197,6 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-
-;;TODO: kanavaurakan tehtvät
 (defn urakan-tehtava
   [urakan-tehtavat-atom
    valittu-urakan-tehtava-atom
@@ -217,7 +213,6 @@
                          :valitse-fn valitse-urakan-tehtava-fn}
     @urakan-tehtavat-atom]])
 
-
 (defn kanavaurakan-kohde
   [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
   (when (not (some
@@ -231,12 +226,6 @@
                          :format-fn #(if % (str (:harja.domain.kanavat.kohde/nimi %)) "Ei kohteita")
                          :valitse-fn #(reset! valittu-kohde-atom %)}
     @kohteet-atom]])
-
-
-;;TODO: lisätty tehtävät tänne, onko turha
-
-;;(when-let [{:keys [urakan-tehtavat-atom valittu-tehtava-atom valitse-tehtava-fn]} tehtava]
- ;; [urakan-tehtava urakan-tehtavat-atom valittu-tehtava-atom valitse-tehtava-fn])
 
 (defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot tehtava] :as optiot}]
   [:span
@@ -392,7 +381,6 @@
                          :valitse-fn #(reset! valittu-paikallinen-kaytto-atom %)}
     valinnat]])
 
-;; TODO: oli jo olemassa, yritetään käyttää
 (defn kanava-kohde
   [valittu-kohde-atom kohteet format-fn]
   ;(log (prn-str "KANAVA KOHTEET  " kohteet))

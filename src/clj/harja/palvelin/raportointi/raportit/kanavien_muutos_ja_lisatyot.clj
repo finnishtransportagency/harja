@@ -94,9 +94,9 @@
   (case tyyppi
     :muutos-ja-lisatyot
     [{:leveys 5 :otsikko "Pvm"}
-     {:leveys 8 :otsikko "Tehtävä"}
      {:leveys 8 :otsikko "Kohde"}
      {:leveys 8 :otsikko "Kohteen osa"}
+     {:leveys 8 :otsikko "Tehtävä"}
      {:leveys 8 :otsikko "Huoltokohde"}
      {:leveys 15 :otsikko "Lisätieto"}
      {:leveys 8 :otsikko "Hinnoittelu"}
@@ -126,24 +126,23 @@
 
   (log/debug (prn-str "YHTEENLASKETTAVAT TYÖT (first urakan hommat) " yhteenlaskettavat-tyot))
   (log/debug (prn-str
-               (mapv #( :summa (first %)) yhteenlaskettavat-tyot)
+               (mapv #(:summa (first %)) yhteenlaskettavat-tyot)
                ))
 
 
-    (case (keyword konteksti)
-      :muutos-ja-lisatyot-koko-maa
-      (let [summien-summa (reduce + 0  (mapv #(:summa (first %)) yhteenlaskettavat-tyot))
-            indeksien-summa (reduce + 0  (mapv #(:indeksi (first %)) yhteenlaskettavat-tyot))
-            ]
+  (case (keyword konteksti)
+    :muutos-ja-lisatyot-koko-maa
+    (let [summien-summa (reduce + 0 (mapv #(:summa (first %)) yhteenlaskettavat-tyot))
+          indeksien-summa (reduce + 0 (mapv #(:indeksi (first %)) yhteenlaskettavat-tyot))
+          ]
 
-        ["Yhteensä" summien-summa indeksien-summa])
-      :muutos-ja-lisatyot
-        (let [summien-summa (reduce + 0  (map #(:summa %)  yhteenlaskettavat-tyot))
-              indeksien-summa (reduce + 0  (map #(:indeksi %)  yhteenlaskettavat-tyot))
-              ]
+      ["Yhteensä" summien-summa indeksien-summa])
+    :muutos-ja-lisatyot
+    (let [summien-summa (reduce + 0 (map #(:summa %) yhteenlaskettavat-tyot))
+          indeksien-summa (reduce + 0 (map #(:indeksi %) yhteenlaskettavat-tyot))
+          ]
 
-          ["" "" "" "" "" "" "Yhteensä" summien-summa indeksien-summa])
-
+      ["" "" "" "" "" "" "Yhteensä" summien-summa indeksien-summa])
 
     )
 
@@ -153,7 +152,7 @@
 
 (defn- kaikki-yhteensa [muutos-ja-lisatyot]
   (log/debug (println-str "Laske summa " muutos-ja-lisatyot))
-  ["" "" "" "" "" "" "" (reduce + 0  (map #(:summa %)  muutos-ja-lisatyot))])
+  ["" "" "" "" "" "" "" (reduce + 0 (map #(:summa %) muutos-ja-lisatyot))])
 
 
 (defn muodosta-rivikokonaisuus
@@ -162,7 +161,6 @@
   (case (keyword konteksti)
 
     :muutos-ja-lisatyot-koko-maa
-    ;;  (conj
 
     [:taulukko {:otsikko (str (:urakan_nimi (first (second (first urakan-tyot)))) ". Kaikki kohteet.")
                 :sheet-nimi (str (:urakan_nimi (first (second (first urakan-tyot)))) ". Kaikki kohteet.")
@@ -171,42 +169,38 @@
      (sarakkeet :muutos-ja-lisatyot-koko-maa)
 
      (conj
-     (mapv (fn [urakan-tyot-hintaryhmassa]
-             (log/debug (prn-str "KOKO MAAurakan-tyot-ryhmiteltyna TYÖT " urakan-tyot-hintaryhmassa))
-
-
+       (mapv (fn [urakan-tyot-hintaryhmassa]
                (rivi
                  (hinnoitteluryhman-nimi (:hinnoittelu_ryhma
                                            (first urakan-tyot-hintaryhmassa)))
                  (or (reduce + 0 (keep :summa (second urakan-tyot-hintaryhmassa))) ei-raha-summaa-info-solu)
                  (or (reduce + 0 (keep :indeksi (second urakan-tyot-hintaryhmassa))) indeksi-puuttuu-info-solu)))
-           ;(muodosta-summarivi konteksti urakan-tyot-ryhmiteltyna)
-           urakan-tyot)
-(muodosta-summarivi :muutos-ja-lisatyot-koko-maa (map #(second %) urakan-tyot))) ]
-;;)
+             ;(muodosta-summarivi konteksti urakan-tyot-ryhmiteltyna)
+             urakan-tyot)
+       (muodosta-summarivi :muutos-ja-lisatyot-koko-maa (map #(second %) urakan-tyot)))]
 
-:muutos-ja-lisatyot
 
-  [:taulukko {:otsikko otsikko
-              :sheet-nimi otsikko
-              :viimeinen-rivi-yhteenveto? true}
-   (sarakkeet :muutos-ja-lisatyot)
-   (conj
-   (mapv (fn [urakan-tyot-ryhmiteltyna]
+    :muutos-ja-lisatyot
 
-           (conj (rivi
-                   (or (pvm/pvm (:pvm urakan-tyot-ryhmiteltyna)) " ")
-                   (:tehtava urakan-tyot-ryhmiteltyna)
-                   (:kohde urakan-tyot-ryhmiteltyna)
-                   (or (:kohteenosa urakan-tyot-ryhmiteltyna) " ")
-                   (:huoltokohde urakan-tyot-ryhmiteltyna)
-                   (str (or (:otsikko urakan-tyot-ryhmiteltyna) " ") " " (or (:lisatieto urakan-tyot-ryhmiteltyna) " "))
-                   (hinnoitteluryhman-nimi (:hinnoittelu_ryhma urakan-tyot-ryhmiteltyna))
-                   (or (:summa urakan-tyot-ryhmiteltyna) ei-raha-summaa-info-solu)
-                   (or (:indeksi urakan-tyot-ryhmiteltyna) indeksi-puuttuu-info-solu)) ;; TODO
-                 )) (sort-by :tehtava urakan-tyot))
-   (muodosta-summarivi :muutos-ja-lisatyot urakan-tyot))
-   ]) )
+    [:taulukko {:otsikko otsikko
+                :sheet-nimi otsikko
+                :viimeinen-rivi-yhteenveto? true}
+     (sarakkeet :muutos-ja-lisatyot)
+     (conj
+       (mapv (fn [urakan-tyot-ryhmiteltyna]
+
+               (conj (rivi
+                       (or (pvm/pvm (:pvm urakan-tyot-ryhmiteltyna)) " ")
+                       (:kohde urakan-tyot-ryhmiteltyna)
+                       (or (:kohteenosa urakan-tyot-ryhmiteltyna) " ")
+                       (:tehtava urakan-tyot-ryhmiteltyna)
+                       (:huoltokohde urakan-tyot-ryhmiteltyna)
+                       (str (or (:otsikko urakan-tyot-ryhmiteltyna) " ") " " (or (:lisatieto urakan-tyot-ryhmiteltyna) " "))
+                       (hinnoitteluryhman-nimi (:hinnoittelu_ryhma urakan-tyot-ryhmiteltyna))
+                       (or (:summa urakan-tyot-ryhmiteltyna) ei-raha-summaa-info-solu)
+                       (or (:indeksi urakan-tyot-ryhmiteltyna) indeksi-puuttuu-info-solu)) ;; TODO
+                     )) (sort-by :tehtava urakan-tyot))
+       (muodosta-summarivi :muutos-ja-lisatyot urakan-tyot))]))
 
 
 
@@ -218,8 +212,6 @@
     (muodosta-summarivi :muutos-ja-lisatyot tyot)))
 
 (defn- taulukko-koko-maa [otsikko tyot-ryhmiteltyna]
-  ;;  {:urakka 34, :hinnoittelu_ryhma "sopimushintainen-tyo-tai-materiaali"} [{:materiaali_id nil,
-  ;;{:urakka 34, :hinnoittelu_ryhma "muut-kulut"} [{:materiaali_id nil,
 
 
   (conj
