@@ -6,6 +6,7 @@
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:import (java.util UUID)))
 
@@ -67,9 +68,9 @@
           viesti (xml/tee-xml-sanoma sahkoposti)]
       (jms-lahettaja viesti viesti-id)))
 
-  (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))
-          sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko (:viesti sisalto))
+          sahkoposti (sanomat/sahkoposti-ja-liite viesti-id vastaanottajat lahettaja otsikko (:viesti sisalto) tiedosto-nimi (pvm/nyt))
           viesti (xml/tee-xml-sanoma sahkoposti)]
       (jms-lahettaja {:xml-viesti viesti :pdf-liite (:pdf-liite sisalto)} viesti-id)))
 

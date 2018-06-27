@@ -17,7 +17,7 @@
    "Palauttaa oletus vastausosoitteen, jota voi käyttää lähettäjänä ja johon lähetetyt viestit
     tulevat takaisin tälle kuuntelijalle")
   (laheta-viesti-ja-liite!
-    [this lahettaja vastaanottaja otsikko sisalto]
+    [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä. Sisällön pitäisi sisältää myös liite"))
 
 (defn sanitoi-otsikko [otsikko]
@@ -39,7 +39,7 @@
                           :body [{:type "text/html; charset=UTF-8"
                                   :content sisalto}]}))
   (vastausosoite [_] vastausosoite)
-  (laheta-viesti-ja-liite! [this lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     ;; Ei implementoida ainakaan vielä
     nil)
   

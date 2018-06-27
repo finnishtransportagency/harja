@@ -86,36 +86,25 @@
   "Lähettää tietyöilmoituksen PDF:n sähköpostitse"
   [{:keys [email vastaanottaja muut-vastaanottajat kopio-itselle?
            viestin-otsikko viestin-vartalo pdf saate
-           tietyoilmoitus-id ilmoittaja] :as params}]
+           tietyoilmoitus-id ilmoittaja tiedostonimi] :as params}]
   (log/debug " Palvelu: laheta-tietyoilmoituksen-pdf-sahkopostitse, params " params)
-  ;; TODO: huom: Koko jono minne liitteen sisältävä sähköposti läheteään, tehdään
-  ;; uutena, samoin sen kuittausjono (ACK). Eli olemassaolevia sähköpostinlähetys-
-  ;; palveluita ei voi käyttää sellaisenaan vaan pitää kytkeytyä tulevaan jonoon
   (try
-    (let [viestin-vartalo (str saate "\n" viestin-vartalo)]
+    (let [viestin-vartalo (str saate "\n" viestin-vartalo)
+          vastaanottajat (if (not (empty? muut-vastaanottajat))
+                           (conj muut-vastaanottajat vastaanottaja)
+                           [vastaanottaja])]
       ;; varsinainen lähetys Tieliikennekeskukseen
       (sahkoposti/laheta-viesti-ja-liite!
         email
         (sahkoposti/vastausosoite email)
-        vastaanottaja
+        vastaanottajat
         (str "Harja: " viestin-otsikko)
         {:viesti viestin-vartalo
-         :pdf-liite pdf})
+         :pdf-liite pdf}
+        tiedostonimi)
       (log/debug " Lähetys tieliikennekeskukseen tehty")
 
       ;; lähetys mahdollisille muille vastaanottajille
-      (doseq [muu-vastaanottaja muut-vastaanottajat]
-        (try
-          (sahkoposti/laheta-viesti-ja-liite!
-            email
-            (sahkoposti/vastausosoite email)
-            muu-vastaanottaja
-            (str "Harja: " viestin-otsikko)
-            {:viesti viestin-vartalo
-             :pdf-liite pdf})
-          (catch Exception e
-            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
-                               muu-vastaanottaja (pr-str e))))))
       (log/debug " Lähetys muille vastaanottajille tehty, muut: " muut-vastaanottajat)
 
       ;; kopio mailitsta itselle
@@ -126,7 +115,8 @@
            :sahkoposti (:sahkoposti ilmoittaja)
            :viesti-otsikko viestin-otsikko
            :viesti-body viestin-vartalo
-           :liite? pdf})
+           :liite pdf
+           :tiedostonimi tiedostonimi})
         (log/debug " Lähetys itselle tehty osoitteeseen " (:sahkoposti ilmoittaja))))
 
     (catch Exception e
@@ -170,16 +160,19 @@
         (log/debug "yritän lähettää sähköpostin step 1 sahkopostitiedot: " sahkopostitiedot)
         (async/thread
           (log/debug "yritän lähettää sähköpostin step 2")
-          (laheta-tietyoilmoituksen-pdf-sahkopostitse {:email email
-                                                       :vastaanottaja (:vastaanottaja sahkopostitiedot)
-                                                       :muut-vastaanottajat (:muut-vastaanottajat sahkopostitiedot)
-                                                       :kopio-itselle? (:kopio-itselle? sahkopostitiedot)
-                                                       :saate (:saate sahkopostitiedot)
-                                                       :viestin-otsikko "TODO: tähän esim. PDF:n nimi"
-                                                       :viestin-vartalo "TODO: viestin sisältö"
-                                                       :pdf (pdf-vienti/luo-pdf pdf :tietyoilmoitus user {:id (::t/id tallennettu)})
-                                                       :tietyoilmoitus-id (::t/id tallennettu)
-                                                       :ilmoittaja user})
+          (let [{pdf-bytet :tiedosto-bytet
+                 tiedostonimi :tiedostonimi} (pdf-vienti/luo-pdf pdf :tietyoilmoitus user {:id (::t/id tallennettu)})]
+            (laheta-tietyoilmoituksen-pdf-sahkopostitse {:email email
+                                                         :vastaanottaja (:vastaanottaja sahkopostitiedot)
+                                                         :muut-vastaanottajat (:muut-vastaanottajat sahkopostitiedot)
+                                                         :kopio-itselle? (:kopio-itselle? sahkopostitiedot)
+                                                         :saate (:saate sahkopostitiedot)
+                                                         :viestin-otsikko "TODO: tähän esim. PDF:n nimi"
+                                                         :viestin-vartalo "TODO: viestin sisältö"
+                                                         :pdf pdf-bytet
+                                                         :tietyoilmoitus-id (::t/id tallennettu)
+                                                         :ilmoittaja user
+                                                         :tiedostonimi tiedostonimi}))
           ;(tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))
           ))
       tallennettu)))

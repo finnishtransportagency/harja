@@ -15,7 +15,7 @@
 
 (defn laheta-sahkoposti-itselle
   "Lähettää sähköpostivahvistuksen itse käyttäjälle joka sai aikaan mailin lähetyksen Harjasta."
-  [{:keys [kopio-viesti email sahkoposti viesti-otsikko viesti-body liite]}]
+  [{:keys [kopio-viesti email sahkoposti viesti-otsikko viesti-body liite tiedostonimi]}]
   (let [lahetys-fn (if liite
                      sahkoposti/laheta-viesti-ja-liite!
                      sahkoposti/laheta-viesti!)
@@ -24,14 +24,11 @@
         viesti (if liite
                  {:viesti viestin-vartalo
                   :pdf-liite liite}
-                 viestin-vartalo)]
+                 viestin-vartalo)
+        argumentit [email (sahkoposti/vastausosoite email) sahkoposti (str "Harja-viesti lähetetty: " viesti-otsikko) viesti]
+        argumentit (if liite (conj argumentit tiedostonimi))]
     (try
-      (lahetys-fn
-        email
-        (sahkoposti/vastausosoite email)
-        sahkoposti
-        (str "Harja-viesti lähetetty: " viesti-otsikko)
-        viesti)
+      (apply lahetys-fn argumentit)
       (catch Exception e
         (log/error (format "Sähköpostin lähetys osoitteeseen %s epäonnistui. Virhe: %s"
                            (pr-str sahkoposti) (pr-str e)))))))

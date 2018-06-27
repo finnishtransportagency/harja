@@ -10,6 +10,7 @@
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
 (def ^:const +sahkoposti-xsd+ "sahkoposti.xsd")
 (def ^:const +sahkoposti-ns+ "http://www.liikennevirasto.fi/xsd/harja/sahkoposti")
+(def ^:const +sahkoposti-liite-ns+ "http://www.liikennevirasto.fi/xsd/harja/sahkopostiLiite")
 
 (defn- validoi [xml-viesti]
   (when-not (xml/validi-xml? +xsd-polku+ +sahkoposti-xsd+ xml-viesti)
@@ -40,6 +41,19 @@
    [:lahettaja lahettaja]
    [:otsikko otsikko]
    [:sisalto (xml/tee-c-data-elementti sisalto)]])
+
+(defn sahkoposti-ja-liite
+  [viesti-id vastaanottajat lahettaja otsikko sisalto tiedosto-nimi vastaanotettu]
+  [:sah:sahkoposti {:xmlns:sah +sahkoposti-liite-ns+}
+   [:viestiId viesti-id]
+   [:vastaanottajat
+    (map #(identity [:vastaanottaja %]) vastaanottajat)]
+   [:lahettaja lahettaja]
+   [:otsikko otsikko]
+   [:sisalto sisalto]
+   [:liitetiedostonNimi tiedosto-nimi]
+   ; :vastaanotettu ei ole pakollinen
+   [:vastaanotettu vastaanotettu]])
 
 (defn lue-kuittaus [xml-viesti]
   (let [v (lue-xml xml-viesti)]

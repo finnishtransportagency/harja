@@ -32,7 +32,8 @@
     (if (and xml-viesti pdf-liite)
       (let [mm (.createMultipartMessage istunto)
             viesti-osio (.createMessagePart mm (luo-viesti xml-viesti istunto))
-            liite-osio (.createPart mm (DataHandler. pdf-liite "application/octet-stream"))]
+            liite-osio (.createMessagePart mm (doto (.createBytesMessage istunto)
+                                                (.writeBytes pdf-liite)))]
         (doto mm
           (.addPart viesti-osio)
           (.addPart liite-osio)))

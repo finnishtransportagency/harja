@@ -74,10 +74,12 @@
   (luo-pdf [_ kasittelija-nimi kayttaja parametrit]
     (let [kasittelija-fn (kasittelija-nimi @pdf-kasittelijat)
           pdf-hiccup (kasittelija-fn kayttaja parametrit)
+          tiedostonimi (-> pdf-hiccup meta :tiedostonimi)
           pdf-outputstream (ByteArrayOutputStream.)]
       (with-open [pdf-outputstream (ByteArrayOutputStream.)]
         (hiccup->pdf fop-factory pdf-hiccup pdf-outputstream)
-        (.toByteArray pdf-outputstream)))))
+        {:tiedosto-bytet (.toByteArray pdf-outputstream)
+         :tiedostonimi tiedostonimi}))))
 
 
 (defn- luo-fop-factory []
