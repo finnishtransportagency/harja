@@ -10,7 +10,8 @@ language: clojure
 jdk:
   - oraclejdk8
 before_install:
-  - export MAVEN_OPTS="$MAVEN_OPTS -Dhttps.protocols=TLSv1.1,TLSv1.2"
+  - export MAVEN_OPTS="$MAVEN_OPTS -Dhttps.protocols=TLSv1.2"
+  - echo $MAVEN_OPTS
   - yes | sudo env LEIN_ROOT=true lein upgrade 2.7.1
   - lein version
   - sh tietokanta/travis.sh
