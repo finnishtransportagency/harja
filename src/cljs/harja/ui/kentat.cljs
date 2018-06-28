@@ -629,12 +629,11 @@
 
         teksti-paivamaaraksi! (fn [data t]
                                 (reset! teksti t)
-                                (if (str/blank? t)
-                                  (reset! data nil)
-                                  (let [d (pvm/->pvm t)
-                                        eri-pvm? (not (pvm/sama-pvm? @data d))]
-                                    (when eri-pvm?
-                                      (reset! data d)))))
+                                (let [d (pvm/->pvm t)
+                                      eri-pvm? (not (or (pvm/sama-pvm? @data d)
+                                                        (and (nil? d) (nil? @data))))]
+                                  (when eri-pvm?
+                                    (reset! data d))))
 
         muuta! (fn [data t]
                  (when (or (re-matches +pvm-regex+ t)
