@@ -8,7 +8,6 @@
             [hiccup.core :refer [html]]
             [clojure.string :as str])
   (:import (javax.jms Session ExceptionListener)
-           (javax.activation DataHandler)
            (java.lang.reflect Proxy InvocationHandler))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -184,7 +183,6 @@
   (if-let [jono (get-in jonot [jonon-nimi :queue])]
     jono
     (let [q (.createQueue istunto jonon-nimi)]
-      (log/debug "EI LÖYTYNYT JONOA. LUODAAN UUSI! " jonon-nimi)
       ;; todo: Näyttää epäilyttävälle. Paluuarvoa ei käytetä mihinkään.
       (assoc-in jonot [jonon-nimi :queue] q)
       q)))

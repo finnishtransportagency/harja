@@ -50,7 +50,7 @@
     (map #(identity [:vastaanottaja %]) vastaanottajat)]
    [:lahettaja lahettaja]
    [:otsikko otsikko]
-   [:sisalto sisalto]
+   [:sisalto (xml/tee-c-data-elementti sisalto)]
    [:liitetiedostonNimi tiedosto-nimi]
    ; :vastaanotettu ei ole pakollinen
    [:vastaanotettu vastaanotettu]])

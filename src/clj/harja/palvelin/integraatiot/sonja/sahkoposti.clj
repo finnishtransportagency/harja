@@ -55,7 +55,8 @@
   (stop [this]
     ((:saapuva this))
     ((:lahteva this))
-    (dissoc this :saapuva :lahteva))
+    ((:lahteva-sahkoposti-ja-liite-kuittauskuuntelija this))
+    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija))
 
   Sahkoposti
   (rekisteroi-kuuntelija! [this kuuntelija-fn]
