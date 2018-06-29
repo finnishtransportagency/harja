@@ -115,7 +115,9 @@
 
     [modal/modal
      {:otsikko (if (= (count kohteet) 1)
-                 (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen: " (pvm/pvm (:valmis-pvm (first kohteet))))
+                 (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen: " (if-let [valmis-pvm (:valmis-pvm (first kohteet))]
+                                                                                           (pvm/pvm valmis-pvm)
+                                                                                           "EI ASETETTU"))
                  (str "Usean kohteen tiemerkinnän valmistuminen"))
       ;:luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? nakyvissa?
@@ -375,7 +377,10 @@
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
            voi-tallentaa? saa-muokata? optiot saa-asettaa-valmis-takarajan?
            saa-merkita-valmiiksi? voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
-  (let [otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
+  (let [aikataulurivit (map (fn [rivi]
+                              (assoc rivi :aikataulu-tiemerkinta-loppu-alkuperainen (:aikataulu-tiemerkinta-loppu rivi)))
+                            aikataulurivit)
+        otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
                                     (otsikoi-aikataulurivit
                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
                                     aikataulurivit)]
@@ -576,14 +581,8 @@
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :aseta (fn [rivi arvo]
                 ;; Näytä dialogi, mikäli arvoa muutetaan
-                ;; HOX: Olisi kiva jos rivin mailitietoja voisi vielä muokata jälkikäteen ja lähettää uuden mailin
-                ;; niin, että valitsee vain saman pvm:n uudelleen ja päivittä dialogin mailitiedot.
-                ;; Tässä on kuitenkin ongelma: palvelin päättelee rivin pvm:n asettamisesta tai muuttamisesta, pitääkö
-                ;; maili lähettää. Näin rivin muiden tietojen muokkaus ei generoi turhaan maililähetystä.
-                ;; Täten saman pvm:n asettaminen uudelleen ei generoi maililähetystä, joten dialogi näyttäminen on turhaa.
-                ;; FIXME Tosin on edelleen mahdollista nähdä dialogi jos vaihtaa pvm:n toiseksi ja sitten takaisin vanhaan.
-                ;; Tällöin dialogi näytetään turhaa, sillä tietoja ei tulla lähettämään
-                (when (not (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu rivi) arvo))
+                (when (not (or (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi) arvo)
+                               (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
                   (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
                         ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
                         aiemmat-sahkopostitiedot (merge
