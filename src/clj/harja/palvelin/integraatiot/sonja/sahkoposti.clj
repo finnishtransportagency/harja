@@ -6,6 +6,7 @@
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
+            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log])
   (:import (java.util UUID)))
@@ -26,7 +27,7 @@
                        (log/error e "Sähköpostin vastaanotossa tapahtui poikkeus"))))
     (constantly nil)))
 
-(defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono jono-tunniste]
+(defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono jono-tunniste kuittaus-kuuntelijat]
   (if (not (empty? sahkoposti-ulos-kuittausjono))
     (let [integraatiotunniste (case jono-tunniste
                                  :sahkoposti "sahkoposti-lahetys"
@@ -35,22 +36,27 @@
       (jms/kuittausjonokuuntelija (lokittaja this integraatiotunniste) sonja sahkoposti-ulos-kuittausjono
                                   sanomat/lue-kuittaus :viesti-id :onnistunut
                                   (fn [viesti viesti-id onnistunut]
+                                    (doseq [kuittaus-kuuntelija (get @kuittaus-kuuntelijat sahkoposti-ulos-kuittausjono)]
+                                      (kuittaus-kuuntelija viesti viesti-id onnistunut))
                                     (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))))
     (constantly nil)))
 
-(defrecord SonjaSahkoposti [vastausosoite jonot kuuntelijat]
+(defrecord SonjaSahkoposti [vastausosoite jonot kuuntelijat kuittaus-kuuntelijat]
   component/Lifecycle
   (start [{sonja :sonja :as this}]
     (assoc this
       :saapuva (tee-vastaanottokuuntelija this (:sahkoposti-sisaan-jono jonot) kuuntelijat)
-      :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot) :sahkoposti)
+      :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot) :sahkoposti kuittaus-kuuntelijat)
       :jms-lahettaja (jms/jonolahettaja (lokittaja this "sahkoposti-lahetys")
                                         sonja
                                         (:sahkoposti-ulos-jono jonot))
       :jms-lahettaja-sahkoposti-ja-liite (jms/jonolahettaja (lokittaja this "sahkoposti-ja-liite-lahetys")
                                                             sonja
                                                             (:sahkoposti-ja-liite-ulos-jono jonot))
-      :lahteva-sahkoposti-ja-liite-kuittauskuuntelija (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ja-liite-ulos-kuittausjono jonot) :sahkoposti-ja-liite)))
+      :lahteva-sahkoposti-ja-liite-kuittauskuuntelija (tee-lahetyksen-kuittauskuuntelija this
+                                                                                         (:sahkoposti-ja-liite-ulos-kuittausjono jonot)
+                                                                                         :sahkoposti-ja-liite
+                                                                                         kuittaus-kuuntelijat)))
 
   (stop [this]
     ((:saapuva this))
@@ -67,16 +73,26 @@
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      (jms-lahettaja viesti viesti-id)))
+      {:jms-message-id (jms-lahettaja viesti viesti-id)
+       :viesti-id viesti-id}))
 
   (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti-ja-liite viesti-id vastaanottajat lahettaja otsikko (:viesti sisalto) tiedosto-nimi (pvm/nyt))
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      (jms-lahettaja {:xml-viesti viesti :pdf-liite (:pdf-liite sisalto)} viesti-id)))
+      {:jms-message-id (jms-lahettaja {:xml-viesti viesti :pdf-liite (:pdf-liite sisalto)} viesti-id)
+       :viesti-id viesti-id}))
 
   (vastausosoite [this]
-    vastausosoite))
+    vastausosoite)
+
+  Kuuntele
+  (kuuntele! [this jono kuuntelija-fn]
+    (swap! kuittaus-kuuntelijat update jono (fn [rekisteroidyt-kuuntelijat]
+                                              (if (nil? rekisteroidyt-kuuntelijat)
+                                                #{kuuntelija-fn}
+                                                (conj rekisteroidyt-kuuntelijat kuuntelija-fn))))
+    #(swap! kuittaus-kuuntelijat update jono disj kuuntelija-fn)))
 
 (defn luo-sahkoposti [vastausosoite jonot]
-  (->SonjaSahkoposti vastausosoite jonot (atom #{})))
+  (->SonjaSahkoposti vastausosoite jonot (atom #{}) (atom {})))

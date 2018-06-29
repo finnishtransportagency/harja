@@ -120,11 +120,6 @@
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae t/ilmoittaja->str
     :leveys 5}
-   (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
-     {:otsikko "Sähkö\u00ADposti lähe\u00ADtetty Tieliikenne\u00ADkeskukseen?" :nimi :email_lahetetty
-      :tyyppi :komponentti
-      :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti %)
-      :leveys 6})
    {:otsikko " "
     :leveys 2
     :nimi :vie-pdf
@@ -206,7 +201,12 @@
       :nimi ::t/tyotyypit
       :hae t/tyotyypit->str
       :muokattava? (constantly false)}
-     (vaikutukset-liikenteelle)]
+     (vaikutukset-liikenteelle)
+     (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+       {:nimi :email-lahetykset-tloikiin
+        :otsikko "PDF:n sähkö\u00ADposti\u00ADlähetykset Harjasta Tie\u00ADliikenne\u00ADkeskuksen sähkö\u00ADpostiin"
+        :tyyppi :komponentti
+        :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))})]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
    [napit/uusi "Lisää työvaihe" #(e! (tiedot/->AloitaUusiTyovaiheilmoitus tietyoilmoitus)) {}]

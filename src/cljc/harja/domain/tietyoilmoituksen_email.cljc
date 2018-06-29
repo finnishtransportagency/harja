@@ -1,6 +1,7 @@
 (ns harja.domain.tietyoilmoituksen-email
   "Määrittelee tietyöilmoituksen email-lähetysten tiedot"
   (:require [clojure.spec.alpha :as s]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.id :refer [id-olemassa?]]
     #?@(:clj  [
             [harja.kyselyt.specql-db :refer [define-tables]]
@@ -25,3 +26,13 @@
                                     :harja.domain.kayttaja/id)
     "kuitattu" ::kuitattu
     "lahetysvirhe" ::lahetysvirhe}])
+
+(def perustiedot
+  #{::id
+    ::tietyoilmoitus-id
+    ::tiedostonimi
+    ::lahetetty
+    ::lahetysid
+    [::lahettaja kayttaja/perustiedot]
+    ::kuitattu
+    ::lahetysvirhe})

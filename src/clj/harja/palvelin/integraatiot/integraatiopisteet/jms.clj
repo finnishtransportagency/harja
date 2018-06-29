@@ -6,18 +6,21 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-epaonnistunut-lahetys
-  ([lokittaja tapahtuma-id virheviesti] (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id nil virheviesti))
-  ([lokittaja tapahtuma-id poikkeus virheviesti]
+  ([lokittaja tapahtuma-id virheviesti] (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id nil virheviesti nil))
+  ([lokittaja tapahtuma-id poikkeus virheviesti] (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id poikkeus virheviesti nil))
+  ([lokittaja tapahtuma-id poikkeus virheviesti parametrit]
    (log/error poikkeus virheviesti)
    (lokittaja :epaonnistunut nil virheviesti tapahtuma-id nil)
    (virheet/heita-sisainen-kasittelyvirhe-poikkeus
-     {:koodi :sonja-lahetys-epaonnistui :viesti virheviesti})))
+     {:koodi :sonja-lahetys-epaonnistui :viesti virheviesti} parametrit)))
 
-(defn kasittele-poikkeus-lahetyksessa [lokittaja tapahtuma-id poikkeus virheviesti]
-  (log/error poikkeus virheviesti)
-  (lokittaja :epaonnistunut virheviesti (format "Poikkeus: %s" (.getMessage poikkeus)) tapahtuma-id nil)
-  (virheet/heita-sisainen-kasittelyvirhe-poikkeus
-    {:koodi :sonja-lahetys-epaonnistui :viesti (format "Poikkeus: %s" poikkeus)}))
+(defn kasittele-poikkeus-lahetyksessa
+  ([lokittaja tapahtuma-id poikkeus virheviesti] (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti nil))
+  ([lokittaja tapahtuma-id poikkeus virheviesti parametrit]
+   (log/error poikkeus virheviesti)
+   (lokittaja :epaonnistunut virheviesti (format "Poikkeus: %s" (.getMessage poikkeus)) tapahtuma-id nil)
+   (virheet/heita-sisainen-kasittelyvirhe-poikkeus
+     {:koodi :sonja-lahetys-epaonnistui :viesti (format "Poikkeus: %s" poikkeus)} parametrit)))
 
 (defn muodosta-viesti [lokittaja tapahtuma-id viesti]
   (if (fn? viesti)
@@ -42,20 +45,26 @@
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
            (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
            jms-viesti-id)
-         (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)]
-           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti)))
+         (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)
+               parametrit {:viesti-id viesti-id}]
+           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti parametrit)))
        (catch [:type :jms-yhteysvirhe] {:keys [virheet]}
-         (log/error (str "Viestiä: " viesti " ei voitu lähettää. "
-                         (-> virheet first :viesti))))
+         (let [poikkeus (:throwable &throw-context)
+               virheviesti (str (format "Lähetys JMS jonoon: %s epäonnistui." jono)
+                                (-> virheet first :viesti))
+               parametrit {:viesti-id viesti-id}]
+           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id poikkeus virheviesti parametrit)))
        (catch [:type :puutteelliset-multipart-parametrit] {:keys [virheet]}
-         (log/error (apply str
-                           (str "Viestiä: " viesti " ei voitu lähettää. ")
-                           (map :viesti virheet))))
+         (let [poikkeus (:throwable &throw-context)
+               virheviesti (str (format "Lähetys JMS jonoon: %s epäonnistui." jono)
+                                (-> virheet first :viesti))
+               parametrit {:viesti-id viesti-id}]
+           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id poikkeus virheviesti parametrit)))
        (catch Object _
          (let [poikkeus (:throwable &throw-context)
-               virheviesti(format "Tapahtui poikkeus lähettäessä JMS jonoon: %s epäonnistui." jono)]
-           (log/error poikkeus virheviesti)
-           (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti)))))))
+               virheviesti (format "Tapahtui poikkeus lähettäessä JMS jonoon: %s epäonnistui." jono)
+               parametrit {:viesti-id viesti-id}]
+           (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti parametrit)))))))
 
 (defn jonolahettaja [lokittaja sonja jono]
   (fn [viesti viesti-id]

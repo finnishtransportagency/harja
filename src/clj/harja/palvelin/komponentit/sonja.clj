@@ -217,8 +217,8 @@
                    :consumer (or consumer
                                  (luo-jonon-kuuntelija istunto jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
-                                                         (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
-                                                         (kuuntelija %))))
+                                                          (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
+                                                          (kuuntelija %))))
                    :kuuntelijat kuuntelijat)))))
 
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
