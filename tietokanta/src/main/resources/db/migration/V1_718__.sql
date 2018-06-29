@@ -1,6 +1,7 @@
 -- Tielupasanomissa tulee ELY-nimiä, jotka eivät ole Harjan elyissä mukana.
 ALTER TYPE organisaatiotyyppi ADD VALUE 'hallintayksikko-tilu';
 
+BEGIN
 INSERT INTO organisaatio (nimi, lyhenne, elynumero,  liikennemuoto, tyyppi, luoja, luotu, poistettu)
 VALUES ('Kainuu', null, 14, 'T', 'hallintayksikko-tilu' , (select id from kayttaja where kayttajanimi = 'Integraatio'), current_timestamp, false);
 
@@ -21,5 +22,5 @@ VALUES ('Pohjois-Karjala', null, 9,'T', 'hallintayksikko-tilu' , (select id from
 
 INSERT INTO organisaatio (nimi, lyhenne, elynumero, liikennemuoto, tyyppi, luoja, luotu, poistettu)
 VALUES ('Satakunta', null, 3,'T', 'hallintayksikko-tilu' , (select id from kayttaja where kayttajanimi = 'Integraatio'), current_timestamp, false);
-
+END;
 
