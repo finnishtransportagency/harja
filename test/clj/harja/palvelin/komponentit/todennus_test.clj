@@ -84,8 +84,8 @@
 
 (deftest ota-organisaatio-roolin-y-tunnuksesta
   (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
-        destia-id (val (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'"))
-        lampunvaihtajat-id (val (q "SELECT id FROM organisaatio WHERE ytunnus = '2234567-8'"))]
+        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
+        lampunvaihtajat-id (first (first (q "SELECT id FROM organisaatio WHERE ytunnus = '2234567-8'")))]
     (testing "Organisaatio löytyy, jos OAM_ORGANIZATION on annettu oikein"
       (let [req (todenna {:headers {"oam_remote_user" "daniel"
                                     "oam_user_first_name" "Daniel"
@@ -109,7 +109,7 @@
 
 (deftest ota-organisaatio-companyid-headerista
   (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
-        destia-id (val (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'"))]
+        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))]
     (testing "Organisaatio löytyy, jos OAM_USER_COMPANYID on annettu oikein vaikka nimi olisi väärä"
       (let [req (todenna {:headers {"oam_remote_user" "daniel"
                                     "oam_user_first_name" "Daniel"
