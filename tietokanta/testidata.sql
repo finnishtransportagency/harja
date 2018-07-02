@@ -44,7 +44,7 @@ UPDATE organisaatio SET elynumero=4 WHERE lyhenne='PIR';
 UPDATE organisaatio SET elynumero=8 WHERE lyhenne='POS';
 UPDATE organisaatio SET elynumero=9 WHERE lyhenne='KES';
 UPDATE organisaatio SET elynumero=10 WHERE lyhenne='EPO';
-UPDATE organisaatio SET elynumero=12 WHERE lyhenne='POP';
+UPDATE organisaatio SET elynumero=13 WHERE lyhenne='POP';
 UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 
 -- Lisätään indeksejä
