@@ -35,6 +35,13 @@ RETURNING id
 SELECT id,nimi,tyyppi FROM organisaatio
  WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
 
+-- name: hae-ely-numerolla-tielupaa-varten
+-- Hakee ELY-keskuksen organisaation ELY numeron perusteella
+-- Tielupasanomissa tulee enemmän Ely-arvoja kuin mitä Harjassa muuten käytetään.
+SELECT id,nimi,tyyppi FROM organisaatio
+ WHERE tyyppi in ('hallintayksikko', 'hallintayksikko-tilu') AND elynumero = :elynumero
+
+
 -- name: hae-organisaation-urakat
 -- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
 SELECT u.id

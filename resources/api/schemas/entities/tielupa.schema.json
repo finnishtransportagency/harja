@@ -78,7 +78,14 @@
             "Kaakkois-Suomi",
             "Varsinais-Suomi",
             "Pohjois-Savo",
-            "Pirkanmaa"
+            "Pirkanmaa",
+            "Ahvenanmaa",
+            "Etelä-Savo",
+            "Häme",
+            "Kainuu",
+            "Pohjanmaa",
+            "Pohjois-Karjala",
+            "Satakunta"
           ]
         },
         "alueurakka": {

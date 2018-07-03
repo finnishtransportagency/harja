@@ -35,7 +35,7 @@
         (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))))
 
 (defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
-  (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
+  (log/warn "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
