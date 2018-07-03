@@ -28,7 +28,7 @@
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu IS NOT TRUE)
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
@@ -61,7 +61,9 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) AS summa,
+     COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
@@ -75,7 +77,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_hinta hinnoiteltu_tyo -- join?
      ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu IS NOT TRUE)
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
@@ -115,7 +117,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu IS NOT TRUE)
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
@@ -149,7 +151,9 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) AS summa,
+     COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
@@ -163,7 +167,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_hinta hinnoiteltu_tyo -- join?
      ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu IS NOT TRUE)
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
@@ -204,7 +208,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu IS NOT TRUE)
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
@@ -238,7 +242,9 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) AS summa,
+   SUM (   COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
@@ -252,7 +258,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_hinta hinnoiteltu_tyo -- join?
      ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu IS NOT TRUE)
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
@@ -292,7 +298,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu IS NOT TRUE)
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
@@ -327,7 +333,9 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) AS summa,
+     COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
@@ -341,7 +349,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_hinta hinnoiteltu_tyo -- join?
      ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu IS NOT TRUE)
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
@@ -383,7 +391,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu IS NOT TRUE)
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
@@ -413,7 +421,9 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) AS summa,
+   COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
    ktp.urakka                                                                     AS urakka,
    u.nimi                                                                         AS urakan_nimi,
@@ -429,7 +439,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_hinta hinnoiteltu_tyo -- join?
      ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu IS NOT TRUE)
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
@@ -468,7 +478,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu IS NOT TRUE)
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
@@ -501,7 +511,9 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) AS summa,
+      COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
@@ -515,7 +527,7 @@ UNION
    JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
-   JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
+   LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
    LEFT OUTER JOIN kan_hinta hinnoiteltu_tyo -- join?
      ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu IS NOT TRUE)
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
