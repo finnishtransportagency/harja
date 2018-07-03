@@ -38,6 +38,7 @@
 (defn hae-sijainnit-avaimella [db avain tielupa]
   (assoc tielupa avain (mapv #(hae-sijainti db %) (get tielupa avain))))
 
+;; Tieluvilla on enemmän ely-keskuksia kuin Harjassa muuten
 (defn hae-ely [db ely tielupa]
   (let [ely-numero (case ely
                      "Uusimaa" 1
@@ -49,10 +50,17 @@
                      "Varsinais-Suomi" 2
                      "Pohjois-Savo" 8
                      "Pirkanmaa" 4
+                     "Ahvenanmaa" 16
+                     "Etelä-Savo" 7
+                     "Häme" 4
+                     "Kainuu" 14
+                     "Pohjanmaa" 12
+                     "Pohjois-Karjala" 9
+                     "Satakunta" 3
                      (throw+ {:type virheet/+viallinen-kutsu+
                               :virheet [{:koodi virheet/+tuntematon-ely+
                                          :viesti (str "Tuntematon ELY " ely)}]}))
-        ely-id (:id (first (kayttajat-q/hae-ely-numerolla db ely-numero)))]
+        ely-id (:id (first (kayttajat-q/hae-ely-numerolla-tielupaa-varten db ely-numero)))]
     (assoc tielupa ::tielupa/ely ely-id)))
 
 (defn kirjaa-tielupa [liitteiden-hallinta db data kayttaja]
