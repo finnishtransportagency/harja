@@ -39,28 +39,61 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest raportin-suoritus-urakka-hoitokausi
+;; TODO: testiaineistossa ei ole muutos- ja lisätöihin soveltuvia tapauksia.
+;; Muutos- ja lisätyönä tallennettu toteuma on linkattu toimenpidekoodiin, joka on relevantti vain kokonaishintaisille.
+
+(deftest raportin-suoritus-urakka
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi       :kanavien-muutos-ja-lisatyot
                                  :konteksti  "urakka"
                                  :urakka-id  (hae-saimaan-kanavaurakan-id)
-                                 :kohde-id  nil
-                                 :tehtava-id  nil
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2018 1 1))
-                                              :loppupvm (c/to-date (t/local-date 2018 12 31))}})]
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2017 1 1))
+                                              :loppupvm (c/to-date (t/local-date 2017 12 31))
+                                              :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                              :kohde-id  nil
+                                              :tehtava-id  nil}})]
+    (is (vector? vastaus))))
 
-    (is (vector? vastaus))
-    ;(let [otsikko "Saimaan kanava, Kaikki kohteet"
-    ;      taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-    ;  (apurit/tarkista-taulukko-sarakkeet taulukko
-    ;                                      {:otsikko "Pvm"}
-    ;                                      {:otsikko "Tyyppi"}
-    ;                                      {:otsikko "Toimenpide"}
-    ;                                      {:otsikko "Tehtävä"}
-    ;                                      {:otsikko "Lisätieto"}
-    ;                                      {:otsikko "Määrä"}
-    ;                                      {:otsikko "Summa €"}
-    ;                                      {:otsikko "Ind.korotus €"}))
-    ))
+(deftest raportin-suorius-urakka-kohde
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi       :kanavien-muutos-ja-lisatyot
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2016 8 1))
+                                              :loppupvm (c/to-date (t/local-date 2017 4 1))
+                                              :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                              :kohde-id  (hae-kohde-palli)
+                                              :tehtava-id  nil}})]
+    (is (vector? vastaus))))
+
+(deftest raportin-suoritus-urakka-tehtava
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi       :kanavien-muutos-ja-lisatyot
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2017 1 1))
+                                              :loppupvm (c/to-date (t/local-date 2017 12 31))
+                                              :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                              :kohde-id  nil
+                                              :tehtava-id  3058}})]
+
+    (is (vector? vastaus))))
+
+(deftest raportin-suoritus-koko-maa
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi       :kanavien-muutos-ja-lisatyot
+                                 :konteksti  "koko maa"
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2017 1 1))
+                                              :loppupvm (c/to-date (t/local-date 2017 12 31))
+                                              :urakka-id  nil
+                                              :kohde-id  nil
+                                              :tehtava-id  nil}})]
+    (is (vector? vastaus))))
