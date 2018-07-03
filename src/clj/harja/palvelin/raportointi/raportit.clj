@@ -314,10 +314,8 @@
 
    {:nimi :kanavien-muutos-ja-lisatyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
-                 {:tyyppi "urakan-toimenpide", :konteksti "urakka", :pakollinen false, :nimi "Toimenpide"}
                  {:tyyppi "urakan-tehtava", :konteksti "urakka",  :pakollinen false, :nimi "Tehtävä"}
-                 {:tyyppi "kanavaurakan-kohde", :konteksti "urakka",  :pakollinen false, :nimi "Kohde"}
-                 ]
+                 {:tyyppi "kanavaurakan-kohde", :konteksti "urakka",  :pakollinen false, :nimi "Kohde"}]
     :konteksti #{"koko maa" "urakka"}
     :kuvaus "Muutos- ja lisätyöt"
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
