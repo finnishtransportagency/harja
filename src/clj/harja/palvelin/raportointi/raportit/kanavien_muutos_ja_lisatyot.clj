@@ -36,12 +36,10 @@
 (defn- hinnoittelu-ryhmat
   "Palauttaa hinnoitteluryhmien tunnukset. Hakee ne ryhmiteltyjen työrivien avaimesta."
   [tyot-ryhmiteltyna]
-  (log/debug (prn-str "BBBBBBB" tyot-ryhmiteltyna))
   (distinct (map #(get % :hinnoittelu_ryhma) (keys tyot-ryhmiteltyna))))
 
 (defn hinnoitteluryhman-nimi
   [hinnoitteluryhma]
-  (log/debug (println-str "Hinnoitteluryhmä " hinnoitteluryhma))
   (case (keyword hinnoitteluryhma)
     :sopimushintainen-tyo-tai-materiaali "Sopimushintainen työ tai materiaali"
     :omakustanteinen-tyo-tai-materiaali "Omakustanteinen työ tai materiaali"
@@ -70,7 +68,6 @@
 
 (defn- muodosta-rivi-hinnoitteluryhmalle
   [hinnoitteluryhman-tyot-urakassa]
-  (log/debug (prn-str "HINNOITTELURYHMÄN TYÖT " hinnoitteluryhman-tyot-urakassa))
   (hash-map
     :hinnoittelu (hinnoitteluryhman-nimi
                    (:hinnoittelu_ryhma (first hinnoitteluryhman-tyot-urakassa)))
@@ -112,24 +109,14 @@
 (def indeksi-puuttuu-info-solu (info-solu "Indeksi puuttuu"))
 (def ei-raha-summaa-info-solu (info-solu "Ei rahasummaa"))
 
-
-
 (defn- summa [arvot]
   (reduce + (keep identity arvot)))
 
 (defn- rivien-summa [rivit yhteenlaskettava-tieto]
   (summa (map yhteenlaskettava-tieto rivit)))
 
-
 ;; TODO: missä indeksi??
 (defn- muodosta-summarivi [konteksti yhteenlaskettavat-tyot]
-
-  (log/debug (prn-str "YHTEENLASKETTAVAT TYÖT (first urakan hommat) " yhteenlaskettavat-tyot))
-  (log/debug (prn-str
-               (mapv #(:summa (first %)) yhteenlaskettavat-tyot)
-               ))
-
-
   (case (keyword konteksti)
     :muutos-ja-lisatyot-koko-maa
     (let [summien-summa (reduce + 0 (mapv #(:summa (first %)) yhteenlaskettavat-tyot))
@@ -141,19 +128,14 @@
     (let [summien-summa (reduce + 0 (map #(:summa %) yhteenlaskettavat-tyot))
           indeksien-summa (reduce + 0 (map #(:indeksi %) yhteenlaskettavat-tyot))
           ]
-
-      ["" "" "" "" "" "" "Yhteensä" summien-summa indeksien-summa])
-
-    )
-
-  )
-
+      ["" "" "" "" "" "" "Yhteensä" summien-summa indeksien-summa])))
 
 
 (defn- kaikki-yhteensa [muutos-ja-lisatyot]
-  (log/debug (println-str "Laske summa " muutos-ja-lisatyot))
-  ["" "" "" "" "" "" "" (reduce + 0 (map #(:summa %) muutos-ja-lisatyot))])
-
+  (conj
+  [:taulukko {:otsikko "Koko maa"
+              :viimeinen-rivi-yhteenveto? true}
+   ["" "" (reduce + 0 (map #(:summa %) muutos-ja-lisatyot))]]))
 
 (defn muodosta-rivikokonaisuus
   [konteksti otsikko urakan-tyot]
@@ -203,9 +185,6 @@
        (muodosta-summarivi :muutos-ja-lisatyot urakan-tyot))]))
 
 
-
-
-
 (defn- taulukko-urakka [otsikko tyot]
   (conj
     (muodosta-rivikokonaisuus :muutos-ja-lisatyot otsikko tyot)
@@ -240,9 +219,6 @@
                         :loppupvm (konv/sql-date loppupvm)
                         :kohdeid kohde-id
                         :tehtavaid tehtava-id}]
-
-    (log/debug (println-str "Haetaan rajauksella " rajaus))
-    (log/debug (println-str "Hakuparametrit " hakuparametrit))
     (case rajaus
       :urakka-kohde-ja-tehtava
       (hae-kanavien-kohde-ja-tehtavakohtaiset-muutos-ja-lisatyot-raportille db hakuparametrit)
@@ -266,8 +242,6 @@
                                    :koko-maa "KOKO MAA")
         raportin-nimi "Muutos- ja lisätöiden raportti"
         raportin-otsikko (raportin-otsikko raportin-kontekstin-nimi raportin-nimi alkupvm loppupvm)
-
-        ;; TODO: tarkempien raporttien rajaavat tiedot myös otsikkoon: kohde, tehtava
         kohde-nimi (if kohde-id
                      (:nimi (first (hae-kanavakohteen-nimi db {:kohdeid kohde-id})))
                      "Kaikki kohteet")
@@ -277,20 +251,14 @@
         muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db parametrit rajaus)
         raportin-alaotsikko (str/join ", " (remove str/blank? [raportin-kontekstin-nimi kohde-nimi tehtava-nimi]))]
 
-
-
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
-     (conj
        (when (not-empty muutos-ja-lisatyot)
-         (if (= (keyword konteksti) :urakka)
+           (if (= (keyword konteksti) :urakka)
            (taulukko-urakka raportin-alaotsikko muutos-ja-lisatyot)
            (taulukko-koko-maa raportin-alaotsikko
                               (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot))))
-       [:taulukko {:otsikko "Kaikki yhteensä"
-                   :tyhja (when (empty? muutos-ja-lisatyot) "Ei raportoitavaa.")
-                   :sheet-nimi "Yhteensä"
-                   :viimeinen-rivi-yhteenveto? true}
-        (kaikki-yhteensa muutos-ja-lisatyot)])]))
+     (kaikki-yhteensa muutos-ja-lisatyot)]))
+
 
 
