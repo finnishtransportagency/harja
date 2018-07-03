@@ -34,7 +34,8 @@
     [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
     [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
     [harja.palvelin.palvelut.viestinta :as viestinta]
-    [harja.pvm :as pvm])
+    [harja.pvm :as pvm]
+    [clojure.java.jdbc :as jdbc])
   (:import (org.postgresql.util PSQLException)))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
@@ -84,6 +85,15 @@
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
     tietyoilmoitukset))
 
+(defn hae-ilmoituksen-sahkopostitiedot [db user {urakka-id ::t/urakka-id ilmoitus-id ::t/id email-id ::tietyoilmoituksen-e/id}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id)
+  (let [{ilmoituksen-emailit ::t/email-lahetykset} (first (q-tietyoilmoitukset/hae-sahkopostitiedot db {::t/id ilmoitus-id}))]
+    (if email-id
+      (some #(when (= (::tietyoilmoituksen-e/id %) email-id)
+               %)
+            ilmoituksen-emailit)
+      ilmoituksen-emailit)))
+
 (defn hae-tietyoilmoitus [db user tietyoilmoitus-id]
   ;; todo: lisää oikeustarkistus, kun tiedetään miten se pitää tehdä
   (oikeudet/ei-oikeustarkistusta!)
@@ -101,7 +111,7 @@
                 (merge mailin-tiedot
                        {::tietyoilmoituksen-e/lahetysid @viesti-id-atom}))
               true)
-          (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [viesti-id]}
+          (catch [:type virheet/+sisainen-kasittelyvirhe-koodi+] {:keys [viesti-id]}
             (reset! viesti-id-atom viesti-id)
             (try (q-tietyoilmoituksen-e/tallenna-lahetetyn-emailin-tiedot
                    db
@@ -148,15 +158,15 @@
 
       ;; kopio mailitsta itselle
       (when (and kopio-itselle? (:sahkoposti ilmoittaja) lahetetty-harjasta?)
-        (try (viestinta/laheta-sahkoposti-itselle
+        (try+ (viestinta/laheta-sahkoposti-itselle
                {:email email
-                :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta"
+                :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta\n-----\n"
                 :sahkoposti [(:sahkoposti ilmoittaja)]
                 :viesti-otsikko viestin-otsikko
                 :viesti-body viestin-vartalo
                 :liite pdf
                 :tiedostonimi tiedostonimi})
-             (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [viesti-id]}
+             (catch [:type virheet/+sisainen-kasittelyvirhe-koodi+] {:keys [virheet viesti-id]}
                false))
         (log/debug " Lähetys itselle tehty osoitteeseen " (:sahkoposti ilmoittaja))))
 
@@ -186,14 +196,16 @@
                        (m/lisaa-muokkaustiedot ::t/id user)
                        (update-in [::t/osoite ::tr/geometria]
                                   #(when % (geo/geometry (geo/clj->pg %)))))
-
-          tallennettu (upsert! db ::t/ilmoitus
-                               ilmoitus
-                               (op/or
-                                 {::m/luoja-id (:id user)}
-                                 {::t/urakoitsija-id org}
-                                 {::t/tilaaja-id org}
-                                 {::t/urakka-id (op/in kayttajan-urakat)}))]
+          tallennettu (jdbc/with-db-transaction [db db]
+                        (let [tallennettu (upsert! db ::t/ilmoitus
+                                                   ilmoitus
+                                                   (op/or
+                                                     {::m/luoja-id (:id user)}
+                                                     {::t/urakoitsija-id org}
+                                                     {::t/tilaaja-id org}
+                                                     {::t/urakka-id (op/in kayttajan-urakat)}))
+                              ilmoituksen-sahkopostitiedot (hae-ilmoituksen-sahkopostitiedot db user (select-keys tallennettu [::t/urakka-id ::t/id]))]
+                          (merge tallennettu {::t/email-lahetykset ilmoituksen-sahkopostitiedot})))]
       (when (and (not (empty? sahkopostitiedot))
                  ;; TODO: Kun sähköpostin lähetys otetaan käyttöön, niin tuo ominaisuus käytössä pitää muistaa jättää
                  ;; (tloik/laheta-tietyoilmoitus tloik (::t/id tallennettu)) funktiokutsulle.
@@ -320,6 +332,9 @@
     (julkaise-palvelu http :hae-urakan-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
                         (hae-urakan-tiedot-tietyoilmoitukselle db fim user tiedot)))
+    (julkaise-palvelu http :hae-ilmoituksen-sahkopostitiedot
+                      (fn [user tiedot]
+                        (hae-ilmoituksen-sahkopostitiedot db user tiedot)))
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
@@ -340,7 +355,8 @@
                      :hae-tietyoilmoitus
                      :tallenna-tietyoilmoitus
                      :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
-                     :hae-urakan-tiedot-tietyoilmoitukselle)
+                     :hae-urakan-tiedot-tietyoilmoitukselle
+                     :hae-ilmoituksen-sahkopostitiedot)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus))
     this))

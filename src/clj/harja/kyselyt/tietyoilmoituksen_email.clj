@@ -7,9 +7,7 @@
             [harja.kyselyt.konversio :as konv]))
 
 (defn tallenna-lahetetyn-emailin-tiedot [db tiedot]
-  (println "-----> TIEDOT:" (pr-str tiedot))
   (specql/insert! db ::e/email-lahetys tiedot))
 
 (defn paivita-lahetetyn-emailin-tietoja [db tiedot where]
-  (println "-----> TIEDOT:" (pr-str tiedot))
   (specql/update! db ::e/email-lahetys tiedot where))

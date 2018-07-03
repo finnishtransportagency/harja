@@ -241,6 +241,10 @@
                (merge ilmoitus ilmoituksen-emailit)))
            ilmoitukset))))
 
+(defn hae-sahkopostitiedot [db parametrit]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-email-lahetykset
+         parametrit))
+
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
                                                 tilaaja?
                                                 urakat

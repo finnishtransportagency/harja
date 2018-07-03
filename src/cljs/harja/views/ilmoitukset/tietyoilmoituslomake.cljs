@@ -331,7 +331,7 @@
       "Tallenna ilmoitus"
       #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf? {}))
       {:disabled (or tallennus-kaynnissa?
-                     (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
+                     (not (t/voi-tallentaa? (into #{} (map :id) kayttajan-urakat) ilmoitus))
                      (not (lomake/voi-tallentaa? ilmoitus)))
        :tallennus-kaynnissa? tallennus-kaynnissa?
        :ikoni (ikonit/tallenna)}]

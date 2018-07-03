@@ -7,7 +7,7 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log]]))
 
-(defn kuittauksen-tila [{lahetetty ::e/lahetetty kuitattu ::e/kuitattu virhe ::e/lahetysvirhe :as foo}]
+(defn kuittauksen-tila [{lahetetty ::e/lahetetty kuitattu ::e/kuitattu virhe ::e/lahetysvirhe}]
   (cond
     virhe [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika (or kuitattu lahetetty)))]
     kuitattu [:span.tila-lahetetty (str "Onnistunut: " (pvm/pvm-aika kuitattu))]
