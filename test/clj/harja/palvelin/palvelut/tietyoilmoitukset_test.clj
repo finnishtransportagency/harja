@@ -9,6 +9,7 @@
             [com.stuartsierra.component :as component]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [taoensso.timbre :as log]
@@ -41,9 +42,16 @@
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
+                        :sonja (feikki-sonja)
+                        :sonja-sahkoposti (component/using
+                                            (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                        :sahkoposti-ulos-jono "harja-to-email"
+                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                                            [:sonja :db :integraatioloki])
                         :tietyoilmoitukset (component/using
                                              (tietyoilmoitukset/->Tietyoilmoitukset)
-                                             [:http-palvelin :db :fim])))))
+                                             [:http-palvelin :db :fim :sonja-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -265,6 +273,19 @@
                                           q-tietyoilmoitukset/ilmoitus-pdf-kentat
                                           {::t/id tti-id})))]
         (pdf-tuloste-sisaltaa-tekstia pdf ["Tämä on testi-ilmoitus"])))))
+
+(deftest hae-ilmoituksen-sahkopostilahetykset-test
+  (let [db (:db jarjestelma)
+        ilmoitus-ja-urakka-id (first
+                                (q "SELECT ti.id, ti.\"urakka-id\"
+                                    FROM tietyoilmoitus ti
+                                    JOIN tietyoilmoituksen_email_lahetys tiel ON tiel.tietyoilmoitus=ti.id
+                                    WHERE tiel.id IS NOT NULL;"))
+        kysely-parametrit {::t/id (first ilmoitus-ja-urakka-id) ::t/urakka-id (second ilmoitus-ja-urakka-id)}
+        sahkopostit (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-ilmoituksen-sahkopostitiedot +kayttaja-jvh+
+                                        kysely-parametrit)]
+    (is (= (count sahkopostit) 2))))
 
 ;; TODO Lisää testit:
 ;; :hae-urakan-tiedot-tietyoilmoitukselle
