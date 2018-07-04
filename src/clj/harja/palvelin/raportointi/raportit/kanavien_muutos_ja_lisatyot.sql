@@ -242,7 +242,7 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-   SUM (   COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+     COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
