@@ -100,4 +100,4 @@
 
         (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)
                                  "Odota, että integraatiotapahtuma päätetään"
-                                 500)))))
+                                 1500)))))
