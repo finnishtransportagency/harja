@@ -185,7 +185,7 @@
  ;; :ais-data
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
-                               :tietyoilmoitusten-lahetys
+                               ; :tietyoilmoitusten-lahetys
                                :ais-data
                                :reittitarkistukset
                                :tiedostopesula}
