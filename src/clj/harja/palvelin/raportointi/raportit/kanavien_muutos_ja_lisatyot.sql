@@ -376,7 +376,7 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-  0 AS indeksi,
+   0 AS indeksi,
    ktp.urakka                                                     AS urakka,
    u.nimi                                                         AS urakan_nimi,
    ktp.id                                                         AS toimenpide_id,
@@ -403,7 +403,7 @@ UNION
    ktp.pvm                                                                        AS pvm,
    tpk.nimi                                                                       AS tehtava,
    k.nimi                                                                         AS kohde,
-   ko.nimi || ' ' || ko.tyyppi                      AS kohteenosa,
+   ko.nimi || ' ' || ko.tyyppi                                                    AS kohteenosa,
    hk.nimi                                                                        AS huoltokohde,
    hinnoiteltu_tyo.ryhma                                                          AS hinta_ryhma,
    CASE
@@ -465,7 +465,7 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-    0 AS indeksi,
+   0 AS indeksi,
    ktp.urakka                                                     AS urakka,
    ktp.id                                                         AS toimenpide_id,
    ktp.tyyppi                                                     AS toimenpidetyyppi,
@@ -491,7 +491,7 @@ UNION
    ktp.pvm                                                                        AS pvm,
    tpk.nimi                                                                       AS tehtava,
    k.nimi                                                                         AS kohde,
-   ko.nimi || ' ' || ko.tyyppi                      AS kohteenosa,
+   ko.nimi || ' ' || ko.tyyppi                                                    AS kohteenosa,
    hk.nimi                                                                        AS huoltokohde,
    ktp.lisatieto                                                                  AS lisatieto,
    hinnoiteltu_tyo.otsikko                                                        AS otsikko,
@@ -511,7 +511,7 @@ UNION
    hinnoiteltu_tyo.id                                                             AS hinta_id,
    hinnoiteltu_tyo.maara                                                          AS maara,
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
-      COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+   COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
     0 AS indeksi,
