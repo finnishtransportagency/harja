@@ -3,6 +3,7 @@
   (:require [postal.core :as postal]
             [taoensso.timbre :as log]
             [clojure.string :as s]
+            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
             [com.stuartsierra.component :as component]))
 
 (defprotocol Sahkoposti
@@ -41,6 +42,9 @@
   (vastausosoite [_] vastausosoite)
   (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     ;; Ei implementoida ainakaan vielä
+    nil)
+  Kuuntele
+  (kuuntele! [this jono kuuntelija-fn]
     nil)
   
   component/Lifecycle

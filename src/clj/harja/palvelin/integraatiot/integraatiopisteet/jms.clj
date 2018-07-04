@@ -76,7 +76,10 @@
     (sonja/kuuntele sonja jono
                     (fn [viesti]
                       (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
-                      (let [multipart-viesti? (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
+                      (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
+                                                   (catch java.lang.ClassNotFoundException e
+                                                     (log/error "Ei löytynyt MultipartMessage luokkaa: " e)
+                                                     nil))
                             viestin-sisalto (if multipart-viesti?
                                               ;; Oletuksena on, että multipartvastaus sisältää vain yhden osan
                                               (-> viesti
