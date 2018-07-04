@@ -26,7 +26,7 @@
                   :pdf-liite liite}
                  viestin-vartalo)
         argumentit [email (sahkoposti/vastausosoite email) sahkoposti (str "Harja-viesti lähetetty: " viesti-otsikko) viesti]
-        argumentit (if liite (conj argumentit tiedostonimi))]
+        argumentit (if liite (conj argumentit tiedostonimi) argumentit)]
     (try
       (apply lahetys-fn argumentit)
       (catch Exception e
