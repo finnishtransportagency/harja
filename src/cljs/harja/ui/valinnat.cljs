@@ -383,9 +383,6 @@
 
 (defn kanava-kohde
   [valittu-kohde-atom kohteet format-fn]
-  ;(log (prn-str "KANAVA KOHTEET  " kohteet))
-  (log (prn-str "KANAVA KOHDE " valittu-kohde-atom))
-
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Kohde"]
    [livi-pudotusvalikko {:valinta @valittu-kohde-atom

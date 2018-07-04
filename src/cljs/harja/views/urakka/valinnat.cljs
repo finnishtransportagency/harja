@@ -147,10 +147,8 @@
 (defn urakan-tehtava []
   (valinnat/urakan-tehtava u/urakan-tehtavat u/valittu-tehtava u/valitse-tehtava!))
 
-;; TODO: tämä on neljännen tason toimenpiteille, jotka ovat muutoshintaisia
-;; Tämä tasojen sotkeminen on vähän huono homma? Onko tämä  uudelleenkäytettävä
+;; Tämä on neljännen tason toimenpiteille, jotka ovat muutoshintaisia
 (defn urakan-tehtava+kaikki []
-  (log (prn-str "*** URAKAN TEHTÄVÄT " @u/urakan-tehtavat))
   (valinnat/urakan-tehtava
     (r/wrap (vec (concat [{:t4_nimi "Kaikki"}]
                          @u/urakan-tehtavat))

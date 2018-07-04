@@ -324,7 +324,6 @@
 
 (defmethod raportin-parametri "kanavaurakan-kohde" [p arvo]
   (let [aseta-kohde (fn [kohde]
-                      (log (prn-str "**** KOHDE-NIMI " (:harja.domain.kanavat.kohde/nimi kohde)))
                     (reset! arvo (if kohde
                                    {:kohde-id (:harja.domain.kanavat.kohde/id kohde)}
                                    {:virhe "Ei kohdevalintaa"})))]
