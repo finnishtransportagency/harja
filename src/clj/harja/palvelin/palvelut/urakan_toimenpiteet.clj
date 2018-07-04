@@ -11,6 +11,14 @@
   (into []
         (q/hae-urakan-toimenpiteet db urakka-id)))
 
+;; TODO: lisätty mutta nimetty väärin pitäisi mainita nimessä rajaus muutoshintaisiin
+(defn hae-urakan-tehtavat
+  "Palvelu, joka palauttaa urakan tehtävät"
+  [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat user urakka-id)
+  (into []
+        (q/hae-urakan-muutoshintaiset-tehtavat db urakka-id)))
+
 (defn hae-urakan-toimenpiteet-ja-tehtavat
   "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
   ([db user urakka-id] (hae-urakan-toimenpiteet-ja-tehtavat db user urakka-id nil))
@@ -40,7 +48,10 @@
                                                              (:db this) user urakka-id :muutoshintaiset)))
       (julkaise-palvelu
         :urakan-toimenpiteet (fn [user urakka-id]
-                               (hae-urakan-toimenpiteet (:db this) user urakka-id))))
+                               (hae-urakan-toimenpiteet (:db this) user urakka-id)))
+      (julkaise-palvelu
+        :urakan-tehtavat (fn [user urakka-id]
+                               (hae-urakan-tehtavat (:db this) user urakka-id))))
     this)
 
   (stop [this]

@@ -197,7 +197,37 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot] :as optiot}]
+(defn urakan-tehtava
+  [urakan-tehtavat-atom
+   valittu-urakan-tehtava-atom
+   valitse-urakan-tehtava-fn]
+  (when (not (some
+               #(= % @valittu-urakan-tehtava-atom)
+               @urakan-tehtavat-atom))
+    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+    (reset! valittu-urakan-tehtava-atom (first @urakan-tehtavat-atom)))
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Tehtävä"]
+   [livi-pudotusvalikko {:valinta @valittu-urakan-tehtava-atom
+                         :format-fn #(if % (str (:t4_nimi %)) "Ei muutoshintaista tehtävää")
+                         :valitse-fn valitse-urakan-tehtava-fn}
+    @urakan-tehtavat-atom]])
+
+(defn kanavaurakan-kohde
+  [kohteet-atom valittu-kohde-atom valitse-kohde-fn]
+  (when (not (some
+               #(= % @valittu-kohde-atom)
+               @kohteet-atom))
+    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+    (reset! valittu-kohde-atom (first @kohteet-atom)))
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Kohde"]
+   [livi-pudotusvalikko {:valinta @valittu-kohde-atom
+                         :format-fn #(if % (str (:harja.domain.kanavat.kohde/nimi %)) "Ei kohteita")
+                         :valitse-fn #(reset! valittu-kohde-atom %)}
+    @kohteet-atom]])
+
+(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot tehtava] :as optiot}]
   [:span
    (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])

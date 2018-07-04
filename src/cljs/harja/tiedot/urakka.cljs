@@ -10,6 +10,7 @@
             [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.organisaatio :as organisaatio]
             [harja.tiedot.toimenpidekoodit :as toimenpidekoodit]
+
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
@@ -60,6 +61,22 @@
       (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
           (first toimenpideinstanssit)))))
 
+(defonce urakan-tehtavat
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when (and urakka-id
+                                (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                       (urakan-toimenpiteet/hae-urakan-tehtavat urakka-id))))
+
+(defonce valitun-tehtavan-koodi (atom nil))
+
+(defonce valittu-tehtava
+         (reaction-writable
+           (let [koodi @valitun-tehtavan-koodi
+                 toimenpidekoodit @urakan-tehtavat]
+             (or (and koodi (first (filter #(= (:t4_id %) koodi) toimenpidekoodit)))
+                 (first toimenpidekoodit)))))
+
 (defn- urakan-toimenpideinstanssi-avaimella [avain arvo]
   (first (filter #(= arvo (avain %)) @urakan-toimenpideinstanssit)))
 
@@ -84,6 +101,20 @@
                    (= koodi @valitun-toimenpideinstanssin-koodi))
           (valitse-toimenpideinstanssi-koodilla! nil))
         (valitse-toimenpideinstanssi-koodilla! koodi))))
+
+(defn valitse-tehtava-koodilla!
+  [koodi]
+  (reset! valitun-tehtavan-koodi koodi))
+
+(defn valitse-tehtava! [{koodi :t4_id :as tpk}]
+  (if-not koodi
+    ;; Kooditon erikoisvalinta, kuten "Kaikki" tai "Muut"
+    (reset! valittu-tehtava tpk)
+    (do (when (and (nil? (:t4_id @valittu-tehtava))
+                   (= koodi @valitun-tehtavan-koodi))
+          (valitse-tehtava-koodilla! nil))
+        (valitse-tehtava-koodilla! koodi))))
+
 
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]

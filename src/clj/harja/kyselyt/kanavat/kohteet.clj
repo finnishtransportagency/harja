@@ -21,7 +21,6 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.oikeudet :as oikeudet]))
 
-;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
 
 (defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
@@ -98,6 +97,16 @@
                     kohde/kohteen-kohdekokonaisuus
                     kohde/kohteenosat)
                   {::m/poistettu? false})
+    (hae-kohteiden-urakkatiedot db user urakka-id)
+    (remove (comp empty? ::kohde/urakat))))
+
+(defn hae-urakan-kohteet-mukaanlukien-poistetut [db user urakka-id]
+  (->>
+    (sort-by :harja.domain.kanavat.kohde/nimi (specql/fetch db
+                  ::kohde/kohde
+                  (set/union
+                    kohde/perustiedot)
+                  {}))
     (hae-kohteiden-urakkatiedot db user urakka-id)
     (remove (comp empty? ::kohde/urakat))))
 
@@ -221,3 +230,5 @@
                       (dissoc kohde ::kohde/id ::kohde/kohteenosat))))]
       (doseq [osa osat]
         (lisaa-kohteelle-osa! db user osa kohde)))))
+
+

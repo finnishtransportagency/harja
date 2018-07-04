@@ -106,7 +106,7 @@
   (defn vie-sillat-kantaan [db shapefile]
     (if shapefile
       (let [kpl (atom 0)
-            siltatietueet-shapefilesta (sort-by :objectid (shapefile/tuo shapefile))]
+            siltatietueet-shapefilesta (reverse (sort-by :muutospvm (shapefile/tuo shapefile)))]
         (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
         (jdbc/with-db-transaction [db db]
                                   (doseq [silta siltatietueet-shapefilesta]

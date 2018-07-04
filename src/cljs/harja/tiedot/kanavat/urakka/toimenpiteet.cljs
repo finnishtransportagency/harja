@@ -10,6 +10,7 @@
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide]
+            [harja.asiakas.kommunikaatio :as k]
             [clojure.string :as str]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
@@ -272,3 +273,5 @@
   (str toimenpiteiden-lkm " "
        (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
        " " toiminto "."))
+
+
