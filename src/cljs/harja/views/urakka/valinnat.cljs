@@ -1,6 +1,7 @@
 (ns harja.views.urakka.valinnat
   "Yleiset urakkaan liittyvät valintakomponentit."
   (:require [harja.tiedot.urakka :as u]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
@@ -143,6 +144,18 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
+(defn urakan-tehtava []
+  (valinnat/urakan-tehtava u/urakan-tehtavat u/valittu-tehtava u/valitse-tehtava!))
+
+;; Tämä on neljännen tason toimenpiteille, jotka ovat muutoshintaisia
+(defn urakan-tehtava+kaikki []
+  (valinnat/urakan-tehtava
+    (r/wrap (vec (concat [{:t4_nimi "Kaikki"}]
+                         @u/urakan-tehtavat))
+            identity)
+    u/valittu-tehtava u/valitse-tehtava!))
+
+
 (defn urakan-kokonaishintainen-tehtava+kaikki []
   (valinnat/urakan-kokonaishintainen-tehtava
     (r/wrap (vec (concat [{:nimi "Kaikki"}]
@@ -158,6 +171,13 @@
             identity)
     u/valittu-yksikkohintainen-tehtava
     u/valitse-yksikkohintainen-tehtava!))
+
+(defn kanavaurakan-kohde+kaikki []
+  (valinnat/kanavaurakan-kohde
+    (r/wrap (vec (concat [{:harja.domain.kanavat.kohde/nimi "Kaikki"}]
+                         @ku/kanavakohteet-mukaanlukien-poistetut))
+            identity)
+    ku/valittu-kohde ku/valitse-kohde!))
 
 
 ;; Komponentit, jotka käyttävät hoitokautta, joutuvat resetoimaan valitun aikavälin eksplisiittisesti
@@ -234,3 +254,6 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
        (merge-with merge
                    (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot])
                    optiot)))))
+
+
+

@@ -37,6 +37,7 @@
   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
+  [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
@@ -311,6 +312,15 @@
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
 
+   {:nimi :kanavien-muutos-ja-lisatyot
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                 {:tyyppi "urakan-tehtava", :konteksti "urakka",  :pakollinen false, :nimi "Tehtävä"}
+                 {:tyyppi "kanavaurakan-kohde", :konteksti "urakka",  :pakollinen false, :nimi "Kohde"}]
+    :konteksti #{"koko maa" "urakka"}
+    :kuvaus "Muutos- ja lisätyöt"
+    :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}
+
    {:nimi :kanavien-liikennetapahtumat
     :konteksti #{}
     :kuvaus "Liikennetapahtumat"
@@ -319,3 +329,4 @@
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
+

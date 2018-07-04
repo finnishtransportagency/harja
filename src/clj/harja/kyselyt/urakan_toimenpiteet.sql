@@ -46,6 +46,34 @@ FROM toimenpideinstanssi tpi
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE urakka = :urakka;
 
+
+-- name: hae-urakan-muutoshintaiset-tehtavat
+-- Hakee kaikki urakan 4. tason muutoshintaiset toimenpiteet
+SELECT
+  t4.id                AS t4_id,
+  t4.koodi             AS t4_koodi,
+  t4.nimi              AS t4_nimi,
+  t4.yksikko           AS t4_yksikko,
+  t4.jarjestys         AS t4_jarjestys,
+  t3.id                AS t3_id,
+  t3.koodi             AS t3_koodi,
+  t3.nimi              AS t3_nimi,
+  t2.id                AS t2_id,
+  t2.koodi             AS t2_koodi,
+  t2.nimi              AS t2_nimi,
+  t1.id                AS t1_id,
+  t1.koodi             AS t1_koodi,
+  t1.nimi              AS t1_nimi
+FROM toimenpidekoodi t4
+  LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
+  LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
+  LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+WHERE t4.taso = 4 AND
+      t4.hinnoittelu @> ARRAY['muutoshintainen'::hinnoittelutyyppi] AND
+      t3.id IN (SELECT toimenpide
+                FROM toimenpideinstanssi
+                WHERE urakka = :urakka);
+
 --name: hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet jotka ovat kokonaishintaisia
 SELECT
