@@ -87,7 +87,8 @@
 
 (defn hae-ilmoituksen-sahkopostitiedot [db user {urakka-id ::t/urakka-id ilmoitus-id ::t/id email-id ::tietyoilmoituksen-e/id}]
   (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id)
-  (let [{ilmoituksen-emailit ::t/email-lahetykset} (first (q-tietyoilmoitukset/hae-sahkopostitiedot db {::t/id ilmoitus-id}))]
+  (let [{ilmoituksen-emailit ::t/email-lahetykset} (first (q-tietyoilmoitukset/hae-sahkopostitiedot db {::t/id ilmoitus-id}))
+        ilmoituksen-emailit (if (nil? ilmoituksen-emailit) '() ilmoituksen-emailit)]
     (if email-id
       (some #(when (= (::tietyoilmoituksen-e/id %) email-id)
                %)
@@ -136,7 +137,7 @@
   (try
     (let [viestin-vartalo (if (empty? saate)
                             viestin-vartalo
-                            (str viestin-vartalo "\nSaate: " saate))
+                            (str viestin-vartalo "\nSaate:\n" saate))
           vastaanottajat (if (not (empty? muut-vastaanottajat))
                            (conj muut-vastaanottajat vastaanottaja)
                            [vastaanottaja])

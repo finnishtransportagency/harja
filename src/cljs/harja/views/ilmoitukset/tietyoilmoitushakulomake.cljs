@@ -122,7 +122,8 @@
     :leveys 5}
    {:otsikko "Vii\u00ADmeisin sähkö\u00ADposti" :tyyppi :komponentti :leveys 2 :hae identity
     :komponentti (fn [rivi _]
-                   [tietyo-yhteiset/kuittauksen-tila (->> rivi ::t/email-lahetykset (sort-by ::e/lahetetty #(pvm/ennen? %1 %2)) last)])
+                   [tietyo-yhteiset/kuittauksen-tila (when-let [email-lahetykset (::t/email-lahetykset rivi)]
+                                                       (last (sort-by ::e/lahetetty #(pvm/ennen? %1 %2) email-lahetykset)))])
     :muokattava? (constantly false)}
    {:otsikko " "
     :leveys 2

@@ -1,5 +1,6 @@
 (ns harja.views.ilmoitukset.tietyoilmoitukset-yhteinen
-  (:require [harja.pvm :as pvm]
+  (:require [clojure.string :as clj-str]
+            [harja.pvm :as pvm]
             [harja.domain.tietyoilmoitus :as t]
             [harja.domain.tietyoilmoituksen-email :as e]
             [harja.domain.kayttaja :as ka]
@@ -9,10 +10,25 @@
 
 (defn kuittauksen-tila [{lahetetty ::e/lahetetty kuitattu ::e/kuitattu virhe ::e/lahetysvirhe}]
   (cond
-    virhe [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika (or kuitattu lahetetty)))]
-    kuitattu [:span.tila-lahetetty (str "Onnistunut: " (pvm/pvm-aika kuitattu))]
-    lahetetty [:span.tila-odottaa-vastausta "Odottaa vastausta..."]
-    :else ""))
+    virhe [:div (sequence (comp
+                            (map #(str % " "))
+                            (map-indexed #(with-meta [:span.tila-virhe {:style {:display "inline-block"
+                                                                       :white-space "pre-wrap"}} %2]
+                                                     {:key %1})))
+                          (clj-str/split (str "Epäonnistunut: " (pvm/pvm-aika (or kuitattu lahetetty)))
+                                         #" "))]
+    kuitattu [:div (sequence (comp
+                               (map #(str % " "))
+                               (map-indexed #(with-meta [:span.tila-lahetetty {:style {:display "inline-block"
+                                                                              :white-space "pre-wrap"}} %2]
+                                                        {:key %1})))
+                             (clj-str/split (str "Onnistunut: " (pvm/pvm-aika kuitattu))
+                                            #" "))]
+    lahetetty [:div (map-indexed #(with-meta [:span.tila-odottaa-vastausta {:style {:display "inline-block"
+                                                                           :white-space "pre-wrap"}} %2]
+                                             {:key %1})
+                         ["Odottaa " "kuittausta..."])]
+    :else [:span ""]))
 
 (defn tietyoilmoituksen-lahetystiedot-komponentti
   [ilmoitus]
