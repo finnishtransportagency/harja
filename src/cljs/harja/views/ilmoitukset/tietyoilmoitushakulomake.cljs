@@ -120,11 +120,12 @@
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae t/ilmoittaja->str
     :leveys 5}
-   {:otsikko "Vii\u00ADmeisin sähkö\u00ADposti" :tyyppi :komponentti :leveys 2 :hae identity
-    :komponentti (fn [rivi _]
-                   [tietyo-yhteiset/kuittauksen-tila (when-let [email-lahetykset (::t/email-lahetykset rivi)]
-                                                       (last (sort-by ::e/lahetetty #(pvm/ennen? %1 %2) email-lahetykset)))])
-    :muokattava? (constantly false)}
+   (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+     {:otsikko "Vii\u00ADmeisin sähkö\u00ADposti" :tyyppi :komponentti :leveys 2 :hae identity
+      :komponentti (fn [rivi _]
+                     [tietyo-yhteiset/kuittauksen-tila (when-let [email-lahetykset (::t/email-lahetykset rivi)]
+                                                         (last (sort-by ::e/lahetetty #(pvm/ennen? %1 %2) email-lahetykset)))])
+      :muokattava? (constantly false)})
    {:otsikko " "
     :leveys 2
     :nimi :vie-pdf
