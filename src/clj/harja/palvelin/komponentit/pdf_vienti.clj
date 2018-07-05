@@ -21,16 +21,32 @@
            javax.xml.transform.stream.StreamSource
            javax.xml.transform.TransformerFactory
            [org.apache.fop.apps FopConfParser MimeConstants]
-           java.io.ByteArrayInputStream))
+           [java.io ByteArrayInputStream
+                    ByteArrayOutputStream]))
 
 (defprotocol PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [this nimi kasittely-fn]
     "Julkaisee PDF käsittelijäfunktion annetulla keyword nimellä.
      Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit
      mäppeinä ja palauttaa PDF:n tiedot hiccup muotoisena FOPina.")
-  (poista-pdf-kasittelija! [this nimi]))
+  (poista-pdf-kasittelija! [this nimi])
+  (luo-pdf [this kasittelija-nimi kayttaja parametrit]
+    "Muodostaa pdf tiedoston annettuna käsittelijän nimi ja sen parametrit"))
 
 (declare muodosta-pdf)
+
+(defn- escape [hiccup]
+  (walk/postwalk #(if (and (string? %)
+                           (not (str/starts-with? % "<![CDATA[")))
+                    (sanitoi %)
+                    %) hiccup))
+
+(defn- hiccup->pdf [fop-factory hiccup out]
+  (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
+        xform (.newTransformer (TransformerFactory/newInstance))
+        src (StreamSource. (java.io.StringReader. (html (escape hiccup))))
+        res (SAXResult. (.getDefaultHandler fop))]
+    (.transform xform src res)))
 
 (defrecord PdfVienti [pdf-kasittelijat fop-factory]
   component/Lifecycle
@@ -53,7 +69,17 @@
 
   (poista-pdf-kasittelija! [_ nimi]
     (log/info "Poistetaan PDF käsittelijä: " nimi)
-    (swap! pdf-kasittelijat dissoc nimi)))
+    (swap! pdf-kasittelijat dissoc nimi))
+
+  (luo-pdf [_ kasittelija-nimi kayttaja parametrit]
+    (let [kasittelija-fn (kasittelija-nimi @pdf-kasittelijat)
+          pdf-hiccup (kasittelija-fn kayttaja parametrit)
+          tiedostonimi (-> pdf-hiccup meta :tiedostonimi)
+          pdf-outputstream (ByteArrayOutputStream.)]
+      (with-open [pdf-outputstream (ByteArrayOutputStream.)]
+        (hiccup->pdf fop-factory pdf-hiccup pdf-outputstream)
+        {:tiedosto-bytet (.toByteArray pdf-outputstream)
+         :tiedostonimi tiedostonimi}))))
 
 
 (defn- luo-fop-factory []
@@ -67,20 +93,6 @@
 
 (defn luo-pdf-vienti []
   (->PdfVienti (atom {}) (luo-fop-factory)))
-
-(defn- escape [hiccup]
-  (walk/postwalk #(if (and (string? %)
-                           (not (str/starts-with? % "<![CDATA[")))
-                    (sanitoi %)
-                    %) hiccup))
-
-(defn- hiccup->pdf [fop-factory hiccup out]
-  (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
-        xform (.newTransformer (TransformerFactory/newInstance))
-        src (StreamSource. (java.io.StringReader. (html (escape hiccup))))
-        res (SAXResult. (.getDefaultHandler fop))]
-    (.transform xform src res)))
-
 
 (defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body
                                                query-params :params

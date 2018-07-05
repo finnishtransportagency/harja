@@ -46,24 +46,37 @@
 (def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
 (def +puutteellinen-paikkatietoaineisto+ "puutteellinen-paikkatietoaineisto")
 
-(defn heita-poikkeus [tyyppi virheet]
-  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (throw+
-    (let [virheet (if (map? virheet) [virheet] virheet)]
-      {:type    tyyppi
-       :virheet virheet})))
+(defn heita-poikkeus
+  ([tyyppi virheet] (heita-poikkeus tyyppi virheet nil))
+  ([tyyppi virheet parametrit]
+   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+   (throw+
+     (let [virheet (if (map? virheet) [virheet] virheet)]
+       (merge {:type tyyppi
+               :virheet virheet}
+              parametrit)))))
 
-(defn heita-viallinen-apikutsu-poikkeus [virheet]
-  (heita-poikkeus +viallinen-kutsu+ virheet))
+(defn heita-viallinen-apikutsu-poikkeus
+  ([virheet] (heita-viallinen-apikutsu-poikkeus virheet nil))
+  ([virheet parametrit]
+   (heita-poikkeus +viallinen-kutsu+ virheet)))
 
-(defn heita-sisainen-kasittelyvirhe-poikkeus [virheet]
-  (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet))
+(defn heita-sisainen-kasittelyvirhe-poikkeus
+  ([virheet] (heita-sisainen-kasittelyvirhe-poikkeus virheet nil))
+  ([virheet parametrit]
+   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet)))
 
-(defn heita-ulkoinen-kasittelyvirhe-poikkeus [virheet]
-  (heita-poikkeus +ulkoinen-kasittelyvirhe-koodi+ virheet))
+(defn heita-ulkoinen-kasittelyvirhe-poikkeus
+  ([virheet] (heita-ulkoinen-kasittelyvirhe-poikkeus virheet nil))
+  ([virheet parametrit]
+   (heita-poikkeus +ulkoinen-kasittelyvirhe-koodi+ virheet)))
 
-(defn heita-puutteelliset-parametrit-poikkeus [virheet]
-  (heita-poikkeus +puutteelliset-parametrit+ virheet))
+(defn heita-puutteelliset-parametrit-poikkeus
+  ([virheet] (heita-puutteelliset-parametrit-poikkeus virheet nil))
+  ([virheet parametrit]
+   (heita-poikkeus +puutteelliset-parametrit+ virheet)))
 
-(defn heita-ei-hakutuloksia-apikutsulle-poikkeus [virheet]
-  (heita-poikkeus +ei-hakutuloksia+ virheet))
+(defn heita-ei-hakutuloksia-apikutsulle-poikkeus
+  ([virheet] (heita-ei-hakutuloksia-apikutsulle-poikkeus virheet nil))
+  ([virheet parametrit]
+   (heita-poikkeus +ei-hakutuloksia+ virheet)))

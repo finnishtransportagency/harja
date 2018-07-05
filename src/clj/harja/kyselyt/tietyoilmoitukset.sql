@@ -38,22 +38,3 @@ FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
   JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE u.id = :urakkaid;
-
--- name: lisaa-tietyoilmoituksen-email-lahetys!
-INSERT INTO tietyoilmoituksen_email_lahetys (tietyoilmoitus, lahetysid, lahetetty)
-     VALUES (:id, :lahetysid, current_timestamp);
-
--- name: merkitse-tietyoilmoituksen-sahkopostilahetys-kuitatuksi!
-UPDATE tietyoilmoituksen_email_lahetys
-SET kuitattu = current_timestamp
-WHERE lahetysid = :lahetysid;
-
--- name: merkitse-tietyoilmoitukselle-lahetysvirhe!
-UPDATE tietyoilmoituksen_email_lahetys
-SET lahetysvirhe = current_timestamp
-WHERE tietyoilmoitus = :id;
-
--- name: merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla!
-UPDATE tietyoilmoituksen_email_lahetys
-SET lahetysvirhe = current_timestamp
-WHERE lahetysid = :lahetysid;

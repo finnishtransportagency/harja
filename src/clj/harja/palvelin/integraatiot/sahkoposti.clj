@@ -3,6 +3,7 @@
   (:require [postal.core :as postal]
             [taoensso.timbre :as log]
             [clojure.string :as s]
+            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
             [com.stuartsierra.component :as component]))
 
 (defprotocol Sahkoposti
@@ -15,7 +16,10 @@
   (vastausosoite
    [this]
    "Palauttaa oletus vastausosoitteen, jota voi käyttää lähettäjänä ja johon lähetetyt viestit
-    tulevat takaisin tälle kuuntelijalle"))
+    tulevat takaisin tälle kuuntelijalle")
+  (laheta-viesti-ja-liite!
+    [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
+    "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä. Sisällön pitäisi sisältää myös liite"))
 
 (defn sanitoi-otsikko [otsikko]
   ;; Javan regexpien \p -luokat vastaavat Unicoden tai ASCII:n merkkikategorioita,
@@ -36,6 +40,12 @@
                           :body [{:type "text/html; charset=UTF-8"
                                   :content sisalto}]}))
   (vastausosoite [_] vastausosoite)
+  (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
+    ;; Ei implementoida ainakaan vielä
+    nil)
+  Kuuntele
+  (kuuntele! [this jono kuuntelija-fn]
+    nil)
   
   component/Lifecycle
   (start [this] this)

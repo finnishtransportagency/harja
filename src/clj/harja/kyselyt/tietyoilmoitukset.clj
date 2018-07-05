@@ -9,7 +9,6 @@
             [clojure.spec.alpha :as s]
             [harja.kyselyt.specql :as specql]
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoituksen-email :as e]
@@ -131,13 +130,7 @@
 
 (def kaikki-ilmoituksen-email-lahetykset
   #{::t/id
-    [::t/email-lahetykset #{::e/id
-                            ::e/tietyoilmoitus-id
-                            ::e/tiedostonimi
-                            ::e/lahetetty
-                            ::e/lahetysid
-                            [::e/lahettaja kayttaja/perustiedot]
-                            ::e/kuitattu}]})
+    [::t/email-lahetykset e/perustiedot]})
 
 (def ilmoitus-pdf-kentat
   (let [pdf-kentat kaikki-ilmoituksen-kentat]
@@ -247,6 +240,10 @@
                                              ilmoituksien-emailit)]
                (merge ilmoitus ilmoituksen-emailit)))
            ilmoitukset))))
+
+(defn hae-sahkopostitiedot [db parametrit]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-email-lahetykset
+         parametrit))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
                                                 tilaaja?

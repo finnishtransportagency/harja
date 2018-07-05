@@ -21,7 +21,7 @@
             [harja.transit :as transit]
             [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 (def tieliikennekeskusten-sahkopostiosoitteet
   (if (k/kehitysymparistossa?)
@@ -32,9 +32,9 @@
 
     ;; Tuotantoversion osoitteet
     [["Helsinki" "helsinki.liikennekeskus@liikennevirasto.fi"]
-    ["Oulu" "oulu.liikennekeskus@liikennevirasto.fi"]
-    ["Tampere" "tampere.liikennekeskus@liikennevirasto.fi"]
-    ["Turku" "turku.liikennekeskus@liikennevirasto.fi"]]))
+     ["Oulu" "oulu.liikennekeskus@liikennevirasto.fi"]
+     ["Tampere" "tampere.liikennekeskus@liikennevirasto.fi"]
+     ["Turku" "turku.liikennekeskus@liikennevirasto.fi"]]))
 
 (def luonti-aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
                        {:nimi "1 päivän ajalta" :tunteja 24}
@@ -75,7 +75,8 @@
               :luotu-loppuaika (pvm/nyt)
               :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
               :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
-              :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}})
+              :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}
+   :pollattavat-ilmoitukset #{}})
 
 (defn- muodosta-palautettu-tila [app]
   ;; kutsutaan, kun atomin sisältö ladataan LocalStoragesta
@@ -90,10 +91,10 @@
             :kayttajan-urakat (:kayttajan-urakat app)})))
 
 (defonce tietyoilmoitukset
-  (local-storage-atom
-   :tietyoilmoitukset
-   tietyoilmoitus-app-sapluuna
-   muodosta-palautettu-tila))
+         (local-storage-atom
+           :tietyoilmoitukset
+           tietyoilmoitus-app-sapluuna
+           muodosta-palautettu-tila))
 
 
 (defonce karttataso-tietyoilmoitukset (atom false))
@@ -172,6 +173,34 @@
       (merge tietyoilmoitus (yllapitokohteen-tiedot-tietyoilmoituksella data))
       tietyoilmoitus)))
 
+(defn pollataan-uudestaan?
+  [lahetysten-tiedot entiset-email-lahetys-idt uusi-lahetetty?]
+  (let [kesken-olevat-lahetykset (filter #(and (::e/lahetetty %)
+                                               (not (::e/kuitattu %))
+                                               (not (::e/lahetysvirhe %)))
+                                         lahetysten-tiedot)
+        joku-lahetys-kesken? (not (empty? kesken-olevat-lahetykset))
+        uusi-sahkoposti-lahetetty? (when uusi-lahetetty?
+                                     (not (empty? (remove #(entiset-email-lahetys-idt (::e/id %))
+                                                          lahetysten-tiedot))))]
+    (or joku-lahetys-kesken?
+        (if (nil? uusi-sahkoposti-lahetetty?)
+          false
+          (not uusi-sahkoposti-lahetetty?)))))
+
+
+(defn pollaa-sahkopostin-lahetysta [muuta-sahkopostin-tila-fn parametrit entiset-lahetykset uusi-lahetetty?]
+  (go-loop [lahetysten-tiedot (async/<! (k/post! :hae-ilmoituksen-sahkopostitiedot parametrit))
+            pollataan? (pollataan-uudestaan? lahetysten-tiedot entiset-lahetykset uusi-lahetetty?)
+            aika 1000]
+           (if pollataan?
+             (do
+               (async/<! (async/timeout (min aika 10000)))
+               (recur (async/<! (k/post! :hae-ilmoituksen-sahkopostitiedot parametrit))
+                      (pollataan-uudestaan? lahetysten-tiedot entiset-lahetykset uusi-lahetetty?)
+                      (* 2 aika)))
+             (muuta-sahkopostin-tila-fn lahetysten-tiedot (select-keys parametrit [::t/id])))))
+
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
 (defrecord HaeIlmoitukset [])
@@ -186,8 +215,9 @@
 (defrecord PaivitaNopeusrajoitukset [nopeusrajoitukset])
 (defrecord PaivitaTienPinnat [tienpinnat avain])
 (defrecord PaivitaTyoajat [tyoajat virheita?])
+(defrecord PaivitaSahkopostilahetyksenTila [sahkopostien-tiedot ilmoituksen-tiedot])
 (defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf? sahkopostitiedot])
-(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf? laheta-sahkoposti?])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AvaaSahkopostinLahetysModal [ilmoitus avaa-pdf?])
 (defrecord SuljeSahkopostinLahetysModal [])
@@ -200,6 +230,26 @@
 (defrecord UrakanTiedotHaettu [urakka])
 (defrecord ValitseYllapitokohde [yllapitokohde])
 (defrecord YllapitokohdeValittu [yllapitokohde])
+
+(defn aloita-ilmoitusten-pollaaminen [ilmoitukset jo-pollattavat-ilmoitukset]
+  (into #{}
+        (for [ilmoitus ilmoitukset
+              :let [email-lahetykset (::t/email-lahetykset ilmoitus)]
+              :when (and
+                      (not (jo-pollattavat-ilmoitukset (::t/id ilmoitus)))
+                      (some #(and (::e/lahetetty %)
+                                  (not (::e/kuitattu %))
+                                  (not (::e/lahetysvirhe %)))
+                            email-lahetykset))]
+          (do (tuck/action!
+                (fn [e!]
+                  (pollaa-sahkopostin-lahetysta (fn [sahkopostien-tiedot ilmoituksen-tiedot]
+                                                  (e! (->PaivitaSahkopostilahetyksenTila sahkopostien-tiedot ilmoituksen-tiedot)))
+                                                (select-keys ilmoitus [::t/id ::t/urakka-id])
+                                                (into #{}
+                                                      (map ::e/id email-lahetykset))
+                                                false)))
+              (::t/id ilmoitus)))))
 
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
@@ -237,8 +287,15 @@
 
   IlmoituksetHaettu
   (process-event [vastaus app]
-    (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
-      (assoc app :tietyoilmoitukset ilmoitukset)))
+    (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))
+          pollattavat-ilmoitukset (when (and (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+                                             (not (:pollaus-kaynnissa? app)))
+                                    (aloita-ilmoitusten-pollaaminen ilmoitukset (:pollattavat-ilmoitukset app)))]
+
+      (-> app
+          (assoc :tietyoilmoitukset ilmoitukset)
+          (update :pollattavat-ilmoitukset (fn [ilmoitus-idt]
+                                             (set/union ilmoitus-idt pollattavat-ilmoitukset))))))
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
@@ -250,8 +307,6 @@
 
   IlmoitustaMuokattu
   (process-event [ilmoitus app]
-    #_(log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
-
     (assoc app :valittu-ilmoitus (:ilmoitus ilmoitus)))
 
   HaeKayttajanUrakat
@@ -265,7 +320,7 @@
     (let [urakat (sort-by :nimi (mapcat :urakat urakat))
           urakka @nav/valittu-urakka-id]
       (assoc app :kayttajan-urakat urakat
-                 :valinnat (assoc (:valinnat app) :urakka-id urakka))))
+             :valinnat (assoc (:valinnat app) :urakka-id urakka))))
 
   PaivitaSijainti
   (process-event [{sijainti :sijainti} app]
@@ -289,10 +344,23 @@
         (assoc-in [:valittu-ilmoitus ::t/tyoajat] tyoajat)
         (assoc-in [:valittu-ilmoitus :komponentissa-virheita? :tyoajat] virheita?)))
 
+  PaivitaSahkopostilahetyksenTila
+  (process-event [{sahkopostien-tiedot :sahkopostien-tiedot
+                   {ilmoitus-id ::t/id} :ilmoituksen-tiedot} app]
+    (-> app
+        (update :tietyoilmoitukset (fn [ilmoitukset]
+                                     (mapv (fn [ilmoitus]
+                                             (if (= ilmoitus-id (::t/id ilmoitus))
+                                               (assoc ilmoitus ::t/email-lahetykset sahkopostien-tiedot)
+                                               ilmoitus))
+                                           ilmoitukset)))
+        (update :pollattavat-ilmoitukset (fn [ilmoitus-idt]
+                                           (disj ilmoitus-idt ilmoitus-id)))))
+
   TallennaIlmoitus
   (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus
                    avaa-pdf? :avaa-pdf? sahkopostitiedot :sahkopostitiedot} app]
-    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus avaa-pdf?)
+    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus avaa-pdf? (not (empty? sahkopostitiedot)))
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
@@ -319,38 +387,55 @@
             (fail! nil)
             (throw e)))))
     (assoc app :tallennus-kaynnissa? true
-               ;; suljetaan ja resetoidaan tallennuksen jälkeen modaali
-               :sahkopostilahetyksen-modal-data {:nakyvissa? false
-                                                 :avaa-pdf? false
-                                                 :ilmoitus nil
-                                                 :lomakedata {:vastaanottaja nil
-                                                              :muut-vastaanottajat #{}
-                                                              :kopio-itselle? false}}))
+           ;; suljetaan ja resetoidaan tallennuksen jälkeen modaali
+           :sahkopostilahetyksen-modal-data {:nakyvissa? false
+                                             :avaa-pdf? false
+                                             :ilmoitus nil
+                                             :lomakedata {:vastaanottaja nil
+                                                          :muut-vastaanottajat #{}
+                                                          :kopio-itselle? false}}))
 
   IlmoitusTallennettu
-  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
-    (viesti/nayta! "Ilmoitus tallennettu!")
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf? laheta-sahkoposti? :laheta-sahkoposti?} app]
+    (if laheta-sahkoposti?
+      (viesti/nayta! "Ilmoitus tallennettu, mutta sähköpostin lähetys on vielä kesken..." :info viesti/viestin-nayttoaika-keskipitka)
+      (viesti/nayta! "Ilmoitus tallennettu!"))
+    (when (and laheta-sahkoposti?
+               (not ((:pollattavat-ilmoitukset app) (::t/id ilmoitus))))
+      (tuck/action!
+        (fn [e!]
+          (pollaa-sahkopostin-lahetysta (fn [sahkopostien-tiedot ilmoituksen-tiedot]
+                                          (e! (->PaivitaSahkopostilahetyksenTila sahkopostien-tiedot ilmoituksen-tiedot)))
+                                        (select-keys ilmoitus [::t/id ::t/urakka-id])
+                                        (into #{}
+                                              (map ::e/id (::t/email-lahetykset ilmoitus)))
+                                        true))))
     (when avaa-pdf?
       (set! (.-location js/window) (k/pdf-url :tietyoilmoitus "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
-    (assoc app
-      :tallennus-kaynnissa? false
-      :valittu-ilmoitus (if sulje-ilmoitus nil ilmoitus)))
+    (-> app
+        (assoc :tallennus-kaynnissa? false
+               :valittu-ilmoitus (if sulje-ilmoitus nil ilmoitus))
+        (update :pollattavat-ilmoitukset (fn [ilmoitus-idt]
+                                           (if (and laheta-sahkoposti?
+                                                    (not ((:pollattavat-ilmoitukset app) (::t/id ilmoitus))))
+                                             (conj ilmoitus-idt (::t/id ilmoitus))
+                                             ilmoitus-idt)))))
 
   IlmoitusEiTallennettu
   (process-event [{virhe :virhe} app]
     (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta ei tallennettu"]
                    :danger)
     (assoc app
-      :tallennus-kaynnissa? false))
+           :tallennus-kaynnissa? false))
 
   AvaaSahkopostinLahetysModal
   (process-event [{ilmoitus :ilmoitus
                    avaa-pdf? :avaa-pdf?} app]
     (assoc app
-      :sahkopostilahetyksen-modal-data {:nakyvissa? true
-                                        :avaa-pdf? avaa-pdf?
-                                        :ilmoitus ilmoitus
-                                        :lomakedata {}}))
+           :sahkopostilahetyksen-modal-data {:nakyvissa? true
+                                             :avaa-pdf? avaa-pdf?
+                                             :ilmoitus ilmoitus
+                                             :lomakedata {}}))
 
   SuljeSahkopostinLahetysModal
   (process-event [_ app]
@@ -388,7 +473,7 @@
   UusiTietyoilmoitus
   (process-event [{esitaytetyt-tiedot :esitaytetyt-tiedot} app]
     (assoc app :valittu-ilmoitus esitaytetyt-tiedot
-               :aloitetaan-uusi-tietyoilmoitus? false))
+           :aloitetaan-uusi-tietyoilmoitus? false))
 
   UrakkaValittu
   (process-event [{urakka-id :urakka-id} app]
@@ -421,4 +506,4 @@
                            (esitayta-tietyoilmoitus
                              (async/<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
       (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
-                                         :tallennus-kaynnissa? false)))))
+                                       :tallennus-kaynnissa? false)))))

@@ -24,7 +24,27 @@
   String
   (luo-viesti [s istunto]
     (doto (.createTextMessage istunto)
-      (.setText s))))
+      (.setText s)))
+  ;; Luodaan multipart viesti
+  clojure.lang.PersistentArrayMap
+  (luo-viesti [{:keys [xml-viesti pdf-liite]} istunto]
+    (if (and xml-viesti pdf-liite)
+      (let [mm (.createMultipartMessage istunto)
+            viesti-osio (.createMessagePart mm (luo-viesti xml-viesti istunto))
+            liite-osio (.createMessagePart mm (doto (.createBytesMessage istunto)
+                                                (.writeBytes pdf-liite)))]
+        (doto mm
+          (.addPart viesti-osio)
+          (.addPart liite-osio)))
+      (throw+ {:type :puutteelliset-multipart-parametrit
+               :virheet [(if xml-viesti
+                           "XML viesti annettu"
+                           {:koodi :ei-xml-viestia
+                            :viesti "XML-viestiä ei annettu"})
+                         (if pdf-liite
+                           "PDF liite annettu"
+                           {:koodi :ei-pdf-liitetta
+                            :viest "PDF-liitettä ei annettu"})]}))))
 
 (defprotocol Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
@@ -197,8 +217,8 @@
                    :consumer (or consumer
                                  (luo-jonon-kuuntelija istunto jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
-                                                         (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
-                                                         (kuuntelija %))))
+                                                          (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
+                                                          (kuuntelija %))))
                    :kuuntelijat kuuntelijat)))))
 
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
