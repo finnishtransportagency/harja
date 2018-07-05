@@ -20,8 +20,6 @@
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
-(def +tloik-tietyoilmoitusviestijono+ "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Msg")
-(def +tloik-tietyoilmoituskuittausjono+ "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Ack")
 (def +testi-ilmoitus-sanoma+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
@@ -251,9 +249,7 @@
   (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
             :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
             :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
-            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+
-            :tietyoilmoitusviestijono +tloik-tietyoilmoitusviestijono+
-            :tietyoilmoituskuittausjono +tloik-tietyoilmoituskuittausjono+}
+            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}
            true))
 
 (def +ilmoitus-ruotsissa+

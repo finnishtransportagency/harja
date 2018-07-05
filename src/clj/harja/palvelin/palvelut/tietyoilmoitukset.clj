@@ -207,8 +207,6 @@
                               ilmoituksen-sahkopostitiedot (hae-ilmoituksen-sahkopostitiedot db user (select-keys tallennettu [::t/urakka-id ::t/id]))]
                           (merge tallennettu {::t/email-lahetykset ilmoituksen-sahkopostitiedot})))]
       (when (and (not (empty? sahkopostitiedot))
-                 ;; TODO: Kun sähköpostin lähetys otetaan käyttöön, niin tuo ominaisuus käytössä pitää muistaa jättää
-                 ;; (tloik/laheta-tietyoilmoitus tloik (::t/id tallennettu)) funktiokutsulle.
                  (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
         (async/thread
           (let [{pdf-bytet :tiedosto-bytet
@@ -229,9 +227,7 @@
                                                          :pdf pdf-bytet
                                                          :tietyoilmoitus-id (::t/id tallennettu)
                                                          :ilmoittaja user
-                                                         :tiedostonimi tiedostonimi}))
-          ;(tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))
-          ))
+                                                         :tiedostonimi tiedostonimi}))))
       tallennettu)))
 
 (defn hae-yhteyshenkilo-roolissa [rooli kayttajat]
