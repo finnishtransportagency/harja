@@ -24,7 +24,7 @@
    ::tielupa/liikenneohjaajan-nimi "Liikenneohjaus Oy"
    ::tielupa/paatoksen-diaarinumero "paatos-123"
    ::tielupa/hakija-tyyppi "kotitalous"
-   ::tielupa/urakka 4
+   ::tielupa/urakat [4]
    ::tielupa/urakoitsija-sahkopostiosoite "yrjana.yhteyshenkilo@example.com"
    ::tielupa/hakija-postinumero "90900"
    ::tielupa/sijainnit [{::tielupa/ajorata 0
@@ -40,7 +40,7 @@
    ::tielupa/urakoitsija-puhelinnumero "987-7889087"
    ::tielupa/otsikko "Testilupa mainosten pystyttämiseen"
    ::tielupa/hakija-postinosoite "Liitintie 1"
-   ::tielupa/urakan-nimi "Oulu"
+   ::tielupa/urakoiden-nimet ["Oulu"]
    ::tielupa/ely 12
    ::tielupa/kohde-postinumero "90900"
    ::tielupa/ulkoinen-tunniste testiluvan-ulkoinen-tunniste

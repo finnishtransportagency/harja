@@ -27,7 +27,7 @@
                   :harja.domain.tielupa/paatoksen-diaarinumero "123456789"
                   :harja.domain.tielupa/hakija-postinumero 90900
                   :harja.domain.tielupa/otsikko "Lupa tehdä töitä"
-                  :harja.domain.tielupa/urakan-nimi "Oulu"
+                  :harja.domain.tielupa/urakoiden-nimet ["Oulu"]
                   :harja.domain.tielupa/kohde-postinumero 90900
                   :harja.domain.tielupa/ulkoinen-tunniste 1234
                   :harja.domain.tielupa/saapumispvm #inst "2020-09-22T10:00:00.000-00:00"

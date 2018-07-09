@@ -90,7 +90,12 @@
         },
         "alueurakka": {
           "id": "urn:harja/tielupa/perustiedot/alueurakka",
-          "type": "string"
+          "type": "array",
+          "maxItems" : 2000,
+          "items": {
+            "id": "urn:harja/tielupa/perustiedot/alueurakka/0",
+            "type": "string"
+          }
         },
         "kunta": {
           "id": "urn:harja/tielupa/perustiedot/kunta",

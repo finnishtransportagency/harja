@@ -10,8 +10,8 @@ INSERT INTO tielupa (
   otsikko,
   "katselmus-url",
   ely,
-  urakka,
-  "urakan-nimi",
+  urakat,
+  "urakoiden-nimet",
   kunta,
   "kohde-lahiosoite",
   "kohde-postinumero",
@@ -59,10 +59,10 @@ VALUES (
   (SELECT id
    FROM organisaatio
    WHERE lyhenne = 'POP'),
-  (SELECT id
+  ARRAY [(SELECT id
    FROM urakka
-   WHERE sampoid = '1242141-OULU2'),
-  'Oulun alueurakka',
+   WHERE sampoid = '1242141-OULU2')],
+  '{Oulun alueurakka}',
   'Kiiminki',
   'Tie 123',
   '90900',
@@ -139,8 +139,8 @@ INSERT INTO tielupa (
   otsikko,
   "katselmus-url",
   ely,
-  urakka,
-  "urakan-nimi",
+  urakat,
+  "urakoiden-nimet",
   kunta,
   "kohde-lahiosoite",
   "kohde-postinumero",
@@ -191,10 +191,10 @@ VALUES (
   (SELECT id
    FROM organisaatio
    WHERE lyhenne = 'POP'),
-  (SELECT id
-   FROM urakka
-   WHERE sampoid = '1242141-OULU2'),
-  'Oulun alueurakka',
+  ARRAY [(SELECT id
+          FROM urakka
+          WHERE sampoid = '1242141-OULU2')],
+  '{Oulun alueurakka}',
   'Kiiminki',
   'Tie 123',
   '90900',

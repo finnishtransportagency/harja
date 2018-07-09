@@ -40,8 +40,8 @@
     ::otsikko
     ::katselmus-url
     ::ely
-    ::urakka
-    ::urakan-nimi
+    ::urakat
+    ::urakoiden-nimet
     ::kunta
     ::kohde-lahiosoite
     ::kohde-postinumero
