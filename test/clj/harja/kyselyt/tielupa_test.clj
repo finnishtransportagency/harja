@@ -40,7 +40,7 @@
    ::tielupa/urakoitsija-puhelinnumero "987-7889087"
    ::tielupa/otsikko "Testilupa mainosten pystyttämiseen"
    ::tielupa/hakija-postinosoite "Liitintie 1"
-   ::tielupa/urakan-nimi "Oulu"
+   ::tielupa/urakoiden-nimet ["Oulu"]
    ::tielupa/ely 12
    ::tielupa/kohde-postinumero "90900"
    ::tielupa/ulkoinen-tunniste testiluvan-ulkoinen-tunniste

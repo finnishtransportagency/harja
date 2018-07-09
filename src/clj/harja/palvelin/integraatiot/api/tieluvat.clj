@@ -76,12 +76,11 @@
        (tielupa-q/tallenna-tielupa db))
 
   (let [tielupa (first (tielupa-q/hae-tieluvat db {::tielupa/ulkoinen-tunniste (get-in data [:tielupa :perustiedot :tunniste :id])}))
-        tielupa-id (::tielupa/id tielupa)
-        urakka-id (::tielupa/urakka tielupa)]
+        tielupa-id (::tielupa/id tielupa)]
     (tielupa-q/aseta-tieluvalle-urakka db tielupa-id)
 
     (when-let [liitteet (get-in data [:tielupa :liitteet])]
-      (liitteet/tallenna-liitteet-tieluvalle db liitteiden-hallinta urakka-id tielupa-id kayttaja liitteet)))
+      (liitteet/tallenna-liitteet-tieluvalle db liitteiden-hallinta nil tielupa-id kayttaja liitteet)))
 
   (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
 

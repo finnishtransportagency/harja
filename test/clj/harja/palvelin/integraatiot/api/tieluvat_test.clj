@@ -86,7 +86,7 @@
                   ::tielupa/urakoitsija-puhelinnumero "987-7889087"
                   ::tielupa/otsikko "Lupa lisätä mainos tielle"
                   ::tielupa/hakija-postinosoite "Liitintie 1"
-                  ::tielupa/urakan-nimi "Oulun alueurakka"
+                  ::tielupa/urakoiden-nimet ["Oulun alueurakka"]
                   ::tielupa/ely 12
                   ::tielupa/kohde-postinumero "90900"
                   ::tielupa/ulkoinen-tunniste 3453455

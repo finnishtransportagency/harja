@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.34</b>  
+<b>Nykyinen versio: 1.0.36</b>  
 <b>Julkaistu: 29.03.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.36 Julkaistu 9.7.2018
+    - Tieluvan kirjaus ottaa alueurakat arrayna.
 - Versionumero 1.0.35 Julkaistu 27.4.2018
     - Päällystysilmoituksen kirjauksessa voi nyt kirjata alustatoimenpiteillä tienumeron. Jos tienumeroa ei anna, käytetään pääkohteen tienumeroa.
 - Versionumero: 1.0.34 Julkaistu: 29.3.2018: 

@@ -26,7 +26,7 @@
       "otsikko": "Lupa rakentaa aitta suoja-alueelle",
       "katselmus-url": "https://tilu.fi/1234",
       "ely": "Pohjois-Pohjanmaa",
-      "alueurakka": "Oulun alueurakka",
+      "alueurakka": ["Oulun alueurakka"],
       "kunta": "Kiiminki",
       "kohteen-lahiosoite": "Tie 123",
       "kohteen-postinumero": "90900",
