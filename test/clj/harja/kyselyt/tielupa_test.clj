@@ -24,7 +24,7 @@
    ::tielupa/liikenneohjaajan-nimi "Liikenneohjaus Oy"
    ::tielupa/paatoksen-diaarinumero "paatos-123"
    ::tielupa/hakija-tyyppi "kotitalous"
-   ::tielupa/urakka 4
+   ::tielupa/urakat [4]
    ::tielupa/urakoitsija-sahkopostiosoite "yrjana.yhteyshenkilo@example.com"
    ::tielupa/hakija-postinumero "90900"
    ::tielupa/sijainnit [{::tielupa/ajorata 0

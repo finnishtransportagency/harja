@@ -12,9 +12,10 @@ DECLARE
   sijainnit_         TR_OSOITE_LAAJENNETTU [];
   geometriat_        GEOMETRY [];
   tieluvan_geometria GEOMETRY;
-  alueurakkanrot_     TEXT [];
-  alueurakkanimet_    TEXT [];
-  urakka_idt_         INTEGER [];
+  alueurakkanrot_    TEXT [];
+  alueurakkanimet_   TEXT [];
+  urakka_idt_        INTEGER [];
+  myontamispvm_      DATE;
 
 BEGIN
 
@@ -26,12 +27,20 @@ BEGIN
   FROM tielupa
   WHERE id = tielupa_id;
 
+  SELECT INTO myontamispvm_ myontamispvm
+  FROM tielupa
+  WHERE id = tielupa_id;
+
   IF (alueurakkanimet_ IS NOT NULL)
   THEN
     SELECT INTO alueurakkanrot_ array_agg(alueurakkanro::TEXT)
     FROM alueurakka
     WHERE nimi = ANY (alueurakkanimet_ ::TEXT[]);
-  ELSIF (sijainnit_ IS NOT NULL AND sijainnit_ [1].tie IS NOT NULL)
+  END IF;
+
+  IF (alueurakkanrot_ IS NULL AND
+      sijainnit_ IS NOT NULL AND
+      sijainnit_ [1].tie IS NOT NULL)
   THEN
     FOREACH sijainti_ IN ARRAY sijainnit_
     LOOP
@@ -56,7 +65,9 @@ BEGIN
   SELECT INTO urakka_idt_ array_agg(id::INTEGER)
   FROM urakka
   WHERE (urakkanro = ANY(alueurakkanrot_::TEXT[]) AND
-         tyyppi='hoito'::urakkatyyppi);
+         tyyppi='hoito'::urakkatyyppi AND
+         alkupvm < myontamispvm_ AND
+         myontamispvm_ < loppupvm);
 
   IF (urakka_idt_ IS NULL)
   THEN
