@@ -180,8 +180,7 @@ FROM toteuma_materiaali tm
        AND t.poistettu IS NOT TRUE
        AND t.sopimus = :sopimus
        AND tm.materiaalikoodi = :materiaali
-       AND t.alkanut :: DATE >= :alku
-       AND t.alkanut :: DATE <= :loppu
+       AND t.alkanut  BETWEEN :alku AND :loppu
 
   INNER JOIN materiaalikoodi m
     ON tm.materiaalikoodi = m.id
