@@ -16,7 +16,9 @@
    ::tielupa/voimassaolon-loppupvm (json-tyokalut/aika-string->java-sql-date (:voimassaolon-loppupvm perustiedot))
    ::tielupa/otsikko (:otsikko perustiedot)
    ::tielupa/katselmus-url (:katselmus-url perustiedot)
-   ::tielupa/urakoiden-nimet (:alueurakka perustiedot)
+   ::tielupa/urakoiden-nimet (if-let [urakoiden-nimet (:alueurakka perustiedot)]
+                               urakoiden-nimet
+                               [])
    ::tielupa/kunta (:kunta perustiedot)
    ::tielupa/kohde-lahiosoite (:kohteen-lahiosoite perustiedot)
    ::tielupa/kohde-postitoimipaikka (:kohteen-postitoimipaikka perustiedot)
