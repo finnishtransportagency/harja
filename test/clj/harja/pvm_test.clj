@@ -5,7 +5,11 @@
     [harja.pvm :as pvm]
     [clj-time.core :as t]))
 
-(def nyt (t/now))
+(def nyt (let [tama-paiva (t/today)]
+           (t/date-time (t/year tama-paiva)
+                        (t/month tama-paiva)
+                        (t/day tama-paiva)
+                        12)))
 
 (deftest ennen?
   (is (false? (pvm/ennen? nil nil)))
