@@ -338,7 +338,7 @@
            [:fo:block
             (case vs
               "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
-              "vastenTienumeronkasvusuuntaa" "Vasten tienumeron kasvusuuntaa"
+              "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"
               "")])]))
 
 (defn- muuta [{m ::t/lisatietoja}]
