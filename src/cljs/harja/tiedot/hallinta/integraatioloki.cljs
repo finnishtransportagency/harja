@@ -72,7 +72,9 @@
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
             (reset! haetut-tapahtumat tapahtumat)
             (when @tultiin-urlin-kautta
-              (.scrollIntoView (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0) true)
+              (try (.scrollIntoView (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0) true)
+                   (catch :default e
+                     (log/debug "VIRHE: Skrollaaminen avattuun vetolaatikkoon ei onnistunut")))
               (reset! tultiin-urlin-kautta nil))
             tapahtumat)))))
 
