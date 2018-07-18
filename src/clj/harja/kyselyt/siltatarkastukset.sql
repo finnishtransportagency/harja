@@ -320,4 +320,5 @@ INSERT INTO siltatarkastus_kohde_liite (siltatarkastus, kohde, liite)
 VALUES (:siltatarkastus, :kohde, :liite);
 
 -- name: hae-sillan-urakat
+-- single?: true
 SELECT urakat FROM silta WHERE id=:siltaid;
