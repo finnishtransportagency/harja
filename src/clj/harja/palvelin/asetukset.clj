@@ -229,7 +229,8 @@
     (log/merge-config! {:appenders
                         {:slack
                          (slack/luo-slack-appender (str/trim (:webhook-url slack))
-                                                   (:taso slack))}}))
+                                                   (:taso slack)
+                                                   (:urls slack))}}))
 
   (when-let [email (-> asetukset :log :email)]
     (log/merge-config!

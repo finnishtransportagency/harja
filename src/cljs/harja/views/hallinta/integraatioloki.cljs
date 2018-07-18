@@ -169,129 +169,142 @@
      eniten-kutsutut]))
 
 (defn tapahtumien-paanakyma []
-  [:span
-   [:div.container
-    [:div.label-ja-alasveto
-     [:span.alasvedon-otsikko "Järjestelmä"]
-     [livi-pudotusvalikko {:valinta @tiedot/valittu-jarjestelma
-                           :format-fn #(if % (:jarjestelma %)
-                                             "Kaikki järjestelmät")
-                           :valitse-fn #(do
-                                          (reset! tiedot/valittu-jarjestelma %)
-                                          (when-not (and @tiedot/valittu-jarjestelma
-                                                         (contains? (:integraatiot @tiedot/valittu-jarjestelma)
-                                                                    @tiedot/valittu-integraatio))
-                                            (reset! tiedot/valittu-integraatio nil)))}
-       (vec (concat [nil] (sort-by :jarjestelma @tiedot/jarjestelmien-integraatiot)))]]
-
-    (when @tiedot/valittu-jarjestelma
+  (let [haetut-tapahtumat @tiedot/haetut-tapahtumat
+        maara-per-sivu 100]
+    [:span
+     [:div.container
       [:div.label-ja-alasveto
-       [:span.alasvedon-otsikko "Integraatio"]
-       [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
-                             :format-fn #(if % (str %) "Kaikki integraatiot")
-                             :valitse-fn #(reset! tiedot/valittu-integraatio %)}
-        (vec (concat [nil] (sort (:integraatiot @tiedot/valittu-jarjestelma))))]])
+       [:span.alasvedon-otsikko "Järjestelmä"]
+       [livi-pudotusvalikko {:valinta @tiedot/valittu-jarjestelma
+                             :format-fn #(if % (:jarjestelma %)
+                                               "Kaikki järjestelmät")
+                             :valitse-fn #(do
+                                            (reset! tiedot/valittu-jarjestelma %)
+                                            (when-not (and @tiedot/valittu-jarjestelma
+                                                           (contains? (:integraatiot @tiedot/valittu-jarjestelma)
+                                                                      @tiedot/valittu-integraatio))
+                                              (reset! tiedot/valittu-integraatio nil)))}
+        (vec (concat [nil] (sort-by :jarjestelma @tiedot/jarjestelmien-integraatiot)))]]
+
+      (when @tiedot/valittu-jarjestelma
+        [:div.label-ja-alasveto
+         [:span.alasvedon-otsikko "Integraatio"]
+         [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
+                               :format-fn #(if % (str %) "Kaikki integraatiot")
+                               :valitse-fn #(reset! tiedot/valittu-integraatio %)}
+          (vec (concat [nil] (sort (:integraatiot @tiedot/valittu-jarjestelma))))]])
 
 
-    (if @tiedot/nayta-uusimmat-tilassa?
-      [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä/hae aikaväliltä"]
-      [:span
-       [valinnat/aikavali tiedot/valittu-aikavali]
-       [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat!)} "Näytä uusimmat"]])
+      (if @tiedot/nayta-uusimmat-tilassa?
+        [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä/hae aikaväliltä"]
+        [:span
+         [valinnat/aikavali tiedot/valittu-aikavali]
+         [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat!)} "Näytä uusimmat"]])
 
 
-    (if-not (empty? @tiedot/tapahtumien-maarat)
-      [:div.integraatio-tilastoja
-       [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat]
-       (when-not @tiedot/valittu-integraatio
-         [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
-      [:div "Ei pyyntöjä annetuilla parametreillä"])
+      (if-not (empty? @tiedot/tapahtumien-maarat)
+        [:div.integraatio-tilastoja
+         [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat]
+         (when-not @tiedot/valittu-integraatio
+           [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
+        [:div "Ei pyyntöjä annetuilla parametreillä"])
 
-    (when (not @tiedot/nayta-uusimmat-tilassa?)
-      [lomake/lomake
-       {:otsikko "Hakuehdot"
-        :muokkaa! #(reset! tiedot/hakuehdot %)}
-       [{:otsikko "Tapahtumien tila" :nimi :tapahtumien-tila :tyyppi :valinta
-         :valinta-arvo first
-         :valinta-nayta second
-         :valinnat [[:kaikki "Kaikki"]
-                    [:onnistuneet "Onnistuneet"]
-                    [:epaonnistuneet "Epäonnistuneet"]]}
-        {:otsikko "Tapahtuman kesto minuuteissa yli"
-         :nimi :tapahtumien-kesto
-         :tyyppi :positiivinen-numero
-         :kokonaisluku? true}
-        (lomake/ryhma
-          {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
-          {:otsikko "Otsikot"
-           :nimi :otsikot
-           :tyyppi :string}
-          {:otsikko "Parametrit"
-           :nimi :parametrit
-           :tyyppi :string}
-          {:otsikko "Viestin sisältö"
-           :nimi :viestin-sisalto
-           :tyyppi :string})
-        (lomake/rivi
-          {:nimi :hae
-           :tyyppi :komponentti
-           :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
-          {:nimi :tyhjenna
-           :tyyppi :komponentti
-           :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
-                                                                          tiedot/hakuehdot
-                                                                          dissoc :otsikot :parametrit :viestin-sisalto)}
-                                 "Tyhjennä"])})]
-       @tiedot/hakuehdot])
+      (when (not @tiedot/nayta-uusimmat-tilassa?)
+        [lomake/lomake
+         {:otsikko "Hakuehdot"
+          :muokkaa! #(reset! tiedot/hakuehdot %)}
+         [{:otsikko "Tapahtumien tila" :nimi :tapahtumien-tila :tyyppi :valinta
+           :valinta-arvo first
+           :valinta-nayta second
+           :valinnat [[:kaikki "Kaikki"]
+                      [:onnistuneet "Onnistuneet"]
+                      [:epaonnistuneet "Epäonnistuneet"]]}
+          {:otsikko "Tapahtuman kesto minuuteissa yli"
+           :nimi :tapahtumien-kesto
+           :tyyppi :positiivinen-numero
+           :kokonaisluku? true}
+          (lomake/ryhma
+            {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
+            {:otsikko "Otsikot"
+             :nimi :otsikot
+             :tyyppi :string}
+            {:otsikko "Parametrit"
+             :nimi :parametrit
+             :tyyppi :string}
+            {:otsikko "Viestin sisältö"
+             :nimi :viestin-sisalto
+             :tyyppi :string})
+          (lomake/rivi
+            {:nimi :hae
+             :tyyppi :komponentti
+             :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
+            {:nimi :tyhjenna
+             :tyyppi :komponentti
+             :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
+                                                                            tiedot/hakuehdot
+                                                                            dissoc :otsikot :parametrit :viestin-sisalto)}
+                                   "Tyhjennä"])})]
+         @tiedot/hakuehdot])
 
-    [grid
-     {:otsikko (if @tiedot/nayta-uusimmat-tilassa? "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
-      :tyhja (if @tiedot/haetut-tapahtumat "Ei tapahtumia" [ajax-loader "Haetaan tapahtumia"])
-      :vetolaatikot (into {}
-                          (map (juxt :id (fn [tapahtuma]
-                                           [tapahtuman-tiedot tapahtuma]))
-                               @tiedot/haetut-tapahtumat))
-      :vetolaatikot-auki (when @tiedot/tapahtuma-id tiedot/tapahtuma-id)
-      }
+      [grid
+       {:otsikko (if @tiedot/nayta-uusimmat-tilassa? "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
+        :tyhja (if @tiedot/haetut-tapahtumat "Ei tapahtumia" [ajax-loader "Haetaan tapahtumia"])
+        :vetolaatikot (into {}
+                            (map (juxt :id (fn [tapahtuma]
+                                             [tapahtuman-tiedot tapahtuma]))
+                                 @tiedot/haetut-tapahtumat))
+        :sivuta maara-per-sivu
+        :aloitus-sivu (r/with-let [tapahtuma-id-alussa (first @tiedot/tapahtuma-id)]
+                                  ;; Tämä on totta silloin, kun tullaan urlin kautta näkymään.
+                                  (when tapahtuma-id-alussa
+                                    (js/Math.floor
+                                      (/ (first
+                                           (sequence (comp
+                                                       (map-indexed #(identity [%1 %2]))
+                                                       (filter #(= (second %) @tiedot/tapahtuma-id)))
+                                                     haetut-tapahtumat))
+                                         maara-per-sivu))))
+        :vetolaatikot-auki (when @tiedot/tapahtuma-id tiedot/tapahtuma-id)
+        }
 
-     (vec
-       (keep identity
-             [{:tyyppi :vetolaatikon-tila :leveys 3}
-              (when-not @tiedot/valittu-jarjestelma
-                {:otsikko "Järjestelmä" :nimi :jarjestelma :hae (comp :jarjestelma :integraatio) :leveys 10})
-              (when-not @tiedot/valittu-integraatio
-                {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
-              {:otsikko "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
-               :komponentti #(if (nil? (:paattynyt %))
-                               [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
-                               (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
-                                                   [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
-              {:otsikko "Alkanut" :nimi :alkanut :leveys 15
-               :hae #(if (:alkanut %)
-                       (pvm/pvm-aika-sek (:alkanut %))
-                       "-")}
-              {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
-               :hae #(if (:paattynyt %)
-                       (pvm/pvm-aika-sek (:paattynyt %))
-                       "-")}
-              {:otsikko "Kesto"
-               :tyyppi :komponentti
-               :komponentti (fn [{:keys [alkanut paattynyt]}]
-                              (when (and alkanut paattynyt)
-                                (let [vali (t/interval alkanut paattynyt)
-                                      kesto-sekunneissa (t/in-seconds vali)
-                                      kesto-millisekunneissa (t/in-millis vali)
-                                      kesto (str kesto-sekunneissa " s (" kesto-millisekunneissa " ms)")]
-                                  (cond
-                                    (< 600 kesto-sekunneissa) [:span.integraatioloki-virhe (ikonit/aika) " " kesto]
-                                    (< 300 kesto-sekunneissa) [:span.integraatioloki-virhe kesto]
-                                    (< 60 kesto-sekunneissa) [:span.integraatioloki-varoitus kesto]
-                                    :else [:span.integraatioloki-onnistunut kesto]))))
-               :leveys 10}
-              {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
-              {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
+       (vec
+         (keep identity
+               [{:tyyppi :vetolaatikon-tila :leveys 3}
+                (when-not @tiedot/valittu-jarjestelma
+                  {:otsikko "Järjestelmä" :nimi :jarjestelma :hae (comp :jarjestelma :integraatio) :leveys 10})
+                (when-not @tiedot/valittu-integraatio
+                  {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
+                {:otsikko "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
+                 :komponentti #(if (nil? (:paattynyt %))
+                                 [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
+                                 (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
+                                                     [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
+                {:otsikko "Alkanut" :nimi :alkanut :leveys 15
+                 :hae #(if (:alkanut %)
+                         (pvm/pvm-aika-sek (:alkanut %))
+                         "-")}
+                {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
+                 :hae #(if (:paattynyt %)
+                         (pvm/pvm-aika-sek (:paattynyt %))
+                         "-")}
+                {:otsikko "Kesto"
+                 :tyyppi :komponentti
+                 :komponentti (fn [{:keys [alkanut paattynyt]}]
+                                (when (and alkanut paattynyt)
+                                  (let [vali (t/interval alkanut paattynyt)
+                                        kesto-sekunneissa (t/in-seconds vali)
+                                        kesto-millisekunneissa (t/in-millis vali)
+                                        kesto (str kesto-sekunneissa " s (" kesto-millisekunneissa " ms)")]
+                                    (cond
+                                      (< 600 kesto-sekunneissa) [:span.integraatioloki-virhe (ikonit/aika) " " kesto]
+                                      (< 300 kesto-sekunneissa) [:span.integraatioloki-virhe kesto]
+                                      (< 60 kesto-sekunneissa) [:span.integraatioloki-varoitus kesto]
+                                      :else [:span.integraatioloki-onnistunut kesto]))))
+                 :leveys 10}
+                {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
+                {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 
-     @tiedot/haetut-tapahtumat]]])
+       haetut-tapahtumat]]]))
 
 (defn aloita-tapahtumien-paivitys! []
 
@@ -306,15 +319,15 @@
           (when @tiedot/nayta-uusimmat-tilassa?
             (tiedot/hae-tapahtumat!))
           (recur))))
-    #(reset! paivita? false) ;; palautetaan pysäytysfunktio jota komp/ulos kutsuu
+    #(reset! paivita? false)                                ;; palautetaan pysäytysfunktio jota komp/ulos kutsuu
     ))
 
 (defn integraatioloki []
   (komp/luo
     (komp/ulos (aloita-tapahtumien-paivitys!))
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(when @tiedot/tapahtuma-id
-                   (tiedot/hae-tapahtumat!)))
+    (komp/sisaan #(when-not (empty? @tiedot/tapahtuma-id)
+                    (tiedot/hae-tapahtumat!)))
     (fn []
       [:div.integraatioloki
        [tapahtumien-paanakyma]])))

@@ -47,6 +47,7 @@
 (defonce nayta-uusimmat-tilassa? (atom true))
 ;; Kun seurataan ulkoista integraatiolokiin linkkaavaa urlia - näitä lokitetaan ja linkin voi avata suoraan slackista
 (defonce tapahtuma-id (atom nil))
+(defonce tultiin-urlin-kautta (atom nil))
 
 (defn eilen-tanaan-aikavali []
   [(pvm/aikana (time/yesterday) 0 0 0 0)
@@ -70,6 +71,9 @@
       (reset! haetut-tapahtumat nil)
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
             (reset! haetut-tapahtumat tapahtumat)
+            (when @tultiin-urlin-kautta
+              (.scrollIntoView (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0) true)
+              (reset! tultiin-urlin-kautta nil))
             tapahtumat)))))
 
 (defonce tapahtumien-maarat
