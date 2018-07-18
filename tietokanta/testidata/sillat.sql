@@ -121,9 +121,3 @@ SELECT (SELECT id from siltatarkastus where tarkastusaika = '2014-04-08' AND ura
 INSERT
   INTO siltatarkastuskohde (siltatarkastus, kohde, tulos)
 SELECT (SELECT id from siltatarkastus where tarkastusaika = '2015-04-08' AND urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012')) as tark, kohde, 'A' FROM generate_series(1,24) kohde;
-
-
-
-
--- Siltojen insertoinnin jälkeen on päivitettävä materialisoitu näkymä
-REFRESH MATERIALIZED VIEW sillat_alueurakoittain;

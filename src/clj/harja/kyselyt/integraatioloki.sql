@@ -130,3 +130,14 @@ ORDER BY pvm;
 SELECT id
 FROM integraatio
 WHERE jarjestelma = :jarjestelma AND nimi = :integraatio;
+
+-- name: hae-uusin-integraatiotapahtuma-id
+SELECT id
+FROM integraatiotapahtuma it
+  JOIN integraatio i ON i.id = it.integraatio
+WHERE i.jarjestelma = :jarjestelma AND
+      i.nimi = :nimi AND
+      it.paattynyt = NULL AND
+      it.alkanut :: DATE = CURRENT_DATE
+ORDER BY it.alkanut DESC
+LIMIT 1;

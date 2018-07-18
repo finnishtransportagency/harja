@@ -12,3 +12,8 @@ SELECT paivita_geometriapaivityksen_viimeisin_paivitys(:nimi, :viimeisin_paivity
 SELECT viimeisin_paivitys
 FROM geometriapaivitys
 WHERE nimi = 'tieverkko';
+
+-- name: poista-viimeisin-paivitys!
+UPDATE geometriapaivitys
+SET viimeisin_paivitys=NULL
+WHERE nimi=:nimi;
