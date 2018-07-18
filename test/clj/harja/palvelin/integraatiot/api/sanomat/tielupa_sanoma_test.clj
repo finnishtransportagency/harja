@@ -210,14 +210,14 @@
                   :harja.domain.tielupa/liittymalupa-kiinteisto-rn "12344"
                   :harja.domain.tielupa/liittymalupa-kyla "Kiiminki"
                   :harja.domain.tielupa/liittymalupa-liittyman-siirto true
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-leveys-metreissa 4
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-leveys-metreissa 4M
                   :harja.domain.tielupa/liittymalupa-liittymaohje-liikennemerkit "Tieviitta"
                   :harja.domain.tielupa/liittymalupa-liittymaohje-liittymakaari 12M
                   :harja.domain.tielupa/liittymalupa-liittymaohje-liittymisnakema nil
                   :harja.domain.tielupa/liittymalupa-liittymaohje-lisaohjeet ""
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-nakemapisteen-etaisyys 6
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-odotustila-metreissa 4
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-etaisyys-metreissa 4
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-nakemapisteen-etaisyys 6M
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-odotustila-metreissa 4M
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-etaisyys-metreissa 4M
                   :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa 1M
                   :harja.domain.tielupa/liittymalupa-liittymaohje-rumpu true
                   :harja.domain.tielupa/liittymalupa-muut-kulkuyhteydet ""
