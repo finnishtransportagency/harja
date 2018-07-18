@@ -678,7 +678,7 @@
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota?
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
-           raporttivienti raporttiparametrit virhe-viesti aloitus-sivu] :as opts} skeema tiedot]
+           raporttivienti raporttiparametrit virhe-viesti aloitussivu] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -694,7 +694,7 @@
         tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         rivien-maara (atom (count tiedot))
-        nykyinen-sivu-index (atom (or aloitus-sivu 0))      ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
+        nykyinen-sivu-index (atom (or aloitussivu 0))      ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
         max-sivumaara 20
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan

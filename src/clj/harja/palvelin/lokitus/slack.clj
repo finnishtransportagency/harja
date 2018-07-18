@@ -27,7 +27,7 @@
                                 (apply str
                                        (mapcat (fn [tekstin-loput]
                                                  (let [tekstiosat (clj-str/split tekstin-loput regex-lopetus)]
-                                                   (if (> 1 (count tekstiosat))
+                                                   (if (> (count tekstiosat) 1)
                                                      (funktio tekstiosat)
                                                      tekstiosat)))
                                                (clj-str/split teksti regex-aloitus))))
@@ -47,12 +47,14 @@
                                                                                       nil))]
                                                            (apply str
                                                                   ilog-url
-                                                                  (interpose "&"
-                                                                             (map #(apply str %)
-                                                                                  (partition 2
-                                                                                     (interleave
-                                                                                        [tapahtuma-id-par alkanut-par valittu-jarjestelma-par valittu-integraatio-par]
-                                                                                        [tapahtuma-id-arg alkanut-arg valittu-jarjestelma-arg valittu-integraatio-arg]))))))))
+                                                                  (concat
+                                                                    (interpose "&"
+                                                                               (map #(apply str %)
+                                                                                    (partition 2
+                                                                                               (interleave
+                                                                                                 [tapahtuma-id-par alkanut-par valittu-jarjestelma-par valittu-integraatio-par]
+                                                                                                 [tapahtuma-id-arg alkanut-arg valittu-jarjestelma-arg valittu-integraatio-arg]))))
+                                                                    (rest tekstiosat))))))
           jira-linkit-muodostettu (merkkien-parsiminen ilog-linkit-muodostettu
                                                        #"\|\|\|jira"
                                                        #"jira\|\|\|"
@@ -68,7 +70,8 @@
           korvattavat-tekstit (-> jira-linkit-muodostettu
                                   (clj-str/replace #"\|\|\|ilog" ilog)
                                   (clj-str/replace #"\|\|\|glog" glog)
-                                  (clj-str/replace #"\|\|\|" "\n"))])))
+                                  (clj-str/replace #"\|\|\|" "\n"))]
+      korvattavat-tekstit)))
 
 
 (defn laheta [webhook-url level msg urls]
