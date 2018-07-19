@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-07-19",
+    "title": "Tietyöilmoitus PDF lomakkeen lähetys suoraan Harjasta Tieliikennekeskukseen sähköpostitse",
+    "body": "Harjasta voi lähettää tietyöilmoituksen Tieliikennekeskukseen. Ilmoitus lähetetään pdf muodossa käyttäjän antamiin sähköpostiosotteisiin sekä käyttäjän valitsemaan keskukseen. Tämä toiminnallisuus löytyy avatun lomakkeen alareunasta."  
+  },
+  {
     "date": "2018-05-18",
     "title": "Laadunseurantatyökalun käyttöohjeisiin tarkennuksia",
     "body": "Lisäsimme Harjan Laadunseuranta -osioon tarkennuksia laadunseurantatyökalun käytöstä. Lähinnä se, että SIM-kortti ja datayhteys laitteessa nopeuttaa tarkan GPS-sijainnin löytymistä, ja tarkan GPS-sijainnin löytyminen kannattaa odottaa paikallaan autossa ennen tarkastusajon aloittamista."  
