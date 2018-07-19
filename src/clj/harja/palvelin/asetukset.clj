@@ -210,11 +210,11 @@
        (yhdista-asetukset oletusasetukset)))
 
 (defn crlf-filter [msg]
-  (assoc msg :args (mapv (fn [s]
+  (assoc msg :vargs (mapv (fn [s]
                            (if (string? s)
                              (str/replace s #"[\n\r]" "")
                              s))
-                         (:args msg))))
+                         (:vargs msg))))
 
 (defn konfiguroi-lokitus [asetukset]
   (log/merge-config! {:middleware [crlf-filter]})
