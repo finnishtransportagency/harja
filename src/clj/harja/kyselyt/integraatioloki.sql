@@ -132,7 +132,7 @@ FROM integraatio
 WHERE jarjestelma = :jarjestelma AND nimi = :integraatio;
 
 -- name: hae-uusin-integraatiotapahtuma-id
-SELECT id
+SELECT it.id
 FROM integraatiotapahtuma it
   JOIN integraatio i ON i.id = it.integraatio
 WHERE i.jarjestelma = :jarjestelma AND

@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [clojure.set :as clj-set]
             [harja.pvm :as pvm]
             [harja.kyselyt.sillat :as q-sillat]
             [harja.kyselyt.urakat :as q-urakka]
@@ -57,11 +58,11 @@
         ely-lyhenne (:ely_lyhenn silta)
         ely-numero (:ely silta)
         loppupvm_str (:loppupvm silta)
-        loppupvm (if (> (count loppupvm_str) 0) (c/to-date (str (subs loppupvm_str 0 4) "-" (subs loppupvm_str 4 6) "-" (subs loppupvm_str 6 8))) nil) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä
+        loppupvm (when (> (count loppupvm_str) 0) (c/to-date (str (subs loppupvm_str 0 4) "-" (subs loppupvm_str 4 6) "-" (subs loppupvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä
         lakkautuspvm_str (:lakkautpvm silta)
-        lakkautuspvm (if (> (count lakkautuspvm_str) 0) (c/to-date (str (subs lakkautuspvm_str 0 4) "-" (subs lakkautuspvm_str 4 6) "-" (subs lakkautuspvm_str 6 8))) nil) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
+        lakkautuspvm (when (> (count lakkautuspvm_str) 0) (c/to-date (str (subs lakkautuspvm_str 0 4) "-" (subs lakkautuspvm_str 4 6) "-" (subs lakkautuspvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
         muutospvm_str (:muutospvm silta)
-        muutospvm (if (> (count muutospvm_str) 0) (c/to-date (str (subs muutospvm_str 0 4) "-" (subs muutospvm_str 4 6) "-" (subs muutospvm_str 6 8))) nil) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
+        muutospvm (when (> (count muutospvm_str) 0) (c/to-date (str (subs muutospvm_str 0 4) "-" (subs muutospvm_str 4 6) "-" (subs muutospvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
         status (int (:status silta))
         laani-lyhenne (get elytunnuksen-laani ely-lyhenne)
         tunnus (when (not-empty laani-lyhenne)
@@ -81,8 +82,8 @@
                        (some #(= (:urakka-id %) urakka-id) urakkatiedot) (mapv :urakka-id urakkatiedot)
                        ;; Urakkaa ei ole merkattu sillalle, joten täytyy tarkistaa onko silta jo toisessa aktiivisessa
                        ;; urakassa. Varmaankin mahdollista vain, jos esim. tr:ssä ollaan päivitetty urakkatietoja.
-                       (some #(pvm/ennen? (pvm/nyt) (pvm/->pvm (:loppupvm %))) urakkatiedot)
-                       (let [vaarat-urakat (filter #(pvm/ennen? (pvm/nyt) (pvm/->pvm (:loppupvm %))) urakkatiedot)
+                       (some #(pvm/ennen? (pvm/nyt) (:loppupvm %)) urakkatiedot)
+                       (let [vaarat-urakat (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)) urakkatiedot)
                              ;; Jos väärissä urakoissa on jo siltatarkastuksia, ei tehdä muuta kuin logitetaan virhe.
                              ;; Jos taasen väärään urakkaan ei olla merkattu siltatarkastuksia, otetaan väärä urakka pois ja
                              ;; laitetaan silta oikeaan urakkaan.
@@ -90,27 +91,37 @@
                                                             (keep identity)
                                                             (for [vaara-urakka vaarat-urakat]
                                                               (if (:siltatarkastuksia? vaara-urakka)
-                                                                (let [tapahtuma-id (q-integraatioloki/hae-uusin-integraatiotapahtuma-id db {:jarjestelma "ptj"
-                                                                                                                                            :nimi "sillat-haku"})
+                                                                (let [tapahtuma-id (first (q-integraatioloki/hae-uusin-integraatiotapahtuma-id db {:jarjestelma "ptj"
+                                                                                                                                                   :nimi "sillat-haku"}))
                                                                       integraatio-log-params {:tapahtuma-id tapahtuma-id
                                                                                               :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                                                                               :valittu-jarjestelma "ptj"
                                                                                               :valittu-integraatio "sillat-haku"}]
                                                                   (log/error {:fields [{:title "Linkit"
-                                                                                        :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> "
-                                                                                                    "<|||jira Silta väärässä urakassa: jira||||JIRA>")}]
+                                                                                        :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
+                                                                                                    "<|||glogglog||||Graylog> | "
+                                                                                                    "<|||jira Silta väärässä urakassa jira||||JIRA>")}]
                                                                               :tekstikentta (str "Silta " siltaid " on merkattu väärään urakkaan " (:urakka-id vaara-urakka)
                                                                                                  "! :bridge_at_night:|||" "Pitäisi olla urakassa: " urakka-id)})
                                                                   (:urakka-id vaara-urakka))
-                                                                (do (q-sillat/poista-urakka-sillalta! db {:urakka-id (:urakka-id vaara-urakka) :silta-id siltaid}) (println "---><<: 4") nil))))]
+                                                                (do (q-sillat/poista-urakka-sillalta! db (select-keys vaara-urakka #{:urakka-id :silta-id})) nil))))
+                             poistetut-urakat (clj-set/difference (into #{} (map :urakka-id vaarat-urakat))
+                                                                  urakat-vaarassa-sillassa)]
                          (if (empty? urakat-vaarassa-sillassa)
                            (do
-                             (log/debug "Kaikki vaarassa sillassa olevat urakat (" (map :urakka-id vaarat-urakat) ") saatiin poistettua")
-                             (conj (mapv :urakka-id urakkatiedot) urakka-id))
+                             (log/debug "Kaikki vaarassa sillassa olevat urakat (" (mapv :urakka-id vaarat-urakat) ") saatiin poistettua")
+                             (conj (reduce (fn [urakat {urakka-id :urakka-id}]
+                                             (if (poistetut-urakat urakka-id)
+                                               urakat (conj urakat urakka-id)))
+                                           [] urakkatiedot)
+                                   urakka-id))
                            (do
-                             (log/debug "Kaikkia vaarassa sillassa olevat urakoita (" (map :urakka-id vaarat-urakat) ") ei saatu poistettua. "
+                             (log/debug "Kaikkia vaarassa sillassa olevat urakoita (" (mapv :urakka-id vaarat-urakat) ") ei saatu poistettua. "
                                         "Urakat väärässä sillassa on: " urakat-vaarassa-sillassa ". Ei lisätä oikeaa urakkaa listaan.")
-                             (mapv :urakka-id urakkatiedot))))
+                             (reduce (fn [urakat {urakka-id :urakka-id}]
+                                       (if (poistetut-urakat urakka-id)
+                                         urakat (conj urakat urakka-id)))
+                                     [] urakkatiedot))))
                        ;; Muuten silta on kannassa, mutta urakkaa ei ole merkattu sille
                        :else (conj (mapv :urakka-id urakkatiedot) urakka-id)))
         sql-parametrit {:tyyppi tyyppi
@@ -145,8 +156,7 @@
     (when (not= nil siltanumero)
       (if-not (empty? urakkatiedot)
         (q-sillat/paivita-silta! db sql-parametrit)
-        (if (or (= loppupvm "")
-                (= loppupvm nil)
+        (if (or (nil? loppupvm)
                 (pvm/ennen? (pvm/->pvm "28.9.2016") loppupvm))
           (q-sillat/luo-silta<! db sql-parametrit))))))
 

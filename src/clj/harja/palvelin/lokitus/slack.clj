@@ -25,7 +25,7 @@
           {glog-url :url from-par :from to-par :to q-par :q} glog
           poista-ja-muokkaa-ei-sallitut-merkit (fn [contains-text-kentta]
                                                  (clj-str/replace (apply str
-                                                                         (re-seq #"[0-9a-zA-ZäÄöÖåÅ_-]|:" contains-text-kentta))
+                                                                         (re-seq #"[ 0-9a-zA-ZäÄöÖåÅ_-]|:" contains-text-kentta))
                                                                   #":" "%3A"))
           merkkien-parsiminen (fn [teksti regex-aloitus regex-lopetus funktio]
                                 (apply str
@@ -83,13 +83,13 @@
                                                                from-arg (or from-arg (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") (.toDate (first aikavali))))
                                                                to-arg (or to-arg (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") (.toDate (last aikavali))))
                                                                q-arg (or q-arg (apply str
-                                                                                      (interpose "%20OR%20" (keep (fn [fieldin-tekstit]
-                                                                                                                    (when-not (empty? fieldin-tekstit)
-                                                                                                                      (apply str
-                                                                                                                             (interpose "%20AND%20"
-                                                                                                                                        (map #(str "%22" % "%22")
-                                                                                                                                             fieldin-tekstit)))))
-                                                                                                                 spesifit-tiedot-poistettu))))]
+                                                                                      (interpose (konv/str->hx ") OR (") (keep (fn [fieldin-tekstit]
+                                                                                                                  (when-not (empty? fieldin-tekstit)
+                                                                                                                    (apply str
+                                                                                                                           (interpose (konv/str->hx " AND ")
+                                                                                                                                      (map #(str "%22" % "%22")
+                                                                                                                                           fieldin-tekstit)))))
+                                                                                                                spesifit-tiedot-poistettu))))]
                                                            (apply str (muodosta-kysely-url glog-url
                                                                                            [from-par to-par q-par]
                                                                                            [from-arg to-arg q-arg])
