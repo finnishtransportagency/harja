@@ -75,9 +75,7 @@ FROM silta s
                                                                    AND urakka = :urakka
                                                              ORDER BY tarkastusaika DESC
                                                              LIMIT 1))
-WHERE s.id IN (SELECT silta
-               FROM sillat_alueurakoittain
-               WHERE urakka = :urakka)
+WHERE s.urakat @> ARRAY[:urakka] ::INT[]
 ORDER BY siltanro;
 
 -- name: hae-sillan-tarkastus
@@ -253,18 +251,14 @@ ORDER BY h.elynumero;
 SELECT
   (SELECT COUNT(*)
    FROM silta s
-   WHERE s.id IN (SELECT silta
-                  FROM sillat_alueurakoittain
-                  WHERE urakka = :urakka)) AS "sillat-lkm",
+   WHERE urakat @> ARRAY[:urakka] ::INT[]) AS "sillat-lkm",
 
   (SELECT COUNT(*)
    FROM silta s
-   WHERE s.id IN (SELECT silta
-                  FROM sillat_alueurakoittain
-                  WHERE urakka = :urakka)
-         AND EXISTS(SELECT tarkastusaika
-                    FROM siltatarkastus st
-                    WHERE st.silta = s.id
-                          AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
-                          AND st.poistettu = FALSE
-                    LIMIT 1))              AS "tarkastukset-lkm"
+   WHERE urakat @> ARRAY[:urakka] ::INT[] AND
+         EXISTS(SELECT tarkastusaika
+                FROM siltatarkastus st
+                WHERE st.silta = s.id AND
+                      EXTRACT(YEAR FROM tarkastusaika) = :vuosi AND
+                      st.poistettu = FALSE
+                LIMIT 1)) AS "tarkastukset-lkm"
