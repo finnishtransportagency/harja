@@ -43,7 +43,19 @@
    "Lap" "L"                                                ;; lappi
    })
 
-
+(defn logita-virhe-sillan-tuonnissa [db jira-viesti tekstikentta]
+  (let [tapahtuma-id (q-integraatioloki/hae-uusin-integraatiotapahtuma-id db {:jarjestelma "ptj"
+                                                                              :nimi "sillat-haku"})
+        integraatio-log-params {:tapahtuma-id tapahtuma-id
+                                :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
+                                :valittu-jarjestelma "ptj"
+                                :valittu-integraatio "sillat-haku"}]
+    (log/error :ei-logiteta_
+               {:fields [{:title "Linkit"
+                          :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
+                                      "<|||glogglog||||Graylog> | "
+                                      "<|||jira" jira-viesti "jira||||JIRA>")}]
+                :tekstikentta tekstikentta})))
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
@@ -67,8 +79,17 @@
         laani-lyhenne (get elytunnuksen-laani ely-lyhenne)
         tunnus (when (not-empty laani-lyhenne)
                  (str laani-lyhenne "-" siltanumero))
-        urakka-id (when-let [alueurakka (str (:ualue silta))]
+        kunnan-numerot ["400" "481"]
+        alueurakka (str (:ualue silta))
+        urakka-id (when-not (or (empty? alueurakka)
+                                (some #(= % alueurakka) kunnan-numerot))
                     (q-urakka/hae-urakka-id-alueurakkanumerolla db {:alueurakka alueurakka}))
+        _ (when (and (nil? urakka-id) (not (some #(= % alueurakka) kunnan-numerot)) (= aineistovirhe "NO ERROR"))
+            (log/debug :ei-logiteta_ "---> e: " silta-floateilla)
+            (logita-virhe-sillan-tuonnissa db "Virhe shapefilessä: Sillalle ei ole merkattu urakkaa"
+                                           (str "Sillalle " (:siltanimi silta)
+                                                " (" siltanumero ") "
+                                                " ei ole merkattu alueurakkaa. Tai on tullut uusi kuntanumero.")))
         trex-oid (:trex_oid silta)
         siltaid (string-intiksi (:silta_id silta))
         urakkatiedot (q-sillat/hae-sillan-tiedot db {:siltaid siltaid :siltatunnus tunnus :trex-oid trex-oid})
@@ -76,6 +97,8 @@
                      ;; Poistetaan mahdolliset nil arvot vektorista
                      (keep identity)
                      (cond
+                       ;; Ei löydetty urakkaa tai kunta hoitaa, palautetaan ne urakat, jotka jo merkattu.
+                       (nil? urakka-id) (mapv :urakka-id urakkatiedot)
                        ;; Siltaa ei ole kannassa
                        (empty? urakkatiedot) [urakka-id]
                        ;; Silta on kannassa ja urakka on jo merkattu sillalle
@@ -91,18 +114,12 @@
                                                             (keep identity)
                                                             (for [vaara-urakka vaarat-urakat]
                                                               (if (:siltatarkastuksia? vaara-urakka)
-                                                                (let [tapahtuma-id (first (q-integraatioloki/hae-uusin-integraatiotapahtuma-id db {:jarjestelma "ptj"
-                                                                                                                                                   :nimi "sillat-haku"}))
-                                                                      integraatio-log-params {:tapahtuma-id tapahtuma-id
-                                                                                              :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
-                                                                                              :valittu-jarjestelma "ptj"
-                                                                                              :valittu-integraatio "sillat-haku"}]
-                                                                  (log/error {:fields [{:title "Linkit"
-                                                                                        :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
-                                                                                                    "<|||glogglog||||Graylog> | "
-                                                                                                    "<|||jira Silta väärässä urakassa jira||||JIRA>")}]
-                                                                              :tekstikentta (str "Silta " siltaid " on merkattu väärään urakkaan " (:urakka-id vaara-urakka)
-                                                                                                 "! :bridge_at_night:|||" "Pitäisi olla urakassa: " urakka-id)})
+                                                                (do
+                                                                  (logita-virhe-sillan-tuonnissa db "Silta väärässä urakassa"
+                                                                                                 (str "Silta " (:silta-id vaara-urakka)
+                                                                                                      " on merkattu väärään urakkaan " (:urakka-id vaara-urakka)
+                                                                                                      "! :bridge_at_night:|||"
+                                                                                                      "Pitäisi olla urakassa: " urakka-id))
                                                                   (:urakka-id vaara-urakka))
                                                                 (do (q-sillat/poista-urakka-sillalta! db (select-keys vaara-urakka #{:urakka-id :silta-id})) nil))))
                              poistetut-urakat (clj-set/difference (into #{} (map :urakka-id vaarat-urakat))
@@ -153,7 +170,7 @@
     ; Silta_id on vanhan Siltarekisterin tunniste, nykyinen Taitorakennerekisteri yksilöi trex-oid-tiedolla. Silta_id voi siis jatkossa puuttua sillalta.
     ; Siltanumero on molempien id:n kanssa relevantti => Otetaan aineistoon mukaan vain sillat, joissa siltanumero on annettu.
 
-    (when (not= nil siltanumero)
+    (when-not (nil? siltanumero)
       (if-not (empty? urakkatiedot)
         (q-sillat/paivita-silta! db sql-parametrit)
         (if (or (nil? loppupvm)

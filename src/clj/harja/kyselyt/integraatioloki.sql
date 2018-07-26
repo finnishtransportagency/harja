@@ -132,12 +132,13 @@ FROM integraatio
 WHERE jarjestelma = :jarjestelma AND nimi = :integraatio;
 
 -- name: hae-uusin-integraatiotapahtuma-id
+-- single?: true
 SELECT it.id
 FROM integraatiotapahtuma it
   JOIN integraatio i ON i.id = it.integraatio
 WHERE i.jarjestelma = :jarjestelma AND
       i.nimi = :nimi AND
-      it.paattynyt = NULL AND
+      it.paattynyt IS NULL AND
       it.alkanut :: DATE = CURRENT_DATE
 ORDER BY it.alkanut DESC
 LIMIT 1;
