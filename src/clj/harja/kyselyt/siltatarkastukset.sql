@@ -19,6 +19,7 @@ FROM silta s
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
 WHERE ARRAY[:urakka] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-puutteet
@@ -47,6 +48,7 @@ FROM silta s
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
 WHERE ARRAY[:urakka] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 --name: hae-urakan-sillat-korjattavat
@@ -77,6 +79,7 @@ FROM silta s
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
 WHERE ARRAY[:urakka] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-ohjelmoitavat
@@ -104,6 +107,7 @@ FROM silta s
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
 WHERE ARRAY[:urakka] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-korjatut
@@ -135,7 +139,9 @@ FROM siltatarkastus st1
   JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
                               AND st2.poistettu = FALSE)
   JOIN silta s ON st1.silta = s.id
-WHERE ARRAY[:urakka] <@ s.urakat AND st1.poistettu = FALSE;
+WHERE ARRAY[:urakka] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
+      AND st1.poistettu = FALSE;
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
