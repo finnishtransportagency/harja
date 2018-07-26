@@ -57,6 +57,24 @@
                                       "<|||jira" jira-viesti "jira||||JIRA>")}]
                 :tekstikentta tekstikentta})))
 
+(defn kasittele-kunnalle-kuuluva-silta
+  "HARJA:n kantaan on tallennettu kunnalle kuuluvia siltoja.
+   Pyritään niistä pois, niin tulevaisuudessa tätä funktiota ei edes välttämättä
+   tarvi."
+  [db urakkatiedot sql-parametrit]
+  (let [silta-kannassa? (not (empty? urakkatiedot))
+        silta-id (:silta-id (first urakkatiedot))]
+    (when silta-kannassa?
+      (if (some :siltatarkastuksia? urakkatiedot)
+        ;; Jos on tarkastuksia, annetaan olla kannassa ja logitetaan
+        (do (q-sillat/paivita-silta! db sql-parametrit)
+            (logita-virhe-sillan-tuonnissa db
+                                           "Kunnan hoitamalle sillalle merkattu tarkastuksia"
+                                           (str "Silta " silta-id
+                                                " on merkattu kunnan hoitamaksi, mutta sillä on siltatarkastuksia.")))
+        ;; Merkataan silta poistetuksi, jos ei ole tarkastuksia
+        (q-sillat/merkkaa-silta-poistetuksi! db {:silta-id silta-id})))))
+
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
         aineistovirhe (:loc_error silta)
@@ -90,7 +108,8 @@
                                            (str "Sillalle " (:siltanimi silta)
                                                 " (" siltanumero ") "
                                                 " ei ole merkattu alueurakkaa. Tai on tullut uusi kuntanumero.")))
-        trex-oid (:trex_oid silta)
+        trex-oid (when-not (empty? (:trex_oid silta))
+                   (:trex_oid silta))
         siltaid (string-intiksi (:silta_id silta))
         urakkatiedot (q-sillat/hae-sillan-tiedot db {:siltaid siltaid :siltatunnus tunnus :trex-oid trex-oid})
         urakat (into []
@@ -171,11 +190,13 @@
     ; Siltanumero on molempien id:n kanssa relevantti => Otetaan aineistoon mukaan vain sillat, joissa siltanumero on annettu.
 
     (when-not (nil? siltanumero)
-      (if-not (empty? urakkatiedot)
-        (q-sillat/paivita-silta! db sql-parametrit)
-        (if (or (nil? loppupvm)
-                (pvm/ennen? (pvm/->pvm "28.9.2016") loppupvm))
-          (q-sillat/luo-silta<! db sql-parametrit))))))
+      (if (some #(= % alueurakka) kunnan-numerot)
+        (kasittele-kunnalle-kuuluva-silta db urakkatiedot sql-parametrit)
+        (if-not (empty? urakkatiedot)
+          (q-sillat/paivita-silta! db sql-parametrit)
+          (if (or (nil? loppupvm)
+                  (pvm/ennen? (pvm/->pvm "28.9.2016") loppupvm))
+            (q-sillat/luo-silta<! db sql-parametrit)))))))
 
 (defn vie-silta-entry [db silta]
   (luo-tai-paivita-silta db silta))

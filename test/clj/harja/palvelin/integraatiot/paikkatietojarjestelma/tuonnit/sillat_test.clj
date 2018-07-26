@@ -16,9 +16,7 @@
 (use-fixtures :once tietokanta-fixture)
 
 (def silta-tuonti
-  {:y 7056414
-   :kuntakoodi 762
-   :siltanimi "Testisilta"
+  {:siltanimi "Testisilta"
    :ajr 0
    :tie 22
    :aosa 1
@@ -61,6 +59,7 @@
           :tr_alkuetaisyys 0
           :tyyppi "Jämäkkä silta"
           :muokattu nil
+          :poistettu false
           :tr_alkuosa 1}))
 
 (deftest luo-ja-paivita-silta
@@ -151,3 +150,26 @@
                              (dissoc :muokattu))))
         (is (= paivita-silta 1))
         (is (= sillat-ennen sillat-jalkeen))))))
+
+(deftest hoida-kunnalle-kuuluva-silta
+  (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
+    (testing "uuden kuntasillan tuominen"
+      (let [silta-tuonti (assoc silta-tuonti :ualue 400
+                                             :trex_oid "987654321"
+                                             :silta_id 1234
+                                             :siltanro 1234)
+            lisaa-silta (sillat/vie-silta-entry ds silta-tuonti)
+            sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
+        (is (nil? lisaa-silta))
+        (is (= sillat-ennen sillat-jalkeen))))
+    (testing "vanhan kuntasillan merkkaaminen poistetuksi"
+      (let [silta-tuonti (assoc silta-tuonti :ualue 400
+                                             :trex_oid ""
+                                             :silta_id 0
+                                             :siltanro 0)
+            lisaa-silta (sillat/vie-silta-entry ds silta-tuonti)
+            hae-silta (first (q-map (str "SELECT * FROM silta WHERE siltanro = 0")))
+            sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
+        (is (= 1 lisaa-silta))
+        (is (:poistettu hae-silta))
+        (is (= sillat-ennen (inc sillat-jalkeen)))))))

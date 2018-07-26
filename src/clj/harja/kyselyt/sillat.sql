@@ -26,22 +26,27 @@ SET tyyppi          = :tyyppi,
     urakat          = (SELECT array_agg(a) ::INT[] || '{}' ::INT[] FROM unnest(ARRAY[:urakat] ::INT[]) a WHERE a IS NOT NULL),
     muokattu        = CURRENT_TIMESTAMP,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
-WHERE (trex_oid NOT IN (null, '') AND trex_oid = :trex-oid) OR
-(siltaid IS NOT NULL AND siltaid = :siltaid);
+WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
+      (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid);
 
 -- name: hae-sillan-tiedot
 SELECT
   u.id AS "urakka-id",
   u.loppupvm,
   s.id AS "silta-id",
-  EXISTS(SELECT 1 FROM siltatarkastus st WHERE st.urakka=u.id) AS "siltatarkastuksia?"
+  EXISTS(SELECT 1 FROM siltatarkastus st WHERE st.urakka=u.id AND st.silta=s.id) AS "siltatarkastuksia?"
 FROM silta s
   LEFT OUTER JOIN urakka u ON ARRAY[u.id] :: INT[] <@ s.urakat
-WHERE s.siltaid = :siltaid OR
-      s.siltatunnus = :siltatunnus OR
-      s.trex_oid = :trex-oid;
+WHERE (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
+      (:siltatunnus ::TEXT IS NOT NULL AND s.siltatunnus = :siltatunnus) OR
+      (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid);
 
 -- name: poista-urakka-sillalta!
 UPDATE silta
 SET urakat = array_remove(urakat, :urakka-id)
 WHERE id = :silta-id
+
+-- name: merkkaa-silta-poistetuksi!
+UPDATE silta
+SET poistettu = TRUE
+WHERE id=:silta-id;

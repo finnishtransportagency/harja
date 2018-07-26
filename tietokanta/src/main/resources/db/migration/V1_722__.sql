@@ -1,4 +1,6 @@
-ALTER TABLE silta ADD COLUMN urakat INTEGER[];
+ALTER TABLE silta
+  ADD COLUMN urakat INTEGER[],
+  ADD COLUMN poistettu BOOLEAN DEFAULT FALSE NOT NULL;
 CREATE INDEX i_sillan_urakat ON silta USING GIN ("urakat");
 
 -- Arrayn elementeille ei voi määritellä FOREIGN KEY constrainttia, joten
