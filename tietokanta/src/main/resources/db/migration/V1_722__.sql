@@ -57,3 +57,6 @@ END $$;
 
 DROP FUNCTION IF EXISTS paivita_sillat_alueurakoittain();
 DROP MATERIALIZED VIEW IF EXISTS sillat_alueurakoittain;
+
+-- Lisätään tielupa taulukkoon myös indexointi urakoiden osalta
+CREATE INDEX i_tieluvan_urakat ON tielupa USING GIN ("urakat");
