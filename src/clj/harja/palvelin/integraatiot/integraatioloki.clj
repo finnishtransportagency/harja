@@ -39,7 +39,7 @@
   {:suunta suunta
    :sisaltotyyppi "application/xml"
    :siirtotyyppi "JMS"
-   :sisalto sisalto
+   :sisalto (if (map? sisalto) (str sisalto) sisalto)
    :osoite jono
    :otsikko (when otsikko (str otsikko))
    :parametrit nil})
