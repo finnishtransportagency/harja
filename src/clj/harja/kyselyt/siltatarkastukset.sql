@@ -18,7 +18,7 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE ARRAY[:urakka] <@ s.urakat
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
       AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
@@ -47,7 +47,7 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE ARRAY[:urakka] <@ s.urakat
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
       AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
@@ -78,7 +78,7 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE ARRAY[:urakka] <@ s.urakat
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
       AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
@@ -106,7 +106,7 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE ARRAY[:urakka] <@ s.urakat
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
       AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
@@ -139,7 +139,7 @@ FROM siltatarkastus st1
   JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
                               AND st2.poistettu = FALSE)
   JOIN silta s ON st1.silta = s.id
-WHERE ARRAY[:urakka] <@ s.urakat
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
       AND s.poistettu IS NOT TRUE
       AND st1.poistettu = FALSE;
 

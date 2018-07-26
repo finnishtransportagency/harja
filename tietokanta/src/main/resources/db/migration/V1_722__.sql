@@ -51,7 +51,7 @@ BEGIN
 
     IF sillan_urakat_ IS NULL THEN
       UPDATE silta SET urakat = ARRAY[silta_urakka_rivi.urakka] ::INT[] WHERE id=silta_urakka_rivi.silta;
-    ELSIF NOT (SELECT sillan_urakat_ @> ARRAY[silta_urakka_rivi.urakka]) THEN
+    ELSIF NOT (SELECT sillan_urakat_ @> ARRAY[silta_urakka_rivi.urakka] ::INT[]) THEN
       UPDATE silta SET urakat = urakat || silta_urakka_rivi.urakka WHERE id=silta_urakka_rivi.silta;
     END IF;
   END LOOP;
