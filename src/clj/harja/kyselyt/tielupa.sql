@@ -17,5 +17,6 @@ FROM liite l JOIN tielupa_liite t ON l.id = t.liite
 WHERE t.tielupa IN (:tielupa);
 
 -- name: hae-urakan-tieluvat
-SELECT * FROM tielupa WHERE
-alueurakka = (select urakkanro from urakka where id = :urakkaid);
+SELECT *
+FROM tielupa
+WHERE urakat @> ARRAY[:urakkaid] ::INT[];

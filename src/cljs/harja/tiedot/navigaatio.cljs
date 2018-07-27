@@ -449,7 +449,8 @@
                  (.get parametrit "tapahtuma-id")
                  (.get parametrit "alkanut"))
         (let [jarjestelmat (<! (integraatioloki/hae-jarjestelmien-integraatiot))
-              jarjestelma (.get parametrit "valittu-jarjestelma")]
+              jarjestelma (.get parametrit "valittu-jarjestelma")
+              alkanut-pvm (pvm/iso-8601->pvm (.get parametrit "alkanut"))]
           (reset! integraatioloki/valittu-jarjestelma (some #(when (= jarjestelma (:jarjestelma %))
                                                                %)
                                                             jarjestelmat))
@@ -458,7 +459,8 @@
                                                       (catch :default e
                                                         nil))})
           (reset! integraatioloki/nayta-uusimmat-tilassa? false)
-          (reset! integraatioloki/valittu-aikavali [(pvm/iso-8601->pvm (.get parametrit "alkanut")) (pvm/nyt)])
+          (reset! integraatioloki/valittu-aikavali [alkanut-pvm alkanut-pvm])
+          (reset! integraatioloki/tultiin-urlin-kautta true)
           ;; Paivitetään url, jotta parametrit eivät enään näy urlissa
           (paivita-url))))
     (reset! render-lupa-url-kasitelty? true)

@@ -56,7 +56,7 @@
                       :onnistuneet true
                       :epaonnistuneet false
                       nil)
-        limit (int (or (min max-tulokset 200) 50))
+        limit 500
         tapahtumien-kesto (when tapahtumien-kesto
                             (/ (t/in-millis (t/minutes tapahtumien-kesto)) 1000))
         tapahtumat (into []

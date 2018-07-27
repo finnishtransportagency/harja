@@ -881,3 +881,7 @@ UPDATE urakka
 SET alue = ST_GeomFromText(:alue) :: GEOMETRY,
 muokattu = CURRENT_TIMESTAMP
 WHERE urakka.urakkanro = :urakkanro;
+
+-- name: hae-urakka-id-alueurakkanumerolla
+-- single?: true
+SELECT id FROM urakka WHERE urakkanro = :alueurakka

@@ -10,6 +10,9 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Testikäyttäjiä
 \i testidata/kayttajat.sql
 
+-- Ladataan alueurakoiden geometriat
+\i testidata/alueurakat.sql
+
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
 
@@ -31,9 +34,6 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 
 -- Luodaan hankkeet
 \i testidata/hankkeet.sql
-
--- Ladataan alueurakoiden geometriat
-\i testidata/alueurakat.sql
 
 -- Lisätään ELY numerot hallintayksiköille
 

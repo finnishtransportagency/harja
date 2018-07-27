@@ -120,7 +120,7 @@
 
 (defn- vaadi-silta-kuuluu-urakkaan [db urakka-id silta-id]
   (when silta-id
-    (let [sillan-urakat (map :urakka (q/hae-sillan-urakat db silta-id))]
+    (let [sillan-urakat (konv/pgarray->vector (q/hae-sillan-urakat db silta-id))]
       (log/debug "Tarkistetaan, että silta " silta-id " kuuluu väitettyyn urakkaan " urakka-id)
       (when (or (empty? sillan-urakat)
                 (not (some #(= urakka-id %) sillan-urakat)))

@@ -1,7 +1,7 @@
 (ns harja.tiedot.hallinta.integraatioloki
   "Hallinnoi integraatiolokin tietoja"
   (:require [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<!] :as async]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
@@ -10,7 +10,7 @@
             [cljs-time.core :as t]
             [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]
+                   [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction]]))
 
 (defn hae-jarjestelmien-integraatiot []
@@ -47,6 +47,7 @@
 (defonce nayta-uusimmat-tilassa? (atom true))
 ;; Kun seurataan ulkoista integraatiolokiin linkkaavaa urlia - näitä lokitetaan ja linkin voi avata suoraan slackista
 (defonce tapahtuma-id (atom nil))
+(defonce tultiin-urlin-kautta (atom nil))
 
 (defn eilen-tanaan-aikavali []
   [(pvm/aikana (time/yesterday) 0 0 0 0)
@@ -62,14 +63,24 @@
                             (eilen-tanaan-aikavali)
                             @valittu-aikavali)
          nakymassa? @nakymassa?
-         hakuehdot (assoc @hakuehdot
-                          :max-tulokset (if @nayta-uusimmat-tilassa?
-                                          50
-                                          200))]
+         hakuehdot @hakuehdot]
     (when nakymassa?
       (reset! haetut-tapahtumat nil)
+      ;; Palvelimen päässä on määritelty, että maksimissaan 500 tulosta palautetaan
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
             (reset! haetut-tapahtumat tapahtumat)
+            (when @tultiin-urlin-kautta
+              (go-loop [aukinainen-vetolaatikko (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0)
+                        kertoja-loopattu 0]
+                       (if (or (= kertoja-loopattu 10) aukinainen-vetolaatikko)
+                         (try (.scrollIntoView aukinainen-vetolaatikko true)
+                              (catch :default e
+                                (log "VIRHE: Skrollaaminen avattuun vetolaatikkoon ei onnistunut" e)))
+                         (do
+                           (<! (async/timeout 1200))
+                           (recur (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0)
+                                  (inc kertoja-loopattu)))))
+              (reset! tultiin-urlin-kautta nil))
             tapahtumat)))))
 
 (defonce tapahtumien-maarat

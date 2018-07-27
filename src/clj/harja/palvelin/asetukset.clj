@@ -30,11 +30,23 @@
          (s/optional-key :tiedosto) s/Str}
    :log {(s/optional-key :gelf) {:palvelin s/Str
                                  :taso s/Keyword}
-         (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword}
+         (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword
+                                  (s/optional-key :urls) {(s/optional-key :ilog) {(s/optional-key :url) s/Str
+                                                                                  (s/optional-key :tapahtuma-id) s/Str
+                                                                                  (s/optional-key :alkanut) s/Str
+                                                                                  (s/optional-key :valittu-jarjestelma) s/Str
+                                                                                  (s/optional-key :valittu-integraatio) s/Str}
+                                                          (s/optional-key :glog) {(s/optional-key :url) s/Str
+                                                                                  (s/optional-key :from) s/Str
+                                                                                  (s/optional-key :to) s/Str
+                                                                                  (s/optional-key :q) s/Str
+                                                                                  }
+                                                          (s/optional-key :jira) [s/Str]}}
 
          (s/optional-key :email) {:taso s/Keyword
                                   :palvelin s/Str
-                                  :vastaanottaja [s/Str]}}
+                                  :vastaanottaja [s/Str]}
+         (s/optional-key :testidata?) s/Bool}
    (s/optional-key :integraatiot) {:paivittainen-lokin-puhdistusaika [s/Num]}
    (s/optional-key :sonja) {:url s/Str
                             :kayttaja s/Str
@@ -210,14 +222,28 @@
        (yhdista-asetukset oletusasetukset)))
 
 (defn crlf-filter [msg]
-  (assoc msg :args (mapv (fn [s]
+  (assoc msg :vargs (mapv (fn [s]
                            (if (string? s)
                              (str/replace s #"[\n\r]" "")
                              s))
-                         (:args msg))))
+                         (:vargs msg))))
+
+(defn logitetaanko
+  "Tämän palauttama middleware on hyödyllinen, jos testidatan puuttellisuus aiheuttaa suuret määrät logitusta turhaan.
+   Esimerkiksi siltojen tuonnissa halutaan logittaa, jos datassa on jotain ongelmia tuotannossa, mutta testidatan
+   kanssa tämä logitus aiheuttaa tuhansia logituksia turhaan."
+  [testidata?]
+  (fn [msg]
+    (let [ensimmainen-arg (-> msg :vargs first)
+          ei-logiteta? (and (keyword? ensimmainen-arg)
+                            (= :ei-logiteta_ ensimmainen-arg))]
+      (if ei-logiteta?
+        (when-not testidata?
+          (update msg :vargs #(vec (rest %))))
+        msg))))
 
 (defn konfiguroi-lokitus [asetukset]
-  (log/merge-config! {:middleware [crlf-filter]})
+  (log/merge-config! {:middleware [(logitetaanko (-> asetukset :log :testidata?)) crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
     (log/merge-config! {:appenders {:println {:min-level :info}}}))
@@ -229,7 +255,8 @@
     (log/merge-config! {:appenders
                         {:slack
                          (slack/luo-slack-appender (str/trim (:webhook-url slack))
-                                                   (:taso slack))}}))
+                                                   (:taso slack)
+                                                   (:urls slack))}}))
 
   (when-let [email (-> asetukset :log :email)]
     (log/merge-config!

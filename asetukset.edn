@@ -46,6 +46,7 @@
        ;;         ;; Lisää nimesi vektoriin, jos haluat spämmiä
        ;;         :vastaanottaja [;;"sinunmailisi@example.org"
        ;;                         ]}
+       :testidata? true
        }
 
  ;:sonja

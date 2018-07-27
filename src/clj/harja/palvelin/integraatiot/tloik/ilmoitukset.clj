@@ -84,13 +84,14 @@
 (defn- laheta-slackiin-ilmoitus-hitaudesta
 
   [{:keys [kulunut-aika viesti-id tapahtuma-id kehitysmoodi?]}]
-  (let [url (if kehitysmoodi? "http://localhost:3000/"
-                              "https://extranet.liikennevirasto.fi/harja/")
-        integraatio-log-url (str url "#hallinta/integraatioloki?tapahtuma-id=" tapahtuma-id
-                                 "&alkanut=" (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
-                                 "&valittu-jarjestelma=tloik&valittu-integraatio=ilmoituksen-kirjaus")]
-    (log/error {:fields [{:title "Linkki"
-                          :value (str "<" integraatio-log-url "|Harja integraatioloki>")}]
+  (let [integraatio-log-params {:tapahtuma-id tapahtuma-id
+                                :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
+                                :valittu-jarjestelma "tloik"
+                                :valittu-integraatio "ilmoituksen-kirjaus"}]
+    (log/error {:fields [{:title "Linkit"
+                          :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
+                                      "<|||jira Ilmoitukset ovat hitaita jira||||JIRA> | "
+                                      "<|||glogglog||||Graylog>")}]
                 :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
                                    "Ilmoituksella, jonka viesti id on " viesti-id "|||"
                                    "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
@@ -100,6 +101,7 @@
   (try (let [kulunut-aika (pvm/aikavali-sekuntteina ilmoitettu vastaanotettu)]
          ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
          (when (and kulunut-aika (> kulunut-aika 300))
+           (log/debug "SLACKIIN PITÄS LÄHTÄ VIESTIÄ")
            (laheta-slackiin-ilmoitus-hitaudesta
              {:kulunut-aika kulunut-aika :viesti-id viesti-id
               :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))

@@ -18,9 +18,8 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE s.id IN (SELECT silta
-               FROM sillat_alueurakoittain
-               WHERE urakka = :urakka)
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-puutteet
@@ -48,9 +47,8 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE s.id IN (SELECT silta
-               FROM sillat_alueurakoittain
-               WHERE urakka = :urakka)
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 --name: hae-urakan-sillat-korjattavat
@@ -80,9 +78,8 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE s.id IN (SELECT silta
-               FROM sillat_alueurakoittain
-               WHERE urakka = :urakka)
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-ohjelmoitavat
@@ -109,9 +106,8 @@ FROM silta s
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
-WHERE s.id IN (SELECT silta
-               FROM sillat_alueurakoittain
-               WHERE urakka = :urakka)
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-korjatut
@@ -143,9 +139,9 @@ FROM siltatarkastus st1
   JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
                               AND st2.poistettu = FALSE)
   JOIN silta s ON st1.silta = s.id
-WHERE s.id IN (SELECT silta
-               FROM sillat_alueurakoittain
-               WHERE urakka = :urakka) AND st1.poistettu = FALSE;
+WHERE ARRAY[:urakka] ::INT[] <@ s.urakat
+      AND s.poistettu IS NOT TRUE
+      AND st1.poistettu = FALSE;
 
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
@@ -330,4 +326,5 @@ INSERT INTO siltatarkastus_kohde_liite (siltatarkastus, kohde, liite)
 VALUES (:siltatarkastus, :kohde, :liite);
 
 -- name: hae-sillan-urakat
-SELECT urakka FROM sillat_alueurakoittain WHERE silta = :siltaid;
+-- single?: true
+SELECT urakat FROM silta WHERE id=:siltaid;

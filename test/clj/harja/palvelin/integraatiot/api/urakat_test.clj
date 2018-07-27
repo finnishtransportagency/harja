@@ -25,7 +25,7 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "yit-rakennus" portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (= 4 (count (:urakat encoodattu-body))) "YIT:lle löytyy oikea määrä urakoita"))
+    (is (= (ffirst (q "SELECT count(*) FROM urakka WHERE urakoitsija=(SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy')")) (count (:urakat encoodattu-body))) "YIT:lle löytyy oikea määrä urakoita"))
 
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "tuntematon-jarjestelma" portti)]
     (is (= 403 (:status vastaus))))
