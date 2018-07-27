@@ -15,8 +15,11 @@
             [harja.kyselyt.tielupa :as tielupa-q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.tieverkko :as tieverkko-q]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
-  (:use [slingshot.slingshot :only [throw+]]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.pvm :as pvm])
+  (:use [slingshot.slingshot :only [throw+]])
+  (:import [java.sql.Date]
+           [java.util.Date]))
 
 (defn hae-sijainti [db sijainti]
   (let [parametrit {:tie (::tielupa/tie sijainti)
@@ -28,6 +31,18 @@
                     (tieverkko-q/tierekisteriosoite-viivaksi db parametrit)
                     (tieverkko-q/tierekisteriosoite-pisteeksi db parametrit))]
     (assoc sijainti ::tielupa/geometria geometria)))
+
+(defn- tarkista-datan-oikeellisuus
+  [tielupa]
+  (cond
+    (some #(= (::tielupa/laite %) "Muuntamo") (::tielupa/kaapeliasennukset tielupa))
+    (if (pvm/jalkeen? (java.util.Date. (.getTime (::tielupa/myontamispvm tielupa)))
+                      (pvm/luo-pvm 2015 0 1))
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+tieluvan-data-vaarin+
+                          :viesti (str "Kaapeliasennusluvalle merkattu laitteeksi 'Muuntamo' vaikka myöntämispäivämäärä (" (pvm/pvm (java.util.Date. (.getTime (::tielupa/myontamispvm tielupa)))) ") on merkattu 1.1.2015 jälkeen")}]})
+      tielupa)
+    :else tielupa))
 
 (defn hae-tieluvan-sijainnit [db tielupa]
   (let [sijainnit (::tielupa/sijainnit tielupa)]
@@ -66,6 +81,7 @@
 (defn kirjaa-tielupa [liitteiden-hallinta db data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
   (->> (tielupa-sanoma/api->domain (:tielupa data))
+       (tarkista-datan-oikeellisuus)
        (hae-tieluvan-sijainnit db)
        (hae-sijainnit-avaimella db ::tielupa/kaapeliasennukset)
        (hae-sijainnit-avaimella db ::tielupa/mainokset)

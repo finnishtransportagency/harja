@@ -28,6 +28,7 @@
 (def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
 (def +tuntematon-ely+ "tuntematon-ely")
 (def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
+(def +tieluvan-data-vaarin+ "tieluvan-data-vaarin")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

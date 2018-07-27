@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.36</b>  
-<b>Julkaistu: 29.03.2018</b>
+<b>Nykyinen versio: 1.0.37</b>
+<b>Julkaistu: 27.07.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.37 Julkaistu 27.07.2018
+    - Tielupa hyväksyy kaapeliasennustyypiksi "Muuntamo":n
 - Versionumero 1.0.36 Julkaistu 9.7.2018
     - Tieluvan kirjaus ottaa alueurakat arrayna.
 - Versionumero 1.0.35 Julkaistu 27.4.2018
