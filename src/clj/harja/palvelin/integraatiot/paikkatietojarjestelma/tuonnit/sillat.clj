@@ -6,7 +6,6 @@
             [harja.kyselyt.sillat :as q-sillat]
             [harja.kyselyt.urakat :as q-urakka]
             [harja.kyselyt.integraatioloki :as q-integraatioloki]
-            [harja.kyselyt.geometriapaivitykset :as q-geometria]
             [harja.tyokalut.functor :as functor]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
             [clj-time.coerce :as c])
@@ -50,7 +49,7 @@
                                 :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                 :valittu-jarjestelma "ptj"
                                 :valittu-integraatio "sillat-haku"}]
-    (log/error :ei-logiteta_
+    (log/error #_:ei-logiteta_
                {:fields [{:title "Linkit"
                           :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
                                       "<|||glogglog||||Graylog> | "
@@ -103,7 +102,7 @@
                                 (some #(= % alueurakka) kunnan-numerot))
                     (q-urakka/hae-urakka-id-alueurakkanumerolla db {:alueurakka alueurakka}))
         _ (when (and (nil? urakka-id) (not (some #(= % alueurakka) kunnan-numerot)) (= aineistovirhe "NO ERROR"))
-            (log/debug :ei-logiteta_ "---> e: " silta-floateilla)
+            (log/debug #_:ei-logiteta_ "---> e: " silta-floateilla)
             (logita-virhe-sillan-tuonnissa db "Virhe shapefilessä: Sillalle ei ole merkattu urakkaa"
                                            (str "Sillalle " (:siltanimi silta)
                                                 " (" siltanumero ") "
@@ -203,16 +202,17 @@
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
+    ;; Järjestyksellä väliä, koska datassa saattaa tulla usea rivi samasta sillasta, joilla eri tiedot.
     (let [siltatietueet-shapefilesta (reverse (sort-by :muutospvm (shapefile/tuo shapefile)))]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
-      (try (time (jdbc/with-db-transaction [db db]
-                   (doseq [silta siltatietueet-shapefilesta]
-                     (vie-silta-entry db silta))))
+      (try (jdbc/with-db-transaction [db db]
+             (doseq [silta siltatietueet-shapefilesta]
+               (vie-silta-entry db silta)))
            (log/debug "siltojen tuonti kantaan valmis.")
            (catch PSQLException e
              (log/error "Siltojen tuonnissa kantaan tapahtui virhe: " e)
-             (q-geometria/poista-viimeisin-paivitys! db {:nimi "sillat"}))
+             (throw e))
            (catch Exception e
              (log/error "Siltojen tuonnissa tapahtui virhe: " e)
-             (q-geometria/poista-viimeisin-paivitys! db {:nimi "sillat"}))))
+             (throw e))))
     (log/debug "Siltojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
