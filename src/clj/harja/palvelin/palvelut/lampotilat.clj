@@ -32,8 +32,18 @@
                     (comp
                       (map (fn [urakka]
                              (merge urakka
-                                    (get hoidon-urakoiden-lampotilat-1981-2010
-                                         (:alueurakkanro urakka))
+                                    ;; Urakan tiedot löytyvät usein vain toisesta result setistä minkä FMI API palauttaa.
+                                    ;; Otetaan kaikki kentät siitä mikä löytyy,
+                                    ;; sekä varmistetaan vielä erikseen että uuden vertailukauden ka on avaimessa :pitkakeskilampotila
+                                    ;; ja vanhan vertailukauden avaimessa :pitkakeskilampotila_vanha
+                                    (or
+                                      (get hoidon-urakoiden-lampotilat-1981-2010
+                                          (:alueurakkanro urakka))
+                                      (get hoidon-urakoiden-lampotilat-1971-2000
+                                           (:alueurakkanro urakka)))
+                                    {:pitkakeskilampotila (:pitkakeskilampotila
+                                                            (get hoidon-urakoiden-lampotilat-1981-2010
+                                                                 (:alueurakkanro urakka)))}
                                     {:pitkakeskilampotila_vanha (:pitkakeskilampotila
                                                                   (get hoidon-urakoiden-lampotilat-1971-2000
                                                                        (:alueurakkanro urakka)))})))
