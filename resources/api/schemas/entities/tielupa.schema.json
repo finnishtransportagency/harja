@@ -334,9 +334,6 @@
                       "45 kV ilmajohto",
                       "110 kV ilmajohto",
                       "Ilmajohto",
-                      "Muuntamo",
-                      "Puistomuuntamo",
-                      "Pylväsmuuntamo",
                       "Jakokaappi",
                       "Telekaapeli",
                       "Kaukolämpöjohto",
@@ -357,7 +354,10 @@
                       "Jatkos nykyisestä kaapelista",
                       "Ilmajohto tiealueen ulkopuolelle",
                       "Uusi asiakasliittymä",
-                      "Nykyiseen putkitukseen asentaminen"
+                      "Nykyiseen putkitukseen asentaminen",
+                      "Puistomuuntamo",
+                      "Pylväsmuuntamo",
+                      "Muuntamo"
                     ]
                   },
                   "kommentit": {
