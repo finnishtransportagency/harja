@@ -1078,12 +1078,12 @@ documentation:
           example: 12
         voimassaolopvm:
           description: Päivämäärä jonka sisällä varusteiden on oltava voimassa
-          type: date
+          type: date-only
           required: true
           example: 2015-01-01
         tilannepvm:
           description: Lähdejärjestelmän tieverkon version päivämäärä. Osoitteet palautetaan annetun päivämäärän verkolla.
-          type: date
+          type: date-only
           required: true
           example: 2015-01-01
         puoli:
@@ -1147,7 +1147,7 @@ documentation:
             example: tl506
           tilannepvm:
             description: Lähdejärjestelmän tieverkon version päivämäärä. Osoitteet palautetaan annetun päivämäärän verkolla.
-            type: date
+            type: date-only
             required: true
             example: 2015-01-01
       responses:
