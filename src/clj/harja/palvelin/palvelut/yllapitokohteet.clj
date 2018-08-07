@@ -83,6 +83,7 @@
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
 (defn- hae-paallystysurakan-aikataulu [{:keys [db urakka-id sopimus-id vuosi]}]
+  (log/debug (prn-str "*************** hae-paallystysurakan-aikataulu" urakka-id sopimus-id vuosi))
   (let [aikataulu (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
                        (map konv/alaviiva->rakenne)
                        (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
@@ -101,7 +102,8 @@
     aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
-  (let [aikataulu (into []
+  (log/debug (prn-str "*************** hae-tiemerkintaurakan-aikataulu" urakka-id  vuosi))
+             (let [aikataulu (into []
                         (comp
                           (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                           (map konv/alaviiva->rakenne))
@@ -132,10 +134,10 @@
            yllapitokohteet))
     yllapitokohteet))
 
-(defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
+(defn   hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
-  (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
+  (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id " Vuosi: " vuosi)
   (jdbc/with-db-transaction [db db]
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
     (doall

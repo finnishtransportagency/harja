@@ -285,7 +285,9 @@
                                   :kohdenumero "Kohdenumeron mukaan"
                                   :tr "Tieosoitteen mukaan"}
                   :nimi :jarjestys
-                  :otsikko "Järjestä kohteet"}]
+                  :otsikko "Järjestä kohteet"}
+                 {:tyyppi "urakan-vuosi", :konteksti "urakka", :pakollinen false, :nimi :vuosi }
+                 ]
     :konteksti #{"urakka"}
     :suorita #'harja.palvelin.raportointi.raportit.yllapidon-aikataulu/suorita
     :kuvaus "Ylläpidon aikataulu"

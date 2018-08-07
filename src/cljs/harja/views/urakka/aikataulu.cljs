@@ -38,7 +38,8 @@
             [harja.ui.leijuke :as leijuke]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.fmt :as fmt]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [taoensso.timbre :as log])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -215,7 +216,8 @@
 
 (defn valinnat [ur]
   (let [{aikajana? :nayta-aikajana?
-         jarjestys :jarjestys
+         jarjestys :jarjestyss
+         vuosi 2018
          :as valinnat} @tiedot/valinnat]
     [:span.aikataulu-valinnat
      [valinnat/urakan-vuosi ur]
@@ -253,7 +255,8 @@
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
                                           {:jarjestys jarjestys
                                            :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})]]))
+                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
+                                           :vuosi 2016})]]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
