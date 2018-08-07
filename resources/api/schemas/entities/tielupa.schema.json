@@ -338,7 +338,10 @@
                       "Telekaapeli",
                       "Kaukolämpöjohto",
                       "Maakaasuputki",
-                      "Sähkömaakaapeli"
+                      "Sähkömaakaapeli",
+                      "Puistomuuntamo",
+                      "Pylväsmuuntamo",
+                      "Muuntamo"
                     ]
                   },
                   "asennustyyppi": {
@@ -354,10 +357,7 @@
                       "Jatkos nykyisestä kaapelista",
                       "Ilmajohto tiealueen ulkopuolelle",
                       "Uusi asiakasliittymä",
-                      "Nykyiseen putkitukseen asentaminen",
-                      "Puistomuuntamo",
-                      "Pylväsmuuntamo",
-                      "Muuntamo"
+                      "Nykyiseen putkitukseen asentaminen"
                     ]
                   },
                   "kommentit": {
