@@ -57,6 +57,13 @@
                  "Muut")]
     (str toimenpiteen-nimi ": " tyyppi)))
 
+;; Jos Samposta tulee toimenpideinstanssi, joka jo on kannassa, päivitetään siihen liityvät maksuerät ja kustannussuunnitelmat
+;; likaisiksi, jotta ne lähetetään uudelleen Sampoon. Tämä sen varalta, että toimenpideinstansissa on merkitsevä muutos (esim. tuotepolku).
+(defn paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi
+  [db tpi-id]
+  (maksuerat/merkitse-toimenpiteen-maksuerat-likaisiksi! db tpi-id)
+  (kustannussuunnitelmat/merkitse-toimenpiteen-kustannussunnitelmat-likaisiksi! db tpi-id))
+
 (defn perusta-maksuerat-hoidon-urakoille [db]
   (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
   (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
