@@ -241,6 +241,13 @@ UPDATE maksuera
 SET likainen = TRUE
 WHERE tyyppi = :tyyppi :: maksueratyyppi;
 
+-- name: merkitse-toimenpiteen-maksuerat-likaisiksi!
+-- Merkitsee kaikki annetun toimenpiteen mukaiset maksuerät likaisi
+UPDATE maksuera
+SET likainen = TRUE,
+muokattu = CURRENT_TIMESTAMP
+WHERE toimenpideinstanssi = :tpi;
+
 -- name: luo-maksuera<!
 -- Luo uuden maksuerän.
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)

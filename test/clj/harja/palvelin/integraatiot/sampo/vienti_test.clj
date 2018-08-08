@@ -15,7 +15,9 @@
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.kustannussuunnitelmat :as qk]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]))
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [taoensso.timbre :as log]))
 
 (def +lahetysjono-sisaan+ "lahetysjono-sisaan")
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
@@ -81,3 +83,12 @@
                        [(assoc summa :tpi_id (:toimenpideinstanssi maksuera) :sakko nil)])
                      [:maksuera :summa]))
           "Sakko on laskettu oikein, kun sakon summa on nil"))))
+
+(deftest kaikkien-maksueran-ja-kustannussuunnitelman-paivittaminen-likaiseksi
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        tpi  (first (q-map "select id from toimenpideinstanssi where nimi = 'Oulu Talvihoito TP' "))]
+    (is not(= [{:count 8}] (q-map (str "select count(*) from maksuera where toimenpideinstanssi = 1 AND likainen = TRUE" ))))
+    (is not(= [{:count 8}] (q-map (str "select count(*) from kustannussuunnitelma where maksuera in (select numero from maksuera where toimenpideinstanssi = 1 )  AND likainen = TRUE"))))
+    (maksuerat/paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi db (:id tpi))
+    (is (= [{:count 8}] (q-map (str "select count(*) from maksuera where toimenpideinstanssi = 1 AND likainen = TRUE"))))
+    (is (= [{:count 8}] (q-map (str "select count(*) from kustannussuunnitelma where maksuera in (select numero from maksuera where toimenpideinstanssi = 1 )  AND likainen = TRUE"))))))
