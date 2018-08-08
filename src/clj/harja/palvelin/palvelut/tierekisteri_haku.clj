@@ -12,22 +12,23 @@
 (def +threshold+ 250)
 
 (defn muunna-geometria [tros]
+  (assoc tros :geometria (geo/pg->clj (:geometria tros))))
+
+(defn hae-tr-pisteilla
+  "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
+  [db params]
+  (println "hae tr pisteillä: " params)
   (try
-    (assoc tros :geometria (geo/pg->clj (:geometria tros)))
+    (when-let [tros (first (tv/hae-tr-osoite-valille db
+                                                     (:x1 params) (:y1 params)
+                                                     (:x2 params) (:y2 params)
+                                                     +threshold+))]
+     (muunna-geometria tros))
     (catch PSQLException e
       (if (= (.getMessage e) "ERROR: pisteillä ei yhteistä tietä")
         nil
         ;; else
         (throw e)))))
-
-(defn hae-tr-pisteilla
-  "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
-  [db params]
-  (when-let [tros (first (tv/hae-tr-osoite-valille db
-                                                   (:x1 params) (:y1 params)
-                                                   (:x2 params) (:y2 params)
-                                                   +threshold+))]
-    (muunna-geometria tros)))
 
 (defn hae-tr-pisteella
   "params on mappi {:x .. :y ..}"
