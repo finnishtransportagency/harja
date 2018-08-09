@@ -533,7 +533,8 @@
             (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
                                                     (:maara tm) (:id user)))))
 
-      (materiaalit-q/paivita-koko-sopimuksen-materiaalin-kaytto c (:sopimus t))
+      (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus (:sopimus t)
+                                                                         :toteuma (:id toteuma)})
 
       ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
       ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
