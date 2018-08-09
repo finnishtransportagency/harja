@@ -336,8 +336,6 @@
         alku-y 50
         korkeus (+ alku-y (* (count rivit) rivin-korkeus))
         kaikki-ajat (mapcat ::ajat rivit)
-        alkuajat (sort-by ::alku pvm/ennen? kaikki-ajat)
-        loppuajat (sort-by ::loppu pvm/jalkeen? kaikki-ajat)
         valitut-palkit (or valitut-palkit #{})
         ;; Otetaan alku ja loppu aikajanoista (+/- 14 päivää).
         ;; Ylikirjoitetaan optioista otetuilla arvoilla, jos annettu.
