@@ -84,7 +84,8 @@
                                :kohdenumero :kohdenumero
                                :tr tr/tieosoitteen-jarjestys) aikataulu))
         sarakkeet (filter some? (kohdeluettelo-sarakkeet (:tyyppi parametrit)))]
-    [:raportti {:nimi "Ylläpidon aikataulu"
+    [:raportti {:nimi (str "Ylläpidon aikataulu" (when vuosi
+                                                   (str " vuonna " vuosi)))
                 :orientaatio :landscape}
      [:aikajana {}
       ;; Välitavoitteita ei piirretä PDF-raporttiin, koska tod.näk. niitä ei siinä haluta nähdä.
