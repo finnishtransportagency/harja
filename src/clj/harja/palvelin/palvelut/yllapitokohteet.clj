@@ -103,7 +103,7 @@
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
   (log/debug (prn-str "*************** hae-tiemerkintaurakan-aikataulu" urakka-id  vuosi))
-             (let [aikataulu (into []
+  (let [aikataulu (into []
                         (comp
                           (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                           (map konv/alaviiva->rakenne))
