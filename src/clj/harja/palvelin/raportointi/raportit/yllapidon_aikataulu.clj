@@ -9,7 +9,8 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
             [specql.core :refer [fetch]]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [taoensso.timbre :as log]))
 
 (defn- parametrit-urakan-tiedoilla
   "Hae urakan tyyppi ja pääsopimuksen id"
@@ -73,7 +74,8 @@
 
 (defn suorita [db user {jarjestys :jarjestys
                         nayta-tarkka-aikajana? :nayta-tarkka-aikajana?
-                        nayta-valitavoitteet? :nayta-valitavoitteet? :as parametrit}]
+                        nayta-valitavoitteet? :nayta-valitavoitteet?
+                        vuosi :vuosi :as parametrit}]
   (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
         aikataulu (if (or (nil? jarjestys) (= :aika jarjestys))
@@ -81,8 +83,9 @@
                     (sort-by (case jarjestys
                                :kohdenumero :kohdenumero
                                :tr tr/tieosoitteen-jarjestys) aikataulu))
-        sarakkeet (kohdeluettelo-sarakkeet (:tyyppi parametrit))]
-    [:raportti {:nimi "Ylläpidon aikataulu"
+        sarakkeet (filter some? (kohdeluettelo-sarakkeet (:tyyppi parametrit)))]
+    [:raportti {:nimi (str "Ylläpidon aikataulu" (when vuosi
+                                                   (str " vuonna " vuosi)))
                 :orientaatio :landscape}
      [:aikajana {}
       ;; Välitavoitteita ei piirretä PDF-raporttiin, koska tod.näk. niitä ei siinä haluta nähdä.

@@ -253,14 +253,14 @@
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
                                           {:jarjestys jarjestys
                                            :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})]]))
+                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
+                                           :vuosi @u/valittu-urakan-vuosi})]]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
   (case nakyma
     :paallystys
     (:suorittava-tiemerkintaurakka rivi)
-
     true))
 
 (defn visuaalinen-aikataulu

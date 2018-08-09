@@ -2,9 +2,10 @@
   "Raportit"
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :refer [<! >! chan close!]]
-            
+
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log tarkkaile!]])
+            [harja.loki :refer [log tarkkaile!]]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))

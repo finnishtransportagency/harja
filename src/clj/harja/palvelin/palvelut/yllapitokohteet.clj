@@ -101,6 +101,7 @@
     aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
+  (log/debug (prn-str "*************** hae-tiemerkintaurakan-aikataulu" urakka-id  vuosi))
   (let [aikataulu (into []
                         (comp
                           (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
@@ -135,7 +136,7 @@
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
-  (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
+  (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id " Vuosi: " vuosi)
   (jdbc/with-db-transaction [db db]
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
     (doall
