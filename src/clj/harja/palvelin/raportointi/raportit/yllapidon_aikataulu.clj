@@ -83,7 +83,7 @@
                     (sort-by (case jarjestys
                                :kohdenumero :kohdenumero
                                :tr tr/tieosoitteen-jarjestys) aikataulu))
-        sarakkeet (kohdeluettelo-sarakkeet (:tyyppi parametrit))]
+        sarakkeet (filter some? (kohdeluettelo-sarakkeet (:tyyppi parametrit)))]
     [:raportti {:nimi "Ylläpidon aikataulu"
                 :orientaatio :landscape}
      [:aikajana {}
