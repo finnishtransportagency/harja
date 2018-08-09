@@ -291,7 +291,6 @@
                                              (reset! arvo {:tienumero uusi})
                                              (reset! tienumero uusi)))]))
 
-;; TODO: ESIMERKKI
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
   (let [aseta-tpi (fn [tpi]
                     (reset! arvo (if tpi
@@ -414,7 +413,6 @@
    "Vuosi"
    {:valinta    (:vuosi @arvo)
     :valitse-fn #(reset! arvo {:vuosi %})}
-
    @urakan-vuodet])
 
 (def tyomaakokousraportit

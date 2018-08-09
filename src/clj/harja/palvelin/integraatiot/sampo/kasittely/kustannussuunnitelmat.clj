@@ -55,10 +55,13 @@
 (defn tee-oletus-vuosisummat [vuodet]
   (map (fn [vuosi] (rakenna-vuosi vuosi 1)) vuodet))
 
+
+;; Jos summa on 0 euroa, summaksi asetetaan 1 euro. Sampo-järjestelmän vaatimus.
+;; Vaatimus koskee kokonaishintaisten ja yksikköhintaisten toimenpiteiden lisäksi lisä-ja muutostöitä.
 (defn tee-vuosisummat [vuodet summat]
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
-            (let [summa (or (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0) 0)]
+            (let [summa (or (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 1) 0)]
               (rakenna-vuosi vuosi summa)))
           vuodet)))
 

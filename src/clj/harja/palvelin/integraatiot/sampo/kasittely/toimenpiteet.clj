@@ -70,6 +70,7 @@
                                              talousosasto-polku tuote-id tuote-polku
                                              urakka-sampo-id sampo-toimenpidekoodi)]
       (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)
+      (maksuerat/paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi db toimenpide-id)
       (maksuerat/perusta-maksuerat-hoidon-urakoille db)
       (log/debug "Toimenpide käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))

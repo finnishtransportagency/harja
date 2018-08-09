@@ -23,6 +23,13 @@ FROM kustannussuunnitelma k
   JOIN urakka u ON tpi.urakka = u.id
 WHERE k.likainen = TRUE;
 
+-- name: merkitse-toimenpiteen-kustannussunnitelmat-likaisiksi!
+-- Merkitsee kaikki toimenpiteen kustannussuunnitelmat likaisiksi uudelleen lähetystä varten
+UPDATE kustannussuunnitelma
+SET likainen = TRUE,
+muokattu = current_timestamp
+WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi);
+
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE kustannussuunnitelma
