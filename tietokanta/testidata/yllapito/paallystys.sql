@@ -287,30 +287,30 @@ INSERT INTO yllapitokohteen_aikataulu
 VALUES
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Leppäjärven ramppi 2018'), '2017-05-19',
-                                             '2017-05-19', '2017-05-21', '2017-05-22',
-                                             '2017-05-23',
-                                             '2017-05-24', (SELECT id
+    WHERE nimi = 'Leppäjärven ramppi 2018'), '2018-05-19',
+                                             '2018-05-19', '2018-05-21', '2018-05-22',
+                                             '2018-05-23',
+                                             '2018-05-24', (SELECT id
                                                             FROM kayttaja
                                                             WHERE kayttajanimi = 'jvh'), NOW(),
-                                             '2017-05-21', '2017-06-04'),
+                                             '2018-05-21', '2018-06-04'),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Oulun ohitusramppi 2018'), '2017-05-21',
-                                             '2017-05-21', NULL, NULL, NULL,
+    WHERE nimi = 'Oulun ohitusramppi 2018'), '2018-05-21',
+                                             '2018-05-21', NULL, NULL, NULL,
                                              NULL, (SELECT id
                                                     FROM kayttaja
                                                     WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Oulaisten ohitusramppi 2018'), '2017-05-26',
+    WHERE nimi = 'Oulaisten ohitusramppi 2018'), '2018-05-26',
                                                  NULL, NULL, NULL, NULL,
                                                  NULL, (SELECT id
                                                         FROM kayttaja
                                                         WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Kuusamontien testi 2018'), '2017-06-02',
+    WHERE nimi = 'Kuusamontien testi 2018'), '2018-06-02',
                                              NULL, NULL, NULL, NULL,
                                              NULL, (SELECT id
                                                     FROM kayttaja
@@ -325,9 +325,9 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
                                                                FROM yllapitokohde
                                                                WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN 2018'));
 
-INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'ojankaivuu'::yllapitokohteen_aikataulu_toimenpide, 'Kaivetaan syvä oja ensin', '2017-05-19', '2017-05-20', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
-INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'muu'::yllapitokohteen_aikataulu_toimenpide, 'Siirretään iso kivi pois alta', '2017-05-22', '2017-05-22', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
-INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'rp_tyot'::yllapitokohteen_aikataulu_toimenpide, NULL, '2017-05-22', '2017-05-25', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'ojankaivuu'::yllapitokohteen_aikataulu_toimenpide, 'Kaivetaan syvä oja ensin', '2018-05-19', '2018-05-20', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'muu'::yllapitokohteen_aikataulu_toimenpide, 'Siirretään iso kivi pois alta', '2018-05-22', '2018-05-22', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'rp_tyot'::yllapitokohteen_aikataulu_toimenpide, NULL, '2018-05-22', '2018-05-25', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
 
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi 2018'), 400, 100, 4543.95, 0);
