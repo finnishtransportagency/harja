@@ -41,6 +41,15 @@
 
     100))
 
+(defn otsikko-muutostyotyypin-mukaan [tyyppi]
+  "Muun työn tyypin teksti avainsanaa vastaan"
+  (case tyyppi
+    :muutostyo "Muutostöiden raportti"
+    :lisatyo "Lisätöiden raportti"
+    :akillinen-hoitotyo "Äkillisten hoitotöiden raportti"
+    :vahinkojen-korjaukset "Vahinkojen korjausten raportti"
+    "Muutos- ja lisätöiden raportti, kaikki työtyypit"))
+
 (defn hae-muutos-ja-lisatyot-aikavalille
   [db user urakka-annettu? urakka-id
    urakkatyyppi hallintayksikko-annettu? hallintayksikko-id
@@ -83,7 +92,7 @@
           (or (:korotus %) indeksi-puuttuu-info-solu))
         (sort-by tyypin-sort-avain tyot)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id muutostyotyyppi
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -108,7 +117,7 @@
         muutos-ja-lisatyot-hyn-mukaan (sort-by #(or (sort-avain (first %)) 100000)
                                                (seq (group-by :hallintayksikko
                                                               muutos-ja-lisatyot)))
-        raportin-nimi "Muutos- ja lisätöiden raportti"
+        raportin-nimi (otsikko-muutostyotyypin-mukaan muutostyotyyppi)
         tpi-nimi (if toimenpide-id
                    (:nimi (first (toimenpiteet-q/hae-tuote-kolmostason-toimenpidekoodilla db {:id toimenpide-id})))
                    "Kaikki toimenpiteet")

@@ -27,6 +27,7 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.domain.raportointi :as raportti-domain]
             [harja.tiedot.hallintayksikot :as hy]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [cljs-time.core :as t]
             [harja.fmt :as fmt]
             [harja.ui.viesti :as viesti]
@@ -348,6 +349,24 @@
                                                  {:urakoittain? @urakoittain?}))}
       @urakoittain?]]))
 
+(defonce valittu-muutostyotyyppi (atom nil))
+
+(defmethod raportin-parametri "muutostyotyyppi" [p arvo]
+  (let [aseta-tyyppi (fn [tyyppi]
+                       (reset! arvo {:muutostyotyyppi tyyppi}))]
+   (komp/luo
+     (komp/watcher valittu-muutostyotyyppi
+                   (fn [_ _ tyyppi]
+                     (aseta-tyyppi tyyppi)))
+     (komp/piirretty #(reset! valittu-muutostyotyyppi nil))
+
+     (fn [_ _]
+       @valittu-muutostyotyyppi
+       [ui-valinnat/muutostyon-tyyppi (cons nil toteumat/+muun-tyon-tyypit+)
+        valittu-muutostyotyyppi
+        #(fn [uusi]
+           (reset! valittu-muutostyotyyppi uusi))]))))
+
 (def laatupoikkeama-tekija (atom :kaikki))
 
 (defmethod raportin-parametri "laatupoikkeamatekija" [p arvo]
@@ -517,7 +536,8 @@
                                                  (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
                                                "urakka"
                                                (raportit/urakkaraportin-parametrit
-                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
+                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))
+                                  _ (println "vie raportti, parametrit:  " (pr-str parametrit))]
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))]

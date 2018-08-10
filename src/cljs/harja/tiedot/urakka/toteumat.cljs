@@ -80,3 +80,28 @@
 
 (def ilmoitus-jarjestelman-luoma-toteuma
   "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu.")
+
+(def +muun-tyon-tyypit+
+  [:muutostyo :lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset])
+
+(def +valitse-tyyppi+
+  "- Valitse tyyppi -")
+
+(defn muun-tyon-tyypin-teksti-genetiivissa [avainsana]
+  "Muun työn tyypin teksti avainsanaa vastaan"
+  (case avainsana
+    :muutostyo "muutostyön"
+    :lisatyo "lisätyön"
+    :akillinen-hoitotyo "äkillisen hoitotyön"
+    :vahinkojen-korjaukset "vahinkojen korjaukset"
+    "työn jonka tyyppi on tuntematon"))
+
+(defn muun-tyon-tyypin-teksti [avainsana]
+  "Muun työn tyypin teksti avainsanaa vastaan"
+  (case avainsana
+    :muutostyo "Muutostyö"
+    :lisatyo "Lisätyö"
+    :akillinen-hoitotyo "Äkillinen hoitotyö"
+    :vahinkojen-korjaukset "Vahinkojen korjaukset"
+    nil "Kaikki"
+    +valitse-tyyppi+))
