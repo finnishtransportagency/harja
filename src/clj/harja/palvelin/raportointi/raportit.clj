@@ -228,6 +228,7 @@
    {:nimi :muutos-ja-lisatyot
     :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
                  {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
+                 {:tyyppi "muutostyotyyppi", :konteksti nil, :pakollinen false, :nimi "Työn tyyppi"}
                  {:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
                  {:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
                  {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]

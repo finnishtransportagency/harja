@@ -14,6 +14,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot-kartalla]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
@@ -74,31 +75,6 @@
         (reset! u/toteutuneet-muut-tyot-hoitokaudella res)
         (paivita! u/muutoshintaiset-tyot)
         (or uuden-id true))))
-
-(def +valitse-tyyppi+
-  "- Valitse tyyppi -")
-
-(defn muun-tyon-tyypin-teksti [avainsana]
-  "Muun työn tyypin teksti avainsanaa vastaan"
-  (case avainsana
-    :muutostyo "Muutostyö"
-    :lisatyo "Lisätyö"
-    :akillinen-hoitotyo "Äkillinen hoitotyö"
-    :vahinkojen-korjaukset "Vahinkojen korjaukset"
-    +valitse-tyyppi+))
-
-(defn muun-tyon-tyypin-teksti-genetiivissa [avainsana]
-  "Muun työn tyypin teksti avainsanaa vastaan"
-  (case avainsana
-    :muutostyo "muutostyön"
-    :lisatyo "lisätyön"
-    :akillinen-hoitotyo "äkillisen hoitotyön"
-    :vahinkojen-korjaukset "vahinkojen korjaukset"
-    "työn jonka tyyppi on tuntematon"))
-
-(def +muun-tyon-tyypit+
-  [:muutostyo :lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset])
-
 
 (def korostettavan-rivin-id (atom nil))
 
@@ -235,7 +211,7 @@
                                                              (reset! tallennus-kaynnissa false)))))}
                                      "Poista toteuma"]]}
                           [kuvaus-ja-avainarvopareja
-                           (str "Haluatko varmasti poistaa " (muun-tyon-tyypin-teksti-genetiivissa (:tyyppi m)) "?")
+                           (str "Haluatko varmasti poistaa " (toteumat/muun-tyon-tyypin-teksti-genetiivissa (:tyyppi m)) "?")
                            "Pvm:" (pvm/pvm (:alkanut m))
                            "Tehtävä:" (get-in m [:tehtava :nimi])
                            "Kustannus:" (fmt/euro-opt
@@ -261,8 +237,8 @@
              {:otsikko "Tyyppi" :nimi :tyyppi
               :tyyppi :valinta
               :pakollinen? true
-              :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (muun-tyon-tyypin-teksti %))
-              :valinnat +muun-tyon-tyypit+
+              :valinta-nayta #(if (nil? %) toteumat/+valitse-tyyppi+ (toteumat/muun-tyon-tyypin-teksti %))
+              :valinnat toteumat/+muun-tyon-tyypit+
               :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
               :palstoja 1}
              {:otsikko "Toimenpide" :nimi :toimenpideinstanssi
@@ -471,7 +447,7 @@
              :rivin-luokka #(aseta-rivin-luokka %)
              :tunniste #(get-in % [:toteuma :id])}
             [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "5%"}
-             {:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "15%"}
+             {:otsikko "Tyyppi" :nimi :tyyppi :fmt toteumat/muun-tyon-tyypin-teksti :leveys "15%"}
              {:otsikko "Tehtävä" :tyyppi :string :nimi :tehtavan_nimi
               :hae #(get-in % [:tehtava :nimi]) :leveys "20%"}
              {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :muokattava? (constantly false)

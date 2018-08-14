@@ -15,6 +15,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.ui.dom :as dom]
             [harja.domain.urakka :as u-domain]
             [harja.loki :as log])
@@ -521,3 +522,14 @@
                            :format-fn format-fn
                            :valitse-fn valitse-fn}
       materiaalit]]))
+
+(defn muutostyon-tyyppi
+  [tyypit valittu-tyyppi-atom valitse-fn]
+  [:div.label-ja-alasveto.hoitokausi
+   [:span.alasvedon-otsikko "Työtyyppi"]
+   [livi-pudotusvalikko {:valinta @valittu-tyyppi-atom
+                         :format-fn #(if %
+                                       (toteumat/muun-tyon-tyypin-teksti %)
+                                       "Kaikki")
+                         :valitse-fn valitse-fn}
+    tyypit]])
