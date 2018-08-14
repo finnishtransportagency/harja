@@ -234,7 +234,7 @@ SELECT
   urk.ytunnus              AS urakoitsija_ytunnus,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
-   WHERE urakka = u.id)    AS sopimukset,
+   WHERE urakka = u.id and poistettu = FALSE)    AS sopimukset,
   ST_Simplify(au.alue, 50) AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
@@ -265,7 +265,7 @@ SELECT
   urk.ytunnus              AS urakoitsija_ytunnus,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
-   WHERE urakka = u.id)    AS sopimukset,
+   WHERE urakka = u.id and poistettu = FALSE)    AS sopimukset,
   ST_Simplify(au.alue, 50) AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
@@ -369,7 +369,7 @@ SELECT
   s.alkupvm,
   s.loppupvm
 FROM sopimus s
-WHERE s.urakka = :urakka;
+WHERE s.urakka = :urakka and s.poistettu = FALSE;
 
 -- name: onko-olemassa
 -- Tarkistaa onko id:n mukaista urakkaa olemassa tietokannassa
@@ -500,7 +500,7 @@ SELECT
   yt.sidonta_lukittu                                            AS yha_sidonta_lukittu,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
-   WHERE urakka = u.id)                                         AS sopimukset,
+   WHERE urakka = u.id and poistettu = FALSE)                   AS sopimukset,
   ST_Simplify(au.alue, 50)                                      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
@@ -874,7 +874,7 @@ WHERE
 
 -- name: urakan-paasopimus-id
 -- single?: true
-SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL
+SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL AND poistettu = FALSE;
 
 -- name: paivita-alue-urakalle!
 UPDATE urakka

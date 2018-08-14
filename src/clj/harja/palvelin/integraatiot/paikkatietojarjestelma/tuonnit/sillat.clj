@@ -80,7 +80,7 @@
         tyyppi (:rakennety silta)
         siltanumero (:siltanro silta)
         nimi (:siltanimi silta)
-        geometria (if (= aineistovirhe "NO ERROR") (.toString (:the_geom silta)) nil) ;; Jos sillan geometria ei ole validi, jätetään se tallentamatta, mutta tallennetaan muut tiedot sillasta
+        geometria (if (= aineistovirhe "NO ERROR") (.toString (:the_geom silta)) nil) ;; Jos sillan geometria ei ole validi, jätetään se tallentamatta, mutta tallennetaan muut tiedot sillasta. Poistetuilta silloilta puuttuu sijainti, mutta tiedon poistosta täytyy siirtyä.
         tie (:tie silta)
         alkuosa (:aosa silta)
         alkuetaisyys (:aet silta)
@@ -144,14 +144,14 @@
                                                                   urakat-vaarassa-sillassa)]
                          (if (empty? urakat-vaarassa-sillassa)
                            (do
-                             (log/debug "Kaikki vaarassa sillassa olevat urakat (" (mapv :urakka-id vaarat-urakat) ") saatiin poistettua")
+                             (log/debug "Kaikki väärässä sillassa olevat urakat (" (mapv :urakka-id vaarat-urakat) ") saatiin poistettua")
                              (conj (reduce (fn [urakat {urakka-id :urakka-id}]
                                              (if (poistetut-urakat urakka-id)
                                                urakat (conj urakat urakka-id)))
                                            [] urakkatiedot)
                                    urakka-id))
                            (do
-                             (log/debug "Kaikkia vaarassa sillassa olevat urakoita (" (mapv :urakka-id vaarat-urakat) ") ei saatu poistettua. "
+                             (log/debug "Kaikkia väärässä sillassa olevat urakoita (" (mapv :urakka-id vaarat-urakat) ") ei saatu poistettua. "
                                         "Urakat väärässä sillassa on: " urakat-vaarassa-sillassa ". Ei lisätä oikeaa urakkaa listaan.")
                              (reduce (fn [urakat {urakka-id :urakka-id}]
                                        (if (poistetut-urakat urakka-id)
@@ -203,7 +203,7 @@
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     ;; Järjestyksellä väliä, koska datassa saattaa tulla usea rivi samasta sillasta, joilla eri tiedot.
-    (let [siltatietueet-shapefilesta (reverse (sort-by :muutospvm (shapefile/tuo shapefile)))]
+    (let [siltatietueet-shapefilesta (sort-by :muutospvm (shapefile/tuo shapefile))]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (try (jdbc/with-db-transaction [db db]
              (doseq [silta siltatietueet-shapefilesta]
