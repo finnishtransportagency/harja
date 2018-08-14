@@ -118,8 +118,7 @@
                                                                               (when muutostyotyyppi
                                                                                 (name muutostyotyyppi))
                                                                               alkupvm loppupvm kayta-ryhmittelya?
-                                                                              konteksti
-                                                                              ))
+                                                                              konteksti))
         muutos-ja-lisatyot (if kayta-ryhmittelya?
                              muutos-ja-lisatyot-kannasta
                              (reverse (sort-by (juxt (comp :id :urakka) :alkanut) muutos-ja-lisatyot-kannasta)))
