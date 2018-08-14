@@ -60,9 +60,21 @@
                                                                :loppupvm (c/to-date (t/local-date 2015 9 30))
                                                                :toimenpide-id nil
                                                                :muutostyotyyppi :muutostyo}})
-        nurkkasumman-teksti-kaikki-muutostyot (last (last vastaus-kaikki-muutostyot))]
+        nurkkasumman-teksti-kaikki-muutostyot (last (last vastaus-kaikki-muutostyot))
+        vastaus-kaikki-tyotyypit-liikenneymparisto (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :suorita-raportti
+                                                 +kayttaja-jvh+
+                                                 {:nimi       :muutos-ja-lisatyot
+                                                  :konteksti  "urakka"
+                                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
+                                                               :loppupvm (c/to-date (t/local-date 2015 9 30))
+                                                               :toimenpide-id (hae-liikenneympariston-hoidon-toimenpidekoodin-id)
+                                                               :muutostyotyyppi nil}})
+        nurkkasumman-teksti-kaikki-tyotyypit-liikenneymparisto (last (last vastaus-kaikki-tyotyypit-liikenneymparisto))]
     (is (vector? vastaus-kaikki-tyotyypit))
     (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti")
+    (is (= "Summat ja indeksit yhteensä 14 080,46 €" nurkkasumman-teksti-kaikki-tyotyypit-liikenneymparisto) "nurkkasumman teksti")
     (is (= "Summat ja indeksit yhteensä 7 045,98 €" nurkkasumman-teksti-kaikki-muutostyot) "nurkkasumman teksti")
     (let [otsikko-kaikki-tyotyypit "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
           taulukko-kaikki-tyotyypit (apurit/taulukko-otsikolla vastaus-kaikki-tyotyypit otsikko-kaikki-tyotyypit)
