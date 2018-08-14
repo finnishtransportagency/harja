@@ -39,20 +39,46 @@
                       urakkatieto-fixture))
 
 (deftest raportin-suoritus-urakka-hoitokausi
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vastaus-kaikki-tyotyypit (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi       :muutos-ja-lisatyot
                                  :konteksti  "urakka"
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                              :loppupvm (c/to-date (t/local-date 2015 9 30))
+                                              :toimenpide-id nil
+                                              :muutostyotyyppi nil}})
+        nurkkasumman-teksti-kaikki-tyotyypit (last (last vastaus-kaikki-tyotyypit))
+        vastaus-kaikki-muutostyot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :suorita-raportti
+                                                 +kayttaja-jvh+
+                                                 {:nimi       :muutos-ja-lisatyot
+                                                  :konteksti  "urakka"
+                                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
+                                                               :loppupvm (c/to-date (t/local-date 2015 9 30))
+                                                               :toimenpide-id nil
+                                                               :muutostyotyyppi :muutostyo}})
+        nurkkasumman-teksti-kaikki-muutostyot (last (last vastaus-kaikki-muutostyot))]
+    (is (vector? vastaus-kaikki-tyotyypit))
+    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti")
+    (is (= "Summat ja indeksit yhteensä 7 045,98 €" nurkkasumman-teksti-kaikki-muutostyot) "nurkkasumman teksti")
+    (let [otsikko-kaikki-tyotyypit "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          taulukko-kaikki-tyotyypit (apurit/taulukko-otsikolla vastaus-kaikki-tyotyypit otsikko-kaikki-tyotyypit)
+          otsikko-kaikki-muutostyot "Oulun alueurakka 2014-2019, Muutostöiden raportti ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          taulukko-kaikki-muutostyot (apurit/taulukko-otsikolla vastaus-kaikki-muutostyot otsikko-kaikki-muutostyot)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko-kaikki-tyotyypit
+                                          {:otsikko "Pvm"}
+                                          {:otsikko "Tyyppi"}
+                                          {:otsikko "Toimenpide"}
+                                          {:otsikko "Tehtävä"}
+                                          {:otsikko "Lisätieto"}
+                                          {:otsikko "Määrä"}
+                                          {:otsikko "Summa €"}
+                                          {:otsikko "Ind.korotus €"})
+
+      (apurit/tarkista-taulukko-sarakkeet taulukko-kaikki-muutostyot
                                           {:otsikko "Pvm"}
                                           {:otsikko "Tyyppi"}
                                           {:otsikko "Toimenpide"}
@@ -64,7 +90,7 @@
 
 
 (deftest raportin-suoritus-hallintayksikolle-hoitokausi
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vastaus-kaikki-tyotyypit (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :muutos-ja-lisatyot
@@ -72,13 +98,34 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi :hoito}})]
-    (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)
-          nurkkasumman-teksti (last (last vastaus))]
-      (is (= "Summat ja indeksit yhteensä 32 224,14 €" nurkkasumman-teksti) "nurkkasumman teksti")
-      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                                      :urakkatyyppi :hoito
+                                                      :toimenpide-id nil
+                                                      :muutostyotyyppi nil}})
+        vastaus-kaikki-lisatyot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :suorita-raportti
+                                                +kayttaja-jvh+
+                                                {:nimi               :muutos-ja-lisatyot
+                                                 :konteksti          "hallintayksikko"
+                                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
+                                                                      :loppupvm     (c/to-date (t/local-date 2015 9 30))
+                                                                      :urakkatyyppi :hoito
+                                                                      :toimenpide-id nil
+                                                                      :muutostyotyyppi :lisatyo}})]
+    (is (vector? vastaus-kaikki-tyotyypit))
+    (let [otsikko-kaikki-tyotyypit "Pohjois-Pohjanmaa, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          taulukko-kaikki-tyotyypit (apurit/taulukko-otsikolla vastaus-kaikki-tyotyypit otsikko-kaikki-tyotyypit)
+          nurkkasumman-teksti-kaikki-tyotyypit (last (last vastaus-kaikki-tyotyypit))
+          otsikko-kaikki-lisatyot "Pohjois-Pohjanmaa, Lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          taulukko-kaikki-lisatyot (apurit/taulukko-otsikolla vastaus-kaikki-lisatyot otsikko-kaikki-lisatyot)
+          nurkkasumman-teksti-kaikki-lisatyot (last (last vastaus-kaikki-lisatyot))]
+      (is (= "Summat ja indeksit yhteensä 32 224,14 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti")
+      (is (= "Summat ja indeksit yhteensä 10 034,48 €" nurkkasumman-teksti-kaikki-lisatyot) "nurkkasumman teksti")
+      (apurit/tarkista-taulukko-sarakkeet taulukko-kaikki-tyotyypit
+                                          {:otsikko "Tyyppi"}
+                                          {:otsikko "Summa €"}
+                                          {:otsikko "Ind.korotus €"})
+      (apurit/tarkista-taulukko-sarakkeet taulukko-kaikki-lisatyot
                                           {:otsikko "Tyyppi"}
                                           {:otsikko "Summa €"}
                                           {:otsikko "Ind.korotus €"}))))
@@ -111,7 +158,7 @@
                                           {:otsikko "Ind.korotus €"}))))
 
 (deftest raportin-suoritus-kokomaa-hoitokausi
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vastaus-kaikki-tyotyypit (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :muutos-ja-lisatyot
@@ -119,13 +166,34 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
                                                       :urakkatyyppi :hoito
-                                                      :urakoittain? false}})
-        nurkkasumman-teksti (last (last vastaus))]
-    (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 63 570,46 €" nurkkasumman-teksti) "nurkkasumman teksti")
-    (let [otsikko "KOKO MAA, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                                      :urakoittain? false
+                                                      :toimenpide-id nil
+                                                      :muutostyotyyppi nil}})
+        vastaus-kaikki-vahinkojen-korjaukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :suorita-raportti
+                                                 +kayttaja-jvh+
+                                                 {:nimi               :muutos-ja-lisatyot
+                                                  :konteksti          "koko maa"
+                                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
+                                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
+                                                                       :urakkatyyppi :hoito
+                                                                       :urakoittain? false
+                                                                       :toimenpide-id nil
+                                                                       :muutostyotyyppi :vahinkojen-korjaukset}})
+        nurkkasumman-teksti-kaikki-tyotyypit (last (last vastaus-kaikki-tyotyypit))
+        nurkkasumman-teksti-kaikki-vahinkojen-korjaukset (last (last vastaus-kaikki-vahinkojen-korjaukset))]
+    (is (vector? vastaus-kaikki-tyotyypit))
+    (is (= "Summat ja indeksit yhteensä 63 570,46 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti")
+    (is (= "Summat ja indeksit yhteensä 3 943,41 €" nurkkasumman-teksti-kaikki-vahinkojen-korjaukset) "nurkkasumman teksti")
+    (let [otsikko-kaikki-tyotyypit "KOKO MAA, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          taulukko-kaikki-tyotyypit (apurit/taulukko-otsikolla vastaus-kaikki-tyotyypit otsikko-kaikki-tyotyypit)
+          otsikko-kaikki-vahinkojen-korjaukset "KOKO MAA, Vahinkojen korjausten raportti ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          taulukko-kaikki-vahinkojen-korjaukset (apurit/taulukko-otsikolla vastaus-kaikki-vahinkojen-korjaukset otsikko-kaikki-vahinkojen-korjaukset)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko-kaikki-tyotyypit
+                                          {:otsikko "Tyyppi"}
+                                          {:otsikko "Summa €"}
+                                          {:otsikko "Ind.korotus €"})
+      (apurit/tarkista-taulukko-sarakkeet taulukko-kaikki-tyotyypit
                                           {:otsikko "Tyyppi"}
                                           {:otsikko "Summa €"}
                                           {:otsikko "Ind.korotus €"}))))

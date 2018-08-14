@@ -39,10 +39,7 @@ SELECT
   tpk4.nimi                                              AS tehtava_nimi
 FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
-                     t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                  'lisatyo' :: toteumatyyppi,
-                                  'muutostyo' :: toteumatyyppi,
-                                  'vahinkojen-korjaukset' :: toteumatyyppi) AND
+                     t.tyyppi::TEXT IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
   JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
@@ -94,10 +91,7 @@ SELECT
   lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
 FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
-                     t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                  'lisatyo' :: toteumatyyppi,
-                                  'muutostyo' :: toteumatyyppi,
-                                  'vahinkojen-korjaukset' :: toteumatyyppi) AND
+                     t.tyyppi::TEXT  IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
   JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
@@ -147,10 +141,7 @@ SELECT
   u.nimi                                                AS hallintayksikko_nimi
 FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
-                     t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                  'lisatyo' :: toteumatyyppi,
-                                  'muutostyo' :: toteumatyyppi,
-                                  'vahinkojen-korjaukset' :: toteumatyyppi) AND
+                     t.tyyppi::TEXT  IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
   JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi

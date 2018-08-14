@@ -352,20 +352,12 @@
 (defonce valittu-muutostyotyyppi (atom nil))
 
 (defmethod raportin-parametri "muutostyotyyppi" [p arvo]
-  (let [aseta-tyyppi (fn [tyyppi]
-                       (reset! arvo {:muutostyotyyppi tyyppi}))]
-   (komp/luo
-     (komp/watcher valittu-muutostyotyyppi
-                   (fn [_ _ tyyppi]
-                     (aseta-tyyppi tyyppi)))
-     (komp/piirretty #(reset! valittu-muutostyotyyppi nil))
-
-     (fn [_ _]
-       @valittu-muutostyotyyppi
-       [ui-valinnat/muutostyon-tyyppi (cons nil toteumat/+muun-tyon-tyypit+)
-        valittu-muutostyotyyppi
-        #(fn [uusi]
-           (reset! valittu-muutostyotyyppi uusi))]))))
+  [ui-valinnat/muutostyon-tyyppi (cons nil toteumat/+muun-tyon-tyypit+)
+   valittu-muutostyotyyppi
+   (fn [uusi]
+     (do
+       (reset! valittu-muutostyotyyppi uusi)
+       (reset! arvo {:muutostyotyyppi uusi})))])
 
 (def laatupoikkeama-tekija (atom :kaikki))
 
