@@ -647,6 +647,12 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
+(defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
+  (ffirst (q (str "SELECT id
+  FROM toimenpidekoodi
+  WHERE nimi = 'Laaja toimenpide' AND taso = 3\nAND
+  emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
+
 (defn hae-yha-paallystysurakan-id []
   (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'")))
 
