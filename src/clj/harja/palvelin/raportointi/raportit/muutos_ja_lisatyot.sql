@@ -65,7 +65,7 @@ WHERE
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                     FROM toimenpidekoodi tpk
                                                     WHERE tpk.emo = :tpi))
-  AND t.alkanut :: DATE BETWEEN :alku AND :loppu;
+  AND t.alkanut BETWEEN :alku AND :loppu;
 
 
 -- name: hae-tyypin-ja-hyn-mukaan-ryhmitellyt-muutos-ja-lisatyot-raportille
@@ -117,7 +117,7 @@ WHERE
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                     FROM toimenpidekoodi tpk
                                                     WHERE tpk.emo = :tpi))
-  AND t.alkanut :: DATE BETWEEN :alku AND :loppu
+  AND t.alkanut BETWEEN :alku AND :loppu
 GROUP BY hy.id, t.tyyppi;
 
 -- name: hae-tyypin-ja-urakan-mukaan-ryhmitellyt-hyn-muutos-ja-lisatyot-raportille
@@ -160,5 +160,5 @@ WHERE
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                     FROM toimenpidekoodi tpk
                                                     WHERE tpk.emo = :tpi))
-  AND t.alkanut :: DATE BETWEEN :alku AND :loppu
+  AND t.alkanut BETWEEN :alku AND :loppu
 GROUP BY u.id, t.tyyppi;
