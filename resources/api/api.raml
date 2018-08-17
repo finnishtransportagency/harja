@@ -1077,12 +1077,12 @@ documentation:
           required: true
           example: 12
         voimassaolopvm:
-          description: Päivämäärä jonka sisällä varusteiden on oltava voimassa
+          description: Päivämäärä jonka aikana varusteiden on oltava voimassa. Esim. 2015-01-01.
           type: date
           required: true
           example: 2015-01-01
         tilannepvm:
-          description: Lähdejärjestelmän tieverkon version päivämäärä. Osoitteet palautetaan annetun päivämäärän verkolla.
+          description: Lähdejärjestelmän tieverkon version päivämäärä. Esim. 2015-01-01. Osoitteet palautetaan annetun päivämäärän tieverkon mukaan.
           type: date
           required: true
           example: 2015-01-01
@@ -1146,7 +1146,7 @@ documentation:
             type: string
             example: tl506
           tilannepvm:
-            description: Lähdejärjestelmän tieverkon version päivämäärä. Osoitteet palautetaan annetun päivämäärän verkolla.
+            description: Lähdejärjestelmän tieverkon version päivämäärä. Esim. 2015-01-01. Osoitteet palautetaan annetun päivämäärän tieverkon mukaan.
             type: date
             required: true
             example: 2015-01-01
@@ -1359,11 +1359,11 @@ documentation:
             required: true
             example: 0414332119
           alkaen:
-            description: Päivystykset alkaen
+            description: Päivystykset alkaen. Esim. 2015-01-01.
             type: date
             example: 2015-01-01
           paattyen:
-            description: Päivystykset päättyen
+            description: Päivystykset päättyen. Esim. 2015-01-01.
             type: date
             example: 2015-01-01
         responses:
@@ -1403,12 +1403,13 @@ documentation:
             required: true
             example: 7210782
           alkaen:
-            description: Päivystykset alkaen
+            description: Päivystykset alkaen.  Esim. 2015-01-01.
             type: integer
             example: 2015-01-01
           paattyen:
-            description: Päivystykset päättyen
+            description: Päivystykset päättyen.  Esim. 2015-01-01.
             type: date
+            example: 2015-01-01
         responses:
           200:
             body:
