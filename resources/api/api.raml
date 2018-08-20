@@ -1078,14 +1078,12 @@ documentation:
           example: 12
         voimassaolopvm:
           description: Päivämäärä jonka aikana varusteiden on oltava voimassa. Esim. 2015-01-01.
-          type: date
+          type: date-only
           required: true
-          example: 2015-01-01
         tilannepvm:
           description: Lähdejärjestelmän tieverkon version päivämäärä. Esim. 2015-01-01. Osoitteet palautetaan annetun päivämäärän tieverkon mukaan.
-          type: date
+          type: date-only
           required: true
-          example: 2015-01-01
         puoli:
           description: Tien puoli, jolta varusteet haetaan
           type: integer
@@ -1147,9 +1145,8 @@ documentation:
             example: tl506
           tilannepvm:
             description: Lähdejärjestelmän tieverkon version päivämäärä. Esim. 2015-01-01. Osoitteet palautetaan annetun päivämäärän tieverkon mukaan.
-            type: date
+            type: date-only
             required: true
-            example: 2015-01-01
       responses:
         200:
           body:
@@ -1359,11 +1356,11 @@ documentation:
             required: true
             example: 0414332119
           alkaen:
-            description: Päivystykset alkaen. Esim. 2015-01-01.
+            description: Päivystykset alkaen.
             type: date
             example: 2015-01-01
           paattyen:
-            description: Päivystykset päättyen. Esim. 2015-01-01.
+            description: Päivystykset päättyen.
             type: date
             example: 2015-01-01
         responses:
@@ -1403,11 +1400,11 @@ documentation:
             required: true
             example: 7210782
           alkaen:
-            description: Päivystykset alkaen.  Esim. 2015-01-01.
+            description: Päivystykset alkaen.
             type: integer
             example: 2015-01-01
           paattyen:
-            description: Päivystykset päättyen.  Esim. 2015-01-01.
+            description: Päivystykset päättyen.
             type: date
             example: 2015-01-01
         responses:
