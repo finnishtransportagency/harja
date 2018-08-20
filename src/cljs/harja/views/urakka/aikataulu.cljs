@@ -629,7 +629,7 @@
          :tyyppi :komponentti
          :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id :as kohde}]
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(siirtymat/avaa-tietyoilmoitus kohde)}
+                         {:on-click #(siirtymat/avaa-tietyoilmoitus kohde urakka-id)}
                          (if tietyoilmoitus-id
                            [ikonit/ikoni-ja-teksti (ikonit/livicon-eye) " Avaa"]
                            [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
