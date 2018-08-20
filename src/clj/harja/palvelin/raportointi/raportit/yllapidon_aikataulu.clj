@@ -78,9 +78,10 @@
                         vuosi :vuosi :as parametrit}]
   (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
-        aikataulu (if (or (nil? jarjestys) (= :aika jarjestys))
+        aikataulu (if (or (nil? jarjestys))
                     aikataulu
                     (sort-by (case jarjestys
+                               :aika :aikataulu-kohde-alku
                                :kohdenumero :kohdenumero
                                :tr tr/tieosoitteen-jarjestys) aikataulu))
         sarakkeet (filter some? (kohdeluettelo-sarakkeet (:tyyppi parametrit)))]
