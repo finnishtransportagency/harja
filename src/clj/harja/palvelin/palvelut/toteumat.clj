@@ -343,7 +343,7 @@
           (apply toteumat-q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false)
                                                                           (:id ek)
                                                                           (:urakka-id ek)])))
-        (toteumat-q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! db (:toimenpideinstanssi ek))
+        (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
         (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
                                                  :alkupvm (:alkupvm ek)
                                                  :loppupvm (:loppupvm ek)})))

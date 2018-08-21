@@ -464,7 +464,7 @@ WHERE
                JOIN toteuma t ON t.id = tt.toteuma
              WHERE tt.id IN (:toteuma_tehtava_idt) AND t.tyyppi :: TEXT = m.tyyppi :: TEXT);
 
--- name: merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi!
+-- name: merkitse-toimenpideinstanssin-maksuera-likaiseksi!
 -- Merkitsee erilliskustannuksia vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
 SET likainen = TRUE
