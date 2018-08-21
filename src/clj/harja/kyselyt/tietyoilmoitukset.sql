@@ -18,7 +18,7 @@ SELECT
   ely.nimi               AS "tilaaja-nimi"
 FROM yllapitokohde ypk
   JOIN yllapitokohteen_aikataulu ypkat ON ypk.id = ypkat.yllapitokohde
-  JOIN urakka u ON ypk.urakka = u.id
+  JOIN urakka u ON :valittu_urakka_id = u.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE ypk.id = :kohdeid;

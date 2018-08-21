@@ -254,8 +254,8 @@
              :geometria (:kohdeosa_sijainti kohde)})
           yllapitokohteet)))
 
-(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
-  (log/debug "Haetaan ylläpitokohteen " yllapitokohde-id " tiedot tietyöilmoitukselle")
+(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user {:keys [yllapitokohde-id valittu-urakka-id]}]
+  (log/debug "Haetaan ylläpitokohteen " yllapitokohde-id " tiedot tietyöilmoitukselle, valittu-urakka-id: " valittu-urakka-id)
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
   (oikeudet/ei-oikeustarkistusta!)
   (let [{:keys [urakka-id
@@ -266,7 +266,8 @@
                 tr-loppuosa
                 tr-loppuetaisyys]
          :as yllapitokohde}
-        (first (q-tietyoilmoitukset/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))
+        (first (q-tietyoilmoitukset/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id
+                                                                                       :valittu_urakka_id valittu-urakka-id}))
         geometria (tr-haku/hae-tr-viiva db {:numero tr-numero
                                             :alkuosa tr-alkuosa
                                             :alkuetaisyys tr-alkuetaisyys

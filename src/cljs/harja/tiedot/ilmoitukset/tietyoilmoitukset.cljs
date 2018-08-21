@@ -112,8 +112,9 @@
 (defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
   (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
 
-(defn- hae-yllapitokohteen-tiedot-tietyoilmoitukselle [yllapitokohde-id]
-  (k/post! :hae-yllapitokohteen-tiedot-tietyoilmoitukselle yllapitokohde-id))
+(defn- hae-yllapitokohteen-tiedot-tietyoilmoitukselle [{:keys [yllapitokohde-id valittu-urakka-id]}]
+  (k/post! :hae-yllapitokohteen-tiedot-tietyoilmoitukselle {:yllapitokohde-id yllapitokohde-id
+                                                            :valittu-urakka-id valittu-urakka-id}))
 
 (defn- hae-urakan-tiedot-tietyoilmoitukselle [urakka-id]
   (k/post! :hae-urakan-tiedot-tietyoilmoitukselle urakka-id))
@@ -499,11 +500,12 @@
     (assoc app :valittu-ilmoitus (merge (:valittu-ilmoitus app) yllapitokohde))))
 
 (defn avaa-tietyoilmoitus
-  [tietyoilmoitus-id yllapitokohde]
+  [tietyoilmoitus-id yllapitokohde valittu-urakka-id]
   (go
     (let [tietyoilmoitus (if tietyoilmoitus-id
                            (async/<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
                            (esitayta-tietyoilmoitus
-                             (async/<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
+                             (async/<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle {:yllapitokohde-id (:id yllapitokohde)
+                                                                                        :valittu-urakka-id valittu-urakka-id}))))]
       (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
-                                       :tallennus-kaynnissa? false)))))
+                                         :tallennus-kaynnissa? false)))))

@@ -139,8 +139,8 @@
 
 (defn avaa-tietyoilmoitus
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
-  [{:keys [tietyoilmoitus-id] :as yllapitokohde}]
+  [{:keys [tietyoilmoitus-id] :as yllapitokohde} valittu-urakka-id]
   (go
     (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
     (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
-    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde)))
+    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde valittu-urakka-id)))
