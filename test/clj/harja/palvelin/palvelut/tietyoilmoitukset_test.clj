@@ -175,25 +175,18 @@
     (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
           paallystysurakka-id (hae-muhoksen-paallystysurakan-id)
           tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
-          epavalidi-urakka-id 667
           vastaus-paallystysurakka (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
-                                  +kayttaja-jvh+
-                                  {:yllapitokohde-id yllapitokohde-id
-                                   :valittu-urakka-id paallystysurakka-id})
-          vastaus-tiemerkintaurakka (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                                                    +kayttaja-jvh+
                                                    {:yllapitokohde-id yllapitokohde-id
-                                                    :valittu-urakka-id tiemerkintaurakka-id})
-          vastaus-epavalidi-urakka (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
-                                  +kayttaja-jvh+
-                                  {:yllapitokohde-id yllapitokohde-id
-                                   :valittu-urakka-id epavalidi-urakka-id})]
+                                                    :valittu-urakka-id paallystysurakka-id})
+          vastaus-tiemerkintaurakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                                                    +kayttaja-jvh+
+                                                    {:yllapitokohde-id yllapitokohde-id
+                                                     :valittu-urakka-id tiemerkintaurakka-id})]
       (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus-paallystysurakka))
-      (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus-tiemerkintaurakka))
-      (is (not (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus-epavalidi-urakka))))))
+      (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus-tiemerkintaurakka)))))
 
 (deftest hae-tietyoilmoitus
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
