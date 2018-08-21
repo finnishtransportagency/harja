@@ -555,7 +555,7 @@ FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_tarkka_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
                                                                  AND ypkya.poistettu IS NOT TRUE
-  LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
+  LEFT JOIN tietyoilmoitus tti ON (ypk.id = tti.yllapitokohde AND tti."urakka-id" = :urakka)
 WHERE
   ypk.urakka = :urakka
   AND ypk.sopimus = :sopimus
@@ -606,7 +606,7 @@ FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_tarkka_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
                                                       AND ypkya.poistettu IS NOT TRUE
-  LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
+  LEFT JOIN tietyoilmoitus tti ON (ypk.id = tti.yllapitokohde AND tti."urakka-id" = :suorittava_tiemerkintaurakka)
   LEFT JOIN urakka paallystysurakka ON ypk.urakka = paallystysurakka.id
   LEFT JOIN yllapitokohteen_sahkopostitiedot sposti ON sposti.yllapitokohde_id = ypk.id
 

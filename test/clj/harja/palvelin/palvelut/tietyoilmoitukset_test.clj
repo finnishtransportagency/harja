@@ -173,11 +173,20 @@
   (with-fake-http
     [+testi-fim+ (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
     (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
-                                  +kayttaja-jvh+
-                                  yllapitokohde-id)]
-      (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus)))))
+          paallystysurakka-id (hae-muhoksen-paallystysurakan-id)
+          tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
+          vastaus-paallystysurakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                                                   +kayttaja-jvh+
+                                                   {:yllapitokohde-id yllapitokohde-id
+                                                    :valittu-urakka-id paallystysurakka-id})
+          vastaus-tiemerkintaurakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                                                    +kayttaja-jvh+
+                                                    {:yllapitokohde-id yllapitokohde-id
+                                                     :valittu-urakka-id tiemerkintaurakka-id})]
+      (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus-paallystysurakka))
+      (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus-tiemerkintaurakka)))))
 
 (deftest hae-tietyoilmoitus
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
