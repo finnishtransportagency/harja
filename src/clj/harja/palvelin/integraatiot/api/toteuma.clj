@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi]
             [harja.domain.reittipiste :as rp]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
@@ -55,14 +56,19 @@
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kayttaja-id (:id kirjaaja)
+          toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
+                                       (q-toteumat/hae-toteumien-alkanut-ulkoisella-idlla db {:kayttaja-id kayttaja-id
+                                                                                              :ulkoiset-idt ulkoiset-idt})))
           poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt)
           sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
       (log/debug "Poistettujen määrä:" poistettujen-maara)
       (when (and (> poistettujen-maara 0)
                  (> (count sopimus-idt) 0))
         (doseq [sopimus-id sopimus-idt]
-          (log/debug "paivita-koko-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id)
-          (materiaalit/paivita-koko-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id})))
+          (doseq [alkupvm toteumien-alkupvmt]
+            (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " (pvm/->pvm alkupvm))
+            (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                   :alkupvm (pvm/->pvm alkupvm)}))))
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
                           "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
