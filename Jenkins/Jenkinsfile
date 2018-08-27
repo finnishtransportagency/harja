@@ -10,10 +10,10 @@ node {
   def aikaNytD = new Date()
   def aika5minSitten = new Date(aikaNytD.getTime() - 5*60*1000)
   if (aika5minSitten.before(viimeisinMuutosD)) {
-    def testikannanPystytysOnnistui = sh([script: "sh Jenkins/skriptit/testitietokanta.sh"
+    def testikannanPystytysOnnistui = sh([script: "sh Jenkins/skriptit/testitietokanta.sh",
                                           returnStatus: true])
     if (testikannanPystytysOnnistui == 0) {
-      def tuotantoBuildJaTestit = sh([script: "lein tuotanto"
+      def tuotantoBuildJaTestit = sh([script: "lein tuotanto",
                                       returnStatus: true])
       archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
       if (tuotantoBuildJaTestit == 0) {
