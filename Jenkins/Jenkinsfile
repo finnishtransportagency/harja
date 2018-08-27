@@ -5,16 +5,15 @@ node {
   // Lisää mvn pathiin
   env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-  // Jos on tarvesta tarkastaa, että onko oikeasti kommitoitu mitäään viime pollauksesta, niin unkommentoi tämä
-  /*
-  def viimeisinMuutosRiviS = sh([script: "git log -n 1 --date=iso8601 | grep Date",
-                                 returnStdout: true])
-  def viimeisinMuutosS = (viimeisinMuutosRiviS =~ /[-0-9]+ [:0-9]*/)[0]
-  SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
-  def viimeisinMuutosD = sdf.parse(viimeisinMuutosS)
-  def aikaNytD = new Date()
-  def aika5minSitten = new Date(aikaNytD.getTime() - 5*60*1000)
-  if (aika5minSitten.before(viimeisinMuutosD)) { */
+  // Jos on tarvesta tarkastaa, että onko oikeasti kommitoitu mitäään viime pollauksesta, niin unkommentoi nämä
+  // def viimeisinMuutosRiviS = sh([script: "git log -n 1 --date=iso8601 | grep Date",
+  //                                returnStdout: true])
+  // def viimeisinMuutosS = (viimeisinMuutosRiviS =~ /[-0-9]+ [:0-9]*/)[0]
+  // SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+  // def viimeisinMuutosD = sdf.parse(viimeisinMuutosS)
+  // def aikaNytD = new Date()
+  // def aika5minSitten = new Date(aikaNytD.getTime() - 5*60*1000)
+  // if (aika5minSitten.before(viimeisinMuutosD)) {
     def testikannanPystytysOnnistui = sh([script: "sh Jenkins/skriptit/testitietokanta.sh",
                                           returnStatus: true])
     if (testikannanPystytysOnnistui == 0) {
