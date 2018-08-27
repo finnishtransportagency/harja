@@ -1,10 +1,12 @@
-import java.text.SimpleDateFormat
+//import java.text.SimpleDateFormat
 
 node {
   checkout scm;
   // Lisää mvn pathiin
   env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
+  // Jos on tarvesta tarkastaa, että onko oikeasti kommitoitu mitäään viime pollauksesta, niin unkommentoi tämä
+  /*
   def viimeisinMuutosRiviS = sh([script: "git log -n 1 --date=iso8601 | grep Date",
                                  returnStdout: true])
   def viimeisinMuutosS = (viimeisinMuutosRiviS =~ /[-0-9]+ [:0-9]*/)[0]
@@ -12,7 +14,7 @@ node {
   def viimeisinMuutosD = sdf.parse(viimeisinMuutosS)
   def aikaNytD = new Date()
   def aika5minSitten = new Date(aikaNytD.getTime() - 5*60*1000)
-  if (aika5minSitten.before(viimeisinMuutosD)) {
+  if (aika5minSitten.before(viimeisinMuutosD)) { */
     def testikannanPystytysOnnistui = sh([script: "sh Jenkins/skriptit/testitietokanta.sh",
                                           returnStatus: true])
     if (testikannanPystytysOnnistui == 0) {
@@ -22,10 +24,12 @@ node {
       if (tuotantoBuildJaTestit == 0) {
         sh "echo Kaikki hyvin"
       } else {
-        sh "echo joku feilas."
+        error([message: "'lein tuotanto' epäonnistui"])
       }
+    } else {
+      error([message: "Testikannan pystytys epäonnistui."])
     }
-  }
+  //}
   // Migraatiot testipannulle
   // Nightly deploy
   // Harja-e2e
