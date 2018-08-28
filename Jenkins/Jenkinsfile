@@ -117,6 +117,14 @@ node {
             error([message: "Testiserverin app pystytys epäonnistui."])
         }
     }
+
+    /*
+     * SIIVOTAAN WORKSPACE
+     */
+
+    stage('Siivoa workspace') {
+        cleanWs()
+    }
   // Harja-e2e
     // build env
       // Xvfb
