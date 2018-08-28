@@ -355,6 +355,7 @@ WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS N
 SELECT alkanut
   FROM toteuma t
  WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
+
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT

@@ -57,9 +57,10 @@
   (jdbc/with-db-transaction [db db]
     (let [kayttaja-id (:id kirjaaja)
           toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
-                                       (q-toteumat/hae-toteumien-alkanut-ulkoisella-idlla db {:kayttaja-id kayttaja-id
-                                                                                              :ulkoiset-idt ulkoiset-idt})))
+                                       (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:kayttaja-id kayttaja-id
+                                                                                                            :ulkoiset-idt ulkoiset-idt})))
           poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt)
+
           sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
       (log/debug "Poistettujen määrä:" poistettujen-maara)
       (when (and (> poistettujen-maara 0)
