@@ -4,11 +4,6 @@ node {
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-    // Onnistuiko stage
-    int testikannanLuontiOnnistui
-    int jarJaTestitOnnistui
-    int testiserverinKannanLuontiOnnistui
-    int testiserverinAppLuontiOnnistui
     // Stage nimet
     String testikannanLuonti = 'Luo testikanta'
     String jarJaTestit = 'Luo JAR ja aja testit'
@@ -21,55 +16,36 @@ node {
          * TESTIKANNAN LUOMINEN
          */
 
-        stage(testikannanLuonti) {
-            testikannanLuontiOnnistui = sh([script      : "sh Jenkins/skriptit/testitietokanta.sh",
-                                            returnStatus: true])
+        try {
+            stage(testikannanLuonti) {
+                sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
+            }
+        } catch (e) {
+            env.FAILED_STAGE = testikannanLuonti
+            error([message: "Testikannan pystytys epäonnistui."])
         }
 
         /*
          * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
          */
 
-        if (testikannanLuontiOnnistui == 0) {
+        try {
             stage(jarJaTestit) {
                 // Luo API docsit
                 sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
                 // Luo jarri ja aja testit
-                jarJaTestitOnnistui = sh([script      : "lein tuotanto",
-                                          returnStatus: true])
+                sh([script: "lein tuotanto"])
                 // Säilötään se jarri
                 archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
                 // Testitulokset
                 junit([testResults: 'test2junit/xml/*.xml'])
                 // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
-                if (jarJaTestitOnnistui == 0 &&
-                    currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
+                if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
                     slackSend([color  : 'good',
                                message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
                 }
             }
-        } else {
-            env.FAILED_STAGE = testikannanLuonti
-            error([message: "Testikannan pystytys epäonnistui."])
-        }
-
-        /*
-         * TESTISERVERIKANNAN LUOMINEN
-         */
-
-        if (jarJaTestitOnnistui == 0) {
-            stage(testiserverinKannanLuonti) {
-                withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                    // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
-                    withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                        testiserverinKannanLuontiOnnistui = sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
-                                                                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
-                                                                        " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA",
-                                                                returnStatus: true])
-                    }
-                }
-            }
-        } else {
+        } catch (e) {
             env.FAILED_STAGE = jarJaTestit
             mail([from   : params.LAHETTAJA_SPOSTI,
                   replyTo: '',
@@ -81,6 +57,26 @@ node {
             slackSend([color  : 'warning',
                        message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
             error([message: "'lein tuotanto' epäonnistui"])
+        }
+
+        /*
+         * TESTISERVERIKANNAN LUOMINEN
+         */
+
+        try {
+            stage(testiserverinKannanLuonti) {
+                withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                    // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
+                    withMaven(jdk: '', maven: 'Maven 3.5.4') {
+                        sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
+                                    " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
+                                    " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                    }
+                }
+            }
+        } catch (e) {
+            env.FAILED_STAGE = testiserverinKannanLuonti
+            error([message: "Testiserverin kannan pystytys epäonnistui."])
         }
     }
 
@@ -95,27 +91,20 @@ node {
          * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
          */
 
-        if (testiserverinKannanLuontiOnnistui == 0) {
+        try {
             stage(testiserverinAppLuonti) {
-                testiserverinAppLuontiOnnistui = ansiblePlaybook([installation: 'ansible 1.9.1',
-                                                                  inventory   : 'inventory/testing',
-                                                                  playbook    : 'playbooks/nightly.yml'])
+                ansiblePlaybook([installation: 'ansible 1.9.1',
+                                 inventory   : 'inventory/testing',
+                                 playbook    : 'playbooks/nightly.yml'])
             }
-        } else {
-            env.FAILED_STAGE = testiserverinKannanLuonti
-            error([message: "Testiserverin kannan pystytys epäonnistui."])
+        } catch (e) {
+            env.FAILED_STAGE = testiserverinAppLuonti
+            error([message: "Testiserverin app pystytys epäonnistui."])
         }
 
         /*
          * E2E testit
          */
-
-        if (testiserverinAppLuontiOnnistui == 0) {
-            sh "echo jay"
-        } else {
-            env.FAILED_STAGE = testiserverinAppLuonti
-            error([message: "Testiserverin app pystytys epäonnistui."])
-        }
     }
 
     /*
