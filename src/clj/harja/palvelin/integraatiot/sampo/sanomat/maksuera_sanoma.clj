@@ -51,7 +51,7 @@
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
                  :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm)
-                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja loppupvm) "00:00:00.0" "17:00:00.0")
+                 :finish                (.replace (pvm/lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm loppupvm 3) "23:00:00" "17:00:00")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
@@ -89,8 +89,10 @@
                                            :objectCode         "vv_invoice_receipt"
                                            :instanceCode       instance-code}
                                 (custom-information {"code"                 instance-code
-                                                         ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
-                                                         ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
+
+                                                         ;; Taloushallinnon kanssa on sovittu, että maksuerän loppupäivämäärä eli viimeisen maksuerän
+                                                         ;; päivämäärä on 3 kk urakan päättymisen jälkeen (30.9. => 31.12).
+                                                         ;; Maksuerä kestää siis yli toimenpideinstanssin elinkaaren. (ks. Product :finish yllä)
                                                          "vv_payment_date"      (pvm/aika-iso8601-ilman-millisekunteja (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
