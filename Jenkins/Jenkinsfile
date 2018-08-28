@@ -62,7 +62,7 @@ node {
                 withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
                     // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
                     withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                        testiserverinKannanLuontiOnnistui = sh([script: "mvn clean compile flyway:migrate" +
+                        testiserverinKannanLuontiOnnistui = sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
                                                                         " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
                                                                         " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA",
                                                                 returnStatus: true])
