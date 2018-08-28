@@ -1,3 +1,5 @@
+import hudson.scm.ChangeLogSet
+
 node {
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
