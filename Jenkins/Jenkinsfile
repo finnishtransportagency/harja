@@ -9,6 +9,7 @@ node {
     String jarJaTestit = 'Luo JAR ja aja testit'
     String testiserverinKannanLuonti = 'Luo testiserverin kanta'
     String testiserverinAppLuonti = 'Luo testiserverin app'
+    String e2eTestit = 'Aja E2E testit'
 
     dir('Harja') {
         checkout scm;
@@ -81,12 +82,18 @@ node {
     }
 
     dir('CI') {
-        checkout([$class: 'GitSCM',
-                  branches: [[name: '*/master']],
-                  doGenerateSubmoduleConfigurations: false,
-                  extensions: [],
-                  submoduleCfg: [],
-                  userRemoteConfigs: [[url: params.HARJA_CI_URL]]])
+        resolveScm([source: [$class: 'GitSCMSource',
+                            credentialsId: '',
+                            id: '_',
+                            remote: params.HARJA_CI_URL,
+                            traits: [[$class: 'BranchDiscoveryTrait']]],
+                    targets: ['master']])
+        //checkout([$class: 'GitSCM',
+        //          branches: [[name: '*/master']],
+        //          doGenerateSubmoduleConfigurations: false,
+        //          extensions: [],
+        //          submoduleCfg: [],
+        //          userRemoteConfigs: [[url: params.HARJA_CI_URL]]])
         /*
          * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
          */
@@ -116,10 +123,46 @@ node {
             env.FAILED_STAGE = testiserverinAppLuonti
             error([message: "Testiserverin app pystytys epäonnistui."])
         }
+    }
+
+    dir('E2E') {
+        resolveScm([source: [$class: 'GitSCMSource',
+                             credentialsId: '',
+                             id: '_',
+                             remote: params.HARJA_E2E_URL,
+                             traits: [[$class: 'BranchDiscoveryTrait']]],
+                    targets: ['develop']])
+        //checkout([$class: 'GitSCM',
+        //          branches: [[name: '*/develop']],
+        //          doGenerateSubmoduleConfigurations: false,
+        //          extensions: [],
+        //          submoduleCfg: [],
+        //          userRemoteConfigs: [[url: params.HARJA_E2E_URL]]])
 
         /*
-         * E2E testit
+         * E2E TESTIT
          */
+        try {
+            stage(e2eTestit) {
+                wrap([$class: 'Xvfb']) {
+                    retry(5) {
+                        timeout(20) {
+                            sh([script: "lein do clean, compile, test2junit"])
+                        }
+                    }
+                }
+                junit([testResults: 'test2junit/xml/*.xml'])
+                if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == e2eTestit) {
+                    slackSend([color  : 'good',
+                               message: 'E2E-testit normalisoitui'])
+                }
+            }
+        } catch (e) {
+            env.FAILED_STAGE = e2eTestit
+            slackSend([color  : 'warning',
+                       message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
+            error([message: "E2E-testit epäonnistuivat"])
+        }
     }
 
     /*
