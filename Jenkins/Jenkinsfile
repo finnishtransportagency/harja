@@ -1,36 +1,120 @@
-//import java.text.SimpleDateFormat
-
 node {
-  checkout scm;
-  // Lisää mvn pathiin
-  env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
+    // Lisää mvn pathiin
+    env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-  // Jos on tarvesta tarkastaa, että onko oikeasti kommitoitu mitäään viime pollauksesta, niin unkommentoi nämä
-  // def viimeisinMuutosRiviS = sh([script: "git log -n 1 --date=iso8601 | grep Date",
-  //                                returnStdout: true])
-  // def viimeisinMuutosS = (viimeisinMuutosRiviS =~ /[-0-9]+ [:0-9]*/)[0]
-  // SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
-  // def viimeisinMuutosD = sdf.parse(viimeisinMuutosS)
-  // def aikaNytD = new Date()
-  // def aika5minSitten = new Date(aikaNytD.getTime() - 5*60*1000)
-  // if (aika5minSitten.before(viimeisinMuutosD)) {
-    def testikannanPystytysOnnistui = sh([script: "sh Jenkins/skriptit/testitietokanta.sh",
+    // Onnistuiko stage
+    int testikannanLuontiOnnistui
+    int jarJaTestitOnnistui
+    int testiserverinKannanLuontiOnnistui
+    int testiserverinAppLuontiOnnistui
+    // Stage nimet
+    String testikannanLuonti = 'Luo testikanta'
+    String jarJaTestit = 'Luo JAR ja aja testit'
+    String testiserverinKannanLuonti = 'Luo testiserverin kanta'
+    String testiserverinAppLuonti = 'Luo testiserverin app'
+
+    dir('Harja') {
+        checkout scm;
+        /*
+         * TESTIKANNAN LUOMINEN
+         */
+
+        stage(testikannanLuonti) {
+            testikannanLuontiOnnistui = sh([script      : "sh Jenkins/skriptit/testitietokanta.sh",
+                                            returnStatus: true])
+        }
+
+        /*
+         * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
+         */
+
+        if (testikannanLuontiOnnistui == 0) {
+            stage(jarJaTestit) {
+                // Luo API docsit
+                sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
+                // Luo jarri ja aja testit
+                jarJaTestitOnnistui = sh([script      : "lein tuotanto",
                                           returnStatus: true])
-    if (testikannanPystytysOnnistui == 0) {
-      def tuotantoBuildJaTestit = sh([script: "lein tuotanto",
-                                      returnStatus: true])
-      archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-      if (tuotantoBuildJaTestit == 0) {
-        sh "echo Kaikki hyvin"
-      } else {
-        error([message: "'lein tuotanto' epäonnistui"])
-      }
-    } else {
-      error([message: "Testikannan pystytys epäonnistui."])
+                // Säilötään se jarri
+                archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
+                // Testitulokset
+                junit([testResults: 'test2junit/xml/*.xml'])
+                // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
+                if (jarJaTestitOnnistui == 0 &&
+                    currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
+                    slackSend([color  : 'good',
+                               message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
+                }
+            }
+        } else {
+            env.FAILED_STAGE = testikannanLuonti
+            error([message: "Testikannan pystytys epäonnistui."])
+        }
+
+        /*
+         * TESTISERVERIKANNAN LUOMINEN
+         */
+
+        if (jarJaTestitOnnistui == 0) {
+            stage(testiserverinKannanLuonti) {
+                withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                    // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
+                    withMaven(jdk: '', maven: 'Maven 3.5.4') {
+                        testiserverinKannanLuontiOnnistui = sh([script: "mvn clean compile flyway:migrate" +
+                                                                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
+                                                                        " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA",
+                                                                returnStatus: true])
+                    }
+                }
+            }
+        } else {
+            env.FAILED_STAGE = jarJaTestit
+            mail([from   : params.LAHETTAJA_SPOSTI,
+                  replyTo: '',
+                  to     : params.VASTAANOTTAJAT_SPOSTI,
+                  cc     : '',
+                  bcc    : '',
+                  subject: 'Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}',
+                  body   : "Build: ${env.BUILD_URL}\n" + changeSets2String(currentBuild.changeSets)])
+            slackSend([color  : 'warning',
+                       message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
+            error([message: "'lein tuotanto' epäonnistui"])
+        }
     }
-  //}
-  // Migraatiot testipannulle
-  // Nightly deploy
+
+    dir('CI') {
+        checkout([$class: 'GitSCM',
+                  branches: [[name: '*/master']],
+                  doGenerateSubmoduleConfigurations: false,
+                  extensions: [],
+                  submoduleCfg: [],
+                  userRemoteConfigs: [[url: params.HARJA_CI_URL]]])
+        /*
+         * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+         */
+
+        if (testiserverinKannanLuontiOnnistui == 0) {
+            stage(testiserverinAppLuonti) {
+                testiserverinAppLuontiOnnistui = ansiblePlaybook([installation: 'ansible 1.9.1',
+                                                                  inventory   : 'inventory/testing',
+                                                                  playbook    : 'playbooks/nightly.yml'])
+            }
+        } else {
+            env.FAILED_STAGE = testiserverinKannanLuonti
+            error([message: "Testiserverin kannan pystytys epäonnistui."])
+        }
+
+        /*
+         * E2E testit
+         */
+
+        if (testiserverinAppLuontiOnnistui == 0) {
+            sh "echo jay"
+        } else {
+            env.FAILED_STAGE = testiserverinAppLuonti
+            error([message: "Testiserverin app pystytys epäonnistui."])
+        }
+    }
   // Harja-e2e
     // build env
       // Xvfb
@@ -46,10 +130,25 @@ node {
     // General
       // keep builds for 7 days
   // harja-prod-db
-  // harja-prod-app
+    // harja-prod-app
     // ajetaan?
-      // 7am arkisin
+    // 7am arkisin
     // slack kun build start, faiure, success, back to normal
-  // API Docsit pitää laittaa jossain väli
+    // API Docsit pitää laittaa jossain väli
 
+}
+
+String changeSets2String(ChangeLogSet<?> muutokset) {
+    StringBuilder sb = new StringBuilder()
+    for (Object muutos : muutokset) {
+        sb.append("[" + muutos.author + "]")
+        sb.append(" " + muutos.msg + "\n")
+    }
+    sb.toString()
+}
+
+Boolean onkoTiedostoOlemassa(absolutePath) {
+    loytyikoTiedosto = sh([script      : "[ -f " + absolutePath + " ]",
+                           returnStatus: true])
+    loytyikoTiedosto == 0
 }
