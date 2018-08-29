@@ -12,7 +12,7 @@
                         12)))
 
 (deftest ennen?
-  (is (false? (pvm/ennen? nil nil)))
+  (is (true? (pvm/ennen? nil nil)))
   (is (false? (pvm/ennen? nyt nil)))
   (is (false? (pvm/ennen? nil nyt)))
   (is (false? (pvm/ennen? nyt nyt)))
