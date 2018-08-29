@@ -906,8 +906,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 #?(:clj
    (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm[pvm kk-maara]
-     (aika-iso8601-ilman-millisekunteja
-       (tc/to-date
-          (t/last-day-of-the-month
-              (t/plus (tc/to-date-time pvm)(t/months kk-maara)))))))
-
+       (tc/to-date-time
+         (t/last-day-of-the-month
+           (t/plus (tc/to-date-time (aika-iso8601 pvm))(t/months kk-maara))))))
