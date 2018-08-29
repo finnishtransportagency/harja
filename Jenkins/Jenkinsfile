@@ -203,7 +203,7 @@ node {
 def changeSets2String(muutokset) {
     StringBuilder sb = new StringBuilder()
     println "MUUTOKSET: " + muutokset
-    for (ChangeLogSet<T> muutos : muutokset) {
+    for (ChangeLogSet muutos : muutokset) {
         println "MUUTOS: " + muutos
         println "KIND: " + muutos.getKind()
         println "ITEMS: " + muutos.getItems()
