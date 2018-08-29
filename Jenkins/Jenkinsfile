@@ -201,16 +201,15 @@ node {
 
 @NonCPS
 def changeSets2String(muutokset) {
-    StringBuilder sb = new StringBuilder()
     println "MUUTOKSET: " + muutokset
+    def teksti = ""
     for (ChangeLogSet muutos : muutokset) {
         println "MUUTOS: " + muutos
         println "KIND: " + muutos.getKind()
         println "ITEMS: " + muutos.getItems()
         for (Object kentta : muutos.getItems()) {
             println "KENTTÄ: " + kentta
-            sb.append("[" + muutos.author + "]")
-            sb.append(" " + muutos.msg + "\n")
+            teksti = teksti + "[" + muutos.author + "] " + muutos.msg + "\n"
         }
     }
     return sb.toString()
