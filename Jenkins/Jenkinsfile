@@ -224,12 +224,12 @@ def onkoTiedostoOlemassa(absolutePath) {
 
 @NonCPS
 def muutosTapahtuiHarjaan(muutokset) {
-    def muutos = muutokset.get(0)
     // Onko pollaus lauennu turhan takia
-    if (muutos == null) {
+    println "KÄYTTÄJÄ: " + currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause).getUserName()
+    if (muutokset.isEmpty()) {
         return false
     } else {
-        def polku = muutos.getItems().get(0).getPaths().get(0)
+        def polku = muutokset.get(0).getItems().get(0).getPaths().get(0)
         println "DEST: " + polku.getDest()
         println "SRC: " + polku.getSrc()
         return true
