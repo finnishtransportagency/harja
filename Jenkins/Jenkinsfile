@@ -4,8 +4,15 @@ import hudson.plugins.git.GitChangeSet
 
 // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-41674
 // ja lisäksi se pollailee kaikkia repoja.
-if (muutosTapahtuiHarjaan(currentBuild.changeSets)) {
-    node {
+
+node {
+    def kaynnistaja
+    wrap([$class: 'BuildUser']) {
+        kaynnistaja = sh([script      : 'echo ${BUILD_USER_FIRST_NAME}',
+                          returnStdout: true])
+    }
+    println "KÄYNNISTÄJÄ: " + kaynnistaja
+    if (muutosTapahtuiHarjaan(currentBuild.changeSets, kaynnistaja)) {
         // Lisää mvn pathiin
         env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
@@ -223,14 +230,8 @@ def onkoTiedostoOlemassa(absolutePath) {
 }
 
 @NonCPS
-def muutosTapahtuiHarjaan(muutokset) {
+def muutosTapahtuiHarjaan(muutokset, kayttaja) {
     // Onko pollaus lauennu turhan takia
-    def kayttaja
-    wrap([$class: 'BuildUser']) {
-        kayttaja = sh([script: 'echo ${BUILD_USER_FIRST_NAME}',
-                       returnStdout: true])
-    }
-    println "KÄYNNISTÄJÄ: " + kayttaja
     if (muutokset.isEmpty()) {
         return false
     } else {
