@@ -11,6 +11,21 @@ node {
     String testiserverinAppLuonti = 'Luo testiserverin app'
     String e2eTestit = 'Aja E2E testit'
 
+    def buildNumberJenkinsille
+    if (params.ARCHIVE_BUILD_NUMBER) {
+        if (onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/testi-pipeline/builds/" + params.ARCHIVE_BUILD_NUMBER + "/archive/target/harja-*-standalone.jar")) {
+            sh([script: "echo KÄYTETÄÄN JARRIA BUILD NUMBERISTA: " + params.ARCHIVE_BUILD_NUMBER])
+            buildNumberJenkinsille = params.ARCHIVE_BUILD_NUMBER
+        } else {
+            sh([script: "echo EI KÄYTETÄ MÄÄRITETTYÄ BUILD NUMBERIA, KOSKA SE EI SISÄLLÄ JARRIA!"])
+            slackSend([color  : 'warning',
+                       message: "Pipeline buildissa ${env.BUILD_NUMBER} ei käytetä käyttäjän määrittämän build numberin jarria, koska sitä ei ole olemassa."])
+            buildNumberJenkinsille = currentBuild.number
+        }
+    } else {
+        buildNumberJenkinsille = currentBuild.number
+    }
+
     dir('Harja') {
         checkout scm;
         /*
@@ -98,20 +113,6 @@ node {
          * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
          */
 
-        def buildNumberJenkinsille
-        if (params.ARCHIVE_BUILD_NUMBER) {
-            if (onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/testi-pipeline/builds/" + params.ARCHIVE_BUILD_NUMBER + "/archive/target/harja-*-standalone.jar")) {
-                sh([script: "echo KÄYTETÄÄN JARRIA BUILD NUMBERISTA: " + params.ARCHIVE_BUILD_NUMBER])
-                buildNumberJenkinsille = params.ARCHIVE_BUILD_NUMBER
-            } else {
-                sh([script: "echo EI KÄYTETÄ MÄÄRITETTYÄ BUILD NUMBERIA, KOSKA SE EI SISÄLLÄ JARRIA!"])
-                slackSend([color  : 'warning',
-                           message: "Pipeline buildissa ${env.BUILD_NUMBER} ei käytetä käyttäjän määrittämän build numberin jarria, koska sitä ei ole olemassa."])
-                buildNumberJenkinsille = currentBuild.number
-            }
-        } else {
-            buildNumberJenkinsille = currentBuild.number
-        }
         try {
             stage(testiserverinAppLuonti) {
                 ansiblePlaybook([installation: 'ansible 1.9.1',
