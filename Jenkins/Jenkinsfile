@@ -225,7 +225,7 @@ def onkoTiedostoOlemassa(absolutePath) {
 @NonCPS
 def muutosTapahtuiHarjaan(muutokset) {
     // Onko pollaus lauennu turhan takia
-    println "Buildin aloitti: " $BUILD_USER_FIRST_NAME
+    println "Buildin aloitti: $BUILD_USER_FIRST_NAME"
     if (muutokset.isEmpty()) {
         return false
     } else {
