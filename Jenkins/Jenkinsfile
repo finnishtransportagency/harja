@@ -229,7 +229,7 @@ def muutosTapahtuiHarjaan(muutokset) {
     if (muutos == null) {
         return false
     } else {
-        def polku = muutos.getItems().iterator().next().getPaths().interator().next()
+        def polku = muutos.getItems().get(0).getPaths().get(0)
         println "DEST: " + polku.getDest()
         println "SRC: " + polku.getSrc()
         return true
