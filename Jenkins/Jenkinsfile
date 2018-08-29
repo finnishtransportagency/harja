@@ -199,16 +199,24 @@ node {
 
 }
 
-def changeSets2String(ChangeLogSet<?> muutokset) {
+@NonCPS
+def changeSets2String(muutokset) {
     StringBuilder sb = new StringBuilder()
-    for (Object muutos : muutokset) {
-        sb.append("[" + muutos.author + "]")
-        sb.append(" " + muutos.msg + "\n")
+    println "MUUTOKSET: " + muutokset
+    for (ChangeLogSet<T> muutos : muutokset) {
+        println "MUUTOS: " + muutos
+        println "KIND: " + muutos.getKind()
+        println "ITEMS: " + muutos.getItems()
+        for (Object kentta : muutos.getItems()) {
+            println "KENTTÄ: " + kentta
+            sb.append("[" + muutos.author + "]")
+            sb.append(" " + muutos.msg + "\n")
+        }
     }
     return sb.toString()
 }
 
-def onkoTiedostoOlemassa(String absolutePath) {
+def onkoTiedostoOlemassa(absolutePath) {
     loytyikoTiedosto = sh([script      : "[ -f " + absolutePath + " ]",
                            returnStatus: true])
     return loytyikoTiedosto == 0
