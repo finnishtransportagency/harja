@@ -232,7 +232,7 @@ def onkoTiedostoOlemassa(absolutePath) {
 @NonCPS
 def muutosTapahtuiHarjaan(muutokset, kayttaja) {
     // Onko pollaus lauennu turhan takia
-    if (muutokset.isEmpty()) {
+    if (muutokset.isEmpty() || kayttaja != "") {
         return false
     } else {
         def polku = muutokset.get(0).getItems().get(0).getPaths().get(0)
