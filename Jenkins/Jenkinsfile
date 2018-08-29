@@ -62,6 +62,7 @@ node {
                 }
             } catch (e) {
                 env.FAILED_STAGE = jarJaTestit
+                junit([testResults: 'test2junit/xml/*.xml'])
                 mail([from   : params.LAHETTAJA_SPOSTI,
                       replyTo: '',
                       to     : params.VASTAANOTTAJAT_SPOSTI,
@@ -159,6 +160,7 @@ node {
                 }
             } catch (e) {
                 env.FAILED_STAGE = e2eTestit
+                junit([testResults: 'test2junit/xml/*.xml'])
                 slackSend([color  : 'warning',
                            message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
                 error([message: "E2E-testit epäonnistuivat"])
