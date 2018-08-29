@@ -8,7 +8,7 @@ import hudson.plugins.git.GitChangeSet
 node {
     def kaynnistaja
     wrap([$class: 'BuildUser']) {
-        kaynnistaja = sh([script      : 'echo ${BUILD_USER_FIRST_NAME}',
+        kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
                           returnStdout: true])
     }
     println "KÄYNNISTÄJÄ: " + kaynnistaja
