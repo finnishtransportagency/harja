@@ -1,17 +1,16 @@
 import hudson.scm.ChangeLogSet
 import hudson.plugins.git.GitChangeSet
 
-
-// Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-41674
-// ja lisäksi se pollailee kaikkia repoja.
-
 node {
     def kaynnistaja
+    // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
     wrap([$class: 'BuildUser']) {
         kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
                           returnStdout: true])
     }
     println "KÄYNNISTÄJÄ: " + kaynnistaja
+    // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
+    // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
     if (muutosTapahtuiHarjaan(currentBuild.changeSets, kaynnistaja)) {
         // Lisää mvn pathiin
         env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
@@ -75,14 +74,7 @@ node {
                 } catch (e) {
                     env.FAILED_STAGE = jarJaTestit
                     junit([testResults: 'test2junit/xml/*.xml'])
-                    String muutokset = changeSets2String(currentBuild.changeSets)
-                    mail([from   : params.LAHETTAJA_SPOSTI,
-                          replyTo: '',
-                          to     : params.VASTAANOTTAJAT_SPOSTI,
-                          cc     : '',
-                          bcc    : '',
-                          subject: 'Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}',
-                          body   : "Build: ${env.BUILD_URL}\n" + muutokset])
+                    step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: params.VASTAANOTTAJAT_SPOSTI, sendToIndividuals: false])
                     slackSend([color  : 'warning',
                                message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
                     error([message: "'lein tuotanto' epäonnistui"])
