@@ -224,7 +224,7 @@ def onkoTiedostoOlemassa(absolutePath) {
 
 @NonCPS
 def muutosTapahtuiHarjaan(muutokset) {
-    def muutos = muutokset.iterator().next()
+    def muutos = muutokset.get(0)
     // Onko pollaus lauennu turhan takia
     if (muutos == null) {
         return false
