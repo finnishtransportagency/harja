@@ -44,14 +44,13 @@
         maksueranumero (maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
         instance-code (instance-code (:numero maksuera))]
-
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
                  :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm)
-                 :finish                (.replace (pvm/lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm loppupvm 3) "23:00:00" "17:00:00")
+                 :finish                (.replace (str (pvm/lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm loppupvm 3)) "00:00:00.000Z" "17:00:00")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
