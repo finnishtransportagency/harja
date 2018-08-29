@@ -212,7 +212,7 @@ def changeSets2String(muutokset) {
             teksti = teksti + "[" + muutos.author + "] " + muutos.msg + "\n"
         }
     }
-    return sb.toString()
+    return teksti
 }
 
 def onkoTiedostoOlemassa(absolutePath) {
