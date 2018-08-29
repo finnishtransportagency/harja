@@ -7,7 +7,7 @@
             [clojure.data.zip.xml :as z]
             [harja.testi :refer :all]
             [harja.tyokalut.xml :as xml]
-            [harja.pvm :as pvm]
+            [harja.pvm :as pvm])
   (:import (java.io ByteArrayInputStream)
            (java.text SimpleDateFormat)))
 
