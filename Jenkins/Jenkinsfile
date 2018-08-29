@@ -225,7 +225,7 @@ def onkoTiedostoOlemassa(absolutePath) {
 @NonCPS
 def muutosTapahtuiHarjaan(muutokset) {
     // Onko pollaus lauennu turhan takia
-    println "KÄYTTÄJÄ: " + currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause).getUserName()
+    println "Buildin aloitti: " $BUILD_USER_FIRST_NAME
     if (muutokset.isEmpty()) {
         return false
     } else {
