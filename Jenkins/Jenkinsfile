@@ -230,9 +230,9 @@ def onkoTiedostoOlemassa(absolutePath) {
 }
 
 @NonCPS
-def muutosTapahtuiHarjaan(muutokset, kayttaja) {
+def muutosTapahtuiHarjaan(muutokset, kaynnistaja) {
     // Onko pollaus lauennu turhan takia
-    if (muutokset.isEmpty() || kayttaja != "") {
+    if (muutokset.isEmpty() && kaynnistaja == "") {
         return false
     } else {
         def polku = muutokset.get(0).getItems().get(0).getPaths().get(0)
