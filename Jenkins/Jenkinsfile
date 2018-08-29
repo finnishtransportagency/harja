@@ -199,17 +199,17 @@ node {
 
 }
 
-String changeSets2String(ChangeLogSet<?> muutokset) {
+def changeSets2String(ChangeLogSet<?> muutokset) {
     StringBuilder sb = new StringBuilder()
     for (Object muutos : muutokset) {
         sb.append("[" + muutos.author + "]")
         sb.append(" " + muutos.msg + "\n")
     }
-    sb.toString()
+    return sb.toString()
 }
 
-Boolean onkoTiedostoOlemassa(String absolutePath) {
+def onkoTiedostoOlemassa(String absolutePath) {
     loytyikoTiedosto = sh([script      : "[ -f " + absolutePath + " ]",
                            returnStatus: true])
-    loytyikoTiedosto == 0
+    return loytyikoTiedosto == 0
 }
