@@ -234,6 +234,8 @@ def muutosTapahtuiHarjaan(muutokset, kaynnistaja) {
     // Onko pollaus lauennu turhan takia
     if (muutokset.isEmpty() && kaynnistaja == "") {
         return false
+    } else if (muutokset.isEmpty()) {
+        return true
     } else {
         def polku = muutokset.get(0).getItems().get(0).getPaths().get(0)
         println "DEST: " + polku.getDest()
