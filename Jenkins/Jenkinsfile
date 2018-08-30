@@ -150,9 +150,10 @@ node {
                         ansiblePlaybook([installation: 'ansible 1.9.1',
                                          inventory   : 'inventory/testing',
                                          playbook    : 'playbooks/nightly.yml',
-                                         extraVars   : "jenkins_build_number=" + jenkinsinBuildNumber])
+                                         extraVars   : '"jenkins_build_number=' + jenkinsinBuildNumber + '"'])
                     } catch (e) {
                         env.FAILED_STAGE = testiserverinAppLuonti
+                        sh([script: "echo " + e])
                         error([message: "Testiserverin app pystytys epäonnistui."])
                     }
                 }
