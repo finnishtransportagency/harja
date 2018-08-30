@@ -125,10 +125,10 @@ node {
                 break
             }
             if (loytynytJarBuild) {
-                sh([script: "echo Määritetyn buildin jarria (" + jenkinsinBuildNumber + ") ei löytynyt. Käytetään sen sijaan buildin (" + loytynytJarBuild + ") jarria"])
+                sh([script: "echo \"Määritetyn buildin jarria (" + jenkinsinBuildNumber + ") ei löytynyt. Käytetään sen sijaan buildin (" + loytynytJarBuild + ") jarria\""])
                 jenkinsinBuildNumber = loytynytJarBuild
             } else {
-                sh([script: "Yhtään jarria ei löytynyt Jenkinsistä!"])
+                sh([script: "echo \"Yhtään jarria ei löytynyt Jenkinsistä!\""])
                 error([message: "Jarreja ei löytynyt."])
             }
         }
@@ -246,7 +246,7 @@ def onkoTiedostoOlemassa(absolutePath) {
     return loytyikoTiedosto == 0
 }
 
-def hyvaksyttyPolku(String polku) {
+def hyvaksyttyPolku(polku) {
     // Elikkä git pollaus pollailee kaikkia tässä filussa checkoutattuihin repoihin.
     // Määrritellään tässä, että kun muutos tapahtuu jossain tietyssä polussa, niin ajetaan
     // putki vain silloin.
