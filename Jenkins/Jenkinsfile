@@ -221,8 +221,7 @@ def changeSets2String() {
             Collection<GitChangeSet.Path> polut = kentta.getAffectedFiles()
             if (!polut.isEmpty()) {
                 println "Polut ei ole tyhjä"
-                polut.each { polku ->
-                    println "ITEMI: " + polku
+                for (GitChangeSet.Path polku : polut) {
                     println "Polku on: " + polku
                     println "DEST: " + polku.getDest()
                     println "SRC: " + polku.getSrc()
