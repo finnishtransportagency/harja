@@ -223,9 +223,21 @@ def changeSets2String() {
                 println "Polut ei ole tyhjä"
                 for (GitChangeSet.Path polku : polut) {
                     println "Polku on: " + polku
-                    println "DST: " + polku.getDst()
-                    println "SRC: " + polku.getSrc()
-                    println "PATH: " + polku.getPath()
+                    try {
+                        println "DST: " + polku.getDst()
+                    } catch (e) {
+                        println "getDst() ei toimi"
+                    }
+                    try {
+                        println "SRC: " + polku.getSrc()
+                    } catch (e) {
+                        println "getSrc() ei toimi"
+                    }
+                    try {
+                        println "PATH: " + polku.getPath()
+                    } catch (e) {
+                        println "getPath() ei toimi"
+                    }
                 }
 
             }
