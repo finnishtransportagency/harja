@@ -1,5 +1,6 @@
 import hudson.scm.ChangeLogSet
 import hudson.plugins.git.GitChangeSet
+import static hudson.plugins.git.GitChangeSet.Path
 
 node {
     def kaynnistaja
@@ -11,7 +12,7 @@ node {
     println "KÄYNNISTÄJÄ: " + kaynnistaja
     // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
     // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
-    if (muutosTapahtuiHarjaan(currentBuild.changeSets, kaynnistaja)) {
+    if (muutosTapahtuiHarjaan(kaynnistaja)) {
         // Lisää mvn pathiin
         env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
@@ -58,20 +59,13 @@ node {
 
             stage(jarJaTestit) {
                 try {
+                    String muutokset = changeSets2String()
                     // Luo API docsit
                     sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
                     // Luo jarri ja aja testit
                     sh([script: "lein tuotanto"])
                     // Säilötään se jarri
                     archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-                    // Testitulokset
-                    junit([testResults: 'test2junit/xml/*.xml'])
-                    // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
-                    if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
-                        slackSend([color  : 'good',
-                                   message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
-                    }
-                    String muutokset = changeSets2String(currentBuild.changeSets)
                     mail([from   : params.LAHETTAJA_SPOSTI,
                           replyTo: '',
                           to     : params.VASTAANOTTAJAT_SPOSTI,
@@ -79,6 +73,13 @@ node {
                           bcc    : '',
                           subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
                           body   : "Build: ${env.BUILD_URL}\n" + muutokset])
+                    // Testitulokset
+                    junit([testResults: 'test2junit/xml/*.xml'])
+                    // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
+                    if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
+                        slackSend([color  : 'good',
+                                   message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
+                    }
                 } catch (e) {
                     env.FAILED_STAGE = jarJaTestit
                     junit([testResults: 'test2junit/xml/*.xml'])
@@ -211,7 +212,8 @@ node {
 }
 
 @NonCPS
-def changeSets2String(muutokset) {
+def changeSets2String() {
+    def muutokset = currentBuild.changeSets
     println "MUUTOKSET: " + muutokset
     def teksti = ""
     for (ChangeLogSet muutos : muutokset) {
@@ -233,7 +235,8 @@ def onkoTiedostoOlemassa(absolutePath) {
 }
 
 @NonCPS
-def muutosTapahtuiHarjaan(muutokset, kaynnistaja) {
+def muutosTapahtuiHarjaan(kaynnistaja) {
+    def muutokset = currentBuild.changeSets
     // Onko pollaus lauennu turhan takia
     if (muutokset.isEmpty() && kaynnistaja == "") {
         return false
