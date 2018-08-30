@@ -23,19 +23,26 @@ node {
         String testiserverinAppLuonti = 'Luo testiserverin app'
         String e2eTestit = 'Aja E2E testit'
 
-        def buildNumberJenkinsille
+        // Mitkä staget ajetaan
+        Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
+        Boolean jarJaTestitAjetaan = ["Kaikki", "JAR ja testit"].contains(STAGE_ETIAPAIN)
+        Boolean testiserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
+        Boolean testiserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
+        Boolean e2eTestitAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN)
+
+        def jenkinsinBuildNumber
         if (params.ARCHIVE_BUILD_NUMBER) {
-            if (onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/testi-pipeline/builds/" + params.ARCHIVE_BUILD_NUMBER + "/archive/target/harja-*-standalone.jar")) {
+            if (onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + params.ARCHIVE_BUILD_NUMBER + "/archive/target/harja-*-standalone.jar")) {
                 sh([script: "echo KÄYTETÄÄN JARRIA BUILD NUMBERISTA: " + params.ARCHIVE_BUILD_NUMBER])
-                buildNumberJenkinsille = params.ARCHIVE_BUILD_NUMBER
+                jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
             } else {
                 sh([script: "echo EI KÄYTETÄ MÄÄRITETTYÄ BUILD NUMBERIA, KOSKA SE EI SISÄLLÄ JARRIA!"])
                 slackSend([color  : 'warning',
                            message: "Pipeline buildissa ${env.BUILD_NUMBER} ei käytetä käyttäjän määrittämän build numberin jarria, koska sitä ei ole olemassa."])
-                buildNumberJenkinsille = currentBuild.number
+                jenkinsinBuildNumber = currentBuild.number
             }
         } else {
-            buildNumberJenkinsille = currentBuild.number
+            jenkinsinBuildNumber = currentBuild.number
         }
 
         dir('Harja') {
@@ -45,11 +52,13 @@ node {
              */
 
             stage(testikannanLuonti) {
-                try {
-                    sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
-                } catch (e) {
-                    env.FAILED_STAGE = testikannanLuonti
-                    error([message: "Testikannan pystytys epäonnistui."])
+                if (testikannanLuontiAjetaan) {
+                    try {
+                        sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
+                    } catch (e) {
+                        env.FAILED_STAGE = testikannanLuonti
+                        error([message: "Testikannan pystytys epäonnistui."])
+                    }
                 }
             }
 
@@ -58,34 +67,36 @@ node {
              */
 
             stage(jarJaTestit) {
-                try {
-                    String muutokset = changeSets2String()
-                    // Luo API docsit
-                    sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
-                    // Luo jarri ja aja testit
-                    sh([script: "lein tuotanto"])
-                    // Säilötään se jarri
-                    archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-                    mail([from   : params.LAHETTAJA_SPOSTI,
-                          replyTo: '',
-                          to     : params.VASTAANOTTAJAT_SPOSTI,
-                          cc     : '',
-                          bcc    : '',
-                          subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
-                          body   : "Build: ${env.BUILD_URL}\n" + muutokset])
-                    // Testitulokset
-                    junit([testResults: 'test2junit/xml/*.xml'])
-                    // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
-                    if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
-                        slackSend([color  : 'good',
-                                   message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
+                if (jarJaTestitAjetaan) {
+                    try {
+                        String muutokset = changeSets2String()
+                        // Luo API docsit
+                        sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
+                        // Luo jarri ja aja testit
+                        sh([script: "lein tuotanto"])
+                        // Säilötään se jarri
+                        archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
+                        // Testitulokset
+                        junit([testResults: 'test2junit/xml/*.xml'])
+                        // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
+                        if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
+                            slackSend([color  : 'good',
+                                       message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
+                        }
+                    } catch (e) {
+                        env.FAILED_STAGE = jarJaTestit
+                        junit([testResults: 'test2junit/xml/*.xml'])
+                        mail([from   : params.LAHETTAJA_SPOSTI,
+                              replyTo: '',
+                              to     : params.VASTAANOTTAJAT_SPOSTI,
+                              cc     : '',
+                              bcc    : '',
+                              subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
+                              body   : "Build: ${env.BUILD_URL}\n" + muutokset])
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
+                        error([message: "'lein tuotanto' epäonnistui"])
                     }
-                } catch (e) {
-                    env.FAILED_STAGE = jarJaTestit
-                    junit([testResults: 'test2junit/xml/*.xml'])
-                    slackSend([color  : 'warning',
-                               message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
-                    error([message: "'lein tuotanto' epäonnistui"])
                 }
             }
 
@@ -94,89 +105,83 @@ node {
              */
 
             stage(testiserverinKannanLuonti) {
-                try {
-                    withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                        // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
-                        withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                            sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
-                                    " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
-                                    " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                if (testiserverinKannanLuontiAjetaan) {
+                    try {
+                        withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                            // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
+                            withMaven(jdk: '', maven: 'Maven 3.5.4') {
+                                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
+                                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
+                                        " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                            }
                         }
+                    } catch (e) {
+                        env.FAILED_STAGE = testiserverinKannanLuonti
+                        error([message: "Testiserverin kannan pystytys epäonnistui."])
                     }
-                } catch (e) {
-                    env.FAILED_STAGE = testiserverinKannanLuonti
-                    error([message: "Testiserverin kannan pystytys epäonnistui."])
                 }
             }
         }
 
         dir('CI') {
-            resolveScm([source : [$class       : 'GitSCMSource',
-                                  credentialsId: '',
-                                  id           : '_',
-                                  remote       : params.HARJA_CI_URL,
-                                  traits       : [[$class: 'BranchDiscoveryTrait']]],
-                        targets: ['master']])
-            //checkout([$class: 'GitSCM',
-            //          branches: [[name: '*/master']],
-            //          doGenerateSubmoduleConfigurations: false,
-            //          extensions: [],
-            //          submoduleCfg: [],
-            //          userRemoteConfigs: [[url: params.HARJA_CI_URL]]])
+            checkout([$class                           : 'GitSCM',
+                      branches                         : [[name: '*/master']],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions                       : [],
+                      submoduleCfg                     : [],
+                      userRemoteConfigs                : [[url: params.HARJA_CI_URL]]])
             /*
              * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
              */
 
             stage(testiserverinAppLuonti) {
-                try {
-                    ansiblePlaybook([installation: 'ansible 1.9.1',
-                                     inventory   : 'inventory/testing',
-                                     playbook    : 'playbooks/nightly.yml',
-                                     extras      : "jenkins_build_number=" + buildNumberJenkinsille])
-                } catch (e) {
-                    env.FAILED_STAGE = testiserverinAppLuonti
-                    error([message: "Testiserverin app pystytys epäonnistui."])
+                if (testiserverinAppLuontiAjetaan) {
+                    try {
+                        ansiblePlaybook([installation: 'ansible 1.9.1',
+                                         inventory   : 'inventory/testing',
+                                         playbook    : 'playbooks/nightly.yml',
+                                         extras      : "jenkins_build_number=" + jenkinsinBuildNumber])
+                    } catch (e) {
+                        env.FAILED_STAGE = testiserverinAppLuonti
+                        error([message: "Testiserverin app pystytys epäonnistui."])
+                    }
                 }
             }
         }
 
         dir('E2E') {
-            resolveScm([source : [$class       : 'GitSCMSource',
-                                  credentialsId: '',
-                                  id           : '_',
-                                  remote       : params.HARJA_E2E_URL,
-                                  traits       : [[$class: 'BranchDiscoveryTrait']]],
-                        targets: ['develop']])
-            //checkout([$class: 'GitSCM',
-            //          branches: [[name: '*/develop']],
-            //          doGenerateSubmoduleConfigurations: false,
-            //          extensions: [],
-            //          submoduleCfg: [],
-            //          userRemoteConfigs: [[url: params.HARJA_E2E_URL]]])
+            checkout([$class                           : 'GitSCM',
+                      branches                         : [[name: '*/develop']],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions                       : [],
+                      submoduleCfg                     : [],
+                      userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]])
 
             /*
              * E2E TESTIT
              */
             stage(e2eTestit) {
-                try {
-                    wrap([$class: 'Xvfb']) {
-                        retry(5) {
-                            timeout(20) {
-                                sh([script: "lein do clean, compile, test2junit"])
+                if (e2eTestitAjetaan) {
+                    try {
+                        wrap([$class: 'Xvfb']) {
+                            retry(5) {
+                                timeout(20) {
+                                    sh([script: "lein do clean, compile, test2junit"])
+                                }
                             }
                         }
+                        junit([testResults: 'test2junit/xml/*.xml'])
+                        if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == e2eTestit) {
+                            slackSend([color  : 'good',
+                                       message: 'E2E-testit normalisoitui'])
+                        }
+                    } catch (e) {
+                        env.FAILED_STAGE = e2eTestit
+                        junit([testResults: 'test2junit/xml/*.xml'])
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
+                        error([message: "E2E-testit epäonnistuivat"])
                     }
-                    junit([testResults: 'test2junit/xml/*.xml'])
-                    if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == e2eTestit) {
-                        slackSend([color  : 'good',
-                                   message: 'E2E-testit normalisoitui'])
-                    }
-                } catch (e) {
-                    env.FAILED_STAGE = e2eTestit
-                    junit([testResults: 'test2junit/xml/*.xml'])
-                    slackSend([color  : 'warning',
-                               message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
-                    error([message: "E2E-testit epäonnistuivat"])
                 }
             }
         }
@@ -188,16 +193,6 @@ node {
         stage('Siivoa workspace') {
             cleanWs()
         }
-        // Harja-e2e
-        // build env
-        // Xvfb
-        // abort if stuck 20min tries 2
-        // build
-        // do clean, compile, test2junit
-        // After
-        // JUnit
-        // Retry 5min delay, 3 failed tries
-        // Slack on fail and back to normal
         // harja-staging-db
         // harja-staging-app
         // General
