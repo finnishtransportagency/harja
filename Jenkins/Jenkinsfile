@@ -214,37 +214,22 @@ node {
 @NonCPS
 def changeSets2String() {
     def muutokset = currentBuild.changeSets
-    println "MUUTOKSET: " + muutokset
     def teksti = ""
     for (ChangeLogSet muutos : muutokset) {
         for (GitChangeSet kentta : muutos.getItems()) {
+            def tekija
+            def viesti
             try {
-                println "AffectedPaths: " + kentta.getAffectedPaths()
+                tekija = kentta.getAuthor()
             } catch (e) {
-                println "getAffectedPaths() ei toimi"
+                tekija = "Unknown"
             }
             try {
-                println "AuthorName: " + kentta.getAuthorName()
+                viesti = kentta.getMsg()
             } catch (e) {
-                println "getAuthorName() ei toimi"
+                viesti = "Unkown"
             }
-            try {
-                println "Msg: " + kentta.getMsg()
-            } catch (e) {
-                println "getMsg() ei toimi"
-            }
-            try {
-                println "Author: " + kentta.getAuthor()
-                println "Author full name: " + kentta.getAuthor().getFullName()
-            } catch (e) {
-                println "getAuthor() ei toimi"
-            }
-            try {
-                println "Comment: " + kentta.getComment()
-            } catch (e) {
-                println "getComment() ei toimi"
-            }
-            teksti = teksti + "[" + kentta.getAuthorName() + "] " + kentta.getMsg() + "\n"
+            teksti = teksti + "[" + tekija + "] " + viesti + "\n"
         }
     }
     return teksti
@@ -256,6 +241,30 @@ def onkoTiedostoOlemassa(absolutePath) {
     return loytyikoTiedosto == 0
 }
 
+def hyvaksyttyPolku(String polku) {
+    // Elikkä git pollaus pollailee kaikkia tässä filussa checkoutattuihin repoihin.
+    // Määrritellään tässä, että kun muutos tapahtuu jossain tietyssä polussa, niin ajetaan
+    // putki vain silloin.
+    def hyvaksytytPolut = ["src/", "resources/", "Jenkins/"]
+    def eiHyvaksytytPolut = ["src/harja/e2e/"]
+    def hyvaksyttyPolkub = false
+    for (String hp : hyvaksytytPolut) {
+        def hpr = "^" + hp.replaceAll(~/\//, "\\\\/")
+        def hpm = (polku =~ ~hpr)
+        if (hpm.getCount() != 0) {
+            for (String ehp : eiHyvaksytytPolut) {
+                def ehpr = "^" + ehp.replaceAll(~/\//, "\\\\/")
+                def ehpm = (polku =~ ~ehpr)
+                if (ehpm.getCount() != 0) {
+                    return false
+                }
+            }
+            hyvaksyttyPolkub = true
+        }
+    }
+    return hyvaksyttyPolkub
+}
+
 @NonCPS
 def muutosTapahtuiHarjaan(kaynnistaja) {
     def muutokset = currentBuild.changeSets
@@ -265,9 +274,22 @@ def muutosTapahtuiHarjaan(kaynnistaja) {
     } else if (muutokset.isEmpty()) {
         return true
     } else {
-        def polku = muutokset.get(0).getItems().get(0).getPaths().get(0)
-        println "DEST: " + polku.getDest()
-        println "SRC: " + polku.getSrc()
-        return true
+        // Tarkistetaan polku
+        for (ChangeLogSet muutos : muutokset) {
+            for (GitChangeSet kentta : muutos.getItems()) {
+                def polut
+                try {
+                    polut = kentta.getAffectedPaths()
+                } catch (e) {
+                    continue
+                }
+                for (String polku : polut) {
+                    if (hyvaksyttyPolku(polut)) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
     }
 }
