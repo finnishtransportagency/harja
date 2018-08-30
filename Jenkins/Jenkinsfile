@@ -219,10 +219,13 @@ def changeSets2String() {
     for (ChangeLogSet muutos : muutokset) {
         for (GitChangeSet kentta : muutos.getItems()) {
             Collection<GitChangeSet.Path> polut = kentta.getAffectedFiles()
-            println "KENTTÄ: " + kentta
-            println "PATHS: " + polut
-            println "DEST: " + polut.get(0).getDest()
-            println "SRC: " + polut.get(0).getSrc()
+            GitChangeSet.Path polku
+            if (!polut.isEmpty()) {
+                polku = polut.get(0)
+                println "DEST: " + polku.getDest()
+                println "SRC: " + polku.getSrc()
+                println "PATH: " + polku.getPath()
+            }
             teksti = teksti + "[" + kentta.getAuthorName() + "] " + kentta.getMsg() + "\n"
         }
     }
