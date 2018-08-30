@@ -218,28 +218,31 @@ def changeSets2String() {
     def teksti = ""
     for (ChangeLogSet muutos : muutokset) {
         for (GitChangeSet kentta : muutos.getItems()) {
-            Collection<GitChangeSet.Path> polut = kentta.getAffectedFiles()
-            if (!polut.isEmpty()) {
-                println "Polut ei ole tyhjä"
-                for (GitChangeSet.Path polku : polut) {
-                    println "Polku on: " + polku
-                    try {
-                        println "DST: " + polku.getDst()
-                    } catch (e) {
-                        println "getDst() ei toimi"
-                    }
-                    try {
-                        println "SRC: " + polku.getSrc()
-                    } catch (e) {
-                        println "getSrc() ei toimi"
-                    }
-                    try {
-                        println "PATH: " + polku.getPath()
-                    } catch (e) {
-                        println "getPath() ei toimi"
-                    }
-                }
-
+            try {
+                println "AffectedPaths: " + kentta.getAffectedPaths()
+            } catch (e) {
+                println "getAffectedPaths() ei toimi"
+            }
+            try {
+                println "AuthorName: " + kentta.getAuthorName()
+            } catch (e) {
+                println "getAuthorName() ei toimi"
+            }
+            try {
+                println "Msg: " + kentta.getMsg()
+            } catch (e) {
+                println "getMsg() ei toimi"
+            }
+            try {
+                println "Author: " + kentta.getAuthor()
+                println "Author full name: " + kentta.getAuthor().getFullName()
+            } catch (e) {
+                println "getAuthor() ei toimi"
+            }
+            try {
+                println "Comment: " + kentta.getComment()
+            } catch (e) {
+                println "getComment() ei toimi"
             }
             teksti = teksti + "[" + kentta.getAuthorName() + "] " + kentta.getMsg() + "\n"
         }
