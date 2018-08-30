@@ -30,21 +30,6 @@ node {
         Boolean testiserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
         Boolean e2eTestitAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN)
 
-        def jenkinsinBuildNumber
-        if (params.ARCHIVE_BUILD_NUMBER) {
-            if (onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + params.ARCHIVE_BUILD_NUMBER + "/archive/target/harja-*-standalone.jar")) {
-                sh([script: "echo KÄYTETÄÄN JARRIA BUILD NUMBERISTA: " + params.ARCHIVE_BUILD_NUMBER])
-                jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
-            } else {
-                sh([script: "echo EI KÄYTETÄ MÄÄRITETTYÄ BUILD NUMBERIA, KOSKA SE EI SISÄLLÄ JARRIA!"])
-                slackSend([color  : 'warning',
-                           message: "Pipeline buildissa ${env.BUILD_NUMBER} ei käytetä käyttäjän määrittämän build numberin jarria, koska sitä ei ole olemassa."])
-                jenkinsinBuildNumber = currentBuild.number
-            }
-        } else {
-            jenkinsinBuildNumber = currentBuild.number
-        }
-
         dir('Harja') {
             checkout scm;
             /*
@@ -123,6 +108,31 @@ node {
             }
         }
 
+        def jenkinsinBuildNumber
+        if (params.ARCHIVE_BUILD_NUMBER) {
+            jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
+        } else {
+            jenkinsinBuildNumber = currentBuild.number
+        }
+        if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+            int nykyinenBuildNumber
+            def loytynytJarBuild = null
+            for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
+                if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+                    continue
+                }
+                loytynytJarBuild = nykyinenBuildNumber
+                break
+            }
+            if (loytynytJarBuild) {
+                sh([script: "echo Määritetyn buildin jarria (" + jenkinsinBuildNumber + ") ei löytynyt. Käytetään sen sijaan buildin (" + loytynytJarBuild + ") jarria"])
+                jenkinsinBuildNumber = loytynytJarBuild
+            } else {
+                sh([script: "Yhtään jarria ei löytynyt Jenkinsistä!"])
+                error([message: "Jarreja ei löytynyt."])
+            }
+        }
+
         dir('CI') {
             checkout([$class                           : 'GitSCM',
                       branches                         : [[name: '*/master']],
@@ -140,7 +150,7 @@ node {
                         ansiblePlaybook([installation: 'ansible 1.9.1',
                                          inventory   : 'inventory/testing',
                                          playbook    : 'playbooks/nightly.yml',
-                                         extras      : "jenkins_build_number=" + jenkinsinBuildNumber])
+                                         extraVars   : "jenkins_build_number=" + jenkinsinBuildNumber])
                     } catch (e) {
                         env.FAILED_STAGE = testiserverinAppLuonti
                         error([message: "Testiserverin app pystytys epäonnistui."])
