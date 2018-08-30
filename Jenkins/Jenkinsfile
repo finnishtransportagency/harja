@@ -218,7 +218,7 @@ def changeSets2String() {
     def teksti = ""
     for (ChangeLogSet muutos : muutokset) {
         for (GitChangeSet kentta : muutos.getItems()) {
-            Collection<GitChangeSet.Path> polut = kentta.getPaths()
+            Collection<GitChangeSet.Path> polut = kentta.getAffectedFiles()
             println "KENTTÄ: " + kentta
             println "PATHS: " + polut
             println "DEST: " + polut.get(0).getDest()
