@@ -329,7 +329,8 @@ def muutosTapahtuiHarjaan(kaynnistaja) {
                     continue
                 }
                 for (String polku : polut) {
-                    if (hyvaksyttyPolku(polut)) {
+                    if (hyvaksyttyPolku(polku)) {
+                        sh([script: "echo \"hyväksytty polku on " + polku + "\""])
                         return true
                     }
                 }
