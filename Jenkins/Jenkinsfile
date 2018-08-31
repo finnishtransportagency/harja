@@ -28,8 +28,8 @@ node {
         String testiserverinKannanLuonti = 'Luo testiserverin kanta'
         String testiserverinAppLuonti = 'Luo testiserverin app'
         String e2eTestit = 'Aja E2E testit'
-        String stageserverinKannanLuonti = 'Luo stageserverin kanta'
-        String stageserverinAppLuonti = 'Luo stageserverin app'
+        String stagingserverinKannanLuonti = 'Luo stageserverin kanta'
+        String stagingserverinAppLuonti = 'Luo stageserverin app'
 
         // Mitkä staget ajetaan
         Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
@@ -37,8 +37,8 @@ node {
         Boolean testiserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
         Boolean testiserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
         Boolean e2eTestitAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN)
-        Boolean stageserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
-        Boolean stageserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+        Boolean stagingserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+        Boolean stagingserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
 
         dir('Harja') {
             checkout scm;
@@ -52,6 +52,8 @@ node {
                         sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
                     } catch (e) {
                         env.FAILED_STAGE = testikannanLuonti
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
                         error([message: "Testikannan pystytys epäonnistui."])
                     }
                 }
@@ -71,16 +73,13 @@ node {
                         sh([script: "lein tuotanto"])
                         // Säilötään se jarri
                         archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-                        // Testitulokset
-                        junit([testResults: 'test2junit/xml/*.xml'])
                         // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
                         if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
                             slackSend([color  : 'good',
-                                       message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
+                                       message: 'Pipeline ei enää hajoa testien/JAR:in luomisen kohdalla'])
                         }
                     } catch (e) {
                         env.FAILED_STAGE = jarJaTestit
-                        junit([testResults: 'test2junit/xml/*.xml'])
                         mail([from   : params.LAHETTAJA_SPOSTI,
                               replyTo: '',
                               to     : params.VASTAANOTTAJAT_SPOSTI,
@@ -89,8 +88,11 @@ node {
                               subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
                               body   : "Build: ${env.BUILD_URL}\n" + muutokset])
                         slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
+                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
                         error([message: "'lein tuotanto' epäonnistui"])
+                    } finally {
+                        // Testitulokset
+                        junit([testResults: 'test2junit/xml/*.xml'])
                     }
                 }
             }
@@ -112,6 +114,8 @@ node {
                         }
                     } catch (e) {
                         env.FAILED_STAGE = testiserverinKannanLuonti
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
                         error([message: "Testiserverin kannan pystytys epäonnistui."])
                     }
                 }
@@ -120,27 +124,16 @@ node {
 
         def jenkinsinBuildNumber
         if (params.ARCHIVE_BUILD_NUMBER) {
+            slackSend([color  : 'warning',
+                       message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER])
             jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
         } else {
             jenkinsinBuildNumber = currentBuild.number
         }
         if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
-            int nykyinenBuildNumber
-            def loytynytJarBuild = null
-            for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
-                if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar")) {
-                    continue
-                }
-                loytynytJarBuild = nykyinenBuildNumber
-                break
-            }
-            if (loytynytJarBuild) {
-                sh([script: "echo \"Määritetyn buildin jarria (" + jenkinsinBuildNumber + ") ei löytynyt. Käytetään sen sijaan buildin (" + loytynytJarBuild + ") jarria\""])
-                jenkinsinBuildNumber = loytynytJarBuild
-            } else {
-                sh([script: "echo \"Yhtään jarria ei löytynyt Jenkinsistä!\""])
-                error([message: "Jarreja ei löytynyt."])
-            }
+            slackSend([color  : 'warning',
+                       message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
+            error([message: "JAR:ia ei löytynyt halutulla numerolla"])
         }
 
         dir('CI') {
@@ -165,7 +158,8 @@ node {
                                          ]])
                     } catch (e) {
                         env.FAILED_STAGE = testiserverinAppLuonti
-                        sh([script: "echo " + e])
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
                         error([message: "Testiserverin app pystytys epäonnistui."])
                     }
                 }
@@ -193,17 +187,17 @@ node {
                                 }
                             }
                         }
-                        junit([testResults: 'test2junit/xml/*.xml'])
                         if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == e2eTestit) {
                             slackSend([color  : 'good',
                                        message: 'E2E-testit normalisoitui'])
                         }
                     } catch (e) {
                         env.FAILED_STAGE = e2eTestit
-                        junit([testResults: 'test2junit/xml/*.xml'])
                         slackSend([color  : 'warning',
                                    message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
                         error([message: "E2E-testit epäonnistuivat"])
+                    } finally {
+                        junit([testResults: 'test2junit/xml/*.xml'])
                     }
                 }
             }
@@ -214,8 +208,8 @@ node {
              * STAGESERVERIKANNAN LUOMINEN
              */
 
-            stage(stageserverinKannanLuonti) {
-                if (stageserverinKannanLuontiAjetaan) {
+            stage(stagingserverinKannanLuonti) {
+                if (stagingserverinKannanLuontiAjetaan) {
                     try {
                         withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
                             // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
@@ -226,8 +220,10 @@ node {
                             }
                         }
                     } catch (e) {
-                        env.FAILED_STAGE = stageserverinKannanLuonti
-                        error([message: "Stageserverin kannan pystytys epäonnistui."])
+                        env.FAILED_STAGE = stagingserverinKannanLuonti
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
+                        error([message: "Staging serverin kannan pystytys epäonnistui."])
                     }
                 }
             }
@@ -235,11 +231,11 @@ node {
 
         dir('CI') {
             /*
-             * STAGESERVERIAPPIKSEN DEPLOYAAMINEN
+             * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
              */
 
-            stage(stageserverinAppLuonti) {
-                if (stageserverinAppLuontiAjetaan) {
+            stage(stagingserverinAppLuonti) {
+                if (stagingserverinAppLuontiAjetaan) {
                     try {
                         ansiblePlaybook([installation: 'ansible 1.9.1',
                                          inventory   : 'inventory/staging',
@@ -248,9 +244,10 @@ node {
                                                  jenkins_build_number: jenkinsinBuildNumber
                                          ]])
                     } catch (e) {
-                        env.FAILED_STAGE = stageserverinAppLuonti
-                        sh([script: "echo " + e])
-                        error([message: "Stageserverin app pystytys epäonnistui."])
+                        env.FAILED_STAGE = stagingserverinAppLuonti
+                        slackSend([color  : 'warning',
+                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
+                        error([message: "Staging serverin app pystytys epäonnistui."])
                     }
                 }
             }
@@ -310,7 +307,7 @@ def hyvaksyttyPolku(polku) {
     // Elikkä git pollaus pollailee kaikkia tässä filussa checkoutattuihin repoihin.
     // Määrritellään tässä, että kun muutos tapahtuu jossain tietyssä polussa, niin ajetaan
     // putki vain silloin.
-    def hyvaksytytPolut = ["src/", "resources/", "Jenkins/"]
+    def hyvaksytytPolut = ["src/", "resources/", "Jenkins/", "test/", "tietokanta/"]
     def eiHyvaksytytPolut = ["src/harja/e2e/"]
     def hyvaksyttyPolkub = false
     for (String hp : hyvaksytytPolut) {
