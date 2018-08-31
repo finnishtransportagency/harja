@@ -62,25 +62,27 @@
    tarvi."
   [db urakkatiedot sql-parametrit]
   (let [silta-kannassa? (not (empty? urakkatiedot))
-        silta-id (:silta-id (first urakkatiedot))]
+        silta-taulun-id  (:silta-taulun-id (first urakkatiedot))]
     (when silta-kannassa?
       (if (some :siltatarkastuksia? urakkatiedot)
         ;; Jos on tarkastuksia, annetaan olla kannassa ja logitetaan
         (do (q-sillat/paivita-silta! db sql-parametrit)
             (logita-virhe-sillan-tuonnissa db
                                            "Kunnan hoitamalle sillalle merkattu tarkastuksia"
-                                           (str "Silta " silta-id
+                                           (str "Silta " silta-taulun-id
                                                 " on merkattu kunnan hoitamaksi, mutta sillä on siltatarkastuksia.")))
         ;; Merkataan silta poistetuksi, jos ei ole tarkastuksia
-        (q-sillat/merkkaa-silta-poistetuksi! db {:silta-id silta-id})))))
+        (q-sillat/merkkaa-silta-poistetuksi! db {:silta-id silta-taulun-id})))))
+
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
+  (when (or (= 1 1) (= (:silta_id silta-floateilla) 246125))
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
         aineistovirhe (:loc_error silta)
         tyyppi (:rakennety silta)
         siltanumero (:siltanro silta)
         nimi (:siltanimi silta)
-        geometria (if (= aineistovirhe "NO ERROR") (.toString (:the_geom silta)) nil) ;; Jos sillan geometria ei ole validi, jätetään se tallentamatta, mutta tallennetaan muut tiedot sillasta. Poistetuilta silloilta puuttuu sijainti, mutta tiedon poistosta täytyy siirtyä.
+        geometria nil; (if (= aineistovirhe "NO ERROR") (.toString (:the_geom silta)) nil) ;; Jos sillan geometria ei ole validi, jätetään se tallentamatta, mutta tallennetaan muut tiedot sillasta. Poistetuilta silloilta puuttuu sijainti, mutta tiedon poistosta täytyy siirtyä.
         tie (:tie silta)
         alkuosa (:aosa silta)
         alkuetaisyys (:aet silta)
@@ -110,7 +112,7 @@
         trex-oid (when-not (empty? (:trex_oid silta))
                    (:trex_oid silta))
         siltaid (string-intiksi (:silta_id silta))
-        urakkatiedot (q-sillat/hae-sillan-tiedot db {:siltaid siltaid :siltatunnus tunnus :trex-oid trex-oid})
+        urakkatiedot (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltaid siltaid :siltatunnus tunnus :siltanimi nimi})
         urakat (into []
                      ;; Poistetaan mahdolliset nil arvot vektorista
                      (keep identity)
@@ -120,7 +122,7 @@
                        ;; Siltaa ei ole kannassa
                        (empty? urakkatiedot) [urakka-id]
                        ;; Silta on kannassa ja urakka on jo merkattu sillalle
-                       (some #(= (:urakka-id %) urakka-id) urakkatiedot) (mapv :urakka-id urakkatiedot)
+                       (some #(= (:urakka-id %) urakka-id) urakkatiedot)(mapv :urakka-id urakkatiedot)
                        ;; Urakkaa ei ole merkattu sillalle, joten täytyy tarkistaa onko silta jo toisessa aktiivisessa
                        ;; urakassa. Varmaankin mahdollista vain, jos esim. tr:ssä ollaan päivitetty urakkatietoja.
                        (some #(pvm/ennen? (pvm/nyt) (:loppupvm %)) urakkatiedot)
@@ -133,13 +135,18 @@
                                                             (for [vaara-urakka vaarat-urakat]
                                                               (if (:siltatarkastuksia? vaara-urakka)
                                                                 (do
+                                                                  (log/debug "Silta väärässä urakassa"
+                                                                                                 (str "Silta " (:silta-taulun-id vaara-urakka)
+                                                                                                      " on merkattu väärään urakkaan " (:urakka-id vaara-urakka)
+                                                                                                      "! :bridge_at_night:|||"
+                                                                                                      "Pitäisi olla urakassa: " urakka-id))
                                                                   (logita-virhe-sillan-tuonnissa db "Silta väärässä urakassa"
-                                                                                                 (str "Silta " (:silta-id vaara-urakka)
+                                                                                                 (str "Silta " (:silta-taulun-id  vaara-urakka)
                                                                                                       " on merkattu väärään urakkaan " (:urakka-id vaara-urakka)
                                                                                                       "! :bridge_at_night:|||"
                                                                                                       "Pitäisi olla urakassa: " urakka-id))
                                                                   (:urakka-id vaara-urakka))
-                                                                (do (q-sillat/poista-urakka-sillalta! db (select-keys vaara-urakka #{:urakka-id :silta-id})) nil))))
+                                                                (do (q-sillat/poista-urakka-sillalta! db (select-keys vaara-urakka #{:urakka-id :silta-taulun-id})) nil))))
                              poistetut-urakat (clj-set/difference (into #{} (map :urakka-id vaarat-urakat))
                                                                   urakat-vaarassa-sillassa)]
                          (if (empty? urakat-vaarassa-sillassa)
@@ -195,15 +202,83 @@
           (q-sillat/paivita-silta! db sql-parametrit)
           (if (or (nil? loppupvm)
                   (pvm/ennen? (pvm/->pvm "28.9.2016") loppupvm))
-            (q-sillat/luo-silta<! db sql-parametrit)))))))
+            (q-sillat/luo-silta<! db sql-parametrit))))))))
 
 (defn vie-silta-entry [db silta]
   (luo-tai-paivita-silta db silta))
 
+
+;
+;
+;(defn onko-silta-kokonaan-lakkautettu? [sillan-rivit]
+;  (every? #(and
+;              (not (= nil (:loppupvm %)))
+;              (not (= "" (:loppupvm %)))
+;              (not (= nil (:lakkautpvm %)))
+;              (not (= "" (:lakkautpvm %))))
+;          sillan-rivit))
+;
+;(defn merkitse-lakkautetetut-sillat
+;  "Ottaa vastaan listan vektorit, joissa sillan trex-oid ja rivien määrä sekä shapefilestä koostetun silta-aineiston.
+;  Palauttaa vekorilistan, johon on lisätty tieto siitä, onko silta poistunut käytöstä kokonaan."
+;  [tarkasteltavat-sillat kaikki-sillat]
+;  ;; 3. Jos vain osa sillan riveistä on loppupvm/lakkautuspvm is not null, suodata pois rivi(t), joissa loppupvm/lakkautuspvm is not null.
+;  ;;    Jos kaikki ovat lopetettuja/lakkautettuja, jätä aineistoon rivi jossa on tuorein :muutospvm
+;  (for [silta  tarkasteltavat-sillat]
+;    (let [sillan-rivit (filter #(= (key silta) (:trex_oid %)) kaikki-sillat)]
+;      (conj silta (onko-silta-kokonaan-lakkautettu? sillan-rivit)))))
+;
+;
+;(defn suodata-tarkasteltavat-sillat
+;  "Ottaa vastaan shapefilestä koostetun silta-aineiston.
+;  Suodattaa ensin silloista pois ne, joissa trex_oid on nil tai tyhjä.
+;  Valitsee sitten tarkasteltavaksi ne sillat, joista aineistossa on 2 tai useampi rivi.
+;  Palauttaa listan vektoreita, joissa sillan trex-oid ja silta-aineistosta löytyvien rivien määrä."
+;  [kaikki-sillat]
+;
+;  ;; Aineistossa :trex_ois on null tai tyhjä vain, kun myös :silta_id on tyhjä. Silta ei ole yksiselitteisesti tunnistettavissa.
+;  ;; Nämä sillat ovat aina myös lopetettuja/lakkautettuja ja Harjan kannalta turhia.
+;
+;
+;  (let [tunnistettavat-sillat (filter #(not (or
+;                                              (= nil (key %))
+;                                              (= "" (key %))))
+;                                      (group-by :trex_oid kaikki-sillat))
+;        tarkasteltavat-sillat (filter #(> (val %) 1)
+;                                      (zipmap (keys tunnistettavat-sillat)
+;                                              (map #(count (second %)) tunnistettavat-sillat)))]
+;    tarkasteltavat-sillat))
+;
+;(defn jarjesta-sillat
+;  "Ottaa vastaan listan vektorit, joissa sillan trex-oid ja rivien määrä sekä shapefilestä koostetun silta-aineiston.
+;  Käsittelee kunkin sillan vektorilistassa ja poistaa silta-aineistosta ei-relevantit rivit."
+;  [tarkasteltavat-sillat kaikki-sillat]
+;  (let [sillat (merkitse-lakkautetetut-sillat tarkasteltavat-sillat kaikki-sillat)]
+;    (for [silta  sillat]
+;      (remove #(= (:id %) 2) (sort-by :muutospvm kaikki-sillat))
+;    )
+;  )
+;
+;  )
+
+
+(defn distinct-consequtive [sequence] (map first (partition-by #(= :trex_oid (:trex_oid %)) sequence)))
+
+
+
+(defn siivoa-duplikaatit-silloista [siltatietueet-shapefilesta]
+  (let [sorted (sort-by (juxt :trex_oid :muutospvm :loppupvm)  siltatietueet-shapefilesta)
+        ;filtered (medley.core/distinct-by #(% :trex_oid)  sorted)
+         ]
+    (distinct-consequtive sorted)
+      )
+  )
+
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
-    ;; Järjestyksellä väliä, koska datassa saattaa tulla usea rivi samasta sillasta, joilla eri tiedot.
-    (let [siltatietueet-shapefilesta (sort-by :muutospvm (shapefile/tuo shapefile))]
+    (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
+          ;relevantit-siltatietueet (siivoa-duplikaatit-silloista siltatietueet-shapefilesta)
+          ]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (try (jdbc/with-db-transaction [db db]
              (doseq [silta siltatietueet-shapefilesta]
