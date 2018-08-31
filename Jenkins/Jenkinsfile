@@ -50,11 +50,9 @@ node {
                 if (testikannanLuontiAjetaan) {
                     try {
                         sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
+                        hoidaMahdollisenErrorinKorjaantuminen(testikannanLuonti, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
                     } catch (e) {
-                        env.FAILED_STAGE = testikannanLuonti
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
-                        error([message: "Testikannan pystytys epäonnistui."])
+                        hoidaErrori(testikannanLuonti, "Pipeline hajosi Jenkinsin testikannan luomiseen")
                     }
                 }
             }
@@ -66,20 +64,15 @@ node {
             stage(jarJaTestit) {
                 if (jarJaTestitAjetaan) {
                     try {
-                        String muutokset = changeSets2String()
                         // Luo API docsit
                         sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
                         // Luo jarri ja aja testit
                         sh([script: "lein tuotanto"])
                         // Säilötään se jarri
                         archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-                        // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
-                        if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
-                            slackSend([color  : 'good',
-                                       message: 'Pipeline ei enää hajoa testien/JAR:in luomisen kohdalla'])
-                        }
+                        hoidaMahdollisenErrorinKorjaantuminen(jarJaTestit, "Pipeline ei enää hajoa testien ajamiseen/JAR:in luomiseen")
                     } catch (e) {
-                        env.FAILED_STAGE = jarJaTestit
+                        String muutokset = changeSets2String()
                         mail([from   : params.LAHETTAJA_SPOSTI,
                               replyTo: '',
                               to     : params.VASTAANOTTAJAT_SPOSTI,
@@ -87,9 +80,7 @@ node {
                               bcc    : '',
                               subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
                               body   : "Build: ${env.BUILD_URL}\n" + muutokset])
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
-                        error([message: "'lein tuotanto' epäonnistui"])
+                        hoidaErrori(jarJaTestit, "Pipeline hajosi testien ajamiseen/JAR:in luomiseen")
                     } finally {
                         // Testitulokset
                         junit([testResults: 'test2junit/xml/*.xml'])
@@ -112,11 +103,9 @@ node {
                                         " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                             }
                         }
+                        hoidaMahdollisenErrorinKorjaantuminen(testiserverinKannanLuonti, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
                     } catch (e) {
-                        env.FAILED_STAGE = testiserverinKannanLuonti
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
-                        error([message: "Testiserverin kannan pystytys epäonnistui."])
+                        hoidaErrori(testiserverinKannanLuonti, "Pipeline hajosi testiserverin kannan luomiseen")
                     }
                 }
             }
@@ -156,11 +145,9 @@ node {
                                          extraVars   : [
                                                  jenkins_build_number: jenkinsinBuildNumber
                                          ]])
+                        hoidaMahdollisenErrorinKorjaantuminen(testiserverinAppLuonti, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
                     } catch (e) {
-                        env.FAILED_STAGE = testiserverinAppLuonti
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
-                        error([message: "Testiserverin app pystytys epäonnistui."])
+                        hoidaErrori(testiserverinAppLuonti, "Pipeline hajosi testiserverin appiksen luomiseen")
                     }
                 }
             }
@@ -187,15 +174,9 @@ node {
                                 }
                             }
                         }
-                        if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == e2eTestit) {
-                            slackSend([color  : 'good',
-                                       message: 'E2E-testit normalisoitui'])
-                        }
+                        hoidaMahdollisenErrorinKorjaantuminen(e2eTestit, "Pipeline ei enää hajoa E2E testeihin")
                     } catch (e) {
-                        env.FAILED_STAGE = e2eTestit
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
-                        error([message: "E2E-testit epäonnistuivat"])
+                        hoidaErrori(e2eTestit, "Pipeline hajosi E2E testeihin")
                     } finally {
                         junit([testResults: 'test2junit/xml/*.xml'])
                     }
@@ -219,11 +200,9 @@ node {
                                         " -Dflyway.url=jdbc:postgresql://harja-db1-stg/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                             }
                         }
+                        hoidaMahdollisenErrorinKorjaantuminen(stagingserverinKannanLuonti, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
                     } catch (e) {
-                        env.FAILED_STAGE = stagingserverinKannanLuonti
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
-                        error([message: "Staging serverin kannan pystytys epäonnistui."])
+                        hoidaErrori(stagingserverinKannanLuonti, "Pipeline hajosi stagingserverin kannan luomiseen")
                     }
                 }
             }
@@ -243,11 +222,9 @@ node {
                                          extraVars   : [
                                                  jenkins_build_number: jenkinsinBuildNumber
                                          ]])
+                        hoidaMahdollisenErrorinKorjaantuminen(stagingserverinAppLuonti, "Pipeline ei enää hajoa stagingserverin appiksen luomiseen")
                     } catch (e) {
-                        env.FAILED_STAGE = stagingserverinAppLuonti
-                        slackSend([color  : 'warning',
-                                   message: 'Pipeline hajosi testien/JAR:in luomisen kohdalla komennon kohdalla'])
-                        error([message: "Staging serverin app pystytys epäonnistui."])
+                        hoidaErrori(stagingserverinAppLuonti, "Pipeline hajosi stagingserverin appiksen luomiseen")
                     }
                 }
             }
@@ -260,17 +237,22 @@ node {
         stage('Siivoa workspace') {
             cleanWs()
         }
-        // harja-staging-db
-        // harja-staging-app
-        // General
-        // keep builds for 7 days
-        // harja-prod-db
-        // harja-prod-app
-        // ajetaan?
-        // 7am arkisin
-        // slack kun build start, faiure, success, back to normal
-        // API Docsit pitää laittaa jossain väli
     }
+}
+
+def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti='Pipeline korjaantui') {
+    // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
+    if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == stageNimi) {
+        slackSend([color  : 'good',
+                   message: viesti])
+    }
+}
+
+def hoidaErrori(stageNimi, viesti='Pipelinessä tapahtui poikkeus') {
+    env.FAILED_STAGE = stageNimi
+    slackSend([color  : 'warning',
+               message: viesti])
+    error([message: stageNimi + " epäonnistui."])
 }
 
 @NonCPS
