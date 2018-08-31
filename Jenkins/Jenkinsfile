@@ -7,7 +7,7 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
                                       numToKeepStr: '14')),
             disableConcurrentBuilds(),
             disableResume(),
-            pipelineTriggers([cron('* * * * 1-5')]),
+            pipelineTriggers([cron('0 7 * * 1-5')]),
             pipelineTriggers([pollSCM('H/5 * * * *')])])
 
 node {
@@ -19,7 +19,6 @@ node {
     }
     // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
     // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
-    println "Käynnistäjä on tyhjä: " + kaynnistaja.trim().isEmpty()
     if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
         String tuotantokannanLuonti = 'Luodaan tuotantokanta'
         dir('Harja') {
@@ -27,7 +26,7 @@ node {
                 println "Ajetaan tuotanto."
             }
         }
-    } else if (muutosTapahtuiHarjaan(kaynnistaja)) {
+    } else if (muutosTapahtuiHarjaan(kaynnistaja.trim())) {
         // Lisää mvn pathiin
         env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
