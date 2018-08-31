@@ -7,7 +7,7 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
                                       numToKeepStr: '14')),
             disableConcurrentBuilds(),
             disableResume(),
-            pipelineTriggers([cron('06 16 * * 1-5')]),
+            pipelineTriggers([cron('* * * * 1-5')]),
             pipelineTriggers([pollSCM('H/5 * * * *')])])
 
 node {
@@ -17,10 +17,11 @@ node {
         kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
                           returnStdout: true])
     }
-    println "KÄYNNISTÄJÄ: " + kaynnistaja
     // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
     // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
-    if (muutosTapahtuiHarjaan(kaynnistaja)) {
+    if (kaynnistaja.isEmpty() || params.AJA_TUOTANTO) {
+        println "Ajetaan tuotanto."
+    } else if (muutosTapahtuiHarjaan(kaynnistaja)) {
         // Lisää mvn pathiin
         env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
