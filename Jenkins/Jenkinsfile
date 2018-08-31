@@ -16,7 +16,6 @@ node {
         kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
                           returnStdout: true])
     }
-    println "KÄYNNISTÄJÄ: " + kaynnistaja
     // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
     // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
     if (muutosTapahtuiHarjaan(kaynnistaja)) {
@@ -335,9 +334,10 @@ def hyvaksyttyPolku(polku) {
 def muutosTapahtuiHarjaan(kaynnistaja) {
     def muutokset = currentBuild.changeSets
     // Onko pollaus lauennu turhan takia
-    if (muutokset.isEmpty() && kaynnistaja == "") {
+    if (muutokset.isEmpty() && kaynnistaja == "SCMTrigger") {
         return false
     } else if (muutokset.isEmpty()) {
+        // Tämä tarkoittaa sitä, että joku käyttäjä on käynyt painamassa erikseen sitä nappia, että työ pitäs käynistää
         return true
     } else {
         // Tarkistetaan polku
