@@ -210,7 +210,7 @@ node {
             }
         }
 
-        dir('CI') {
+        dir('Harja') {
             /*
              * STAGESERVERIKANNAN LUOMINEN
              */
@@ -232,7 +232,9 @@ node {
                     }
                 }
             }
+        }
 
+        dir('CI') {
             /*
              * STAGESERVERIAPPIKSEN DEPLOYAAMINEN
              */
