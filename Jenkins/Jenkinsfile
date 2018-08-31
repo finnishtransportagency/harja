@@ -1,6 +1,13 @@
 import hudson.scm.ChangeLogSet
 import hudson.plugins.git.GitChangeSet
-import static hudson.plugins.git.GitChangeSet.Path
+
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
+                                      artifactNumToKeepStr: '',
+                                      daysToKeepStr: '7',
+                                      numToKeepStr: '14')),
+            disableConcurrentBuilds(),
+            disableResume(),
+            pipelineTriggers([pollSCM('H/5 * * * *')])])
 
 node {
     def kaynnistaja
@@ -22,6 +29,8 @@ node {
         String testiserverinKannanLuonti = 'Luo testiserverin kanta'
         String testiserverinAppLuonti = 'Luo testiserverin app'
         String e2eTestit = 'Aja E2E testit'
+        String stageserverinKannanLuonti = 'Luo stageserverin kanta'
+        String stageserverinAppLuonti = 'Luo stageserverin app'
 
         // Mitkä staget ajetaan
         Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
@@ -29,6 +38,8 @@ node {
         Boolean testiserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
         Boolean testiserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
         Boolean e2eTestitAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN)
+        Boolean stageserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+        Boolean stageserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
 
         dir('Harja') {
             checkout scm;
@@ -194,6 +205,51 @@ node {
                         slackSend([color  : 'warning',
                                    message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
                         error([message: "E2E-testit epäonnistuivat"])
+                    }
+                }
+            }
+        }
+
+        dir('CI') {
+            /*
+             * STAGESERVERIKANNAN LUOMINEN
+             */
+
+            stage(stageserverinKannanLuonti) {
+                if (stageserverinKannanLuontiAjetaan) {
+                    try {
+                        withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                            // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
+                            withMaven(jdk: '', maven: 'Maven 3.5.4') {
+                                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
+                                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
+                                        " -Dflyway.url=jdbc:postgresql://harja-db1-stg/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                            }
+                        }
+                    } catch (e) {
+                        env.FAILED_STAGE = stageserverinKannanLuonti
+                        error([message: "Stageserverin kannan pystytys epäonnistui."])
+                    }
+                }
+            }
+
+            /*
+             * STAGESERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+
+            stage(stageserverinAppLuonti) {
+                if (stageserverinAppLuontiAjetaan) {
+                    try {
+                        ansiblePlaybook([installation: 'ansible 1.9.1',
+                                         inventory   : 'inventory/staging',
+                                         playbook    : 'playbooks/staging.yml',
+                                         extraVars   : [
+                                                 jenkins_build_number: jenkinsinBuildNumber
+                                         ]])
+                    } catch (e) {
+                        env.FAILED_STAGE = stageserverinAppLuonti
+                        sh([script: "echo " + e])
+                        error([message: "Stageserverin app pystytys epäonnistui."])
                     }
                 }
             }
