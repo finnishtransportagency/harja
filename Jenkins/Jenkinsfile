@@ -11,34 +11,115 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
             pipelineTriggers([pollSCM('H/5 * * * *')])])
 
 node {
+    // Stage nimet
+    String testikannanLuonti = 'Luo testikanta'
+    String jarJaTestit = 'Luo JAR ja aja testit'
+    String testiserverinKannanLuonti = 'Luo testiserverin kanta'
+    String testiserverinAppLuonti = 'Luo testiserverin app'
+    String e2eTestit = 'Aja E2E testit'
+    String stagingserverinKannanLuonti = 'Luo stagingserverin kanta'
+    String stagingserverinAppLuonti = 'Luo stagingserverin app'
+    String tuotantoserverinKannanLuonti = 'Luodaan tuotantokanta'
+    String tuotantoserverinAppLuonti = 'Luodaan tuotantoserverin app'
+    String e2eTestitTuotanto = 'E2E testit tuotanto'
+    def jenkinsinBuildNumber
     def kaynnistaja
     // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
     wrap([$class: 'BuildUser']) {
         kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
                           returnStdout: true])
     }
-    // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
-    // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
+    // Lisää mvn pathiin
+    env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
+    // Eli ajetaanko tuotanto?
     if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
-        String tuotantokannanLuonti = 'Luodaan tuotantokanta'
-        dir('Harja') {
-            stage(tuotantokannanLuonti) {
-                println "Ajetaan tuotanto."
+        if (params.ARCHIVE_BUILD_NUMBER) {
+            slackSend([color  : '#3232ff',
+                       message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
+            jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
+            if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+                slackSend([color  : 'warning',
+                           message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
+                error([message: "JAR:ia ei löytynyt halutulla numerolla"])
+            }
+        } else {
+            // Jos build numberia ei ole annettu, niin etsitään se build number, joka on viimeksi mennyt onnistuneesti putken läpi.
+            int nykyinenBuildNumber
+            def loytynytJarBuild = null
+            for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
+                if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") || buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE")) {
+                    continue
+                }
+                loytynytJarBuild = nykyinenBuildNumber
+                break
+            }
+            if (loytynytJarBuild) {
+                sh([script: "echo \"Käytetään buildin " + loytynytJarBuild + " JAR:ia tuotanto deploymenttiin\""])
+                jenkinsinBuildNumber = loytynytJarBuild
+            } else {
+                sh([script: "echo \"Yhtään jarria ei löytynyt Jenkinsistä!\""])
+                error([message: "Jarreja ei löytynyt."])
             }
         }
+
+        // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
+        if (!buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+            /*
+             * TESTISERVERIKANNAN LUOMINEN
+             */
+
+            dir('Harja') {
+                checkout scm;
+                stage(testiserverinKannanLuonti) {
+                    ajaTestiserverinKanta(testiserverinKannanLuonti)
+                }
+            }
+            dir('CI') {
+                checkout([$class                           : 'GitSCM',
+                          branches                         : [[name: '*/master']],
+                          doGenerateSubmoduleConfigurations: false,
+                          extensions                       : [],
+                          submoduleCfg                     : [],
+                          userRemoteConfigs                : [[url: params.HARJA_CI_URL]]])
+                /*
+                 * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+                 */
+
+                stage(testiserverinAppLuonti) {
+                    ajaTestiserverinApp(testiserverinAppLuonti, jenkinsinBuildNumber)
+                }
+            }
+
+            dir('E2E') {
+                checkout([$class                           : 'GitSCM',
+                          branches                         : [[name: '*/develop']],
+                          doGenerateSubmoduleConfigurations: false,
+                          extensions                       : [],
+                          submoduleCfg                     : [],
+                          userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]])
+
+                /*
+                 * E2E TESTIT
+                 */
+                stage(e2eTestit) {
+                    ajaE2ETestit(e2eTestitTuotanto)
+                }
+            }
+        }
+        //// TÄHÄN VIELÄ TUOTANNON DEPLOYAAMINEN
+
+        /*
+         * SIIVOTAAN WORKSPACE
+         */
+
+        stage('Siivoa workspace') {
+            cleanWs()
+        }
+        // Jos ei ajeta tuotantoa, niin ajetaan sitten kaikki muut
+
+        // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
+        // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
     } else if (muutosTapahtuiHarjaan(kaynnistaja.trim())) {
-        // Lisää mvn pathiin
-        env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
-
-        // Stage nimet
-        String testikannanLuonti = 'Luo testikanta'
-        String jarJaTestit = 'Luo JAR ja aja testit'
-        String testiserverinKannanLuonti = 'Luo testiserverin kanta'
-        String testiserverinAppLuonti = 'Luo testiserverin app'
-        String e2eTestit = 'Aja E2E testit'
-        String stagingserverinKannanLuonti = 'Luo stageserverin kanta'
-        String stagingserverinAppLuonti = 'Luo stageserverin app'
-
         // Mitkä staget ajetaan
         Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
         Boolean jarJaTestitAjetaan = ["Kaikki", "JAR ja testit"].contains(STAGE_ETIAPAIN)
@@ -60,6 +141,7 @@ node {
                         sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
                         hoidaMahdollisenErrorinKorjaantuminen(testikannanLuonti, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
                     } catch (e) {
+                        println "ERROR IS: " + e.getMessage()
                         hoidaErrori(testikannanLuonti, "Pipeline hajosi Jenkinsin testikannan luomiseen")
                     }
                 }
@@ -102,26 +184,13 @@ node {
 
             stage(testiserverinKannanLuonti) {
                 if (testiserverinKannanLuontiAjetaan) {
-                    try {
-                        withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                            // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
-                            withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
-                                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
-                                        " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
-                            }
-                        }
-                        hoidaMahdollisenErrorinKorjaantuminen(testiserverinKannanLuonti, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
-                    } catch (e) {
-                        hoidaErrori(testiserverinKannanLuonti, "Pipeline hajosi testiserverin kannan luomiseen")
-                    }
+                    ajaTestiserverinKanta(testiserverinKannanLuonti)
                 }
             }
         }
 
-        def jenkinsinBuildNumber
         if (params.ARCHIVE_BUILD_NUMBER) {
-            slackSend([color  : 'warning',
+            slackSend([color  : '#3232ff',
                        message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER])
             jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
         } else {
@@ -146,17 +215,7 @@ node {
 
             stage(testiserverinAppLuonti) {
                 if (testiserverinAppLuontiAjetaan) {
-                    try {
-                        ansiblePlaybook([installation: 'ansible 1.9.1',
-                                         inventory   : 'inventory/testing',
-                                         playbook    : 'playbooks/nightly.yml',
-                                         extraVars   : [
-                                                 jenkins_build_number: jenkinsinBuildNumber
-                                         ]])
-                        hoidaMahdollisenErrorinKorjaantuminen(testiserverinAppLuonti, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
-                    } catch (e) {
-                        hoidaErrori(testiserverinAppLuonti, "Pipeline hajosi testiserverin appiksen luomiseen")
-                    }
+                    ajaTestiserverinApp(testiserverinAppLuonti, jenkinsinBuildNumber)
                 }
             }
         }
@@ -174,20 +233,7 @@ node {
              */
             stage(e2eTestit) {
                 if (e2eTestitAjetaan) {
-                    try {
-                        wrap([$class: 'Xvfb']) {
-                            retry(5) {
-                                timeout(20) {
-                                    sh([script: "lein do clean, compile, test2junit"])
-                                }
-                            }
-                        }
-                        hoidaMahdollisenErrorinKorjaantuminen(e2eTestit, "Pipeline ei enää hajoa E2E testeihin")
-                    } catch (e) {
-                        hoidaErrori(e2eTestit, "Pipeline hajosi E2E testeihin")
-                    } finally {
-                        junit([testResults: 'test2junit/xml/*.xml'])
-                    }
+                    ajaE2ETestit(e2eTestit)
                 }
             }
         }
@@ -350,5 +396,66 @@ def muutosTapahtuiHarjaan(kaynnistaja) {
             }
         }
         return false
+    }
+}
+
+def buildNumberinEnv(buildNumber, envNimi) {
+    var build = currentBuild
+    try {
+        while (build.number != buildNumber) {
+            build = build.previousBuild
+        }
+    } catch (e) {
+        error([message: "Oikean build numberin (" + buildNumber + ") etsiminen epäonnistui."])
+    }
+    return build.buildVariables."$envNimi"
+}
+
+def ajaTestiserverinKanta(stagenNimi) {
+    try {
+        withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+            // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
+            withMaven(jdk: '', maven: 'Maven 3.5.4') {
+                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
+                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
+                        " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+            }
+        }
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
+    } catch (e) {
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen")
+    }
+}
+
+def ajaTestiserverinApp(stagenNimi, buildNumber) {
+    try {
+        ansiblePlaybook([installation: 'ansible 1.9.1',
+                         inventory   : 'inventory/testing',
+                         playbook    : 'playbooks/nightly.yml',
+                         extraVars   : [
+                                 jenkins_build_number: buildNumber
+                         ]])
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
+    } catch (e) {
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
+    }
+}
+
+def ajaE2ETestit(stagenNimi) {
+    try {
+        wrap([$class: 'Xvfb']) {
+            retry(5) {
+                timeout(20) {
+                    sh([script: "lein do clean, compile, test2junit"])
+                }
+            }
+        }
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa E2E testeihin")
+        env.E2E_ONNISTUI = true
+    } catch (e) {
+        env.E2E_ONNISTUI = false
+        hoidaErrori(stagenNimi, "Pipeline hajosi E2E testeihin")
+    } finally {
+        junit([testResults: 'test2junit/xml/*.xml'])
     }
 }
