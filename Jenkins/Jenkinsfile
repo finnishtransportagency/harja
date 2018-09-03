@@ -302,9 +302,14 @@ def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti='Pipeline korjaantui
 
 def hoidaErrori(eViesti, stageNimi, viesti='Pipelinessä tapahtui poikkeus') {
     env.FAILED_STAGE = stageNimi
-    matcher = (eViesti =~ /code (\d+)/)
+    def virheKoodi
+    try {
+        virheKoodi = (eViesti =~ /code (\d+)/)[0][1]
+    } catch(e) {
+        virheKoodi = null
+    }
     // Ei lähetetä viestiä Slackiin, jos käyttäjä on perunut buildin.
-    if (!matcher[0][1] == "143") {
+    if (virheKoodi != "143") {
         slackSend([color  : 'warning',
                    message: viesti])
     }
@@ -416,11 +421,8 @@ def buildNumberinEnv(buildNumber, envNimi) {
 def ajaTestiserverinKanta(stagenNimi) {
     try {
         withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-            // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
-            withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
-                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
-                        " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+            configFileProvider([configFile(fileId: 'Flyway_testserver_config', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+                sh([script: 'mvn -Dflyway.configFiles=$FLYWAY_SETTINGS -f tietokanta/pom.xml clean compile flyway:migrate'])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
