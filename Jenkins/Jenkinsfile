@@ -140,8 +140,7 @@ node {
                         sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
                         hoidaMahdollisenErrorinKorjaantuminen(testikannanLuonti, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
                     } catch (e) {
-                        println "ERROR IS: " + e.getMessage()
-                        hoidaErrori(testikannanLuonti, "Pipeline hajosi Jenkinsin testikannan luomiseen")
+                        hoidaErrori(e.getMessage(), testikannanLuonti, "Pipeline hajosi Jenkinsin testikannan luomiseen")
                     }
                 }
             }
@@ -169,7 +168,7 @@ node {
                               bcc    : '',
                               subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
                               body   : "Build: ${env.BUILD_URL}\n" + muutokset])
-                        hoidaErrori(jarJaTestit, "Pipeline hajosi testien ajamiseen/JAR:in luomiseen")
+                        hoidaErrori(e.getMessage(), jarJaTestit, "Pipeline hajosi testien ajamiseen/JAR:in luomiseen")
                     } finally {
                         // Testitulokset
                         junit([testResults: 'test2junit/xml/*.xml'])
@@ -255,7 +254,7 @@ node {
                         }
                         hoidaMahdollisenErrorinKorjaantuminen(stagingserverinKannanLuonti, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
                     } catch (e) {
-                        hoidaErrori(stagingserverinKannanLuonti, "Pipeline hajosi stagingserverin kannan luomiseen")
+                        hoidaErrori(e.getMessage(), stagingserverinKannanLuonti, "Pipeline hajosi stagingserverin kannan luomiseen")
                     }
                 }
             }
@@ -277,7 +276,7 @@ node {
                                          ]])
                         hoidaMahdollisenErrorinKorjaantuminen(stagingserverinAppLuonti, "Pipeline ei enää hajoa stagingserverin appiksen luomiseen")
                     } catch (e) {
-                        hoidaErrori(stagingserverinAppLuonti, "Pipeline hajosi stagingserverin appiksen luomiseen")
+                        hoidaErrori(e.getMessage(), stagingserverinAppLuonti, "Pipeline hajosi stagingserverin appiksen luomiseen")
                     }
                 }
             }
@@ -301,10 +300,14 @@ def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti='Pipeline korjaantui
     }
 }
 
-def hoidaErrori(stageNimi, viesti='Pipelinessä tapahtui poikkeus') {
+def hoidaErrori(eViesti, stageNimi, viesti='Pipelinessä tapahtui poikkeus') {
     env.FAILED_STAGE = stageNimi
-    slackSend([color  : 'warning',
-               message: viesti])
+    matcher = (eViesti =~ /code (\d+)/)
+    // Ei lähetetä viestiä Slackiin, jos käyttäjä on perunut buildin.
+    if (!matcher[0][1] == "143") {
+        slackSend([color  : 'warning',
+                   message: viesti])
+    }
     error([message: stageNimi + " epäonnistui."])
 }
 
