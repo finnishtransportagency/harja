@@ -420,10 +420,10 @@ def buildNumberinEnv(buildNumber, envNimi) {
 
 def ajaTestiserverinKanta(stagenNimi) {
     try {
-        withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-            configFileProvider([configFile(fileId: 'Flyway_testserver_config', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+        configFileProvider([configFile(fileId: 'Flyway_testserver_config', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+            withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
                 // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS"])
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS'])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
