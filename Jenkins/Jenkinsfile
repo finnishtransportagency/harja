@@ -68,7 +68,7 @@ node {
              */
 
             dir('Harja') {
-                checkout scm;
+                checkout scm
                 stage(testiserverinKannanLuonti) {
                     ajaTestiserverinKanta(testiserverinKannanLuonti)
                 }
@@ -105,7 +105,62 @@ node {
                 }
             }
         }
-        //// TÄHÄN VIELÄ TUOTANNON DEPLOYAAMINEN
+
+        dir('Harja') {
+            checkout scm
+
+
+            /*
+             * TUOTANTOSERVERIKANNAN LUOMINEN
+             */
+            stage(tuotantoserverinKannanLuonti) {
+                try {
+                    // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+                    // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+                    // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
+                    configFileProvider([configFile(fileId: 'Flyway_tuotantoserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+                        withCredentials([usernamePassword(credentialsId: 'TUOTANTOPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                            // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
+                            sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                                    " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                        }
+                    }
+                    hoidaMahdollisenErrorinKorjaantuminen(tuotantoserverinKannanLuonti, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
+                } catch (e) {
+                    hoidaErrori(e.getMessage(), tuotantoserverinKannanLuonti, "Pipeline hajosi tuotantoserverin kannan luomiseen")
+                }
+            }
+        }
+
+        dir('CI') {
+            /*
+             * TUOTANTO SERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+            checkout([$class                           : 'GitSCM',
+                      branches                         : [[name: '*/master']],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions                       : [],
+                      submoduleCfg                     : [],
+                      userRemoteConfigs                : [[url: params.HARJA_CI_URL]]])
+
+            stage(tuotantoserverinAppLuonti) {
+                try {
+                    slackSend([color  : 'good',
+                               message: 'Aloitetaan tuotanto deployment'])
+                    ansiblePlaybook([installation: 'ansible 1.9.1',
+                                     inventory   : 'inventory/production',
+                                     playbook    : 'playbooks/production.yml',
+                                     extraVars   : [
+                                             jenkins_build_number: jenkinsinBuildNumber
+                                     ]])
+                    hoidaMahdollisenErrorinKorjaantuminen(tuotantoserverinAppLuonti, "Pipeline ei enää hajoa tuotantoserverin appiksen luomiseen")
+                    slackSend([color  : 'good',
+                               message: 'Tuotanto deployment onnistui'])
+                } catch (e) {
+                    hoidaErrori(e.getMessage(), tuotantoserverinAppLuonti, "Pipeline hajosi tuotantoserverin appiksen luomiseen")
+                }
+            }
+        }
 
         /*
          * SIIVOTAAN WORKSPACE
