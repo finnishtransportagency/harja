@@ -144,7 +144,8 @@
   (let [ilm (or (::t/paailmoitus ilm) ilm)
         osoite (::t/osoite ilm)]
     (tietotaulukko
-     [(tieto "Projekti / Urakka" (::t/urakan-nimi ilm))]
+     [(tieto "Projekti / Urakka" (::t/urakan-nimi ilm))
+      (tieto "Urakoitsijan nimi" (::t/urakoitsijan-nimi ilm))]
 
      [(tieto "Urakoitsijan yhteyshenkilö ja puh."
              (yhteyshenkilo (::t/urakoitsijayhteyshenkilo ilm)))]
@@ -341,8 +342,12 @@
               "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"
               "")])]))
 
-(defn- muuta [{m ::t/lisatietoja}]
-  [:fo:block m])
+(defn- muuta [{lisatietoja ::t/lisatietoja diaarinumero ::t/luvan-diaarinumero}]
+  (tietotaulukko
+    [(tieto "Lisätietoja"
+            lisatietoja)
+     (tieto "Diaarinumero"
+            diaarinumero)]))
 
 (defn- ilmoittaja [{ilmoittaja ::t/ilmoittaja luotu ::m/luotu muokattu ::m/muokattu}]
   (tietotaulukko
