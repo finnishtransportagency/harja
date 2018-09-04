@@ -191,8 +191,6 @@
     (muodosta-summarivi :muutos-ja-lisatyot tyot)))
 
 (defn- taulukko-koko-maa [otsikko tyot-ryhmiteltyna]
-
-
   (conj
     (map (fn [urakka-id]
            (muodosta-rivikokonaisuus :muutos-ja-lisatyot-koko-maa
@@ -253,11 +251,10 @@
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
-       (when (not-empty muutos-ja-lisatyot)
-           (if (= (keyword konteksti) :urakka)
-           (taulukko-urakka raportin-alaotsikko muutos-ja-lisatyot)
-           (taulukko-koko-maa raportin-alaotsikko
-                              (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot))))
+     (if (= konteksti :urakka)
+       (taulukko-urakka raportin-alaotsikko muutos-ja-lisatyot)
+       (taulukko-koko-maa raportin-alaotsikko
+                          (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot)))
      (kaikki-yhteensa muutos-ja-lisatyot)]))
 
 
