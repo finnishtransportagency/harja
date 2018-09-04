@@ -144,7 +144,8 @@
   (let [ilm (or (::t/paailmoitus ilm) ilm)
         osoite (::t/osoite ilm)]
     (tietotaulukko
-     [(tieto "Projekti / Urakka" (::t/urakan-nimi ilm))]
+     [(tieto "Projekti / Urakka" (::t/urakan-nimi ilm))
+      (tieto "Urakoitsijan nimi" (::t/urakoitsijan-nimi ilm))]
 
      [(tieto "Urakoitsijan yhteyshenkilö ja puh."
              (yhteyshenkilo (::t/urakoitsijayhteyshenkilo ilm)))]
