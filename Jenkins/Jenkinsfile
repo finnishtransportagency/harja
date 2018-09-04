@@ -244,12 +244,14 @@ node {
             stage(stagingserverinKannanLuonti) {
                 if (stagingserverinKannanLuontiAjetaan) {
                     try {
-                        withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                            // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
-                            withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                                sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
-                                        " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
-                                        " -Dflyway.url=jdbc:postgresql://harja-db1-stg/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                        // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+                        // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+                        // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
+                        configFileProvider([configFile(fileId: 'Flyway_stagingserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+                            withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
+                                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                                        " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                             }
                         }
                         hoidaMahdollisenErrorinKorjaantuminen(stagingserverinKannanLuonti, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
@@ -423,7 +425,7 @@ def ajaTestiserverinKanta(stagenNimi) {
         // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
         // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
-        configFileProvider([configFile(fileId: 'Flyway_testserver_config', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+        configFileProvider([configFile(fileId: 'Flyway_testiserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
                 // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
                 sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
