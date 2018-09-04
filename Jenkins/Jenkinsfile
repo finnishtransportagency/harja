@@ -407,7 +407,7 @@ def muutosTapahtuiHarjaan(kaynnistaja) {
 }
 
 def buildNumberinEnv(buildNumber, envNimi) {
-    var build = currentBuild
+    def build = currentBuild
     try {
         while (build.number != buildNumber) {
             build = build.previousBuild
@@ -420,10 +420,14 @@ def buildNumberinEnv(buildNumber, envNimi) {
 
 def ajaTestiserverinKanta(stagenNimi) {
     try {
+        // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+        // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+        // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_testserver_config', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
                 // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS'])
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
