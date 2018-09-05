@@ -39,9 +39,6 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-;; TODO: testiaineistossa ei ole muutos- ja lisätöihin soveltuvia tapauksia.
-;; Muutos- ja lisätyönä tallennettu toteuma on linkattu toimenpidekoodiin, joka on relevantti vain kokonaishintaisille.
-
 (deftest raportin-suoritus-urakka
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -53,8 +50,10 @@
                                               :loppupvm (c/to-date (t/local-date 2017 12 31))
                                               :urakka-id  (hae-saimaan-kanavaurakan-id)
                                               :kohde-id  nil
-                                              :tehtava-id  nil}})]
-    (is (vector? vastaus))))
+                                              :tehtava-id  nil}})
+        nurkkasumma (last (last (last vastaus)))]
+    (is (vector? vastaus))
+    (is (= nurkkasumma 2546.0M))))
 
 (deftest raportin-suorius-urakka-kohde
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -67,11 +66,13 @@
                                               :loppupvm (c/to-date (t/local-date 2017 4 1))
                                               :urakka-id  (hae-saimaan-kanavaurakan-id)
                                               :kohde-id  (hae-kohde-palli)
-                                              :tehtava-id  nil}})]
+                                              :tehtava-id  nil}})
+        nurkkasumma (last (last (last vastaus)))]
     (is (vector? vastaus))))
 
 (deftest raportin-suoritus-urakka-tehtava
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vaylanhoito-ei-yksiloity-tpk-id (hae-vaylanhoito-ei-yksiloity-tpk-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi       :kanavien-muutos-ja-lisatyot
@@ -81,9 +82,10 @@
                                               :loppupvm (c/to-date (t/local-date 2017 12 31))
                                               :urakka-id  (hae-saimaan-kanavaurakan-id)
                                               :kohde-id  nil
-                                              :tehtava-id  3058}})]
-
-    (is (vector? vastaus))))
+                                              :tehtava-id  vaylanhoito-ei-yksiloity-tpk-id}})
+        nurkkasumma (last (last (last vastaus)))]
+    (is (vector? vastaus))
+    (is (= nurkkasumma 2546.0M))))
 
 (deftest raportin-suoritus-koko-maa
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

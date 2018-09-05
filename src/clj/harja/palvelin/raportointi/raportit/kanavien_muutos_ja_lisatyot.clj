@@ -191,8 +191,6 @@
     (muodosta-summarivi :muutos-ja-lisatyot tyot)))
 
 (defn- taulukko-koko-maa [otsikko tyot-ryhmiteltyna]
-
-
   (conj
     (map (fn [urakka-id]
            (muodosta-rivikokonaisuus :muutos-ja-lisatyot-koko-maa
@@ -245,19 +243,19 @@
         kohde-nimi (if kohde-id
                      (:nimi (first (hae-kanavakohteen-nimi db {:kohdeid kohde-id})))
                      "Kaikki kohteet")
-        tehtava-nimi (if tehtava-id
-                       (:nimi (first (hae-kanavatoimenpiteen-nimi db {:tehtavaid tehtava-id}))
-                         "Kaikki toimenpiteet"))
+        tehtava-nimi (str "tehtävä: "
+                          (if tehtava-id
+                            (:nimi (first (hae-kanavatoimenpiteen-nimi db {:tehtavaid tehtava-id})))
+                            "kaikki"))
         muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db parametrit rajaus)
         raportin-alaotsikko (str/join ", " (remove str/blank? [raportin-kontekstin-nimi kohde-nimi tehtava-nimi]))]
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
-       (when (not-empty muutos-ja-lisatyot)
-           (if (= (keyword konteksti) :urakka)
-           (taulukko-urakka raportin-alaotsikko muutos-ja-lisatyot)
-           (taulukko-koko-maa raportin-alaotsikko
-                              (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot))))
+     (if (= konteksti :urakka)
+       (taulukko-urakka raportin-alaotsikko muutos-ja-lisatyot)
+       (taulukko-koko-maa raportin-alaotsikko
+                          (group-by #(select-keys % [:urakka :hinnoittelu_ryhma]) muutos-ja-lisatyot)))
      (kaikki-yhteensa muutos-ja-lisatyot)]))
 
 
