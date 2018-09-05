@@ -2,9 +2,9 @@ import hudson.scm.ChangeLogSet
 import hudson.plugins.git.GitChangeSet
 
 properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
-                                      artifactNumToKeepStr: '',
-                                      daysToKeepStr: '7',
-                                      numToKeepStr: '14')),
+        artifactNumToKeepStr: '',
+        daysToKeepStr: '7',
+        numToKeepStr: '14')),
             disableConcurrentBuilds(),
             disableResume(),
             pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
@@ -68,18 +68,26 @@ node {
              */
 
             dir('Harja') {
-                checkout scm
+                checkout([poll: true,
+                          scm : [$class                           : 'GitSCM',
+                                 branches                         : [[name: '*/develop']],
+                                 doGenerateSubmoduleConfigurations: false,
+                                 extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                                     [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
                 stage(testiserverinKannanLuonti) {
                     ajaTestiserverinKanta(testiserverinKannanLuonti)
                 }
             }
             dir('CI') {
-                checkout([$class                           : 'GitSCM',
-                          branches                         : [[name: '*/master']],
-                          doGenerateSubmoduleConfigurations: false,
-                          extensions                       : [],
-                          submoduleCfg                     : [],
-                          userRemoteConfigs                : [[url: params.HARJA_CI_URL]]])
+                checkout([poll: false,
+                          scm : [$class                           : 'GitSCM',
+                                 branches                         : [[name: '*/master']],
+                                 doGenerateSubmoduleConfigurations: false,
+                                 extensions                       : [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
                 /*
                  * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
                  */
@@ -90,12 +98,13 @@ node {
             }
 
             dir('E2E') {
-                checkout([$class                           : 'GitSCM',
-                          branches                         : [[name: '*/develop']],
-                          doGenerateSubmoduleConfigurations: false,
-                          extensions                       : [],
-                          submoduleCfg                     : [],
-                          userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]])
+                checkout([poll: false,
+                          scm : [$class                           : 'GitSCM',
+                                 branches                         : [[name: '*/develop']],
+                                 doGenerateSubmoduleConfigurations: false,
+                                 extensions                       : [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]]])
 
                 /*
                  * E2E TESTIT
@@ -107,8 +116,14 @@ node {
         }
 
         dir('Harja') {
-            checkout scm
-
+            checkout([poll: true,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/develop']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                                 [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 
             /*
              * TUOTANTOSERVERIKANNAN LUOMINEN
@@ -136,12 +151,13 @@ node {
             /*
              * TUOTANTO SERVERIAPPIKSEN DEPLOYAAMINEN
              */
-            checkout([$class                           : 'GitSCM',
-                      branches                         : [[name: '*/master']],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions                       : [],
-                      submoduleCfg                     : [],
-                      userRemoteConfigs                : [[url: params.HARJA_CI_URL]]])
+            checkout([poll: false,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/master']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
 
             stage(tuotantoserverinAppLuonti) {
                 try {
@@ -166,9 +182,9 @@ node {
          * SIIVOTAAN WORKSPACE
          */
 
-        stage('Siivoa workspace') {
-            cleanWs()
-        }
+        //stage('Siivoa workspace') {
+        //    cleanWs()
+        //}
         // Jos ei ajeta tuotantoa, niin ajetaan sitten kaikki muut
 
         // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
@@ -184,7 +200,14 @@ node {
         Boolean stagingserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
 
         dir('Harja') {
-            checkout scm;
+            checkout([poll: true,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/develop']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                                 [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
             /*
              * TESTIKANNAN LUOMINEN
              */
@@ -256,12 +279,13 @@ node {
         }
 
         dir('CI') {
-            checkout([$class                           : 'GitSCM',
-                      branches                         : [[name: '*/master']],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions                       : [],
-                      submoduleCfg                     : [],
-                      userRemoteConfigs                : [[url: params.HARJA_CI_URL]]])
+            checkout([poll: false,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/master']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
             /*
              * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
              */
@@ -274,12 +298,13 @@ node {
         }
 
         dir('E2E') {
-            checkout([$class                           : 'GitSCM',
-                      branches                         : [[name: '*/develop']],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions                       : [],
-                      submoduleCfg                     : [],
-                      userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]])
+            checkout([poll: false,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/develop']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]]])
 
             /*
              * E2E TESTIT
@@ -343,13 +368,13 @@ node {
          * SIIVOTAAN WORKSPACE
          */
 
-        stage('Siivoa workspace') {
-            cleanWs()
-        }
+        //stage('Siivoa workspace') {
+        //   cleanWs()
+        //}
     }
 }
 
-def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti='Pipeline korjaantui') {
+def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti = 'Pipeline korjaantui') {
     // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
     if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == stageNimi) {
         slackSend([color  : 'good',
@@ -357,12 +382,12 @@ def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti='Pipeline korjaantui
     }
 }
 
-def hoidaErrori(eViesti, stageNimi, viesti='Pipelinessä tapahtui poikkeus') {
+def hoidaErrori(eViesti, stageNimi, viesti = 'Pipelinessä tapahtui poikkeus') {
     env.FAILED_STAGE = stageNimi
     def virheKoodi
     try {
         virheKoodi = (eViesti =~ /code (\d+)/)[0][1]
-    } catch(e) {
+    } catch (e) {
         virheKoodi = null
     }
     // Ei lähetetä viestiä Slackiin, jos käyttäjä on perunut buildin.
@@ -484,7 +509,7 @@ def ajaTestiserverinKanta(stagenNimi) {
             withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
                 // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
                 sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
-                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                        " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
