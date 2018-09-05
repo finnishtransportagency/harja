@@ -243,9 +243,10 @@
         kohde-nimi (if kohde-id
                      (:nimi (first (hae-kanavakohteen-nimi db {:kohdeid kohde-id})))
                      "Kaikki kohteet")
-        tehtava-nimi (if tehtava-id
-                       (:nimi (first (hae-kanavatoimenpiteen-nimi db {:tehtavaid tehtava-id}))
-                         "Kaikki toimenpiteet"))
+        tehtava-nimi (str "tehtävä: "
+                          (if tehtava-id
+                            (:nimi (first (hae-kanavatoimenpiteen-nimi db {:tehtavaid tehtava-id})))
+                            "kaikki"))
         muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db parametrit rajaus)
         raportin-alaotsikko (str/join ", " (remove str/blank? [raportin-kontekstin-nimi kohde-nimi tehtava-nimi]))]
 
