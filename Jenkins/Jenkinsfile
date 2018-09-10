@@ -446,13 +446,11 @@ def hyvaksyttyPolku(polku) {
     def eiHyvaksytytPolut = ["src\\/harja\\/e2e\\/"]
     def hyvaksyttyPolkub = false
     for (String hp : hyvaksytytPolut) {
-        def hpr = "^" + hp
-        def hpm = (polku =~ ~hpr)
-        if (hpm.getCount() != 0) {
+        def hpr = "^" + hp + ".*"
+        if (polku ==~ ~hpr) {
             for (String ehp : eiHyvaksytytPolut) {
-                def ehpr = "^" + ehp
-                def ehpm = (polku =~ ~ehpr)
-                if (ehpm.getCount() != 0) {
+                def ehpr = "^" + ehp + ".*"
+                if (polku ==~ ~ehpr) {
                     return false
                 }
             }
