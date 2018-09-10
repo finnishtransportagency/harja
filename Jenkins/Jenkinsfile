@@ -485,6 +485,7 @@ def muutosTapahtuiHarjaan(kaynnistaja) {
                     continue
                 }
                 for (String polku : polut) {
+                    println "POLKU: " + polku
                     if (hyvaksyttyPolku(polku)) {
                         println "HYVÄKSYTTY POLKU: " + polku
                         return true
