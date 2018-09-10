@@ -454,37 +454,47 @@ def hyvaksyttyPolku(polku) {
 
 @NonCPS
 def muutosTapahtuiHarjaan(kaynnistaja) {
-    println "KÄYNNISTÄJÄ: " + kaynnistaja
-    def muutokset = currentBuild.changeSets
-    println "MUUTOKSET: " + muutokset
-    println "TYHYJÄ: " + muutokset.isEmpty()
-    println kaynnistaja == "SCMTrigger"
-    // Onko pollaus lauennu turhan takia
-    if (muutokset.isEmpty() && kaynnistaja == "SCMTrigger") {
-        return false
-    } else if (muutokset.isEmpty()) {
-        // Tämä tarkoittaa sitä, että joku käyttäjä on käynyt painamassa erikseen sitä nappia, että työ pitäs käynistää
-        println "Käyttäjä triggeröi"
-        return true
-    } else {
-        // Tarkistetaan polku
-        for (ChangeLogSet muutos : muutokset) {
-            for (GitChangeSet kentta : muutos.getItems()) {
-                def polut
-                try {
-                    polut = kentta.getAffectedPaths()
-                } catch (e) {
-                    continue
-                }
-                for (String polku : polut) {
-                    if (hyvaksyttyPolku(polku)) {
-                        println "HYVÄKSYTTY POLKU: " + polku
-                        return true
+    dir('Harja') {
+        checkout([poll: true,
+                  scm : [$class                           : 'GitSCM',
+                         branches                         : [[name: '*/develop']],
+                         doGenerateSubmoduleConfigurations: false,
+                         extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                             [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                         submoduleCfg                     : [],
+                         userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
+        println "KÄYNNISTÄJÄ: " + kaynnistaja
+        def muutokset = currentBuild.changeSets
+        println "MUUTOKSET: " + muutokset
+        println "TYHYJÄ: " + muutokset.isEmpty()
+        println kaynnistaja == "SCMTrigger"
+        // Onko pollaus lauennu turhan takia
+        if (muutokset.isEmpty() && kaynnistaja == "SCMTrigger") {
+            return false
+        } else if (muutokset.isEmpty()) {
+            // Tämä tarkoittaa sitä, että joku käyttäjä on käynyt painamassa erikseen sitä nappia, että työ pitäs käynistää
+            println "Käyttäjä triggeröi"
+            return true
+        } else {
+            // Tarkistetaan polku
+            for (ChangeLogSet muutos : muutokset) {
+                for (GitChangeSet kentta : muutos.getItems()) {
+                    def polut
+                    try {
+                        polut = kentta.getAffectedPaths()
+                    } catch (e) {
+                        continue
+                    }
+                    for (String polku : polut) {
+                        if (hyvaksyttyPolku(polku)) {
+                            println "HYVÄKSYTTY POLKU: " + polku
+                            return true
+                        }
                     }
                 }
             }
+            return false
         }
-        return false
     }
 }
 
