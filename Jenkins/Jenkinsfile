@@ -440,15 +440,17 @@ def hyvaksyttyPolku(polku) {
     // Elikkä git pollaus pollailee kaikkia tässä filussa checkoutattuihin repoihin.
     // Määrritellään tässä, että kun muutos tapahtuu jossain tietyssä polussa, niin ajetaan
     // putki vain silloin.
-    def hyvaksytytPolut = ["src/", "resources/", "Jenkins/", "test/", "tietokanta/"]
-    def eiHyvaksytytPolut = ["src/harja/e2e/"]
+    // Nämä polut täytyy kirjoittaa tässä jo regex hyväksyttävään muotoon, koska replaceAll ei ole
+    // hyväksytty funktio Jenkinsissä
+    def hyvaksytytPolut = ["src\\/", "resources\\/", "Jenkins\\/", "test\\/", "tietokanta\\/"]
+    def eiHyvaksytytPolut = ["src\\/harja\\/e2e\\/"]
     def hyvaksyttyPolkub = false
     for (String hp : hyvaksytytPolut) {
-        def hpr = "^" + hp.replaceAll(~/\//, "\\\\/")
+        def hpr = "^" + hp
         def hpm = (polku =~ ~hpr)
         if (hpm.getCount() != 0) {
             for (String ehp : eiHyvaksytytPolut) {
-                def ehpr = "^" + ehp.replaceAll(~/\//, "\\\\/")
+                def ehpr = "^" + ehp
                 def ehpm = (polku =~ ~ehpr)
                 if (ehpm.getCount() != 0) {
                     return false
