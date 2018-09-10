@@ -4,7 +4,9 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [new-reliquary.core :as nr]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [clojure.string :as clj-str]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net ConnectException)
            (org.httpkit.client TimeoutException)))
@@ -47,8 +49,18 @@
          :virheet [{:koodi :poikkeus :viesti (str "HTTP-kutsukäsittelyssä tapahtui odottamaton virhe.")}]}))))
 
 (defn kasittele-virhe [lokittaja lokiviesti tapahtuma-id url error status]
-  (log/error (format "Kutsu palveluun: %s epäonnistui. Virhe: %s. Statuskoodi: %s" url error status))
-  (log/error "Virhetyyppi: " (type error))
+  (let [[jarjestelma integraation-nimi] (clj-str/split (lokittaja :avain) #"-" 2)
+        integraatio-log-params {:tapahtuma-id tapahtuma-id
+                                :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
+                                :valittu-jarjestelma jarjestelma
+                                :valittu-integraatio integraation-nimi}]
+    (log/error {:fields [{:title "Linkit"
+                          :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
+                                      "<|||jira HTTP integraatiopiste ongelmat jira||||JIRA> | "
+                                      "<|||glogglog||||Graylog>")}]
+                :tekstikentta (str "Kutsu palveluun: " url " epäonnistui.|||"
+                                   "Virhe: " error "|||"
+                                   "Statuskoodi: " status)}))
   (lokittaja :epaonnistunut lokiviesti (str "Virhe: " error ", statuskoodi: %s" status) tapahtuma-id)
   ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
   ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.

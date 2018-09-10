@@ -82,14 +82,17 @@
                                                                aikavali (pvm/aikavali-nyt-miinus 1)
                                                                from-arg (or from-arg (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") (.toDate (first aikavali))))
                                                                to-arg (or to-arg (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") (.toDate (last aikavali))))
-                                                               q-arg (or q-arg (apply str
-                                                                                      (interpose (konv/str->hx ") OR (") (keep (fn [fieldin-tekstit]
-                                                                                                                  (when-not (empty? fieldin-tekstit)
-                                                                                                                    (apply str
-                                                                                                                           (interpose (konv/str->hx " AND ")
-                                                                                                                                      (map #(str "%22" % "%22")
-                                                                                                                                           fieldin-tekstit)))))
-                                                                                                                spesifit-tiedot-poistettu))))]
+                                                               q-arg (or q-arg (str (konv/str->hx "(")
+                                                                                    (->> spesifit-tiedot-poistettu
+                                                                                         (keep (fn [fieldin-tekstit]
+                                                                                                 (when-not (empty? fieldin-tekstit)
+                                                                                                   (apply str
+                                                                                                          (interpose (konv/str->hx " AND ")
+                                                                                                                     (map #(str "%22" % "%22")
+                                                                                                                          fieldin-tekstit))))))
+                                                                                         (interpose (konv/str->hx ") OR ("))
+                                                                                         (apply str))
+                                                                                    (konv/str->hx ")")))]
                                                            (apply str (muodosta-kysely-url glog-url
                                                                                            [from-par to-par q-par]
                                                                                            [from-arg to-arg q-arg])
@@ -98,10 +101,11 @@
                                                        #"\|\|\|jira"
                                                        #"jira\|\|\|"
                                                        (fn [tekstiosat]
-                                                         (let [vapaa-teksti (poista-ja-muokkaa-ei-sallitut-merkit
-                                                                              (if-not (empty? (first tekstiosat))
-                                                                                (first tekstiosat)
-                                                                                (str (hash spesifit-tiedot-poistettu))))]
+                                                         (let [vapaa-teksti (clj-str/trim
+                                                                              (poista-ja-muokkaa-ei-sallitut-merkit
+                                                                                (if-not (empty? (first tekstiosat))
+                                                                                  (first tekstiosat)
+                                                                                  (str (hash spesifit-tiedot-poistettu)))))]
                                                            ;; Jos jira||| merkkijonoja on enemmän kuin yksi tällä pätkällä, ei käsitellä muita kuin ensimmäinen
                                                            (when (> 2 (count tekstiosat))
                                                              (log/debug "Linkkien lokituksessa slackiin virhe: jira||| tageja enemmän kuin yksi peräkkäin."))
