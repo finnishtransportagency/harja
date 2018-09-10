@@ -1,222 +1,552 @@
 import hudson.scm.ChangeLogSet
+import hudson.plugins.git.GitChangeSet
+
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
+        artifactNumToKeepStr: '',
+        daysToKeepStr: '7',
+        numToKeepStr: '14')),
+            disableConcurrentBuilds(),
+            disableResume(),
+            pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
 
 node {
-    // Lisää mvn pathiin
-    env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
-
     // Stage nimet
     String testikannanLuonti = 'Luo testikanta'
     String jarJaTestit = 'Luo JAR ja aja testit'
     String testiserverinKannanLuonti = 'Luo testiserverin kanta'
     String testiserverinAppLuonti = 'Luo testiserverin app'
     String e2eTestit = 'Aja E2E testit'
-
-    def buildNumberJenkinsille
-    if (params.ARCHIVE_BUILD_NUMBER) {
-        if (onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/testi-pipeline/builds/" + params.ARCHIVE_BUILD_NUMBER + "/archive/target/harja-*-standalone.jar")) {
-            sh([script: "echo KÄYTETÄÄN JARRIA BUILD NUMBERISTA: " + params.ARCHIVE_BUILD_NUMBER])
-            buildNumberJenkinsille = params.ARCHIVE_BUILD_NUMBER
-        } else {
-            sh([script: "echo EI KÄYTETÄ MÄÄRITETTYÄ BUILD NUMBERIA, KOSKA SE EI SISÄLLÄ JARRIA!"])
-            slackSend([color  : 'warning',
-                       message: "Pipeline buildissa ${env.BUILD_NUMBER} ei käytetä käyttäjän määrittämän build numberin jarria, koska sitä ei ole olemassa."])
-            buildNumberJenkinsille = currentBuild.number
-        }
-    } else {
-        buildNumberJenkinsille = currentBuild.number
+    String stagingserverinKannanLuonti = 'Luo stagingserverin kanta'
+    String stagingserverinAppLuonti = 'Luo stagingserverin app'
+    String tuotantoserverinKannanLuonti = 'Luodaan tuotantokanta'
+    String tuotantoserverinAppLuonti = 'Luodaan tuotantoserverin app'
+    String e2eTestitTuotanto = 'E2E testit tuotanto'
+    def jenkinsinBuildNumber
+    def kaynnistaja
+    // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
+    wrap([$class: 'BuildUser']) {
+        kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
+                          returnStdout: true])
     }
-
-    dir('Harja') {
-        checkout scm;
-        /*
-         * TESTIKANNAN LUOMINEN
-         */
-
-        stage(testikannanLuonti) {
-            try {
-                sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
-            } catch (e) {
-                env.FAILED_STAGE = testikannanLuonti
-                error([message: "Testikannan pystytys epäonnistui."])
-            }
-        }
-
-        /*
-         * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
-         */
-
-        stage(jarJaTestit) {
-            try {
-                // Luo API docsit
-                sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
-                // Luo jarri ja aja testit
-                sh([script: "lein tuotanto"])
-                // Säilötään se jarri
-                archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-                // Testitulokset
-                junit([testResults: 'test2junit/xml/*.xml'])
-                // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
-                if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == jarJaTestit) {
-                    slackSend([color  : 'good',
-                               message: 'Pipeline ei enään hajoa `lein tuotanto` komennon kohdalla'])
-                }
-            } catch (e) {
-                env.FAILED_STAGE = jarJaTestit
-                junit([testResults: 'test2junit/xml/*.xml'])
-                String muutokset = changeSets2String(currentBuild.changeSets)
-                mail([from   : params.LAHETTAJA_SPOSTI,
-                      replyTo: '',
-                      to     : params.VASTAANOTTAJAT_SPOSTI,
-                      cc     : '',
-                      bcc    : '',
-                      subject: 'Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}',
-                      body   : "Build: ${env.BUILD_URL}\n" + muutokset])
+    // Lisää mvn pathiin
+    env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
+    // Eli ajetaanko tuotanto?
+    if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
+        if (params.ARCHIVE_BUILD_NUMBER) {
+            slackSend([color  : '#3232ff',
+                       message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
+            jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
+            if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
                 slackSend([color  : 'warning',
-                           message: 'Pipeline hajosi `lein tuotanto` komennon kohdalla'])
-                error([message: "'lein tuotanto' epäonnistui"])
+                           message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
+                error([message: "JAR:ia ei löytynyt halutulla numerolla"])
             }
-        }
-
-        /*
-         * TESTISERVERIKANNAN LUOMINEN
-         */
-
-        stage(testiserverinKannanLuonti) {
-            try {
-                withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                    // Halutessaan withMaven:in avulla voi määritellä conffi filet, mutta käytetään defaultteja
-                    withMaven(jdk: '', maven: 'Maven 3.5.4') {
-                        sh([script: "mvn -f tietokanta/pom.xml clean compile flyway:migrate" +
-                                " -Dflyway.baselineOnMigrate=true -Dflyway.baselineVersion=0" +
-                                " -Dflyway.url=jdbc:postgresql://harja-db1-test/harja -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
-                    }
+        } else {
+            // Jos build numberia ei ole annettu, niin etsitään se build number, joka on viimeksi mennyt onnistuneesti putken läpi.
+            int nykyinenBuildNumber
+            def loytynytJarBuild = null
+            for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
+                if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") || buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE")) {
+                    continue
                 }
-            } catch (e) {
-                env.FAILED_STAGE = testiserverinKannanLuonti
-                error([message: "Testiserverin kannan pystytys epäonnistui."])
+                loytynytJarBuild = nykyinenBuildNumber
+                break
+            }
+            if (loytynytJarBuild) {
+                sh([script: "echo \"Käytetään buildin " + loytynytJarBuild + " JAR:ia tuotanto deploymenttiin\""])
+                jenkinsinBuildNumber = loytynytJarBuild
+            } else {
+                sh([script: "echo \"Yhtään jarria ei löytynyt Jenkinsistä!\""])
+                error([message: "Jarreja ei löytynyt."])
             }
         }
-    }
 
-    dir('CI') {
-        resolveScm([source: [$class: 'GitSCMSource',
-                            credentialsId: '',
-                            id: '_',
-                            remote: params.HARJA_CI_URL,
-                            traits: [[$class: 'BranchDiscoveryTrait']]],
-                    targets: ['master']])
-        //checkout([$class: 'GitSCM',
-        //          branches: [[name: '*/master']],
-        //          doGenerateSubmoduleConfigurations: false,
-        //          extensions: [],
-        //          submoduleCfg: [],
-        //          userRemoteConfigs: [[url: params.HARJA_CI_URL]]])
-        /*
-         * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-         */
+        // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
+        if (!buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+            /*
+             * TESTISERVERIKANNAN LUOMINEN
+             */
 
-        stage(testiserverinAppLuonti) {
-            try {
-                ansiblePlaybook([installation: 'ansible 1.9.1',
-                                 inventory   : 'inventory/testing',
-                                 playbook    : 'playbooks/nightly.yml',
-                                 extras      : "jenkins_build_number=" + buildNumberJenkinsille])
-            } catch (e) {
-                env.FAILED_STAGE = testiserverinAppLuonti
-                error([message: "Testiserverin app pystytys epäonnistui."])
+            dir('Harja') {
+                checkout([poll: true,
+                          scm : [$class                           : 'GitSCM',
+                                 branches                         : [[name: '*/develop']],
+                                 doGenerateSubmoduleConfigurations: false,
+                                 extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                                     [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
+                stage(testiserverinKannanLuonti) {
+                    ajaTestiserverinKanta(testiserverinKannanLuonti)
+                }
+            }
+            dir('CI') {
+                checkout([poll: false,
+                          scm : [$class                           : 'GitSCM',
+                                 branches                         : [[name: '*/master']],
+                                 doGenerateSubmoduleConfigurations: false,
+                                 extensions                       : [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
+                /*
+                 * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+                 */
+
+                stage(testiserverinAppLuonti) {
+                    ajaTestiserverinApp(testiserverinAppLuonti, jenkinsinBuildNumber)
+                }
+            }
+
+            dir('E2E') {
+                checkout([poll: false,
+                          scm : [$class                           : 'GitSCM',
+                                 branches                         : [[name: '*/develop']],
+                                 doGenerateSubmoduleConfigurations: false,
+                                 extensions                       : [],
+                                 submoduleCfg                     : [],
+                                 userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]]])
+
+                /*
+                 * E2E TESTIT
+                 */
+                stage(e2eTestit) {
+                    ajaE2ETestit(e2eTestitTuotanto)
+                }
             }
         }
-    }
 
-    dir('E2E') {
-        resolveScm([source: [$class: 'GitSCMSource',
-                             credentialsId: '',
-                             id: '_',
-                             remote: params.HARJA_E2E_URL,
-                             traits: [[$class: 'BranchDiscoveryTrait']]],
-                    targets: ['develop']])
-        //checkout([$class: 'GitSCM',
-        //          branches: [[name: '*/develop']],
-        //          doGenerateSubmoduleConfigurations: false,
-        //          extensions: [],
-        //          submoduleCfg: [],
-        //          userRemoteConfigs: [[url: params.HARJA_E2E_URL]]])
+        dir('Harja') {
+            checkout([poll: true,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/develop']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                                 [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 
-        /*
-         * E2E TESTIT
-         */
-        stage(e2eTestit) {
-            try {
-                wrap([$class: 'Xvfb']) {
-                    retry(5) {
-                        timeout(20) {
-                            sh([script: "lein do clean, compile, test2junit"])
+            /*
+             * TUOTANTOSERVERIKANNAN LUOMINEN
+             */
+            stage(tuotantoserverinKannanLuonti) {
+                try {
+                    // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+                    // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+                    // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
+                    configFileProvider([configFile(fileId: 'Flyway_tuotantoserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+                        withCredentials([usernamePassword(credentialsId: 'TUOTANTOPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                            // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
+                            sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                                    " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                         }
                     }
+                    hoidaMahdollisenErrorinKorjaantuminen(tuotantoserverinKannanLuonti, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
+                } catch (e) {
+                    hoidaErrori(e.getMessage(), tuotantoserverinKannanLuonti, "Pipeline hajosi tuotantoserverin kannan luomiseen")
                 }
-                junit([testResults: 'test2junit/xml/*.xml'])
-                if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == e2eTestit) {
-                    slackSend([color  : 'good',
-                               message: 'E2E-testit normalisoitui'])
-                }
-            } catch (e) {
-                env.FAILED_STAGE = e2eTestit
-                junit([testResults: 'test2junit/xml/*.xml'])
-                slackSend([color  : 'warning',
-                           message: 'Pipeline hajosi: E2E-testit epäonnistuivat'])
-                error([message: "E2E-testit epäonnistuivat"])
             }
         }
+
+        dir('CI') {
+            /*
+             * TUOTANTO SERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+            checkout([poll: false,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/master']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
+
+            stage(tuotantoserverinAppLuonti) {
+                try {
+                    slackSend([color  : 'good',
+                               message: 'Aloitetaan tuotanto deployment'])
+                    ansiblePlaybook([installation: 'ansible 1.9.1',
+                                     inventory   : 'inventory/production',
+                                     playbook    : 'playbooks/production.yml',
+                                     extraVars   : [
+                                             jenkins_build_number: jenkinsinBuildNumber
+                                     ]])
+                    hoidaMahdollisenErrorinKorjaantuminen(tuotantoserverinAppLuonti, "Pipeline ei enää hajoa tuotantoserverin appiksen luomiseen")
+                    slackSend([color  : 'good',
+                               message: 'Tuotanto deployment onnistui'])
+                } catch (e) {
+                    hoidaErrori(e.getMessage(), tuotantoserverinAppLuonti, "Pipeline hajosi tuotantoserverin appiksen luomiseen")
+                }
+            }
+        }
+
+        /*
+         * SIIVOTAAN WORKSPACE
+         */
+
+        //stage('Siivoa workspace') {
+        //    cleanWs()
+        //}
+        // Jos ei ajeta tuotantoa, niin ajetaan sitten kaikki muut
+
+        // Pitää wrapata koko pipeline tämmöisen funktion taakse, koska git polling plugarissa on bugi JENKINS-30350
+        // ja lisäksi se pollailee kaikkia repoja JENKINS-41674.
+    } else if (muutosTapahtuiHarjaan(kaynnistaja.trim())) {
+        // Mitkä staget ajetaan
+        Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
+        Boolean jarJaTestitAjetaan = ["Kaikki", "JAR ja testit"].contains(STAGE_ETIAPAIN)
+        Boolean testiserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
+        Boolean testiserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN)
+        Boolean e2eTestitAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN)
+        Boolean stagingserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+        Boolean stagingserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+
+        dir('Harja') {
+            checkout([poll: true,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/develop']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                                 [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
+            /*
+             * TESTIKANNAN LUOMINEN
+             */
+
+            stage(testikannanLuonti) {
+                if (testikannanLuontiAjetaan) {
+                    try {
+                        sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
+                        hoidaMahdollisenErrorinKorjaantuminen(testikannanLuonti, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
+                    } catch (e) {
+                        hoidaErrori(e.getMessage(), testikannanLuonti, "Pipeline hajosi Jenkinsin testikannan luomiseen")
+                    }
+                }
+            }
+
+            /*
+             * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
+             */
+
+            stage(jarJaTestit) {
+                if (jarJaTestitAjetaan) {
+                    try {
+                        // Luo API docsit
+                        sh([script: "sh Jenkins/skriptit/luo-API-docsit.sh"])
+                        // Luo jarri ja aja testit
+                        sh([script: "lein tuotanto"])
+                        // Säilötään se jarri
+                        archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
+                        hoidaMahdollisenErrorinKorjaantuminen(jarJaTestit, "Pipeline ei enää hajoa testien ajamiseen/JAR:in luomiseen")
+                    } catch (e) {
+                        String muutokset = changeSets2String()
+                        mail([from   : params.LAHETTAJA_SPOSTI,
+                              replyTo: '',
+                              to     : params.VASTAANOTTAJAT_SPOSTI,
+                              cc     : '',
+                              bcc    : '',
+                              subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
+                              body   : "Build: ${env.BUILD_URL}\n" + muutokset])
+                        hoidaErrori(e.getMessage(), jarJaTestit, "Pipeline hajosi testien ajamiseen/JAR:in luomiseen")
+                    } finally {
+                        // Testitulokset
+                        junit([testResults: 'test2junit/xml/*.xml'])
+                    }
+                }
+            }
+
+            /*
+             * TESTISERVERIKANNAN LUOMINEN
+             */
+
+            stage(testiserverinKannanLuonti) {
+                if (testiserverinKannanLuontiAjetaan) {
+                    ajaTestiserverinKanta(testiserverinKannanLuonti)
+                }
+            }
+        }
+
+        if (params.ARCHIVE_BUILD_NUMBER) {
+            slackSend([color  : '#3232ff',
+                       message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER])
+            jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
+        } else {
+            jenkinsinBuildNumber = currentBuild.number
+        }
+        if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+            slackSend([color  : 'warning',
+                       message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
+            error([message: "JAR:ia ei löytynyt halutulla numerolla"])
+        }
+
+        dir('CI') {
+            checkout([poll: false,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/master']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
+            /*
+             * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+
+            stage(testiserverinAppLuonti) {
+                if (testiserverinAppLuontiAjetaan) {
+                    ajaTestiserverinApp(testiserverinAppLuonti, jenkinsinBuildNumber)
+                }
+            }
+        }
+
+        dir('E2E') {
+            checkout([poll: false,
+                      scm : [$class                           : 'GitSCM',
+                             branches                         : [[name: '*/develop']],
+                             doGenerateSubmoduleConfigurations: false,
+                             extensions                       : [],
+                             submoduleCfg                     : [],
+                             userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]]])
+
+            /*
+             * E2E TESTIT
+             */
+            stage(e2eTestit) {
+                if (e2eTestitAjetaan) {
+                    ajaE2ETestit(e2eTestit)
+                }
+            }
+        }
+
+        dir('Harja') {
+            /*
+             * STAGESERVERIKANNAN LUOMINEN
+             */
+
+            stage(stagingserverinKannanLuonti) {
+                if (stagingserverinKannanLuontiAjetaan) {
+                    try {
+                        // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+                        // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+                        // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
+                        configFileProvider([configFile(fileId: 'Flyway_stagingserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+                            withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
+                                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                                        " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                            }
+                        }
+                        hoidaMahdollisenErrorinKorjaantuminen(stagingserverinKannanLuonti, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
+                    } catch (e) {
+                        hoidaErrori(e.getMessage(), stagingserverinKannanLuonti, "Pipeline hajosi stagingserverin kannan luomiseen")
+                    }
+                }
+            }
+        }
+
+        dir('CI') {
+            /*
+             * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+
+            stage(stagingserverinAppLuonti) {
+                if (stagingserverinAppLuontiAjetaan) {
+                    try {
+                        ansiblePlaybook([installation: 'ansible 1.9.1',
+                                         inventory   : 'inventory/staging',
+                                         playbook    : 'playbooks/staging.yml',
+                                         extraVars   : [
+                                                 jenkins_build_number: jenkinsinBuildNumber
+                                         ]])
+                        hoidaMahdollisenErrorinKorjaantuminen(stagingserverinAppLuonti, "Pipeline ei enää hajoa stagingserverin appiksen luomiseen")
+                    } catch (e) {
+                        hoidaErrori(e.getMessage(), stagingserverinAppLuonti, "Pipeline hajosi stagingserverin appiksen luomiseen")
+                    }
+                }
+            }
+        }
+
+        /*
+         * SIIVOTAAN WORKSPACE
+         */
+
+        //stage('Siivoa workspace') {
+        //   cleanWs()
+        //}
     }
+}
 
-    /*
-     * SIIVOTAAN WORKSPACE
-     */
-
-    stage('Siivoa workspace') {
-        cleanWs()
+def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti = 'Pipeline korjaantui') {
+    // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
+    if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == stageNimi) {
+        slackSend([color  : 'good',
+                   message: viesti])
     }
-  // Harja-e2e
-    // build env
-      // Xvfb
-      // abort if stuck 20min tries 2
-    // build
-      // do clean, compile, test2junit
-    // After
-      // JUnit
-      // Retry 5min delay, 3 failed tries
-      // Slack on fail and back to normal
-  // harja-staging-db
-  // harja-staging-app
-    // General
-      // keep builds for 7 days
-  // harja-prod-db
-    // harja-prod-app
-    // ajetaan?
-    // 7am arkisin
-    // slack kun build start, faiure, success, back to normal
-    // API Docsit pitää laittaa jossain väli
+}
 
+def hoidaErrori(eViesti, stageNimi, viesti = 'Pipelinessä tapahtui poikkeus') {
+    env.FAILED_STAGE = stageNimi
+    def virheKoodi
+    try {
+        virheKoodi = (eViesti =~ /code (\d+)/)[0][1]
+    } catch (e) {
+        virheKoodi = null
+    }
+    // Ei lähetetä viestiä Slackiin, jos käyttäjä on perunut buildin.
+    if (virheKoodi != "143") {
+        slackSend([color  : 'warning',
+                   message: viesti])
+    }
+    error([message: stageNimi + " epäonnistui."])
 }
 
 @NonCPS
-def changeSets2String(muutokset) {
-    println "MUUTOKSET: " + muutokset
+def changeSets2String() {
+    def muutokset = currentBuild.changeSets
     def teksti = ""
     for (ChangeLogSet muutos : muutokset) {
-        println "MUUTOS: " + muutos
-        println "KIND: " + muutos.getKind()
-        println "ITEMS: " + muutos.getItems()
-        for (Object kentta : muutos.getItems()) {
-            println "KENTTÄ: " + kentta
-            teksti = teksti + "[" + muutos.author + "] " + muutos.msg + "\n"
+        for (GitChangeSet kentta : muutos.getItems()) {
+            def tekija
+            def viesti
+            try {
+                tekija = kentta.getAuthor()
+            } catch (e) {
+                tekija = "Unknown"
+            }
+            try {
+                viesti = kentta.getMsg()
+            } catch (e) {
+                viesti = "Unkown"
+            }
+            teksti = teksti + "[" + tekija + "] " + viesti + "\n"
         }
     }
-    return sb.toString()
+    return teksti
 }
 
 def onkoTiedostoOlemassa(absolutePath) {
     loytyikoTiedosto = sh([script      : "[ -f " + absolutePath + " ]",
                            returnStatus: true])
     return loytyikoTiedosto == 0
+}
+
+def hyvaksyttyPolku(polku) {
+    // Elikkä git pollaus pollailee kaikkia tässä filussa checkoutattuihin repoihin.
+    // Määrritellään tässä, että kun muutos tapahtuu jossain tietyssä polussa, niin ajetaan
+    // putki vain silloin.
+    def hyvaksytytPolut = ["src/", "resources/", "Jenkins/", "test/", "tietokanta/"]
+    def eiHyvaksytytPolut = ["src/harja/e2e/"]
+    def hyvaksyttyPolkub = false
+    for (String hp : hyvaksytytPolut) {
+        def hpr = "^" + hp.replaceAll(~/\//, "\\\\/")
+        def hpm = (polku =~ ~hpr)
+        if (hpm.getCount() != 0) {
+            for (String ehp : eiHyvaksytytPolut) {
+                def ehpr = "^" + ehp.replaceAll(~/\//, "\\\\/")
+                def ehpm = (polku =~ ~ehpr)
+                if (ehpm.getCount() != 0) {
+                    return false
+                }
+            }
+            hyvaksyttyPolkub = true
+        }
+    }
+    return hyvaksyttyPolkub
+}
+
+@NonCPS
+def muutosTapahtuiHarjaan(kaynnistaja) {
+    println "KÄYNNISTÄJÄ: " + kaynnistaja
+    def muutokset = currentBuild.changeSets
+    println "MUUTOKSET: " + muutokset
+    println "TYHYJÄ: " + muutokset.isEmpty()
+    println kaynnistaja == "SCMTrigger"
+    // Onko pollaus lauennu turhan takia
+    if (muutokset.isEmpty() && kaynnistaja == "SCMTrigger") {
+        return false
+    } else if (muutokset.isEmpty()) {
+        // Tämä tarkoittaa sitä, että joku käyttäjä on käynyt painamassa erikseen sitä nappia, että työ pitäs käynistää
+        println "Käyttäjä triggeröi"
+        return true
+    } else {
+        // Tarkistetaan polku
+        for (ChangeLogSet muutos : muutokset) {
+            for (GitChangeSet kentta : muutos.getItems()) {
+                def polut
+                try {
+                    polut = kentta.getAffectedPaths()
+                } catch (e) {
+                    continue
+                }
+                for (String polku : polut) {
+                    if (hyvaksyttyPolku(polku)) {
+                        println "HYVÄKSYTTY POLKU: " + polku
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+}
+
+def buildNumberinEnv(buildNumber, envNimi) {
+    def build = currentBuild
+    try {
+        while (build.number != buildNumber) {
+            build = build.previousBuild
+        }
+    } catch (e) {
+        error([message: "Oikean build numberin (" + buildNumber + ") etsiminen epäonnistui."])
+    }
+    return build.buildVariables."$envNimi"
+}
+
+def ajaTestiserverinKanta(stagenNimi) {
+    try {
+        // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+        // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+        // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
+        configFileProvider([configFile(fileId: 'Flyway_testiserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+            withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                        " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+            }
+        }
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
+    } catch (e) {
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen")
+    }
+}
+
+def ajaTestiserverinApp(stagenNimi, buildNumber) {
+    try {
+        ansiblePlaybook([installation: 'ansible 1.9.1',
+                         inventory   : 'inventory/testing',
+                         playbook    : 'playbooks/nightly.yml',
+                         extraVars   : [
+                                 jenkins_build_number: buildNumber
+                         ]])
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
+    } catch (e) {
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
+    }
+}
+
+def ajaE2ETestit(stagenNimi) {
+    try {
+        wrap([$class: 'Xvfb']) {
+            retry(5) {
+                timeout(20) {
+                    sh([script: "lein do clean, compile, test2junit"])
+                }
+            }
+        }
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa E2E testeihin")
+        env.E2E_ONNISTUI = true
+    } catch (e) {
+        env.E2E_ONNISTUI = false
+        hoidaErrori(stagenNimi, "Pipeline hajosi E2E testeihin")
+    } finally {
+        junit([testResults: 'test2junit/xml/*.xml'])
+    }
 }
