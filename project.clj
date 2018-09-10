@@ -43,7 +43,8 @@
                  [org.clojure/core.cache "0.6.5"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "42.1.4"]
+                 ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
+                 [org.postgresql/postgresql "42.2.5"]
                  ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [webjure/postgis-jdbc "2.1.7"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
