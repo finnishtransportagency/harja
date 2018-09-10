@@ -17,17 +17,12 @@
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-(defonce valitun-kanavakohteen-id (atom nil))
-
 (def kanavakohteet
   (reaction<!
     [urakka @nav/valittu-urakka]
     (when (and urakka
                (urakka/kanavaurakka? urakka))
       (k/post! :hae-urakan-kohteet {::urakka/id (:id urakka)}))))
-
-;; TODO: kanavaurakan kohde
-;; TODO: reaction-writable - huono pattern
 
 (def kanavakohteet-mukaanlukien-poistetut
   (reaction<!
@@ -36,13 +31,9 @@
                (urakka/kanavaurakka? urakka))
       (k/post! :hae-kaikki-urakan-kohteet (:id urakka)))))
 
-(defonce valittu-kohde
-         (reaction-writable
-           (let [id @valitun-kanavakohteen-id ;; vai pitäikö olla @valittu-kohde-atom
-                 kohteet @kanavakohteet-mukaanlukien-poistetut]
-             (or (and id (first (filter #(= (:id %) id) kohteet)))
-                 (first kohteet)))))
+(defonce valittu-kohde (atom
+                         (when @kanavakohteet-mukaanlukien-poistetut
+                           (first @kanavakohteet-mukaanlukien-poistetut))))
 
-;; TODO: toimiiko, tarviiko muuta?
 (defn valitse-kohde! [{id :id :as kohde}]
   (reset! valittu-kohde kohde))

@@ -301,8 +301,6 @@
       (komp/watcher u/valittu-toimenpideinstanssi
                     (fn [_ _ tpi]
                       (aseta-tpi tpi)))
-      (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
-
       (fn [_ _]
         @u/valittu-toimenpideinstanssi
         [valinnat/urakan-toimenpide+kaikki]))))
@@ -316,8 +314,6 @@
       (komp/watcher u/valittu-tehtava
                     (fn [_ _ tpk]
                       (aseta-tpk tpk)))
-      (komp/piirretty #(reset! u/valittu-tehtava {:t4_nimi "Kaikki"}))
-
       (fn [_ _]
         @u/valittu-tehtava
         [valinnat/urakan-tehtava+kaikki]))))
@@ -331,8 +327,6 @@
       (komp/watcher ku/valittu-kohde
                     (fn [_ _ kohde]
                       (aseta-kohde kohde)))
-      (komp/piirretty #(reset! ku/valittu-kohde {:harja.domain.kanavat.kohde/nimi "Kaikki"}))
-
       (fn [_ _]
         @ku/valittu-kohde
         [valinnat/kanavaurakan-kohde+kaikki]))))
