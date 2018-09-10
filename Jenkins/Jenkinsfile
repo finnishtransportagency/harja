@@ -436,30 +436,6 @@ def onkoTiedostoOlemassa(absolutePath) {
     return loytyikoTiedosto == 0
 }
 
-def hyvaksyttyPolku(polku) {
-    // Elikkä git pollaus pollailee kaikkia tässä filussa checkoutattuihin repoihin.
-    // Määrritellään tässä, että kun muutos tapahtuu jossain tietyssä polussa, niin ajetaan
-    // putki vain silloin.
-    // Nämä polut täytyy kirjoittaa tässä jo regex hyväksyttävään muotoon, koska replaceAll ei ole
-    // hyväksytty funktio Jenkinsissä
-    def hyvaksytytPolut = ["src\\/", "resources\\/", "Jenkins\\/", "test\\/", "tietokanta\\/"]
-    def eiHyvaksytytPolut = ["src\\/harja\\/e2e\\/"]
-    def hyvaksyttyPolkub = false
-    for (String hp : hyvaksytytPolut) {
-        def hpr = "^" + hp + ".*"
-        if (polku ==~ ~hpr) {
-            for (String ehp : eiHyvaksytytPolut) {
-                def ehpr = "^" + ehp + ".*"
-                if (polku ==~ ~ehpr) {
-                    return false
-                }
-            }
-            hyvaksyttyPolkub = true
-        }
-    }
-    return hyvaksyttyPolkub
-}
-
 @NonCPS
 def muutosTapahtuiHarjaan(kaynnistaja) {
     println "KÄYNNISTÄJÄ: " + kaynnistaja
@@ -468,33 +444,7 @@ def muutosTapahtuiHarjaan(kaynnistaja) {
     println "TYHYJÄ: " + muutokset.isEmpty()
     println kaynnistaja == "SCMTrigger"
     // Onko pollaus lauennu turhan takia
-    if (muutokset.isEmpty() && kaynnistaja == "SCMTrigger") {
-        return false
-    } else if (muutokset.isEmpty()) {
-        // Tämä tarkoittaa sitä, että joku käyttäjä on käynyt painamassa erikseen sitä nappia, että työ pitäs käynistää
-        println "Käyttäjä triggeröi"
-        return true
-    } else {
-        // Tarkistetaan polku
-        for (ChangeLogSet muutos : muutokset) {
-            for (GitChangeSet kentta : muutos.getItems()) {
-                def polut
-                try {
-                    polut = kentta.getAffectedPaths()
-                } catch (e) {
-                    continue
-                }
-                for (String polku : polut) {
-                    println "POLKU: " + polku
-                    if (hyvaksyttyPolku(polku)) {
-                        println "HYVÄKSYTTY POLKU: " + polku
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
+    return !(muutokset.isEmpty() && kaynnistaja == "SCMTrigger")
 }
 
 def buildNumberinEnv(buildNumber, envNimi) {
