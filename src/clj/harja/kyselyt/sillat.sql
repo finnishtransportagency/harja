@@ -23,6 +23,7 @@ SET tyyppi          = :tyyppi,
     lakkautuspvm    = :lakkautuspvm,
     muutospvm       = :muutospvm,
     status          = :status,
+    trex_oid        = :trex-oid,
     urakat          = (SELECT array_agg(a) ::INT[] || '{}' ::INT[] FROM unnest(ARRAY[:urakat] ::INT[]) a WHERE a IS NOT NULL),
     muokattu        = CURRENT_TIMESTAMP,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
