@@ -42,7 +42,10 @@
             :yha-id (z/xml1-> alikohde :yha-id z/text xml/parsi-kokonaisluku)
             :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
             :tunnus (z/xml1-> alikohde :tunnus z/text)
-            :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)))
+            :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)
+            :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
+            :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
+            :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)))
         (z/xml-> alikohteet :alikohde)))
 
 (defn kasittele-kohdetyyppi [tyyppi]
@@ -60,9 +63,6 @@
                     :yllapitokohdetyotyyppi (z/xml1-> kohde :kohdetyotyyppi z/text keyword)
                     :nimi (z/xml1-> kohde :nimi z/text)
                     :tunnus (z/xml1-> kohde :tunnus z/text)
-                    :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
-                    :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
-                    :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)
                     :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> kohde :tierekisteriosoitevali))
                     :alikohteet (lue-alikohteet (z/xml1-> kohde :alikohteet))))
         (z/xml-> data :kohteet :kohde)))
