@@ -43,9 +43,9 @@
             :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
             :tunnus (z/xml1-> alikohde :tunnus z/text)
             :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)
-            :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
-            :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
-            :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)))
+            :yllapitoluokka (z/xml1-> alikohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
+            :keskimaarainen-vuorokausiliikenne (z/xml1-> alikohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
+            :nykyinen-paallyste (z/xml1-> alikohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)))
         (z/xml-> alikohteet :alikohde)))
 
 (defn kasittele-kohdetyyppi [tyyppi]
