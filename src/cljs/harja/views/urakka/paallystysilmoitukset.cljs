@@ -630,6 +630,16 @@
                      :validoi [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
                      :tasaa :oikea
                      :kokonaisluku? true}
+                    {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero :leveys 10
+                     :pituus-max 256
+                     :validoi [[:ei-tyhja "Ajorata puuttuu"] #_tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
+                    {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero :leveys 10
+                     :pituus-max 256
+                     :validoi [[:ei-tyhja "Kaista puuttuu"] #_tr-validaattori]
+                     :tasaa :oikea
+                     :kokonaisluku? true}
                     {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
                      :pituus-max 256
                      :validoi [[:ei-tyhja "Alkuosa puuttuu"] #_tr-validaattori]

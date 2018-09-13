@@ -105,9 +105,6 @@
 
 (defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
-                                                          yllapitoluokka
-                                                          keskimaarainen-vuorokausiliikenne
-                                                          nykyinen-paallyste
                                                           nimi] :as kohde}]
   (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
   (let [kohde (yha-q/luo-yllapitokohde<!
@@ -118,22 +115,18 @@
                  :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                  :tr_loppuosa (:losa tierekisteriosoitevali)
                  :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                 :tr_ajorata (:ajorata tierekisteriosoitevali)
-                 :tr_kaista (:kaista tierekisteriosoitevali)
                  :tunnus tunnus
                  :yhaid yha-id
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)
                  :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
-                 :yllapitoluokka yllapitoluokka
-                 :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                 :nykyinen_paallyste nykyinen-paallyste
                  :nimi nimi
                  :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
                  :yha_kohdenumero yha-kohdenumero
                  :kohdenumero yha-kohdenumero})]
     (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})
     (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-kustannustaulu<! db {:yllapitokohde (:id kohde)})
-    (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
+    (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus
+                    yllapitoluokka nykyinen-paallyste keskimaarainen-vuorokausiliikenne] :as alikohde} alikohteet]
       (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
       (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
                             db
@@ -147,6 +140,9 @@
                              :tr_loppuetaisyys (:let tierekisteriosoitevali)
                              :tr_ajorata (:ajorata tierekisteriosoitevali)
                              :tr_kaista (:kaista tierekisteriosoitevali)
+                             :yllapitoluokka yllapitoluokka
+                             :nykyinen_paallyste nykyinen-paallyste
+                             :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                              :yhaid yha-id})]))))
 
 (defn- lisaa-kohteisiin-validointitiedot [db kohteet]
