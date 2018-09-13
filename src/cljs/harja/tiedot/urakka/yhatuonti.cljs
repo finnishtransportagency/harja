@@ -71,7 +71,10 @@
 (defn alikohteen-lopun-tunnus [kohde alikohde]
   (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-loppu"))
 
-(defn rakenna-tieosoitteet [kohteet]
+(defn rakenna-tieosoitteet
+  "Harjassa tuetaan vielä molempia malleja, kun vanhoissa YHA:n tiedoissa ajorata ilmoitettiin
+   kohteen alla eikä alikohteella. Uudessa mallissa ajorata on alikohteella."
+  [kohteet]
   (into []
         (mapcat (fn [kohde]
                   (let [tr (:tierekisteriosoitevali kohde)]
