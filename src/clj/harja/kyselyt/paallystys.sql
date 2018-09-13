@@ -16,7 +16,6 @@ SELECT
   ypkk.kaasuindeksi,
   lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
-  lahetysvirhe,
   takuupvm,
   pi.muokattu
 FROM yllapitokohde ypk

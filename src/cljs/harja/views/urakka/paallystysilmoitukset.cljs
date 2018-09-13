@@ -865,7 +865,7 @@
         [:span.tila-lahetetty
          (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
         [:span.tila-virhe
-         (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
+         (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
       [:span "Ei lähetetty"])))
 
 (defn- yha-lahetykset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
