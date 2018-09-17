@@ -49,8 +49,8 @@
      [:Products
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
-                 :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm)
-                 :finish                (.replace (str (pvm/lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm loppupvm 3)) "00:00:00.000Z" "17:00:00")
+                 :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm) ;esim. 2005-10-01T00:00:00
+                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja (pvm/vuoden-viim-pvm (pvm/vuosi loppupvm))) "00:00:00" "17:00:00") ; sovittu että aina lähetetään vuoden viimeinen päivä
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
