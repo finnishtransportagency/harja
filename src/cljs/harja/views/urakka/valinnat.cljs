@@ -144,9 +144,6 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
-(defn urakan-tehtava []
-  (valinnat/urakan-tehtava u/urakan-tehtavat u/valittu-tehtava u/valitse-tehtava!))
-
 ;; Tämä on neljännen tason toimenpiteille, jotka ovat muutoshintaisia
 (defn urakan-tehtava+kaikki []
   (valinnat/urakan-tehtava

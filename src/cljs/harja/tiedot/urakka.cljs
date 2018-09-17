@@ -68,14 +68,9 @@
                                 (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                        (urakan-toimenpiteet/hae-urakan-tehtavat urakka-id))))
 
-(defonce valitun-tehtavan-koodi (atom nil))
-
-(defonce valittu-tehtava
-         (reaction-writable
-           (let [koodi @valitun-tehtavan-koodi
-                 toimenpidekoodit @urakan-tehtavat]
-             (or (and koodi (first (filter #(= (:t4_id %) koodi) toimenpidekoodit)))
-                 (first toimenpidekoodit)))))
+(defonce valittu-tehtava (atom
+                           (when @urakan-tehtavat
+                             (first @urakan-tehtavat))))
 
 (defn- urakan-toimenpideinstanssi-avaimella [avain arvo]
   (first (filter #(= arvo (avain %)) @urakan-toimenpideinstanssit)))
@@ -102,19 +97,9 @@
           (valitse-toimenpideinstanssi-koodilla! nil))
         (valitse-toimenpideinstanssi-koodilla! koodi))))
 
-(defn valitse-tehtava-koodilla!
-  [koodi]
-  (reset! valitun-tehtavan-koodi koodi))
 
 (defn valitse-tehtava! [{koodi :t4_id :as tpk}]
-  (if-not koodi
-    ;; Kooditon erikoisvalinta, kuten "Kaikki" tai "Muut"
-    (reset! valittu-tehtava tpk)
-    (do (when (and (nil? (:t4_id @valittu-tehtava))
-                   (= koodi @valitun-tehtavan-koodi))
-          (valitse-tehtava-koodilla! nil))
-        (valitse-tehtava-koodilla! koodi))))
-
+  (reset! valittu-tehtava tpk))
 
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
