@@ -22,9 +22,7 @@
         "aosa": 1,
         "aet": 1,
         "losa": 3,
-        "let": 5,
-        "ajr": 1,
-        "kaista": 1
+        "let": 5
       },
       "alikohteet": [
         {
@@ -107,7 +105,9 @@
             "aosa": 1,
             "aet": 1,
             "losa": 3,
-            "let": 5
+            "let": 5,
+            "ajr": 1,
+            "kaista": 1
           },
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1,
