@@ -135,13 +135,13 @@
                                                               (if (:siltatarkastuksia? vaara-urakka)
                                                                 (do
                                                                   (log/debug "Silta väärässä urakassa"
-                                                                                                 (str "Siltaan " (:silta-taulun-id vaara-urakka)
-                                                                                                      " on merkattu väärä urakka " (:urakka-id vaara-urakka)
+                                                                                                 (str "Siltaan " (:silta-taulun-id vaara-urakka) " (trex-oid: " trex-oid ")"
+                                                                                                      " on merkattu väärä urakka " (:urakka-id vaara-urakka) " (alueurakka: " alueurakka ")"
                                                                                                       "! :bridge_at_night:|||"
                                                                                                       "Silta on urakan " urakka-id " vastuulla"))
                                                                   (logita-virhe-sillan-tuonnissa db "Silta väärässä urakassa"
-                                                                                                 (str "Siltaan " (:silta-taulun-id  vaara-urakka)
-                                                                                                      " on merkattu väärä urakka " (:urakka-id vaara-urakka)
+                                                                                                 (str "Siltaan " (:silta-taulun-id  vaara-urakka) " (trex-oid: " trex-oid ")"
+                                                                                                      " on merkattu väärä urakka " (:urakka-id vaara-urakka) " (alueurakka: " alueurakka ")"
                                                                                                       "! :bridge_at_night:|||"
                                                                                                       "Silta on urakan " urakka-id " vastuulla"))
                                                                   (:urakka-id vaara-urakka))
