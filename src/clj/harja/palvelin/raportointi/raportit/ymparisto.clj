@@ -20,6 +20,11 @@
   [db parametrit]
   (into []
         (comp (map konv/alaviiva->rakenne)
+              (map #(assoc % :luokka
+                             (if (and (:luokka %)
+                                      (pvm/ennen? (:kk %) hoitoluokat/thoitolk-koodiston-muutospvm))
+                               (hoitoluokat/vanha-thoitolk-uuteen (:luokka %))
+                               (:luokka %))))
               (map #(update-in % [:kk]
                                (fn [pvm]
                                  (when pvm
@@ -287,13 +292,14 @@
                                                                   :yksikko (:yksikko materiaali)
                                                                   :desimaalien-maara 2}])]))}]
 
-            ;; Mahdolliset hoitoluokkakohtaiset rivit
+             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
-                   (let [rivit (if urakoittain?
+                   (let [rivit (if (or urakoittain? (= konteksti :urakka))
                                  rivit
                                  ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
-                                 [(assoc (first rivit) :maara
-                                                       (reduce + 0 (keep :maara rivit)))])
+                                 (map
+                                   #(assoc (first (val %)) :maara (reduce + 0 (keep :maara (val %))))
+                                   (group-by :kk rivit)))
                          kk-arvot (into {}
                                         (map (juxt :kk #(do
                                                           [:arvo-ja-yksikko {:arvo (:maara %)
