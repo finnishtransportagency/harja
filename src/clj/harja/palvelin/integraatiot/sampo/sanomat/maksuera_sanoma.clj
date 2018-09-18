@@ -49,8 +49,11 @@
      [:Products
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
-                 :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm) ;esim. 2005-10-01T00:00:00
-                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja (pvm/vuoden-viim-pvm (pvm/vuosi loppupvm))) "00:00:00" "17:00:00") ; sovittu että aina lähetetään vuoden viimeinen päivä
+                 :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm)
+                 ;; Taloushallinnon kanssa on sovittu, että maksuerän loppupäivämäärä eli viimeisen maksuerän
+                 ;; päivämäärä on urakan viimeisen vuoden viimeinen päivä. Pätee kaikkiin urakkatyyppeihin.
+                 ;; Maksuerä kestää saattaa kestää siis yli toimenpideinstanssin elinkaaren ja yli projektin elinkaaren. (ks. Product :finish alla)
+                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja (pvm/vuoden-viim-pvm (pvm/vuosi loppupvm))) "00:00:00" "17:00:00")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
@@ -88,10 +91,6 @@
                                            :objectCode         "vv_invoice_receipt"
                                            :instanceCode       instance-code}
                                 (custom-information {"code"                 instance-code
-
-                                                         ;; Taloushallinnon kanssa on sovittu, että maksuerän loppupäivämäärä eli viimeisen maksuerän
-                                                         ;; päivämäärä on 3 kk urakan päättymisen jälkeen (30.9. => 31.12).
-                                                         ;; Maksuerä kestää siis yli toimenpideinstanssin elinkaaren. (ks. Product :finish yllä)
                                                          "vv_payment_date"      (pvm/aika-iso8601-ilman-millisekunteja (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
