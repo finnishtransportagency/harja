@@ -157,8 +157,8 @@
                                            [] urakkatiedot)
                                    urakka-id))
                            (do
-                             (log/debug "Kaikkia siltaan " (:silta-taulun-id vaara-urakka) " virheellisesti liitettyjä urakoita (" (mapv :urakka-id vaarat-urakat) ") ei saatu poistettua sillasta. "
-                                        "Urakat väärässä sillassa on: " urakat-vaarassa-sillassa ". Ei lisätä oikeaa urakkaa listaan.")
+                             (log/debug "Kaikkia käsiteltyyn siltaan virheellisesti liitettyjä urakoita (" (mapv :urakka-id vaarat-urakat) ") ei saatu poistettua sillan tiedoista. "
+                                        "Väärät urakat sillassa on: " urakat-vaarassa-sillassa ". Ei lisätä oikeaa urakkaa listaan.")
                              (reduce (fn [urakat {urakka-id :urakka-id}]
                                        (if (poistetut-urakat urakka-id)
                                          urakat (conj urakat urakka-id)))
@@ -193,8 +193,10 @@
 
     ; Silta_id on vanhan Siltarekisterin tunniste, nykyinen Taitorakennerekisteri yksilöi trex-oid-tiedolla. Silta_id voi siis jatkossa puuttua sillalta.
     ; Siltanumero on molempien id:n kanssa relevantti => Otetaan aineistoon mukaan vain sillat, joissa siltanumero on annettu.
+    ; Jos sekä siltaid että trex-oid puuttuvat, ei viedä siltaa kantaan.
 
-    (when-not (nil? siltanumero)
+    (when-not (or (nil? siltanumero)
+                  (and (nil? siltaid) (nil? trex-oid)))
       (if (some #(= % alueurakka) kunnan-numerot)
         (kasittele-kunnalle-kuuluva-silta db urakkatiedot sql-parametrit)
         (if-not (empty? urakkatiedot)
