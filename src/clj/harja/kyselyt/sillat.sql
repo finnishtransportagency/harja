@@ -28,7 +28,8 @@ SET tyyppi          = :tyyppi,
     muokattu        = CURRENT_TIMESTAMP,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
-      (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid);
+      (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
+      ((:siltatunnus ::TEXT IS NOT NULL AND s.siltatunnus = :siltatunnus) AND (:siltanimi ::TEXT IS NOT NULL AND s.siltanimi = :siltanimi));
 
 -- name: hae-sillan-tiedot
 SELECT
@@ -43,7 +44,7 @@ FROM silta s
   LEFT OUTER JOIN urakka u ON ARRAY[u.id] :: INT[] <@ s.urakat
 WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
       (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
-      ((:siltatunnus ::TEXT IS NOT NULL AND s.siltatunnus = :siltatunnus) AND (:siltanimi ::TEXT IS NOT NULL AND s.siltanimi = :siltanimi))
+      ((:siltatunnus ::TEXT IS NOT NULL AND s.siltatunnus = :siltatunnus) AND (:siltanimi ::TEXT IS NOT NULL AND s.siltanimi = :siltanimi));
 
 -- name: poista-urakka-sillalta!
 UPDATE silta
