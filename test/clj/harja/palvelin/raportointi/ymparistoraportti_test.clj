@@ -518,9 +518,7 @@
           talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 3))
           talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 4))
           talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 5))
-          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 6))
-
-          ]
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 6))]
 
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani 1000M))
       (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-IsE 300M))
@@ -538,6 +536,7 @@
 
 
       (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Urakka"}
                                           {:otsikko "Materiaali"}
                                           {:otsikko "01/18"}
                                           {:otsikko "02/18"}
@@ -553,5 +552,48 @@
                                           {:otsikko "12/18"}
                                           {:otsikko "Määrä yhteensä"}
                                           {:otsikko "Tot-%"}
-                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
-      (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"}))))
+
+;; Testaa että talvihoitoluokan normalisointisproc-toimii odotetusti.
+;;Muutospvm aineistossa 2.7.2018 jonka mukaan vipu vääntyy.
+(deftest normalisoi-talvihoitoluokka
+  (let [vanha-IsE (ffirst (q "select * from normalisoi_talvihoitoluokka(0, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-IsE (ffirst (q "select * from normalisoi_talvihoitoluokka(1, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-Is (ffirst (q "select * from normalisoi_talvihoitoluokka(1, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-Is (ffirst (q "select * from normalisoi_talvihoitoluokka(2, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-I (ffirst (q "select * from normalisoi_talvihoitoluokka(2, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-I (ffirst (q "select * from normalisoi_talvihoitoluokka(3, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-Ib (ffirst (q "select * from normalisoi_talvihoitoluokka(3, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-Ib (ffirst (q "select * from normalisoi_talvihoitoluokka(4, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-TIb (ffirst (q "select * from normalisoi_talvihoitoluokka(4, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-Ic (ffirst (q "select * from normalisoi_talvihoitoluokka(5, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-II (ffirst (q "select * from normalisoi_talvihoitoluokka(5, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-II (ffirst (q "select * from normalisoi_talvihoitoluokka(6, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-III (ffirst (q "select * from normalisoi_talvihoitoluokka(6, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-III (ffirst (q "select * from normalisoi_talvihoitoluokka(7, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-K1 (ffirst (q "select * from normalisoi_talvihoitoluokka(7, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-K1 (ffirst (q "select * from normalisoi_talvihoitoluokka(9, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-K2 (ffirst (q "select * from normalisoi_talvihoitoluokka(8, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-K2 (ffirst (q "select * from normalisoi_talvihoitoluokka(10, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+
+        vanha-ei-talvihoitoa (ffirst (q "select * from normalisoi_talvihoitoluokka(9, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-ei-talvihoitoa (ffirst (q "select * from normalisoi_talvihoitoluokka(11, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+
+        vanha-III (ffirst (q "select * from normalisoi_talvihoitoluokka(6, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-III (ffirst (q "select * from normalisoi_talvihoitoluokka(7, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+
+        ei-talvihoitoluokkaa-vanha (ffirst (q "select * from normalisoi_talvihoitoluokka(null, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        ei-talvihoitoluokkaa-uusi (ffirst (q "select * from normalisoi_talvihoitoluokka(null, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        ei-talvihoitoluokkaa-outonumero (ffirst (q "select * from normalisoi_talvihoitoluokka(667, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        ]
+    (is (= vanha-IsE uusi-IsE 1) "IsE")
+    (is (= vanha-Is uusi-Is 2) "Is")
+    (is (= vanha-I uusi-I 3) "I")
+    (is (= vanha-Ib uusi-Ib 4) "Ib")
+    (is (= vanha-TIb uusi-Ic 5) "TIb")
+    (is (= vanha-II uusi-II 6) "II")
+    (is (= vanha-III uusi-III 7) "III")
+    (is (= vanha-K1 uusi-K1 9) "K1")
+    (is (= vanha-K2 uusi-K2 10) "K2")
+    (is (= vanha-ei-talvihoitoa uusi-ei-talvihoitoa 11) "ei talvihoitoa")
+    (is (= ei-talvihoitoluokkaa-vanha ei-talvihoitoluokkaa-uusi ei-talvihoitoluokkaa-outonumero 100) "ei talvihoitoluokkaa")))

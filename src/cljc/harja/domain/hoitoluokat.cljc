@@ -50,15 +50,19 @@ talvihoitoluokat
    {:nimi "Is"  :numero 2 :numero-str "2"}
    {:nimi "I"   :numero 3 :numero-str "3"}
    {:nimi "Ib"  :numero 4 :numero-str "4"}
-   {:nimi "TIb" :numero 5 :numero-str "5"}                   ;; 1.10.2019 alkaen oltava Ic!
+   {:nimi "TIb" :numero 5 :numero-str "5"} ; 1.10.2019 alkaen oltava Ic!
    {:nimi "II"  :numero 6 :numero-str "6"}
    {:nimi "III" :numero 7 :numero-str "7"}
-   {:nimi "L"  :numero 8 :numero-str "8"}
+   {:nimi "L"  :numero 8 :numero-str "8"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
    {:nimi "K1"  :numero 9 :numero-str "9"}
    {:nimi "K2"  :numero 10 :numero-str "10"}
    {:nimi "Ei talvihoitoa"  :numero 11 :numero-str "11"}
    {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
 
+(def hoitoluokkavaihtoehdot-raporteille
+  (filter #(and (not= (:numero %) 8)
+                (not= (:numero %) 11)
+                (not= (:numero %) 100)) talvihoitoluokat))
 
 (defn haluttujen-hoitoluokkien-nimet-ja-numerot [hoitoluokan-numero-set]
   (conj

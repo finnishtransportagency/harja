@@ -20,11 +20,6 @@
   [db parametrit]
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :luokka
-                             (if (and (:luokka %)
-                                      (pvm/ennen? (:kk %) hoitoluokat/thoitolk-koodiston-muutospvm))
-                               (hoitoluokat/vanha-thoitolk-uuteen (:luokka %))
-                               (:luokka %))))
               (map #(update-in % [:kk]
                                (fn [pvm]
                                  (when pvm

@@ -25,7 +25,7 @@ UNION
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  COALESCE(umkh.talvihoitoluokka, 100) AS luokka, -- Jos hoitoluokkaa ei ole, asetetaan 100 = Ei tiedossa
+  hl.hoitoluokka as luokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
@@ -34,12 +34,13 @@ SELECT
   SUM(umkh.maara) AS maara
 FROM urakka u
   JOIN urakan_materiaalin_kaytto_hoitoluokittain umkh ON u.id = umkh.urakka
+  LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(umkh.talvihoitoluokka::INTEGER, umkh.pvm) AS hoitoluokka) hl ON TRUE
   JOIN materiaalikoodi mk ON mk.id = umkh.materiaalikoodi
 WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), umkh.talvihoitoluokka
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
