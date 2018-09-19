@@ -73,9 +73,7 @@ WHERE yt.yhaid IN (:yhaidt);
 -- name: luo-yllapitokohde<!
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- tr_ajorata, tr_kaista,
- tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
- nykyinen_paallyste, nimi, vuodet)
+ tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, nimi, vuodet)
 VALUES (
   :urakka,
   (SELECT id
@@ -86,17 +84,12 @@ VALUES (
   :tr_alkuetaisyys,
   :tr_loppuosa,
   :tr_loppuetaisyys,
-  :tr_ajorata,
-  :tr_kaista,
   :tunnus,
   :yhaid,
   :yha_kohdenumero,
   :kohdenumero,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-  :yllapitoluokka,
-  :keskimaarainen_vuorokausiliikenne,
-  :nykyinen_paallyste,
   :nimi,
   :vuodet :: INTEGER []);
 
