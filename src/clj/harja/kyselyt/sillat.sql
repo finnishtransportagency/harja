@@ -29,7 +29,7 @@ SET tyyppi          = :tyyppi,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
       (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
-      ((:siltatunnus ::TEXT IS NOT NULL AND s.siltatunnus = :siltatunnus) AND (:siltanimi ::TEXT IS NOT NULL AND s.siltanimi = :siltanimi));
+      ((:tunnus ::TEXT IS NOT NULL AND siltatunnus = :tunnus) AND (:siltanimi ::TEXT IS NOT NULL AND siltanimi = :siltanimi));
 
 -- name: hae-sillan-tiedot
 SELECT
