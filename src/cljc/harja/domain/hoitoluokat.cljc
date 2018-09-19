@@ -4,43 +4,6 @@
 
 (def ei-talvihoitoluokkaa-nimi "Ei tiedossa")
 
-(def ^{:doc "Mahdolliset talvihoitoluokat. Nimi kertoo käyttöliittymässä käytetyn
-nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
-selvitettyä, se asetetaan arvoon 100. Arvolla NULL PSQL upsert ei toimisi, koska UNIQUE
-constrait vertailussa NULL arvot eivät aiheuta koskaan konfliktia."}
-  talvihoitoluokat-vanhat
-  [{:nimi "IsE"  :numero 0 :numero-str "0"}
-   {:nimi "Is"  :numero 1 :numero-str "1"}
-   {:nimi "I"   :numero 2 :numero-str "2"}
-   {:nimi "Ib"  :numero 3 :numero-str "3"}
-   {:nimi "TIb" :numero 4 :numero-str "4"}
-   {:nimi "II"  :numero 5 :numero-str "5"}
-   {:nimi "III" :numero 6 :numero-str "6"}
-   {:nimi "K1"  :numero 7 :numero-str "7"}
-   {:nimi "K2"  :numero 8 :numero-str "8"}
-   {:nimi "Ei talvihoitoa"  :numero 9 :numero-str "9"}
-   {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
-
-(def thoitolk-koodiston-muutospvm
-  (pvm/->pvm "2.7.2018"))
-
-(def talvihoitoluokka-vanha-->uusi
-  {0 1  ; Ise
-   1 2  ; Is
-   2 3  ; I
-   3 4  ; Ib
-   4 5  ; TIb -> Ic
-   5 6  ; II
-   6 7  ; III
-   7 9  ; K1
-   8 10  ; K2
-   9 11  ; Ei talvihoitoa
-   })
-
-(defn vanha-thoitolk-uuteen
-  [koodi]
-  (get talvihoitoluokka-vanha-->uusi koodi))
-
 (def ^{:doc "Talvihoitoluokat voimaan 1.10.2019 alkaen urakoissa. Tierekisteriin nämä tulivat voimaan jo 14.6.2018 ja AVA:n geometria-aineistoon 2.7.2018. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
 selvitettyä, se asetetaan arvoon 100. Arvolla NULL PSQL upsert ei toimisi, koska UNIQUE
