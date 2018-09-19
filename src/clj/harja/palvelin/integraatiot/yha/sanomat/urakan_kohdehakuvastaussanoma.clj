@@ -26,7 +26,13 @@
     {:karttapaivamaara (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
     (into {}
           (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
-          [:ajorata :kaista :aosa :aet :losa :let :tienumero])))
+          [:aosa :aet :losa :let :tienumero])))
+
+(defn lue-tierekisteriosoitevali-kaistalla-ja-ajoradalla [tierekisteriosoitevali]
+  (merge (lue-tierekisteriosoitevali tierekisteriosoitevali)
+         (into {}
+               (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
+               [:ajorata :kaista])))
 
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
@@ -40,7 +46,7 @@
   (mapv (fn [alikohde]
           (hash-map
             :yha-id (z/xml1-> alikohde :yha-id z/text xml/parsi-kokonaisluku)
-            :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
+            :tierekisteriosoitevali (lue-tierekisteriosoitevali-kaistalla-ja-ajoradalla (z/xml1-> alikohde :tierekisteriosoitevali))
             :tunnus (z/xml1-> alikohde :tunnus z/text)
             :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)
             :yllapitoluokka (z/xml1-> alikohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
