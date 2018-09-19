@@ -139,6 +139,8 @@
                                            :tr-alkuosa 1
                                            :tr-loppuetaisyys 5
                                            :tr-loppuosa 3
+                                           :tr-ajorata 1
+                                           :tr-kaista 1
                                            :verkkotyyppi 1
                                            :verkon-sijainti 1
                                            :verkon-tarkoitus 5}]
@@ -269,10 +271,10 @@
           ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
           kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
           kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
@@ -289,6 +291,8 @@
                               :tr-alkuosa 1
                               :tr-loppuetaisyys 5
                               :tr-loppuosa 3
+                              :tr-ajorata 1
+                              :tr-kaista 1
                               :verkkotyyppi 1
                               :verkon-sijainti 1
                               :verkon-tarkoitus 5}]
@@ -336,6 +340,8 @@
               :tr_loppuetaisyys 0
               :tr_loppuosa 2
               :tr_numero 20
+              :tr_ajorata 1
+              :tr_kaista 1
               :tyomenetelma nil
               :yllapitokohde 1}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
@@ -349,6 +355,8 @@
               :tr_loppuetaisyys 5
               :tr_loppuosa 3
               :tr_numero 20
+              :tr_ajorata 1
+              :tr_kaista 1
               :tyomenetelma nil
               :yllapitokohde 1}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
