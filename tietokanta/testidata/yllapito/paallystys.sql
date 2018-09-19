@@ -833,27 +833,43 @@ VALUES
   ((SELECT id
        FROM urakka
        WHERE nimi = 'Utajärven päällystysurakka'),
-      (SELECT id
-       FROM sopimus
-       WHERE urakka = (SELECT id
-                       FROM urakka
-                       WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
-      111, 'L11', 'Kaks kakonen', 'paallyste' :: yllapitokohdetyyppi,
-      'paallystys' ::yllapitokohdetyotyyppi, 13371,
-      22, 12, 4336, 12, 9477, 1, 1, NULL,
-   '{2019}'),
+   (SELECT id
+    FROM sopimus
+    WHERE urakka = (SELECT id
+                    FROM urakka
+                    WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
+   111, 'L11', 'Kaks kakonen', 'paallyste' :: yllapitokohdetyyppi,
+   'paallystys' ::yllapitokohdetyotyyppi, 13371,
+   22, 12, 4336, 12, 9477, 1, 1, NULL, '{2019}'),
   ((SELECT id
-       FROM urakka
-       WHERE nimi = 'Utajärven päällystysurakka'),
-      (SELECT id
-       FROM sopimus
-       WHERE urakka = (SELECT id
-                       FROM urakka
-                       WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
-      112, 'L12', 'Puolangalle menevä', 'paallyste' :: yllapitokohdetyyppi,
-      'paallystys' ::yllapitokohdetyotyyppi, 13372,
-      837, 1, 136, 1, 546, 1, 1, NULL,
-   '{2019}');
+    FROM urakka
+    WHERE nimi = 'Utajärven päällystysurakka'),
+   (SELECT id
+    FROM sopimus
+    WHERE urakka = (SELECT id
+                    FROM urakka
+                    WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
+   112, 'L12', 'Puolangalle menevä', 'paallyste' :: yllapitokohdetyyppi,
+   'paallystys' ::yllapitokohdetyotyyppi, 13372,
+   837, 1, 136, 1, 546, 1, 1, NULL, '{2019}');
+
+INSERT INTO yllapitokohteen_aikataulu
+(yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
+ kohde_valmis, muokkaaja, muokattu, valmis_tiemerkintaan, tiemerkinta_takaraja)
+VALUES
+  ((SELECT id
+    FROM yllapitokohde
+    WHERE nimi = 'Kaks kakonen'), '2019-05-19',
+   '2019-05-19', '2019-05-21', '2019-05-22',
+   '2019-05-23',
+   '2019-05-24', (SELECT id
+                  FROM kayttaja
+                  WHERE kayttajanimi = 'jvh'), NOW(),
+   '2019-05-21', '2019-06-04');
+
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
+                                                               FROM yllapitokohde
+                                                               WHERE nimi = 'Puolangalle menevä'));
 
 INSERT INTO yllapitokohdeosa (id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu)
 VALUES (313, (SELECT id
