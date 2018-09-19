@@ -44,14 +44,16 @@
         maksueranumero (maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
         instance-code (instance-code (:numero maksuera))]
-
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
      [:Products
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
                  :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm)
-                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja loppupvm) "00:00:00.0" "17:00:00.0")
+                 ;; Taloushallinnon kanssa on sovittu, että maksuerän loppupäivämäärä eli viimeisen maksuerän
+                 ;; päivämäärä on urakan viimeisen vuoden viimeinen päivä. Pätee kaikkiin urakkatyyppeihin.
+                 ;; Maksuerä kestää saattaa kestää siis yli toimenpideinstanssin elinkaaren ja yli projektin elinkaaren. (ks. Product :finish alla)
+                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja (pvm/vuoden-viim-pvm (pvm/vuosi loppupvm))) "00:00:00" "17:00:00")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
@@ -89,8 +91,6 @@
                                            :objectCode         "vv_invoice_receipt"
                                            :instanceCode       instance-code}
                                 (custom-information {"code"                 instance-code
-                                                         ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
-                                                         ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
                                                          "vv_payment_date"      (pvm/aika-iso8601-ilman-millisekunteja (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
