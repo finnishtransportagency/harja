@@ -16,7 +16,6 @@ FROM toteuma t
   LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
   LEFT JOIN LATERAL unnest(rp.tehtavat) AS rt ON TRUE
   LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(rp.talvihoitoluokka::INTEGER, t.alkanut::TIMESTAMP) AS hoitoluokka) hl ON TRUE
-
 WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR t.urakka IN (SELECT id
                                                               FROM urakka
