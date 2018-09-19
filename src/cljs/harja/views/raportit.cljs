@@ -457,7 +457,7 @@
   (komp/luo
     (komp/sisaan #(reset! arvo {:hoitoluokat (or (get @muistetut-parametrit :hoitoluokat)
                                                  (into #{}
-                                                       (map :numero hoitoluokat/talvihoitoluokat)))}))
+                                                       (map :numero hoitoluokat/hoitoluokkavaihtoehdot-raporteille)))}))
     (fn [p arvo]
       [:div.hoitoluokat
        [yleiset/otsikolla "Hoitoluokat"
