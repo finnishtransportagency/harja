@@ -45,7 +45,7 @@
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 10 1))
-                                              :hoitoluokat  #{0 1 2 3 4 5 6 8 7}
+                                              :hoitoluokat  #{1 2 3 4 5 6 7 9 10}
                                               :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2014-2019, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
@@ -105,7 +105,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 10 1))
-                                                      :hoitoluokat  #{0 1 2 3 4 5 6 8 7}
+                                                      :hoitoluokat  #{1 2 3 4 5 6 7 9 10}
                                                       :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
@@ -190,7 +190,7 @@
                                  :konteksti  "koko maa"
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 12 31))
-                                              :hoitoluokat  #{0 1 2 3 4 5 6 8 7}
+                                              :hoitoluokat  #{1 2 3 4 5 6 7 9 10}
                                               :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "KOKO MAA, Toimenpidekilometrit ajalta 01.01.2014 - 31.12.2015")]
     (is (vector? vastaus))
