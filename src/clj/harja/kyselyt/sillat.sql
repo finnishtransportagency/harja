@@ -11,13 +11,11 @@ VALUES
 -- name: paivita-silta!
 UPDATE silta
 SET tyyppi          = :tyyppi,
-    siltanro        = :siltanro,
     siltanimi       = :siltanimi,
     alue            = ST_GeomFromText(:geometria) :: GEOMETRY,
     tr_numero       = :numero,
     tr_alkuosa      = :aosa,
     tr_alkuetaisyys = :aet,
-    siltatunnus     = :tunnus,
     siltaid         = :siltaid,
     loppupvm        = :loppupvm,
     lakkautuspvm    = :lakkautuspvm,
@@ -28,8 +26,8 @@ SET tyyppi          = :tyyppi,
     muokattu        = CURRENT_TIMESTAMP,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
-      (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
-      ((:tunnus ::TEXT IS NOT NULL AND siltatunnus = :tunnus) AND (:siltanimi ::TEXT IS NOT NULL AND siltanimi = :siltanimi));
+      (trex_oid IS NULL AND :siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
+      (trex_oid IS NULL AND siltaid IS NULL AND (:tunnus ::TEXT IS NOT NULL AND siltatunnus = :tunnus) AND (:siltanimi ::TEXT IS NOT NULL AND siltanimi = :siltanimi));
 
 -- name: hae-sillan-tiedot
 SELECT
@@ -43,8 +41,8 @@ SELECT
 FROM silta s
   LEFT OUTER JOIN urakka u ON ARRAY[u.id] :: INT[] <@ s.urakat
 WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
-      (:siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
-      ((:siltatunnus ::TEXT IS NOT NULL AND s.siltatunnus = :siltatunnus) AND (:siltanimi ::TEXT IS NOT NULL AND s.siltanimi = :siltanimi));
+      (trex_oid IS NULL AND :siltaid ::INT IS NOT NULL AND siltaid = :siltaid) OR
+      (trex_oid IS NULL AND siltaid IS NULL AND (:siltatunnus ::TEXT IS NOT NULL AND siltatunnus = :siltatunnus) AND (:siltanimi ::TEXT IS NOT NULL AND siltanimi = :siltanimi));
 
 -- name: poista-urakka-sillalta!
 UPDATE silta
