@@ -457,7 +457,7 @@
   (komp/luo
     (komp/sisaan #(reset! arvo {:hoitoluokat (or (get @muistetut-parametrit :hoitoluokat)
                                                  (into #{}
-                                                       (map :numero hoitoluokat/talvihoitoluokat)))}))
+                                                       (map :numero hoitoluokat/hoitoluokkavaihtoehdot-raporteille)))}))
     (fn [p arvo]
       [:div.hoitoluokat
        [yleiset/otsikolla "Hoitoluokat"
@@ -465,7 +465,7 @@
               valitut (:hoitoluokat arvo-nyt)]
           (vec (concat
                  [yleiset/rivi {:koko "col-sm-2"}]
-                 (for [sarake (partition 3 hoitoluokat/talvihoitoluokat)]
+                 (for [sarake (partition 3 hoitoluokat/hoitoluokkavaihtoehdot-raporteille)]
                    ^{:key (:numero (first sarake))}
                    [:div.inline
                     (for [{:keys [nimi numero]} sarake
