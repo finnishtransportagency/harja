@@ -134,11 +134,6 @@
                                                             (for [vaara-urakka vaarat-urakat]
                                                               (if (:siltatarkastuksia? vaara-urakka)
                                                                 (do
-                                                                  (log/debug "Silta väärässä urakassa"
-                                                                                                 (str "Siltaan " (:silta-taulun-id vaara-urakka) " (trex-oid: " trex-oid ")"
-                                                                                                      " on merkattu väärä urakka " (:urakka-id vaara-urakka) " (alueurakka: " alueurakka ")"
-                                                                                                      "! :bridge_at_night:|||"
-                                                                                                      "Silta on urakan " urakka-id " vastuulla"))
                                                                   (logita-virhe-sillan-tuonnissa db "Silta väärässä urakassa"
                                                                                                  (str "Siltaan " (:silta-taulun-id  vaara-urakka) " (trex-oid: " trex-oid ")"
                                                                                                       " on merkattu väärä urakka " (:urakka-id vaara-urakka) " (alueurakka: " alueurakka ")"
@@ -150,15 +145,15 @@
                                                                   urakat-vaarassa-sillassa)]
                          (if (empty? urakat-vaarassa-sillassa)
                            (do
-                             (log/debug "Kaikki virheellisesti siltaan liitetyt urakat (" (mapv :urakka-id vaarat-urakat) ") saatiin poistettua sillan tiedoista.")
+                             (log/debug "Kaikki virheellisesti siltaan ( trex-oid:" trex-oid ", silta-id: " siltaid ") liitetyt urakat (" (mapv :urakka-id vaarat-urakat) ") saatiin poistettua sillan tiedoista.")
                              (conj (reduce (fn [urakat {urakka-id :urakka-id}]
                                              (if (poistetut-urakat urakka-id)
                                                urakat (conj urakat urakka-id)))
                                            [] urakkatiedot)
                                    urakka-id))
                            (do
-                             (log/debug "Kaikkia käsiteltyyn siltaan virheellisesti liitettyjä urakoita (" (mapv :urakka-id vaarat-urakat) ") ei saatu poistettua sillan tiedoista. "
-                                        "Väärät urakat sillassa on: " urakat-vaarassa-sillassa ". Ei lisätä oikeaa urakkaa listaan.")
+                             (log/debug "Kaikkia käsiteltyyn siltaan ( trex-oid:" trex-oid ", silta-id: " siltaid ") virheellisesti liitettyjä urakoita (" urakat-vaarassa-sillassa ") ei saatu poistettua sillan tiedoista. "
+                                        "Ei lisätä oikeaa urakkaa ( alueurakka:" alueurakka ", urakka: " urakka-id ") listaan. Siltaan virheellisesti liitetyt urakat olivat poistetut mukaan lukien: " (mapv :urakka-id vaarat-urakat))
                              (reduce (fn [urakat {urakka-id :urakka-id}]
                                        (if (poistetut-urakat urakka-id)
                                          urakat (conj urakat urakka-id)))
@@ -211,8 +206,8 @@
 (defn voimassaolevat-sillat
   "Silta on voimassa, kun sillä on osuus, jossa ei ole asetettu lopetus- eikä lakkautuspäivämäärää.
   Jos silta ei ole voimassa, se on purettu, sillä liikennöinti on lakkautettu tai sen ylläpito on siirretty pois valtiolta.
-  Harjan kannalta ei-voimassaoleva silta on poistettu.
-  Funktio palauttaa vektorin, jossa poistettavien siltojen trex-oid (yksilöivä tunnus)."
+  Harjan kannalta ei-voimassaoleva silta on sama kuin poistettu.
+  Funktio palauttaa vektorin, jossa poistettavien siltojen trex-oid (yksilöivä tunnus Taitorakennerekisterissä)."
   [kaikki-sillat]
         (map #(:trex_oid %)
              (filter #(and
