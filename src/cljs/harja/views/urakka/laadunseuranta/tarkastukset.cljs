@@ -387,7 +387,7 @@
             :nimi :tr
             :pakollinen? true
             :ala-nayta-virhetta-komponentissa? true
-            :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+            :varoita [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
             :sijainti (r/wrap (:sijainti tarkastus)
                               #(swap! tarkastus-atom assoc :sijainti %))})
 
