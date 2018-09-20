@@ -259,11 +259,8 @@
     (schema/optional-key :pitoisuus) (schema/maybe schema/Num)
     (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
-(def paallystysilmoitus-alustatoimet
-  [{:tr-numero schema/Int
-    :tr-ajorata schema/Int
-    :tr-kaista schema/Int
-    :tr-alkuosa schema/Int
+(def paallystysilmoitus-alustatoimet-vanha
+  [{:tr-alkuosa schema/Int
     :tr-alkuetaisyys schema/Int
     :tr-loppuosa schema/Int
     :tr-loppuetaisyys schema/Int
@@ -275,15 +272,27 @@
     (schema/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+
     (schema/optional-key :poistettu) schema/Bool}])
 
+(def paallystysilmoitus-alustatoimet
+  (->> paallystysilmoitus-alustatoimet-vanha
+       first
+       (merge {:tr-numero schema/Int
+               :tr-ajorata schema/Int
+               :tr-kaista schema/Int})
+       vector))
+
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
+  {:osoitteet paallystysilmoitus-osoitteet
+   :alustatoimet paallystysilmoitus-alustatoimet})
+
+(def +vanha-paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet paallystysilmoitus-osoitteet
 
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet paallystysilmoitus-alustatoimet})
+   :alustatoimet paallystysilmoitus-alustatoimet-vanha})
 
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]

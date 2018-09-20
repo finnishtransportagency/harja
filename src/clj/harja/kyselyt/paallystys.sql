@@ -48,6 +48,7 @@ SELECT
   ypk.nimi                      AS kohdenimi,
   ypk.tunnus,
   ypk.kohdenumero,
+  ypk.vuodet,
   ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
