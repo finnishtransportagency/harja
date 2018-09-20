@@ -288,8 +288,6 @@
           oulu-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 5))
           oulu-talvisuola-luokka-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 6))]
 
-      ;; Assertoidaan että hoitoluokittaiset määrät natsaavat, POP Elyllä oltava
-      ;; tämän testidatan mukaisesti kaksinkertaiset määrät kuin Oululla tai Kajaanilla yksin
       (is (= pop-ely-talvisuola-luokka-IsE 600M))
       (is (= pop-ely-talvisuola-luokka-Is 400M))
       (is (= pop-ely-talvisuola-luokka-I 400M))
@@ -320,3 +318,282 @@
                                           {:otsikko "Tot-%"}
                                           {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-pop-ely tarkistusfunktio))))
+
+
+(deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-oulu
+  (let [vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :suorita-raportti
+                                     +kayttaja-jvh+
+                                     {:nimi               :ymparistoraportti
+                                      :konteksti          "urakka"
+                                      :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                      :parametrit         {:alkupvm     (pvm/->pvm "1.1.2018")
+                                                           :loppupvm     (pvm/->pvm "31.12.2018")
+                                                           :urakkatyyppi :hoito}})]
+
+    (is (vector? vastaus-oulu))
+    (let [otsikko-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+          taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
+          oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 1))
+          oulu-talvisuola-luokka-IsE-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 2))
+          oulu-talvisuola-luokka-Is-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 3))
+          oulu-talvisuola-luokka-I-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 4))
+          oulu-talvisuola-luokka-Ib-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 5))
+          oulu-talvisuola-luokka-TIb-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 6))
+          oulu-talvisuola-luokka-II-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 7))
+          oulu-talvisuola-luokka-III-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 8))
+          oulu-talvisuola-luokka-L-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 9))
+          oulu-talvisuola-luokka-K1-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 10))
+          oulu-talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 11))
+          oulu-talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 12))
+
+          oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 1))
+          oulu-talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 2))
+          oulu-talvisuola-luokka-Is-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 3))
+          oulu-talvisuola-luokka-I-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 4))
+          oulu-talvisuola-luokka-Ib-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 5))
+          oulu-talvisuola-luokka-TIb-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 6))
+          oulu-talvisuola-luokka-II-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 7))
+          oulu-talvisuola-luokka-III-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 8))
+          oulu-talvisuola-luokka-L-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 9))
+          oulu-talvisuola-luokka-K1-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 10))
+          oulu-talvisuola-luokka-K2-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 11))
+          oulu-talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 12))]
+
+      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 1500M))
+      (is (= oulu-talvisuola-luokka-IsE-02-18 300M))
+      (is (= oulu-talvisuola-luokka-Is-02-18 200M))
+      (is (= oulu-talvisuola-luokka-I-02-18 200M))
+      (is (= oulu-talvisuola-luokka-Ib-02-18 200M))
+      (is (= oulu-talvisuola-luokka-TIb-02-18 100M))
+      (is (= oulu-talvisuola-luokka-II-02-18 100M))
+      (is (= oulu-talvisuola-luokka-III-02-18 100M))
+      (is (nil? oulu-talvisuola-luokka-L-02-18))
+      (is (= oulu-talvisuola-luokka-K1-02-18 100M))
+      (is (= oulu-talvisuola-luokka-K2-02-18 100M))
+      (is (= oulu-talvisuola-luokka-ei-talvih-02-18 100M))
+
+      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
+      (is (= oulu-talvisuola-luokka-IsE-10-18 100M))
+      (is (= oulu-talvisuola-luokka-Is-10-18 100M))
+      (is (= oulu-talvisuola-luokka-I-10-18 100M))
+      (is (= oulu-talvisuola-luokka-Ib-10-18 100M))
+      (is (= oulu-talvisuola-luokka-TIb-10-18 100M))
+      (is (= oulu-talvisuola-luokka-II-10-18 100M))
+      (is (= oulu-talvisuola-luokka-III-10-18 100M))
+      (is (= oulu-talvisuola-luokka-L-10-18 100M))
+      (is (= oulu-talvisuola-luokka-K1-10-18 100M))
+      (is (= oulu-talvisuola-luokka-K2-10-18 100M))
+      (is (= oulu-talvisuola-luokka-ei-talvih-10-18 100M))
+
+      (apurit/tarkista-taulukko-sarakkeet taulukko-oulu
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "01/18"}
+                                          {:otsikko "02/18"}
+                                          {:otsikko "03/18"}
+                                          {:otsikko "04/18"}
+                                          {:otsikko "05/18"}
+                                          {:otsikko "06/18"}
+                                          {:otsikko "07/18"}
+                                          {:otsikko "08/18"}
+                                          {:otsikko "09/18"}
+                                          {:otsikko "10/18"}
+                                          {:otsikko "11/18"}
+                                          {:otsikko "12/18"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
+
+
+(deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-ei-urakoittain
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :suorita-raportti
+                                     +kayttaja-jvh+
+                                     {:nimi               :ymparistoraportti
+                                      :konteksti          "hallintayksikko"
+                                      :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                      :parametrit         {:alkupvm     (pvm/->pvm "1.1.2018")
+                                                           :loppupvm     (pvm/->pvm "31.12.2018")
+                                                           :urakkatyyppi :hoito
+                                                           :urakoittain? false}})]
+
+    (is (vector? vastaus))
+    (let [otsikko "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+          talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 1))
+          talvisuola-luokka-IsE-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 2))
+          talvisuola-luokka-Is-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 3))
+          talvisuola-luokka-I-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 4))
+          talvisuola-luokka-Ib-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 5))
+          talvisuola-luokka-TIb-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 6))
+          talvisuola-luokka-II-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 7))
+          talvisuola-luokka-III-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 8))
+          talvisuola-luokka-L-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 9))
+          talvisuola-luokka-K1-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 10))
+          talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 11))
+          talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 2 12))
+
+          talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 1))
+          talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 2))
+          talvisuola-luokka-Is-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 3))
+          talvisuola-luokka-I-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 4))
+          talvisuola-luokka-Ib-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 5))
+          talvisuola-luokka-TIb-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 6))
+          talvisuola-luokka-II-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 7))
+          talvisuola-luokka-III-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 8))
+          talvisuola-luokka-L-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 9))
+          talvisuola-luokka-K1-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 10))
+          talvisuola-luokka-K2-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 11))
+          talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 10 12))]
+
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18 2500M))
+      (is (= talvisuola-luokka-IsE-02-18 600M))
+      (is (= talvisuola-luokka-Is-02-18 400M))
+      (is (= talvisuola-luokka-I-02-18 400M))
+      (is (= talvisuola-luokka-Ib-02-18 400M))
+      (is (= talvisuola-luokka-TIb-02-18 200M))
+      (is (= talvisuola-luokka-II-02-18 100M))
+      (is (= talvisuola-luokka-III-02-18 100M))
+      (is (nil? talvisuola-luokka-L-02-18))
+      (is (= talvisuola-luokka-K1-02-18 100M))
+      (is (= talvisuola-luokka-K2-02-18 100M))
+      (is (= talvisuola-luokka-ei-talvih-02-18 100M))
+
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
+      (is (= talvisuola-luokka-IsE-10-18 100M))
+      (is (= talvisuola-luokka-Is-10-18 100M))
+      (is (= talvisuola-luokka-I-10-18 100M))
+      (is (= talvisuola-luokka-Ib-10-18 100M))
+      (is (= talvisuola-luokka-TIb-10-18 100M))
+      (is (= talvisuola-luokka-II-10-18 100M))
+      (is (= talvisuola-luokka-III-10-18 100M))
+      (is (= talvisuola-luokka-L-10-18 100M))
+      (is (= talvisuola-luokka-K1-10-18 100M))
+      (is (= talvisuola-luokka-K2-10-18 100M))
+      (is (= talvisuola-luokka-ei-talvih-10-18 100M))
+
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "01/18"}
+                                          {:otsikko "02/18"}
+                                          {:otsikko "03/18"}
+                                          {:otsikko "04/18"}
+                                          {:otsikko "05/18"}
+                                          {:otsikko "06/18"}
+                                          {:otsikko "07/18"}
+                                          {:otsikko "08/18"}
+                                          {:otsikko "09/18"}
+                                          {:otsikko "10/18"}
+                                          {:otsikko "11/18"}
+                                          {:otsikko "12/18"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
+
+(deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-urakoittain
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi               :ymparistoraportti
+                                 :konteksti          "hallintayksikko"
+                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :parametrit         {:alkupvm     (pvm/->pvm "1.1.2018")
+                                                      :loppupvm     (pvm/->pvm "31.12.2018")
+                                                      :urakkatyyppi :hoito
+                                                      :urakoittain? true}})]
+
+    (is (vector? vastaus))
+    (let [otsikko "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 1))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 2))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 3))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 4))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 5))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 6))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 7))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 2))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 3))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 4))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 5))
+          talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 6))]
+
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani 1000M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-IsE 300M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-Is 200M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-I 200M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-Ib 200M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-kajaani-TIb 100M))
+
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu 1500M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-IsE 300M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Is 200M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-I 200M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-Ib 200M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18-oulu-TIb 100M))
+
+
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Urakka"}
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "01/18"}
+                                          {:otsikko "02/18"}
+                                          {:otsikko "03/18"}
+                                          {:otsikko "04/18"}
+                                          {:otsikko "05/18"}
+                                          {:otsikko "06/18"}
+                                          {:otsikko "07/18"}
+                                          {:otsikko "08/18"}
+                                          {:otsikko "09/18"}
+                                          {:otsikko "10/18"}
+                                          {:otsikko "11/18"}
+                                          {:otsikko "12/18"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"}))))
+
+;; Testaa että talvihoitoluokan normalisointisproc-toimii odotetusti.
+;;Muutospvm aineistossa 2.7.2018 jonka mukaan vipu vääntyy.
+(deftest normalisoi-talvihoitoluokka
+  (let [vanha-IsE (ffirst (q "select * from normalisoi_talvihoitoluokka(0, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-IsE (ffirst (q "select * from normalisoi_talvihoitoluokka(1, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-Is (ffirst (q "select * from normalisoi_talvihoitoluokka(1, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-Is (ffirst (q "select * from normalisoi_talvihoitoluokka(2, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-I (ffirst (q "select * from normalisoi_talvihoitoluokka(2, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-I (ffirst (q "select * from normalisoi_talvihoitoluokka(3, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-Ib (ffirst (q "select * from normalisoi_talvihoitoluokka(3, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-Ib (ffirst (q "select * from normalisoi_talvihoitoluokka(4, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-TIb (ffirst (q "select * from normalisoi_talvihoitoluokka(4, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-Ic (ffirst (q "select * from normalisoi_talvihoitoluokka(5, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-II (ffirst (q "select * from normalisoi_talvihoitoluokka(5, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-II (ffirst (q "select * from normalisoi_talvihoitoluokka(6, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-III (ffirst (q "select * from normalisoi_talvihoitoluokka(6, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-III (ffirst (q "select * from normalisoi_talvihoitoluokka(7, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-K1 (ffirst (q "select * from normalisoi_talvihoitoluokka(7, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-K1 (ffirst (q "select * from normalisoi_talvihoitoluokka(9, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        vanha-K2 (ffirst (q "select * from normalisoi_talvihoitoluokka(8, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-K2 (ffirst (q "select * from normalisoi_talvihoitoluokka(10, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+
+        vanha-ei-talvihoitoa (ffirst (q "select * from normalisoi_talvihoitoluokka(9, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-ei-talvihoitoa (ffirst (q "select * from normalisoi_talvihoitoluokka(11, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+
+        vanha-III (ffirst (q "select * from normalisoi_talvihoitoluokka(6, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        uusi-III (ffirst (q "select * from normalisoi_talvihoitoluokka(7, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+
+        ei-talvihoitoluokkaa-vanha (ffirst (q "select * from normalisoi_talvihoitoluokka(null, '2017-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        ei-talvihoitoluokkaa-uusi (ffirst (q "select * from normalisoi_talvihoitoluokka(null, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        ei-talvihoitoluokkaa-outonumero (ffirst (q "select * from normalisoi_talvihoitoluokka(667, '2018-07-3T09:42:04.123-00:00'::TIMESTAMP);"))
+        ]
+    (is (= vanha-IsE uusi-IsE 1) "IsE")
+    (is (= vanha-Is uusi-Is 2) "Is")
+    (is (= vanha-I uusi-I 3) "I")
+    (is (= vanha-Ib uusi-Ib 4) "Ib")
+    (is (= vanha-TIb uusi-Ic 5) "TIb")
+    (is (= vanha-II uusi-II 6) "II")
+    (is (= vanha-III uusi-III 7) "III")
+    (is (= vanha-K1 uusi-K1 9) "K1")
+    (is (= vanha-K2 uusi-K2 10) "K2")
+    (is (= vanha-ei-talvihoitoa uusi-ei-talvihoitoa 11) "ei talvihoitoa")
+    (is (= ei-talvihoitoluokkaa-vanha ei-talvihoitoluokkaa-uusi ei-talvihoitoluokkaa-outonumero 100) "ei talvihoitoluokkaa")))

@@ -46,9 +46,10 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        hoitoluokat (or hoitoluokat
-                        ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
-                        (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat))
+        hoitoluokat (apply sorted-set
+                           (or hoitoluokat
+                               ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
+                               (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat)))
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat-domain/talvihoitoluokat)
         naytettavat-alueet (yleinen/naytettavat-alueet db konteksti
                                                        {:urakka urakka-id

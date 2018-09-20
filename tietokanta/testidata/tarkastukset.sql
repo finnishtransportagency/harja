@@ -28,7 +28,7 @@ INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Ok'), '7', 6, 6, 0.5, -15, -5, 1);
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'järjestelmän raportoima testitarkastus 4'), null, 6, 6, 0.5, -15, -5, 1);
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = ''), '8', 6, 6, 0.5, -15, -5, 1);
-INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin'), 'A', 10, 5, 1, -16, -3, 1);
+INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin'), '2', 10, 5, 1, -16, -3, 1);
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'havaittiin liukkautta kovasti'), '4', 0.34, -14, -6, 1);
 
 -- Tiestö

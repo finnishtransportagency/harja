@@ -40,7 +40,6 @@
                     (-> uri
                         (str/replace #"/wmts/" "/")
                         (str/replace #"/wmtslivi/" "/")))]
-    (log/info "Haetaan WMTS URL: " osoite)
     osoite))
 
 (defn- hae-karttakuva [{:keys [uri query-params] :as req}]
