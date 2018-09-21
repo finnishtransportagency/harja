@@ -129,7 +129,7 @@
         (is (= sillat-ennen sillat-jalkeen))))
 
     (testing "Siirrä silta toiseen urakkaan kun sillalle on merkattu tarkastuksia entiseen urakkaan"
-      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:trex_oid odotettu-vastaus) :siltatunnus nil :siltaid nil})))
+      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:trex_oid odotettu-vastaus) :siltatunnus nil :siltaid nil :siltanimi "Testisilta"})))
                                                :urakka (ffirst (q "SELECT id FROM urakka WHERE nimi='Aktiivinen Kajaani Testi';"))
                                                :tarkastusaika (Date.)
                                                :tarkastaja "Foo"
