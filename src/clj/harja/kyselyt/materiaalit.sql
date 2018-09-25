@@ -290,6 +290,7 @@ FROM toteuma_materiaali tm
   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
   LEFT JOIN kayttaja k ON tm.luoja = k.id
 WHERE t.urakka = :urakka
+      AND t.tyyppi = 'kokonaishintainen'
       AND tm.poistettu IS NOT TRUE
       AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
       AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI;
