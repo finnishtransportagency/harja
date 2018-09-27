@@ -220,7 +220,11 @@
                                                           (map :lisatieto toteumat)))
                                      :maara (apply + (map :maara toteumat))))
                          (keys ryhmitellyt-koneelliset))
-        kaikki (concat manuaaliset koneelliset)]
+        kaikki (reverse
+                 (sort-by :pvm
+                          (into []
+                                (map-indexed (fn [i rivi] (assoc rivi :rivinumero i)))
+                                (concat manuaaliset koneelliset))))]
     (into [] (map konv/alaviiva->rakenne kaikki))))
 
 (defn hae-suolamateriaalit [db user]
