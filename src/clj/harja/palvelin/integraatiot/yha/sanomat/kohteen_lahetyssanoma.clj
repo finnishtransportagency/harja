@@ -13,8 +13,8 @@
 (defn kasittele-kohteen-tyyppi [tyyppi]
   (case tyyppi
     "paallyste" 1
-    "sora" 2
-    "kevytliikenne" 3
+    "kevytliikenne" 2
+    "sora" 3
     1))
 
 (defn tee-tierekisteriosoitevali [osoite]
