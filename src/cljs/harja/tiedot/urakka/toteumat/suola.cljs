@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<!]]
             [reagent.ratom :refer [reaction]]
@@ -34,11 +34,7 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and hae? urakka aikavali)
                 (go
-                  (into []
-                        ;; luodaan kaikille id
-                        (map-indexed (fn [i rivi] (assoc rivi :id i)))
-
-                        (<! (hae-toteumat (:id urakka) aikavali)))))))
+                  (<! (hae-toteumat (:id urakka) aikavali))))))
 
 (defonce valitut-toteumat (atom #{}))
 

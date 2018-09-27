@@ -64,7 +64,9 @@
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
-    [urakka-valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali]
+    [urakka-valinnat/aikavali-nykypvm-taakse urakka
+     tiedot/valittu-aikavali
+     {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
     [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
                                      :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
@@ -72,6 +74,7 @@
                                      :materiaalit materiaali-nimet}]]
 
    [grid/grid {:otsikko "Talvisuolan käyttö"
+               :tunniste :rivinumero
                :tallenna (if (oikeudet/voi-kirjoittaa?
                                oikeudet/urakat-toteumat-suola
                                (:id @nav/valittu-urakka))
@@ -87,7 +90,7 @@
                :max-rivimaara 500
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
-                                   (map (juxt :id (fn [rivi] [suolankayton-paivan-erittely rivi])))
+                                   (map (juxt :rivinumero (fn [rivi] [suolankayton-paivan-erittely rivi])))
                                    @tiedot/toteumat)
                :piilota-toiminnot? true}
     [{:tyyppi :vetolaatikon-tila :leveys 1}
@@ -142,12 +145,10 @@
       (let [urakka @nav/valittu-urakka
             [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
             muokattava? (comp not true? :koneellinen)
-            listaus (reverse (sort-by :pvm
-                                      ;; Näytetään vain valittu suola
-                                      (filter (fn [{{nimi :nimi} :materiaali}]
-                                                (or (= (:suola @tiedot/suodatin-valinnat) "Kaikki")
-                                                    (= (:suola @tiedot/suodatin-valinnat) nimi)))
-                                              @tiedot/toteumat)))
+            listaus (filter (fn [{{nimi :nimi} :materiaali}]
+                              (or (= (:suola @tiedot/suodatin-valinnat) "Kaikki")
+                                  (= (:suola @tiedot/suodatin-valinnat) nimi)))
+                            @tiedot/toteumat)
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
                                             @tiedot/toteumat))
