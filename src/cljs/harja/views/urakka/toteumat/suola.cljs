@@ -64,7 +64,9 @@
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
-    [urakka-valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali]
+    [urakka-valinnat/aikavali-nykypvm-taakse urakka
+     tiedot/valittu-aikavali
+     {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
     [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
                                      :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
