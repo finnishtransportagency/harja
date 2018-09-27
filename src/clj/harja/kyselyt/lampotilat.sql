@@ -73,9 +73,10 @@ INSERT INTO pohjavesialue_talvisuola
 VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
 
 
-
 -- name: aseta-suolasakon-kaytto!
--- Insertoidaan rivi, jos urakalla ei ole suolasakkoriviä, jotta voidaan tallentaa tieto myös suolasakon käyttämättömyydestä (HAR-8311). Sama käytössä-tieto koskee kaikkia urakan hoitokausia.
+-- Insertoidaan rivi, jos urakalla ei ole suolasakkoriviä, jotta voidaan tallentaa tieto myös suolasakon käyttämättömyydestä (HAR-8311).
+-- Sama käytössä-tieto ja muut määritykset koskevat kaikkia urakan hoitokausia, vaikka hoitokausille on oma suolasakkorivinsä.
+-- Ks. myös
 INSERT INTO suolasakko (kaytossa, luotu, luoja, urakka, hoitokauden_alkuvuosi) VALUES (:kaytossa, NOW(), :kayttaja, :urakka,
                                                                                        (SELECT date_part('year', alkupvm) FROM urakka where id = :urakka))
 ON CONFLICT (urakka, hoitokauden_alkuvuosi) DO UPDATE
