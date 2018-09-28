@@ -284,7 +284,7 @@
     (kirjaa-materiaalitoteuma "2018-01-18 12:00:00.000000" "2018-01-18 12:30:00.000000" 12356789 "Talvisuolaliuos NaCl" 10)
     (kirjaa-materiaalitoteuma "2018-01-18 12:30:00.000000" "2018-01-18 13:00:00.000000" 12356710 "Talvisuolaliuos NaCl" 21)
     (kirjaa-materiaalitoteuma "2018-01-18 13:00:00.000000" "2018-01-18 13:39:00.000000" 12356711 "Talvisuola" 2)
-    
+
     (let [koneellisesti-kirjatut (kutsu-palvelua
                                    (:http-palvelin jarjestelma)
                                    :hae-suolatoteumat
@@ -301,3 +301,20 @@
 
         (is (= 1 (:lukumaara (first hcoona-kirjaukset))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
         (is (= 2M (apply + (map :maara hcoona-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")))))
+
+
+(deftest hae-suolatoteumien-tarkat-tiedot-test
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        materiaali-id (ffirst (q "SELECT id FROM materiaalikoodi where nimi = 'Hiekoitushiekka';"))
+        testidatasta (kutsu-palvelua
+                       (:http-palvelin jarjestelma)
+                       :hae-suolatoteumien-tarkat-tiedot
+                       +kayttaja-jvh+
+                       {:toteumaidt [22]
+                        :materiaali-id materiaali-id
+                        :urakka-id urakka-id})]
+    (is (boolean (some #(= (:maara %) 500M) testidatasta)))
+    (is (boolean (some #(= (:maara %) 555M) testidatasta)))
+    (is (boolean (some #(= (:tid %) 22) testidatasta)))
+    (is (= 2 (count testidatasta)))))
+

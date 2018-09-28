@@ -357,6 +357,7 @@
                      :hae-urakassa-kaytetyt-materiaalit
                      :tallenna-toteuma-materiaaleja!
                      :hae-suolatoteumat
+                     :hae-suolatoteumien-tarkat-tiedot
                      :hae-suolamateriaalit
                      :tallenna-suolatoteumat)
 
