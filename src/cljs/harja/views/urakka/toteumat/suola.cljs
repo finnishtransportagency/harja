@@ -103,7 +103,7 @@
                                                             [vetolaatikon-suolarivit rivi urakka])))
                                    @tiedot/toteumat)
                :piilota-toiminnot? true}
-    [{:tyyppi :vetolaatikon-tila :leveys 1}
+    [{:tyyppi :vetolaatikon-tila :leveys 3}
      {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30 :muokattava? muokattava?
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse materiaali"]]
