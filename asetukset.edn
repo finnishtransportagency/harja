@@ -19,16 +19,16 @@
 
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
-              :portti 7731
+              :portti 5432
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana "s_harja"}
+              :salasana ""}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
-                      :portti 7731
+                      :portti 5432
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana "s_harja"}
+                      :salasana ""}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -56,11 +56,11 @@
   :tyyppi :activemq}
 
 
- :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
-         :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
-         :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
-         :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
-         :paivittainen-lahetysaika nil}
+ ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
+ ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
+ ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
+ ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
+ ;        :paivittainen-lahetysaika nil}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
  ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
