@@ -205,27 +205,14 @@
   (log/debug "kutsutaan hae-suolatoteumat: " {:urakka urakka-id
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm})
-  (let [toteumat (q/hae-suolatoteumat db {:urakka urakka-id
-                                          :alkupvm alkupvm
-                                          :loppupvm loppupvm})
-        manuaaliset (filter #(not (:koneellinen %)) toteumat)
-        ryhmitellyt-koneelliset (group-by #(select-keys % [:materiaali_id :materiaali_nimi :pvm])
-                                          (filter :koneellinen toteumat))
-        koneelliset (map #(let [toteumat (get ryhmitellyt-koneelliset %)]
-                            (assoc % :toteumat toteumat
-                                     :koneellinen true
-                                     :lisatieto (str/join
-                                                  ", "
-                                                  (filter (fn [s] (and s (not (empty? (str/trim s)))))
-                                                          (map :lisatieto toteumat)))
-                                     :maara (apply + (map :maara toteumat))))
-                         (keys ryhmitellyt-koneelliset))
-        kaikki (reverse
-                 (sort-by :pvm
-                          (into []
-                                (map-indexed (fn [i rivi] (assoc rivi :rivinumero i)))
-                                (concat manuaaliset koneelliset))))]
-    (into [] (map konv/alaviiva->rakenne kaikki))))
+  (let [toteumat (into []
+                       (comp
+                         (map konv/alaviiva->rakenne)
+                         (map #(konv/array->vec % :toteumaidt)))
+                       (q/hae-suolatoteumien-summatiedot db {:urakka urakka-id
+                                                             :alkupvm alkupvm
+                                                             :loppupvm loppupvm}))]
+    toteumat))
 
 (defn hae-suolamateriaalit [db user]
   (oikeudet/ei-oikeustarkistusta!)

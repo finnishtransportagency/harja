@@ -109,13 +109,15 @@
       :hae #(if (muokattava? %)
               (:lisatieto %)
               (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
-                   (count (:toteumat %)) ")"))}
+                   (:lukumaara %) ")"))}
      {:otsikko ""
       :nimi :nayta-kartalla
       :tyyppi :komponentti
       :leveys 40
       :komponentti (fn [rivi]
-                     (let [toteumat (:toteumat rivi)
+                     (let [toteumat (map (fn [tid]
+                                           {:tid tid})
+                                         (:toteumaidt rivi))
                            valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
                        (when (not (empty? toteumat))
                          [:div
