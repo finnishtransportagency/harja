@@ -18,7 +18,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -34,7 +35,7 @@
   [grid/grid
    {:otsikko "Päivän toteumat"
     :tyhja "Ei päivän toteumia"
-    :tunniste :id}
+    :tunniste :tid}
    [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
@@ -56,9 +57,17 @@
                         (if (tiedot/valittu-suolatoteuma? toteuma)
                           "Piilota kartalta"
                           "Näytä kartalla"))]])}]
-   (map-indexed (fn [i toteuma]
-                  (assoc toteuma :id i))
-                (:toteumat suolan-kaytto))])
+   suolan-kaytto])
+
+(defn vetolaatikon-suolarivit [rivi urakka]
+  (let [vetolaatikon-rivit (atom nil)]
+    (go
+      (reset! vetolaatikon-rivit
+              (<! (k/post! :hae-suolatoteumien-tarkat-tiedot {:toteumaidt (:toteumaidt rivi)
+                                                              :materiaali-id (get-in rivi [:materiaali :id])
+                                                              :urakka-id (:id urakka)}))))
+    (fn [rivi urakka]
+      [suolankayton-paivan-erittely @vetolaatikon-rivit])))
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
   [:div.suolatoteumat
@@ -90,7 +99,8 @@
                :max-rivimaara 500
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
-                                   (map (juxt :rivinumero (fn [rivi] [suolankayton-paivan-erittely rivi])))
+                                   (map (juxt :rivinumero (fn [rivi]
+                                                            [vetolaatikon-suolarivit rivi urakka])))
                                    @tiedot/toteumat)
                :piilota-toiminnot? true}
     [{:tyyppi :vetolaatikon-tila :leveys 1}
@@ -119,7 +129,8 @@
                                            {:tid tid})
                                          (:toteumaidt rivi))
                            valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
-                       (when (not (empty? toteumat))
+                       (when (and (not (empty? toteumat))
+                                  (:koneellinen rivi))
                          [:div
                           [(if (valittu?)
                              :button.nappi-toissijainen.nappi-grid

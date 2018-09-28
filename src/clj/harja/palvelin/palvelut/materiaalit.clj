@@ -200,6 +200,17 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
+(defn hae-suolatoteumien-tarkat-tiedot
+  [db user {:keys [toteumaidt materiaali-id urakka-id]}]
+  (log/debug "hae-suolatoteumien-tarkat-tiedot " toteumaidt " materiaali " materiaali-id " urakkaid " urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (let [toteumat (into []
+                       (comp
+                         (map konv/alaviiva->rakenne))
+                       (q/hae-suolatoteumien-tarkat-tiedot-materiaalille db {:toteumaidt toteumaidt
+                                                                             :materiaali_id materiaali-id}))]
+    toteumat))
+
 (defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "kutsutaan hae-suolatoteumat: " {:urakka urakka-id
@@ -321,6 +332,11 @@
                       (fn [user tiedot]
                         (log/debug "hae-suolatoteumat: tiedot" tiedot)
                         (hae-suolatoteumat (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-suolatoteumien-tarkat-tiedot
+                      (fn [user tiedot]
+                        (log/debug "hae-suolatoteumien-tarkat-tiedot: " tiedot)
+                        (hae-suolatoteumien-tarkat-tiedot (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-suolamateriaalit
                       (fn [user]

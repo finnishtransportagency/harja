@@ -272,7 +272,7 @@ SELECT id
 FROM materiaalikoodi
 WHERE nimi = :nimi;
 
--- name: hae-suolatoteumien-tarkat-tiedot
+-- name: hae-suolatoteumien-tarkat-tiedot-materiaalille
 -- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
 SELECT
   tm.id                        AS tmid,
@@ -289,7 +289,7 @@ FROM toteuma_materiaali tm
   JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
   LEFT JOIN kayttaja k ON tm.luoja = k.id
-WHERE t.id IN (:toteumaidt);
+WHERE t.id IN (:toteumaidt) and mk.id = :materiaali_id;
 
 -- name: hae-suolatoteumien-summatiedot
 SELECT
