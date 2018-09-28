@@ -200,32 +200,30 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
+(defn hae-suolatoteumien-tarkat-tiedot
+  [db user {:keys [toteumaidt materiaali-id urakka-id]}]
+  (log/debug "hae-suolatoteumien-tarkat-tiedot " toteumaidt " materiaali " materiaali-id " urakkaid " urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (let [toteumat (into []
+                       (comp
+                         (map konv/alaviiva->rakenne))
+                       (q/hae-suolatoteumien-tarkat-tiedot-materiaalille db {:toteumaidt toteumaidt
+                                                                             :materiaali_id materiaali-id}))]
+    toteumat))
+
 (defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "kutsutaan hae-suolatoteumat: " {:urakka urakka-id
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm})
-  (let [toteumat (q/hae-suolatoteumat db {:urakka urakka-id
-                                          :alkupvm alkupvm
-                                          :loppupvm loppupvm})
-        manuaaliset (filter #(not (:koneellinen %)) toteumat)
-        ryhmitellyt-koneelliset (group-by #(select-keys % [:materiaali_id :materiaali_nimi :pvm])
-                                          (filter :koneellinen toteumat))
-        koneelliset (map #(let [toteumat (get ryhmitellyt-koneelliset %)]
-                            (assoc % :toteumat toteumat
-                                     :koneellinen true
-                                     :lisatieto (str/join
-                                                  ", "
-                                                  (filter (fn [s] (and s (not (empty? (str/trim s)))))
-                                                          (map :lisatieto toteumat)))
-                                     :maara (apply + (map :maara toteumat))))
-                         (keys ryhmitellyt-koneelliset))
-        kaikki (reverse
-                 (sort-by :pvm
-                          (into []
-                                (map-indexed (fn [i rivi] (assoc rivi :rivinumero i)))
-                                (concat manuaaliset koneelliset))))]
-    (into [] (map konv/alaviiva->rakenne kaikki))))
+  (let [toteumat (into []
+                       (comp
+                         (map konv/alaviiva->rakenne)
+                         (map #(konv/array->vec % :toteumaidt)))
+                       (q/hae-suolatoteumien-summatiedot db {:urakka urakka-id
+                                                             :alkupvm alkupvm
+                                                             :loppupvm loppupvm}))]
+    toteumat))
 
 (defn hae-suolamateriaalit [db user]
   (oikeudet/ei-oikeustarkistusta!)
@@ -335,6 +333,11 @@
                         (log/debug "hae-suolatoteumat: tiedot" tiedot)
                         (hae-suolatoteumat (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
+                      :hae-suolatoteumien-tarkat-tiedot
+                      (fn [user tiedot]
+                        (log/debug "hae-suolatoteumien-tarkat-tiedot: " tiedot)
+                        (hae-suolatoteumien-tarkat-tiedot (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
                       :hae-suolamateriaalit
                       (fn [user]
                         (hae-suolamateriaalit (:db this) user)))
@@ -354,6 +357,7 @@
                      :hae-urakassa-kaytetyt-materiaalit
                      :tallenna-toteuma-materiaaleja!
                      :hae-suolatoteumat
+                     :hae-suolatoteumien-tarkat-tiedot
                      :hae-suolamateriaalit
                      :tallenna-suolatoteumat)
 
