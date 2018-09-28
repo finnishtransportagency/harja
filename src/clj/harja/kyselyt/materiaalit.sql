@@ -273,7 +273,7 @@ FROM materiaalikoodi
 WHERE nimi = :nimi;
 
 -- name: hae-suolatoteumien-tarkat-tiedot-materiaalille
--- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
+-- Hakee annettujen toteumien ja materiaalikoodin tarkat tiedot
 SELECT
   tm.id                        AS tmid,
   t.id                         AS tid,
@@ -292,6 +292,7 @@ FROM toteuma_materiaali tm
 WHERE t.id IN (:toteumaidt) and mk.id = :materiaali_id;
 
 -- name: hae-suolatoteumien-summatiedot
+-- Hakee annetun aikavälin suolatoteumien summatiedot ryhmiteltynä
 SELECT
        row_number() OVER ()         AS rivinumero,
        mk.id                        AS materiaali_id,
