@@ -301,12 +301,19 @@ SELECT
        count(t.id)                  AS lukumaara,
        array_agg(t.id)              AS toteumaidt,
        (k.jarjestelma = TRUE)       AS koneellinen,
-       t.lisatieto                  AS lisatieto,
+       CASE WHEN k.jarjestelma = FALSE
+                 THEN t.lisatieto
+            ELSE NULL
+           END                                  AS lisatieto,
     -- Käsin luotuja pitää pystyä muokkaamaan, siksi niille tarvitaan toteuman id
        CASE WHEN k.jarjestelma = FALSE
                  THEN t.id
             ELSE NULL
-           END                                  AS tid
+           END                                  AS tid,
+       CASE WHEN k.jarjestelma = FALSE
+                 THEN tm.id
+            ELSE -1 -- ei tarvita koneellisille päivitystä
+           END                                  AS tmid
 FROM toteuma_materiaali tm
        JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
        JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
@@ -316,7 +323,7 @@ WHERE t.urakka = :urakka
   AND tm.poistettu IS NOT TRUE
   AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
   AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
-group by mk.id, pvm, k.jarjestelma, t.lisatieto, tid
+group by mk.id, pvm, k.jarjestelma, t.lisatieto, tid, tmid
 ORDER BY pvm DESC;
 
 -- name: hae-suolamateriaalit
