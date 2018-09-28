@@ -48,13 +48,14 @@
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Unknown operation code provided.")
              :ei-kriittinen? true
              :virheet [{:virhe "Tuntematon toimenpidekoodi (vv_operation)"}]}))
-  (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
-    (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
-             :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus
-                         viesti-id "Operation"
-                         (str "Project: " sampo-urakka-id " already has operation: " sampo-toimenpidekoodi))
-             :ei-kriittinen? true
-             :virheet [{:virhe (str "Sampon projektille (id: " sampo-urakka-id ") on jo perustettu toimenpidekoodi: " sampo-toimenpidekoodi)}]})))
+  (if (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
+    (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
+      (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
+               :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus
+                           viesti-id "Operation"
+                           (str "Project: " sampo-urakka-id " already has operation: " sampo-toimenpidekoodi))
+               :ei-kriittinen? true
+               :virheet [{:virhe (str "Sampon projektille (id: " sampo-urakka-id ") on jo perustettu toimenpidekoodi: " sampo-toimenpidekoodi)}]}))))
 
 (defn kasittele-toimenpide [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm
                                        vastuuhenkilo-id talousosasto-id

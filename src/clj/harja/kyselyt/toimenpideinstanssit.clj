@@ -10,3 +10,9 @@
 
 (defn onko-urakalla-toimenpide? [db urakkaid toimenpide]
   (:exists (first (onko-urakalla-toimenpide db urakkaid toimenpide))))
+
+(defn sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja?
+  "Jos urakkaa ei ole tuotu Harjaan, toimenpideinstansseja saa olla vain yksi.
+   Jos urakka on tuotu ja se on sopivaa kyselyssä määriteltyä urakkatyyppiä (kuten päällystys), useampi tpi on sallittu."
+  [db sampo-urakka-id]
+  (:exists (first (sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja db sampo-urakka-id))))
