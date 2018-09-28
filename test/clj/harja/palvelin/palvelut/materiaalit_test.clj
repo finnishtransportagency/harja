@@ -293,12 +293,11 @@
                                     :sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
                                     :alkupvm #inst "2018-01-01T00:00:00.000-00:00"
                                     :loppupvm #inst "2018-02-01T00:00:00.000-00:00"})]
-      (println "koneellisesti" koneellisesti-kirjatut)
       (is (= 2 (count koneellisesti-kirjatut)) "Kirjauksia löytyy 2 päivälle.")
       (let [nacl-kirjaukset (filter #(= "Talvisuolaliuos NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)
             hcoona-kirjaukset (filter #(= "Talvisuola" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
-        (is (= 2 (count (:toteumat (first nacl-kirjaukset)))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
+        (is (= 2 (:lukumaara (first nacl-kirjaukset))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
         (is (= 31M (apply + (map :maara nacl-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")
 
-        (is (= 1 (count (:toteumat (first hcoona-kirjaukset)))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
+        (is (= 1 (:lukumaara (first hcoona-kirjaukset))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
         (is (= 2M (apply + (map :maara hcoona-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")))))
