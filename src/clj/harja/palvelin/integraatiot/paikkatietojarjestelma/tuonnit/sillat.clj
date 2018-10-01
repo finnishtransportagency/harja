@@ -222,6 +222,13 @@
            (assoc silta :voimassa false))) kaikki-sillat))
 
 
+; Aineistossa tulee joskus koulutuksessa käytettyjä siltoja, poistetaan ne ennen käsittelyä.
+(defn karsi-testisillat [sillat]
+  (remove #(= true
+              (boolean
+                (re-find #"TENTTI_" (:siltanimi %))))
+          sillat))
+
 (defn karsi-voimassaolevien-siltojen-poistetut-osuudet
   "Ei viedä tietoja poistetuista osuuksista Harjaan, jos silta on vielä voimassa. Karsitaan ne aineistosta.
   Voimassa olevista osuuksista tallentuu yhden siltatietueen tiedot, vaikka osuuksia olisi useampia.
@@ -252,7 +259,7 @@
   (if shapefile
     (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
           tallennettavat-siltatietueet (jarjesta-voimassaolevat-sillat-yksittaisille-riveille
-                                     (karsi-voimassaolevien-siltojen-poistetut-osuudet siltatietueet-shapefilesta))]
+                                         (karsi-testisillat (karsi-voimassaolevien-siltojen-poistetut-osuudet siltatietueet-shapefilesta)))]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (try (jdbc/with-db-transaction [db db]
              (doseq [silta tallennettavat-siltatietueet]
