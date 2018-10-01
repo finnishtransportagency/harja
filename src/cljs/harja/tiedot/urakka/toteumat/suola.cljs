@@ -36,27 +36,31 @@
                 (go
                   (<! (hae-toteumat (:id urakka) aikavali))))))
 
-(defonce valitut-toteumat (atom #{}))
+(def valitut-toteumat (atom #{}))
 
 (defonce valitut-toteumat-kartalla
   (reaction<! [toteumat (distinct (map :tid @valitut-toteumat))
-               valittu-urakka @nav/valittu-urakka]
-              (when @nav/valittu-urakka
-                (hae-toteumien-reitit! (:id @nav/valittu-urakka) toteumat))))
+               valitun-urakan-id (:id @nav/valittu-urakka)]
+              (when valitun-urakan-id
+                (hae-toteumien-reitit! valitun-urakan-id toteumat))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
 (def karttataso-suolatoteumat (atom false))
 
-(defonce suolatoteumat-kartalla
+(def suolatoteumat-kartalla
   (reaction
     (when @karttataso-suolatoteumat
       (kartalla-esitettavaan-muotoon
-        (let [yksittaiset-toteumat (filter
+        (let [kaikki-toteumat (apply concat (map :toteumaidt @toteumat))
+              yksittaiset-toteumat (filter
                                      #(valittu-suolatoteuma? %)
-                                     (apply concat (map :toteumat @toteumat)))]
+                                     (map (fn [tid]
+                                            {:tid tid})
+                                          kaikki-toteumat))]
           (map #(assoc % :tyyppi-kartalla :suolatoteuma
-                         :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
+                         :sijainti (hae-toteuman-sijainti %))
+               yksittaiset-toteumat))
         #(constantly false)))))
 
 (defn hae-toteuman-sijainti [toteuma]
@@ -64,11 +68,11 @@
                             @valitut-toteumat-kartalla))))
 
 (defn eriteltavat-toteumat [toteumat]
-  (map #(hash-map :tid (:tid %) :materiaali_nimi (:materiaali_nimi %)) toteumat))
+  (map #(hash-map :tid (:tid %)) toteumat))
 
 (defn valittu-suolatoteuma? [toteuma]
-  (contains? @valitut-toteumat {:tid (:tid toteuma)
-                                :materiaali_nimi (:materiaali_nimi toteuma)}))
+  (some #(= (:tid toteuma) (:tid %))
+        @valitut-toteumat))
 
 (defn valitse-suolatoteumat [toteumat]
   (reset! valitut-toteumat
