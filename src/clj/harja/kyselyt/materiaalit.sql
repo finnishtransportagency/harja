@@ -272,8 +272,8 @@ SELECT id
 FROM materiaalikoodi
 WHERE nimi = :nimi;
 
--- name: hae-suolatoteumat
--- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
+-- name: hae-suolatoteumien-tarkat-tiedot-materiaalille
+-- Hakee annettujen toteumien ja materiaalikoodin tarkat tiedot
 SELECT
   tm.id                        AS tmid,
   t.id                         AS tid,
@@ -289,10 +289,43 @@ FROM toteuma_materiaali tm
   JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
   LEFT JOIN kayttaja k ON tm.luoja = k.id
+WHERE t.id IN (:toteumaidt) and mk.id = :materiaali_id;
+
+-- name: hae-suolatoteumien-summatiedot
+-- Hakee annetun aikavälin suolatoteumien summatiedot ryhmiteltynä
+SELECT
+       row_number() OVER ()         AS rivinumero,
+       mk.id                        AS materiaali_id,
+       mk.nimi                      AS materiaali_nimi,
+       date_trunc('day', t.alkanut) AS pvm,
+       sum(tm.maara)                AS maara,
+       count(t.id)                  AS lukumaara,
+       array_agg(t.id)              AS toteumaidt,
+       (k.jarjestelma = TRUE)       AS koneellinen,
+       CASE WHEN k.jarjestelma = FALSE
+                 THEN t.lisatieto
+            ELSE NULL
+           END                                  AS lisatieto,
+    -- Käsin luotuja pitää pystyä muokkaamaan, siksi niille tarvitaan toteuman id
+       CASE WHEN k.jarjestelma = FALSE
+                 THEN t.id
+            ELSE NULL
+           END                                  AS tid,
+       CASE WHEN k.jarjestelma = FALSE
+                 THEN tm.id
+            ELSE -1 -- ei tarvita koneellisille päivitystä
+           END                                  AS tmid
+FROM toteuma_materiaali tm
+       JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
+       JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+       LEFT JOIN kayttaja k ON tm.luoja = k.id
 WHERE t.urakka = :urakka
-      AND tm.poistettu IS NOT TRUE
-      AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
-      AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI;
+  AND t.tyyppi = 'kokonaishintainen'
+  AND tm.poistettu IS NOT TRUE
+  AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+  AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
+group by mk.id, pvm, k.jarjestelma, t.lisatieto, tid, tmid
+ORDER BY pvm DESC;
 
 -- name: hae-suolamateriaalit
 SELECT *

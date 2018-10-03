@@ -71,7 +71,8 @@
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
-  ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?] :as optiot}]
+  ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?
+                                    aikavalin-rajoitus] :as optiot}]
    (let [[valittu-aikavali-alku valittu-aikavali-loppu
           :as valittu-aikavali-nyt] @valittu-aikavali
          vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
@@ -125,7 +126,7 @@
                                    :valitse-fn (partial valitse urakka)}
               aikavali-valinnat]]
             (when @vapaa-aikavali?
-              [valinnat/aikavali valittu-aikavali])]))))))
+              [valinnat/aikavali valittu-aikavali {:aikavalin-rajoitus aikavalin-rajoitus}])]))))))
 
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))

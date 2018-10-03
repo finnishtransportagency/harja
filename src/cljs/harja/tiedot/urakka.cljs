@@ -504,3 +504,5 @@
          (= (:sopimustyyppi ur) :palvelusopimus))
     (and (= (:tyyppi ur) :tiemerkinta)
          (= (:sopimustyyppi ur) :palvelusopimus))))
+
+(def +toteumien-haun-aikavalin-max-pituus-kk+ 1)
