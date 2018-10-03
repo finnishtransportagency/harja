@@ -840,7 +840,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    111, 'L11', 'Ouluntie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13371,
-   22, 12, 4336, 12, 9477, 1, 1, NULL, '{2019}'),
+   22, 12, 4336, 12, 9477, NULL, NULL, NULL, '{2019}'),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -851,7 +851,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    112, 'L12', 'Kirkkotie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13372,
-   18642, 1, 13, 1, 493, 1, 1, NULL, '{2019}'),
+   18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2019}'),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -862,7 +862,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    113, 'L13', 'Puolangalle menevä', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13373,
-   837, 1, 136, 1, 546, 1, 1, NULL, '{2019}');
+   837, 1, 136, 1, 546, NULL, NULL, NULL, '{2019}');
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,

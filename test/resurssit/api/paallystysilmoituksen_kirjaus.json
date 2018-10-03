@@ -15,7 +15,7 @@
 
   "paallystysilmoitus": {
     "perustiedot": {
-      "takuupvm": "2015-02-15T12:00:00Z"
+      "takuupvm": "2020-02-15T12:00:00Z"
     },
     "yllapitokohde": {
       "sijainti": {
@@ -101,7 +101,7 @@
       {
         "alustatoimenpide": {
           "sijainti": {
-            "numero": 21,
+            "numero": 22,
             "aosa": 1,
             "aet": 1,
             "losa": 3,

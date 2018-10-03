@@ -145,33 +145,22 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn tarkista-alikohteiden-ajorata-ja-kaista
-     "Tarkistaa, että jos pääkohteelle on annettu ajorata / kaista, arvo on sama myös alikohteella."
+     "Tarkistaa, että alikohteella on ajorata ja kaista."
      [kohde-id kohteen-sijainti alikohteet]
      (let [ajorata #(or (:ajr %) (:tr-ajorata %) (:ajorata %))
            kaista #(or (:kaista %) (:tr-kaista %))
            paakohteen-ajorata (ajorata kohteen-sijainti)
            paakohteen-kaista (kaista kohteen-sijainti)]
-       (if (and paakohteen-ajorata paakohteen-kaista)
-         (mapv (fn [{:keys [tunnus tunniste sijainti]}]
-                 (if (and (some? (ajorata sijainti))
-                          (not= paakohteen-ajorata (ajorata sijainti)))
-                   (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                              (format "Alikohteen (tunniste: %s) ajorata (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
-                                      (or tunnus (:id tunniste))
-                                      (ajorata sijainti)
-                                      kohde-id
-                                      paakohteen-ajorata))
-                   (when (and
-                           (some? (kaista sijainti))
-                           (not= paakohteen-kaista (kaista sijainti)))
-                     (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                                (format "Alikohteen (tunniste: %s) kaista: (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
-                                        (or tunnus (:id tunniste))
-                                        (kaista sijainti)
-                                        kohde-id
-                                        (kaista kohteen-sijainti))))))
-               alikohteet)
-         []))))
+       (mapv (fn [{:keys [tunnus tunniste sijainti]}]
+               (when-not (and (ajorata sijainti) (kaista sijainti))
+                 (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
+                            (str "Alikohteelta (tunniste: " (or tunnus (:id tunniste)) ") puuttuu"
+                                 (apply str
+                                        (interpose ", " (keep (fn [{:keys [f nimi]}]
+                                                                (when (nil? (f sijainti))
+                                                                  nimi))
+                                                              [{:f ajorata :nimi "ajorata"} {:f kaista :nimi "kaista"}])))))))
+             alikohteet))))
 
 #?(:clj
    (defn tarkista-etteivat-alikohteet-mene-paallekkain
