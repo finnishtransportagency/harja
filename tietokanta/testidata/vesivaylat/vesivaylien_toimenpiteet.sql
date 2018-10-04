@@ -713,8 +713,8 @@ INSERT INTO vv_hinnoittelu_kommentti
 (tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
   VALUES
     ('hyvaksytty'::kommentin_tila,
-    NOW() - INTERVAL '2 months',
-     NOW() - INTERVAL '2 months',
+    '2018-07-01'::DATE - INTERVAL '2 months',
+     '2018-07-01'::DATE - INTERVAL '2 months',
      (SELECT id
       FROM kayttaja
       WHERE kayttajanimi = 'tero'),
@@ -1121,8 +1121,8 @@ VALUES
   (tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
   VALUES
     ('hyvaksytty'::kommentin_tila,
-     NOW() - INTERVAL '3 months',
-     NOW() - INTERVAL '2 months',
+     '2018-07-01'::DATE - INTERVAL '3 months',
+     '2018-07-01'::DATE - INTERVAL '2 months',
      (SELECT id
       FROM kayttaja
       WHERE kayttajanimi = 'tero'),
