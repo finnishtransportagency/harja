@@ -41,23 +41,23 @@
 (deftest tarkista-validi-kohde
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
         yksi-alikohde [{:tunnus "A"
-                        :sijainti {:aosa 1, :aet 1, :losa 4, :let 4}}]
+                        :sijainti {:aosa 1, :aet 1, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
         kaksi-alikohdetta [{:tunnus "A"
-                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
                            {:tunnus "B"
-                            :sijainti {:aosa 2, :aet 2, :losa 4, :let 4}}]
+                            :sijainti {:aosa 2, :aet 2, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
         monta-alikohdetta [{:tunnus "A"
-                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
                            {:tunnus "B"
-                            :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
+                            :sijainti {:aosa 2, :aet 2, :losa 3, :let 3 :ajorata 1 :kaista 1}}
                            {:tunnus "C"
-                            :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]
-        yksi-alustatoimenpide [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}]
-        kaksi-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                                   {:sijainti {:aosa 2, :aet 2, :losa 4, :let 4}}]
-        monta-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                                   {:sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
-                                   {:sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
+                            :sijainti {:aosa 3, :aet 3, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
+        yksi-alustatoimenpide [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}]
+        kaksi-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
+                                   {:sijainti {:aosa 2, :aet 2, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
+        monta-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
+                                   {:sijainti {:aosa 2, :aet 2, :losa 3, :let 3 :ajorata 1 :kaista 1}}
+                                   {:sijainti {:aosa 3, :aet 3, :losa 4, :let 4 :ajorata 1 :kaista 1}}]]
 
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde kaksi-alikohdetta)
@@ -69,8 +69,8 @@
 
 (deftest tarkista-alustatoimenpiteiden-validius
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
-        alustatoimenpiteet [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                            {:sijainti {:aosa 2, :aet 2, :losa 5, :let 3}}]]
+        alustatoimenpiteet [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
+                            {:sijainti {:aosa 2, :aet 2, :losa 5, :let 3 :ajorata 1 :kaista 1}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
              %

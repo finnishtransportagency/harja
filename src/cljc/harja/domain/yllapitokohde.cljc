@@ -142,25 +142,30 @@ yllapitoluokkanimi->numero
                                   kohde-id))))
            alikohteet)))
 
+#?(:clj
+   (defn tarkista-ajorata
+     [sijainti]
+     (or (:ajr sijainti) (:tr-ajorata sijainti) (:ajorata sijainti))))
+
+#?(:clj
+  (defn tarkista-kaista
+    [sijainti]
+    (or (:kaista sijainti) (:tr-kaista sijainti))))
 
 #?(:clj
    (defn tarkista-alikohteiden-ajorata-ja-kaista
      "Tarkistaa, että alikohteella on ajorata ja kaista."
-     [kohde-id kohteen-sijainti alikohteet]
-     (let [ajorata #(or (:ajr %) (:tr-ajorata %) (:ajorata %))
-           kaista #(or (:kaista %) (:tr-kaista %))
-           paakohteen-ajorata (ajorata kohteen-sijainti)
-           paakohteen-kaista (kaista kohteen-sijainti)]
-       (mapv (fn [{:keys [tunnus tunniste sijainti]}]
-               (when-not (and (ajorata sijainti) (kaista sijainti))
-                 (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                            (str "Alikohteelta (tunniste: " (or tunnus (:id tunniste)) ") puuttuu"
-                                 (apply str
-                                        (interpose ", " (keep (fn [{:keys [f nimi]}]
-                                                                (when (nil? (f sijainti))
-                                                                  nimi))
-                                                              [{:f ajorata :nimi "ajorata"} {:f kaista :nimi "kaista"}])))))))
-             alikohteet))))
+     [alikohteet]
+     (mapv (fn [{:keys [tunnus tunniste sijainti]}]
+             (when-not (and (tarkista-ajorata sijainti) (tarkista-kaista sijainti))
+               (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
+                          (str "Alikohteelta (tunniste: " (or tunnus (:id tunniste)) ") puuttuu "
+                               (apply str
+                                      (interpose ", " (keep (fn [{:keys [f nimi]}]
+                                                              (when (nil? (f sijainti))
+                                                                nimi))
+                                                            [{:f tarkista-ajorata :nimi "ajorata"} {:f tarkista-kaista :nimi "kaista"}])))))))
+           alikohteet)))
 
 #?(:clj
    (defn tarkista-etteivat-alikohteet-mene-paallekkain
@@ -210,7 +215,7 @@ yllapitoluokkanimi->numero
        (concat
          (tarkista-alikohteiden-sijainnit alikohteet)
          (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteiden-ajorata-ja-kaista kohde-id kohteen-sijainti alikohteet)
+         (tarkista-alikohteiden-ajorata-ja-kaista alikohteet)
          (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
 #?(:clj
@@ -227,9 +232,20 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn validoi-alustatoimenpide [kohde-id kohteen-sijainti sijainti]
-     (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
-       [(tee-virhe +viallinen-alustatoimenpiteen-sijainti+
-                   (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))])))
+     (let [sijainti-virheet
+           (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
+             [(tee-virhe +viallinen-alustatoimenpiteen-sijainti+
+                         (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))])
+           puutteelliset-tiedot
+           (when-not (and (tarkista-ajorata sijainti) (tarkista-kaista sijainti))
+             [(tee-virhe +viallinen-alustatoimenpiteen-sijainti+
+                         (str "Alustatoimenpiteeltä (" sijainti ") puuttuu "
+                              (apply str
+                                     (interpose ", " (keep (fn [{:keys [f nimi]}]
+                                                             (when (nil? (f sijainti))
+                                                               nimi))
+                                                           [{:f tarkista-ajorata :nimi "ajorata"} {:f tarkista-kaista :nimi "kaista"}])))))])]
+       (concat sijainti-virheet puutteelliset-tiedot))))
 
 #?(:clj (defn tarkista-alustatoimenpiteiden-sijainnit
           "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
