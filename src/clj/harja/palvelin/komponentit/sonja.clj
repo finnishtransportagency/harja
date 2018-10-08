@@ -59,10 +59,12 @@
 
 (def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
-
 (declare aloita-yhdistaminen
          yhdista-kuuntelija
          tee-jms-poikkeuskuuntelija)
+
+(defn- luo-istunto [yhteys]
+  (.createSession yhteys false Session/AUTO_ACKNOWLEDGE))
 
 (defn- poista-consumerit [{jonot :jonot :as tila}]
   (reduce (fn [tila jono]
@@ -81,7 +83,8 @@
          [[jonon-nimi kuuntelija] & kuuntelijat]
          (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]
                    (log/info (format "Yhdistetään uudestaan kuuntelijat jonoon: %s" jonon-nimi))
-                   (map (fn [k] [jonon-nimi k]) @kuuntelijat)) jonot)]
+                   (map (fn [k] [jonon-nimi k]) @kuuntelijat))
+                 jonot)]
     (if (not jonon-nimi)
       tila
       (recur (yhdista-kuuntelija tila jonon-nimi kuuntelija)
@@ -102,6 +105,7 @@
   (reify ExceptionListener
     (onException [_ e]
       (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e)))
+
       (send-off agentti yhdista-uudelleen agentti asetukset yhteys-ok?))))
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
@@ -142,13 +146,17 @@
       nil)))
 
 (defn aloita-yhdistaminen [tila asetukset poikkeuskuuntelija yhteys-ok?]
+  (println "TILA: ")
+  (clojure.pprint/pprint tila)
   (loop [aika 10000]
     (let [yhteys (yhdista asetukset poikkeuskuuntelija)]
+      (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
+                                        meta-data))
       (if yhteys
-        (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
-          (log/debug "Saatiin yhteys Sonjan JMS-brokeriin.")
+        (do
+          (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
           (reset! yhteys-ok? true)
-          (assoc tila :yhteys yhteys :istunto istunto))
+          (assoc tila :yhteys yhteys))
         (do
           (log/warn (format "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan %s millisekunnin päästä." aika))
           (Thread/sleep aika)
@@ -156,84 +164,92 @@
 
 (defn- luo-jonon-kuuntelija
   "Luo jonon kuuntelijan annetulle istunnolle."
-  [istunto jonon-nimi kasittelija]
-  (let [jono (.createQueue istunto jonon-nimi)
+  [yhteys jonon-nimi kasittelija]
+  (let [istunto (luo-istunto yhteys)
+        jono (.createQueue istunto jonon-nimi)
         consumer (.createConsumer istunto jono)
         viesti-ch (viestin-kasittelija kasittelija)]
     (log/debug (format "Luodaan jono kuuntelija jonoon: %s" jonon-nimi))
-    (thread
-      (try
-        (loop [viesti (.receive consumer)]
-          (if-not viesti
-            (log/info (format "JMS jonon: %s consumer suljettu. Lopetetaan kuuntelu." jonon-nimi))
-            (do
-              (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
-              (try
-                (>!! viesti-ch viesti)
-                (catch Exception e
-                  (log/warn e (str "Viestin käsittelijä heitti poikkeuksen, jono: " jonon-nimi))))
-              (recur (.receive consumer)))))
-        (catch Exception e
-          (log/warn e (str "Virhe Sonja kuuntelijassa, jono: " jonon-nimi)))))
-    consumer))
+    (try
+      (loop [viesti (.receive consumer)]
+        (if-not viesti
+          (log/info (format "JMS jonon: %s consumer suljettu. Lopetetaan kuuntelu." jonon-nimi))
+          (do
+            (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
+            (try
+              (>!! viesti-ch viesti)
+              (catch Exception e
+                (log/warn e (str "Viestin käsittelijä heitti poikkeuksen, jono: " jonon-nimi))))
+            (recur (.receive consumer)))))
+      (catch Exception e
+        (log/warn e (str "Virhe Sonja kuuntelijassa, jono: " jonon-nimi))))
+    istunto))
 
 (defn- varmista-jono
   "Varmistaa, että nimetylle jonolle on luotu Queue instanssi. Palauttaa jonon."
-  [istunto jonot jonon-nimi]
+  [agentti istunto jonot jonon-nimi]
   (if-let [jono (get-in jonot [jonon-nimi :queue])]
     jono
     (let [q (.createQueue istunto jonon-nimi)]
-      ;; todo: Näyttää epäilyttävälle. Paluuarvoa ei käytetä mihinkään.
-      (assoc-in jonot [jonon-nimi :queue] q)
+      (send-off agentti #(assoc-in % [:jonot jonon-nimi :queue] q))
       q)))
 
 (defn- varmista-producer
   "Varmistaa, että nimetylle jonolle on luotu producer viestien lähettämistä varten. Palauttaa producerin."
-  [istunto jonot jonon-nimi]
+  [agentti istunto jonot jonon-nimi]
   (if-let [producer (get-in jonot [jonon-nimi :producer])]
     producer
-    (let [jono (varmista-jono istunto jonot jonon-nimi)
+    (let [jono (varmista-jono agentti istunto jonot jonon-nimi)
           producer (.createProducer istunto jono)]
-      ;; todo: Näyttää epäilyttävälle. Paluuarvoa ei käytetä mihinkään.
-      (assoc-in jonot [jonon-nimi :producer] producer)
+      (send-off agentti #(assoc-in % [:jonot jonon-nimi :producer] producer))
       producer)))
 
+(defn varmista-istunto
+  [agentti yhteys jonot jonon-nimi]
+  (if-let [istunto (get-in jonot [jonon-nimi :istunto])]
+    istunto
+    (let [istunto (luo-istunto yhteys)]
+      (send-off agentti #(assoc-in % [:jonot jonon-nimi :istunto] istunto))
+      istunto)))
+
 (defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
-  (update-in tila [:jonot jonon-nimi] (fn [{:keys [consumer kuuntelijat] :as jono}]
+  (update-in tila [:jonot jonon-nimi] (fn [{:keys [istunto kuuntelijat] :as jono}]
                                         (swap! kuuntelijat disj kuuntelija-fn)
                                         (if (empty? @kuuntelijat)
                                           (do
-                                            (.close consumer)
+                                            (.close istunto)
                                             nil)
                                           jono))))
 
-(defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
+(defn yhdista-kuuntelija [{:keys [yhteys] :as tila} jonon-nimi kuuntelija-fn]
   (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
   (update-in tila [:jonot jonon-nimi]
-             (fn [{:keys [consumer kuuntelijat] :as jonon-tiedot}]
+             (fn [{:keys [istunto kuuntelijat] :as jonon-tiedot}]
                (let [kuuntelijat (or kuuntelijat (atom #{}))]
                  (swap! kuuntelijat conj kuuntelija-fn)
                  (assoc jonon-tiedot
-                   :consumer (or consumer
-                                 (luo-jonon-kuuntelija istunto jonon-nimi
+                   :istunto (or istunto
+                                 (luo-jonon-kuuntelija yhteys jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
                                                           (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
                                                           (kuuntelija %))))
                    :kuuntelijat kuuntelijat)))))
 
-(defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
-  (if istunto
-    (try
-      (let [producer (varmista-producer istunto jonot jonon-nimi)
-            msg (luo-viesti viesti istunto)]
-        (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
-        (when correlation-id
-          (.setJMSCorrelationID msg correlation-id))
-        (.send producer msg)
-        (.getJMSMessageID msg))
-      (catch Exception e
-        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))
-    (throw+ ei-jms-yhteytta)))
+(defn laheta-viesti [agentti jonon-nimi viesti correlation-id]
+  (let [{:keys [yhteys jonot]} @agentti]
+    (if yhteys
+      (try
+        (let [istunto (varmista-istunto agentti yhteys jonot jonon-nimi)
+              producer (varmista-producer agentti istunto jonot jonon-nimi)
+              msg (luo-viesti viesti istunto)]
+          (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
+          (when correlation-id
+            (.setJMSCorrelationID msg correlation-id))
+          (.send producer msg)
+          (.getJMSMessageID msg))
+        (catch Exception e
+          (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))
+      (throw+ ei-jms-yhteytta))))
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
@@ -271,7 +287,7 @@
     (if-not @yhteys-ok?
       (throw+ ei-jms-yhteytta)
       (let [tila @tila]
-        (laheta-viesti (:istunto tila) (:jonot tila) jonon-nimi viesti correlation-id))))
+        (laheta-viesti (:tila this) jonon-nimi viesti correlation-id))))
 
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil)))
