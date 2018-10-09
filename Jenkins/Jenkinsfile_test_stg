@@ -61,7 +61,7 @@ node {
                     omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
                 }
             }
-            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
+            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false, false)
 
             /*
              * TESTISERVERIKANNAN LUOMINEN
