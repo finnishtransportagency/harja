@@ -23,7 +23,7 @@ node {
 
     println "stg-test branch"
 
-    def jenkinsinBuildNumber = currentBuild.number
+    def jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
     // Käynnistäjä
     def kaynnistaja
     // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
