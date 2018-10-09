@@ -1,0 +1,114 @@
+evaluate(new File("Jenkins/skriptit/Tyokalut.groovy"))
+
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
+        artifactNumToKeepStr: '',
+        numToKeepStr: '2')),
+            disableConcurrentBuilds(),
+            disableResume(),
+            pipelineTriggers([pollSCM('H/5 * * * *')])])
+
+node {
+
+    evaluate(new File("Jenkins/skriptit/Vars.groovy"))
+
+    println "stg-test branch"
+
+    def jenkinsinBuildNumber = currentBuild.number
+
+    // Lisää mvn pathiin
+    env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
+
+    if (muutosTapahtui) {
+        dir('Harja') {
+            checkoutHarja('*/test-stg')
+
+            env.TESTI_BRANCH = true
+            /*
+             * TESTIKANNAN LUOMINEN
+             */
+
+            stage(testikannanLuonti) {
+                if (testikannanLuontiAjetaan) {
+                    ajaTestikannanLuonti(testikannanLuonti)
+                }
+            }
+
+            /*
+             * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
+             */
+
+            stage(jarJaTestit) {
+                if (jarJaTestitAjetaan) {
+                    ajaJarJaTestit(jarJaTestit)
+                }
+            }
+
+            /*
+             * TESTISERVERIKANNAN LUOMINEN
+             */
+
+            stage(testiserverinKannanLuonti) {
+                if (testiserverinKannanLuontiAjetaan) {
+                    ajaTestiserverinKanta(testiserverinKannanLuonti)
+                }
+            }
+        }
+
+        dir('CI') {
+            checkoutCI()
+            /*
+             * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+
+            stage(testiserverinAppLuonti) {
+                if (testiserverinAppLuontiAjetaan) {
+                    ajaTestiserverinApp(testiserverinAppLuonti, jenkinsinBuildNumber)
+                }
+            }
+        }
+
+        dir('E2E') {
+            checkoutE2E()
+            /*
+             * E2E TESTIT
+             */
+            stage(e2eTestit) {
+                if (e2eTestitAjetaan) {
+                    ajaE2ETestit(e2eTestit)
+                }
+            }
+        }
+
+        dir('Harja') {
+            /*
+             * STAGESERVERIKANNAN LUOMINEN
+             */
+
+            stage(stagingserverinKannanLuonti) {
+                if (stagingserverinKannanLuontiAjetaan) {
+                    ajaStagingserverinKanta(stagingserverinKannanLuonti)
+                }
+            }
+        }
+
+        dir('CI') {
+            /*
+             * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
+             */
+
+            stage(stagingserverinAppLuonti) {
+                if (stagingserverinAppLuontiAjetaan) {
+                    ajaStagingserverinApp(stagingserverinAppLuonti, jenkinsinBuildNumber)
+                }
+            }
+        }
+
+        /*
+         * SIIVOTAAN WORKSPACE
+         */
+
+        //stage('Siivoa workspace') {
+        //   cleanWs()
+        //}
+    }
+}
