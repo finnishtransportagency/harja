@@ -23,7 +23,8 @@ node {
 
     println "stg-test branch"
 
-    def jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
+    // ei anneta tälle vielä arvoa, koska nykyinen arvo ei näy vaikka tällä kieroksella luotaisiinkin jarri
+    def jenkinsinBuildNumber
     // Käynnistäjä
     def kaynnistaja
     // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
@@ -58,6 +59,7 @@ node {
             stage(omatVarit.jarJaTestit) {
                 if (omatVarit.jarJaTestitAjetaan) {
                     omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
+                    jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
                 }
             }
 
