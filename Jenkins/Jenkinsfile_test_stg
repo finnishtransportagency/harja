@@ -59,9 +59,9 @@ node {
             stage(omatVarit.jarJaTestit) {
                 if (omatVarit.jarJaTestitAjetaan) {
                     omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
-                    jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
                 }
             }
+            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
 
             /*
              * TESTISERVERIKANNAN LUOMINEN
