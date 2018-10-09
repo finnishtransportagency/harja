@@ -18,8 +18,6 @@ wrap([$class: 'BuildUser']) {
                       returnStdout: true])
 }
 
-Boolean muutosTapahtui = muutosTapahtuiHarjaan(kaynnistaja.trim())
-
 // Mitkä staget ajetaan
 Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
 Boolean jarJaTestitAjetaan = ["Kaikki", "JAR ja testit"].contains(STAGE_ETIAPAIN)

@@ -25,6 +25,7 @@ node {
     println "stg-test branch"
 
     def jenkinsinBuildNumber = currentBuild.number
+    Boolean muutosTapahtui = omatFunktiot.muutosTapahtuiHarjaan(omatVarit.kaynnistaja.trim())
 
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
