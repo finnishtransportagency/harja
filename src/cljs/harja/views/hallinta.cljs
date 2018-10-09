@@ -22,6 +22,7 @@
 
 (defn hallinta []
   (println "Foo")
+  (println "Bar")
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
 
