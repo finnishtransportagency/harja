@@ -10,14 +10,6 @@ String tuotantoserverinKannanLuonti = 'Luodaan tuotantokanta'
 String tuotantoserverinAppLuonti = 'Luodaan tuotantoserverin app'
 String e2eTestitTuotanto = 'E2E testit tuotanto'
 
-// Käynnistäjä
-def kaynnistaja
-// Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
-wrap([$class: 'BuildUser']) {
-    kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
-                      returnStdout: true])
-}
-
 // Mitkä staget ajetaan
 Boolean testikannanLuontiAjetaan = STAGE_ETIAPAIN == "Kaikki"
 Boolean jarJaTestitAjetaan = ["Kaikki", "JAR ja testit"].contains(STAGE_ETIAPAIN)
