@@ -25,22 +25,21 @@ node {
     println "stg-test branch"
 
     def jenkinsinBuildNumber = currentBuild.number
-    Boolean muutosTapahtui = omatFunktiot.muutosTapahtuiHarjaan(omatVarit.kaynnistaja.trim())
+    // Käynnistäjä
+    def kaynnistaja
+    // Tätä Build User Vars Plugin plugaria ei tarvisi, jos JENKINS-41272 issue saataisiin jossain väli tehtyä
+    wrap([$class: 'BuildUser']) {
+        kaynnistaja = sh([script      : 'echo ${BUILD_USER}',
+                          returnStdout: true])
+    }
+    Boolean muutosTapahtui = omatFunktiot.muutosTapahtuiHarjaan(kaynnistaja.trim())
 
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
     if (muutosTapahtui) {
         dir('Harja') {
-            // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja, mutta tämä pitää tehdä ennen, kuin tuota fileä voi ladata workspacesta
-            checkout([poll: true,
-                      scm : [$class                           : 'GitSCM',
-                             branches                         : [[name: '*/test-stg']],
-                             doGenerateSubmoduleConfigurations: false,
-                             extensions                       : [[$class: 'CheckoutOption', timeout: 15],
-                                                                 [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
-                             submoduleCfg                     : [],
-                             userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
+            checkoutHarja('*/test-stg')
 
             env.TESTI_BRANCH = true
             /*
