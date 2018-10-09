@@ -88,7 +88,7 @@ def etsiKaytettavaJar(valitetaankoTestiBranchista) {
         } else {
             onkoTestiBranch = false
         }
-        if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") ||
+        if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/${env.JOB_BASE_NAME}/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") ||
                 buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE") ||
                 onkoTestiBranch) {
             continue
@@ -96,6 +96,7 @@ def etsiKaytettavaJar(valitetaankoTestiBranchista) {
         loytynytJarBuild = nykyinenBuildNumber
         break
     }
+    println "loytynytJarBuild: " + loytynytJarBuild
     return loytynytJarBuild
 }
 
