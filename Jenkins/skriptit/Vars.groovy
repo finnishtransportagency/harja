@@ -28,3 +28,5 @@ Boolean testiserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserver
 Boolean e2eTestitAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN)
 Boolean stagingserverinKannanLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
 Boolean stagingserverinAppLuontiAjetaan = ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+
+return this
