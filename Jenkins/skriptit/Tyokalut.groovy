@@ -78,6 +78,27 @@ def buildNumberinEnv(buildNumber, envNimi) {
     return build.buildVariables."$envNimi"
 }
 
+def etsiKaytettavaJar(valitetaankoTestiBranchista) {
+    int nykyinenBuildNumber
+    def loytynytJarBuild = null
+    def onkoTestiBranch = null
+    for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
+        if (valitetaankoTestiBranchista) {
+            onkoTestiBranch = buildNumberinEnv(nykyinenBuildNumber, "TESTI_BRANCH")
+        } else {
+            onkoTestiBranch = false
+        }
+        if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") ||
+                buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE") ||
+                onkoTestiBranch) {
+            continue
+        }
+        loytynytJarBuild = nykyinenBuildNumber
+        break
+    }
+    return loytynytJarBuild
+}
+
 ///////////////////////////////////////
 //////// ERI STAGEJEN AJAMISET ////////
 ///////////////////////////////////////
