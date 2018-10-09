@@ -1,5 +1,3 @@
-evaluate(new File("Jenkins/skriptit/Tyokalut.groovy"))
-
 properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
         artifactNumToKeepStr: '',
         numToKeepStr: '2')),
@@ -9,7 +7,8 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
 
 node {
 
-    evaluate(new File("Jenkins/skriptit/Vars.groovy"))
+    def methods = load "Jenkins/skriptit/Tyokalut.groovy"
+    def vars = load "Jenkins/skriptit/Vars.groovy"
 
     println "stg-test branch"
 
@@ -20,16 +19,16 @@ node {
 
     if (muutosTapahtui) {
         dir('Harja') {
-            checkoutHarja('*/test-stg')
+            methods.checkoutHarja('*/test-stg')
 
             env.TESTI_BRANCH = true
             /*
              * TESTIKANNAN LUOMINEN
              */
 
-            stage(testikannanLuonti) {
-                if (testikannanLuontiAjetaan) {
-                    ajaTestikannanLuonti(testikannanLuonti)
+            stage(vars.testikannanLuonti) {
+                if (vars.testikannanLuontiAjetaan) {
+                    methods.ajaTestikannanLuonti(vars.testikannanLuonti)
                 }
             }
 
@@ -37,9 +36,9 @@ node {
              * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
              */
 
-            stage(jarJaTestit) {
-                if (jarJaTestitAjetaan) {
-                    ajaJarJaTestit(jarJaTestit)
+            stage(vars.jarJaTestit) {
+                if (vars.jarJaTestitAjetaan) {
+                    methods.ajaJarJaTestit(vars.jarJaTestit)
                 }
             }
 
@@ -47,34 +46,34 @@ node {
              * TESTISERVERIKANNAN LUOMINEN
              */
 
-            stage(testiserverinKannanLuonti) {
-                if (testiserverinKannanLuontiAjetaan) {
-                    ajaTestiserverinKanta(testiserverinKannanLuonti)
+            stage(vars.testiserverinKannanLuonti) {
+                if (vars.testiserverinKannanLuontiAjetaan) {
+                    methods.ajaTestiserverinKanta(vars.testiserverinKannanLuonti)
                 }
             }
         }
 
         dir('CI') {
-            checkoutCI()
+            methods.checkoutCI()
             /*
              * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
              */
 
-            stage(testiserverinAppLuonti) {
-                if (testiserverinAppLuontiAjetaan) {
-                    ajaTestiserverinApp(testiserverinAppLuonti, jenkinsinBuildNumber)
+            stage(vars.testiserverinAppLuonti) {
+                if (vars.testiserverinAppLuontiAjetaan) {
+                    methods.ajaTestiserverinApp(vars.testiserverinAppLuonti, jenkinsinBuildNumber)
                 }
             }
         }
 
         dir('E2E') {
-            checkoutE2E()
+            methods.checkoutE2E()
             /*
              * E2E TESTIT
              */
-            stage(e2eTestit) {
-                if (e2eTestitAjetaan) {
-                    ajaE2ETestit(e2eTestit)
+            stage(vars.e2eTestit) {
+                if (vars.e2eTestitAjetaan) {
+                    methods.ajaE2ETestit(vars.e2eTestit)
                 }
             }
         }
@@ -84,9 +83,9 @@ node {
              * STAGESERVERIKANNAN LUOMINEN
              */
 
-            stage(stagingserverinKannanLuonti) {
-                if (stagingserverinKannanLuontiAjetaan) {
-                    ajaStagingserverinKanta(stagingserverinKannanLuonti)
+            stage(vars.stagingserverinKannanLuonti) {
+                if (vars.stagingserverinKannanLuontiAjetaan) {
+                    methods.ajaStagingserverinKanta(vars.stagingserverinKannanLuonti)
                 }
             }
         }
@@ -96,9 +95,9 @@ node {
              * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
              */
 
-            stage(stagingserverinAppLuonti) {
-                if (stagingserverinAppLuontiAjetaan) {
-                    ajaStagingserverinApp(stagingserverinAppLuonti, jenkinsinBuildNumber)
+            stage(vars.stagingserverinAppLuonti) {
+                if (vars.stagingserverinAppLuontiAjetaan) {
+                    methods.ajaStagingserverinApp(vars.stagingserverinAppLuonti, jenkinsinBuildNumber)
                 }
             }
         }
@@ -107,8 +106,8 @@ node {
          * SIIVOTAAN WORKSPACE
          */
 
-        //stage('Siivoa workspace') {
-        //   cleanWs()
-        //}
+        stage('Siivoa workspace') {
+           cleanWs()
+        }
     }
 }

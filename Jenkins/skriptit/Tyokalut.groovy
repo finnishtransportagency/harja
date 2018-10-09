@@ -235,3 +235,4 @@ def checkoutE2E() {
                      submoduleCfg                     : [],
                      userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]]])
 }
+return this
