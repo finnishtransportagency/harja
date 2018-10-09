@@ -62,6 +62,7 @@ node {
                     jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false)
                 }
             }
+            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(false, false)
 
             /*
              * TESTISERVERIKANNAN LUOMINEN

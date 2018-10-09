@@ -78,18 +78,24 @@ def buildNumberinEnv(buildNumber, envNimi) {
     return build.buildVariables."$envNimi"
 }
 
-def etsiKaytettavaJar(valitetaankoTestiBranchista) {
+def etsiKaytettavaJar(valitetaankoTestiBranchista, valitetaankoEpaonnistuneestaAjosta) {
     int nykyinenBuildNumber
     def loytynytJarBuild = null
     def onkoTestiBranch = null
+    def onkoAjoEpaonnistunut = null
     for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
         if (valitetaankoTestiBranchista) {
             onkoTestiBranch = buildNumberinEnv(nykyinenBuildNumber, "TESTI_BRANCH")
         } else {
             onkoTestiBranch = false
         }
+        if (valitetaankoEpaonnistuneestaAjosta) {
+            onkoAjoEpaonnistunut = buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE")
+        } else {
+            onkoAjoEpaonnistunut = false
+        }
         if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/${env.JOB_BASE_NAME}/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") ||
-                buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE") ||
+                onkoAjoEpaonnistunut ||
                 onkoTestiBranch) {
             continue
         }
