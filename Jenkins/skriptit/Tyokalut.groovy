@@ -141,7 +141,7 @@ def ajaTestiserverinApp(stagenNimi, buildNumber) {
                          playbook    : 'playbooks/nightly.yml',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
-                                 jenkins_job_name: ${env.JOB_BASE_NAME}
+                                 jenkins_job_name: env.JOB_BASE_NAME
                          ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
     } catch (e) {
@@ -193,7 +193,7 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
                          playbook    : 'playbooks/staging.yml',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
-                                 jenkins_job_name: ${env.JOB_BASE_NAME}
+                                 jenkins_job_name: env.JOB_BASE_NAME
                          ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin appiksen luomiseen")
     } catch (e) {
