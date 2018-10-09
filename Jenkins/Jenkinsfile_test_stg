@@ -7,6 +7,20 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
 
 node {
 
+    // Tämä Checkout on sama kuin methods.checkoutHarja, mutta tämä pitää tehdä ennen, kuin tuota fileä voi ladata workspacesta
+    checkout([poll: true,
+              scm : [$class                           : 'GitSCM',
+                     branches                         : [[name: '*/test-stg']],
+                     doGenerateSubmoduleConfigurations: false,
+                     extensions                       : [[$class: 'CheckoutOption', timeout: 15],
+                                                         [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15],
+                                                         [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'Jenkins/*']]]],
+                     submoduleCfg                     : [],
+                     userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
+
+    def methods = load "Jenkins/skriptit/Tyokalut.groovy"
+    def vars = load "Jenkins/skriptit/Vars.groovy"
+
     println "stg-test branch"
 
     def jenkinsinBuildNumber = currentBuild.number
