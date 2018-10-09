@@ -2,8 +2,7 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
         artifactNumToKeepStr: '',
         numToKeepStr: '2')),
             disableConcurrentBuilds(),
-            disableResume(),
-            pipelineTriggers([pollSCM('H/5 * * * *')])])
+            disableResume()])
 
 node {
 
