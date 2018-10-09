@@ -21,6 +21,7 @@
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
+  (println "Foo")
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
 
