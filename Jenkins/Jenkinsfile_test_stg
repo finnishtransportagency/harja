@@ -7,7 +7,8 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
 
 node {
 
-    // Tämä Checkout on sama kuin methods.checkoutHarja, mutta tämä pitää tehdä ennen, kuin tuota fileä voi ladata workspacesta
+    // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja muuten paitsi otetaan vain Jenkins kansion sisältö.
+    // Tämä pitää tehdä ennen, kuin groovy filejä voi ladata workspacesta
     checkout([poll: true,
               scm : [$class                           : 'GitSCM',
                      branches                         : [[name: '*/test-stg']],
@@ -18,8 +19,8 @@ node {
                      submoduleCfg                     : [],
                      userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 
-    def methods = load "Jenkins/skriptit/Tyokalut.groovy"
-    def vars = load "Jenkins/skriptit/Vars.groovy"
+    def omatFunktiot = load "Jenkins/skriptit/Tyokalut.groovy"
+    def omatVarit = load "Jenkins/skriptit/Vars.groovy"
 
     println "stg-test branch"
 
@@ -28,9 +29,9 @@ node {
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-    if (muutosTapahtui) {
+    if (omatVarit.muutosTapahtui) {
         dir('Harja') {
-            // Tämä Checkout on sama kuin methods.checkoutHarja, mutta tämä pitää tehdä ennen, kuin tuota fileä voi ladata workspacesta
+            // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja, mutta tämä pitää tehdä ennen, kuin tuota fileä voi ladata workspacesta
             checkout([poll: true,
                       scm : [$class                           : 'GitSCM',
                              branches                         : [[name: '*/test-stg']],
@@ -40,17 +41,14 @@ node {
                              submoduleCfg                     : [],
                              userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 
-            def methods = load "Jenkins/skriptit/Tyokalut.groovy"
-            def vars = load "Jenkins/skriptit/Vars.groovy"
-
             env.TESTI_BRANCH = true
             /*
              * TESTIKANNAN LUOMINEN
              */
 
-            stage(vars.testikannanLuonti) {
-                if (vars.testikannanLuontiAjetaan) {
-                    methods.ajaTestikannanLuonti(vars.testikannanLuonti)
+            stage(omatVarit.testikannanLuonti) {
+                if (omatVarit.testikannanLuontiAjetaan) {
+                    omatFunktiot.ajaTestikannanLuonti(omatVarit.testikannanLuonti)
                 }
             }
 
@@ -58,9 +56,9 @@ node {
              * TESTIEN AJAMINEN JA JAR:IN LUOMINEN
              */
 
-            stage(vars.jarJaTestit) {
-                if (vars.jarJaTestitAjetaan) {
-                    methods.ajaJarJaTestit(vars.jarJaTestit)
+            stage(omatVarit.jarJaTestit) {
+                if (omatVarit.jarJaTestitAjetaan) {
+                    omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
                 }
             }
 
@@ -68,34 +66,34 @@ node {
              * TESTISERVERIKANNAN LUOMINEN
              */
 
-            stage(vars.testiserverinKannanLuonti) {
-                if (vars.testiserverinKannanLuontiAjetaan) {
-                    methods.ajaTestiserverinKanta(vars.testiserverinKannanLuonti)
+            stage(omatVarit.testiserverinKannanLuonti) {
+                if (omatVarit.testiserverinKannanLuontiAjetaan) {
+                    omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
                 }
             }
         }
 
         dir('CI') {
-            methods.checkoutCI()
+            omatFunktiot.checkoutCI()
             /*
              * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
              */
 
-            stage(vars.testiserverinAppLuonti) {
-                if (vars.testiserverinAppLuontiAjetaan) {
-                    methods.ajaTestiserverinApp(vars.testiserverinAppLuonti, jenkinsinBuildNumber)
+            stage(omatVarit.testiserverinAppLuonti) {
+                if (omatVarit.testiserverinAppLuontiAjetaan) {
+                    omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
                 }
             }
         }
 
         dir('E2E') {
-            methods.checkoutE2E()
+            omatFunktiot.checkoutE2E()
             /*
              * E2E TESTIT
              */
-            stage(vars.e2eTestit) {
-                if (vars.e2eTestitAjetaan) {
-                    methods.ajaE2ETestit(vars.e2eTestit)
+            stage(omatVarit.e2eTestit) {
+                if (omatVarit.e2eTestitAjetaan) {
+                    omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
                 }
             }
         }
@@ -105,9 +103,9 @@ node {
              * STAGESERVERIKANNAN LUOMINEN
              */
 
-            stage(vars.stagingserverinKannanLuonti) {
-                if (vars.stagingserverinKannanLuontiAjetaan) {
-                    methods.ajaStagingserverinKanta(vars.stagingserverinKannanLuonti)
+            stage(omatVarit.stagingserverinKannanLuonti) {
+                if (omatVarit.stagingserverinKannanLuontiAjetaan) {
+                    omatFunktiot.ajaStagingserverinKanta(omatVarit.stagingserverinKannanLuonti)
                 }
             }
         }
@@ -117,9 +115,9 @@ node {
              * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
              */
 
-            stage(vars.stagingserverinAppLuonti) {
-                if (vars.stagingserverinAppLuontiAjetaan) {
-                    methods.ajaStagingserverinApp(vars.stagingserverinAppLuonti, jenkinsinBuildNumber)
+            stage(omatVarit.stagingserverinAppLuonti) {
+                if (omatVarit.stagingserverinAppLuontiAjetaan) {
+                    omatFunktiot.ajaStagingserverinApp(omatVarit.stagingserverinAppLuonti, jenkinsinBuildNumber)
                 }
             }
         }
