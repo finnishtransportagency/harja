@@ -39,7 +39,7 @@ node {
 
     if (muutosTapahtui) {
         dir('Harja') {
-            checkoutHarja('*/test-stg')
+            omatFunktiot.checkoutHarja('*/test-stg')
 
             env.TESTI_BRANCH = true
             /*
