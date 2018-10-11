@@ -101,4 +101,12 @@ SELECT exists(SELECT id
 
 -- name: urakan-toimenpideinstanssi-idt
 -- Palauttaa urakan toimenpideinstanssien idt
-SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka
+SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka;
+
+
+-- name: sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja
+-- Jos urakkaa ei ole tuotu Harjaan, toimenpideinstansseja saa olla vain yksi.
+-- Jos urakka on tuotu ja se on sopivaa urakkatyyppiä (määritellään tässä SQL-lauseessa), useampi tpi on sallittu.
+SELECT exists(SELECT id
+              FROM urakka
+              WHERE sampoid = :sampoid AND tyyppi IN ('paallystys', 'tiemerkinta'));
