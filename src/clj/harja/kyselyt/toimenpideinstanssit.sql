@@ -109,4 +109,4 @@ SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka;
 -- Jos urakka on tuotu ja se on sopivaa urakkatyyppiä (määritellään tässä SQL-lauseessa), useampi tpi on sallittu.
 SELECT exists(SELECT id
               FROM urakka
-              WHERE sampoid = :sampoid AND tyyppi IN ('paallystys'));
+              WHERE sampoid = :sampoid AND tyyppi IN ('paallystys', 'tiemerkinta'));
