@@ -46,7 +46,9 @@ node {
             int nykyinenBuildNumber
             def loytynytJarBuild = null
             for (nykyinenBuildNumber = currentBuild.number; nykyinenBuildNumber >= 0; nykyinenBuildNumber--) {
-                if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") || buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE")) {
+                if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + nykyinenBuildNumber + "/archive/target/harja-*-standalone.jar") ||
+                    buildNumberinEnv(nykyinenBuildNumber, "FAILED_STAGE") ||
+                    buildNumberinEnv(nykyinenBuildNumber, "TESTI_BRANCH")) {
                     continue
                 }
                 loytynytJarBuild = nykyinenBuildNumber
