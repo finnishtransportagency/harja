@@ -73,7 +73,7 @@
 (defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
   (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
   (try
-    (sonja/kuuntele sonja jono
+    (sonja/kuuntele! sonja jono
                     (fn [viesti]
                       (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
                       (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
@@ -100,7 +100,7 @@
 (defn jms-kuuntelu [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
   (try
-    (sonja/kuuntele
+    (sonja/kuuntele!
       sonja jono-sisaan
       (fn [viesti]
         (log/debug "Vastaanotettiin viesti jonosta " jono-sisaan ": " viesti)
