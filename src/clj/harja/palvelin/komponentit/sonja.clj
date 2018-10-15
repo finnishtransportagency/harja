@@ -272,15 +272,22 @@
     (if (some? jonon-nimi)
       (do
         (log/info (format "Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
+        ;; Nostetaan säikeiden määrä counteria ennen kuin aloitetaan säije, jotta voidaan olla varmoja, että
+        ;; säikeitä ei enään luoda, kun counteri menee nollille.
+        (swap! (:tila this) update :saikeiden-maara #(if % (inc %) 1))
         (thread
           ;; Blokkaa siksi aikaa, että yhteys olio on luotu
-          (when (-> this :yhteys-future deref)
-            (swap! (:tila this) update :saikeiden-maara #(if % (inc %) 1))
-            (swap! (:tila this)
-                  (fn [tila-nyt]
-                     (yhdista-kuuntelija tila-nyt jonon-nimi kuuntelija-fn)))
-            (log/info (format "JMS-jonon: %s kuuntelu alustettu" jonon-nimi))
-            (swap! (:tila this) update :saikeiden-maara dec)))
+          (try
+            (when (-> this :yhteys-future deref)
+              (swap! (:tila this)
+                     (fn [tila-nyt]
+                       (yhdista-kuuntelija tila-nyt jonon-nimi kuuntelija-fn)))
+              (log/info (format "JMS-jonon: %s kuuntelu alustettu" jonon-nimi))
+              (swap! (:tila this) update :saikeiden-maara dec))
+            (catch Throwable e
+              (log/info "Jonon " jonon-nimi " kuunteleminen epäonnistui: " e)
+              (swap! (:tila this) update :saikeiden-maara dec)
+              (throw e))))
         #(swap! (:tila this) poista-kuuntelija jonon-nimi kuuntelija-fn))
       (do
         (log/warn "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä")
