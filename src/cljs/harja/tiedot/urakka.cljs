@@ -119,7 +119,7 @@
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
-               (pvm/hoitokauden-loppupvm (inc vuosi))])
+               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
             (range ensimmainen-vuosi viimeinen-vuosi))
 
       (= :vesivayla-hoito tyyppi)
