@@ -104,7 +104,7 @@
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
-           (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
+           (pvm/paivan-lopussa (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi)))])
         (range ensimmainen-vuosi viimeinen-vuosi)))
 
 (defn hoito-tai-sopimuskaudet
@@ -127,7 +127,7 @@
 
       :default
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
-      (pvm/urakan-vuodet alkupvm loppupvm))))
+      (pvm/urakan-vuodet alkupvm (pvm/paivan-lopussa loppupvm)))))
 
 (defn edelliset-hoitokaudet
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
