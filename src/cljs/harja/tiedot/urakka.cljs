@@ -320,8 +320,11 @@
   voidaan luoda tyhjät ryhmät myös hoitokausille, joilla ei ole yhtään riviä."
   ([rivit] (ryhmittele-hoitokausittain rivit nil))
   ([rivit hoitokaudet]
-   (loop [ryhmitelty (group-by (juxt :alkupvm :loppupvm)
-                               rivit)
+   (loop [ryhmitelty (into {}
+                           (map (fn [[[alkupvm loppupvm] arvot]]
+                                  [[(pvm/paivan-alussa alkupvm) (pvm/paivan-lopussa loppupvm)] arvot])
+                                (group-by (juxt :alkupvm :loppupvm)
+                                          rivit)))
           [kausi & hoitokaudet] hoitokaudet]
      (if-not kausi
        ryhmitelty
