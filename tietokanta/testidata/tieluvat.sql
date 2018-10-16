@@ -8,6 +8,7 @@ INSERT INTO tielupa (
   "voimassaolon-alkupvm",
   "voimassaolon-loppupvm",
   otsikko,
+  "liite-url",
   "katselmus-url",
   ely,
   urakat,
@@ -55,6 +56,7 @@ VALUES (
   '2017-10-18',
   '2018-10-20',
   'Testilupa johtojen ja kaapelien vetämiseen',
+  'https://liite.tilu.fi/666.pdf',
   'https://tilu.fi/666',
   (SELECT id
    FROM organisaatio
@@ -137,6 +139,7 @@ INSERT INTO tielupa (
   "voimassaolon-alkupvm",
   "voimassaolon-loppupvm",
   otsikko,
+  "liite-url",
   "katselmus-url",
   ely,
   urakat,
@@ -187,6 +190,7 @@ VALUES (
   '2017-02-12',
   '2018-02-12',
   'Testilupa mainosten pystyttämiseen',
+  'https://liite.tilu.fi/123.pdf',
   'https://tilu.fi/123',
   (SELECT id
    FROM organisaatio
