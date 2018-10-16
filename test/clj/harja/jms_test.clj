@@ -17,7 +17,7 @@
     this)
 
   sonja/Sonja
-  (kuuntele [_ nimi kuuntelija]
+  (kuuntele! [_ nimi kuuntelija]
     (log/debug "Lisätään kuuntelija:" kuuntelija ", jonoon: " nimi)
     (swap! kuuntelijat
            update-in [nimi]

@@ -671,6 +671,18 @@
 
 (defonce harja-jarjestelma nil)
 
+(defn aloita-sonja [jarjestelma]
+  (go-loop []
+    (let [kuuntelu-prosessia-kesken (-> jarjestelma :sonja :tila deref :saikeiden-maara)]
+      (if (= kuuntelu-prosessia-kesken 0)
+        (do
+          (log/info "Aloitaetaan Sonjayhteys")
+          (sonja/aloita-yhteys (:sonja jarjestelma))
+          true)
+        (do
+          (<! (timeout 2000))
+          (recur))))))
+
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     (alter-var-root #'harja-jarjestelma
@@ -678,15 +690,7 @@
                       (-> (lue-asetukset asetusfile)
                           luo-jarjestelma
                           component/start)))
-    (go-loop []
-      (let [kuuntelu-prosessia-kesken (-> harja-jarjestelma :sonja :tila deref :saikeiden-maara)]
-        (if (= kuuntelu-prosessia-kesken 0)
-          (do
-            (log/info "Aloitaetaan Sonjayhteys")
-            (sonja/aloita-yhteys (:sonja harja-jarjestelma)))
-          (do
-            (<! (timeout 2000))
-            (recur)))))
+    (aloita-sonja harja-jarjestelma)
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
