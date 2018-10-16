@@ -6,7 +6,7 @@
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.core.async :as a :refer [<!! <! go-loop timeout alts!!]]
+            [clojure.core.async :as a :refer [<!! <! go go-loop thread timeout alts!!]]
             [org.httpkit.client :as http]
             [com.stuartsierra.component :as component]
 
@@ -24,6 +24,30 @@
 
 (def ^:dynamic *sonja-yhteys* nil)
 
+(defrecord TestiKomponentti [tila]
+  component/Lifecycle
+  (start [{sonja :sonja :as this}]
+    (let [loppu-tila (go (<! (timeout 2000))
+                         (if-let [tapahtuma (:tapahtuma @tila)]
+                           (:tapahtuma @tila)
+                           :ok))]
+      (thread
+        (case (<!! loppu-tila)
+          :ok (swap! tila assoc :testi-jono (sonja/kuuntele! sonja "testi-jono" (fn [])))
+          :exception (let [virhe-lahetetty? (atom false)]
+                       (with-redefs [sonja/yhdista-kuuntelija (fn [& args]
+                                                                (reset! virhe-lahetetty? true)
+                                                                (throw Exception))]
+                         (sonja/kuuntele! sonja "testi-jono" (fn []))
+                         (<!! (go-loop []
+                                (when-not @virhe-lahetetty?
+                                  (<! (timeout 2000))
+                                  (recur))))))))
+      this))
+  (stop [{sonja :sonja :as this}]
+    (when-let [sammutus-fn (-> this :tila deref :testi-jono)]
+      (sammutus-fn))))
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -40,6 +64,9 @@
                                                                         :sahkoposti-ulos-jono "harja-to-email"
                                                                         :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                                             [:sonja :db :integraatioloki])
+                        :testi-komponentti (component/using
+                                             (->TestiKomponentti (atom nil))
+                                             [:sonja])
                         #_#_:labyrintti (feikki-labyrintti)
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
@@ -66,7 +93,7 @@
     (testit))
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (defn sonja-laheta [jonon-nimi sanoma]
   (let [options {:timeout 200
@@ -136,6 +163,12 @@
           :tuottaja (do
                       (is (instance? javax.jms.MessageProducer olio))
                       (is (= (->> (.getDestination olio) (cast javax.jms.Queue) .getQueueName) jonon-nimi))))))))
+
+(deftest sonja-yhteys-kaynnistyy-vaikka-sita-kayttava-komponentti-ei
+  (swap! (-> jarjestelma :testi-komponentti :tila) assoc :tapahtuma :exception)
+  (let [alkoiko-yhteys? (alts!! [*sonja-yhteys* (timeout 10000)])]
+    (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
+    (is (nil? (-> jarjestelma :testi-komponentti :tila deref :testi-jono)))))
 
 (deftest main-komponentit-loytyy
   (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
