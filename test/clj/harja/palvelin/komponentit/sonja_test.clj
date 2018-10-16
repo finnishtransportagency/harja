@@ -18,8 +18,8 @@
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61616"
-                            :kayttaja "harja"
-                            :salasana "harjaxx"
+                            :kayttaja ""
+                            :salasana ""
                             :tyyppi :activemq}})
 
 (def ^:dynamic *sonja-yhteys* nil)
@@ -95,7 +95,6 @@
                    (inc aika))))))))
 
 ;;; Sonja komponentin testit
-; - Käynnistyksen jälkeen tila-atomi näyttää oklta
 ; - Käynnistyy vaikka jokin sonjaa käyttävä komponentti feilaa
 ;   - Nähdään mitkä komponentit ei ole käynnissä
 ; - Jos Sonja ei käynnisty, sitä käyttävät komponentit käynnistyy
@@ -109,9 +108,34 @@
 
 (deftest sonjan-kaynnistys
   (let [alkoiko-yhteys? (alts!! [*sonja-yhteys* (timeout 10000)])
-        {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila} (:sonja jarjestelma)]
-    (is alkoiko-yhteys? "Yhteys ei alkanut")
-    (is (= (:sonja asetukset) sonja-asetukset))))
+        {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila} (:sonja jarjestelma)
+        {:keys [yhteys qcf jonot]} @tila]
+    (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
+    (is (= (:sonja asetukset) sonja-asetukset))
+    (is @yhteys-future "Yhteyoliota ei luotu")
+    (doseq [[jonon-nimi jonon-oliot] jonot]
+      (println "Jonon nimi: " jonon-nimi)
+      (when-let [olio (:vastaanottaja jonon-oliot)]
+        (= (-> olio .getMessageListener meta :kuuntelijoiden-maara) 1))
+      (doseq [[avain olio] jonon-oliot]
+        (case avain
+          ;; :kuuntelijat ei sisällä oliota
+          :kuuntelijat (is (every? fn? olio))
+          :istunto (do
+                     (is (instance? javax.jms.QueueSession olio)))
+          :jono (do
+                  (is (instance? javax.jms.Queue olio))
+                  (is (= (.getQueueName olio) jonon-nimi)))
+          :vastaanottaja (do
+                           (is (instance? javax.jms.QueueReceiver olio))
+                           (is (= (.. olio getQueue getQueueName) jonon-nimi))
+                           (is (instance? javax.jms.MessageListener (.getMessageListener olio))))
+          :selailija (do
+                       (is (instance? javax.jms.QueueBrowser olio))
+                       (is (= (.. olio getQueue getQueueName) jonon-nimi)))
+          :tuottaja (do
+                      (is (instance? javax.jms.MessageProducer olio))
+                      (is (= (->> (.getDestination olio) (cast javax.jms.Queue) .getQueueName) jonon-nimi))))))))
 
-#_(deftest main-komponentit-loytyy
+(deftest main-komponentit-loytyy
   (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))

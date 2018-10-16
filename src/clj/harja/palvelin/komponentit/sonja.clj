@@ -171,10 +171,12 @@
         (assoc tila :yhteys yhteys :qcf qcf)))))
 
 (defn kasittele-viesti [vastaanottaja kuuntelijat]
-  (.setMessageListener vastaanottaja (reify MessageListener
-                                       (onMessage [_ message]
-                                         (doseq [kuuntelija kuuntelijat]
-                                           (kuuntelija message))))))
+  (.setMessageListener vastaanottaja
+                       ^{:kuuntelijoiden-maara (count kuuntelijat)}
+                       (reify MessageListener
+                         (onMessage [_ message]
+                           (doseq [kuuntelija kuuntelijat]
+                             (kuuntelija message))))))
 
 (defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
   (update-in tila [:jonot jonon-nimi]
