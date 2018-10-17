@@ -134,7 +134,7 @@
 ; - Testataan, että ilmoitukset käsitellään
 
 (deftest sonjan-kaynnistys
-  (let [alkoiko-yhteys? (alts!! [*sonja-yhteys* (timeout 10000)])
+  (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
         {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila} (:sonja jarjestelma)
         {:keys [yhteys qcf jonot]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
@@ -166,9 +166,40 @@
 
 (deftest sonja-yhteys-kaynnistyy-vaikka-sita-kayttava-komponentti-ei
   (swap! (-> jarjestelma :testi-komponentti :tila) assoc :tapahtuma :exception)
-  (let [alkoiko-yhteys? (alts!! [*sonja-yhteys* (timeout 10000)])]
+  (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (nil? (-> jarjestelma :testi-komponentti :tila deref :testi-jono)))))
 
-(deftest main-komponentit-loytyy
+(deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
+  (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
+                                            (loop []
+                                              (Thread/sleep 1000)
+                                              (recur)))]
+    ;; Varmistetaan, että component/start ei blokkaa vaikka sonjayhteystä ei saada
+    (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
+                                                    (component/system-map
+                                                      :db (tietokanta/luo-tietokanta testitietokanta)
+                                                      #_#_:http-palvelin (testi-http-palvelin)
+                                                      :sonja (sonja/luo-oikea-sonja (:sonja asetukset))
+                                                      :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
+                                                                                        [:db])
+                                                      :sonja-sahkoposti (component/using
+                                                                          (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                                                     {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                                                      :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
+                                                                                                      :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
+                                                                          [:sonja :db :integraatioloki]))))
+                                          (timeout 10000)])
+          sonja-yhteys (when toinen-jarjestelma
+                         (sut/aloita-sonja toinen-jarjestelma))]
+      (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
+      ;; Odotellaan vähän aikaa, jotta voidaan varmistua siitä, että :saikeiden-maara lukemisessa ei tule race-conditionia.
+      ;; Eli tässähän pitäisi käydä niin, että jokaisen sonja/kuuntele! kutsun kohdalla kounteria nostetaan ja sitä lasketaan
+      ;; vain, jos kuuntele! nakkaa poikkeuksen tai se suorittaa tehtävänsä loppuun omassa threadissään. Nythän sen pitäisi blokata sillä, futuren lukeminen
+      ;; blokkaa niin kauan, että sen arvo voidaan lukea. Sitä ei tässä testissä voida ikinä lukea, sillä sonja/aloita-yhdistaminen on määritelty ikuiseen
+      ;; looppiin.
+      (Thread/sleep 2000)
+      (is (= 3 (-> toinen-jarjestelma :sonja :tila deref :saikeiden-maara))))))
+
+#_(deftest main-komponentit-loytyy
   (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))

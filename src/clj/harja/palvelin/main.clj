@@ -674,6 +674,8 @@
 (defn aloita-sonja [jarjestelma]
   (go-loop []
     (let [kuuntelu-prosessia-kesken (-> jarjestelma :sonja :tila deref :saikeiden-maara)]
+      ;; Aloitetaan yhteys vasta, kun kaikki komponentit ovat saaneet suoritettua niiden
+      ;; sonja/kuuntele! tehtävänsä.
       (if (= kuuntelu-prosessia-kesken 0)
         (do
           (log/info "Aloitaetaan Sonjayhteys")
