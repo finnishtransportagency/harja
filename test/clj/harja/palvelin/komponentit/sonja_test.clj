@@ -2,19 +2,21 @@
   (:require [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [clojure.test :refer :all]
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.core.async :as a :refer [<!! <! go go-loop thread timeout alts!!]]
             [org.httpkit.client :as http]
+            [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
 
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61616"
@@ -59,7 +61,7 @@
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
                         :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
+                                            (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"
                                                                         :sahkoposti-ulos-jono "harja-to-email"
                                                                         :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
@@ -164,6 +166,21 @@
                       (is (instance? javax.jms.MessageProducer olio))
                       (is (= (->> (.getDestination olio) (cast javax.jms.Queue) .getQueueName) jonon-nimi))))))))
 
+(defn tarkista-xml-sisalto
+  [{:keys [content tag]} tarkistukset]
+  (let [tarkistus-fn (tag tarkistukset)]
+    (when tarkistus-fn
+      (tarkistus-fn content))
+    (if (map? (first content))
+      (doseq [content-element content]
+        (tarkista-xml-sisalto content-element tarkistukset)))))
+
+(defn purge-jono [istunto jono]
+  (let [vastaanottaja (.createReceiver istunto jono)]
+    (loop [viesti (.receiveNoWait vastaanottaja)]
+      (when viesti
+        (recur (.receiveNoWait vastaanottaja))))))
+
 (deftest sonja-yhteys-kaynnistyy-vaikka-sita-kayttava-komponentti-ei
   (swap! (-> jarjestelma :testi-komponentti :tila) assoc :tapahtuma :exception)
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
@@ -184,7 +201,7 @@
                                                       :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                                         [:db])
                                                       :sonja-sahkoposti (component/using
-                                                                          (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                          (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
                                                                                                      {:sahkoposti-sisaan-jono "email-to-harja"
                                                                                                       :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
                                                                                                       :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
@@ -193,13 +210,36 @@
           sonja-yhteys (when toinen-jarjestelma
                          (sut/aloita-sonja toinen-jarjestelma))]
       (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
-      ;; Odotellaan vähän aikaa, jotta voidaan varmistua siitä, että :saikeiden-maara lukemisessa ei tule race-conditionia.
+      ;; Odotellaan vähän aikaa, jotta voidaan varmistua siitä, että :saikeiden-maara lukemisessa ei tule race-conditionia (vaikkei tämän pitäisi olla edes mahdollista, mutta silti).
       ;; Eli tässähän pitäisi käydä niin, että jokaisen sonja/kuuntele! kutsun kohdalla kounteria nostetaan ja sitä lasketaan
-      ;; vain, jos kuuntele! nakkaa poikkeuksen tai se suorittaa tehtävänsä loppuun omassa threadissään. Nythän sen pitäisi blokata sillä, futuren lukeminen
+      ;; vain, jos kuuntele! nakkaa poikkeuksen tai se suorittaa tehtävänsä loppuun omassa threadissään. Nythän tämä "oma säije" pitäisi blokata sillä, futuren lukeminen
       ;; blokkaa niin kauan, että sen arvo voidaan lukea. Sitä ei tässä testissä voida ikinä lukea, sillä sonja/aloita-yhdistaminen on määritelty ikuiseen
-      ;; looppiin.
+      ;; looppiin. Mutta mikäli "oma säije" pääsisi jotenkin laskemaan counteria, niin silloin syntyisi race-condition.
       (Thread/sleep 2000)
       (is (= 3 (-> toinen-jarjestelma :sonja :tila deref :saikeiden-maara))))))
+
+(deftest viestin-lahetys-onnistuu
+  ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
+  (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
+        jonot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :jonot)
+        _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
+        jonot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :jonot)
+        {:keys [jono istunto selailija]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
+        viestit-jonossa (.getEnumeration selailija)
+        viesti (->> viestit-jonossa .nextElement (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
+    (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
+    (tarkista-xml-sisalto viesti {:vastaanottajat (fn [vastaanottajat]
+                                                    (is (every? #(= :vastaanottaja (:tag %)) vastaanottajat)))
+                                  :vastaanottaja (fn [[vastaanottaja]]
+                                                   (is (= vastaanottaja "vastaanottaja@example.com")))
+                                  :lahettaja (fn [[lahettaja]]
+                                               (is (= lahettaja "lahettaja@example.com")))
+                                  :otsikko (fn [[otsikko]]
+                                             (is (= otsikko "Testiotsikko")))
+                                  :sisalto (fn [[sisalto]]
+                                             (is (= sisalto "Testisisalto")))})
+    (is (not (.hasMoreElements viestit-jonossa)))
+    (purge-jono istunto jono)))
 
 #_(deftest main-komponentit-loytyy
   (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
