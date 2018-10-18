@@ -170,31 +170,41 @@
         (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
         (assoc tila :yhteys yhteys :qcf qcf)))))
 
-(defn kasittele-viesti [vastaanottaja kuuntelijat]
+(defn kasittele-viesti [vastaanottaja kasittelija-fn]
   (.setMessageListener vastaanottaja
-                       ^{:kuuntelijoiden-maara (count kuuntelijat)}
-                       (reify MessageListener
-                         (onMessage [_ message]
-                           (doseq [kuuntelija kuuntelijat]
-                             (kuuntelija message))))))
+                       (with-meta
+                         (reify MessageListener
+                           (onMessage [_ message]
+                             (kasittelija-fn message)))
+                         (meta kasittelija-fn))))
 
 (defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
-  (update-in tila [:jonot jonon-nimi]
-             (fn [{:keys [istunto kuuntelijat vastaanottaja jono] :as jonon-tiedot}]
-               (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
-                 (if (empty? kuuntelijat)
-                   (do
-                     (.close istunto)
-                     nil)
-                   (do
-                     ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
-                     ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit.
-                     ;; Tämän jälkeen luodaan uusi vastaanottaja.
-                     (.close vastaanottaja)
-                     (let [vastaanottaja (.createReceiver istunto jono)]
-                       (kasittele-viesti vastaanottaja kuuntelijat)
+  (let [{:keys [istunto kuuntelijat vastaanottaja jono] :as jonon-tiedot} (get-in @tila [:jonot jonon-nimi])]
+    (if (contains? kuuntelijat kuuntelija-fn)
+      (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
+        (if (empty? kuuntelijat)
+          (do
+            (.close istunto)
+            (swap! tila assoc-in [:jonot jonon-nimi] nil))
+          (do
+            (println "KUUNTELIJOINTA USEAMPI: " (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara))
+            ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
+            ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit.
+            ;; Tämän jälkeen luodaan uusi vastaanottaja.
+            (println "Ennen closea" (java.util.Date.))
+            (.close vastaanottaja)
+            (println "Closen jälkeen" (java.util.Date.))
+            (println "LUODAAN UUT")
+            (let [vastaanottaja (.createReceiver istunto jono)]
+              (kasittele-viesti vastaanottaja kuuntelijat)
+              (swap! tila update-in [:jonot jonon-nimi]
+                     (fn [jonon-tiedot]
                        (assoc jonon-tiedot :vastaanottaja vastaanottaja
-                                           :kuuntelijat kuuntelijat))))))))
+                                           :kuuntelijat kuuntelijat)))))))
+      (do (println "Onpi jo poistettu")
+          (println "kuuntelija-fn " kuuntelija-fn " meta: " (meta kuuntelija-fn))
+          (println "Kuuntelijat: " kuuntelijat " meta: " (mapv meta kuuntelijat))
+          jonon-tiedot))))
 
 (defn luo-istunto [yhteys]
   (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE))
@@ -203,12 +213,28 @@
   (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
   (update-in tila [:jonot jonon-nimi]
              (fn [{:keys [kuuntelijat istunto jono vastaanottaja selailija] :as jonon-tiedot}]
+               (when vastaanottaja
+                 (.close vastaanottaja))
+               (when selailija
+                 (.close selailija))
+               (when istunto
+                 (.close istunto))
                (let [kuuntelijat (conj (or kuuntelijat #{}) kuuntelija-fn)
-                     istunto (or istunto (luo-istunto yhteys))
-                     jono (or jono (.createQueue istunto jonon-nimi))
-                     vastaanottaja (or vastaanottaja (.createReceiver istunto jono))
-                     selailija (or selailija (.createBrowser istunto jono))]
-                 (kasittele-viesti vastaanottaja kuuntelijat)
+                     kasittelija-fn ^{:kuuntelijoiden-maara (count kuuntelijat)}
+                                    (fn [viesti]
+                                      (doseq [kuuntelija kuuntelijat]
+                                        (println "KUUNTELIJOITA: " (count kuuntelijat))
+                                        (println "JONO: " jono)
+                                        (println "kuuntelija alotetaan" (java.util.Date.))
+                                        (println "Kuuntelija: " (meta kuuntelija) "Käsittelle")
+                                        (kuuntelija viesti)
+                                        (println "Kuuntelija: " (meta kuuntelija) "valmis")
+                                        (println "kuuntelija lopetetaan" (java.util.Date.))))
+                     istunto (luo-istunto yhteys)
+                     jono (.createQueue istunto jonon-nimi)
+                     vastaanottaja (.createReceiver istunto jono)
+                     selailija (.createBrowser istunto jono)]
+                 (kasittele-viesti vastaanottaja kasittelija-fn)
                  (assoc jonon-tiedot
                    :istunto istunto
                    :jono jono
@@ -290,7 +316,7 @@
               (log/info "Jonon " jonon-nimi " kuunteleminen epäonnistui: " e)
               (swap! (:tila this) update :saikeiden-maara dec)
               (throw e))))
-        #(swap! (:tila this) poista-kuuntelija jonon-nimi kuuntelija-fn))
+        #(poista-kuuntelija (:tila this) jonon-nimi kuuntelija-fn))
       (do
         (log/warn "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä")
         (constantly nil))))

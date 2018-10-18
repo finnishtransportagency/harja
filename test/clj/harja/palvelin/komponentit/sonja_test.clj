@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.core.async :as a :refer [<!! <! go go-loop thread timeout alts!!]]
+            [clojure.core.async :as a :refer [<!! <! >!! go go-loop thread timeout alts!! chan]]
             [org.httpkit.client :as http]
             [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
@@ -26,29 +26,59 @@
 
 (def ^:dynamic *sonja-yhteys* nil)
 
-(defrecord TestiKomponentti [tila]
+(defrecord Testikomponentti [tila]
   component/Lifecycle
   (start [{sonja :sonja :as this}]
-    (let [loppu-tila (go (<! (timeout 2000))
-                         (if-let [tapahtuma (:tapahtuma @tila)]
-                           (:tapahtuma @tila)
-                           :ok))]
+    ;; Tässä go-blockissa oletetaan, että kahden sekunnin aikana jarjestelma keretään alustaa ja päästä testin sisälle, jossa testin alussa
+    ;; voidaan halutessa muuttaa 'tila' atomin arvoa haluttuun arvoon.
+    (let [tila (atom nil)
+          lopputila (go (<! (timeout 2000))
+                        (if-let [tapahtuma (:tapahtuma @tila)]
+                          (:tapahtuma @tila)
+                          :ok))
+          viestia-kasitellaan (chan)
+          lopetus-kasky-lahetetty (chan)
+          testijonot (chan)]
       (thread
-        (case (<!! loppu-tila)
-          :ok (swap! tila assoc :testi-jono (sonja/kuuntele! sonja "testi-jono" (fn [])))
+        (case (<!! lopputila)
+          :ok (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []))})
           :exception (let [virhe-lahetetty? (atom false)]
                        (with-redefs [sonja/yhdista-kuuntelija (fn [& args]
                                                                 (reset! virhe-lahetetty? true)
                                                                 (throw Exception))]
-                         (sonja/kuuntele! sonja "testi-jono" (fn []))
+                         (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []))})
+                         ;; sonja/kuuntele aloittaa säikeen, jossa sonja/yhdista-kuuntelija funktiota käytetään.
+                         ;; On mahdollista, että tästä 'with-redefs' blokista ollaan jo ulkona tässä säikeessä
+                         ;; siinä vaiheessa, kun sonja/yhdista-kuuntelija funktiota kutsutaan. Tämä ei ole toivottu tilanne,
+                         ;; joten blokataan siksi aikaa, että sonja/yhdista-kuuntelija funktiota on kutsuttu.
                          (<!! (go-loop []
                                 (when-not @virhe-lahetetty?
                                   (<! (timeout 2000))
-                                  (recur))))))))
-      this))
+                                  (recur))))))
+          :useampi-kuuntelija (>!! testijonot
+                                   {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
+                                                                                                            (println "KÄSITELLÄÄN")
+                                                                                                            (>!! viestia-kasitellaan true)
+                                                                                                            ;; Nukutaan sekuntti, jotta 'pääsäikeessä' keretään sammuttaa kuuntelija.
+                                                                                                            (<!! lopetus-kasky-lahetetty)
+                                                                                                            (println "SWAPPAILLAAN")
+                                                                                                            (swap! tila update :testikasittelyita (fn [laskuri]
+                                                                                                                                                    (println "LASKURI: " laskuri)
+                                                                                                                                                    (if laskuri (inc laskuri) 1)))))
+                                    :testijono-2 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
+                                                                                                            (println "SWAPATAA")
+                                                                                                            (swap! tila update :testikasittelyita (fn [laskuri]
+                                                                                                                                                    (println "LASKURI: " laskuri)
+                                                                                                                                                    (if laskuri (inc laskuri) 1)))))})))
+      (assoc this :testijonot testijonot
+                  :viestia-kasitellaan viestia-kasitellaan
+                  :lopetus-kasky-lahetetty lopetus-kasky-lahetetty
+                  :tila tila)))
   (stop [{sonja :sonja :as this}]
-    (when-let [sammutus-fn (-> this :tila deref :testi-jono)]
-      (sammutus-fn))))
+    (println "AJETAAN STOP")
+    (doseq [jono [:testijono :testijono-1 :testijono-2]]
+      (when-let [sammutus-fn (-> this :tila deref jono)]
+        (sammutus-fn)))))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -62,13 +92,13 @@
                                                           [:db])
                         :sonja-sahkoposti (component/using
                                             (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                                                                             {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                              :sahkoposti-ulos-jono "harja-to-email"
+                                                                              :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                                             [:sonja :db :integraatioloki])
-                        :testi-komponentti (component/using
-                                             (->TestiKomponentti (atom nil))
-                                             [:sonja])
+                        :testikomponentti (component/using
+                                            (->Testikomponentti nil)
+                                            [:sonja])
                         #_#_:labyrintti (feikki-labyrintti)
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
@@ -91,7 +121,11 @@
                                       (status/luo-status)
                                       [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])))))
   ;; aloita-sonja palauttaa kanavan.
-  (binding [*sonja-yhteys* (sut/aloita-sonja jarjestelma)]
+  (binding [*sonja-yhteys* (go
+                             ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
+                             (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
+                               (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
+                             (<! (sut/aloita-sonja jarjestelma)))]
     (testit))
   (alter-var-root #'jarjestelma component/stop))
 
@@ -182,10 +216,10 @@
         (recur (.receiveNoWait vastaanottaja))))))
 
 (deftest sonja-yhteys-kaynnistyy-vaikka-sita-kayttava-komponentti-ei
-  (swap! (-> jarjestelma :testi-komponentti :tila) assoc :tapahtuma :exception)
+  (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
-    (is (nil? (-> jarjestelma :testi-komponentti :tila deref :testi-jono)))))
+    (is (nil? (-> jarjestelma :testikomponentti :tila deref :testijono)))))
 
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
@@ -202,9 +236,9 @@
                                                                                         [:db])
                                                       :sonja-sahkoposti (component/using
                                                                           (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                                                     {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                                                      :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
-                                                                                                      :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
+                                                                                                           {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                                                            :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
+                                                                                                            :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
                                                                           [:sonja :db :integraatioloki]))))
                                           (timeout 10000)])
           sonja-yhteys (when toinen-jarjestelma
@@ -218,9 +252,30 @@
       (Thread/sleep 2000)
       (is (= 3 (-> toinen-jarjestelma :sonja :tila deref :saikeiden-maara))))))
 
+(deftest lopeta-kuuntelija
+  (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :useampi-kuuntelija)
+  (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
+        testikomponentti (:testikomponentti jarjestelma)
+        {:keys [istunto jono vastaanottaja]} (-> jarjestelma :sonja :tila deref :jonot (get "testijono"))
+        tuottaja (.createProducer istunto jono)
+        msg (sonja/luo-viesti "foo" istunto)]
+    (is (= 2 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara)))
+    ;; Lähetetään viesti
+    (.send tuottaja msg)
+    ;; Odotetaan, että viestiä käsitellään
+    (<!! (-> testikomponentti :viestia-kasitellaan))
+    (println "FOO: ")
+    (clojure.pprint/pprint (-> jarjestelma :testikomponentti :tila deref))
+    ;; lopetetaan yksi kuuntelija
+    ((-> testikomponentti :tila deref :testijono-1))
+    (>!! (-> testikomponentti :lopetus-kasky-lahetetty) true)
+    (clojure.pprint/pprint (-> jarjestelma :testikomponentti :tila deref))
+    ;; Lopetuksen pitäisi blokata ja odotella, että consumer saa hoidettua hommansa
+    (is (= (-> testikomponentti :tila deref :testikasittelyita) 2))))
+
 (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
-  (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
+  (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
         jonot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :jonot)
         _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
         jonot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :jonot)
@@ -241,5 +296,7 @@
     (is (not (.hasMoreElements viestit-jonossa)))
     (purge-jono istunto jono)))
 
+
+
 #_(deftest main-komponentit-loytyy
-  (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
+    (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
