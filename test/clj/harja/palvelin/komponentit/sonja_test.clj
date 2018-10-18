@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.core.async :as a :refer [<!! <! >!! go go-loop thread timeout alts!! chan]]
+            [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout alts!! chan]]
             [org.httpkit.client :as http]
             [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
@@ -29,53 +29,34 @@
 (defrecord Testikomponentti [tila]
   component/Lifecycle
   (start [{sonja :sonja :as this}]
-    ;; Tässä go-blockissa oletetaan, että kahden sekunnin aikana jarjestelma keretään alustaa ja päästä testin sisälle, jossa testin alussa
-    ;; voidaan halutessa muuttaa 'tila' atomin arvoa haluttuun arvoon.
     (let [tila (atom nil)
+          ;; Tässä go-blockissa oletetaan, että kahden sekunnin aikana jarjestelma keretään alustaa ja päästä testin sisälle, jossa testin alussa
+          ;; voidaan halutessa muuttaa 'tila' atomin arvoa haluttuun arvoon.
           lopputila (go (<! (timeout 2000))
                         (if-let [tapahtuma (:tapahtuma @tila)]
                           (:tapahtuma @tila)
                           :ok))
-          viestia-kasitellaan (chan)
-          lopetus-kasky-lahetetty (chan)
+          testijonokanava (chan)
           testijonot (chan)]
       (thread
         (case (<!! lopputila)
           :ok (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []))})
-          :exception (let [virhe-lahetetty? (atom false)]
-                       (with-redefs [sonja/yhdista-kuuntelija (fn [& args]
-                                                                (reset! virhe-lahetetty? true)
-                                                                (throw Exception))]
-                         (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []))})
-                         ;; sonja/kuuntele aloittaa säikeen, jossa sonja/yhdista-kuuntelija funktiota käytetään.
-                         ;; On mahdollista, että tästä 'with-redefs' blokista ollaan jo ulkona tässä säikeessä
-                         ;; siinä vaiheessa, kun sonja/yhdista-kuuntelija funktiota kutsutaan. Tämä ei ole toivottu tilanne,
-                         ;; joten blokataan siksi aikaa, että sonja/yhdista-kuuntelija funktiota on kutsuttu.
-                         (<!! (go-loop []
-                                (when-not @virhe-lahetetty?
-                                  (<! (timeout 2000))
-                                  (recur))))))
+          :exception (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []
+                                                                                      (throw (Exception. "VIRHE"))))})
           :useampi-kuuntelija (>!! testijonot
                                    {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
-                                                                                                            (println "KÄSITELLÄÄN")
-                                                                                                            (>!! viestia-kasitellaan true)
+                                                                                                            (>!! testijonokanava :viestia-kasitellaan)
                                                                                                             ;; Nukutaan sekuntti, jotta 'pääsäikeessä' keretään sammuttaa kuuntelija.
-                                                                                                            (<!! lopetus-kasky-lahetetty)
-                                                                                                            (println "SWAPPAILLAAN")
+                                                                                                            (Thread/sleep 1000)
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
-                                                                                                                                                    (println "LASKURI: " laskuri)
                                                                                                                                                     (if laskuri (inc laskuri) 1)))))
                                     :testijono-2 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
-                                                                                                            (println "SWAPATAA")
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
-                                                                                                                                                    (println "LASKURI: " laskuri)
                                                                                                                                                     (if laskuri (inc laskuri) 1)))))})))
       (assoc this :testijonot testijonot
-                  :viestia-kasitellaan viestia-kasitellaan
-                  :lopetus-kasky-lahetetty lopetus-kasky-lahetetty
+                  :testijonokanava testijonokanava
                   :tila tila)))
   (stop [{sonja :sonja :as this}]
-    (println "AJETAAN STOP")
     (doseq [jono [:testijono :testijono-1 :testijono-2]]
       (when-let [sammutus-fn (-> this :tila deref jono)]
         (sammutus-fn)))))
@@ -177,7 +158,6 @@
     (is (= (:sonja asetukset) sonja-asetukset))
     (is @yhteys-future "Yhteyoliota ei luotu")
     (doseq [[jonon-nimi jonon-oliot] jonot]
-      (println "Jonon nimi: " jonon-nimi)
       (when-let [olio (:vastaanottaja jonon-oliot)]
         (= (-> olio .getMessageListener meta :kuuntelijoiden-maara) 1))
       (doseq [[avain olio] jonon-oliot]
@@ -215,13 +195,15 @@
       (when viesti
         (recur (.receiveNoWait vastaanottaja))))))
 
-(deftest sonja-yhteys-kaynnistyy-vaikka-sita-kayttava-komponentti-ei
+#_(deftest virhe-kasittelija-funktiossa
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (nil? (-> jarjestelma :testikomponentti :tila deref :testijono)))))
 
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
+  ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
+  (<!! *sonja-yhteys*)
   (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
                                             (loop []
                                               (Thread/sleep 1000)
@@ -230,7 +212,6 @@
     (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
                                                     (component/system-map
                                                       :db (tietokanta/luo-tietokanta testitietokanta)
-                                                      #_#_:http-palvelin (testi-http-palvelin)
                                                       :sonja (sonja/luo-oikea-sonja (:sonja asetukset))
                                                       :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                                         [:db])
@@ -244,18 +225,13 @@
           sonja-yhteys (when toinen-jarjestelma
                          (sut/aloita-sonja toinen-jarjestelma))]
       (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
-      ;; Odotellaan vähän aikaa, jotta voidaan varmistua siitä, että :saikeiden-maara lukemisessa ei tule race-conditionia (vaikkei tämän pitäisi olla edes mahdollista, mutta silti).
-      ;; Eli tässähän pitäisi käydä niin, että jokaisen sonja/kuuntele! kutsun kohdalla kounteria nostetaan ja sitä lasketaan
-      ;; vain, jos kuuntele! nakkaa poikkeuksen tai se suorittaa tehtävänsä loppuun omassa threadissään. Nythän tämä "oma säije" pitäisi blokata sillä, futuren lukeminen
-      ;; blokkaa niin kauan, että sen arvo voidaan lukea. Sitä ei tässä testissä voida ikinä lukea, sillä sonja/aloita-yhdistaminen on määritelty ikuiseen
-      ;; looppiin. Mutta mikäli "oma säije" pääsisi jotenkin laskemaan counteria, niin silloin syntyisi race-condition.
-      (Thread/sleep 2000)
-      (is (= 3 (-> toinen-jarjestelma :sonja :tila deref :saikeiden-maara))))))
+      (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen ei blokkaa vaikka yhteys ei ole käytössä"))))
 
 (deftest lopeta-kuuntelija
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :useampi-kuuntelija)
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
         testikomponentti (:testikomponentti jarjestelma)
+        testijonokanava (:testijonokanava testikomponentti)
         {:keys [istunto jono vastaanottaja]} (-> jarjestelma :sonja :tila deref :jonot (get "testijono"))
         tuottaja (.createProducer istunto jono)
         msg (sonja/luo-viesti "foo" istunto)]
@@ -263,13 +239,9 @@
     ;; Lähetetään viesti
     (.send tuottaja msg)
     ;; Odotetaan, että viestiä käsitellään
-    (<!! (-> testikomponentti :viestia-kasitellaan))
-    (println "FOO: ")
-    (clojure.pprint/pprint (-> jarjestelma :testikomponentti :tila deref))
+    (<!! testijonokanava)
     ;; lopetetaan yksi kuuntelija
     ((-> testikomponentti :tila deref :testijono-1))
-    (>!! (-> testikomponentti :lopetus-kasky-lahetetty) true)
-    (clojure.pprint/pprint (-> jarjestelma :testikomponentti :tila deref))
     ;; Lopetuksen pitäisi blokata ja odotella, että consumer saa hoidettua hommansa
     (is (= (-> testikomponentti :tila deref :testikasittelyita) 2))))
 
