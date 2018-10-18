@@ -139,13 +139,9 @@
                    (inc aika))))))))
 
 ;;; Sonja komponentin testit
-; - Käynnistyy vaikka jokin sonjaa käyttävä komponentti feilaa
 ;   - Nähdään mitkä komponentit ei ole käynnissä
-; - Jos Sonja ei käynnisty, sitä käyttävät komponentit käynnistyy
 ;   - Nähdään, että Sonja ei ole päällä
 ; - Jonossa näkyy viestit
-; - Viestin käsittelijän lopetus
-; - Viestin lähetys onnistuu
 
 ;;; Sonjaa käyttävien komponenttien testejä
 ; - Testataan, että ilmoitukset käsitellään

@@ -1,7 +1,7 @@
 (ns harja.palvelin.main
   (:require
     [taoensso.timbre :as log]
-    [clojure.core.async :as a :refer [<! go-loop timeout]]
+    [clojure.core.async :as a :refer [<! go timeout]]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
@@ -672,18 +672,10 @@
 (defonce harja-jarjestelma nil)
 
 (defn aloita-sonja [jarjestelma]
-  (go-loop []
-    (let [kuuntelu-prosessia-kesken (-> jarjestelma :sonja :tila deref :saikeiden-maara)]
-      ;; Aloitetaan yhteys vasta, kun kaikki komponentit ovat saaneet suoritettua niiden
-      ;; sonja/kuuntele! tehtävänsä.
-      (if (= kuuntelu-prosessia-kesken 0)
-        (do
-          (log/info "Aloitaetaan Sonjayhteys")
-          (sonja/aloita-yhteys (:sonja jarjestelma))
-          true)
-        (do
-          (<! (timeout 2000))
-          (recur))))))
+  (go
+    (log/info "Aloitaetaan Sonjayhteys")
+    (sonja/aloita-yhteys (:sonja jarjestelma))
+    true))
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
