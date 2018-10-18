@@ -50,13 +50,12 @@
 
   (testing "suolasakon luonti ja päivitys"
     (let [urakka-id @oulun-alueurakan-2014-2019-id
-          valitun-urakan-hoitokaudet (q (str "SELECT * FROM urakan_hoitokaudet(" urakka-id ")"))
-          lisattava-suolasakko {:hoitokaudet valitun-urakan-hoitokaudet
+          lisattava-suolasakko {:hoitokauden-alkuvuosi 2015
                                 :urakka urakka-id
                                 :suolasakko {:maksukuukausi 6
                                              :indeksi "MAKU 2005"
                                              :maara 40
-                                             :hoitokauden-alkuvuosi 2015
+                                             :hoitokauden_alkuvuosi 2015
                                              :talvisuolaraja 100}}
           tulos (:suolasakot (kutsu-palvelua
                                (:http-palvelin jarjestelma)
