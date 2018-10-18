@@ -74,16 +74,17 @@ VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
 
 
 -- name: aseta-suolasakon-kaytto!
--- Insertoidaan rivi, jos urakalla ei ole suolasakkoriviä, jotta voidaan tallentaa tieto myös suolasakon käyttämättömyydestä (HAR-8311).
--- Sama käytössä-tieto ja muut määritykset koskevat kaikkia urakan hoitokausia, vaikka hoitokausille on oma suolasakkorivinsä.
--- Ks. myös
 INSERT INTO suolasakko (kaytossa, luotu, luoja, urakka, hoitokauden_alkuvuosi) VALUES (:kaytossa, NOW(), :kayttaja, :urakka,
-                                                                                       (SELECT date_part('year', alkupvm) FROM urakka where id = :urakka))
+                                                                                       :hoitokauden_alkuvuosi)
+
 ON CONFLICT (urakka, hoitokauden_alkuvuosi) DO UPDATE
   SET kaytossa = :kaytossa, muokattu = NOW(), muokkaaja = :kayttaja;
 
 -- name: onko-suolasakko-kaytossa?
-SELECT EXISTS(SELECT id FROM suolasakko WHERE urakka=:urakka AND kaytossa=true) as kaytossa;
+SELECT EXISTS(SELECT id FROM suolasakko
+              WHERE urakka = :urakka AND
+                    kaytossa = true AND
+                    hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi) as kaytossa;
 
 -- name: hae-teiden-hoitourakoiden-lampotilat
 SELECT

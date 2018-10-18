@@ -92,11 +92,25 @@
 
       (apurit/tarkista-taulukko-rivit
        taulukko
-       (fn [[urakka-nimi lampotila keskilampo sallittu & _ ]]
+       (fn [[urakka-nimi lampotila keskilampo sallittu bonusraja sakkoraja kerroin
+             kohtuullistarkistettu-sakkoraja kaytetty-talvisuolaa erotus
+             sakkobonus-per-t vainsakko-per-t sakkobonus indeksi
+             indeksikorotettuna & _ ]]
          (and (= urakka-nimi "Oulun alueurakka 2014-2019")
               (testi/=marginaalissa? lampotila -6.2)
               (testi/=marginaalissa? keskilampo -9.3)
-              (testi/=marginaalissa? sallittu 800)))
+              (testi/=marginaalissa? sallittu 800)
+              (testi/=marginaalissa? bonusraja 760)
+              (testi/=marginaalissa? sakkoraja 840)
+              (testi/=marginaalissa? (:arvo (second kerroin)) 1.2)
+              (testi/=marginaalissa? kohtuullistarkistettu-sakkoraja 1008)
+              (testi/=marginaalissa? kaytetty-talvisuolaa 2000)
+              (testi/=marginaalissa? erotus 992)
+              (testi/=marginaalissa? sakkobonus-per-t 30)
+              (nil? vainsakko-per-t)
+              (testi/=marginaalissa? sakkobonus -29760)
+              (testi/=marginaalissa? indeksi -104.52)
+              (testi/=marginaalissa? indeksikorotettuna -29864.52)))
        (fn [[yht & _]]
          (= "Yhteensä" yht)))
 

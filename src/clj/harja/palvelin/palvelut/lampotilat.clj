@@ -135,35 +135,32 @@
   (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue))
     (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue)))
 
-;; TIEDOT:
-;; {:suolasakko {:talvisuolaraja 444, :maksukuukausi 7, :indeksi "MAKU 2010", :maara 30}
-;;  :pohjavesialue-talvisuola [{:pohjavesialue "43091941", :urakka 4, :hoitokauden_alkuvuosi 2015, :talvisuolaraja 4242}]
-;;  :muokattu true
-;;  :hoitokauden_alkuvuosi 2015}
 (defn tallenna-suolasakko-ja-pohjavesialueet
-  [db user {:keys [hoitokaudet urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
+  [db user {:keys [hoitokauden-alkuvuosi urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
   (log/debug"tallenna-suolasakko-ja-pohjavesialueet tiedot: " (pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka)
   (jdbc/with-db-transaction
     [db db]
-    (doseq [hk hoitokaudet]
-      (let [hoitokauden-alkuvuosi (pvm/vuosi (first hk))
-            suolasakon-id (tallenna-suolasakko db user urakka
-                                               hoitokauden-alkuvuosi suolasakko)]
-        (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
-          (tallenna-pohjavesialue-talvisuola db user urakka
-                                             hoitokauden-alkuvuosi pohjavesialue talvisuolaraja))))
+    (let [suolasakon-id (tallenna-suolasakko db user urakka
+                                             hoitokauden-alkuvuosi suolasakko)]
+      (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
+        (tallenna-pohjavesialue-talvisuola db user urakka
+                                           hoitokauden-alkuvuosi pohjavesialue talvisuolaraja)))
 
     (hae-urakan-suolasakot-ja-lampotilat db user urakka)))
 
 
-(defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
-  (log/debug "Käytössä? " kaytossa?)
+(defn aseta-suolasakon-kaytto [db user {:keys [urakka-id hoitokauden-alkuvuosi kaytossa?] :as params}]
+  (log/debug "aseta-suolasakon-kaytto, params: " params)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (jdbc/with-db-transaction
     [db db]
-    (q/aseta-suolasakon-kaytto! db kaytossa? (:id user) urakka-id)
-    (:kaytossa (first (q/onko-suolasakko-kaytossa? db urakka-id)))))
+    (q/aseta-suolasakon-kaytto! db {:kaytossa kaytossa?
+                                    :kayttaja (:id user)
+                                    :urakka urakka-id
+                                    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+    (:kaytossa (first (q/onko-suolasakko-kaytossa? db {:urakka urakka-id
+                                                       :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))))
 
 (defrecord Lampotilat [ilmatieteenlaitos-url]
   component/Lifecycle
