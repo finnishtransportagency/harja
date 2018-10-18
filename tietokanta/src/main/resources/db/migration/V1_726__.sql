@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS tg_aseta_suoasakon_kaytto_kaikille_hoitokausille ON suolasakko;
