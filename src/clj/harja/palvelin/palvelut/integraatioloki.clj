@@ -40,14 +40,14 @@
 (defn hae-jarjestelmien-integraatiot
   "Palvelu, joka palauttaa kaikki eri järjestelmien integraatiot."
   [db kayttaja]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
   (log/debug "Haetaan järjestelmien integraatiot.")
   (hae-integraatiot db))
 
 (defn hae-integraatiotapahtumat
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
   (let [{:keys [otsikot parametrit viestin-sisalto tapahtumien-tila tapahtumien-kesto max-tulokset]} hakuehdot
         otsikot (if (str/blank? otsikot) nil otsikot)
         parametrit (if (str/blank? parametrit) nil parametrit)
@@ -76,7 +76,7 @@
 
 (defn hae-integraatiotapahtumien-maarat
   [db kayttaja jarjestelma integraatio]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
   (let [
         jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
         maarat (q/hae-integraatiotapahtumien-maarat
@@ -86,7 +86,7 @@
     maarat))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
   (into []
         viesti-xf
         (q/hae-integraatiotapahtuman-viestit db tapahtuma-id)))

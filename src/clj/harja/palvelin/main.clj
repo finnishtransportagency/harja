@@ -83,6 +83,7 @@
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
+    [harja.palvelin.palvelut.harjatila :as harjatila]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -210,7 +211,9 @@
                        [:db])
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
-      :sonja (sonja/luo-sonja (:sonja asetukset))
+      :sonja (component/using
+               (sonja/luo-sonja (:sonja asetukset))
+               [:db])
       :sonja-sahkoposti
       (component/using
         (let [{:keys [vastausosoite jonot suora? palvelin]}
@@ -552,6 +555,10 @@
       :koordinaatit (component/using
                       (koordinaatit/->Koordinaatit)
                       [:http-palvelin])
+
+      :harjatila (component/using
+                   (harjatila/->Harjatila)
+                   [:db :http-palvelin])
 
       ;; Harja API
       :api-urakat (component/using

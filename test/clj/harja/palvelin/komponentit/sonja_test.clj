@@ -169,9 +169,6 @@
                            (is (instance? javax.jms.QueueReceiver olio))
                            (is (= (.. olio getQueue getQueueName) jonon-nimi))
                            (is (instance? javax.jms.MessageListener (.getMessageListener olio))))
-          :selailija (do
-                       (is (instance? javax.jms.QueueBrowser olio))
-                       (is (= (.. olio getQueue getQueueName) jonon-nimi)))
           :tuottaja (do
                       (is (instance? javax.jms.MessageProducer olio))
                       (is (= (->> (.getDestination olio) (cast javax.jms.Queue) .getQueueName) jonon-nimi))))))))
@@ -247,9 +244,9 @@
         jonot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :jonot)
         _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
         jonot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :jonot)
-        {:keys [jono istunto selailija]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
-        viestit-jonossa (.getEnumeration selailija)
-        viesti (->> viestit-jonossa .nextElement (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
+        {:keys [jono istunto]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
+        viestit-jonossa (sonja/hae-jonon-viestit istunto jono)
+        viesti (->> viestit-jonossa first (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
     (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
     (tarkista-xml-sisalto viesti {:vastaanottajat (fn [vastaanottajat]
                                                     (is (every? #(= :vastaanottaja (:tag %)) vastaanottajat)))
@@ -261,7 +258,7 @@
                                              (is (= otsikko "Testiotsikko")))
                                   :sisalto (fn [[sisalto]]
                                              (is (= sisalto "Testisisalto")))})
-    (is (not (.hasMoreElements viestit-jonossa)))
+    (is (= 1 (count viestit-jonossa)))
     (purge-jono istunto jono)))
 
 

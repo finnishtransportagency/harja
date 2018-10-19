@@ -3,13 +3,17 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
-            [clojure.core.async :refer [go <! >! thread >!!] :as async]
+            [cheshire.core :as cheshire]
+            [clojure.core.async :refer [go-loop go <! >! thread >!! timeout] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.kyselyt.harjatila :as q]
+            [harja.fmt :as fmt])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
-           (java.lang.reflect Proxy InvocationHandler))
+           (java.lang.reflect Proxy InvocationHandler)
+           (java.net InetAddress))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def JMS-alkutila
@@ -65,6 +69,62 @@
 
 (def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
+
+(defmacro exception-wrapper [olio metodi]
+  `(when ~olio
+     (try (. ~olio ~metodi)
+          "ACTIVE"
+          ~(list 'catch 'javax.jms.IllegalStateException 'e
+            "CLOSED"))))
+
+(defn hae-jonon-viestit [istunto jono]
+  (when (and istunto jono)
+    (let [selailija (.createBrowser istunto jono)]
+      (try (loop [viestit (.getEnumeration selailija)
+                  viesti-idt []]
+             (if (.hasMoreElements viestit)
+               (recur viestit
+                      (conj viesti-idt (->> viestit .nextElement .getJMSMessageID)))
+               viesti-idt))
+           (catch JMSException e
+             nil)
+           (finally
+             (when selailija
+               (.close selailija)))))))
+
+(defn aloita-sonja-yhteyden-tarkkailu [JMS-oliot tyyppi db]
+  (go-loop []
+    (let [{yhteys :yhteys jonot :jonot} @JMS-oliot
+          yhteyden-tila (when yhteys
+                          (if (= tyyppi :activemq)
+                            (if (.isClosed yhteys)
+                              "CLOSED"
+                              "ACTIVE")
+                            (.getConnectionState yhteys)))
+          olioiden-tilat {:yhteyden-tila yhteyden-tila
+                          :istunnot (mapv (fn [[jonon-nimi {:keys [istunto jono tuottaja vastaanottaja]}]]
+                                            ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
+                                            ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException
+                                            (let [istunnon-tila (exception-wrapper istunto getAcknowledgeMode)
+                                                  jonon-viestit (hae-jonon-viestit istunto jono)
+                                                  _ (if (not (empty? jonon-viestit))
+                                                      (println "AJFOAJFOAJFAO: " jonon-viestit))
+                                                  tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
+                                                  vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
+                                              {:istunnon-tila istunnon-tila
+                                               :jono {jonon-nimi {:jonon-viestit jonon-viestit
+                                                                  :tuottajat (when tuottaja
+                                                                               {:tuottajan-tila tuottajan-tila})
+                                                                  :vastaanottajat (when vastaanottaja
+                                                                                    {:vastaanottajan-tila vastaanottajan-tila})}}}))
+                                          jonot)}]
+      (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode olioiden-tilat)
+                                    :palvelin (fmt/leikkaa-merkkijono 512
+                                                                      (.toString (InetAddress/getLocalHost)))
+                                    :osa-alue "sonja"}))
+    (<! (timeout 5000))
+    (recur)))
+
 (declare aloita-yhdistaminen
          yhdista-kuuntelija
          tee-jms-poikkeuskuuntelija)
@@ -74,6 +134,8 @@
             (assoc-in tila [:jonot jono :consumer] nil))
           tila
           (keys jonot)))
+
+
 
 #_(defn- luodaanko-uusi-sonja-yhteys? [kulunut-aika {:keys [yhteys jonot] :as tila} {:keys [tyyppi]}]
   (let [yhteyden-tila (when (= :sonicmq tyyppi)
@@ -216,33 +278,29 @@
   (let [{:keys [yhteys]} @tila
         istunto (luo-istunto yhteys)
         jono (.createQueue istunto jonon-nimi)
-        vastaanottaja (.createReceiver istunto jono)
-        selailija (.createBrowser istunto jono)]
+        vastaanottaja (.createReceiver istunto jono)]
     (kasittele-viesti vastaanottaja kuuntelijat)
     (swap! tila update-in [:jonot jonon-nimi]
            (fn [jonon-tila]
              (assoc jonon-tila
                :istunto istunto
                :jono jono
-               :vastaanottaja vastaanottaja
-               :selailija selailija)))))
+               :vastaanottaja vastaanottaja)))))
 
 (defn varmista-jms-objektit [tila jonon-nimi]
   (let [{jonot :jonot yhteys :yhteys} @tila
-        {:keys [istunto jono tuottaja selailija]} (get jonot jonon-nimi)]
+        {:keys [istunto jono tuottaja]} (get jonot jonon-nimi)]
     ;Käytetään swap! vaan, jos on tarvis
-    (when-not (and istunto jono tuottaja selailija)
+    (when-not (and istunto jono tuottaja)
       (swap! tila update-in [:jonot jonon-nimi]
-             (fn [{:keys [istunto jono tuottaja selailija] :as jonon-tiedot}]
+             (fn [{:keys [istunto jono tuottaja] :as jonon-tiedot}]
                (let [istunto (or istunto (luo-istunto yhteys))
                      jono (or jono (.createQueue istunto jonon-nimi))
-                     tuottaja (or tuottaja (.createProducer istunto jono))
-                     selailija (or selailija (.createBrowser istunto jono))]
+                     tuottaja (or tuottaja (.createProducer istunto jono))]
                  (assoc jonon-tiedot
                    :istunto istunto
                    :jono jono
-                   :tuottaja tuottaja
-                   :selailija selailija)))))))
+                   :tuottaja tuottaja)))))))
 
 (defn laheta-viesti [{yhteys :yhteys jonot :jonot} jonon-nimi viesti correlation-id]
   (if yhteys
@@ -260,7 +318,8 @@
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok? yhteys-future]
   component/Lifecycle
-  (start [this]
+  (start [{db :db
+           :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
           yhteys-ok? (atom false)
           poikkeus-kuuntelija (tee-jms-poikkeuskuuntelija JMS-oliot asetukset yhteys-ok?)
@@ -269,7 +328,8 @@
       (assoc this
         :tila JMS-oliot
         :yhteys-ok? yhteys-ok?
-        :yhteys-future yhteys-future)))
+        :yhteys-future yhteys-future
+        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu JMS-oliot (:tyyppi asetukset) db))))
 
   (stop [this]
     (when @yhteys-ok?
