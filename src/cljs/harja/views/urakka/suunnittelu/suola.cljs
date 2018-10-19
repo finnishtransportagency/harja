@@ -130,19 +130,10 @@
       (let [{:keys [pohjavesialueet]} @suolasakot-ja-lampotilat
             tiedot (:suolasakko @syotettavat-tiedot)
             lampotilat @lampotilat
-            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))
-            kaytossa? @suolasakko-kaytossa?
-            valittu-hoitokausi @u/valittu-hoitokausi]
+            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))]
         [:span.suolasakkolomake
          [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
          [valinnat/urakan-hoitokausi urakka]
-         [yleiset/raksiboksi {:teksti "Suolasakko käytössä"
-                              :toiminto #(go (reset! suolasakko-kaytossa?
-                                                     (<! (suola/aseta-suolasakon-kaytto (:id urakka)
-                                                                                        (pvm/vuosi (first valittu-hoitokausi))
-                                                                                        (not kaytossa?)))))
-                              :disabled? (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka)))}
-          kaytossa?]
          [lomake {:muokkaa! (fn [uusi]
                               (log "lomaketta muokattu, tiedot:" (pr-str uusi))
                               (swap! syotettavat-tiedot assoc :suolasakko uusi :muokattu true))
@@ -159,13 +150,17 @@
                                                (viesti/nayta! "Tallentaminen onnistui" :success viesti/viestin-nayttoaika-lyhyt)
                                                (reset! pohjavesialueita-muokattu? false)
                                                (reset! suolasakot-ja-lampotilat %))}])]}
-          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true
+          [{:teksti "Suolasakko käytössä"
+            :muokattava? (constantly saa-muokata?)
+            :nimi :kaytossa :nayta-rivina? true
+            :tyyppi :checkbox :palstoja 2}
+           {:otsikko "Talvisuolan käyttöraja"
             :muokattava? (constantly saa-muokata?)
             :nimi :talvisuolaraja
             :tyyppi :positiivinen-numero :palstoja 1
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
            {:otsikko "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
-            :valinta-arvo first :pakollinen? true
+            :valinta-arvo first
             :muokattava? (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
                              ""
