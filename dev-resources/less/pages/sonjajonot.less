@@ -1,0 +1,45 @@
+.yhteys {
+  display: flex;
+  flex-direction: column;
+
+  .istunnot {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+
+    .jono {
+      display: flex;
+      flex-direction: column;
+
+      flex: 1;
+
+      .jms-viestit {
+        display: flex;
+        flex-direction: column;
+        border: solid;
+        padding: 0.5em;
+        margin: 0.2em;
+      }
+      .viestin-kasittelijat{
+        .jms-virheet {
+          display: flex;
+          flex-direction: column;
+          .virhe {
+            display: flex;
+            flex-direction: row;
+            border: solid;
+            padding: 0.5em;
+            margin: 0.2em;
+            .aika {
+              flex: 1;
+              border-right: solid;
+            }
+            .virhe-viesti {
+              flex: 1;
+            }
+          }
+        }
+      }
+    }
+  }
+}

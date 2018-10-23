@@ -5,55 +5,72 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :as debug]))
 
-(defn vastaanottaja [e! {vastaanottajan-tila :vastaanottajan-tila}]
-  [:div
-   [ikonit/livicon-arrow-up]])
+(defn kasittelija-esitys [e! kasittelija tila]
+  (let [onko-vastaanottaja? (= kasittelija :vastaanottaja)
+        {virheet :virheet kasittelija-tila (if onko-vastaanottaja?
+                                             :vastaanottajan-tila
+                                             :tuottajan-tila)} tila]
+    [:div
+     [:div {:class (if (= kasittelija-tila "ACTIVE")
+                     "bg-success" "bg-danger")}
+      (str (if onko-vastaanottaja?
+             "Vastaanottaja: "
+             "Tuottaja: ")
+           kasittelija-tila)]
+     (when virheet
+       [:div
+        [:span "Virheet"]
+        [:div.jms-virheet
+         (map #(with-meta
+                 [:div.virhe
+                  [:div.aika (:aika %)]
+                  [:div.virhe-viesti (:viesti %)]]
+                 {:key (:aika %)})
+              virheet)]])]))
 
-(defn tuottaja [e! {tuottajan-tila :tuottajan-tila}]
-  [:div
-   [ikonit/livicon-arrow-down]])
-
-(defn jono [e! [jonon-nimi {:keys [tuottajat vastaanottajat jonon-viestit]}]]
-  [:div {:style {:display "flex"
-                 :flex-direction "column"}}
-   [:h3 jonon-nimi]
-   [:div
-    (map #(with-meta
-            (identity
-              [:span %])
-            {:key %})
-         jonon-viestit)]
-   (concat
-     (map-indexed #(with-meta
-                     (tuottaja e! %2)
-                     {:key %1})
-                  tuottajat)
-     (map-indexed #(with-meta
-                     (vastaanottaja e! %2)
-                     {:key %1})
-                  vastaanottajat))])
+(defn jono [e! [jonon-nimi {:keys [tuottaja vastaanottaja jonon-viestit]}]]
+  (let [viestit (map #(with-meta
+                        (identity
+                          [:span %])
+                        {:key %})
+                     jonon-viestit)]
+    [:div.thumbnail.jono
+     [:h3 jonon-nimi]
+     [:div.viestin-kasittelijat
+      (list
+        (when tuottaja
+          (with-meta
+            [kasittelija-esitys e! :tuottaja tuottaja]
+            {:key "tuottajan-tila"}))
+        (when vastaanottaja
+          (with-meta
+            [kasittelija-esitys e! :vastaanottaja vastaanottaja]
+            {:key "vastaanottajan-tila"})))]
+     [:span "Viestit"]
+     [:div.jms-viestit
+      (if (empty? viestit)
+        "Ei viestejä jonossa..."
+        viestit)]]))
 
 (defn istunto [e! {sonja-jono :jono istunnon-tila :istunnon-tila}]
-  [:div {:style {:display "flex"
-                 :flex-direction "row"}}
-   [:span istunnon-tila]
+  [:div.thumbnail
+   [:span (str "Istunnon tila: " istunnon-tila)]
    (map #(with-meta
-           (jono e! %)
+           [jono e! %]
            {:key (key %)})
         sonja-jono)])
 
 (defn yhteys [e! {palvelin :palvelin {:keys [istunnot yhteyden-tila]} :tila}]
-  [:div {:style {:display "flex"
-                :flex-direction "column"}}
+  [:div.yhteys
    [:div.thumbnail
     [:h2 palvelin]
-    [:span yhteyden-tila]]
-   [:div {:style {:display "flex"
-                  :flex-direction "row"}}
-    (map-indexed #(with-meta
-                    (istunto e! %2)
-                    {:key %1})
-         istunnot)]])
+    [:span (str "Yhteyden tila: " yhteyden-tila)]
+    [:hr]
+    [:div.istunnot
+     (map-indexed #(with-meta
+                     [istunto e! %2]
+                     {:key %1})
+                  istunnot)]]])
 
 (defn virhe [app]
   [:p app])
@@ -67,7 +84,7 @@
        [debug/debug app]
        (if sonjan-tila
          (map #(with-meta
-                 (yhteys e! %)
+                 [yhteys e! %]
                  {:key (:palvelin %)})
               sonjan-tila)
          [virhe app])])))
