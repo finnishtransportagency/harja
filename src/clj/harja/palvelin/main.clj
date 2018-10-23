@@ -686,6 +686,13 @@
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
+    ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
+    ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
+    (Thread/setDefaultUncaughtExceptionHandler
+      (reify Thread$UncaughtExceptionHandler
+        (uncaughtException [_ thread e]
+          (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
+          (log/error "Virhe: " e))))
     (alter-var-root #'harja-jarjestelma
                     (constantly
                       (-> (lue-asetukset asetusfile)
