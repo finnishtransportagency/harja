@@ -38,7 +38,8 @@
                                   (fn [viesti viesti-id onnistunut]
                                     (doseq [kuittaus-kuuntelija (get @kuittaus-kuuntelijat sahkoposti-ulos-kuittausjono)]
                                       (kuittaus-kuuntelija viesti viesti-id onnistunut))
-                                    (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))))
+                                    (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))
+                                  "EMAIL"))
     (constantly nil)))
 
 (defrecord SonjaSahkoposti [vastausosoite jonot kuuntelijat kuittaus-kuuntelijat]

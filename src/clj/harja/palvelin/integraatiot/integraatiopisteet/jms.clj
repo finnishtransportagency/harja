@@ -34,13 +34,14 @@
     viesti))
 
 (defn laheta-jonoon
-  ([lokittaja sonja jono viesti] (laheta-jonoon lokittaja sonja jono viesti nil))
-  ([lokittaja sonja jono viesti viesti-id]
+  ([lokittaja sonja jono viesti] (laheta-jonoon lokittaja sonja jono viesti nil nil))
+  ([lokittaja sonja jono viesti viesti-id] (laheta-jonoon lokittaja sonja jono viesti nil nil))
+  ([lokittaja sonja jono viesti viesti-id jarjestelma]
    (log/debug (format "Lähetetään JMS jonoon: %s viesti: %s." jono viesti))
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
      (try+
-       (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
+       (if-let [jms-viesti-id (sonja/laheta sonja jono viesti nil jarjestelma)]
          (do
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
            (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
@@ -66,11 +67,13 @@
                parametrit {:viesti-id viesti-id}]
            (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti parametrit)))))))
 
-(defn jonolahettaja [lokittaja sonja jono]
-  (fn [viesti viesti-id]
-    (laheta-jonoon lokittaja sonja jono viesti viesti-id)))
+(defn jonolahettaja
+  ([lokittaja sonja jono] (jonolahettaja lokittaja sonja jono nil))
+  ([lokittaja sonja jono jarjestelma]
+   (fn [viesti viesti-id]
+     (laheta-jonoon lokittaja sonja jono viesti viesti-id jarjestelma))))
 
-(defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
+(defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija jarjestelma]
   (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
   (try
     (sonja/kuuntele! sonja jono
@@ -93,7 +96,8 @@
                         (if viesti-id
                           (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut jono)
                           (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
-                        (kasittelija data viesti-id onnistunut))))
+                        (kasittelija data viesti-id onnistunut)))
+                     jarjestelma)
     (catch Exception e
       (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
 

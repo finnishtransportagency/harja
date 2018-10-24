@@ -29,11 +29,11 @@
               virheet)]])]))
 
 (defn jono [e! [jonon-nimi {:keys [tuottaja vastaanottaja jonon-viestit]}]]
-  (let [viestit (map #(with-meta
-                        (identity
-                          [:span %])
-                        {:key %})
-                     jonon-viestit)]
+  (let [viestit (map-indexed #(with-meta
+                                (identity
+                                  [:span %2])
+                                {:key %1})
+                             jonon-viestit)]
     [:div.thumbnail.jono
      [:h3 jonon-nimi]
      [:div.viestin-kasittelijat
@@ -52,13 +52,13 @@
         "Ei viestejä jonossa..."
         viestit)]]))
 
-(defn istunto [e! {sonja-jono :jono istunnon-tila :istunnon-tila}]
+(defn istunto [e! {jonot :jonot istunnon-tila :istunnon-tila}]
   [:div.thumbnail
    [:span (str "Istunnon tila: " istunnon-tila)]
    (map #(with-meta
-           [jono e! %]
-           {:key (key %)})
-        sonja-jono)])
+           [jono e! (first %)]
+           {:key (first (keys %))})
+        jonot)])
 
 (defn yhteys [e! {palvelin :palvelin {:keys [istunnot yhteyden-tila]} :tila}]
   [:div.yhteys

@@ -41,7 +41,8 @@
       (partial ilmoitukset/vastaanota-ilmoitus
                sonja (tee-lokittaja this "ilmoituksen-kirjaus")
                ilmoitusasetukset klusterin-tapahtumat db ilmoituskuittausjono
-               jms-lahettaja kehitysmoodi?))))
+               jms-lahettaja kehitysmoodi?)
+      "T-LOIK")))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
@@ -51,7 +52,8 @@
       :viesti-id
       #(and (not (:virhe %)) (not (= "virhe" (:kuittaustyyppi %))))
       (fn [_ viesti-id onnistunut]
-        (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
+        (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
+      "T-LOIK")))
 
 (defn rekisteroi-kuittauskuuntelijat [{:keys [sonja labyrintti db sonja-sahkoposti] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
@@ -76,7 +78,7 @@
               (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
-  (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
+  (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset) "T-LOIK"))
 
 
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this toimenpide-jms-lahettaja aikavali]

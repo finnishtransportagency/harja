@@ -4,7 +4,7 @@
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [cheshire.core :as cheshire]
-            [clojure.core.async :refer [go-loop go <! >! thread >!! timeout] :as async]
+            [clojure.core.async :refer [go-loop go <! >! thread >!! <!! timeout chan] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str]
@@ -17,7 +17,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def JMS-alkutila
-  {:yhteys nil :jonot {} :saikeiden-maara nil})
+  {:yhteys nil :istunnot {}})
 
 (def ei-jms-yhteytta {:type :jms-yhteysvirhe
                       :virheet [{:koodi :ei-yhteytta
@@ -52,7 +52,7 @@
                             :viest "PDF-liitettä ei annettu"})]}))))
 
 (defprotocol Sonja
-  (kuuntele! [this jonon-nimi kuuntelija-fn]
+  (kuuntele! [this jonon-nimi kuuntelija-fn] [this jonon-nimi kuuntelija-fn jarjestelma]
     "Lisää uuden kuuntelijan annetulle jonolle. Jos jonolla on monta kuuntelijaa,
     viestit välitetään jokaiselle kuuntelijalle.
     Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti.
@@ -61,7 +61,7 @@
     käsittely epäonnistuu uudessa säikeessä ja varsinainen consumer on lopettanut jo hommansa, niin viesti on jo poistettu
     jonosta.")
 
-  (laheta [this jono viesti] [this jono viesti otsikot]
+  (laheta [this jono viesti] [this jono viesti otsikot] [this jono viesti otsikot jarjestelma]
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n.")
 
   (aloita-yhteys [this]
@@ -75,53 +75,27 @@
      (try (. ~olio ~metodi)
           "ACTIVE"
           ~(list 'catch 'javax.jms.IllegalStateException 'e
-            "CLOSED"))))
+                 "CLOSED"))))
 
 (defn hae-jonon-viestit [istunto jono]
   (when (and istunto jono)
     (let [selailija (.createBrowser istunto jono)]
-      (try (loop [viestit (.getEnumeration selailija)
-                  viesti-idt []]
-             (if (.hasMoreElements viestit)
-               (recur viestit
-                      (conj viesti-idt (->> viestit .nextElement .getJMSMessageID)))
-               viesti-idt))
+      (try (loop [viesti-elementit (.getEnumeration selailija)
+                  elementit []]
+             (if (.hasMoreElements viesti-elementit)
+               (let [elementti (-> viesti-elementit .nextElement)]
+                 (recur viesti-elementit
+                        (conj elementit elementti)))
+               elementit))
            (catch JMSException e
              nil)
            (finally
              (when selailija
                (.close selailija)))))))
 
-(defn aloita-sonja-yhteyden-tarkkailu [JMS-oliot tyyppi db]
+(defn aloita-sonja-yhteyden-tarkkailu [kaskytys-kanava tyyppi db]
   (go-loop []
-    (let [{yhteys :yhteys jonot :jonot} @JMS-oliot
-          yhteyden-tila (when yhteys
-                          (if (= tyyppi :activemq)
-                            (if (.isClosed yhteys)
-                              "CLOSED"
-                              "ACTIVE")
-                            (.getConnectionState yhteys)))
-          olioiden-tilat {:yhteyden-tila yhteyden-tila
-                          :istunnot (mapv (fn [[jonon-nimi {:keys [istunto jono tuottaja vastaanottaja virheet]}]]
-                                            ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
-                                            ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException
-                                            (let [istunnon-tila (exception-wrapper istunto getAcknowledgeMode)
-                                                  jonon-viestit (hae-jonon-viestit istunto jono)
-                                                  tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
-                                                  vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
-                                              {:istunnon-tila istunnon-tila
-                                               :jono {jonon-nimi {:jonon-viestit jonon-viestit
-                                                                  :tuottaja (when tuottaja
-                                                                               {:tuottajan-tila tuottajan-tila
-                                                                                :virheet (:virheet virheet)})
-                                                                  :vastaanottaja (when vastaanottaja
-                                                                                    {:vastaanottajan-tila vastaanottajan-tila
-                                                                                     :virheet (:virheet virheet)})}}}))
-                                          jonot)}]
-      (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode olioiden-tilat)
-                                    :palvelin (fmt/leikkaa-merkkijono 512
-                                                                      (.toString (InetAddress/getLocalHost)))
-                                    :osa-alue "sonja"}))
+    (>! kaskytys-kanava {:jms-tilanne [tyyppi db]})
     (<! (timeout 5000))
     (recur)))
 
@@ -138,46 +112,46 @@
 
 
 #_(defn- luodaanko-uusi-sonja-yhteys? [kulunut-aika {:keys [yhteys jonot] :as tila} {:keys [tyyppi]}]
-  (let [yhteyden-tila (when (= :sonicmq tyyppi)
-                        (.getConnectionState yhteys))
-        #_#_jonojen-tila (when )]
-    (if (> kulunut-aika 120)
-      true
-      )))
+    (let [yhteyden-tila (when (= :sonicmq tyyppi)
+                          (.getConnectionState yhteys))
+          #_#_jonojen-tila (when)]
+      (if (> kulunut-aika 120)
+        true
+        )))
 
 #_(defn yhdista-uudelleen [{:keys [yhteys jonot] :as tila} JMS-oliot asetukset yhteys-ok?]
-  (let [katkos-alkoi (pvm/nyt-suomessa)
-        nukkumisaika 5000]
-    (log/info "Yritetään yhdistään JMS-yhteys uudelleen. Katkos alkoi: " (str katkos-alkoi))
-    (loop [kulunut-aika (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))
-           kaynnistetaan-uudestaan? (luodaanko-uusi-sonja-yhteys? kulunut-aika @JMS-oliot asetukset)]
-      (if kaynnistetaan-uudestaan?
-        (do
-          (when yhteys
-            (try
-              (.close yhteys)
-              (catch Exception e
-                (log/error e "JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e)))))
-          (loop [tila (aloita-yhdistaminen (poista-consumerit tila) asetukset (tee-jms-poikkeuskuuntelija JMS-oliot asetukset yhteys-ok?) yhteys-ok?)
-                 [[jonon-nimi kuuntelija] & kuuntelijat]
-                 (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]
-                           (log/info (format "Yhdistetään uudestaan kuuntelijat jonoon: %s" jonon-nimi))
-                           (map (fn [k] [jonon-nimi k]) @kuuntelijat))
-                         jonot)]
-            (if (not jonon-nimi)
-              tila
-              (recur (yhdista-kuuntelija tila jonon-nimi kuuntelija)
-                     kuuntelijat))))
-        (do (Thread/sleep nukkumisaika)
-            (recur (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))
-                   (luodaanko-uusi-sonja-yhteys? kulunut-aika @JMS-oliot asetukset)))))))
+    (let [katkos-alkoi (pvm/nyt-suomessa)
+          nukkumisaika 5000]
+      (log/info "Yritetään yhdistään JMS-yhteys uudelleen. Katkos alkoi: " (str katkos-alkoi))
+      (loop [kulunut-aika (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))
+             kaynnistetaan-uudestaan? (luodaanko-uusi-sonja-yhteys? kulunut-aika @JMS-oliot asetukset)]
+        (if kaynnistetaan-uudestaan?
+          (do
+            (when yhteys
+              (try
+                (.close yhteys)
+                (catch Exception e
+                  (log/error e "JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e)))))
+            (loop [tila (aloita-yhdistaminen (poista-consumerit tila) asetukset (tee-jms-poikkeuskuuntelija JMS-oliot asetukset yhteys-ok?) yhteys-ok?)
+                   [[jonon-nimi kuuntelija] & kuuntelijat]
+                   (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]
+                             (log/info (format "Yhdistetään uudestaan kuuntelijat jonoon: %s" jonon-nimi))
+                             (map (fn [k] [jonon-nimi k]) @kuuntelijat))
+                           jonot)]
+              (if (not jonon-nimi)
+                tila
+                (recur (yhdista-kuuntelija tila jonon-nimi kuuntelija)
+                       kuuntelijat))))
+          (do (Thread/sleep nukkumisaika)
+              (recur (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))
+                     (luodaanko-uusi-sonja-yhteys? kulunut-aika @JMS-oliot asetukset)))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
-                      0 (log/info "Sonja JMS yhteyden tila: ACTIVE")
-                      1 (log/info "Sonja JMS yhteyden tila: RECONNECTING")
-                      2 (log/error "Sonja JMS yhteyden tila: FAILED")
-                      3 (log/info "Sonja JMS yhteyden tila: CLOSED"))
+                       0 (log/info "Sonja JMS yhteyden tila: ACTIVE")
+                       1 (log/info "Sonja JMS yhteyden tila: RECONNECTING")
+                       2 (log/error "Sonja JMS yhteyden tila: FAILED")
+                       3 (log/info "Sonja JMS yhteyden tila: CLOSED"))
         kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
         instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
@@ -232,7 +206,7 @@
         (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
         {:yhteys yhteys :qcf qcf}))))
 
-(defn kasittele-viesti [vastaanottaja kuuntelijat tila jonon-nimi]
+(defn kasittele-viesti [vastaanottaja kuuntelijat tila jarjestelma jonon-nimi]
   (.setMessageListener vastaanottaja
                        (with-meta
                          (reify MessageListener
@@ -241,45 +215,149 @@
                                (try
                                  (kuuntelija message)
                                  (catch Throwable t
-                                   (log/warn (str "Jonoon " (-> vastaanottaja .getQueue .getQueueName) " tuli viesti "
+                                   (log/error (str "Jonoon " (-> vastaanottaja .getQueue .getQueueName) " tuli viesti "
                                                   (if (instance? javax.jms.TextMessage message)
                                                     (.getText message)
                                                     message)
                                                   " ja sen käsittely epäonnistui funktiolta " kuuntelija))
-                                   (swap! tila update-in [:jonot jonon-nimi :virheet]
+                                   (swap! tila update-in [:istunnot jarjestelma :jonot jonon-nimi :virheet]
                                           (fn [virheet]
                                             (conj (or virheet []) {:viesti (.getMessage t)
                                                                    :aika (pvm/nyt-suomessa)})))
                                    (throw t))))))
                          {:kuuntelijoiden-maara (count kuuntelijat)})))
 
-(defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
-  (let [{:keys [istunto kuuntelijat vastaanottaja jono] :as jonon-tiedot} (get-in @tila [:jonot jonon-nimi])]
-    (if (contains? kuuntelijat kuuntelija-fn)
-      (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
-        (if (empty? kuuntelijat)
-          (do
-            (.close istunto)
-            (swap! tila assoc-in [:jonot jonon-nimi] nil))
-          (do
-            ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
-            ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit.
-            ;; Tämän jälkeen luodaan uusi vastaanottaja.
-            (.close vastaanottaja)
-            (let [vastaanottaja (.createReceiver istunto jono)]
-              (kasittele-viesti vastaanottaja kuuntelijat tila jonon-nimi)
-              (swap! tila update-in [:jonot jonon-nimi]
-                     (fn [jonon-tiedot]
-                       (assoc jonon-tiedot :vastaanottaja vastaanottaja
-                                           :kuuntelijat kuuntelijat)))))))
-      jonon-tiedot)))
+(defn poista-kuuntelija [tila jarjestelma jonon-nimi kuuntelija-fn]
+  (let [{:keys [jonot istunto]} (get-in @tila [:istunnot jarjestelma])
+        {:keys [kuuntelijat vastaanottaja jono] :as jonon-tiedot} (get jonot jonon-nimi)]
+    (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
+      ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
+      ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit ja blokkaa siksi aikaa.
+      ;; Tämän jälkeen luodaan uusi vastaanottaja.
+      (.close vastaanottaja)
+      (if (empty? kuuntelijat)
+        (swap! tila assoc-in [:istunnot jarjestelma :jonot jonon-nimi] nil)
+        (let [vastaanottaja (.createReceiver istunto jono)]
+          (kasittele-viesti vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
+          (swap! tila update-in [:jonot jonon-nimi]
+                 (fn [jonon-tiedot]
+                   (assoc jonon-tiedot :vastaanottaja vastaanottaja
+                                       :kuuntelijat kuuntelijat))))))))
 
-(defn luo-istunto [yhteys]
+(defn luo-istunto [yhteys jonon-nimi]
   (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE))
 
-(defn yhdista-kuuntelija [tila jonon-nimi kuuntelijat]
+(defn varmista-jms-objektit [tila jonon-nimi jarjestelma kasittelija]
+  (let [{istunnot :istunnot yhteys :yhteys} @tila
+        {istunto :istunto jonot :jonot} (get istunnot jarjestelma)
+        {jono :jono kasittelija-olio kasittelija kuuntelijat :kuuntelijat} (get jonot jonon-nimi)]
+    (when-not (and istunto jono kasittelija-olio)
+      (let [istunto (or istunto (luo-istunto yhteys jonon-nimi))
+            jono (or jono (.createQueue istunto jonon-nimi))
+            kasittelija-olio (or kasittelija-olio (if (= kasittelija :vastaanottaja)
+                                                    (let [vastaanottaja (.createReceiver istunto jono)]
+                                                      (kasittele-viesti vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
+                                                      vastaanottaja)
+                                                    (.createProducer istunto jono)))]
+        (swap! tila (fn [tiedot]
+                      (-> tiedot
+                          (assoc-in [:istunnot jarjestelma :istunto] istunto)
+                          (assoc-in [:istunnot jarjestelma :jonot jonon-nimi :jono] jono)
+                          (assoc-in [:istunnot jarjestelma :jonot jonon-nimi kasittelija] kasittelija-olio))))))))
+
+(defn laheta-viesti [tila jonon-nimi viesti correlation-id jarjestelma]
+  (try
+    (let [{istunnot :istunnot} @tila
+          {istunto :istunto jonot :jonot} (get istunnot jarjestelma)
+          {tuottaja :tuottaja} (get jonot jonon-nimi)
+          msg (luo-viesti viesti istunto)]
+      (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
+      (when correlation-id
+        (.setJMSCorrelationID msg correlation-id))
+      (.send tuottaja msg)
+      (.getJMSMessageID msg))
+    (catch Exception e
+      (swap! tila update-in [:istunnot jarjestelma :jonot jonon-nimi :virheet]
+             (fn [virheet]
+               (conj (or virheet []) {:viesti (.getMessage e)
+                                      :aika (pvm/nyt-suomessa)})))
+      (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi))))
+
+(defn luo-jms-saije
+  "JMS spesifikaation mukaan connection oliota voi käyttää ihan vapaasti useasta eri säikeestä, mutta session olioita ja
+   kaikkia sen luomia olioita ei voi. Niitä tulisi kohdella säijekohtaisesti. Mikään ei estä niiden käsittelyä useasta eri
+   säikeestä, mutta se on käyttäjän vastuulla, että samaa oliota ei käytetä yhtä aikaa, jonka takia tosiaa suositellaan,
+   että manipulaatio tehdään yhdestä säikeestä. Tässä luodaan vain yksi säije, jossa luodaan kaikki sessiot ja siihen
+   liittyvät muut oliot. Myöhemmin voi luoda useampia säikeitä joihin tulee vaikkapa vain tietyn järjestelmän sessiot, jos
+   tähän on tarvesta. ActiveMQ ja SonicMQ ovat kumminkin implementoitu niin, että useamman session luominen johtaa jo
+   threadpoolien käyttämiseen eikä kaikkea varsinaisesti suoriteta yhdessä säikeessä.
+
+   Näitä jms-olioita käsitellään omassa säikeessään 'pääsäikeen' sijasta, jotta Harja järjestelmä voidaan muuten käynnistää
+   vaikka olisi jotain ongelmia Sonjan kanssa."
+  [{:keys [tila yhteys-ok? yhteys-future kaskytys-kanava]}]
+  (thread
+    (doto (Thread/currentThread)
+      (.setName "jms-saije"))
+    ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
+    ;; joku arvo pihalle.
+    (let [yhteys-olio @yhteys-future]
+      (swap! tila merge yhteys-olio)
+      (loop []
+        (let [[kasky params] (first (<!! kaskytys-kanava))]
+          (try (case kasky
+                 :aloita-yhteys (let [{:keys [istunnot yhteys]} @tila]
+                                  ;; Alustetaan vastaanottaja jvm oliot
+                                  (doseq [[jarjestelma {jonot :jonot}] istunnot]
+                                    (doseq [[jonon-nimi _] jonot]
+                                      (varmista-jms-objektit tila jonon-nimi jarjestelma :vastaanottaja)))
+                                  ;; Aloita yhteys
+                                  (.start yhteys)
+                                  (reset! yhteys-ok? true))
+                 :laheta-viesti (let [[jonon-nimi viesti {:keys [correlation-id]} jarjestelma] params]
+                                  (varmista-jms-objektit tila jonon-nimi jarjestelma :tuottaja)
+                                  ;; Meidän ei tarvitse olla varmoja, että yhteys on aloitettu (eli start metodi on kutsuttu) silloin kun
+                                  ;; lähetetään viestejä. JMS jonoissa se ei ole pakollista.
+                                  (laheta-viesti tila jonon-nimi viesti correlation-id jarjestelma))
+                 :jms-tilanne (let [[tyyppi db] params
+                                    {:keys [yhteys istunnot]} @tila
+                                    yhteyden-tila (when yhteys
+                                                    (if (= tyyppi :activemq)
+                                                      (if (.isClosed yhteys)
+                                                        "CLOSED"
+                                                        "ACTIVE")
+                                                      (.getConnectionState yhteys)))
+                                    olioiden-tilat {:yhteyden-tila yhteyden-tila
+                                                    :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
+                                                                      ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
+                                                                      ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException
+                                                                      (let [{:keys [jonot istunto]} istunto-tiedot
+                                                                            istunnon-tila (exception-wrapper istunto getAcknowledgeMode)]
+                                                                        {:istunnon-tila istunnon-tila
+                                                                         :jonot (map (fn [[jonon-nimi {:keys [jono tuottaja vastaanottaja virheet]}]]
+                                                                                       (let [jonon-viestit (hae-jonon-viestit istunto jono)
+                                                                                             tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
+                                                                                             vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
+                                                                                         {jonon-nimi {:jonon-viestit jonon-viestit
+                                                                                                      :tuottaja (when tuottaja
+                                                                                                                  {:tuottajan-tila tuottajan-tila
+                                                                                                                   :virheet virheet})
+                                                                                                      :vastaanottaja (when vastaanottaja
+                                                                                                                       {:vastaanottajan-tila vastaanottajan-tila
+                                                                                                                        :virheet virheet})}}))
+                                                                                     jonot)}))
+                                                                    istunnot)}]
+                                (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode olioiden-tilat)
+                                                              :palvelin (fmt/leikkaa-merkkijono 512
+                                                                                                (.toString (InetAddress/getLocalHost)))
+                                                              :osa-alue "sonja"}))
+                 nil)
+               (catch Throwable t
+                 (log/error "Jokin meni vikaan sonjakäskyissä: " t)))
+          (recur))))))
+
+#_(defn yhdista-kuuntelija [tila jarjestelma]
   (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
-  (let [{:keys [yhteys]} @tila
+  (let [{yhteys :yhteys istunnot :istunnot} @tila
         istunto (luo-istunto yhteys)
         jono (.createQueue istunto jonon-nimi)
         vastaanottaja (.createReceiver istunto jono)]
@@ -291,54 +369,25 @@
                :jono jono
                :vastaanottaja vastaanottaja)))))
 
-(defn varmista-jms-objektit [tila jonon-nimi]
-  (let [{jonot :jonot yhteys :yhteys} @tila
-        {:keys [istunto jono tuottaja]} (get jonot jonon-nimi)]
-    ;Käytetään swap! vaan, jos on tarvis
-    (when-not (and istunto jono tuottaja)
-      (swap! tila update-in [:jonot jonon-nimi]
-             (fn [{:keys [istunto jono tuottaja] :as jonon-tiedot}]
-               (let [istunto (or istunto (luo-istunto yhteys))
-                     jono (or jono (.createQueue istunto jonon-nimi))
-                     tuottaja (or tuottaja (.createProducer istunto jono))]
-                 (assoc jonon-tiedot
-                   :istunto istunto
-                   :jono jono
-                   :tuottaja tuottaja)))))))
-
-(defn laheta-viesti [tila jonon-nimi viesti correlation-id]
-  (let [{yhteys :yhteys jonot :jonot} @tila]
-    (if yhteys
-      (try
-        (let [{:keys [istunto tuottaja]} (get jonot jonon-nimi)
-              msg (luo-viesti viesti istunto)]
-          (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
-          (when correlation-id
-            (.setJMSCorrelationID msg correlation-id))
-          (.send tuottaja msg)
-          (.getJMSMessageID msg))
-        (catch Exception e
-          (swap! tila update-in [:jonot jonon-nimi :virheet]
-                 (fn [virheet]
-                   (conj (or virheet []) {:viesti (.getMessage e)
-                                          :aika (pvm/nyt-suomessa)})))
-          (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))
-      (throw+ ei-jms-yhteytta))))
-
 (defrecord SonjaYhteys [asetukset tila yhteys-ok? yhteys-future]
   component/Lifecycle
   (start [{db :db
            :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
           yhteys-ok? (atom false)
+          kaskytys-kanava (chan 100)
           poikkeus-kuuntelija (tee-jms-poikkeuskuuntelija JMS-oliot asetukset yhteys-ok?)
           yhteys-future (future
-                          (aloita-yhdistaminen asetukset poikkeus-kuuntelija))]
+                          (aloita-yhdistaminen asetukset poikkeus-kuuntelija))
+          this (assoc this
+                 :tila JMS-oliot
+                 :yhteys-ok? yhteys-ok?
+                 :yhteys-future yhteys-future
+                 :kaskytys-kanava kaskytys-kanava)
+          jms-saije (luo-jms-saije this)]
+      (swap! (:tila this) assoc :jms-saije jms-saije)
       (assoc this
-        :tila JMS-oliot
-        :yhteys-ok? yhteys-ok?
-        :yhteys-future yhteys-future
-        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu JMS-oliot (:tyyppi asetukset) db))))
+        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytys-kanava (:tyyppi asetukset) db))))
 
   (stop [this]
     (when @yhteys-ok?
@@ -348,40 +397,28 @@
       :tila nil))
 
   Sonja
-  (kuuntele! [this jonon-nimi kuuntelija-fn]
+  (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]
     (if (some? jonon-nimi)
       (do
-        (swap! (:tila this) update-in [:jonot jonon-nimi]
+        (swap! (:tila this) update-in [:istunnot jarjestelma :jonot jonon-nimi]
                (fn [{kuuntelijat :kuuntelijat}]
                  {:kuuntelijat (conj (or kuuntelijat #{}) kuuntelija-fn)}))
-        #(poista-kuuntelija (:tila this) jonon-nimi kuuntelija-fn))
+        #(poista-kuuntelija (:tila this) jarjestelma jonon-nimi kuuntelija-fn))
       (do
         (log/warn "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä")
         (constantly nil))))
+  (kuuntele! [this jonon-nimi kuuntelija-fn]
+    (kuuntele! this jonon-nimi kuuntelija-fn "muu"))
 
-  (laheta [this jonon-nimi viesti {:keys [correlation-id]}]
-    (thread
-      ;; Blokataan siksi aikaa, että yhteys objekti on luotu
-      (-> this :yhteys-future deref)
-      (varmista-jms-objektit (:tila this) jonon-nimi)
-      ;; Meidän ei tarvitse olla varmoja, että yhteys on aloitettu (eli start metodi on kutsuttu) silloin kun
-      ;; lähetetään viestejä. JMS jonoissa se ei ole pakollista.
-      (laheta-viesti (:tila this) jonon-nimi viesti correlation-id)))
-
+  (laheta [{kaskytys-kanava :kaskytys-kanava :as this} jonon-nimi viesti otsikot jarjestelma]
+    (>!! kaskytys-kanava {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))
+  (laheta [this jonon-nimi viesti otsikot]
+    (laheta this jonon-nimi viesti otsikot "muu"))
   (laheta [this jonon-nimi viesti]
-    (laheta this jonon-nimi viesti nil))
+    (laheta this jonon-nimi viesti nil "muu"))
 
-  (aloita-yhteys [{:keys [tila yhteys-ok? yhteys-future] :as this}]
-    ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
-    ;; joku arvo pihalle.
-    (let [yhteys-olio @yhteys-future]
-      (swap! tila merge yhteys-olio)
-      ;; Alustetaan jvm oliot
-      (doseq [[jonon-nimi jonon-tila] (:jonot @tila)]
-        (yhdista-kuuntelija tila jonon-nimi (:kuuntelijat jonon-tila)))
-      ;; Aloita yhteys
-      (.start (:yhteys @tila))
-      (reset! yhteys-ok? true))))
+  (aloita-yhteys [{jms-saije :jms-saije kaskytys-kanava :kaskytys-kanava :as this}]
+    (>!! kaskytys-kanava {:aloita-yhteys nil})))
 
 (defn luo-oikea-sonja [asetukset]
   (->SonjaYhteys asetukset nil nil nil))
@@ -393,14 +430,18 @@
     (stop [this] this)
 
     Sonja
-    (kuuntele! [this jonon-nimi kuuntelija-fn]
+    (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]
       (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
       (constantly nil))
-    (laheta [this jonon-nimi viesti otsikot]
+    (kuuntele! [this jonon-nimi kuuntelija-fn]
+      (kuuntele! this jonon-nimi kuuntelija-fn nil))
+    (laheta [this jonon-nimi viesti otsikot jarjestelma]
       (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
       (str "ID:" (System/currentTimeMillis)))
+    (laheta [this jonon-nimi viesti otsikot]
+      (laheta this jonon-nimi viesti nil nil))
     (laheta [this jonon-nimi viesti]
-      (laheta this jonon-nimi viesti nil))
+      (laheta this jonon-nimi viesti nil nil))
     (aloita-yhteys [this]
       (log/debug "Feikki Sonja, aloita muka yhteys"))))
 
