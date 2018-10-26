@@ -40,11 +40,13 @@
       (list
         (when tuottaja
           (with-meta
-            [kasittelija-esitys e! :tuottaja tuottaja]
+            (when kasittelija-esitys
+              [kasittelija-esitys e! :tuottaja tuottaja])
             {:key "tuottajan-tila"}))
         (when vastaanottaja
           (with-meta
-            [kasittelija-esitys e! :vastaanottaja vastaanottaja]
+            (when kasittelija-esitys
+              [kasittelija-esitys e! :vastaanottaja vastaanottaja])
             {:key "vastaanottajan-tila"})))]
      [:span "Viestit"]
      [:div.jms-viestit
@@ -56,7 +58,8 @@
   [:div.thumbnail
    [:span (str "Istunnon tila: " istunnon-tila)]
    (map #(with-meta
-           [jono e! (first %)]
+           (when jono
+             [jono e! (first %)])
            {:key (first (keys %))})
         jonot)])
 
@@ -68,7 +71,8 @@
     [:hr]
     [:div.istunnot
      (map-indexed #(with-meta
-                     [istunto e! %2]
+                     (when istunto
+                       [istunto e! %2])
                      {:key %1})
                   istunnot)]]])
 
@@ -84,7 +88,8 @@
        [debug/debug app]
        (if sonjan-tila
          (map #(with-meta
-                 [yhteys e! %]
+                 (when yhteys
+                   [yhteys e! %])
                  {:key (:palvelin %)})
               sonjan-tila)
          [virhe app])])))
