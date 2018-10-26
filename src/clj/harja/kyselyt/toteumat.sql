@@ -349,12 +349,12 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
-WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
+WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
 SELECT alkanut
   FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
+ WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -499,7 +499,8 @@ VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisat
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
-DELETE FROM toteuma_tehtava
+UPDATE toteuma_tehtava
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE toteuma = :id;
 
 -- name: luo-toteuma-materiaali<!
@@ -508,8 +509,9 @@ INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja)
 VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
 
 -- name: poista-toteuma-materiaali-toteuma-idlla!
--- Poistaa toteuman materiaalit
-DELETE FROM toteuma_materiaali
+-- Päivittää toteuman materiaalit poistetuksi
+UPDATE toteuma_materiaali
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE toteuma = :id;
 
 -- name: paivita-varustetoteuman-tr-osoite!
