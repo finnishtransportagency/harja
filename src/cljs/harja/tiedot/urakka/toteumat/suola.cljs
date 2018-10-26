@@ -148,12 +148,6 @@
   {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))
 
-(defn aseta-suolasakon-kaytto [urakka-id hoitokauden-alkuvuosi kaytossa?]
-  {:pre [(int? urakka-id)]}
-  (k/post! :aseta-suolasakon-kaytto {:urakka-id urakka-id
-                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     :kaytossa? kaytossa?}))
-
 (defn tallenna-teiden-hoitourakoiden-lampotilat [hoitokausi lampotilat]
   (let [lampotilat (mapv #(assoc % :alkupvm (first hoitokausi)
                                    :loppupvm (second hoitokausi))
