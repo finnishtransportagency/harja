@@ -1,7 +1,11 @@
-.yhteys {
+.tilat {
   display: flex;
   flex-direction: column;
 
+  .saije {
+    display: flex;
+    flex-direction: column;
+  }
   .istunnot {
     display: flex;
     flex-flow: row wrap;
@@ -19,6 +23,12 @@
         border: solid;
         padding: 0.5em;
         margin: 0.2em;
+
+        .viesti-tiedot {
+          display: flex;
+          flex-direction: column;
+          border-bottom: solid;
+        }
       }
       .viestin-kasittelijat{
         .jms-virheet {

@@ -30,8 +30,10 @@
 
 (defn jono [e! [jonon-nimi {:keys [tuottaja vastaanottaja jonon-viestit]}]]
   (let [viestit (map-indexed #(with-meta
-                                (identity
-                                  [:span %2])
+                                (let [{:keys [message-id timestamp]} %2]
+                                  [:div.viesti-tiedot
+                                   [:span "Message-id: " message-id]
+                                   [:span "Timestamp: " timestamp]])
                                 {:key %1})
                              jonon-viestit)]
     [:div.thumbnail.jono
@@ -58,23 +60,33 @@
   [:div.thumbnail
    [:span (str "Istunnon tila: " istunnon-tila)]
    (map #(with-meta
-           (when jono
-             [jono e! (first %)])
+           [jono e! (first %)]
            {:key (first (keys %))})
         jonot)])
 
-(defn yhteys [e! {palvelin :palvelin {:keys [istunnot yhteyden-tila]} :tila}]
-  [:div.yhteys
-   [:div.thumbnail
-    [:h2 palvelin]
-    [:span (str "Yhteyden tila: " yhteyden-tila)]
-    [:hr]
-    [:div.istunnot
-     (map-indexed #(with-meta
-                     (when istunto
-                       [istunto e! %2])
-                     {:key %1})
-                  istunnot)]]])
+(defn tila [e! {palvelin :palvelin {:keys [olioiden-tilat saikeiden-tilat]} :tila}]
+  (let [{:keys [istunnot yhteyden-tila]} olioiden-tilat]
+    [:div.tilat
+     [:div.thumbnail
+      [:h2 palvelin]
+      [:hr]
+      [:h3 "Säikeet"]
+      (map (fn [{:keys [nimi status]}]
+             (with-meta
+               [:div.saije
+                [:span "Nimi: " nimi]
+                [:span "Status: " status]]
+               {:key nimi}))
+           (reverse (sort-by :nimi saikeiden-tilat)))
+      [:hr]
+      [:h3 "JMS"]
+      [:span (str "Yhteyden tila: " yhteyden-tila)]
+      [:div.istunnot
+       (map-indexed #(with-meta
+                       (when istunto
+                         [istunto e! %2])
+                       {:key %1})
+                    istunnot)]]]))
 
 (defn virhe [app]
   [:p app])
@@ -88,8 +100,7 @@
        [debug/debug app]
        (if sonjan-tila
          (map #(with-meta
-                 (when yhteys
-                   [yhteys e! %])
+                 [tila e! %]
                  {:key (:palvelin %)})
               sonjan-tila)
          [virhe app])])))

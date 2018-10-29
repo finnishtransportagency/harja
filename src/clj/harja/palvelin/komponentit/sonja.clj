@@ -94,7 +94,8 @@
                (let [elementti (->> viesti-elementit .nextElement)]
                  (if (nil? elementti)
                    (conj elementit nil)
-                   (recur (conj elementit elementti))))
+                   (recur (conj elementit {:message-id (.getJMSMessageID elementti)
+                                           :timestamp (.getJMSTimestamp elementti)}))))
                elementit))
            (catch JMSException e
              nil)
@@ -102,14 +103,14 @@
              (when selailija
                (.close selailija)))))))
 
-(defn aloita-sonja-yhteyden-tarkkailu [kaskytys-kanava tyyppi db]
-  (go-loop []
-    (>! kaskytys-kanava {:jms-tilanne [tyyppi db]})
-    (<! (timeout 5000))
-    (recur)))
-
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan)
+
+(defn aloita-sonja-yhteyden-tarkkailu [kaskytys-kanava tyyppi db]
+  (go-loop []
+    (let [vastaus (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]})]
+      (<! (timeout 5000))
+      (recur))))
 
 (defn- poista-consumerit [{jonot :jonot :as tila}]
   (reduce (fn [tila jono]
@@ -291,14 +292,24 @@
     (reset! yhteys-ok? true)))
 
 (defmethod jms-toiminto :yhdista-uudelleen
-  [{:keys [asetukset tila yhteys-future-atom kaskytys-kanava] :as sonja} kasky]
+  [{:keys [asetukset tila kaskytys-kanava] :as sonja} kasky]
   (let [params (when-let [params (vals kasky)]
                  (first params))
         [katkos-alkoi] params
         yhteys-future (aloita-yhdistaminen asetukset)
         yhteys-olio @yhteys-future]
     (swap! tila merge yhteys-olio)
-    (reset! yhteys-future-atom yhteys-future)
+    (swap! tila update :istunnot (fn [istunnot]
+                                   (reduce (fn [tulos [istunnon-nimi m]]
+                                             (let [m (select-keys m [:jonot])
+                                                   jonot (:jonot m)]
+                                               (merge tulos
+                                                      {istunnon-nimi
+                                                       {:jonot (into {}
+                                                                     (map (fn [[jonon-nimi jms-oliot]]
+                                                                            [jonon-nimi (select-keys jms-oliot [:kuuntelijat])])
+                                                                          jonot))}})))
+                                           {} istunnot)))
     (jms-toiminto sonja {:aloita-yhteys nil})))
 
 (defmethod jms-toiminto :laheta-viesti
@@ -343,8 +354,16 @@
                                                                                             {:vastaanottajan-tila vastaanottajan-tila
                                                                                              :virheet virheet})}}))
                                                           jonot)}))
-                                        istunnot)}]
-    (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode olioiden-tilat)
+                                        istunnot)}
+        saikeiden-tilat (sequence (comp
+                                    (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija)" (.getName %))
+                                               %))
+                                    (map #(identity
+                                            {:nimi (.getName %)
+                                             :status (.. % getState toString)})))
+                                  (.keySet (Thread/getAllStackTraces)))]
+    (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode {:olioiden-tilat olioiden-tilat
+                                                          :saikeiden-tilat saikeiden-tilat})
                                   :palvelin (fmt/leikkaa-merkkijono 512
                                                                     (.toString (InetAddress/getLocalHost)))
                                   :osa-alue "sonja"})))
@@ -360,22 +379,23 @@
 
    Näitä jms-olioita käsitellään omassa säikeessään 'pääsäikeen' sijasta, jotta Harja järjestelmä voidaan muuten käynnistää
    vaikka olisi jotain ongelmia Sonjan kanssa."
-  [{:keys [yhteys-future-atom tila kaskytys-kanava] :as sonja}]
+  [{:keys [yhteys-future tila kaskytys-kanava] :as sonja}]
   (thread
     (doto (Thread/currentThread)
       (.setName "jms-saije"))
     ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
     ;; joku arvo pihalle.
-    (let [yhteys-olio (-> yhteys-future-atom deref deref)]
+    (let [yhteys-olio @yhteys-future]
       (swap! tila merge yhteys-olio)
       (loop []
         (let [{:keys [kasky kaskytys-kanavan-vastaus]} (<!! kaskytys-kanava)
               _ (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
               kasitellaan? (= :kasittele (<!! kaskytys-kanavan-vastaus))]
-          (try (>!! kaskytys-kanavan-vastaus (jms-toiminto sonja kasky))
-               (catch Throwable t
-                 (log/error "Jokin meni vikaan sonjakäskyissä: " t)
-                 (>!! kaskytys-kanavan-vastaus {:virhe t})))
+          (>!! kaskytys-kanavan-vastaus
+               (try (jms-toiminto sonja kasky)
+                    (catch Throwable t
+                      (log/error "Jokin meni vikaan sonjakäskyissä: " t)
+                      {:virhe t})))
           (recur))))))
 
 (defn laheta-viesti-kaskytyskanavaan
@@ -393,7 +413,7 @@
       (do (>!! kaskytys-kanavan-vastaus :kasittele)
           (thread
             (doto (Thread/currentThread)
-              (.setName (str "jms-kasittelyn-odottelija-" (inc jms-kaittelyn-odottelija-numero))))
+              (.setName (str "jms-kasittelyn-odottelija-" (-> kasky keys first name) "-" (inc jms-kaittelyn-odottelija-numero))))
             (<!! kaskytys-kanavan-vastaus)))
       (do (>!! kaskytys-kanavan-vastaus :aika-katkaisu)
           (let [vastaus-kanava (chan)]
@@ -413,7 +433,7 @@
           this (assoc this
                  :tila JMS-oliot
                  :yhteys-ok? yhteys-ok?
-                 :yhteys-future-atom (atom yhteys-future)
+                 :yhteys-future yhteys-future
                  :kaskytys-kanava kaskytys-kanava)
           jms-saije (luo-jms-saije this)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
