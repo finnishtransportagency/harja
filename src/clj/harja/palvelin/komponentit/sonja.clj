@@ -218,23 +218,6 @@
                                    (throw t))))))
                          {:kuuntelijoiden-maara (count kuuntelijat)})))
 
-(defn poista-kuuntelija [tila jarjestelma jonon-nimi kuuntelija-fn]
-  (let [{:keys [jonot istunto]} (get-in @tila [:istunnot jarjestelma])
-        {:keys [kuuntelijat vastaanottaja jono] :as jonon-tiedot} (get jonot jonon-nimi)]
-    (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
-      ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
-      ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit ja blokkaa siksi aikaa.
-      ;; Tämän jälkeen luodaan uusi vastaanottaja.
-      (.close vastaanottaja)
-      (if (empty? kuuntelijat)
-        (swap! tila assoc-in [:istunnot jarjestelma :jonot jonon-nimi] nil)
-        (let [vastaanottaja (.createReceiver istunto jono)]
-          (kasittele-viesti vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
-          (swap! tila update-in [:jonot jonon-nimi]
-                 (fn [jonon-tiedot]
-                   (assoc jonon-tiedot :vastaanottaja vastaanottaja
-                                       :kuuntelijat kuuntelijat))))))))
-
 (defn luo-istunto [yhteys jonon-nimi]
   (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE))
 
@@ -325,6 +308,28 @@
     ;; Meidän ei tarvitse olla varmoja, että yhteys on aloitettu (eli start metodi on kutsuttu) silloin kun
     ;; lähetetään viestejä. JMS jonoissa se ei ole pakollista.
     (laheta-viesti tila jonon-nimi viesti correlation-id jarjestelma)))
+
+(defmethod jms-toiminto :poista-kuuntelija
+  [{:keys [tila]} kasky]
+  (let [params (when-let [params (vals kasky)]
+                 (first params))
+        [jarjestelma jonon-nimi kuuntelija-fn] params
+        {:keys [jonot istunto]} (get-in @tila [:istunnot jarjestelma])
+        {:keys [kuuntelijat vastaanottaja jono] :as jonon-tiedot} (get jonot jonon-nimi)
+        kuuntelijat (disj kuuntelijat kuuntelija-fn)]
+    ;; Jos viestiä käsitellään, kun vaihdetaan messageListeneriä, niin sen seuraukset ovat määrittelemättömät.
+    ;; Sen takia ensin sammutetaan nykyinen kuuntelija, koska se ensin käsittelee käsitteilä olevat viestit ja blokkaa siksi aikaa.
+    ;; Tämän jälkeen luodaan uusi vastaanottaja.
+    (.close vastaanottaja)
+    (if (empty? kuuntelijat)
+      (swap! tila assoc-in [:istunnot jarjestelma :jonot jonon-nimi] nil)
+      (let [vastaanottaja (.createReceiver istunto jono)]
+        (kasittele-viesti vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
+        (swap! tila update-in [:istunnot jarjestelma :jonot jonon-nimi]
+               (fn [jonon-tiedot]
+                 (assoc jonon-tiedot :vastaanottaja vastaanottaja
+                                     :kuuntelijat kuuntelijat)))))
+    true))
 
 (defmethod jms-toiminto :jms-tilanne
   [{:keys [tila yhteys-ok? kaskytys-kanava]} kasky]
@@ -500,7 +505,7 @@
         (swap! (:tila this) update-in [:istunnot jarjestelma :jonot jonon-nimi]
                (fn [{kuuntelijat :kuuntelijat}]
                  {:kuuntelijat (conj (or kuuntelijat #{}) kuuntelija-fn)}))
-        #(poista-kuuntelija (:tila this) jarjestelma jonon-nimi kuuntelija-fn))
+        #(laheta-viesti-kaskytyskanavaan (:kaskytys-kanava this) {:poista-kuuntelija [jarjestelma jonon-nimi kuuntelija-fn]}))
       (do
         (log/warn "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä")
         (constantly nil))))

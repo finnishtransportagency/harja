@@ -40,19 +40,22 @@
           testijonot (chan)]
       (thread
         (case (<!! lopputila)
-          :ok (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []))})
+          :ok (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []) "testijarjestelma")})
           :exception (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []
-                                                                                      (throw (Exception. "VIRHE"))))})
+                                                                                      (throw (Exception. "VIRHE")))
+                                                                  "testijarjestelma")})
           :useampi-kuuntelija (>!! testijonot
                                    {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
                                                                                                             (>!! testijonokanava :viestia-kasitellaan)
                                                                                                             ;; Nukutaan sekuntti, jotta 'pääsäikeessä' keretään sammuttaa kuuntelija.
                                                                                                             (Thread/sleep 1000)
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
-                                                                                                                                                    (if laskuri (inc laskuri) 1)))))
+                                                                                                                                                    (if laskuri (inc laskuri) 1))))
+                                                                  "testijarjestelma")
                                     :testijono-2 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
-                                                                                                                                                    (if laskuri (inc laskuri) 1)))))})))
+                                                                                                                                                    (if laskuri (inc laskuri) 1))))
+                                                                  "testijarjestelma")})))
       (assoc this :testijonot testijonot
                   :testijonokanava testijonokanava
                   :tila tila)))
@@ -229,7 +232,8 @@
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
         testikomponentti (:testikomponentti jarjestelma)
         testijonokanava (:testijonokanava testikomponentti)
-        {:keys [istunto jono vastaanottaja]} (-> jarjestelma :sonja :tila deref :jonot (get "testijono"))
+        {:keys [istunto jonot]} (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma"))
+        {:keys [jono vastaanottaja]} (get jonot "testijono")
         tuottaja (.createProducer istunto jono)
         msg (sonja/luo-viesti "foo" istunto)]
     (is (= 2 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara)))
@@ -238,9 +242,15 @@
     ;; Odotetaan, että viestiä käsitellään
     (<!! testijonokanava)
     ;; lopetetaan yksi kuuntelija
-    ((-> testikomponentti :tila deref :testijono-1))
-    ;; Lopetuksen pitäisi blokata ja odotella, että consumer saa hoidettua hommansa
-    (is (= (-> testikomponentti :tila deref :testikasittelyita) 2))))
+    (let [kanava ((-> testikomponentti :tila deref :testijono-1))
+          ;; Odotetaan, että :poista-kuuntelija multimetodi on ajettu loppuun
+          [tulos _] (alts!! [kanava (timeout 10000)])
+          {:keys [vastaanottaja]} (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "testijono"))]
+      ;; Lopetuksen pitäisi blokata ja odotella, että consumer saa hoidettua hommansa
+      (is (= (-> testikomponentti :tila deref :testikasittelyita) 2))
+      (is tulos "Kuuntelijan poisto ei onnistunut")
+      ;; Tarkistetaan, että onhan kuuntelijoita enää yksi jäljellä
+      (is (= 1 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara))))))
 
 (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
