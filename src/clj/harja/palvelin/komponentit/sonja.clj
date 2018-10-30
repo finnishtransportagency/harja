@@ -424,7 +424,7 @@
                 (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
                 (when (= :kasittele (<!! kaskytys-kanavan-vastaus))
                   (>!! kaskytys-kanavan-vastaus
-                       (try (jms-toiminto sonja kasky)
+                       (try {:vastaus (jms-toiminto sonja kasky)}
                             (catch Throwable t
                               (log/error "Jokin meni vikaan sonjakäskyissä: " t)
                               {:virhe t})))))
@@ -521,11 +521,11 @@
   (laheta [{kaskytys-kanava :kaskytys-kanava :as this} jonon-nimi viesti otsikot jarjestelma]
     (let [lahetyksen-viesti (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava
                                                                  {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))]
-      (if (and (map? lahetyksen-viesti) (contains? lahetyksen-viesti :virhe))
+      (if (contains? lahetyksen-viesti :virhe)
         (if (= "Aikakatkaistiin" (:virhe lahetyksen-viesti))
           (throw+ aikakatkaisu-virhe)
           (throw (:virhe lahetyksen-viesti)))
-        lahetyksen-viesti)))
+        (:vastaus lahetyksen-viesti))))
   (laheta [this jonon-nimi viesti otsikot]
     (laheta this jonon-nimi viesti otsikot (str "istunto-" jonon-nimi)))
   (laheta [this jonon-nimi viesti]

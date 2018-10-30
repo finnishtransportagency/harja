@@ -8,6 +8,9 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout alts!! chan]]
+            [clojure.set :as set]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [org.httpkit.client :as http]
             [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
@@ -36,16 +39,18 @@
                         (if-let [tapahtuma (:tapahtuma @tila)]
                           (:tapahtuma @tila)
                           :ok))
-          testijonokanava (chan)
+          lahetys-fn (fn [viesti]
+                       (sonja/laheta sonja "testilahetys-jono" viesti nil "testijarjestelma-lahetys"))
+          testijonokanava (chan 100)
           testijonot (chan)]
       (thread
-        (case (<!! lopputila)
-          :ok (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []) "testijarjestelma")})
-          :exception (>!! testijonot {:testijono (sonja/kuuntele! sonja "testijono" (fn []
-                                                                                      (throw (Exception. "VIRHE")))
-                                                                  "testijarjestelma")})
-          :useampi-kuuntelija (>!! testijonot
-                                   {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
+        (>!! testijonot
+             (case (<!! lopputila)
+               :ok {:testijono (sonja/kuuntele! sonja "testijono" (fn []) "testijarjestelma")}
+               :exception {:testijono (sonja/kuuntele! sonja "testijono" (fn []
+                                                                           (throw (Exception. "VIRHE")))
+                                                       "testijarjestelma")}
+               :useampi-kuuntelija {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
                                                                                                             (>!! testijonokanava :viestia-kasitellaan)
                                                                                                             ;; Nukutaan sekuntti, jotta 'pääsäikeessä' keretään sammuttaa kuuntelija.
                                                                                                             (Thread/sleep 1000)
@@ -55,14 +60,25 @@
                                     :testijono-2 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-2} (fn [_]
                                                                                                             (swap! tila update :testikasittelyita (fn [laskuri]
                                                                                                                                                     (if laskuri (inc laskuri) 1))))
-                                                                  "testijarjestelma")})))
+                                                                  "testijarjestelma")}
+               :kuormitus {:testijono-1 (sonja/kuuntele! sonja "testijono-1" (fn [viesti]
+                                                                               (Thread/sleep (.intValue (* 1000 (rand))))
+                                                                               (>!! testijonokanava viesti)))
+                           :testijono-2 (sonja/kuuntele! sonja "testijono-2" (fn [viesti]
+                                                                               (Thread/sleep (.intValue (* 1000 (rand))))
+                                                                               (>!! testijonokanava viesti)))})))
       (assoc this :testijonot testijonot
                   :testijonokanava testijonokanava
+                  :lahetys-fn lahetys-fn
                   :tila tila)))
   (stop [{sonja :sonja :as this}]
     (doseq [jono [:testijono :testijono-1 :testijono-2]]
       (when-let [sammutus-fn (-> this :tila deref jono)]
-        (sammutus-fn)))))
+        (sammutus-fn)))
+    (assoc this :testijonot nil
+                :testijonokanava nil
+                :lahetys-fn nil
+                :tila nil)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -233,12 +249,10 @@
         testikomponentti (:testikomponentti jarjestelma)
         testijonokanava (:testijonokanava testikomponentti)
         {:keys [istunto jonot]} (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma"))
-        {:keys [jono vastaanottaja]} (get jonot "testijono")
-        tuottaja (.createProducer istunto jono)
-        msg (sonja/luo-viesti "foo" istunto)]
-    (is (= 2 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara)))
+        {:keys [jono vastaanottaja]} (get jonot "testijono")]
     ;; Lähetetään viesti
-    (.send tuottaja msg)
+    (sonja/laheta (-> jarjestelma :sonja) "testijono" "foo" nil "testijarjestelma")
+    (is (= 2 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara)))
     ;; Odotetaan, että viestiä käsitellään
     (<!! testijonokanava)
     ;; lopetetaan yksi kuuntelija
@@ -284,6 +298,42 @@
     (is (= 1 (count viestit-jonossa)))
     (purge-jono istunto jono)))
 
+(s/def ::testilahetys-viesti string?)
+
+(deftest sonja-kuormitus-testi
+  (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
+  (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
+        {:keys [lahetys-fn testijonokanava tila]} (:testikomponentti jarjestelma)
+        {:keys [testijono-1 testijono-2]} @tila
+        sonja (-> jarjestelma :sonja)
+        _ (is (and testijono-1 testijono-2) "Testikomponentin jonoja ei keretty säätää oikein")
+        {istunnot :istunnot} (-> sonja :tila deref :istunnot)
+        testikomponentin-istunnot (select-keys istunnot ["istunto-testijono-1" "istunto-testijono-2"])
+        testikomponentin-lahettamat-viestit (into #{}
+                                                  (repeatedly 10 #(gen/generate (s/gen ::testilahetys-viesti))))
+        testijono-1-vastaanottamat-viestit (into #{}
+                                                 (repeatedly 10 #(str "jono-1"
+                                                                      (gen/generate (s/gen ::testilahetys-viesti)))))
+        testijono-2-vastaanottamat-viestit (into #{}
+                                                 (repeatedly 10 #(str "jono-2"
+                                                                      (gen/generate (s/gen ::testilahetys-viesti)))))
+        testijono-1-lahetys-fn #(sonja/laheta sonja "testijono-1" %)
+        testijono-2-lahetys-fn #(sonja/laheta sonja "testijono-2" %)
+        ;; Lähetetään viestejä rinnakkain
+        _ (thread (vec (pmap #(is (string? (re-find #"ID:.*" (lahetys-fn %)))) testikomponentin-lahettamat-viestit)))
+        ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
+        _ (thread (vec (pmap (fn [viesti]
+                               (testijono-1-lahetys-fn viesti))
+                             testijono-1-vastaanottamat-viestit)))
+        ;; Vastaanotetaan viestejä rinnakkain testijonoon 2
+        _ (thread (vec (pmap (fn [viesti]
+                               (testijono-2-lahetys-fn viesti))
+                             testijono-2-vastaanottamat-viestit)))
+        kasitellyt-viestit (<!! (go-loop [saadut-viestit #{}]
+                                  (if-let [uusi-viesti (first (alts!! [testijonokanava (timeout 1000)]))]
+                                    (recur (conj saadut-viestit (.getText uusi-viesti)))
+                                    saadut-viestit)))]
+    (is (= kasitellyt-viestit (set/union testijono-1-vastaanottamat-viestit testijono-2-vastaanottamat-viestit)))))
 
 
 #_(deftest main-komponentit-loytyy
