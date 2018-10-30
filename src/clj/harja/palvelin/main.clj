@@ -681,8 +681,7 @@
 (defn aloita-sonja [jarjestelma]
   (go
     (log/info "Aloitaetaan Sonjayhteys")
-    (sonja/aloita-yhteys (:sonja jarjestelma))
-    true))
+    (<! (sonja/aloita-yhteys (:sonja jarjestelma)))))
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try

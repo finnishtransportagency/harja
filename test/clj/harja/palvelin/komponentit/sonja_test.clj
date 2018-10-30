@@ -66,9 +66,11 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :db ds
                         #_#_:http-palvelin (testi-http-palvelin)
-                        :sonja (sonja/luo-oikea-sonja (:sonja asetukset))
+                        :sonja (component/using
+                                 (sonja/luo-oikea-sonja (:sonja asetukset))
+                                 [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
                         :sonja-sahkoposti (component/using
@@ -148,30 +150,32 @@
 
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
-        {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila} (:sonja jarjestelma)
-        {:keys [yhteys qcf jonot]} @tila]
+        {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
+         db :db kaskytys-kanava :kaskytys-kanava yhteyden-tiedot :yhteyden-tiedot} (:sonja jarjestelma)
+        {:keys [yhteys qcf istunnot jms-saije]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (= (:sonja asetukset) sonja-asetukset))
     (is @yhteys-future "Yhteyoliota ei luotu")
-    (doseq [[jonon-nimi jonon-oliot] jonot]
-      (when-let [olio (:vastaanottaja jonon-oliot)]
-        (= (-> olio .getMessageListener meta :kuuntelijoiden-maara) 1))
-      (doseq [[avain olio] jonon-oliot]
-        (case avain
-          ;; :kuuntelijat ei sisällä oliota
-          :kuuntelijat (is (every? fn? olio))
-          :istunto (do
-                     (is (instance? javax.jms.QueueSession olio)))
-          :jono (do
-                  (is (instance? javax.jms.Queue olio))
-                  (is (= (.getQueueName olio) jonon-nimi)))
-          :vastaanottaja (do
-                           (is (instance? javax.jms.QueueReceiver olio))
-                           (is (= (.. olio getQueue getQueueName) jonon-nimi))
-                           (is (instance? javax.jms.MessageListener (.getMessageListener olio))))
-          :tuottaja (do
-                      (is (instance? javax.jms.MessageProducer olio))
-                      (is (= (->> (.getDestination olio) (cast javax.jms.Queue) .getQueueName) jonon-nimi))))))))
+    (doseq [[istunnon-nimi istunnon-oliot] istunnot]
+      (let [{:keys [jonot istunto]} istunnon-oliot
+            [jonon-nimi jonon-oliot] (first jonot)]
+        (is (instance? javax.jms.QueueSession istunto))
+        (is (= 1 (count jonot)))
+        (doseq [[avain olio] jonon-oliot]
+          (case avain
+            ;; :kuuntelijat ei sisällä oliota
+            :kuuntelijat (is (every? fn? olio))
+            :jono (do
+                    (is (instance? javax.jms.Queue olio))
+                    (is (= (.getQueueName olio) jonon-nimi)))
+            :vastaanottaja (do
+                             (is (instance? javax.jms.QueueReceiver olio))
+                             (is (= (.. olio getQueue getQueueName) jonon-nimi))
+                             (is (instance? javax.jms.MessageListener (.getMessageListener olio)))
+                             (is (= (-> olio .getMessageListener meta :kuuntelijoiden-maara) 1)))
+            :tuottaja (do
+                        (is (instance? javax.jms.MessageProducer olio))
+                        (is (= (->> (.getDestination olio) (cast javax.jms.Queue) .getQueueName) jonon-nimi)))))))))
 
 (defn tarkista-xml-sisalto
   [{:keys [content tag]} tarkistukset]
@@ -189,10 +193,10 @@
         (recur (.receiveNoWait vastaanottaja))))))
 
 #_(deftest virhe-kasittelija-funktiossa
-  (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
-  (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
-    (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
-    (is (nil? (-> jarjestelma :testikomponentti :tila deref :testijono)))))
+    (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
+    (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
+      (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
+      (is (nil? (-> jarjestelma :testikomponentti :tila deref :testijono)))))
 
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.

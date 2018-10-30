@@ -106,11 +106,14 @@
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan)
 
-(defn aloita-sonja-yhteyden-tarkkailu [kaskytys-kanava tyyppi db]
-  (go-loop []
-    (let [vastaus (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]})]
-      (<! (timeout 5000))
-      (recur))))
+(defn aloita-sonja-yhteyden-tarkkailu [kaskytys-kanava lopeta-tarkkailu-kanava tyyppi db]
+  (go-loop [[lopetetaan? _] (async/alts! [lopeta-tarkkailu-kanava]
+                                         :default false)]
+    (when-not lopetetaan?
+      (let [vastaus (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]})]
+        (<! (timeout 5000))
+        (recur (async/alts! [lopeta-tarkkailu-kanava]
+                            :default false))))))
 
 (defn- poista-consumerit [{jonot :jonot :as tila}]
   (reduce (fn [tila jono]
@@ -289,7 +292,8 @@
     (.setExceptionListener yhteys poikkeuskuuntelija)
     ;; Aloita yhteys
     (.start yhteys)
-    (reset! yhteys-ok? true)))
+    (reset! yhteys-ok? true)
+    true))
 
 (defmethod jms-toiminto :yhdista-uudelleen
   [{:keys [asetukset tila kaskytys-kanava] :as sonja} kasky]
@@ -379,7 +383,7 @@
 
    Näitä jms-olioita käsitellään omassa säikeessään 'pääsäikeen' sijasta, jotta Harja järjestelmä voidaan muuten käynnistää
    vaikka olisi jotain ongelmia Sonjan kanssa."
-  [{:keys [yhteys-future tila kaskytys-kanava] :as sonja}]
+  [{:keys [yhteys-future tila kaskytys-kanava] :as sonja} sammutus-kanava]
   (thread
     (doto (Thread/currentThread)
       (.setName "jms-saije"))
@@ -387,16 +391,39 @@
     ;; joku arvo pihalle.
     (let [yhteys-olio @yhteys-future]
       (swap! tila merge yhteys-olio)
-      (loop []
-        (let [{:keys [kasky kaskytys-kanavan-vastaus]} (<!! kaskytys-kanava)
-              _ (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
-              kasitellaan? (= :kasittele (<!! kaskytys-kanavan-vastaus))]
-          (>!! kaskytys-kanavan-vastaus
-               (try (jms-toiminto sonja kasky)
-                    (catch Throwable t
-                      (log/error "Jokin meni vikaan sonjakäskyissä: " t)
-                      {:virhe t})))
-          (recur))))))
+      ;; Aloitetaan ikuinen looppi
+      (loop [;; Tarkistetaan joka kieroksella, että onko tullut käsky tuhota tämä säije
+             [lopetetaan? _] (async/alts!! [sammutus-kanava]
+                                           :default false)]
+        (let [[{:keys [kasky kaskytys-kanavan-vastaus]} _] (if lopetetaan?
+                                                             ;; Lopetuksen jälkeen käsitellään ensin kaikki kanavassa jo olevat
+                                                             ;; käskyt
+                                                             (async/alts!! [kaskytys-kanava]
+                                                                           :default {:kasky :saije-lopetetaan})
+                                                             ;; Jos ei niin jäädään odottelemaan seuraavaa käskyä. Kummiskin loopataan
+                                                             ;; vähintään 3 sek välein, jotta voidaan tarkastaa, että onko säije
+                                                             ;; tarkoitus lopettaa
+                                                             (async/alts!! [kaskytys-kanava (timeout 3000)]))]
+          (if-not (or (= kasky :saije-lopetetaan)
+                      ;; Tässä tapauksessa kaskytys-kanava on closetettu
+                      (and lopetetaan? (nil? kasky)))
+            (do
+              ;; Saatiinko käsky vai kerkesikö timeout mennä loppuun?
+              (when-not (nil? kasky)
+                (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
+                (when (= :kasittele (<!! kaskytys-kanavan-vastaus))
+                  (>!! kaskytys-kanavan-vastaus
+                       (try (jms-toiminto sonja kasky)
+                            (catch Throwable t
+                              (log/error "Jokin meni vikaan sonjakäskyissä: " t)
+                              {:virhe t})))))
+              (recur (if lopetetaan?
+                       [true nil]
+                       (async/alts!! [sammutus-kanava]
+                                     :default false))))
+            (do
+              (async/close! kaskytys-kanava)
+              (>!! sammutus-kanava true))))))))
 
 (defn laheta-viesti-kaskytyskanavaan
   "Lähettää käskyn jms-saikeelle. Käskytyskanavalle on määritelty dropping-buffer, joten se pudottaa lähetetyn viestin
@@ -408,12 +435,12 @@
   [kaskytys-kanava kasky]
   (let [kaskytys-kanavan-vastaus (chan)
         _ (>!! kaskytys-kanava {:kasky kasky :kaskytys-kanavan-vastaus kaskytys-kanavan-vastaus})
-        [tulos _] (async/alts!! [(timeout 5000) (thread (<!! kaskytys-kanavan-vastaus))])]
+        [tulos _] (async/alts!! [(timeout 5000) kaskytys-kanavan-vastaus])]
     (if (= tulos :valmis-kasiteltavaksi)
       (do (>!! kaskytys-kanavan-vastaus :kasittele)
           (thread
             (doto (Thread/currentThread)
-              (.setName (str "jms-kasittelyn-odottelija-" (-> kasky keys first name) "-" (inc jms-kaittelyn-odottelija-numero))))
+              (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*" (inc jms-kaittelyn-odottelija-numero))))
             (<!! kaskytys-kanavan-vastaus)))
       (do (>!! kaskytys-kanavan-vastaus :aika-katkaisu)
           (let [vastaus-kanava (chan)]
@@ -427,25 +454,44 @@
     (let [JMS-oliot (atom JMS-alkutila)
           yhteys-ok? (atom false)
           kaskytys-kanava (chan (dropping-buffer 100))
-          kaskytys-kanavan-vastaus (chan)
+          lopeta-tarkkailu-kanava (chan)
+          saikeen-sammutus-kanava (chan)
           yhteys-future (future
                           (aloita-yhdistaminen asetukset))
           this (assoc this
                  :tila JMS-oliot
                  :yhteys-ok? yhteys-ok?
                  :yhteys-future yhteys-future
-                 :kaskytys-kanava kaskytys-kanava)
-          jms-saije (luo-jms-saije this)]
+                 :kaskytys-kanava kaskytys-kanava
+                 :lopeta-tarkkailu-kanava lopeta-tarkkailu-kanava
+                 :saikeen-sammutus-kanava saikeen-sammutus-kanava)
+          jms-saije (luo-jms-saije this saikeen-sammutus-kanava)]
       (swap! (:tila this) assoc :jms-saije jms-saije)
       (assoc this
-        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytys-kanava (:tyyppi asetukset) db))))
+        :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytys-kanava lopeta-tarkkailu-kanava (:tyyppi asetukset) db))))
 
-  (stop [this]
+  (stop [{:keys [lopeta-tarkkailu-kanava kaskytys-kanava saikeen-sammutus-kanava] :as this}]
     (when @yhteys-ok?
       (let [tila @tila]
         (some-> tila :yhteys .close)))
-    (assoc this
-      :tila nil))
+    (>!! lopeta-tarkkailu-kanava true)
+    (async/close! kaskytys-kanava)
+    (>!! saikeen-sammutus-kanava true)
+    (loop [[sammutettu? _] (async/alts!! [saikeen-sammutus-kanava (timeout 5000)])
+           kierroksia 1]
+      (if sammutettu?
+        (log/info "Sonja säije sammutettu")
+        (do
+          (log/info "Ei saatu sammutettua Sonja säijettä " (* kierroksia 5) " sekunnin sisällä.")
+          (when (< kierroksia 5)
+            (recur (async/alts!! [saikeen-sammutus-kanava (timeout 5000)])
+                   (inc kierroksia))))))
+    (assoc this :tila nil
+                :yhteys-future nil
+                :kaskytys-kanava nil
+                :lopeta-tarkkailu-kanava nil
+                :saikeen-sammutus-kanava nil
+                :yhteyden-tiedot nil))
 
   Sonja
   (kuuntele! [this jonon-nimi kuuntelija-fn jarjestelma]
@@ -464,9 +510,9 @@
   (laheta [{kaskytys-kanava :kaskytys-kanava :as this} jonon-nimi viesti otsikot jarjestelma]
     (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))
   (laheta [this jonon-nimi viesti otsikot]
-    (laheta this jonon-nimi viesti otsikot "muu"))
+    (laheta this jonon-nimi viesti otsikot (str "istunto-" jonon-nimi)))
   (laheta [this jonon-nimi viesti]
-    (laheta this jonon-nimi viesti nil "muu"))
+    (laheta this jonon-nimi viesti nil (str "istunto-" jonon-nimi)))
 
   (aloita-yhteys [{kaskytys-kanava :kaskytys-kanava :as this}]
     (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:aloita-yhteys nil})))

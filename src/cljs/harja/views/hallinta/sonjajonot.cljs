@@ -33,7 +33,7 @@
                                 (let [{:keys [message-id timestamp]} %2]
                                   [:div.viesti-tiedot
                                    [:span "Message-id: " message-id]
-                                   [:span "Timestamp: " timestamp]])
+                                   [:span "Timestamp: " (.toString (js/Date. timestamp))]])
                                 {:key %1})
                              jonon-viestit)]
     [:div.thumbnail.jono
