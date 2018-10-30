@@ -4,7 +4,7 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [clojure.test :refer :all]
-            [clojure.string :as str]
+            [clojure.string :as clj-str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout alts!! chan]]
@@ -138,7 +138,8 @@
                  :basic-auth ["admin" "admin"]
                  :headers {"Content-Type" "application/xml"}
                  :body sanoma}
-        {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/message/" jonon-nimi "?type=queue") options)]))
+        {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/message/" jonon-nimi "?type=queue") options)]
+    response))
 
 (defn sonja-laheta-odota [jonon-nimi sanoma]
   (let [kasitellyn-tapahtuman-id (fn []
@@ -312,13 +313,15 @@
         testikomponentin-lahettamat-viestit (into #{}
                                                   (repeatedly 10 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
-                                                 (repeatedly 10 #(str "jono-1"
-                                                                      (gen/generate (s/gen ::testilahetys-viesti)))))
+                                                 (repeatedly 10 #(str "<harja:testi xmlns:harja=\"\">"
+                                                                      "<viesti>jono-1" (gen/generate (s/gen ::testilahetys-viesti))
+                                                                      "</viesti></harja:testi>")))
         testijono-2-vastaanottamat-viestit (into #{}
-                                                 (repeatedly 10 #(str "jono-2"
-                                                                      (gen/generate (s/gen ::testilahetys-viesti)))))
-        testijono-1-lahetys-fn #(sonja/laheta sonja "testijono-1" %)
-        testijono-2-lahetys-fn #(sonja/laheta sonja "testijono-2" %)
+                                                 (repeatedly 10 #(str "<harja:testi xmlns:harja=\"\">"
+                                                                      "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
+                                                                      "</viesti></harja:testi>")))
+        testijono-1-lahetys-fn #(sonja-laheta "testijono-1" %)
+        testijono-2-lahetys-fn #(sonja-laheta "testijono-2" %)
         ;; Lähetetään viestejä rinnakkain
         _ (thread (vec (pmap #(is (string? (re-find #"ID:.*" (lahetys-fn %)))) testikomponentin-lahettamat-viestit)))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
@@ -331,7 +334,7 @@
                              testijono-2-vastaanottamat-viestit)))
         kasitellyt-viestit (<!! (go-loop [saadut-viestit #{}]
                                   (if-let [uusi-viesti (first (alts!! [testijonokanava (timeout 1000)]))]
-                                    (recur (conj saadut-viestit (.getText uusi-viesti)))
+                                    (recur (conj saadut-viestit (clj-str/trim (.getText uusi-viesti))))
                                     saadut-viestit)))]
     (is (= kasitellyt-viestit (set/union testijono-1-vastaanottamat-viestit testijono-2-vastaanottamat-viestit)))))
 
