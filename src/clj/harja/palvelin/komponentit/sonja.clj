@@ -23,6 +23,10 @@
 (defonce ei-jms-yhteytta {:type :jms-yhteysvirhe
                       :virheet [{:koodi :ei-yhteytta
                                  :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
+
+(defonce aikakatkaisu-virhe {:type :jms-ruuhkaa
+                             :virheet [{:koodi :ruuhkaa
+                                        :viesti "Sonja-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
@@ -94,8 +98,7 @@
                (let [elementti (->> viesti-elementit .nextElement)]
                  (if (nil? elementti)
                    (conj elementit nil)
-                   (recur (conj elementit {:message-id (.getJMSMessageID elementti)
-                                           :timestamp (.getJMSTimestamp elementti)}))))
+                   (recur (conj elementit elementti))))
                elementit))
            (catch JMSException e
              nil)
@@ -352,7 +355,10 @@
                                             {:istunnon-tila istunnon-tila
                                              :jarjestelma jarjestelma
                                              :jonot (mapv (fn [[jonon-nimi {:keys [jono tuottaja vastaanottaja virheet]}]]
-                                                            (let [jonon-viestit (hae-jonon-viestit istunto jono)
+                                                            (let [jonon-viestit (map #(identity
+                                                                                        {:message-id (.getJMSMessageID %)
+                                                                                         :timestamp (.getJMSTimestamp %)})
+                                                                                     (hae-jonon-viestit istunto jono))
                                                                   tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
                                                                   vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
                                                               {jonon-nimi {:jonon-viestit jonon-viestit
@@ -513,7 +519,13 @@
     (kuuntele! this jonon-nimi kuuntelija-fn (str "istunto-" jonon-nimi)))
 
   (laheta [{kaskytys-kanava :kaskytys-kanava :as this} jonon-nimi viesti otsikot jarjestelma]
-    (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))
+    (let [lahetyksen-viesti (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava
+                                                                 {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))]
+      (if (and (map? lahetyksen-viesti) (contains? lahetyksen-viesti :virhe))
+        (if (= "Aikakatkaistiin" (:virhe lahetyksen-viesti))
+          (throw+ aikakatkaisu-virhe)
+          (throw (:virhe lahetyksen-viesti)))
+        lahetyksen-viesti)))
   (laheta [this jonon-nimi viesti otsikot]
     (laheta this jonon-nimi viesti otsikot (str "istunto-" jonon-nimi)))
   (laheta [this jonon-nimi viesti]

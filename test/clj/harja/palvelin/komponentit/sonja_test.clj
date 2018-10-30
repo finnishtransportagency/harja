@@ -255,10 +255,19 @@
 (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        jonot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :jonot)
+        istunnot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :istunnot)
+        jonot-ennen-lahetysta (apply merge
+                                     (map (fn [[istunnon-nimi istunnon-tiedot]]
+                                            (:jonot istunnon-tiedot))
+                                          istunnot-ennen-lahetysta))
         _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
-        jonot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :jonot)
-        {:keys [jono istunto]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
+        istunnot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :istunnot)
+        jonot-lahetyksen-jalkeen (apply merge
+                                     (map (fn [[istunnon-nimi istunnon-tiedot]]
+                                            (:jonot istunnon-tiedot))
+                                          istunnot-lahetyksen-jalkeen))
+        {:keys [istunto]} (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email"))
+        {:keys [jono]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
         viestit-jonossa (sonja/hae-jonon-viestit istunto jono)
         viesti (->> viestit-jonossa first (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
     (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
