@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.kyselyt.konversio :as konv]
             [clojure.test :refer :all]
             [clojure.string :as clj-str]
             [clojure.edn :as edn]
@@ -14,6 +15,7 @@
             [org.httpkit.client :as http]
             [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
+            [cheshire.core :as cheshire]
 
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -40,7 +42,8 @@
                           (:tapahtuma @tila)
                           :ok))
           lahetys-fn (fn [viesti]
-                       (sonja/laheta sonja "testilahetys-jono" viesti nil "testijarjestelma-lahetys"))
+                       (let [vastaus (sonja/laheta sonja "testilahetys-jono" viesti nil "testijarjestelma-lahetys")]
+                         vastaus))
           testijonokanava (chan 100)
           testijonot (chan)]
       (thread
@@ -63,6 +66,7 @@
                                                                   "testijarjestelma")}
                :kuormitus {:testijono-1 (sonja/kuuntele! sonja "testijono-1" (fn [viesti]
                                                                                (Thread/sleep (.intValue (* 1000 (rand))))
+                                                                               (throw (Exception.))
                                                                                (>!! testijonokanava viesti)))
                            :testijono-2 (sonja/kuuntele! sonja "testijono-2" (fn [viesti]
                                                                                (Thread/sleep (.intValue (* 1000 (rand))))
@@ -141,6 +145,29 @@
         {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/message/" jonon-nimi "?type=queue") options)]
     response))
 
+(defn sonja-jolokia [jonon-nimi attribute operation]
+  (let [attribute (when attribute
+                    {:type "read"
+                     :attribute (case attribute
+                                  :dispatch-count "DispatchCount"
+                                  :in-flight-count "InFlightCount"
+                                  :dequeue-count "DequeueCount"
+                                  :enqueue-count "EnqueueCount")})
+        operation (when operation
+                    {:type "EXEC"
+                     :operation (case operation
+                                  :purge "purge")
+                     :arguments (case operation
+                                  :purge [])})
+        sanoma (merge {:mbean (str "org.apache.activemq:brokerName=localhost,destinationName=" jonon-nimi ",destinationType=Queue,type=Broker")}
+                       attribute
+                       operation)
+        options {:timeout 200
+                 :basic-auth ["admin" "admin"]
+                 :body (cheshire/encode sanoma)}
+        {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/jolokia/") options)]
+    response))
+
 (defn sonja-laheta-odota [jonon-nimi sanoma]
   (let [kasitellyn-tapahtuman-id (fn []
                                    (not-empty
@@ -164,9 +191,6 @@
 ;   - Nähdään mitkä komponentit ei ole käynnissä
 ;   - Nähdään, että Sonja ei ole päällä
 ; - Jonossa näkyy viestit
-
-;;; Sonjaa käyttävien komponenttien testejä
-; - Testataan, että ilmoitukset käsitellään
 
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
@@ -205,12 +229,6 @@
     (if (map? (first content))
       (doseq [content-element content]
         (tarkista-xml-sisalto content-element tarkistukset)))))
-
-(defn purge-jono [istunto jono]
-  (let [vastaanottaja (.createReceiver istunto jono)]
-    (loop [viesti (.receiveNoWait vastaanottaja)]
-      (when viesti
-        (recur (.receiveNoWait vastaanottaja))))))
 
 #_(deftest virhe-kasittelija-funktiossa
     (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
@@ -278,9 +296,9 @@
         _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
         istunnot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :istunnot)
         jonot-lahetyksen-jalkeen (apply merge
-                                     (map (fn [[istunnon-nimi istunnon-tiedot]]
-                                            (:jonot istunnon-tiedot))
-                                          istunnot-lahetyksen-jalkeen))
+                                        (map (fn [[istunnon-nimi istunnon-tiedot]]
+                                               (:jonot istunnon-tiedot))
+                                             istunnot-lahetyksen-jalkeen))
         {:keys [istunto]} (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email"))
         {:keys [jono]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
         viestit-jonossa (sonja/hae-jonon-viestit istunto jono)
@@ -297,9 +315,13 @@
                                   :sisalto (fn [[sisalto]]
                                              (is (= sisalto "Testisisalto")))})
     (is (= 1 (count viestit-jonossa)))
-    (purge-jono istunto jono)))
+    (sonja-jolokia jono nil :purge)))
 
 (s/def ::testilahetys-viesti string?)
+
+(defn suorita-rinnakkain [f s]
+  (doall (for [m s]
+           (thread (f m)))))
 
 (deftest sonja-kuormitus-testi
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
@@ -310,34 +332,50 @@
         _ (is (and testijono-1 testijono-2) "Testikomponentin jonoja ei keretty säätää oikein")
         {istunnot :istunnot} (-> sonja :tila deref :istunnot)
         testikomponentin-istunnot (select-keys istunnot ["istunto-testijono-1" "istunto-testijono-2"])
+        sonja-broker-tila #(-> (sonja-jolokia "tloik-ilmoituskuittausjono" % nil) :body (cheshire/decode) (get "value"))
         testikomponentin-lahettamat-viestit (into #{}
-                                                  (repeatedly 10 #(gen/generate (s/gen ::testilahetys-viesti))))
+                                                  (repeatedly 50 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
                                                  (repeatedly 10 #(str "<harja:testi xmlns:harja=\"\">"
                                                                       "<viesti>jono-1" (gen/generate (s/gen ::testilahetys-viesti))
                                                                       "</viesti></harja:testi>")))
         testijono-2-vastaanottamat-viestit (into #{}
                                                  (repeatedly 10 #(str "<harja:testi xmlns:harja=\"\">"
-                                                                      "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
-                                                                      "</viesti></harja:testi>")))
+                                                                       "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
+                                                                       "</viesti></harja:testi>")))
         testijono-1-lahetys-fn #(sonja-laheta "testijono-1" %)
         testijono-2-lahetys-fn #(sonja-laheta "testijono-2" %)
-        ;; Lähetetään viestejä rinnakkain
-        _ (thread (vec (pmap #(is (string? (re-find #"ID:.*" (lahetys-fn %)))) testikomponentin-lahettamat-viestit)))
+        tloik-lahetys-fn (fn [_]
+                           (sonja-laheta "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml")))
+        ;; Lähetetään viestejä rinnakkain testikomponentista brokerille
+        testijonon-lahetys (thread (suorita-rinnakkain lahetys-fn testikomponentin-lahettamat-viestit))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
-        _ (thread (vec (pmap (fn [viesti]
-                               (testijono-1-lahetys-fn viesti))
-                             testijono-1-vastaanottamat-viestit)))
+        testijonon-vastaanotto-1 (thread (suorita-rinnakkain testijono-1-lahetys-fn testijono-1-vastaanottamat-viestit))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 2
-        _ (thread (vec (pmap (fn [viesti]
-                               (testijono-2-lahetys-fn viesti))
-                             testijono-2-vastaanottamat-viestit)))
+        testijonon-vastaanotto-2 (thread (suorita-rinnakkain testijono-2-lahetys-fn testijono-2-vastaanottamat-viestit))
+        ;; Vastaaanotetaan viestejä tloikista
+        tloik-vastaanotto (thread (suorita-rinnakkain tloik-lahetys-fn testijono-2-vastaanottamat-viestit))
+        ;; Otetaan kaikki ne viestit, joita käsiteltiin testikomponentissa
         kasitellyt-viestit (<!! (go-loop [saadut-viestit #{}]
                                   (if-let [uusi-viesti (first (alts!! [testijonokanava (timeout 1000)]))]
                                     (recur (conj saadut-viestit (clj-str/trim (.getText uusi-viesti))))
                                     saadut-viestit)))]
-    (is (= kasitellyt-viestit (set/union testijono-1-vastaanottamat-viestit testijono-2-vastaanottamat-viestit)))))
+    (doseq [viesti-thread (<!! testijonon-lahetys)
+            :let [viesti (<!! viesti-thread)]]
+      (when (string? viesti)
+        ;; Testataan, että lähtihän kaikki viestit
+        (is (string? (re-find #"ID:.*" (lahetys-fn viesti))))))
+    (doseq [tloik-viesti (<!! tloik-vastaanotto)]
+      (<!! tloik-viesti))
+    ;; Vain testijono-2 viestit pitäisi olla käsitelty, koska ykkönen nakkaa exceptionia
+    (is (= kasitellyt-viestit testijono-2-vastaanottamat-viestit))
+    ;; Tarkistetaan, että testijono-1:n vastaanottaja on kummiski vielä pystyssä
+    (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))
+    ;; Onhan TLOIK lähettänyt yhtä moneen viestiin kuittaukset, kuin se on saanutkin viestejä
+    (is (= (count testijono-2-vastaanottamat-viestit) (- (sonja-broker-tila :enqueue-count) (sonja-broker-tila :dequeue-count))))
+    (sonja-jolokia "tloik-ilmoituskuittausjono" nil :purge)
+    (sonja-jolokia "testilahetys-jono" nil :purge)))
 
 
-#_(deftest main-komponentit-loytyy
+(deftest main-komponentit-loytyy
     (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))

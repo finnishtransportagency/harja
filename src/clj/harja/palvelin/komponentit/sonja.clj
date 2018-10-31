@@ -91,9 +91,9 @@
 (defn hae-jonon-viestit [istunto jono]
   "Luodaan selailija olio aina uudestaan, koska se saa jonosta snapshot tilanteen silloin, kun se luodaan."
   (when (and istunto jono)
-    (let [selailija (.createBrowser istunto jono)
-          viesti-elementit (.getEnumeration selailija)]
-      (try (loop [elementit []]
+    (try (let [selailija (.createBrowser istunto jono)
+               viesti-elementit (.getEnumeration selailija)]
+           (loop [elementit []]
              ;; Selailija olio ei ainakaan ActiveMQ:n kanssa toimi oikein kun istunnossa on useita eri jonoja. hasMoreElements
              ;; palauttaa oikein true sillin, kun siellä on viestejä, mutta nextElement palauttaa siitä huolimatta nil
              (if (.hasMoreElements viesti-elementit)
@@ -101,12 +101,11 @@
                  (if (nil? elementti)
                    (conj elementit nil)
                    (recur (conj elementit elementti))))
-               elementit))
+               (do
+                 (.close selailija)
+                 elementit))))
            (catch JMSException e
-             nil)
-           (finally
-             (when selailija
-               (.close selailija)))))))
+             nil))))
 
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan)
@@ -119,12 +118,6 @@
         (<! (timeout 5000))
         (recur (async/alts! [lopeta-tarkkailu-kanava]
                             :default false))))))
-
-(defn- poista-consumerit [{jonot :jonot :as tila}]
-  (reduce (fn [tila jono]
-            (assoc-in tila [:jonot jono :consumer] nil))
-          tila
-          (keys jonot)))
 
 (defn yhdista-uudelleen [{:keys [tila yhteys-ok? kaskytys-kanava] :as sonja}]
     (let [katkos-alkoi (pvm/nyt-suomessa)
@@ -207,6 +200,7 @@
                        (with-meta
                          (reify MessageListener
                            (onMessage [_ message]
+                             (log/debug "Saatiin viesti jonoon: " jonon-nimi)
                              (doseq [kuuntelija kuuntelijat]
                                (try
                                  (kuuntelija message)
@@ -215,12 +209,12 @@
                                                    (if (instance? javax.jms.TextMessage message)
                                                      (.getText message)
                                                      message)
-                                                   " ja sen käsittely epäonnistui funktiolta " kuuntelija))
+                                                   " ja sen käsittely epäonnistui funktiolta " kuuntelija
+                                                   " virheeseen " (.getMessage t)))
                                    (swap! tila update-in [:istunnot jarjestelma :jonot jonon-nimi :virheet]
                                           (fn [virheet]
                                             (conj (or virheet []) {:viesti (.getMessage t)
-                                                                   :aika (pvm/nyt-suomessa)})))
-                                   (throw t))))))
+                                                                   :aika (.toString (pvm/nyt-suomessa))}))))))))
                          {:kuuntelijoiden-maara (count kuuntelijat)})))
 
 (defn luo-istunto [yhteys jonon-nimi]
