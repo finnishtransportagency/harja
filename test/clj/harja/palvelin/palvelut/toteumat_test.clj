@@ -444,7 +444,7 @@
                                      :tunniste "HARJ0000000000000002"))
                   vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu DESC;")]
+                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu ASC;")]
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
@@ -466,7 +466,7 @@
                                      :tunniste "HARJ0000000000000002"))
                   vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu DESC;")]
+                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu ASC;")]
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
