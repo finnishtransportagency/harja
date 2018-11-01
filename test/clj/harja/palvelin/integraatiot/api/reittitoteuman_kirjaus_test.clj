@@ -7,8 +7,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [specql.core :refer [fetch columns]]
-            [harja.domain.reittipiste :as rp]
-            [taoensso.timbre :as log]))
+            [harja.domain.reittipiste :as rp]))
 
 (def kayttaja "destia")
 
@@ -55,10 +54,6 @@
                                                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
-    (log/debug (str "ULKOINEN ID 1 " ulkoinen-id ))
-    (log/debug (str "sopimus-id ID 1 " sopimus-id ))
-    (log/debug (str "vastaus-lisays ID 1 " vastaus-lisays ))
-
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
@@ -83,11 +78,6 @@
               toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id)))]
-          (log/debug (str "toteuma-id ID 1 " toteuma-id))
-          (log/debug (str "toteuma-kannassa ID 1 " toteuma-kannassa))
-          (log/debug (str "toteuma-tehtava-idt ID 1 " toteuma-tehtava-idt))
-          (log/debug (str "toteuma-materiaali-idt ID 1 " toteuma-materiaali-idt))
-          (log/debug (str "toteuman-materiaali ID 1 " toteuman-materiaali))
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
           (is (= (count reittipisteet) 3))
           (is (= (count toteuma-tehtava-idt) 2))
@@ -305,7 +295,6 @@
       (let [vastaus-paivitys (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
             hoitoluokittaiset-kolmannen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
             sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-        (log/debug (prn-str "ULKOINEN ID " ulkoinen-id ))
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
