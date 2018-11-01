@@ -50,12 +50,13 @@
 
   (testing "suolasakon luonti ja päivitys"
     (let [urakka-id @oulun-alueurakan-2014-2019-id
-          lisattava-suolasakko {:hoitokauden-alkuvuosi 2015
+          lisattava-suolasakko {:hoitokauden-alkuvuosi 2014
                                 :urakka urakka-id
                                 :suolasakko {:maksukuukausi 6
                                              :indeksi "MAKU 2005"
                                              :maara 40
-                                             :hoitokauden_alkuvuosi 2015
+                                             :kaytossa true
+                                             :hoitokauden_alkuvuosi 2014
                                              :talvisuolaraja 100}}
           tulos (:suolasakot (kutsu-palvelua
                                (:http-palvelin jarjestelma)
@@ -66,7 +67,7 @@
                                          :hae-urakan-suolasakot-ja-lampotilat
                                          +kayttaja-jvh+
                                          urakka-id)
-          suolasakko (first (filter #(= (:hoitokauden_alkuvuosi %) 2015)
+          suolasakko (first (filter #(= (:hoitokauden_alkuvuosi %) 2014)
                                     (:suolasakot kutsun-jalkeen))) ]
 
       (is (= (:maksukuukausi suolasakko) 6) "maksukuukausi")
@@ -74,5 +75,5 @@
       (is (= (:talvisuolaraja suolasakko) 100M) "talvisuolaraja")
       (is (= (:urakka suolasakko) urakka-id) "urakka")
       (is (= (:indeksi suolasakko) "MAKU 2005") "indeksi")
-      (is (= (:hoitokauden_alkuvuosi suolasakko) 2015) "hoitokauden alkuvuosi")
+      (is (= (:hoitokauden_alkuvuosi suolasakko) 2014) "hoitokauden alkuvuosi")
       (is (= (:maara suolasakko) 40.0)))))
