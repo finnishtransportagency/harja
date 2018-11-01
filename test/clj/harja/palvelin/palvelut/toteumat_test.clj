@@ -448,9 +448,6 @@
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
-
-              (log/debug (str "MAARIT TOTEUMA " toteuma))
-              (log/debug (str "MAARIT VASTAUS " vastaus))
               (is (= (mapv rest varusteet) [["HARJ0000000000000002" "tl506" "lisatty" "lahetetty"]
                                             ["HARJ0000000000000002" "tl506" "paivitetty" "lahetetty"]]))
               (is (= (:tunniste (first vastaus)) "HARJ0000000000000002"))
