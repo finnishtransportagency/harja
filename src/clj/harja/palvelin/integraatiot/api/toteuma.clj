@@ -121,10 +121,9 @@
                      (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti)))]}))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
-  (log/debug "Tuhotaan toteuman vanhat tehtävät")
+  (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
   (q-toteumat/poista-toteuma_tehtava-toteuma-idlla!
     db
-    kirjaaja
     toteuma-id)
   (log/debug "Luodaan toteumalle uudet tehtävät")
   (doseq [tehtava (:tehtavat toteuma)]
@@ -139,8 +138,8 @@
       nil)))
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
-  (log/debug "Tuhotaan toteuman vanhat materiaalit")
-  (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db kirjaaja toteuma-id)
+  (log/debug "Tuhotaan toteuman vanhat materiaalit. Toteuma id: " toteuma-id)
+  (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
