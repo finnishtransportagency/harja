@@ -499,8 +499,7 @@ VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisat
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
-UPDATE toteuma_tehtava
-SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+DELETE FROM toteuma_tehtava
 WHERE toteuma = :id;
 
 -- name: luo-toteuma-materiaali<!
@@ -509,9 +508,8 @@ INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja)
 VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
 
 -- name: poista-toteuma-materiaali-toteuma-idlla!
--- Päivittää toteuman materiaalit poistetuksi
-UPDATE toteuma_materiaali
-SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+-- Poistaa toteuman materiaalit
+DELETE FROM toteuma_materiaali
 WHERE toteuma = :id;
 
 -- name: paivita-varustetoteuman-tr-osoite!
