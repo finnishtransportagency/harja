@@ -89,12 +89,12 @@
                     istunnot)]]]))
 
 (defn virhe [app]
-  [:p app])
+  [:p "Sonjan tilaa ei haettu..."])
 
 (defn sonjajonot* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(e! (tila/->AloitaSonjaTilanHakeminen))
-                      #())
+                      #(e! (tila/->LopetaSonjaTilanHakeminen)))
     (fn [e! {sonjan-tila :sonjan-tila :as app}]
       [:div
        [debug/debug app]

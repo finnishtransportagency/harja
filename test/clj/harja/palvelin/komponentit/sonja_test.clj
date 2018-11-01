@@ -414,12 +414,46 @@
 (deftest main-komponentit-loytyy
     (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
 
-(deftest jms-kay-alhaalla
-  (let [status-ennen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM harjatila")))
+(deftest jms-yhteys-kay-alhaalla
+  (alts!! [*sonja-yhteys* (timeout 10000)])
+  (let [kaskytys-kanava (-> jarjestelma :sonja :kaskytys-kanava)
+        db (:db jarjestelma)
+        tyyppi (-> asetukset :sonja :tyyppi)
+        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]})))
         _ (sonja-jolokia-connection nil :stop)
-        status-lopetuksen-jalkeen (sonja-jolokia-broker :health nil)
+        ;; Odotetaan hetki, että restart prosessi on kerennyt lähtä käyntiin
+        _ (<!! (timeout 3000))
+        ;; Tilanne pitää katsoa kannasta, koska käskyjen lähettäminen vain blokkaa ja timeout tulee vastaukseksi
+        status-lopetuksen-jalkeen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM harjatila")))
         _ (sonja-jolokia-connection nil :start)
-        status-aloituksen-jalkeen (sonja-jolokia-broker :health nil)]
-    (println "STATUS ENNEN: " status-ennen)
-    (println "STATUS LOPETUKSEN JÄLKEEN: " status-lopetuksen-jalkeen)
-    (println "STATUS ALOITUKSEN JÄLKEEN: " status-aloituksen-jalkeen)))
+        status-aloituksen-jalkeen (loop [kertoja 1]
+                                    (when (< kertoja 5)
+                                      (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]}))]
+                                        (if (= vastaus {:virhe "Aikakatkaistiin"})
+                                          (recur (inc kertoja))
+                                          (:vastaus vastaus)))))]
+
+    ;; STATUS ENNEN TESTIT
+    (is (= (-> status-ennen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
+    (doseq [istunto (-> status-ennen :olioiden-tilat :istunnot)]
+      (is (= (:istunnon-tila istunto) "ACTIVE"))
+      (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
+    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*1"]]
+      (is (some #(= (:nimi %) saije)
+                (:saikeiden-tilat status-ennen))))
+    ;; STATUS LOPETUKSEN JÄLKEEN TESTIT
+    (is (= (-> status-lopetuksen-jalkeen :olioiden-tilat :yhteyden-tila) "CLOSED"))
+    (doseq [istunto (-> status-lopetuksen-jalkeen :olioiden-tilat :istunnot)]
+      (is (= (:istunnon-tila istunto) "CLOSED"))
+      (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "CLOSED")))
+    (doseq [saije ["jms-saije" "jms-reconnecting-saije" "jms-kasittelyn-odottelija*yhdista-uudelleen*1"]]
+      (is (some #(= (:nimi %) saije)
+                (:saikeiden-tilat status-lopetuksen-jalkeen))))
+    ;; STATUS RECONNECTIN JÄLKEEN
+    (is (= (-> status-aloituksen-jalkeen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
+    (doseq [istunto (-> status-aloituksen-jalkeen :olioiden-tilat :istunnot)]
+      (is (= (:istunnon-tila istunto) "ACTIVE"))
+      (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
+    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*1"]]
+      (is (some #(= (:nimi %) saije)
+                (:saikeiden-tilat status-aloituksen-jalkeen))))))

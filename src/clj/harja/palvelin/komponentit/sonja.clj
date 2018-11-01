@@ -109,7 +109,8 @@
            nil))))
 
 (declare tee-jms-poikkeuskuuntelija
-         laheta-viesti-kaskytyskanavaan)
+         laheta-viesti-kaskytyskanavaan
+         jms-toiminto)
 
 (defn aloita-sonja-yhteyden-tarkkailu [kaskytys-kanava lopeta-tarkkailu-kanava tyyppi db]
   (go-loop [[lopetetaan? _] (async/alts! [lopeta-tarkkailu-kanava]
@@ -134,7 +135,7 @@
           (reset! yhteys-ok? false))))
     (thread
       (doto (Thread/currentThread)
-        (.setName "jms-reconnecting-saija"))
+        (.setName "jms-reconnecting-saije"))
       (loop [{:keys [vastaus virhe]} (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:yhdista-uudelleen nil}))]
         (if virhe
           (recur (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:yhdista-uudelleen nil})))
@@ -273,6 +274,15 @@
                                       :aika (pvm/nyt-suomessa)})))
       (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi))))
 
+(defn ilmoita-oma-tila-yhdistamisen-aikana
+  "Ilmoittaa omasta tilasta, kun yritetään yhdistää brokeriin."
+  [yhteys-future {db :db {tyyppi :tyyppi} :asetukset :as sonja}]
+  (jms-toiminto sonja {:jms-tilanne [tyyppi db]})
+  (let [[yhteys-oliot _] (async/alts!! [(timeout 5000) (thread @yhteys-future)])]
+    (if yhteys-oliot
+      yhteys-oliot
+      (ilmoita-oma-tila-yhdistamisen-aikana yhteys-future sonja))))
+
 (defmulti jms-toiminto
   (fn [sonja kasky]
     (-> kasky keys first)))
@@ -299,7 +309,7 @@
 (defmethod jms-toiminto :yhdista-uudelleen
   [{:keys [asetukset tila kaskytys-kanava] :as sonja} kasky]
   (try (let [yhteys-future (future (aloita-yhdistaminen asetukset))
-             yhteys-olio @yhteys-future]
+             yhteys-olio (ilmoita-oma-tila-yhdistamisen-aikana yhteys-future sonja)]
          (swap! tila merge yhteys-olio)
          (swap! tila update :istunnot (fn [istunnot]
                                         (reduce (fn [tulos [istunnon-nimi m]]
@@ -397,12 +407,14 @@
                                          (map #(identity
                                                  {:nimi (.getName %)
                                                   :status (.. % getState toString)})))
-                                       (.keySet (Thread/getAllStackTraces)))]
-         (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode {:olioiden-tilat olioiden-tilat
-                                                               :saikeiden-tilat saikeiden-tilat})
+                                       (.keySet (Thread/getAllStackTraces)))
+             jms-tila {:olioiden-tilat olioiden-tilat
+                       :saikeiden-tilat saikeiden-tilat}]
+         (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
                                        :palvelin (fmt/leikkaa-merkkijono 512
                                                                          (.toString (InetAddress/getLocalHost)))
-                                       :osa-alue "sonja"}))
+                                       :osa-alue "sonja"})
+         jms-tila)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
@@ -424,7 +436,7 @@
       (.setName "jms-saije"))
     ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
     ;; joku arvo pihalle.
-    (let [yhteys-olio @yhteys-future]
+    (let [yhteys-olio (ilmoita-oma-tila-yhdistamisen-aikana yhteys-future sonja)]
       (log/debug "Yhteys oliot valmiit")
       (swap! tila merge yhteys-olio)
       ;; Aloitetaan ikuinen looppi
