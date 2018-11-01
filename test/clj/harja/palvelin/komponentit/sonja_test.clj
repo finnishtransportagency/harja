@@ -145,7 +145,13 @@
         {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/message/" jonon-nimi "?type=queue") options)]
     response))
 
-(defn sonja-jolokia [jonon-nimi attribute operation]
+(defn sonja-jolokia [sanoma]
+  (let [options {:timeout 200
+                 :basic-auth ["admin" "admin"]
+                 :body (cheshire/encode sanoma)}]
+    @(http/post (str "http://localhost:8161/api/jolokia/") options)))
+
+(defn sonja-jolokia-jono [jonon-nimi attribute operation]
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
@@ -161,12 +167,40 @@
                                   :purge [])})
         sanoma (merge {:mbean (str "org.apache.activemq:brokerName=localhost,destinationName=" jonon-nimi ",destinationType=Queue,type=Broker")}
                        attribute
-                       operation)
-        options {:timeout 200
-                 :basic-auth ["admin" "admin"]
-                 :body (cheshire/encode sanoma)}
-        {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/jolokia/") options)]
-    response))
+                       operation)]
+    (sonja-jolokia sanoma)))
+
+(defn sonja-jolokia-broker [attribute operation]
+  (let [attribute (when attribute
+                    {:type "read"
+                     :attribute (case attribute
+                                  :health "health")})
+        operation (when operation
+                    {:type "EXEC"
+                     :operation (case operation
+                                  :start "start"
+                                  :stop "stop")})
+        sanoma (merge {:mbean (str "org.apache.activemq:brokerName=localhost"
+                                   (when (= :health attribute) ",Service=Health")
+                                   ",type=Broker")}
+                      attribute
+                      operation)]
+    (sonja-jolokia sanoma)))
+
+(defn sonja-jolokia-connection [attribute operation]
+  (let [attribute (when attribute
+                    {:type "read"
+                     :attribute (case attribute
+                                  :status "health")})
+        operation (when operation
+                    {:type "EXEC"
+                     :operation (case operation
+                                  :start "start"
+                                  :stop "stop")})
+        sanoma (merge {:mbean "org.apache.activemq:type=Broker,brokerName=localhost,connector=clientConnectors,connectorName=openwire"}
+                      attribute
+                      operation)]
+    (sonja-jolokia sanoma)))
 
 (defn sonja-laheta-odota [jonon-nimi sanoma]
   (let [kasitellyn-tapahtuman-id (fn []
@@ -174,7 +208,7 @@
                                      (first (q (str "SELECT it.id "
                                                     "FROM integraatiotapahtuma it"
                                                     "  JOIN integraatioviesti iv ON iv.integraatiotapahtuma=it.id "
-                                                    "WHERE iv.sisalto ILIKE('" (clojure.string/replace sanoma #"ä" "Ã¤") "') AND "
+                                                    "WHERE iv.sisalto ILIKE('" (clj-str/replace sanoma #"ä" "Ã¤") "') AND "
                                                     "it.paattynyt IS NOT NULL")))))]
     (sonja-laheta jonon-nimi sanoma)
     (<!!
@@ -315,7 +349,7 @@
                                   :sisalto (fn [[sisalto]]
                                              (is (= sisalto "Testisisalto")))})
     (is (= 1 (count viestit-jonossa)))
-    (sonja-jolokia jono nil :purge)))
+    (sonja-jolokia-jono jono nil :purge)))
 
 (s/def ::testilahetys-viesti string?)
 
@@ -332,7 +366,7 @@
         _ (is (and testijono-1 testijono-2) "Testikomponentin jonoja ei keretty säätää oikein")
         {istunnot :istunnot} (-> sonja :tila deref :istunnot)
         testikomponentin-istunnot (select-keys istunnot ["istunto-testijono-1" "istunto-testijono-2"])
-        sonja-broker-tila #(-> (sonja-jolokia "tloik-ilmoituskuittausjono" % nil) :body (cheshire/decode) (get "value"))
+        sonja-broker-tila #(-> (sonja-jolokia-jono "tloik-ilmoituskuittausjono" % nil) :body (cheshire/decode) (get "value"))
         testikomponentin-lahettamat-viestit (into #{}
                                                   (repeatedly 50 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
@@ -373,9 +407,19 @@
     (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))
     ;; Onhan TLOIK lähettänyt yhtä moneen viestiin kuittaukset, kuin se on saanutkin viestejä
     (is (= (count testijono-2-vastaanottamat-viestit) (- (sonja-broker-tila :enqueue-count) (sonja-broker-tila :dequeue-count))))
-    (sonja-jolokia "tloik-ilmoituskuittausjono" nil :purge)
-    (sonja-jolokia "testilahetys-jono" nil :purge)))
+    (sonja-jolokia-jono "tloik-ilmoituskuittausjono" nil :purge)
+    (sonja-jolokia-jono "testilahetys-jono" nil :purge)))
 
 
 (deftest main-komponentit-loytyy
     (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
+
+(deftest jms-kay-alhaalla
+  (let [status-ennen (sonja-jolokia-broker :health nil)
+        _ (sonja-jolokia-connection nil :stop)
+        status-lopetuksen-jalkeen (sonja-jolokia-broker :health nil)
+        _ (sonja-jolokia-connection nil :start)
+        status-aloituksen-jalkeen (sonja-jolokia-broker :health nil)]
+    (println "STATUS ENNEN: " status-ennen)
+    (println "STATUS LOPETUKSEN JÄLKEEN: " status-lopetuksen-jalkeen)
+    (println "STATUS ALOITUKSEN JÄLKEEN: " status-aloituksen-jalkeen)))

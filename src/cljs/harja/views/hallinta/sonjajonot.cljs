@@ -64,11 +64,11 @@
            {:key (first (keys %))})
         jonot)])
 
-(defn tila [e! {palvelin :palvelin {:keys [olioiden-tilat saikeiden-tilat]} :tila}]
+(defn tila [e! {palvelin :palvelin {:keys [olioiden-tilat saikeiden-tilat]} :tila paivitetty :paivitetty}]
   (let [{:keys [istunnot yhteyden-tila]} olioiden-tilat]
     [:div.tilat
      [:div.thumbnail
-      [:h2 palvelin]
+      [:h2 (str palvelin " (Päivitetty: " paivitetty ")")]
       [:hr]
       [:h3 "Säikeet"]
       (map (fn [{:keys [nimi status]}]
@@ -93,7 +93,7 @@
 
 (defn sonjajonot* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tila/->HaeSonjanTila))
+    (komp/sisaan-ulos #(e! (tila/->AloitaSonjaTilanHakeminen))
                       #())
     (fn [e! {sonjan-tila :sonjan-tila :as app}]
       [:div

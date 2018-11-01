@@ -12,17 +12,18 @@
             [harja.kyselyt.harjatila :as q]
             [harja.fmt :as fmt])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
+           (java.io EOFException)
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)
            (java.util Enumeration Collections))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defonce JMS-alkutila
-  {:yhteys nil :istunnot {}})
+         {:yhteys nil :istunnot {}})
 (defonce jms-kaittelyn-odottelija-numero 0)
 (defonce ei-jms-yhteytta {:type :jms-yhteysvirhe
-                      :virheet [{:koodi :ei-yhteytta
-                                 :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
+                          :virheet [{:koodi :ei-yhteytta
+                                     :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 
 (defonce aikakatkaisu-virhe {:type :jms-ruuhkaa
                              :virheet [{:koodi :ruuhkaa
@@ -104,8 +105,8 @@
                (do
                  (.close selailija)
                  elementit))))
-           (catch JMSException e
-             nil))))
+         (catch JMSException e
+           nil))))
 
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan)
@@ -120,22 +121,23 @@
                             :default false))))))
 
 (defn yhdista-uudelleen [{:keys [tila yhteys-ok? kaskytys-kanava] :as sonja}]
-    (let [katkos-alkoi (pvm/nyt-suomessa)
-          nukkumisaika 5000
-          {yhteys :yhteys} @tila]
-      (log/info "Yritetään yhdistään JMS-yhteys uudelleen. Katkos alkoi: " (str katkos-alkoi))
-      (when yhteys
-        (try
-          (.close yhteys)
-          (reset! yhteys-ok? false)
-          (catch Exception e
-            (log/error e "JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e)))))
-      (thread
-        (doto (Thread/currentThread)
-          (.setName "jms-reconnecting-saija"))
-        (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:yhdista-uudelleen [katkos-alkoi]}))
-        (let [kulunut-aika (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))]
-          (log/info "Sonja jonot pystytetty uudestaan. Aikaa meni: " kulunut-aika)))))
+  (let [katkos-alkoi (pvm/nyt-suomessa)
+        nukkumisaika 5000
+        {yhteys :yhteys} @tila]
+    (log/info "Yritetään yhdistään JMS-yhteys uudelleen. Katkos alkoi: " (str katkos-alkoi))
+    (when yhteys
+      (try
+        (.close yhteys)
+        (reset! yhteys-ok? false)
+        (catch Exception e
+          (log/error e "JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e))
+          (reset! yhteys-ok? false))))
+    (thread
+      (doto (Thread/currentThread)
+        (.setName "jms-reconnecting-saija"))
+      (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:yhdista-uudelleen [katkos-alkoi]}))
+      (let [kulunut-aika (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))]
+        (log/info "Sonja jonot pystytetty uudestaan. Aikaa meni: " kulunut-aika)))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -185,15 +187,25 @@
 
 (defn aloita-yhdistaminen [{:keys [url tyyppi] :as asetukset}]
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
-  (let [qcf (luo-connection-factory url tyyppi)
-        yhteys (yhdista asetukset qcf 10000)]
-    (when (= :sonicmq tyyppi)
+  (try
+    (let [qcf (luo-connection-factory url tyyppi)
+          yhteys (yhdista asetukset qcf 10000)]
       (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
-                                        meta-data)))
-    (when yhteys
-      (do
-        (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
-        {:yhteys yhteys :qcf qcf}))))
+                                        meta-data))
+      (when yhteys
+        (do
+          (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
+          {:yhteys yhteys :qcf qcf})))
+    (catch EOFException e
+      ;; ActiveMQ saattaa ainakin saada yhteyden borkeriin vaikkei yhteys olisi ok
+      (log/error "Yhteys brokeriin saatu, mutta yhteys ei ole ok. Yritetään yhdistää uudelleen." (.getMessage e) "\nStackTrace: " (.printStackTrace e))
+      (<!! (timeout 10000))
+      (aloita-yhdistaminen asetukset))
+    (catch Throwable t
+      ;; ActiveMQ saattaa ainakin saada yhteyden borkeriin vaikkei yhteys olisi ok
+      (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen." (.getMessage t) "\nStackTrace: " (.printStackTrace t))
+      (<!! (timeout 10000))
+      (aloita-yhdistaminen asetukset))))
 
 (defn kasittele-viesti [vastaanottaja kuuntelijat tila jarjestelma jonon-nimi]
   (.setMessageListener vastaanottaja
@@ -262,9 +274,7 @@
 
 (defmethod jms-toiminto :aloita-yhteys
   [{:keys [tila yhteys-ok?] :as sonja} kasky]
-  (try (let [params (when-let [params (vals kasky)]
-                      (first params))
-             {:keys [istunnot yhteys]} @tila
+  (try (let [{:keys [istunnot yhteys]} @tila
              poikkeuskuuntelija (tee-jms-poikkeuskuuntelija sonja)]
          ;; Alustetaan vastaanottaja jvm oliot
          (doseq [[jarjestelma {jonot :jonot}] istunnot]
@@ -273,11 +283,20 @@
          ;; Lisätään poikkeuskuuntelija yhteysolioon
          (.setExceptionListener yhteys poikkeuskuuntelija)
          ;; Aloita yhteys
+         (log/debug "Aloitetaan yhteys")
          (.start yhteys)
          (reset! yhteys-ok? true)
          true)
+       (catch JMSException e
+         (log/error "Yhteyden luomisessa virhe " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
+         (let [params (when-let [params (vals kasky)]
+                        (first params))
+               ;; Katkos-alkoi saa arvon vain, jos yhteys on hävinnyt ja yritetään yhdistää uudelleen
+               [katkos-alkoi] params]
+           (<!! (timeout 5000))
+           (jms-toiminto sonja {:yhdista-uudelleen [katkos-alkoi]})))
        (catch Exception e
-         (log/error "VIRHE TAPAHTUI :aloita-yhteys " e)
+         (log/error "VIRHE TAPAHTUI :aloita-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defmethod jms-toiminto :yhdista-uudelleen
@@ -285,7 +304,7 @@
   (try (let [params (when-let [params (vals kasky)]
                       (first params))
              [katkos-alkoi] params
-             yhteys-future (aloita-yhdistaminen asetukset)
+             yhteys-future (future (aloita-yhdistaminen asetukset))
              yhteys-olio @yhteys-future]
          (swap! tila merge yhteys-olio)
          (swap! tila update :istunnot (fn [istunnot]
@@ -299,9 +318,9 @@
                                                                                  [jonon-nimi (select-keys jms-oliot [:kuuntelijat])])
                                                                                jonot))}})))
                                                 {} istunnot)))
-         (jms-toiminto sonja {:aloita-yhteys nil}))
+         (jms-toiminto sonja {:aloita-yhteys [katkos-alkoi]}))
        (catch Exception e
-         (log/error "VIRHE TAPAHTUI :yhdista-uudelleen " e)
+         (log/error "VIRHE TAPAHTUI :yhdista-uudelleen " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defmethod jms-toiminto :laheta-viesti
@@ -314,7 +333,7 @@
          ;; lähetetään viestejä. JMS jonoissa se ei ole pakollista.
          (laheta-viesti tila jonon-nimi viesti correlation-id jarjestelma))
        (catch Exception e
-         (log/error "VIRHE TAPAHTUI :laheta-viesti " e)
+         (log/error "VIRHE TAPAHTUI :laheta-viesti " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defmethod jms-toiminto :poista-kuuntelija
@@ -339,7 +358,7 @@
                                           :kuuntelijat kuuntelijat)))))
          true)
        (catch Exception e
-         (log/error "VIRHE TAPAHTUI :poista-kuuntelija " e)
+         (log/error "VIRHE TAPAHTUI :poista-kuuntelija " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defmethod jms-toiminto :jms-tilanne
@@ -364,9 +383,9 @@
                                                   :jarjestelma jarjestelma
                                                   :jonot (mapv (fn [[jonon-nimi {:keys [jono tuottaja vastaanottaja virheet]}]]
                                                                  (let [jonon-viestit (mapv #(when %
-                                                                                             {:message-id (.getJMSMessageID %)
-                                                                                              :timestamp (.getJMSTimestamp %)})
-                                                                                          (hae-jonon-viestit istunto jono))
+                                                                                              {:message-id (.getJMSMessageID %)
+                                                                                               :timestamp (.getJMSTimestamp %)})
+                                                                                           (hae-jonon-viestit istunto jono))
                                                                        tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
                                                                        vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
                                                                    {jonon-nimi {:jonon-viestit jonon-viestit
@@ -379,7 +398,7 @@
                                                                jonot)}))
                                              istunnot)}
              saikeiden-tilat (sequence (comp
-                                         (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija)" (.getName %))
+                                         (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija|reconnecting-saija)" (.getName %))
                                                     %))
                                          (map #(identity
                                                  {:nimi (.getName %)
@@ -391,7 +410,7 @@
                                                                          (.toString (InetAddress/getLocalHost)))
                                        :osa-alue "sonja"}))
        (catch Exception e
-         (log/error "VIRHE TAPAHTUI :jms-tilanne " e)
+         (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
 (defn luo-jms-saije
@@ -412,6 +431,7 @@
     ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
     ;; joku arvo pihalle.
     (let [yhteys-olio @yhteys-future]
+      (log/debug "Yhteys oliot valmiit")
       (swap! tila merge yhteys-olio)
       ;; Aloitetaan ikuinen looppi
       (loop [;; Tarkistetaan joka kieroksella, että onko tullut käsky tuhota tämä säije
@@ -431,7 +451,8 @@
                       (and lopetetaan? (nil? kasky)))
             (do
               ;; Saatiinko käsky vai kerkesikö timeout mennä loppuun?
-              (when-not (nil? kasky)
+              (when-not (or (nil? kaskytys-kanavan-vastaus)
+                            (= :aika-katkaisu (async/poll! kaskytys-kanavan-vastaus)))
                 (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
                 (when (= :kasittele (<!! kaskytys-kanavan-vastaus))
                   (>!! kaskytys-kanavan-vastaus
@@ -442,7 +463,7 @@
                                 vastaus
                                 {:vastaus vastaus}))
                             (catch Throwable t
-                              (log/error "Jokin meni vikaan sonjakäskyissä: " (.toString (.getStackTrace t)))
+                              (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
                               {:virhe t})))))
               (recur (if lopetetaan?
                        [true nil]
@@ -469,10 +490,11 @@
             (doto (Thread/currentThread)
               (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*" (inc jms-kaittelyn-odottelija-numero))))
             (<!! kaskytys-kanavan-vastaus)))
-      (do (>!! kaskytys-kanavan-vastaus :aika-katkaisu)
-          (let [vastaus-kanava (chan)]
-            (>!! vastaus-kanava {:virhe "Aikakatkaistiin"})
-            vastaus-kanava)))))
+      (do
+        (>!! kaskytys-kanavan-vastaus :aika-katkaisu)
+        (let [vastaus-kanava (chan 1)]
+          (>!! vastaus-kanava {:virhe "Aikakatkaistiin"})
+          vastaus-kanava)))))
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
@@ -548,7 +570,9 @@
     (laheta this jonon-nimi viesti nil (str "istunto-" jonon-nimi)))
 
   (aloita-yhteys [{kaskytys-kanava :kaskytys-kanava :as this}]
-    (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:aloita-yhteys nil})))
+    (loop [{:keys [vastaus virhe]} (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:aloita-yhteys nil}))]
+      (when virhe
+        (recur (<!! (laheta-viesti-kaskytyskanavaan kaskytys-kanava {:aloita-yhteys nil})))))))
 
 (defn luo-oikea-sonja [asetukset]
   (->SonjaYhteys asetukset nil nil))
