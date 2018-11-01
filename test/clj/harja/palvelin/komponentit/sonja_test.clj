@@ -415,7 +415,7 @@
     (let [tapahtuma-id (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))]))
 
 (deftest jms-kay-alhaalla
-  (let [status-ennen (sonja-jolokia-broker :health nil)
+  (let [status-ennen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM harjatila")))
         _ (sonja-jolokia-connection nil :stop)
         status-lopetuksen-jalkeen (sonja-jolokia-broker :health nil)
         _ (sonja-jolokia-connection nil :start)

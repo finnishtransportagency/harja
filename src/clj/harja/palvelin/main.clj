@@ -681,7 +681,10 @@
 (defn aloita-sonja [jarjestelma]
   (go
     (log/info "Aloitaetaan Sonjayhteys")
-    (<! (sonja/aloita-yhteys (:sonja jarjestelma)))))
+    (loop []
+      (let [{:keys [vastaus virhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
+        (when virhe
+          (recur))))))
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
