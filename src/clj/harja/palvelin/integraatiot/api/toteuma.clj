@@ -58,8 +58,9 @@
     (let [kayttaja-id (:id kirjaaja)
           toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
                                        (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:kayttaja-id kayttaja-id
+                                                                                                            :urakka-id urakka-id
                                                                                                             :ulkoiset-idt ulkoiset-idt})))
-          poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt)
+          poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
 
           sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
       (log/debug "Poistettujen määrä:" poistettujen-maara)
@@ -72,7 +73,7 @@
                                                                    :alkupvm (pvm/->pvm alkupvm)}))))
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
-                          "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
+                          "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista urakan toteumista.")]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
@@ -120,7 +121,7 @@
                      (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti)))]}))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
-  (log/debug "Tuhotaan toteuman vanhat tehtävät")
+  (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
   (q-toteumat/poista-toteuma_tehtava-toteuma-idlla!
     db
     toteuma-id)
@@ -137,7 +138,7 @@
       nil)))
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
-  (log/debug "Tuhotaan toteuman vanhat materiaalit")
+  (log/debug "Tuhotaan toteuman vanhat materiaalit. Toteuma id: " toteuma-id)
   (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
