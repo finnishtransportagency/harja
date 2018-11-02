@@ -401,7 +401,7 @@
           hakuehdot {:urakka-id 4
                      :sopimus-id 2
                      :alkupvm (pvm/luo-pvm 2017 9 30)
-                     :loppupvm (pvm/luo-pvm 2018 9 29)
+                     :loppupvm (pvm/luo-pvm 3018 9 29)
                      :tienumero nil}
           toteumien-maara (atom (count (q "SELECT id FROM toteuma;")))
           ;; Tämä kopio tarvitaan, jotta sitä voidaan käyttää with-redefs funktiossa. Tarkoitus on vain muuttaa vastaus-saatu
