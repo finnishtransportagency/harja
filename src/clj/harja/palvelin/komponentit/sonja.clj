@@ -10,13 +10,13 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.kyselyt.harjatila :as q]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [slingshot.slingshot :refer [try+ throw+]])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
            (java.io EOFException)
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)
-           (java.util Enumeration Collections))
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+           (java.util Enumeration Collections)))
 
 (defonce JMS-alkutila
          {:yhteys nil :istunnot {}})
@@ -231,7 +231,8 @@
                                                      (.getText message)
                                                      message)
                                                    " ja sen käsittely epäonnistui funktiolta " kuuntelija
-                                                   " virheeseen " (.getMessage t)))
+                                                   " virheeseen " (.getMessage t)
+                                                   "\nStackTrace: " (.printStackTrace t)))
                                    (swap! tila update-in [:istunnot jarjestelma :jonot jonon-nimi :virheet]
                                           (fn [virheet]
                                             (conj (or virheet []) {:viesti (.getMessage t)

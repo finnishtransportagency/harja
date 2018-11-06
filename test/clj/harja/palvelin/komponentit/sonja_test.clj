@@ -16,6 +16,7 @@
             [clojure.xml :as xml]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
+            [slingshot.slingshot :refer [try+]]
 
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -49,8 +50,8 @@
       (thread
         (>!! testijonot
              (case (<!! lopputila)
-               :ok {:testijono (sonja/kuuntele! sonja "testijono" (fn []) "testijarjestelma")}
-               :exception {:testijono (sonja/kuuntele! sonja "testijono" (fn []
+               :ok {:testijono (sonja/kuuntele! sonja "testijono" (fn [_]) "testijarjestelma")}
+               :exception {:testijono (sonja/kuuntele! sonja "testijono" (fn [viesti]
                                                                            (throw (Exception. "VIRHE")))
                                                        "testijarjestelma")}
                :useampi-kuuntelija {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
@@ -170,23 +171,6 @@
                        operation)]
     (sonja-jolokia sanoma)))
 
-(defn sonja-jolokia-broker [attribute operation]
-  (let [attribute (when attribute
-                    {:type "read"
-                     :attribute (case attribute
-                                  :health "health")})
-        operation (when operation
-                    {:type "EXEC"
-                     :operation (case operation
-                                  :start "start"
-                                  :stop "stop")})
-        sanoma (merge {:mbean (str "org.apache.activemq:brokerName=localhost"
-                                   (when (= :health attribute) ",Service=Health")
-                                   ",type=Broker")}
-                      attribute
-                      operation)]
-    (sonja-jolokia sanoma)))
-
 (defn sonja-jolokia-connection [attribute operation]
   (let [attribute (when attribute
                     {:type "read"
@@ -220,11 +204,6 @@
             (<! (timeout 1000))
             (recur (kasitellyn-tapahtuman-id)
                    (inc aika))))))))
-
-;;; Sonja komponentin testit
-;   - Nähdään mitkä komponentit ei ole käynnissä
-;   - Nähdään, että Sonja ei ole päällä
-; - Jonossa näkyy viestit
 
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
@@ -264,11 +243,15 @@
       (doseq [content-element content]
         (tarkista-xml-sisalto content-element tarkistukset)))))
 
-#_(deftest virhe-kasittelija-funktiossa
+(deftest virhe-kasittelija-funktiossa
     (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
-    (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])]
+    (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
+          testijonokanava (-> jarjestelma :testikomponentti :testijonokanava)]
       (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
-      (is (nil? (-> jarjestelma :testikomponentti :tila deref :testijono)))))
+      (is (not (nil? (-> jarjestelma :testikomponentti :tila deref :testijono))))
+      (sonja-laheta "testijono" "foo")
+      (is (= "VIRHE" (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "testijono") :virheet first :viesti)))
+      (sonja-jolokia-jono "testijono" nil :purge)))
 
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
@@ -457,3 +440,24 @@
     (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*1"]]
       (is (some #(= (:nimi %) saije)
                 (:saikeiden-tilat status-aloituksen-jalkeen))))))
+
+(deftest liikaa-kaskyja
+  (alts!! [*sonja-yhteys* (timeout 10000)])
+  (let [kaskytys-kanava (-> jarjestelma :sonja :kaskytys-kanava)
+        lahetettiinko-muita? (atom false)
+        poikkeus-heitettiin? (atom false)
+        pitkaan-kestava-lahetys (with-redefs [sonja/laheta-viesti (fn [&args]
+                                                                    (<!! (timeout 6000))
+                                                                    true)]
+                                  (sonja/laheta (-> jarjestelma :sonja) "testijono" "foo"))
+        muut-lahetykset (with-redefs [sonja/laheta-viesti (fn [&args]
+                                                            (reset! lahetettiinko-muita? true))]
+                          (suorita-rinnakkain #(sonja/laheta (-> jarjestelma :sonja) "testijono" %)
+                                              (repeat 150 "bar")))]
+    (try+
+      (sonja/laheta (-> jarjestelma :sonja) "testijono" "baz")
+      (catch [:type sonja/aikakatkaisu-virhe] {:keys [virheet]}
+        (reset! poikkeus-heitettiin? true)))
+    (is @poikkeus-heitettiin? "Timeout poikkeusta ei heitetty")
+    (is (<!! pitkaan-kestava-lahetys))
+    (is (false? @lahetettiinko-muita?) "Timeoutatut käskyt käsiteltiin!")))
