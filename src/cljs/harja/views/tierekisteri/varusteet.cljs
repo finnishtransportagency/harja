@@ -107,10 +107,14 @@
                               (and (nil? tarkastus) (str/blank? varusteen-kuntoluokka)) (ffirst kuntoluokka->selite)
                               (nil? tarkastus) varusteen-kuntoluokka
                               :default (:kuntoluokitus tarkastus))
-        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka
-                                   :uusi-liite uusi-liite)]
+        tarkastus (assoc tarkastus
+                    ;; Palautunut kuntoluokitus on nil, jos tietolajiin ei kuulu sellaista tietoa. Pidetään tieto nillinä.
+                    ;; Jos kuntoluokitus kuuluu tietolajiin, mutta sitä ei ole tehty, kuntluokitus on tyhjä. Korvataan uudella tiedolla.
+                    :kuntoluokitus (if (= varusteen-kuntoluokka nil) nil valittu-kuntoluokka)
+                    :uusi-liite uusi-liite)]
     [modal/modal
-     {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
+     {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji "). "
+                    (if (= varusteen-kuntoluokka nil) "Varustetyyppi ei vaadi kuntoluokkaa. Kirjaa korjauskohteet lisätietoihin."))
       :nakyvissa? true
       :sulje-fn #(e! (v/->PeruutaVarusteenTarkastus))
       :footer [:span
@@ -123,13 +127,14 @@
      [lomake/lomake
       {:ei-borderia? true
        :muokkaa! #(e! (v/->AsetaVarusteTarkastuksenTiedot %))}
-      [{:otsikko "Yleinen kuntoluokitus"
-        :nimi :kuntoluokitus
-        :tyyppi :valinta
-        :pakollinen? true
-        :valinnat (vec (keys kuntoluokka->selite))
-        :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
-        :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
+      [(if (not= varusteen-kuntoluokka nil) ;; Näytetään kuntoluokkavalinta vain, kun kuntoluokka kuuluu tietolajiin
+         {:otsikko "Yleinen kuntoluokitus"
+          :nimi :kuntoluokitus
+          :tyyppi :valinta
+          :pakollinen? true
+          :valinnat (vec (keys kuntoluokka->selite))
+          :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
+          :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))})
        {:otsikko "Lisätietoja"
         :nimi :lisatietoja
         :tyyppi :string}

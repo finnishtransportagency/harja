@@ -171,7 +171,8 @@
     (let [tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
-        (let [varuste (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus)
+        (let [varuste (if (not= kuntoluokitus nil)
+                        (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus) varuste)
               varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto uusi-liite)
               hakuehdot {:urakka-id (:id @nav/valittu-urakka)
                          :sopimus-id (first @urakka/valittu-sopimusnumero)

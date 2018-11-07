@@ -221,6 +221,14 @@
            (assoc silta :voimassa true)
            (assoc silta :voimassa false))) kaikki-sillat))
 
+
+; Aineistossa tulee joskus koulutuksessa käytettyjä siltoja, poistetaan ne ennen käsittelyä.
+(defn karsi-testisillat [sillat]
+  (remove #(= true
+              (boolean
+                (re-find #"TENTTI_" (:siltanimi %))))
+          sillat))
+
 (defn karsi-voimassaolevien-siltojen-poistetut-osuudet
   "Ei viedä tietoja poistetuista osuuksista Harjaan, jos silta on vielä voimassa. Karsitaan ne aineistosta.
   Voimassa olevista osuuksista tallentuu yhden siltatietueen tiedot, vaikka osuuksia olisi useampia.
@@ -233,13 +241,28 @@
                        (voimassaolevat-sillat sillat-aineistosta)
                        sillat-aineistosta))))
 
+; Jotta ei tule tallennuksessa ongelmia yksilöivien avainten kanssa + suorituskyvyn parantamiseksi, jätetään tallennettavaan
+; aineistoon ainoastaan yksi rivi per voimassaoleva silta.
+(defn jarjesta-voimassaolevat-sillat-yksittaisille-riveille
+  ([kaikki-siltarivit]
+   (let [erottele (fn erottele [kaikki-siltarivit valitut-siltarivit]
+                (lazy-seq
+                  ((fn [[f :as kaikki-siltarivit] valitut-siltarivit]
+                     (when-let [sillat (seq kaikki-siltarivit)]
+                       (if (contains? valitut-siltarivit (:trex_oid f))
+                         (recur (rest sillat) valitut-siltarivit)
+                         (cons f (erottele (rest sillat) (conj valitut-siltarivit (:trex_oid f)))))))
+                    kaikki-siltarivit valitut-siltarivit)))]
+     (erottele kaikki-siltarivit #{}))))
+
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
-          relevantit-siltatietueet (karsi-voimassaolevien-siltojen-poistetut-osuudet siltatietueet-shapefilesta)]
+          tallennettavat-siltatietueet (jarjesta-voimassaolevat-sillat-yksittaisille-riveille
+                                         (karsi-testisillat (karsi-voimassaolevien-siltojen-poistetut-osuudet siltatietueet-shapefilesta)))]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (try (jdbc/with-db-transaction [db db]
-             (doseq [silta relevantit-siltatietueet]
+             (doseq [silta tallennettavat-siltatietueet]
                (vie-silta-entry db silta)))
            (log/debug "siltojen tuonti kantaan valmis.")
            (catch PSQLException e
