@@ -20,7 +20,7 @@
 
 (defonce JMS-alkutila
          {:yhteys nil :istunnot {}})
-(defonce jms-kaittelyn-odottelija-numero 0)
+(defonce jms-kasittelyn-odottelija-numero 0)
 (defonce ei-jms-yhteytta {:type :jms-yhteysvirhe
                           :virheet [{:koodi :ei-yhteytta
                                      :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
@@ -494,7 +494,7 @@
     (if (= tulos :valmis-kasiteltavaksi)
       (thread
         (doto (Thread/currentThread)
-          (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*" (inc jms-kaittelyn-odottelija-numero))))
+          (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*" (inc jms-kasittelyn-odottelija-numero))))
         (>!! kaskytys-kanavan-vastaus :kasittele)
         (<!! kaskytys-kanavan-vastaus))
       (do
