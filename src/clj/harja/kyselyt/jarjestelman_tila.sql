@@ -1,5 +1,5 @@
 -- name: tallenna-sonjan-tila<!
-INSERT INTO jarjestelma_tila (palvelin, tila, "osa-alue", paivitetty)
+INSERT INTO jarjestelman_tila (palvelin, tila, "osa-alue", paivitetty)
   VALUES (:palvelin, :tila::JSONB, :osa-alue, NOW())
   ON CONFLICT (palvelin, "osa-alue")
     DO UPDATE SET tila = :tila::JSONB,
@@ -7,5 +7,5 @@ INSERT INTO jarjestelma_tila (palvelin, tila, "osa-alue", paivitetty)
 
 -- name: hae-sonjan-tila
 SELECT palvelin, tila, paivitetty
-FROM jarjestelma_tila
+FROM jarjestelman_tila
 WHERE "osa-alue"='sonja';

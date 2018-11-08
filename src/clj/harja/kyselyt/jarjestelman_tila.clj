@@ -1,4 +1,4 @@
-(ns harja.kyselyt.jarjestelma_tila
+(ns harja.kyselyt.jarjestelman_tila
   (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/jarjestelma_tila.sql")
+(defqueries "harja/kyselyt/jarjestelman_tila.sql")
