@@ -407,7 +407,7 @@
         ;; Odotetaan hetki, että restart prosessi on kerennyt lähtä käyntiin
         _ (<!! (timeout 3000))
         ;; Tilanne pitää katsoa kannasta, koska käskyjen lähettäminen vain blokkaa ja timeout tulee vastaukseksi
-        status-lopetuksen-jalkeen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM harjatila")))
+        status-lopetuksen-jalkeen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM jarjestelman_tila")))
         _ (sonja-jolokia-connection nil :start)
         status-aloituksen-jalkeen (loop [kertoja 1]
                                     (when (< kertoja 5)

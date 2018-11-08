@@ -83,7 +83,7 @@
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
-    [harja.palvelin.palvelut.harjatila :as harjatila]
+    [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -556,8 +556,8 @@
                       (koordinaatit/->Koordinaatit)
                       [:http-palvelin])
 
-      :harjatila (component/using
-                   (harjatila/->Harjatila)
+      :jarjestelman-tila (component/using
+                   (jarjestelman-tila/->JarjestelmanTila)
                    [:db :http-palvelin])
 
       ;; Harja API

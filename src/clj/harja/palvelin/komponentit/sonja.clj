@@ -9,7 +9,7 @@
             [hiccup.core :refer [html]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [harja.kyselyt.harjatila :as q]
+            [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)

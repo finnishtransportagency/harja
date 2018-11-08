@@ -1,4 +1,4 @@
-CREATE TABLE harjatila (
+CREATE TABLE jarjestelman_tila (
   id SERIAL PRIMARY KEY,
   palvelin TEXT,
   tila JSONB,

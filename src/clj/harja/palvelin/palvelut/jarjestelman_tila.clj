@@ -1,9 +1,9 @@
-(ns harja.palvelin.palvelut.harjatila
+(ns harja.palvelin.palvelut.jarjestelman-tila
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.domain.sonja :as sd]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.harjatila :as q]
+            [harja.kyselyt.jarjestelman-tila :as q]
             [harja.kyselyt.konversio :as konv]
             [slingshot.slingshot :refer [try+]])
   (:import (com.stuartsierra.component Lifecycle)))
@@ -13,7 +13,7 @@
   (let [sonjan-tila (q/hae-sonjan-tila db)]
     (map #(update % :tila konv/jsonb->clojuremap) sonjan-tila)))
 
-(defrecord Harjatila []
+(defrecord JarjestelmanTila []
   component/Lifecycle
   (start
     [{db :db
