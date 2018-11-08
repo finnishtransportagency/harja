@@ -47,6 +47,7 @@
    ::tielupa/hakija-maakoodi "FI"
    ::tielupa/saapumispvm #inst"2017-02-11T22:00:00.000-00:00"
    ::tielupa/liikenneohjaajan-puhelinnumero "987-7889087"
+   ::tielupa/liite-url "https://liite.tilu.fi/123.pdf"
    ::tielupa/katselmus-url "https://tilu.fi/123"
    ::tielupa/voimassaolon-loppupvm #inst"2018-02-11T22:00:00.000-00:00"
    ::tielupa/hakija-nimi "Henna Hakija"
@@ -58,7 +59,7 @@
    ::tielupa/urakoitsija-yhteyshenkilo "Yrjänä Yhteyshenkilo"
    ::tielupa/urakoitsija-nimi "Puulaaki Oy"})
 
-(deftest hae-kanavan-toimenpiteet
+(deftest hae-tieluvat
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         haettu-osasto "Osasto 123"
         vastaus (tielupa-q/hae-tieluvat db {::tielupa/hakija-osasto haettu-osasto})]

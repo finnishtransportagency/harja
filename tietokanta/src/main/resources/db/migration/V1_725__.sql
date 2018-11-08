@@ -1,8 +1,3 @@
-CREATE TABLE harjatila (
-  id SERIAL PRIMARY KEY,
-  palvelin TEXT,
-  tila JSONB,
-  "osa-alue" TEXT,
-  paivitetty TIMESTAMP,
-  UNIQUE (palvelin, "osa-alue")
-);
+-- Sarake tielupaliitteen URL:ille. Itse liitettä ei lähetetä, ainoastaan URL.
+ALTER TABLE tielupa
+ADD COLUMN "liite-url" TEXT;

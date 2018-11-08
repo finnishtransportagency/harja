@@ -401,7 +401,7 @@
           hakuehdot {:urakka-id 4
                      :sopimus-id 2
                      :alkupvm (pvm/luo-pvm 2017 9 30)
-                     :loppupvm (pvm/luo-pvm 2018 9 29)
+                     :loppupvm (pvm/luo-pvm 3018 9 29)
                      :tienumero nil}
           toteumien-maara (atom (count (q "SELECT id FROM toteuma;")))
           ;; Tämä kopio tarvitaan, jotta sitä voidaan käyttää with-redefs funktiossa. Tarkoitus on vain muuttaa vastaus-saatu
@@ -422,7 +422,7 @@
             [(str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml]
             (let [vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002';")]
+                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu DESC;")]
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
@@ -444,7 +444,7 @@
                                      :tunniste "HARJ0000000000000002"))
                   vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002';")]
+                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu ASC;")]
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
@@ -466,7 +466,7 @@
                                      :tunniste "HARJ0000000000000002"))
                   vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002';")]
+                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu ASC;")]
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
@@ -482,7 +482,7 @@
             [(str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-virhe-xml]
             (let [vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila, lahetysvirhe FROM varustetoteuma WHERE tunniste='HARJ0000000000000003';")]
+                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila, lahetysvirhe FROM varustetoteuma WHERE tunniste='HARJ0000000000000003' ORDER BY luotu DESC;")]
               (swap! toteumien-maara inc)
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
@@ -502,7 +502,7 @@
                                      :id (ffirst (q "SELECT id FROM varustetoteuma WHERE tunniste='HARJ0000000000000003'"))))
                   vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
                   _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila, lahetysvirhe FROM varustetoteuma WHERE tunniste='HARJ0000000000000003';")]
+                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila, lahetysvirhe FROM varustetoteuma WHERE tunniste='HARJ0000000000000003' ORDER BY luotu DESC;")]
               (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
               (is (true? @vastaus-saatu) "Saatiin vastaus")
               (is (= (mapv rest tallennettu-varuste) [["HARJ0000000000000003" "tl506" "lisatty" "lahetetty" nil]]))
