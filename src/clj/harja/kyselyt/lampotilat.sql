@@ -49,14 +49,14 @@ SELECT *
 
 
 -- name: luo-suolasakko<!
-INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja)
-    VALUES (:maara, :vainsakkomaara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja);
+INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja, kaytossa)
+    VALUES (:maara, :vainsakkomaara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja, :kaytossa);
 
 -- name: paivita-suolasakko!
 UPDATE suolasakko
    SET maara = :maara, vainsakkomaara = :vainsakkomaara, maksukuukausi = :maksukuukausi,
        indeksi = :indeksi, muokattu = NOW(), muokkaaja = :kayttaja,
-       talvisuolaraja = :talvisuolaraja
+       talvisuolaraja = :talvisuolaraja, kaytossa = :kaytossa
  WHERE id = :id;
 
 -- name: hae-suolasakko-id
@@ -71,19 +71,6 @@ UPDATE pohjavesialue_talvisuola
 INSERT INTO pohjavesialue_talvisuola
        (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue)
 VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
-
-
--- name: aseta-suolasakon-kaytto!
--- Insertoidaan rivi, jos urakalla ei ole suolasakkoriviä, jotta voidaan tallentaa tieto myös suolasakon käyttämättömyydestä (HAR-8311).
--- Sama käytössä-tieto ja muut määritykset koskevat kaikkia urakan hoitokausia, vaikka hoitokausille on oma suolasakkorivinsä.
--- Ks. myös
-INSERT INTO suolasakko (kaytossa, luotu, luoja, urakka, hoitokauden_alkuvuosi) VALUES (:kaytossa, NOW(), :kayttaja, :urakka,
-                                                                                       (SELECT date_part('year', alkupvm) FROM urakka where id = :urakka))
-ON CONFLICT (urakka, hoitokauden_alkuvuosi) DO UPDATE
-  SET kaytossa = :kaytossa, muokattu = NOW(), muokkaaja = :kayttaja;
-
--- name: onko-suolasakko-kaytossa?
-SELECT EXISTS(SELECT id FROM suolasakko WHERE urakka=:urakka AND kaytossa=true) as kaytossa;
 
 -- name: hae-teiden-hoitourakoiden-lampotilat
 SELECT

@@ -8,6 +8,7 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.napit :refer [palvelinkutsu-nappi]]
             [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.ui.ikonit :as ikonit]
@@ -37,21 +38,22 @@
 
 (defonce suolasakko-kaytossa?
   (reaction-writable
-   (let [ss (:suolasakot @suolasakot-ja-lampotilat)]
-     (or (empty? ss)
-         (some :kaytossa ss)))))
+   (let [hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+         hoitokauden-tiedot (first (filter #(= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi %))
+                                           (:suolasakot @suolasakot-ja-lampotilat)))]
+     (:kaytossa hoitokauden-tiedot))))
 
-;; Suolasakko on urakkakohtainen ja samat tiedot pitää tallentaa jokaiselle hoitokaudelle.
-;; Näytetään vanhin hoitokauden tiedot
-(defn yhden-hoitokauden-rivit [rivit]
+(defn yhden-hoitokauden-rivit [rivit hoitokauden-alkuvuosi]
   (when-not (empty? rivit)
-    [(first (sort-by :hoitokauden-alkuvuosi rivit))]))
+    (filter #(= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi %))
+            rivit)))
 
 (defonce syotettavat-tiedot
   (reaction-writable
-   (let [ss @suolasakot-ja-lampotilat]
-     {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss)))
-      :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))})))
+   (let [ss @suolasakot-ja-lampotilat
+         hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
+     {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss) hoitokauden-alkuvuosi))
+      :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss) hoitokauden-alkuvuosi))})))
 
 (defonce pohjavesialueet
   (reaction-writable
@@ -67,7 +69,7 @@
   (k/post! :tallenna-suolasakko-ja-pohjavesialueet
            (assoc @syotettavat-tiedot
              :urakka (:id @nav/valittu-urakka)
-             :hoitokaudet @u/valitun-urakan-hoitokaudet)))
+             :hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi)))))
 
 
 
@@ -113,9 +115,8 @@
       nimi)))
 
 (defn suolasakko-lomake
-  []
-  (let [urakka @nav/valittu-urakka
-        saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
+  [urakka]
+  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
         pohjavesialueita-muokattu? (atom false)
         tarkista-sakko-ja-bonus (fn [_ {maara :maara vainsakkomaara :vainsakkomaara}]
                                   (when (and (number? vainsakkomaara)
@@ -129,9 +130,10 @@
       (let [{:keys [pohjavesialueet]} @suolasakot-ja-lampotilat
             tiedot (:suolasakko @syotettavat-tiedot)
             lampotilat @lampotilat
-            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))] ;suolasakot hoitospesifistä
+            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))]
         [:span.suolasakkolomake
          [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
+         [valinnat/urakan-hoitokausi urakka]
          [lomake {:muokkaa! (fn [uusi]
                               (log "lomaketta muokattu, tiedot:" (pr-str uusi))
                               (swap! syotettavat-tiedot assoc :suolasakko uusi :muokattu true))
@@ -148,13 +150,17 @@
                                                (viesti/nayta! "Tallentaminen onnistui" :success viesti/viestin-nayttoaika-lyhyt)
                                                (reset! pohjavesialueita-muokattu? false)
                                                (reset! suolasakot-ja-lampotilat %))}])]}
-          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true
+          [{:teksti "Suolasakko käytössä"
+            :muokattava? (constantly saa-muokata?)
+            :nimi :kaytossa :nayta-rivina? true
+            :tyyppi :checkbox :palstoja 2}
+           {:otsikko "Talvisuolan käyttöraja"
             :muokattava? (constantly saa-muokata?)
             :nimi :talvisuolaraja
             :tyyppi :positiivinen-numero :palstoja 1
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
            {:otsikko "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
-            :valinta-arvo first :pakollinen? true
+            :valinta-arvo first
             :muokattava? (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
                              ""
@@ -225,18 +231,10 @@
                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                    (nav/vaihda-kartan-koko! :M)))
     (fn []
-      (let [urakka-id (:id @nav/valittu-urakka)
-            kaytossa? @suolasakko-kaytossa?]
+      (let [urakka @nav/valittu-urakka]
         [:span.suolasakot
          (if (nil? @suolasakot-ja-lampotilat)
            [ajax-loader "Ladataan..."]
            [:div
             [kartta/kartan-paikka]
-            [yleiset/raksiboksi {:teksti "Suolasakko käytössä"
-                                 :toiminto #(go (reset! suolasakko-kaytossa?
-                                                        (<! (suola/aseta-suolasakon-kaytto urakka-id
-                                                                                           (not kaytossa?)))))
-                                 :disabled? (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola urakka-id))}
-             kaytossa?]
-            (when @suolasakko-kaytossa?
-              [suolasakko-lomake])])]))))
+            [suolasakko-lomake urakka]])]))))

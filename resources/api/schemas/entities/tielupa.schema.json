@@ -62,6 +62,10 @@
           "type": "string",
           "required": true
         },
+        "liite-url": {
+          "id": "urn:harja/tielupa/perustiedot/liite-url",
+          "type": "string"
+        },
         "katselmus-url": {
           "id": "urn:harja/tielupa/perustiedot/katselmus-url",
           "type": "string"
