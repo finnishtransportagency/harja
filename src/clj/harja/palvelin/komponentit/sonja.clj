@@ -403,7 +403,7 @@
                                                                jonot)}))
                                              istunnot)}
              saikeiden-tilat (sequence (comp
-                                         (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija|reconnecting-saija)" (.getName %))
+                                         (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija|reconnecting-saije)" (.getName %))
                                                     %))
                                          (map #(identity
                                                  {:nimi (.getName %)
@@ -504,9 +504,9 @@
         (>!! kaskytys-kanavan-vastaus :kasittele)
         (<!! kaskytys-kanavan-vastaus))
       (do
-        (>!! kaskytys-kanavan-vastaus :aika-katkaisu)
-        (let [vastaus-kanava (chan 1)]
-          (>!! vastaus-kanava {:virhe "Aikakatkaistiin"})
+        (async/put! kaskytys-kanavan-vastaus :aika-katkaisu)
+        (let [vastaus-kanava (chan)]
+          (async/put! vastaus-kanava {:virhe "Aikakatkaistiin"})
           vastaus-kanava)))))
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]

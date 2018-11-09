@@ -35,7 +35,7 @@
                             :toimenpidekuittausjono tloik-tk/+tloik-ilmoitustoimenpidekuittausjono+
                             :uudelleenlahetysvali-minuuteissa 30}})
 
-(defonce ai-port (arvo-vapaa-portti))
+(defonce ai-port 8162)
 
 (def ^:dynamic *sonja-yhteys* nil)
 
@@ -355,7 +355,9 @@
   (doall (for [m (if (number? s)
                    (range s)
                    s)]
-           (thread (try (f m)
+           (thread (try+ (f m)
+                        (catch [:type :jms-ruuhkaa] {:keys [virheet]}
+                          "AIKAKATKAISTU")
                         (catch Throwable t
                           (println (str "VIRHE: " (.getMessage t) " " (.getStackTrace t)))
                           "VIRHE"))))))
@@ -431,11 +433,13 @@
         db (:db jarjestelma)
         tyyppi (-> asetukset :sonja :tyyppi)
         status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]})))
+        _ (println "Lopetetetaan yhteys")
         _ (sonja-jolokia-connection nil :stop)
         ;; Odotetaan hetki, että restart prosessi on kerennyt lähtä käyntiin
         _ (<!! (timeout 3000))
         ;; Tilanne pitää katsoa kannasta, koska käskyjen lähettäminen vain blokkaa ja timeout tulee vastaukseksi
         status-lopetuksen-jalkeen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM jarjestelman_tila")))
+        _ (println "Aloitetaan yhteys uudestaan")
         _ (sonja-jolokia-connection nil :start)
         status-aloituksen-jalkeen (loop [kertoja 1]
                                     (when (< kertoja 5)
@@ -471,21 +475,23 @@
 
 (deftest liikaa-kaskyja
   (alts!! [*sonja-yhteys* (timeout 10000)])
-  (let [kaskytys-kanava (-> jarjestelma :sonja :kaskytys-kanava)
+  (let [_ (sonja-jolokia-jono "testilahetys-jono" nil :purge)
+        {:keys [lahetys-fn]} (:testikomponentti jarjestelma)
         lahetettiinko-muita? (atom false)
-        poikkeus-heitettiin? (atom false)
-        pitkaan-kestava-lahetys (with-redefs [sonja/laheta-viesti (fn [&args]
+        pitkaan-kestava-lahetys-kanava (chan)
+        pitkaan-kestava-lahetys (with-redefs [sonja/laheta-viesti (fn [& args]
+                                                                    (println "LÄHETETÄÄN HIDAS VIESTI")
+                                                                    (>!! pitkaan-kestava-lahetys-kanava true)
                                                                     (<!! (timeout 6000))
+                                                                    (println "HIDAS VIESTI LÄHETETTY")
                                                                     true)]
-                                  (sonja/laheta (-> jarjestelma :sonja) "testijono" "foo"))
-        muut-lahetykset (with-redefs [sonja/laheta-viesti (fn [&args]
+                                  (thread (lahetys-fn "foo"))
+                                  ;; Odotellaan, jotta with-redefs toimii
+                                  (<!! pitkaan-kestava-lahetys-kanava))
+        muut-lahetykset (with-redefs [sonja/laheta-viesti (fn [& args]
+                                                            (println "EI ONNISTUNUT")
                                                             (reset! lahetettiinko-muita? true))]
-                          (suorita-rinnakkain #(sonja/laheta (-> jarjestelma :sonja) "testijono" %)
-                                              (repeat 150 "bar")))]
-    (try+
-      (sonja/laheta (-> jarjestelma :sonja) "testijono" "baz")
-      (catch [:type sonja/aikakatkaisu-virhe] {:keys [virheet]}
-        (reset! poikkeus-heitettiin? true)))
-    (is @poikkeus-heitettiin? "Timeout poikkeusta ei heitetty")
-    (is (<!! pitkaan-kestava-lahetys))
+                          (doseq [uusi-lahetys (suorita-rinnakkain #(lahetys-fn %)
+                                                                 (repeat 120 "bar"))]
+                            (is (= "AIKAKATKAISTU" (<!! uusi-lahetys)))))]
     (is (false? @lahetettiinko-muita?) "Timeoutatut käskyt käsiteltiin!")))
