@@ -8,7 +8,7 @@
             [clojure.string :as clj-str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout alts!! chan]]
+            [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout alts!! chan poll!]]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
@@ -25,10 +25,17 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61616"
+(defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""
                             :salasana ""
-                            :tyyppi :activemq}})
+                            :tyyppi :activemq}
+                    :tloik {:ilmoitusviestijono tloik-tk/+tloik-ilmoitusviestijono+
+                            :ilmoituskuittausjono tloik-tk/+tloik-ilmoituskuittausjono+
+                            :toimenpideviestijono tloik-tk/+tloik-ilmoitustoimenpideviestijono+
+                            :toimenpidekuittausjono tloik-tk/+tloik-ilmoitustoimenpidekuittausjono+
+                            :uudelleenlahetysvali-minuuteissa 30}})
+
+(defonce ai-port (arvo-vapaa-portti))
 
 (def ^:dynamic *sonja-yhteys* nil)
 
@@ -139,18 +146,18 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (defn sonja-laheta [jonon-nimi sanoma]
-  (let [options {:timeout 200
+  (let [options {:timeout 1000
                  :basic-auth ["admin" "admin"]
                  :headers {"Content-Type" "application/xml"}
                  :body sanoma}
-        {:keys [status error] :as response} @(http/post (str "http://localhost:8161/api/message/" jonon-nimi "?type=queue") options)]
+        {:keys [status error] :as response} @(http/post (str "http://localhost:" ai-port "/api/message/" jonon-nimi "?type=queue") options)]
     response))
 
 (defn sonja-jolokia [sanoma]
   (let [options {:timeout 200
                  :basic-auth ["admin" "admin"]
                  :body (cheshire/encode sanoma)}]
-    @(http/post (str "http://localhost:8161/api/jolokia/") options)))
+    @(http/post (str "http://localhost:" ai-port "/api/jolokia/") options)))
 
 (defn sonja-jolokia-jono [jonon-nimi attribute operation]
   (let [attribute (when attribute
@@ -256,28 +263,36 @@
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
   (<!! *sonja-yhteys*)
-  (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
-                                            (loop []
-                                              (Thread/sleep 1000)
-                                              (recur)))]
-    ;; Varmistetaan, että component/start ei blokkaa vaikka sonjayhteystä ei saada
-    (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
-                                                    (component/system-map
-                                                      :db (tietokanta/luo-tietokanta testitietokanta)
-                                                      :sonja (sonja/luo-oikea-sonja (:sonja asetukset))
-                                                      :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
-                                                                                        [:db])
-                                                      :sonja-sahkoposti (component/using
-                                                                          (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                                                           {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                                                            :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
-                                                                                                            :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
-                                                                          [:sonja :db :integraatioloki]))))
-                                          (timeout 10000)])
-          sonja-yhteys (when toinen-jarjestelma
-                         (sut/aloita-sonja toinen-jarjestelma))]
-      (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
-      (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen ei blokkaa vaikka yhteys ei ole käytössä"))))
+  (let [sulje-sonja-kanava (chan)]
+    (with-redefs [sonja/aloita-yhdistaminen (fn [& args]
+                                              (loop []
+                                                (if (not (poll! sulje-sonja-kanava))
+                                                  (do
+                                                    (Thread/sleep 1000)
+                                                    (recur))
+                                                  {})))]
+      ;; Varmistetaan, että component/start ei blokkaa vaikka sonjayhteystä ei saada
+      (let [[toinen-jarjestelma _] (alts!! [(thread (component/start
+                                                      (component/system-map
+                                                        :db (tietokanta/luo-tietokanta testitietokanta)
+                                                        :sonja (component/using
+                                                                 (sonja/luo-oikea-sonja (:sonja asetukset))
+                                                                 [:db])
+                                                        :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
+                                                                                          [:db])
+                                                        :sonja-sahkoposti (component/using
+                                                                            (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                                                             {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                                                              :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
+                                                                                                              :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
+                                                                            [:sonja :db :integraatioloki]))))
+                                            (timeout 10000)])
+            sonja-yhteys (when toinen-jarjestelma
+                           (sut/aloita-sonja toinen-jarjestelma))]
+        (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos Sonja ei käynnisty")
+        (is (nil? (first (alts!! [sonja-yhteys (timeout 1000)]))) "Sonja yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")
+        (>!! sulje-sonja-kanava true)
+        (-> toinen-jarjestelma :sonja component/stop)))))
 
 (deftest lopeta-kuuntelija
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :useampi-kuuntelija)
@@ -305,6 +320,7 @@
 (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
+        _ (sonja-jolokia-jono "harja-to-email" nil :purge)
         istunnot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :istunnot)
         jonot-ennen-lahetysta (apply merge
                                      (map (fn [[istunnon-nimi istunnon-tiedot]]
@@ -316,8 +332,8 @@
                                         (map (fn [[istunnon-nimi istunnon-tiedot]]
                                                (:jonot istunnon-tiedot))
                                              istunnot-lahetyksen-jalkeen))
-        {:keys [istunto]} (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email"))
-        {:keys [jono]} (-> jonot-lahetyksen-jalkeen (get "harja-to-email"))
+        istunto (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email") :istunto)
+        jono (-> jonot-lahetyksen-jalkeen (get "harja-to-email") :jono)
         viestit-jonossa (sonja/hae-jonon-viestit istunto jono)
         viesti (->> viestit-jonossa first (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
     (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
@@ -331,25 +347,35 @@
                                              (is (= otsikko "Testiotsikko")))
                                   :sisalto (fn [[sisalto]]
                                              (is (= sisalto "Testisisalto")))})
-    (is (= 1 (count viestit-jonossa)))
-    (sonja-jolokia-jono jono nil :purge)))
+    (is (= 1 (count viestit-jonossa)))))
 
 (s/def ::testilahetys-viesti string?)
 
 (defn suorita-rinnakkain [f s]
-  (doall (for [m s]
-           (thread (f m)))))
+  (doall (for [m (if (number? s)
+                   (range s)
+                   s)]
+           (thread (try (f m)
+                        (catch Throwable t
+                          (println (str "VIRHE: " (.getMessage t) " " (.getStackTrace t)))
+                          "VIRHE"))))))
 
 (deftest sonja-kuormitus-testi
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
+        _ (sonja-jolokia-jono "tloik-ilmoituskuittausjono" nil :purge)
+        _ (sonja-jolokia-jono "testilahetys-jono" nil :purge)
+        _ (sonja-jolokia-jono "tloik-ilmoitusviestijono" nil :purge)
+        _ (sonja-jolokia-jono "testijono-1" nil :purge)
+        _ (sonja-jolokia-jono "testijono-2" nil :purge)
         {:keys [lahetys-fn testijonokanava tila]} (:testikomponentti jarjestelma)
         {:keys [testijono-1 testijono-2]} @tila
         sonja (-> jarjestelma :sonja)
         _ (is (and testijono-1 testijono-2) "Testikomponentin jonoja ei keretty säätää oikein")
         {istunnot :istunnot} (-> sonja :tila deref :istunnot)
         testikomponentin-istunnot (select-keys istunnot ["istunto-testijono-1" "istunto-testijono-2"])
-        sonja-broker-tila #(-> (sonja-jolokia-jono "tloik-ilmoituskuittausjono" % nil) :body (cheshire/decode) (get "value"))
+        sonja-broker-tila (fn [jonon-nimi attribuutti]
+                            (-> (sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
         testikomponentin-lahettamat-viestit (into #{}
                                                   (repeatedly 50 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
@@ -360,10 +386,12 @@
                                                  (repeatedly 10 #(str "<harja:testi xmlns:harja=\"\">"
                                                                        "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
                                                                        "</viesti></harja:testi>")))
+        tloik-viestien-lkm 10
         testijono-1-lahetys-fn #(sonja-laheta "testijono-1" %)
         testijono-2-lahetys-fn #(sonja-laheta "testijono-2" %)
+        tloik-ilmoitus (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml")
         tloik-lahetys-fn (fn [_]
-                           (sonja-laheta "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml")))
+                           (sonja-laheta "tloik-ilmoitusviestijono" tloik-ilmoitus))
         ;; Lähetetään viestejä rinnakkain testikomponentista brokerille
         testijonon-lahetys (thread (suorita-rinnakkain lahetys-fn testikomponentin-lahettamat-viestit))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
@@ -371,27 +399,27 @@
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 2
         testijonon-vastaanotto-2 (thread (suorita-rinnakkain testijono-2-lahetys-fn testijono-2-vastaanottamat-viestit))
         ;; Vastaaanotetaan viestejä tloikista
-        tloik-vastaanotto (thread (suorita-rinnakkain tloik-lahetys-fn testijono-2-vastaanottamat-viestit))
+        tloik-vastaanotto (thread (suorita-rinnakkain tloik-lahetys-fn tloik-viestien-lkm))
         ;; Otetaan kaikki ne viestit, joita käsiteltiin testikomponentissa
         kasitellyt-viestit (<!! (go-loop [saadut-viestit #{}]
-                                  (if-let [uusi-viesti (first (alts!! [testijonokanava (timeout 1000)]))]
+                                  (if-let [uusi-viesti (first (alts!! [testijonokanava (timeout 3000)]))]
                                     (recur (conj saadut-viestit (clj-str/trim (.getText uusi-viesti))))
                                     saadut-viestit)))]
     (doseq [viesti-thread (<!! testijonon-lahetys)
             :let [viesti (<!! viesti-thread)]]
-      (when (string? viesti)
-        ;; Testataan, että lähtihän kaikki viestit
-        (is (string? (re-find #"ID:.*" (lahetys-fn viesti))))))
-    (doseq [tloik-viesti (<!! tloik-vastaanotto)]
-      (<!! tloik-viesti))
+      (is (string? (re-find #"ID:.*" viesti))))
+    (is (= (count testikomponentin-lahettamat-viestit) (- (sonja-broker-tila "testilahetys-jono" :enqueue-count)
+                                                          (sonja-broker-tila "testilahetys-jono" :dequeue-count))))
+    (doseq [tloik-viesti (<!! tloik-vastaanotto)
+            :let [lahetys-viestin-status (-> tloik-viesti <!! :status)]]
+      (is (= 200 lahetys-viestin-status)))
     ;; Vain testijono-2 viestit pitäisi olla käsitelty, koska ykkönen nakkaa exceptionia
     (is (= kasitellyt-viestit testijono-2-vastaanottamat-viestit))
     ;; Tarkistetaan, että testijono-1:n vastaanottaja on kummiski vielä pystyssä
     (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))
-    ;; Onhan TLOIK lähettänyt yhtä moneen viestiin kuittaukset, kuin se on saanutkin viestejä
-    (is (= (count testijono-2-vastaanottamat-viestit) (- (sonja-broker-tila :enqueue-count) (sonja-broker-tila :dequeue-count))))
-    (sonja-jolokia-jono "tloik-ilmoituskuittausjono" nil :purge)
-    (sonja-jolokia-jono "testilahetys-jono" nil :purge)))
+    ;; Onhan TLOIK:iin lähetetty yhtä moneen kuittausta, kuin se on saatu viestejä
+    (is (= tloik-viestien-lkm (- (sonja-broker-tila "tloik-ilmoituskuittausjono" :enqueue-count)
+                                 (sonja-broker-tila "tloik-ilmoituskuittausjono" :dequeue-count))))))
 
 
 (deftest main-komponentit-loytyy
@@ -421,7 +449,7 @@
     (doseq [istunto (-> status-ennen :olioiden-tilat :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
-    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*1"]]
+    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*"]]
       (is (some #(= (:nimi %) saije)
                 (:saikeiden-tilat status-ennen))))
     ;; STATUS LOPETUKSEN JÄLKEEN TESTIT
@@ -429,7 +457,7 @@
     (doseq [istunto (-> status-lopetuksen-jalkeen :olioiden-tilat :istunnot)]
       (is (= (:istunnon-tila istunto) "CLOSED"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "CLOSED")))
-    (doseq [saije ["jms-saije" "jms-reconnecting-saije" "jms-kasittelyn-odottelija*yhdista-uudelleen*1"]]
+    (doseq [saije ["jms-saije" "jms-reconnecting-saije" "jms-kasittelyn-odottelija*yhdista-uudelleen*"]]
       (is (some #(= (:nimi %) saije)
                 (:saikeiden-tilat status-lopetuksen-jalkeen))))
     ;; STATUS RECONNECTIN JÄLKEEN
@@ -437,7 +465,7 @@
     (doseq [istunto (-> status-aloituksen-jalkeen :olioiden-tilat :istunnot)]
       (is (= (:istunnon-tila istunto) "ACTIVE"))
       (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "ACTIVE")))
-    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*1"]]
+    (doseq [saije ["jms-saije" "jms-kasittelyn-odottelija*jms-tilanne*"]]
       (is (some #(= (:nimi %) saije)
                 (:saikeiden-tilat status-aloituksen-jalkeen))))))
 

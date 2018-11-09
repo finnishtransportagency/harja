@@ -20,7 +20,6 @@
 
 (defonce JMS-alkutila
          {:yhteys nil :istunnot {}})
-(defonce jms-kasittelyn-odottelija-numero 0)
 (defonce ei-jms-yhteytta {:type :jms-yhteysvirhe
                           :virheet [{:koodi :ei-yhteytta
                                      :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
@@ -202,10 +201,11 @@
         (.close testi-istunto))
       (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
                                         (.getJMSProviderName meta-data)))
-      (when yhteys
+      (if yhteys
         (do
           (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
-          {:yhteys yhteys :qcf qcf}))
+          {:yhteys yhteys :qcf qcf})
+        (throw (Exception. "Yhteys olio oli nil")))
       (catch Throwable t
         ;; ActiveMQ saattaa ainakin saada yhteyden borkeriin vaikkei yhteys olisi ok
         (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen." (.getMessage t) "\nStackTrace: " (.printStackTrace t))
@@ -420,6 +420,23 @@
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
+(defn laheta-viesti-jonoon [sonja kasky kaskytys-kanavan-vastaus]
+  ;(println "---> KÄSKY: " kasky)
+  (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
+  (when (= :kasittele (<!! kaskytys-kanavan-vastaus))
+    (>!! kaskytys-kanavan-vastaus
+         (let [vastaus (try (let [vastaus (jms-toiminto sonja kasky)]
+                              (if (and (map? vastaus)
+                                       (contains? vastaus :virhe)
+                                       (= (count vastaus) 1))
+                                vastaus
+                                {:vastaus vastaus}))
+                            (catch Throwable t
+                              (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
+                              {:virhe t}))]
+           ;(println "<---- VASTAUS: " vastaus)
+           vastaus))))
+
 (defn luo-jms-saije
   "JMS spesifikaation mukaan connection oliota voi käyttää ihan vapaasti useasta eri säikeestä, mutta session olioita ja
    kaikkia sen luomia olioita ei voi. Niitä tulisi kohdella säijekohtaisesti. Mikään ei estä niiden käsittelyä useasta eri
@@ -460,25 +477,13 @@
               ;; Saatiinko käsky vai kerkesikö timeout mennä loppuun?
               (when-not (or (nil? kaskytys-kanavan-vastaus)
                             (= :aika-katkaisu (async/poll! kaskytys-kanavan-vastaus)))
-                (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
-                (when (= :kasittele (<!! kaskytys-kanavan-vastaus))
-                  (>!! kaskytys-kanavan-vastaus
-                       (try (let [vastaus (jms-toiminto sonja kasky)]
-                              (if (and (map? vastaus)
-                                       (contains? vastaus :virhe)
-                                       (= (count vastaus) 1))
-                                vastaus
-                                {:vastaus vastaus}))
-                            (catch Throwable t
-                              (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
-                              {:virhe t})))))
+                (laheta-viesti-jonoon sonja kasky kaskytys-kanavan-vastaus))
               (recur (if lopetetaan?
                        [true nil]
                        (async/alts!! [sammutus-kanava]
                                      :default false))))
-            (do
-              (async/close! kaskytys-kanava)
-              (>!! sammutus-kanava true))))))))
+            (do (async/close! kaskytys-kanava)
+                (>!! sammutus-kanava true))))))))
 
 (defn laheta-viesti-kaskytyskanavaan
   "Lähettää käskyn jms-saikeelle. Käskytyskanavalle on määritelty dropping-buffer, joten se pudottaa lähetetyn viestin
@@ -489,12 +494,13 @@
    Palauttaa kanavan, josta tuloksen voi lukea."
   [kaskytys-kanava kasky]
   (let [kaskytys-kanavan-vastaus (chan)
-        _ (>!! kaskytys-kanava {:kasky kasky :kaskytys-kanavan-vastaus kaskytys-kanavan-vastaus})
+        ;; put! ei blockaa
+        _ (async/put! kaskytys-kanava {:kasky kasky :kaskytys-kanavan-vastaus kaskytys-kanavan-vastaus})
         [tulos _] (async/alts!! [(timeout 5000) kaskytys-kanavan-vastaus])]
     (if (= tulos :valmis-kasiteltavaksi)
       (thread
         (doto (Thread/currentThread)
-          (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*" (inc jms-kasittelyn-odottelija-numero))))
+          (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*")))
         (>!! kaskytys-kanavan-vastaus :kasittele)
         (<!! kaskytys-kanavan-vastaus))
       (do
