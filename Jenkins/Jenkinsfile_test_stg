@@ -49,6 +49,7 @@ node {
             stage(omatVarit.testikannanLuonti) {
                 if (omatVarit.testikannanLuontiAjetaan) {
                     omatFunktiot.ajaTestikannanLuonti(omatVarit.testikannanLuonti)
+                    sh([script: "sh Jenkins/skriptit/kannan_puukotus.sh"])
                 }
             }
 
