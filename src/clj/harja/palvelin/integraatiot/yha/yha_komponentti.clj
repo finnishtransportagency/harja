@@ -41,7 +41,7 @@
       urakat)))
 
 (defn kasittele-urakan-kohdehakuvastaus [sisalto otsikot]
-  (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (log/debug (format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (urakan-kohdehakuvastaus/lue-sanoma sisalto)
         kohteet (:kohteet vastaus)
         virhe (:virhe vastaus)]

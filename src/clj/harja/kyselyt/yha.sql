@@ -60,7 +60,10 @@ SELECT
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
 WHERE yllapitokohde = :yllapitokohde AND
-      poistettu IS NOT TRUE;
+      -- Tämä ottaa pois kaikki ne jotka on luotu Harjassa ja sen jälkeen poistettu,
+      -- eli eivät ole edes käyneet YHA:ssa missään välissä
+      NOT (poistettu IS TRUE AND
+           yhaid IS NULL);
 
 -- name: hae-urakoiden-sidontatiedot
 SELECT
