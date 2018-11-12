@@ -119,6 +119,15 @@ def ajaTestikannanLuonti (stagenNimi) {
     }
 }
 
+def ajaTestikannanLuontiTestStg (stagenNimi) {
+    try {
+        sh([script: "sh Jenkins/skriptit/testitietokanta_test_stg.sh"])
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
+    } catch (e) {
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi Jenkinsin testikannan luomiseen")
+    }
+}
+
 def ajaJarJaTestit (stagenNimi) {
     try {
         // Luo API docsit
