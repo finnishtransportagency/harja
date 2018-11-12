@@ -144,7 +144,13 @@
           rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
 
           nolla (if rivi-ennen (inc nolla) nolla)
-          otsikko-rivi (.createRow sheet nolla)]
+          otsikko-rivi (.createRow sheet nolla)
+          luodut-tyylit (atom {})
+          luo-uusi-tyyli (fn [solun-tyyli formaatti-fn]
+                           (let [uusi-tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
+                                              formaatti-fn)]
+                             (swap! luodut-tyylit assoc solun-tyyli uusi-tyyli)
+                             uusi-tyyli))]
 
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
@@ -220,8 +226,9 @@
                                          ;; lisää lähinnä % merkin kokonaisluvun loppuun.
                                          (/ naytettava-arvo 100)
                                          naytettava-arvo)
-                       tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
-                               formaatti-fn)]
+                       tyyli (if-let [tyyli (get @luodut-tyylit solun-tyyli)]
+                               tyyli
+                               (luo-uusi-tyyli solun-tyyli formaatti-fn))]
 
                    (if-let [kaava (:excel sarake)]
                      (aseta-kaava! kaava cell rivi-nro sarake-nro)

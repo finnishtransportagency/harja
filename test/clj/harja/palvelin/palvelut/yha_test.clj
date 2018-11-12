@@ -147,17 +147,17 @@
                                          :kuulamylly nil
                                          :raekoko 16
                                          :rc-prosentti nil
-                                         :uusi-paallyste 14}}]
+                                         :uusi-paallyste 14}
+                  :yllapitoluokka 8
+                  :keskimaarainen-vuorokausiliikenne 5000
+                  :nykyinen-paallyste 14}]
     :yha-id 2
     :tierekisteriosoitevali (merge {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"}
                                    kohteen-osoite)
     :yha-kohdenumero 1
     :yllapitokohdetyyppi "paallyste"
-    :nykyinen-paallyste 14
     :nimi "YHA-kohde"
-    :yllapitokohdetyotyyppi :paallystys
-    :yllapitoluokka 8
-    :keskimaarainen-vuorokausiliikenne 5000}])
+    :yllapitokohdetyotyyppi :paallystys}])
 
 (deftest tallenna-uudet-yha-kohteet
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -171,9 +171,7 @@
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                   {:urakka-id urakka-id
-                                   :kohteet (luo-yha-kohteet {:ajorata 1
-                                                              :kaista 1
-                                                              :tienumero 20
+                                   :kohteet (luo-yha-kohteet {:tienumero 20
                                                               :aosa 1
                                                               :aet 1
                                                               :losa 1
@@ -200,9 +198,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 0
-                                                            :kaista 1
-                                                            :tienumero 9
+                                 :kohteet (luo-yha-kohteet {:tienumero 9
                                                             :aosa 328
                                                             :aet 3060
                                                             :losa 329
@@ -225,9 +221,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 2
                                                             :aet 1
                                                             :losa 3
@@ -249,9 +243,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 1
                                                             :losa 2
@@ -273,9 +265,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 1
                                                             :losa 3
@@ -297,9 +287,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 1
                                                             :losa 3
@@ -321,9 +309,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 100
                                                             :losa 5

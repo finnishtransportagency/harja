@@ -232,9 +232,17 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
+        paallystysilmoitus (update paallystysilmoitus :vuodet konv/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-              (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
+            (cond
+              (some #(>= % 2019) (:vuodet paallystysilmoitus)) (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
+              ;; Vuonna 2018 käytettiin uutta ja vanhaa mallia
+              (some #(>= % 2018) (:vuodet paallystysilmoitus)) (try
+                                                                 (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)
+                                                                 (catch Exception e
+                                                                   (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)))
+              :else (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus (as-> paallystysilmoitus p

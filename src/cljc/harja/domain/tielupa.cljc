@@ -38,6 +38,7 @@
     ::voimassaolon-alkupvm
     ::voimassaolon-loppupvm
     ::otsikko
+    ::liite-url
     ::katselmus-url
     ::ely
     ::urakat

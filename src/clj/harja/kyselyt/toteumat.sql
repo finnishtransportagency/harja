@@ -349,12 +349,12 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
-WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
+WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
 SELECT alkanut
   FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
+ WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle

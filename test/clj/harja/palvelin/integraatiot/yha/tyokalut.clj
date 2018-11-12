@@ -83,9 +83,6 @@
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <tunnus>A</tunnus>
-        <yllapitoluokka>1</yllapitoluokka>
-        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-        <nykyinen-paallyste>1</nykyinen-paallyste>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
@@ -93,8 +90,6 @@
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -117,6 +112,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
           <alikohde>
             <yha-id>4</yha-id>
@@ -138,6 +136,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
         </alikohteet>
       </kohde>
@@ -156,9 +157,6 @@
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <tunnus>A</tunnus>
-        <yllapitoluokka>1</yllapitoluokka>
-        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-        <nykyinen-paallyste>1</nykyinen-paallyste>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
@@ -166,8 +164,6 @@
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -190,6 +186,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
           <alikohde>
             <yha-id>4</yha-id>
@@ -211,6 +210,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
         </alikohteet>
       </kohde>
@@ -221,9 +223,6 @@
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <tunnus>A</tunnus>
-        <yllapitoluokka>1</yllapitoluokka>
-        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-        <nykyinen-paallyste>1</nykyinen-paallyste>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
@@ -231,8 +230,6 @@
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -255,6 +252,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
           <alikohde>
             <yha-id>42502</yha-id>
@@ -276,6 +276,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
         </alikohteet>
       </kohde>

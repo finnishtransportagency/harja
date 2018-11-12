@@ -104,7 +104,7 @@
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
-           (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
+           (pvm/paivan-lopussa (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi)))])
         (range ensimmainen-vuosi viimeinen-vuosi)))
 
 (defn hoito-tai-sopimuskaudet
@@ -119,7 +119,7 @@
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
-               (pvm/hoitokauden-loppupvm (inc vuosi))])
+               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
             (range ensimmainen-vuosi viimeinen-vuosi))
 
       (= :vesivayla-hoito tyyppi)
@@ -127,7 +127,7 @@
 
       :default
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
-      (pvm/urakan-vuodet alkupvm loppupvm))))
+      (pvm/urakan-vuodet alkupvm (pvm/paivan-lopussa loppupvm)))))
 
 (defn edelliset-hoitokaudet
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
@@ -320,8 +320,11 @@
   voidaan luoda tyhjät ryhmät myös hoitokausille, joilla ei ole yhtään riviä."
   ([rivit] (ryhmittele-hoitokausittain rivit nil))
   ([rivit hoitokaudet]
-   (loop [ryhmitelty (group-by (juxt :alkupvm :loppupvm)
-                               rivit)
+   (loop [ryhmitelty (into {}
+                           (map (fn [[[alkupvm loppupvm] arvot]]
+                                  [[(pvm/paivan-alussa alkupvm) (pvm/paivan-lopussa loppupvm)] arvot])
+                                (group-by (juxt :alkupvm :loppupvm)
+                                          rivit)))
           [kausi & hoitokaudet] hoitokaudet]
      (if-not kausi
        ryhmitelty

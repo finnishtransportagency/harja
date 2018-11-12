@@ -689,6 +689,9 @@
     {:otsikko "Otsikko"
      :tyyppi :string
      :nimi ::tielupa/otsikko}
+    {:otsikko "Liite URL"
+     :tyyppi :linkki
+     :nimi ::tielupa/liite-url}
     {:otsikko "Katselmus URL"
      :tyyppi :linkki
      :nimi ::tielupa/katselmus-url}

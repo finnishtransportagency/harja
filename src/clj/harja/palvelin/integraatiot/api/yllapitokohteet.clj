@@ -191,7 +191,6 @@
           paallystysilmoitus (:paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-          ;; TODO HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
           alikohteet (mapv #(assoc-in (:alikohde %)
                                       [:sijainti :numero]
                                       (get-in % [:alikohde :sijainti :numero]

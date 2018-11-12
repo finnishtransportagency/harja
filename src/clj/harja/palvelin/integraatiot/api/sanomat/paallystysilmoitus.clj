@@ -32,6 +32,8 @@
     (fn [alustatoimi]
       (let [sijainti (:sijainti alustatoimi)]
         {:tr-numero (:numero sijainti)
+         :tr-ajorata (:ajr sijainti)
+         :tr-kaista (:kaista sijainti)
          :tr-alkuosa (:aosa sijainti)
          :tr-alkuetaisyys (:aet sijainti)
          :tr-loppuosa (:losa sijainti)

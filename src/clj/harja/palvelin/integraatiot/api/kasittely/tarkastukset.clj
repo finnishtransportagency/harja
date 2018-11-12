@@ -67,11 +67,11 @@
                                              alitus))
                            :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))})
                      liitteet (:liitteet tarkastus)]
-                   (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-                   (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
-                   (when-not tr-osoite
-                     (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
-                             (:alkusijainti tarkastus) (:loppusijainti tarkastus)))))
+                 (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
+                 (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
+                 (when-not tr-osoite
+                   (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
+                           (:alkusijainti tarkastus) (:loppusijainti tarkastus)))))
              tarkastukset))
          (catch Throwable t
            (log/warn t "Virhe tarkastuksen lisäämisessä")

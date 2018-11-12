@@ -13,6 +13,7 @@
                             :saapumispvm "2020-09-22T12:00:00+02:00"
                             :otsikko "Lupa tehdä töitä"
                             :ely "Pohjois-Pohjanmaa"
+                            :liite-url "https://liite.tilu.fi/1234.pdf"
                             :katselmus-url "https://tilu.fi/1234"
                             :tunniste {:id 1234}
                             :tien-nimi "Kuusamontie"
@@ -31,6 +32,7 @@
                   :harja.domain.tielupa/kohde-postinumero 90900
                   :harja.domain.tielupa/ulkoinen-tunniste 1234
                   :harja.domain.tielupa/saapumispvm #inst "2020-09-22T10:00:00.000-00:00"
+                  :harja.domain.tielupa/liite-url "https://liite.tilu.fi/1234.pdf"
                   :harja.domain.tielupa/katselmus-url "https://tilu.fi/1234"
                   :harja.domain.tielupa/voimassaolon-loppupvm #inst "2020-09-22T10:00:00.000-00:00"
                   :harja.domain.tielupa/myontamispvm #inst "2020-09-22T10:00:00.000-00:00"
