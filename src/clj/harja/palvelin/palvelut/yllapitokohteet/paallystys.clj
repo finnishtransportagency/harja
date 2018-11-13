@@ -241,7 +241,7 @@
               (some #(>= % 2018) (:vuodet paallystysilmoitus)) (try
                                                                  (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)
                                                                  (catch Exception e
-                                                                   (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)))
+                                                                   (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)))
               :else (skeema/validoi pot-domain/+vanha-paallystysilmoitus+ ilmoitustiedot)))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
