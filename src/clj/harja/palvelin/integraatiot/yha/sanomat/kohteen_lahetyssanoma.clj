@@ -108,7 +108,7 @@
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
    [:toteutunuthinta (laske-hinta-kokonaishinta paallystysilmoitus)]
-   (tee-tierekisteriosoitevali kohde)
+   (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
              (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
