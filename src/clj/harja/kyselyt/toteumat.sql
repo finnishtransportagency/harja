@@ -1046,3 +1046,9 @@ WHERE urakka = :urakka-id AND id IN (:idt);
 UPDATE toteuman_reittipisteet
    SET reittipisteet=paivita_pohjavesialue_reittipistedataan(reittipisteet)
 WHERE toteuma = :toteumaid;
+
+-- name: hae-pohjavesialueen-materiaalitoteumat
+SELECT toteuma, (p).aika, (p).sijainti, (unnest((p).materiaalit)).*
+FROM
+  (SELECT toteuma, unnest(reittipisteet) AS p FROM toteuman_reittipisteet) AS pisteet
+WHERE (pisteet.p).pohjavesialue = :pohjavesialue_id;

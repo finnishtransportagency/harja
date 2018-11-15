@@ -185,7 +185,7 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  ARRAY[
   ROW('2008-09-09 10:00.00', st_makepoint(498919, 7247099)::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
-      ARRAY[]::reittipiste_materiaali[],NULL)::reittipistedata,
+      ARRAY[]::reittipiste_materiaali[],73)::reittipistedata,
   ROW('2008-09-09 10:03.00', st_makepoint(499271, 7248395) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[]::reittipiste_materiaali[],NULL)::reittipistedata,
@@ -194,7 +194,7 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
       ARRAY[]::reittipiste_materiaali[],NULL)::reittipistedata,
   ROW('2008-09-09 10:09.00', st_makepoint(440919, 7207099) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
-      ARRAY[]::reittipiste_materiaali[],NULL)::reittipistedata
+      ARRAY[]::reittipiste_materiaali[],73)::reittipistedata
  ]::reittipistedata[]);
 
 
@@ -274,9 +274,9 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
    ROW('2015-02-01 17:02:00.000000', st_makepoint(430672.2001181495,7199683.66427136) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
    ROW('2015-02-01 17:03:00.000000', st_makepoint(430748.6371464347,7200524.4715824975) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
    ROW('2015-02-01 17:04:00.000000', st_makepoint(430977.9482312902,7201441.715921919) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
-   ROW('2015-02-01 17:05:00.000000', st_makepoint(430977.9482312902,7202129.649176486) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
-   ROW('2015-02-01 17:06:00.000000', st_makepoint(430825.07417471986,7202894.019459338) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
-   ROW('2015-02-01 17:07:00.000000', st_makepoint(430060.7038918681,7204652.0711098965) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
+   ROW('2015-02-01 17:05:00.000000', st_makepoint(430977.9482312902,7202129.649176486) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[ROW(1, 5)]::reittipiste_materiaali[],75),
+   ROW('2015-02-01 17:06:00.000000', st_makepoint(430825.07417471986,7202894.019459338) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[ROW(1, 2)]::reittipiste_materiaali[],75),
+   ROW('2015-02-01 17:07:00.000000', st_makepoint(430060.7038918681,7204652.0711098965) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[ROW(5, 1)]::reittipiste_materiaali[],75),
    ROW('2015-02-01 17:08:00.000000', st_makepoint(429907.8298352977,7205569.315449319) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
    ROW('2015-02-01 17:09:00.000000', st_makepoint(429678.5187504422,7206562.996817026) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
    ROW('2015-02-01 17:10:00.000000', st_makepoint(429525.64469387184,7207403.804128163) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[],NULL),
