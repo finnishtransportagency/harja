@@ -17,13 +17,16 @@
   "Apuri reittipisteen luomiseksi"
   ([aika koordinaatit hoitoluokat]
    (reittipiste aika koordinaatit hoitoluokat [] []))
+  ([aika koordinaatit hoitoluokat tehtavat materiaalit]
+   (reittipiste aika koordinaatit hoitoluokat tehtavat materiaalit nil))
   ([aika
     {:keys [x y] :as koordinaaatit}
     {:keys [talvihoitoluokka soratiehoitoluokka] :as hoitoluokat}
-    tehtavat materiaalit]
+    tehtavat materiaalit pohjavesialue]
    {::aika aika
     ::sijainti [x y]
     ::talvihoitoluokka talvihoitoluokka
     ::soratiehoitoluokka soratiehoitoluokka
     ::tehtavat tehtavat
-    ::materiaalit materiaalit}))
+    ::materiaalit materiaalit
+    ::pohjavesialue pohjavesialue}))

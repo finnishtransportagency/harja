@@ -108,7 +108,8 @@
   ;; Pitää huomata, että periaatteessa voimme oikeasti halutakkin tallentaa tyhjän reitin..
   (when-not reitti (log/warn "Toteumalle " toteuma-id " tallennetaan tyhjä reitti!"))
   (q-toteumat/paivita-toteuman-reitti! db {:id toteuma-id
-                                           :reitti reitti}))
+                                           :reitti reitti})
+  (q-toteumat/paivita-pohjavesialueet-toteuman-reittipisteisiin! db {:toteumaid toteuma-id}))
 
 (defn tallenna-sijainti [db sijainti aika toteuma-id]
   (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")

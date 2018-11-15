@@ -1041,3 +1041,8 @@ SELECT
   reitti as sijainti
 FROM toteuma
 WHERE urakka = :urakka-id AND id IN (:idt);
+
+-- name: paivita-pohjavesialueet-toteuman-reittipisteisiin!
+UPDATE toteuman_reittipisteet
+   SET reittipisteet=paivita_pohjavesialue_reittipistedataan(reittipisteet)
+WHERE toteuma =: toteumaid
