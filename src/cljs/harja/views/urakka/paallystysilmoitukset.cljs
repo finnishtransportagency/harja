@@ -1,6 +1,7 @@
 (ns harja.views.urakka.paallystysilmoitukset
   "Urakan päällystysilmoitukset"
   (:require [reagent.core :refer [atom] :as r]
+            [tuck.core :as tuck]
             [cljs.core.async :refer [<!]]
 
             [harja.ui.grid :as grid]
@@ -377,8 +378,10 @@
              [:figcaption
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
+         (println "-----> FOO: " lomakedata-nyt)
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
+           :yllapitokohde (select-keys lomakedata-nyt [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
            :rivinumerot? true
            :muokattava-tie? (fn [rivi]
                               false
@@ -758,24 +761,6 @@
 
          [tallennus urakka lomakedata-nyt valmis-tallennettavaksi? tallennus-onnistui]]))))
 
-(defn avaa-paallystysilmoitus [paallystyskohteen-id]
-  (go
-    (let [urakka-id (:id @nav/valittu-urakka)
-          vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id paallystyskohteen-id))]
-      (if (k/virhe? vastaus)
-        (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
-        (reset! paallystys/paallystysilmoitus-lomakedata
-                (-> vastaus
-                    ;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
-                    (update-in [:ilmoitustiedot :alustatoimet]
-                               (fn [alustatoimet]
-                                 (vec (map #(assoc %1 :id %2)
-                                           alustatoimet (iterate inc 1)))))
-                    (assoc
-                      :kirjoitusoikeus?
-                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                                (:id @nav/valittu-urakka)))))))))
-
 (defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
   (when paallystysilmoitukset
     (case jarjestys
@@ -807,55 +792,56 @@
     (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
     tama-rivi))
 
-(defn- paallystysilmoitukset-taulukko [urakka-id paallystysilmoitukset]
-  [grid/grid
-   {:otsikko ""
-    :tunniste :paallystyskohde-id
-    :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-    :tallenna (fn [rivit]
-                (go (let [paallystysilmoitukset (mapv #(do
-                                                         {::pot/id (:id %)
-                                                          ::pot/paallystyskohde-id (:paallystyskohde-id %)
-                                                          ::pot/takuupvm (:takuupvm %)})
-                                                      rivit)
-                          vastaus (<! (paallystys/tallenna-paallystysilmoitusten-takuupvmt
-                                        urakka-id
-                                        paallystysilmoitukset))]
-                      (harja.atom/paivita! paallystys/paallystysilmoitukset)
-                      (when (k/virhe? vastaus)
-                        (viesti/nayta! "Päällystysilmoitusten tallennus epäonnistui"
-                                       :warning
-                                       viesti/viestin-nayttoaika-keskipitka)))))
-    :voi-lisata? false
-    :voi-kumota? false
-    :voi-poistaa? (constantly false)
-    :voi-muokata? true}
-   [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-    {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
-    {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
-    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-    {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-     :hae (fn [rivi]
-            (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-     :fmt pvm/pvm-opt
-     :tayta-alas? #(not (nil? %))
-     :tayta-fn tayta-takuupvm
-     :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-    {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
-     :leveys 20
-     :komponentti (fn [rivi]
-                    (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
-    {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
-     :tyyppi :komponentti
-     :komponentti (fn [rivi]
-                    (if (:tila rivi)
-                      [:button.nappi-toissijainen.nappi-grid
-                       {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
-                       [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                      [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
-                       [:span "Aloita päällystysilmoitus"]]))}]
-   paallystysilmoitukset])
+(defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
+  (let [urakka-id (:id urakka)]
+    [grid/grid
+     {:otsikko ""
+      :tunniste :paallystyskohde-id
+      :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+      :tallenna (fn [rivit]
+                  (go (let [paallystysilmoitukset (mapv #(do
+                                                           {::pot/id (:id %)
+                                                            ::pot/paallystyskohde-id (:paallystyskohde-id %)
+                                                            ::pot/takuupvm (:takuupvm %)})
+                                                        rivit)
+                            vastaus (<! (paallystys/tallenna-paallystysilmoitusten-takuupvmt
+                                          urakka-id
+                                          paallystysilmoitukset))]
+                        (harja.atom/paivita! paallystys/paallystysilmoitukset)
+                        (when (k/virhe? vastaus)
+                          (viesti/nayta! "Päällystysilmoitusten tallennus epäonnistui"
+                                         :warning
+                                         viesti/viestin-nayttoaika-keskipitka)))))
+      :voi-lisata? false
+      :voi-kumota? false
+      :voi-poistaa? (constantly false)
+      :voi-muokata? true}
+     [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+      {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
+      {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+      {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+      {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
+       :hae (fn [rivi]
+              (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
+      {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
+       :fmt pvm/pvm-opt
+       :tayta-alas? #(not (nil? %))
+       :tayta-fn tayta-takuupvm
+       :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
+      {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
+       :leveys 20
+       :komponentti (fn [rivi]
+                      (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
+      {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+       :tyyppi :komponentti
+       :komponentti (fn [rivi]
+                      (if (:tila rivi)
+                        [:button.nappi-toissijainen.nappi-grid
+                         {:on-click #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))}
+                         [:span (ikonit/eye-open) " Päällystysilmoitus"]]
+                        [:button.nappi-toissijainen.nappi-grid {:on-click #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))}
+                         [:span "Aloita päällystysilmoitus"]]))}]
+     paallystysilmoitukset]))
 
 (defn- nayta-lahetystiedot [rivi]
   (if (some #(= % (:paallystyskohde-id rivi)) @paallystys/kohteet-yha-lahetyksessa)
@@ -868,7 +854,8 @@
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
       [:span "Ei lähetetty"])))
 
-(defn- yha-lahetykset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
+(defn- yha-lahetykset-taulukko [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+                                    paallystysilmoitukset :paallystysilmoitukset :as app}]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -882,38 +869,30 @@
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
     {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
      :komponentti (fn [rivi]
-                    [yha/yha-lahetysnappi
-                     oikeudet/urakat-kohdeluettelo-paallystyskohteet
-                     urakka-id
-                     sopimus-id
-                     vuosi
-                     [rivi]])}]
+                    [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
+                                           :vuosi valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
+                                           :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}])}]
    paallystysilmoitukset])
 
 (defn- ilmoitusluettelo
-  []
+  [e! app]
   (komp/luo
     (komp/kuuntelija :avaa-paallystysilmoitus
                      (fn [_ rivi]
-                       (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
-    (fn []
-      (let [urakka-id (:id @nav/valittu-urakka)
-            sopimus-id (first @u/valittu-sopimusnumero)
-            urakan-vuosi @u/valittu-urakan-vuosi
-            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu
-                                                                  @yllapito-tiedot/kohdejarjestys)]
+                       (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))
+    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+             paallystysilmoitukset :paallystysilmoitukset :as app}]
+      (let [urakka-id (:id urakka)
+            sopimus-id (first valittu-sopimusnumero)]
         [:div
          [:h3 "Päällystysilmoitukset"]
-         [paallystysilmoitukset-taulukko urakka-id paallystysilmoitukset]
+         [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         [yha/yha-lahetysnappi
-          oikeudet/urakat-kohdeluettelo-paallystyskohteet
-          urakka-id
-          sopimus-id
-          urakan-vuosi
-          paallystysilmoitukset]
-         [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]]))))
+         [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
+                                :vuosi valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
+                                :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}]
+         [yha-lahetykset-taulukko e! app]]))))
 
 (defn paallystysilmoituslomake-historia [ilmoituslomake]
   (let [historia (historia/historia ilmoituslomake)]
@@ -942,15 +921,17 @@
                  (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
                  (reset! ilmoituslomake nil))))]))))
 
-(defn valinnat [urakka]
+(defn valinnat [e! {:keys [urakka] :as app}]
   [:div
    [valinnat/vuosi {}
     (t/year (:alkupvm urakka))
     (t/year (:loppupvm urakka))
     urakka/valittu-urakan-vuosi
-    urakka/valitse-urakan-vuosi!]
-   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-   [u-valinnat/tienumero yllapito-tiedot/tienumero]
+    #(do
+       (urakka/valitse-urakan-vuosi! %)
+       (e! (paallystys/->HaePaallystysilmoitukset)))]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero #(e! (paallystys/->SuodataYllapitokohteet))]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero #(e! (paallystys/->SuodataYllapitokohteet))]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"
     {:valinta @yllapito-tiedot/kohdejarjestys
@@ -960,7 +941,7 @@
                  :muokkausaika "Muokkausajan mukaan"}}
     [:tila :kohdenumero :muokkausaika]]])
 
-(defn paallystysilmoitukset [urakka]
+#_(defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/lippu paallystys/paallystysilmoitukset-tai-kohteet-nakymassa?)
 
@@ -972,3 +953,23 @@
          [:div
           [valinnat urakka]
           [ilmoitusluettelo]])])))
+
+(defn paallystysilmoitukset
+  [e! app]
+  (komp/luo
+    (komp/lippu paallystys/paallystysilmoitukset-tai-kohteet-nakymassa?)
+    (komp/sisaan-ulos
+      (fn []
+        (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] true))
+        (e! (paallystys/->HaePaallystysilmoitukset)))
+      (fn []
+        (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
+    (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
+      [:div.paallystysilmoitukset
+       [kartta/kartan-paikka]
+       [debug app "TUCK STATE"]
+       (if paallystysilmoitus-lomakedata
+         [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
+         [:div
+          [valinnat e! app]
+          [ilmoitusluettelo e! app]])])))

@@ -192,7 +192,9 @@
                :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
               (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                     yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                    _ (println "---> YHDISTETYT KOHTEET: " (pr-str yhdistetyt-kohteet))
                     yhdistyksessa-epaonnistuneet-kohteet (filterv :virhe yhdistetyt-kohteet)
+                    _ (println "---> YHDISTETYT KOHTEET: " (pr-str yhdistyksessa-epaonnistuneet-kohteet))
                     yhdistyksessa-onnistuneet-kohteet (filterv (comp not :virhe) yhdistetyt-kohteet)
                     _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistyksessa-onnistuneet-kohteet))
                     {:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}
@@ -374,36 +376,45 @@
                           paivittajan-nimi))
                    "ei koskaan"))])))
 
-(defn yha-lahetysnappi [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
-  (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
-                                    (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
-                                         (or (= :valmis (:tila paallystysilmoitus))
-                                             (= :lukittu (:tila paallystysilmoitus)))))
-        lahetettavat-ilmoitukset (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset)
-        kohde-idt (mapv :paallystyskohde-id lahetettavat-ilmoitukset)]
-    (when-not @yha-kohteiden-paivittaminen-kaynnissa?
-      [napit/palvelinkutsu-nappi
-       (if (= 1 (count paallystysilmoitukset))
-         (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
-         "Lähetä kaikki kohteet YHAan")
-       #(do
-          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-          (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
-          (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
-                                          :sopimus-id sopimus-id
-                                          :kohde-idt kohde-idt
-                                          :vuosi vuosi}))
-       {:luokka "nappi-grid nappi-ensisijainen"
-        :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
-                      (empty? kohde-idt)
-                      (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
-        :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
-        :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
-        :kun-onnistuu (fn [vastaus]
-                        (if (:lahetys-onnistui? vastaus)
-                          (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
-                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
-                              (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
-                        (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))
-        :virheviesti "Ylläpitokohteen lähettäminen YHAan epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
-                      tai ota yhteyttä Harjan asiakastukeen."}])))
+(defn yha-lahetysnappi [parametrit]
+  (let [kohteet-yha-lahetyksessa (atom false)]
+    (fn [{:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset
+                 lahetys-kaynnissa-fn kun-onnistuu kun-epaonnistuu]}]
+      (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
+                                        (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
+                                             (or (= :valmis (:tila paallystysilmoitus))
+                                                 (= :lukittu (:tila paallystysilmoitus)))))
+            lahetettavat-ilmoitukset (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset)
+            kohde-idt (mapv :paallystyskohde-id lahetettavat-ilmoitukset)]
+        (when-not @yha-kohteiden-paivittaminen-kaynnissa?
+          [napit/palvelinkutsu-nappi
+           (if (= 1 (count paallystysilmoitukset))
+             (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
+             "Lähetä kaikki kohteet YHAan")
+           #(do
+              (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
+              (lahetys-kaynnissa-fn true)
+              (reset! kohteet-yha-lahetyksessa kohde-idt)
+              (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
+                                              :sopimus-id sopimus-id
+                                              :kohde-idt kohde-idt
+                                              :vuosi vuosi}))
+           {:luokka "nappi-grid nappi-ensisijainen"
+            :disabled (or (not (empty? @kohteet-yha-lahetyksessa))
+                          (empty? kohde-idt)
+                          (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
+            :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
+            :kun-valmis #(do
+                           (reset! kohteet-yha-lahetyksessa nil)
+                           (lahetys-kaynnissa-fn false))
+            :kun-onnistuu (fn [vastaus]
+                            (if (:lahetys-onnistui? vastaus)
+                              (kun-onnistuu (:paallystysilmoitukset vastaus))
+                              (do
+                                (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
+                                (kun-epaonnistuu (:paallystysilmoitukset vastaus))))
+                            ;; Tämä on jätetty tähän, koska paallystysilmoitukset atomia käytetään muuallakin kuin
+                            ;; Päällystysilmoituksissa
+                            (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+            :virheviesti "Ylläpitokohteen lähettäminen YHAan epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
+                      tai ota yhteyttä Harjan asiakastukeen."}])))))

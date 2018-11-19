@@ -2,6 +2,8 @@
   "Päällystyksen tiedot"
   (:require
     [reagent.core :refer [atom] :as r]
+    [tuck.core :refer [process-event] :as tuck]
+    [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
@@ -13,6 +15,7 @@
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka :as urakka]
     [harja.domain.tierekisteri :as tr-domain]
+    [harja.domain.oikeudet :as oikeudet]
     [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.domain.paallystysilmoitus :as pot]
     [harja.domain.urakka :as urakka-domain]
@@ -154,3 +157,88 @@
   (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
                                               ::pot/paallystyskohde-id kohde-id
                                               ::pot/tila tila}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
+(def tila (atom nil))
+
+(defrecord MuutaTila [polku arvo])
+(defrecord SuodataYllapitokohteet [])
+(defrecord HaePaallystysilmoitukset [])
+(defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
+(defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
+(defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
+(defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
+(defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord YHAVientiOnnistui [paallystysilmoitukset])
+(defrecord YHAVientiEpaonnistui [paallystysilmoitukset])
+
+(extend-protocol tuck/Event
+  MuutaTila
+  (process-event [{:keys [polku arvo]} tila]
+    (assoc-in tila polku arvo))
+  SuodataYllapitokohteet
+  (process-event [_ {paallystysilmoitukset :paallystysilmoitukset
+                     {:keys [tienumero kohdenumero]} :yllapito-tila :as tila}]
+    (when paallystysilmoitukset
+      (yllapitokohteet/suodata-yllapitokohteet paallystysilmoitukset {:tienumero tienumero
+                                                                      :kohdenumero kohdenumero}))
+    tila)
+  HaePaallystysilmoitukset
+  (process-event [_ {{urakka-id :id} :urakka
+                     {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+                     :as app}]
+    (let [parametrit {:urakka-id urakka-id
+                      :sopimus-id (first valittu-sopimusnumero)
+                      :vuosi valittu-urakan-vuosi}]
+      (println "HAETAAN PARAMETRILLA " parametrit)
+      (-> app
+          (tuck-apurit/post! :urakan-paallystysilmoitukset
+                             parametrit
+                             {:onnistui ->HaePaallystysilmoituksetOnnnistui
+                              :epaonnistui ->HaePaallystysilmoituksetEpaonnisuti})
+          (assoc :kiintioiden-haku-kaynnissa? true))))
+  HaePaallystysilmoituksetOnnnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "VASTAUS ONNISTUI: " vastaus)
+    (assoc app :paallystysilmoitukset vastaus))
+  HaePaallystysilmoituksetEpaonnisuti
+  (process-event [{vastaus :vastaus} app]
+    (println "VASTAUS EPÄONNISTUI: " vastaus)
+    app)
+  HaePaallystysilmoitusPaallystyskohteellaOnnnistui
+  (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
+    (println "VASTAUS ONNISTUI: " vastaus)
+    (assoc app :paallystysilmoitus-lomakedata
+           (-> vastaus
+               ;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
+               (update-in [:ilmoitustiedot :alustatoimet]
+                          (fn [alustatoimet]
+                            (vec (map #(assoc %1 :id %2)
+                                      alustatoimet (iterate inc 1)))))
+               (assoc
+                 :kirjoitusoikeus?
+                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                           (:id urakka))))))
+  HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
+  (process-event [{vastaus :vastaus} app]
+    (println "VASTAUS EPÄONNISTUI: " vastaus)
+    (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
+    app)
+  AvaaPaallystysilmoitus
+  (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
+    (let [parametrit {:urakka-id (:id urakka)
+                      :paallystyskohde-id paallystyskohde-id}]
+      (tuck-apurit/post! app
+                         :urakan-paallystysilmoitus-paallystyskohteella
+                         parametrit
+                         {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
+                          :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  YHAVientiOnnistui
+  (process-event [{paallystysilmoitukset :paallystysilmoitukset} app]
+    (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
+    (assoc app :paallystysilmoitukset paallystysilmoitukset))
+  YHAVientiEpaonnistui
+  (process-event [{paallystysilmoitukset :paallystysilmoitukset} app]
+    (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)
+    (assoc app :paallystysilmoitukset paallystysilmoitukset)))

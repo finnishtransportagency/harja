@@ -180,13 +180,15 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake?]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? toiminta-f]
                                 :as kentta} data]
   [:input {:class (when lomake? "form-control")
            :placeholder (placeholder kentta data)
            :on-change #(let [v (-> % .-target .-value)]
                          (when (or (not regex) (re-matches regex v))
-                           (reset! data v)))
+                           (reset! data v)
+                           (when toiminta-f
+                             (toiminta-f))))
            :on-focus on-focus
            :value @data
            :max-length pituus-max}])
@@ -262,7 +264,7 @@
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -293,7 +295,9 @@
                                                   (js/parseFloat (str/replace v #"," ".")))]
                                      (if (not (js/isNaN numero))
                                        (reset! data numero)
-                                       (reset! data nil)))))}])))))
+                                       (reset! data nil))
+                                     (when toiminta-f
+                                       (toiminta-f)))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
