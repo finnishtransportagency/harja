@@ -19,6 +19,8 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
@@ -70,83 +72,100 @@
       [suolankayton-paivan-erittely @vetolaatikon-rivit])))
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
-  [:div.suolatoteumat
-   [kartta/kartan-paikka]
-   [:span.valinnat
-    [urakka-valinnat/aikavali-nykypvm-taakse urakka
-     tiedot/valittu-aikavali
-     {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
-    [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
-                                     :otsikko "Suola"
-                                     :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
-                                     :lisaa-kaikki? true
-                                     :materiaalit materiaali-nimet}]]
+  (let [sijainti (atom nil)]
+    (fn []
+      [:div.suolatoteumat
+       [kartta/kartan-paikka]
+       [:span.valinnat
+        [urakka-valinnat/aikavali-nykypvm-taakse urakka
+         tiedot/valittu-aikavali
+         {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
+        [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
+                                         :otsikko "Suola"
+                                         :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
+                                         :lisaa-kaikki? true
+                                         :materiaalit materiaali-nimet}]]
 
-   [grid/grid {:otsikko "Talvisuolan käyttö"
-               :tunniste :rivinumero
-               :tallenna (if (oikeudet/voi-kirjoittaa?
-                               oikeudet/urakat-toteumat-suola
-                               (:id @nav/valittu-urakka))
-                           #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
-                                  (paivita! tiedot/toteumat)))
-                           :ei-mahdollinen)
-               :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-toteumat-suola)
-               :tyhja (if (nil? @tiedot/toteumat)
-                        [yleiset/ajax-loader "Suolatoteumia haetaan..."]
-                        "Ei suolatoteumia valitulle aikavälille")
-               :uusi-rivi #(assoc % :alkanut (pvm/nyt))
-               :voi-poistaa? muokattava?
-               :max-rivimaara 500
-               :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
-               :vetolaatikot (into {}
-                                   (map (juxt :rivinumero (fn [rivi]
-                                                            [vetolaatikon-suolarivit rivi urakka])))
-                                   @tiedot/toteumat)
-               :piilota-toiminnot? true}
-    [{:tyyppi :vetolaatikon-tila :leveys 3}
-     {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30 :muokattava? muokattava?
-      :tyyppi :valinta
-      :validoi [[:ei-tyhja "Valitse materiaali"]]
-      :valinta-nayta #(or (:nimi %) "- valitse -")
-      :valinnat @tiedot/materiaalit}
-     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 30 :muokattava? muokattava?
-      :validoi [[:ei-tyhja "Anna päivämäärä"]]
-      :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
-     {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
-      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30 :muokattava? muokattava?
-      :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
-     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60 :muokattava? muokattava?
-      :hae #(if (muokattava? %)
-              (:lisatieto %)
-              (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
-                   (:lukumaara %) ")"))}
-     {:otsikko ""
-      :nimi :nayta-kartalla
-      :tyyppi :komponentti
-      :leveys 40
-      :komponentti (fn [rivi]
-                     (let [toteumat (map (fn [tid]
-                                           {:tid tid})
-                                         (:toteumaidt rivi))
-                           valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
-                       (when (and (not (empty? toteumat))
-                                  (:koneellinen rivi))
-                         [:div
-                          [(if (valittu?)
-                             :button.nappi-toissijainen.nappi-grid
-                             :button.nappi-ensisijainen.nappi-grid)
-                           {:on-click #(if (valittu?)
-                                         (piilota-toteumat-kartalla toteumat)
-                                         (nayta-toteumat-kartalla toteumat))}
-                           (ikonit/ikoni-ja-teksti
-                             (ikonit/map-marker)
-                             (if (valittu?)
-                               "Piilota kartalta"
-                               "Näytä kartalla"))]])))}]
-    listaus]
+       [lomake/lomake
+        {:otsikko "Hae suolatoteumia tieosoiteväliltä"
+         :muokkaa! #(js/console.log "Muokataan")
+         :footer-fn (fn [rivi]
+                      [:div
+                       [napit/yleinen-toissijainen "Hae" (fn []) {:ikoni (ikonit/livicon-search)}]])
+         :ei-borderia? true}
+        [{:nimi :tierekisteriosoite
+          :otsikko "Tierekisteriosoite"
+          :tyyppi :tierekisteriosoite
+          :tyyli :rivitetty
+          :sijainti sijainti
+          :vaadi-vali? true}]
+        ]
+     
+       [grid/grid {:otsikko "Talvisuolan käyttö"
+                   :tunniste :rivinumero
+                   :tallenna (if (oikeudet/voi-kirjoittaa?
+                                  oikeudet/urakat-toteumat-suola
+                                  (:id @nav/valittu-urakka))
+                               #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
+                                      (paivita! tiedot/toteumat)))
+                               :ei-mahdollinen)
+                   :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-toteumat-suola)
+                   :tyhja (if (nil? @tiedot/toteumat)
+                            [yleiset/ajax-loader "Suolatoteumia haetaan..."]
+                            "Ei suolatoteumia valitulle aikavälille")
+                   :uusi-rivi #(assoc % :alkanut (pvm/nyt))
+                   :voi-poistaa? muokattava?
+                   :max-rivimaara 500
+                   :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
+                   :vetolaatikot (into {}
+                                       (map (juxt :rivinumero (fn [rivi]
+                                                                [vetolaatikon-suolarivit rivi urakka])))
+                                       @tiedot/toteumat)
+                   :piilota-toiminnot? true}
+        [{:tyyppi :vetolaatikon-tila :leveys 3}
+         {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30 :muokattava? muokattava?
+          :tyyppi :valinta
+          :validoi [[:ei-tyhja "Valitse materiaali"]]
+          :valinta-nayta #(or (:nimi %) "- valitse -")
+          :valinnat @tiedot/materiaalit}
+         {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 30 :muokattava? muokattava?
+          :validoi [[:ei-tyhja "Anna päivämäärä"]]
+          :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
+         {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
+          :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30 :muokattava? muokattava?
+          :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
+         {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60 :muokattava? muokattava?
+          :hae #(if (muokattava? %)
+                  (:lisatieto %)
+                  (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
+                       (:lukumaara %) ")"))}
+         {:otsikko ""
+          :nimi :nayta-kartalla
+          :tyyppi :komponentti
+          :leveys 40
+          :komponentti (fn [rivi]
+                         (let [toteumat (map (fn [tid]
+                                               {:tid tid})
+                                             (:toteumaidt rivi))
+                               valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
+                           (when (and (not (empty? toteumat))
+                                      (:koneellinen rivi))
+                             [:div
+                              [(if (valittu?)
+                                 :button.nappi-toissijainen.nappi-grid
+                                 :button.nappi-ensisijainen.nappi-grid)
+                               {:on-click #(if (valittu?)
+                                             (piilota-toteumat-kartalla toteumat)
+                                             (nayta-toteumat-kartalla toteumat))}
+                               (ikonit/ikoni-ja-teksti
+                                (ikonit/map-marker)
+                                (if (valittu?)
+                                  "Piilota kartalta"
+                                  "Näytä kartalla"))]])))}]
+        listaus]
 
-   (when-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa])])
+       (when-not (empty? @tiedot/toteumat)
+         [:div.bold kaytetty-yhteensa])])))
 
 (defn suolatoteumat []
   (komp/luo
