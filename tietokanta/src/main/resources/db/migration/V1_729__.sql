@@ -10,6 +10,7 @@ CREATE TABLE suolatoteuma_reittipiste (
        maara NUMERIC
 );
 
+CREATE INDEX suolatoteuma_toteuma_idx ON suolatoteuma_reittipiste (toteuma);
 CREATE INDEX suolatoteuma_reittipiste_idx ON suolatoteuma_reittipiste USING GIST(sijainti);
 CREATE INDEX suolatoteuma_pohjavesialue_idx ON suolatoteuma_reittipiste (pohjavesialue);
 CREATE INDEX suolatoteuma_pohjavesialue_aika ON suolatoteuma_reittipiste (aika);
@@ -74,3 +75,32 @@ BEGIN
     GROUP BY rp.materiaalikoodi;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION toteuman_reittipisteet_trigger_fn() RETURNS TRIGGER AS $$
+DECLARE
+  m reittipiste_materiaali;
+  rp reittipistedata;
+  suolamateriaalikoodit INTEGER[];
+BEGIN
+  SELECT array_agg(id) FROM materiaalikoodi
+   WHERE materiaalityyppi='talvisuola' INTO suolamateriaalikoodit;
+
+  IF (TG_OP = 'UPDATE') THEN
+    DELETE FROM suolatoteuma_reittipiste WHERE toteuma=NEW.toteuma;
+  END IF;
+  
+  FOREACH rp IN ARRAY NEW.reittipisteet LOOP
+    FOREACH m IN ARRAY rp.materiaalit LOOP
+      IF suolamateriaalikoodit @> ARRAY[m.materiaalikoodi] THEN
+        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue)
+            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi, m.maara, pisteen_pohjavesialue(rp.sijainti, 50));
+      END IF;
+    END LOOP;
+  END LOOP;
+    
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER toteuman_reittipisteet_trigger AFTER INSERT OR UPDATE ON toteuman_reittipisteet
+   FOR EACH ROW EXECUTE PROCEDURE toteuman_reittipisteet_trigger_fn();
