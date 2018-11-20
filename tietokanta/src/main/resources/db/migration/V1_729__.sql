@@ -34,6 +34,8 @@ CREATE TABLE suolatoteuma_reittipiste (
 );
 
 CREATE INDEX suolatoteuma_reittipiste_idx ON suolatoteuma_reittipiste USING GIST(sijainti);
+CREATE INDEX suolatoteuma_pohjavesialue_idx ON suolatoteuma_reittipiste (pohjavesialue);
+CREATE INDEX suolatoteuma_pohjavesialue_aika ON suolatoteuma_reittipiste (aika);
 
 CREATE OR REPLACE FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER) RETURNS INTEGER AS $$
 DECLARE
@@ -79,17 +81,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER, threshold INTEGER) RETURNS TABLE (
+CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER, threshold INTEGER, alkuaika TIMESTAMP, loppuaika TIMESTAMP) RETURNS TABLE (
        materiaalikoodi INTEGER,
-       maara NUMERIC) AS $$
+       maara NUMERIC,
+       toteumia INTEGER) AS $$
 DECLARE
   g geometry;
 BEGIN
   SELECT tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_) INTO g;
   
-  RETURN QUERY SELECT rp.materiaalikoodi, SUM(rp.maara)
+  RETURN QUERY SELECT rp.materiaalikoodi as materiaalikoodi, SUM(rp.maara)as maara, count(rp.maara)::integer as toteumia
     FROM suolatoteuma_reittipiste AS rp
     WHERE ST_DWithin(g, rp.sijainti::geometry, threshold)
+      AND aika BETWEEN alkuaika AND loppuaika
     GROUP BY rp.materiaalikoodi;
 END;
 $$ LANGUAGE plpgsql;
