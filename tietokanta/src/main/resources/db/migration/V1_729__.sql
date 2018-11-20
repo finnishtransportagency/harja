@@ -39,13 +39,11 @@ CREATE OR REPLACE FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER)
 DECLARE
   pohjavesialue INTEGER;
 BEGIN
-  SELECT t.id, t.etaisyys
-    FROM (SELECT id, ST_Distance(alue, piste::geometry) AS etaisyys
-            FROM pohjavesialue
-	    ORDER BY 2
-	    LIMIT 1) AS t
-    WHERE t.etaisyys<=threshold
-    INTO pohjavesialue;
+  SELECT id FROM pohjavesialue
+   WHERE ST_DWithin(alue, piste::geometry, threshold)
+   ORDER BY ST_Distance(alue, piste::geometry)
+   LIMIT 1
+   INTO pohjavesialue;
   RETURN pohjavesialue;
 END;
 $$ LANGUAGE plpgsql;
