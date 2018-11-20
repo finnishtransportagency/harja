@@ -377,7 +377,7 @@
                    "ei koskaan"))])))
 
 (defn yha-lahetysnappi [parametrit]
-  (let [kohteet-yha-lahetyksessa (atom false)]
+  (let [kohteet-yha-lahetyksessa (atom [])]
     (fn [{:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset
                  lahetys-kaynnissa-fn kun-onnistuu kun-epaonnistuu]}]
       (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]

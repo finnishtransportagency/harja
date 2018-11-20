@@ -799,19 +799,7 @@
       :tunniste :paallystyskohde-id
       :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
       :tallenna (fn [rivit]
-                  (go (let [paallystysilmoitukset (mapv #(do
-                                                           {::pot/id (:id %)
-                                                            ::pot/paallystyskohde-id (:paallystyskohde-id %)
-                                                            ::pot/takuupvm (:takuupvm %)})
-                                                        rivit)
-                            vastaus (<! (paallystys/tallenna-paallystysilmoitusten-takuupvmt
-                                          urakka-id
-                                          paallystysilmoitukset))]
-                        (harja.atom/paivita! paallystys/paallystysilmoitukset)
-                        (when (k/virhe? vastaus)
-                          (viesti/nayta! "Päällystysilmoitusten tallennus epäonnistui"
-                                         :warning
-                                         viesti/viestin-nayttoaika-keskipitka)))))
+                  (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit)))
       :voi-lisata? false
       :voi-kumota? false
       :voi-poistaa? (constantly false)
@@ -940,19 +928,6 @@
                  :kohdenumero "Kohdenumeron mukaan"
                  :muokkausaika "Muokkausajan mukaan"}}
     [:tila :kohdenumero :muokkausaika]]])
-
-#_(defn paallystysilmoitukset [urakka]
-  (komp/luo
-    (komp/lippu paallystys/paallystysilmoitukset-tai-kohteet-nakymassa?)
-
-    (fn [urakka]
-      [:div.paallystysilmoitukset
-       [kartta/kartan-paikka]
-       (if @paallystys/paallystysilmoitus-lomakedata
-         [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
-         [:div
-          [valinnat urakka]
-          [ilmoitusluettelo]])])))
 
 (defn paallystysilmoitukset
   [e! app]

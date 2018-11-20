@@ -35,10 +35,6 @@
                                           :sopimus-id sopimus-id
                                           :vuosi vuosi}))
 
-(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id yllapitokohde-id]
-  (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
-                                                           :paallystyskohde-id yllapitokohde-id}))
-
 (defn tallenna-paallystysilmoitus! [{:keys [urakka-id sopimus-id vuosi lomakedata]}]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
@@ -53,13 +49,6 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
-
-(def paallystysilmoitukset-suodatettu
-  (reaction (let [tienumero @yllapito-tiedot/tienumero
-                  kohdenumero @yllapito-tiedot/kohdenumero]
-              (when @paallystysilmoitukset
-                (yllapitokohteet/suodata-yllapitokohteet @paallystysilmoitukset {:tienumero tienumero
-                                                                                 :kohdenumero kohdenumero})))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil))
 
@@ -145,13 +134,6 @@
                       (:nimi rivi)))
    :valinnat pot/+tyomenetelmat-ja-nil+})
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id paallystysilmoitukset]
-  (let [ilmoitukset-joilla-jo-pot (keep #(when (:harja.domain.paallystysilmoitus/id %) %)
-                                        paallystysilmoitukset)]
-    (k/post! :tallenna-paallystysilmoitusten-takuupvmt
-             {::urakka-domain/id urakka-id
-              ::pot/tallennettavat-paallystysilmoitusten-takuupvmt ilmoitukset-joilla-jo-pot})))
-
 (defn avaa-paallystysilmoituksen-lukitus!
   [{:keys [urakka-id kohde-id tila]}]
   (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
@@ -170,6 +152,9 @@
 (defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit])
+(defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus])
+(defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus])
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
 (defrecord YHAVientiEpaonnistui [paallystysilmoitukset])
 
@@ -234,6 +219,39 @@
                          parametrit
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  TallennaPaallystysilmoitustenTakuuPaivamaarat
+  (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit} {{urakka-id :id} :urakka :as app}]
+    (let [paallystysilmoitukset (mapv #(do
+                                         {::pot/id (:id %)
+                                          ::pot/paallystyskohde-id (:paallystyskohde-id %)
+                                          ::pot/takuupvm (:takuupvm %)})
+                                      paallystysilmoitus-rivit)
+          ilmoitukset-joilla-jo-pot (keep #(when (:harja.domain.paallystysilmoitus/id %) %)
+                                          paallystysilmoitukset)
+          parametrit {::urakka-domain/id urakka-id
+                      ::pot/tallennettavat-paallystysilmoitusten-takuupvmt ilmoitukset-joilla-jo-pot}]
+      (-> app
+          (tuck-apurit/post! :tallenna-paallystysilmoitusten-takuupvmt
+                             parametrit
+                             {:onnistui ->TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui
+                              :epaonnistui ->TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui})
+          (assoc :kiintioiden-haku-kaynnissa? true))))
+  TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Tämä rivi on vanhaa koodia ja voi ottaa pois, kun refaktorointi on tehty kokonaan
+    (harja.atom/paivita! paallystysilmoitukset)
+    ;; TODO katso, josko tämän koko prosessin saisi vähän järkevämmäksi. Nyt tehdään yhden kantakyselyn
+    ;; jälkeen heti toinen.
+    (tuck/action!
+      (fn [e!]
+        (e! (->HaePaallystysilmoitukset))))
+    app)
+  TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Päällystysilmoitusten takuupäivämäärän tallennus epäonnistui"
+                   :warning
+                   viesti/viestin-nayttoaika-keskipitka)
+    app)
   YHAVientiOnnistui
   (process-event [{paallystysilmoitukset :paallystysilmoitukset} app]
     (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
