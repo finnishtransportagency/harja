@@ -78,3 +78,18 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER, threshold INTEGER) RETURNS TABLE (
+       materiaalikoodi INTEGER,
+       maara NUMERIC) AS $$
+DECLARE
+  g geometry;
+BEGIN
+  SELECT tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_) INTO g;
+  
+  RETURN QUERY SELECT rp.materiaalikoodi, SUM(rp.maara)
+    FROM suolatoteuma_reittipiste AS rp
+    WHERE ST_DWithin(g, rp.sijainti::geometry, threshold)
+    GROUP BY rp.materiaalikoodi;
+END;
+$$ LANGUAGE plpgsql;
