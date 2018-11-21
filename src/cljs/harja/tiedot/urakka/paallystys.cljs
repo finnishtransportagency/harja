@@ -9,7 +9,7 @@
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
-    [cljs.core.async :refer [<!]]
+    [cljs.core.async :refer [<! put!]]
     [harja.atom :refer [paivita!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
@@ -20,6 +20,7 @@
     [harja.domain.paallystysilmoitus :as pot]
     [harja.domain.urakka :as urakka-domain]
     [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
+    [harja.domain.yllapitokohde :as yllapitokohde-domain]
     [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -29,6 +30,11 @@
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-tai-kohteet-nakymassa? (atom false))
 (def validointivirheet-modal (atom nil))
+;; Tämä tila on tuckia varten
+(defonce tila (atom nil))
+;; Tämän alla on joitain kursoreita tilaan, jotta vanhat jutut toimisi.
+;; Näitä ei pitäisi tarvita refaktoroinnin päätteeksi
+(defonce paallystysilmoitus-lomakedata (r/cursor tila [:paallystysilmoitus-lomakedata]))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
@@ -49,8 +55,6 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
-
-(defonce paallystysilmoitus-lomakedata (atom nil))
 
 (defonce karttataso-paallystyskohteet (atom false))
 
@@ -103,8 +107,6 @@
                   paallystyskohteet
                   lomakedata)))))
 
-(defonce kohteet-yha-lahetyksessa (atom nil))
-
 ;; Yhteiset UI-asiat
 
 (def paallyste-grid-skeema
@@ -140,11 +142,37 @@
                                               ::pot/paallystyskohde-id kohde-id
                                               ::pot/tila tila}))
 
+
+(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
+  (when paallystysilmoitukset
+    (case jarjestys
+      :kohdenumero
+      (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)) paallystysilmoitukset)
+
+      :muokkausaika
+      ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
+      (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
+              (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+                       (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+
+      :tila
+      (sort-by
+        (juxt (fn [toteuma] (case (:tila toteuma)
+                              :lukittu 0
+                              :valmis 1
+                              :aloitettu 3
+                              4))
+              (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                              :hyvaksytty 0
+                              :hylatty 1
+                              3)))
+        paallystysilmoitukset))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
-(def tila (atom nil))
 
 (defrecord MuutaTila [polku arvo])
+(defrecord PaivitaTila [polku f])
 (defrecord SuodataYllapitokohteet [])
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
@@ -152,9 +180,9 @@
 (defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
-(defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit])
-(defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus])
-(defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus])
+(defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
+(defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
+(defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
 (defrecord YHAVientiEpaonnistui [paallystysilmoitukset])
 
@@ -162,6 +190,9 @@
   MuutaTila
   (process-event [{:keys [polku arvo]} tila]
     (assoc-in tila polku arvo))
+  PaivitaTila
+  (process-event [{:keys [polku f]} tila]
+    (update-in tila polku f))
   SuodataYllapitokohteet
   (process-event [_ {paallystysilmoitukset :paallystysilmoitukset
                      {:keys [tienumero kohdenumero]} :yllapito-tila :as tila}]
@@ -186,7 +217,7 @@
   HaePaallystysilmoituksetOnnnistui
   (process-event [{vastaus :vastaus} app]
     (println "VASTAUS ONNISTUI: " vastaus)
-    (assoc app :paallystysilmoitukset vastaus))
+    (assoc app :paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus (get-in app [:yllapito-tila :kohdejarjestys]))))
   HaePaallystysilmoituksetEpaonnisuti
   (process-event [{vastaus :vastaus} app]
     (println "VASTAUS EPÄONNISTUI: " vastaus)
@@ -220,7 +251,9 @@
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
   TallennaPaallystysilmoitustenTakuuPaivamaarat
-  (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit} {{urakka-id :id} :urakka :as app}]
+  (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
+                   takuupvm-tallennus-kaynnissa-kanava :takuupvm-tallennus-kaynnissa-kanava}
+                  {{urakka-id :id} :urakka :as app}]
     (let [paallystysilmoitukset (mapv #(do
                                          {::pot/id (:id %)
                                           ::pot/paallystyskohde-id (:paallystyskohde-id %)
@@ -234,10 +267,12 @@
           (tuck-apurit/post! :tallenna-paallystysilmoitusten-takuupvmt
                              parametrit
                              {:onnistui ->TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui
-                              :epaonnistui ->TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui})
+                              :onnistui-parametrit [takuupvm-tallennus-kaynnissa-kanava]
+                              :epaonnistui ->TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui
+                              :epaonnistui-parametrit [takuupvm-tallennus-kaynnissa-kanava]})
           (assoc :kiintioiden-haku-kaynnissa? true))))
   TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [takuupvm-tallennus-kaynnissa-kanava vastaus]} app]
     ;; Tämä rivi on vanhaa koodia ja voi ottaa pois, kun refaktorointi on tehty kokonaan
     (harja.atom/paivita! paallystysilmoitukset)
     ;; TODO katso, josko tämän koko prosessin saisi vähän järkevämmäksi. Nyt tehdään yhden kantakyselyn
@@ -245,12 +280,14 @@
     (tuck/action!
       (fn [e!]
         (e! (->HaePaallystysilmoitukset))))
+    (put! takuupvm-tallennus-kaynnissa-kanava 0)
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [takuupvm-tallennus-kaynnissa-kanava vastaus]} app]
     (viesti/nayta! "Päällystysilmoitusten takuupäivämäärän tallennus epäonnistui"
                    :warning
                    viesti/viestin-nayttoaika-keskipitka)
+    (put! takuupvm-tallennus-kaynnissa-kanava 1)
     app)
   YHAVientiOnnistui
   (process-event [{paallystysilmoitukset :paallystysilmoitukset} app]

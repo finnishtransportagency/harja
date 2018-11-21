@@ -20,6 +20,7 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.muokkauslukko :as lukko]
 
             [harja.loki :refer [log logt]]
             [cljs.core.async :refer [<! >! chan]])
@@ -62,7 +63,8 @@
          (tarkkaile-toisen-tilaa e! yllapito-tiedot/tienumero :pot-kohdeluettelo-yllapito-tienumero [:yllapito-tila :tienumero])
          (tarkkaile-toisen-tilaa e! yllapito-tiedot/kohdejarjestys :pot-kohdeluettelo-yllapito-kohdejarjestys [:yllapito-tila :kohdejarjestys])
          (tarkkaile-toisen-tilaa e! u/valittu-sopimusnumero :pot-kohdeluettelo-urakka-valittu-sopimusnumero [:urakka-tila :valittu-sopimusnumero])
-         (tarkkaile-toisen-tilaa e! u/valittu-urakan-vuosi :pot-kohdeluettelo-valittu-urakan-vuosi [:urakka-tila :valittu-urakan-vuosi]))
+         (tarkkaile-toisen-tilaa e! u/valittu-urakan-vuosi :pot-kohdeluettelo-valittu-urakan-vuosi [:urakka-tila :valittu-urakan-vuosi])
+         (tarkkaile-toisen-tilaa e! lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko [:lukko]))
       #(do
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (tiedot-kartta/kasittele-infopaneelin-linkit! nil)
@@ -70,7 +72,8 @@
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-kohdenumero)
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-tienumero)
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-kohdejarjestys)
-         (remove-watch u/valittu-sopimusnumero :pot-kohdeluettelo-valittu-urakan-vuosi)))
+         (remove-watch u/valittu-sopimusnumero :pot-kohdeluettelo-valittu-urakan-vuosi)
+         (remove-watch lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko)))
     (fn [e! {ur :urakka :as app}]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo

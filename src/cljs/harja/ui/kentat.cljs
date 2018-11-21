@@ -188,7 +188,7 @@
                          (when (or (not regex) (re-matches regex v))
                            (reset! data v)
                            (when toiminta-f
-                             (toiminta-f))))
+                             (toiminta-f v))))
            :on-focus on-focus
            :value @data
            :max-length pituus-max}])
@@ -202,7 +202,7 @@
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
-(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake? pituus-max]} data]
+(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake? pituus-max toiminta-f]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -218,9 +218,12 @@
                      (and (empty? teksti)
                           (nil? @data))
                      ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
-                     (if (< (count teksti) pituus-max)
+                     (let [teksti (if (< (count teksti) pituus-max)
+                                    teksti
+                                    (subs teksti 0 pituus-max))]
                        (reset! data teksti)
-                       (reset! data (subs teksti 0 pituus-max))))))]
+                       (when toiminta-f
+                         (toiminta-f teksti))))))]
     (komp/luo
       (when (= koko-rivit :auto)
         {:component-did-update
@@ -297,7 +300,7 @@
                                        (reset! data numero)
                                        (reset! data nil))
                                      (when toiminta-f
-                                       (toiminta-f)))))}])))))
+                                       (toiminta-f numero)))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)

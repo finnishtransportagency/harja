@@ -2,7 +2,7 @@
   "Urakan päällystysilmoitukset"
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! chan]]
 
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -120,49 +120,11 @@
         :palstoja 2}]
       asiatarkastus]]))
 
-(defn kasittelytiedot [otsikko muokattava? valmistumispvm osa muokkaa!]
-  (let [pvm-validoinnit (if (:paatos osa)
-                          [[:ei-tyhja "Anna käsittelypvm"]
-                           [:pvm-toisen-pvmn-jalkeen valmistumispvm
-                            "Käsittely ei voi olla ennen valmistumista"]]
-                          [[:pvm-toisen-pvmn-jalkeen valmistumispvm
-                            "Käsittely ei voi olla ennen valmistumista"]])]
-    [lomake/lomake
-     {:otsikko otsikko
-      :muokkaa! muokkaa!
-      :voi-muokata? muokattava?}
-     [{:otsikko "Käsitelty"
-       :nimi :kasittelyaika
-       :pakollinen? (when (:paatos osa) true)
-       :tyyppi :pvm
-       :validoi pvm-validoinnit}
-
-      {:otsikko "Päätös"
-       :nimi :paatos
-       :tyyppi :valinta
-       :valinnat [:hyvaksytty :hylatty]
-       :validoi [[:ei-tyhja "Anna päätös"]]
-       :valinta-nayta #(cond
-                         % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                         muokattava? "- Valitse päätös -"
-                         :default "-")
-       :palstoja 1}
-
-      (when (:paatos osa)
-        {:otsikko "Selitys"
-         :nimi :perustelu
-         :tyyppi :text
-         :koko [60 3]
-         :pituus-max 2048
-         :palstoja 2
-         :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})]
-     osa]))
-
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
   Tilaaja voi muokata, urakoitsija voi tarkastella."
   [urakka {:keys [tila tekninen-osa] :as lomakedata-nyt}
-   lukittu? muokkaa!]
+   lukittu? muokkaa! {{:keys [kasittelyaika paatos perustelu]} :tekninen-osa}]
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
@@ -173,8 +135,39 @@
     [:div.pot-kasittely
 
      [:h3 "Käsittely"]
-     [kasittelytiedot "Tekninen osa" muokattava? valmistumispvm tekninen-osa
-      #(muokkaa! assoc :tekninen-osa %)]]))
+     [lomake/lomake
+      {:otsikko "Tekninen osa"
+       :muokkaa! #(muokkaa! assoc :tekninen-osa %)
+       :footer-fn (fn [tiedot]
+                    (muokkaa! assoc-in [:tekninen-osa :voi-tallentaa?] (lomake/voi-tallentaa? tiedot))
+                    nil)
+       :voi-muokata? muokattava?}
+      [{:otsikko "Käsitelty"
+        :nimi :kasittelyaika
+        :pakollinen? (when paatos true)
+        :tyyppi :pvm
+        :validoi kasittelyaika}
+
+       {:otsikko "Päätös"
+        :nimi :paatos
+        :tyyppi :valinta
+        :valinnat [:hyvaksytty :hylatty]
+        :validoi paatos
+        :valinta-nayta #(cond
+                          % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                          muokattava? "- Valitse päätös -"
+                          :default "-")
+        :palstoja 1}
+
+       (when (:paatos tekninen-osa)
+         {:otsikko "Selitys"
+          :nimi :perustelu
+          :tyyppi :text
+          :koko [60 3]
+          :pituus-max 2048
+          :palstoja 2
+          :validoi perustelu})]
+      tekninen-osa]]))
 
 (defn tallennus
   [urakka {:keys [tekninen-osa tila] :as lomake} valmis-tallennettavaksi? tallennus-onnistui]
@@ -250,12 +243,17 @@
              (> valmispvm-paallystys takuupvm))
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
 
-(defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
+(defn paallystysilmoitus-perustiedot [e! {urakka :urakka
+                                          {:keys [tila kirjoitusoikeus? kohdenumero tunnus kohdenimi
+                                                  tr-ajorata tr-kaista] :as lomakedata-nyt} :paallystysilmoitus-lomakedata}
+                                      lukittu?
+                                      muokkaa!
+                                      validoinnit]
   (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
-      [lomake/lomake {:voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+      [lomake/lomake {:voi-muokata? (and (not= :lukittu tila)
                                          (false? lukittu?)
                                          kirjoitusoikeus?)
                       :muokkaa! (fn [uusi]
@@ -263,7 +261,7 @@
                                   (muokkaa! merge uusi))}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
-                (str "#" (:kohdenumero lomakedata-nyt) " " (:tunnus lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))
+                (str "#" kohdenumero " " tunnus " " kohdenimi))
          :muokattava? (constantly false)
          :palstoja 1}
         {:otsikko "Tierekisteriosoite"
@@ -272,10 +270,10 @@
          :fmt tierekisteri-domain/tierekisteriosoite-tekstina
          :muokattava? (constantly false)
          :palstoja 1}
-        (when (or (:tr-ajorata lomakedata-nyt) (:tr-kaista lomakedata-nyt))
+        (when (or tr-ajorata tr-kaista)
           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
 
-        (when (or (:tr-ajorata lomakedata-nyt) (:tr-kaista lomakedata-nyt))
+        (when (or tr-ajorata tr-kaista)
           {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
         {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
@@ -287,21 +285,21 @@
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
          :fmt fmt/euro-opt :tyyppi :numero
          :muokattava? (constantly false) :palstoja 1}
-        (when (and (not= :valmis (:tila lomakedata-nyt))
-                   (not= :lukittu (:tila lomakedata-nyt)))
+        (when (and (not= :valmis tila)
+                   (not= :lukittu tila))
           {:otsikko "Käsittely"
            :teksti "Valmis tilaajan käsiteltäväksi"
            :nimi :valmis-kasiteltavaksi :palstoja 1
            :tyyppi :checkbox})
-        (when (or (= :valmis (:tila lomakedata-nyt))
-                  (= :lukittu (:tila lomakedata-nyt)))
+        (when (or (= :valmis tila)
+                  (= :lukittu tila))
           {:otsikko "Kommentit" :nimi :kommentit
            :palstoja 2
            :tyyppi :komponentti
            :komponentti (fn [_]
                           [kommentit/kommentit
                            {:voi-kommentoida?
-                            (not= :lukittu (:tila lomakedata-nyt))
+                            (not= :lukittu tila)
                             :voi-liittaa? false
                             :palstoja 40
                             :placeholder "Kirjoita kommentti..."
@@ -313,10 +311,10 @@
      [:div.col-md-6
       (when nayta-kasittelyosiot?
         [:div
-         [kasittely urakka lomakedata-nyt lukittu? muokkaa!]
+         [kasittely urakka lomakedata-nyt lukittu? muokkaa! validoinnit]
          [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
-(defn poista-lukitus [urakka lomakedata-nyt]
+(defn poista-lukitus [e! {urakka :urakka lomakedata-nyt :paallystysilmoitus-lomakedata :as app}]
   (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id urakka))
@@ -335,7 +333,8 @@
        :ikoni (ikonit/livicon-wrench)
        :virheviesti "Lukituksen avaaminen epäonnistui"
        :kun-onnistuu (fn [vastaus]
-                       (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
+                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :tila] (:tila vastaus)))
+                       ;; Tämä on tässä vielä tukemassa vanhaa koodia
                        (harja.atom/paivita! paallystys/paallystysilmoitukset))}]]))
 
 
@@ -709,7 +708,7 @@
                      :leveys 30}]
                    alustalle-tehdyt-toimet]]])]))))
 
-(defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
+#_(defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                 _ muokkaa! historia tallennus-onnistui]
   (komp/luo
     (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
@@ -761,30 +760,115 @@
 
          [tallennus urakka lomakedata-nyt valmis-tallennettavaksi? tallennus-onnistui]]))))
 
-(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
-  (when paallystysilmoitukset
-    (case jarjestys
-      :kohdenumero
-      (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)) paallystysilmoitukset)
+#_(defn paallystysilmoituslomake-historia [ilmoituslomake]
+  (let [historia (historia/historia ilmoituslomake)]
+    (komp/luo
+      (komp/ulos (historia/kuuntele! historia))
+      (fn [ilmoituslomake]
+        [paallystysilmoituslomake
+         @nav/valittu-urakka
+         @ilmoituslomake
+         @lukko/nykyinen-lukko
+         (partial swap! ilmoituslomake)
+         historia
+         (fn [vastaus]
+           (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
+           (if (:validointivirheet vastaus)
+             (modal/nayta!
+               {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
+                :otsikko-tyyli :virhe}
+               [:div
+                [:p "Virheet:"]
+                (into [:ul] (mapv (fn [virhe]
+                                    [:li virhe])
+                                  (:validointivirheet vastaus)))])
+             (do (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+                 (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus))
+                 (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
+                 (reset! ilmoituslomake nil))))]))))
 
-      :muokkausaika
-      ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
-      (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
-              (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
-                       (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+(defn paallystysilmoitus [e! {{yllapitokohde-id :yllapitokohde-id} :paallystysilmoitus-lomakedata :as app}]
+  (komp/luo
+    ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
+    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
+    (komp/sisaan-ulos #(e! (paallystys/->MuutaTila [:paallystysilmoitus-historia] []))
+                      #(e! (paallystys/->MuutaTila [:paallystysilmoitus-historia] nil)))
+    (fn [e! {lukko :lukko urakka :urakka paallystysilmoitus-historia :paallystysilmoitus-historia
+             {:keys [virheet tila kirjoitusoikeus? yllapitokohdetyyppi tekninen-osa
+                     valmistumispvm] :as lomakedata-nyt} :paallystysilmoitus-lomakedata :as app}]
+      (let [lukittu? (lukko/nakyma-lukittu? lukko)
+            tekninen-osa-voi-muokata? (and (not= :lukittu tila)
+                                           (not= :hyvaksytty
+                                                 (:paatos tekninen-osa))
+                                           (false? lukittu?)
+                                           kirjoitusoikeus?)
+            alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
+                                           (not (= "sora" yllapitokohdetyyppi)))
+            muokkaa! (fn [f & args]
+                       (e! (paallystys/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
+                                                                                        (apply f vanha-arvo args)))))
+            validoinnit {:asiatarkastus {}
+                         :tekninen-osa {:kasittelyaika (if (:paatos tekninen-osa)
+                                                         [[:ei-tyhja "Anna käsittelypvm"]
+                                                          [:pvm-toisen-pvmn-jalkeen valmistumispvm
+                                                           "Käsittely ei voi olla ennen valmistumista"]]
+                                                         [[:pvm-toisen-pvmn-jalkeen valmistumispvm
+                                                           "Käsittely ei voi olla ennen valmistumista"]])
+                                        :paatos [[:ei-tyhja "Anna päätös"]]}}
+            valmis-tallennettavaksi? (and
+                                       (not (= tila :lukittu))
+                                       ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
+                                       ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
+                                       ;; kenttien virheet tyhjät.
+                                       (or (every? empty? (vals virheet))
+                                           (empty? (reduce (fn [tehty [_ virhe-map]]
+                                                             (concat tehty (flatten (map vals (vals virhe-map)))))
+                                                           [] virheet)))
+                                       (false? lukittu?)
+                                       ;; Tarkistetaan lomakkeet
+                                       (not (false? (:voi-tallentaa? tekninen-osa))))
+            ;; TODO: NÄMÄ POIS
+            wrap-virheet (fn [virheet-key]
+                           (atom/wrap-arvo paallystys/tila [:paallystysilmoitus-lomakedata :virheet virheet-key] muokkaa!))
+            grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
+            tallennus-onnistui (fn [vastaus]
+                                 (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
+                                 (if (:validointivirheet vastaus)
+                                   (modal/nayta!
+                                     {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
+                                      :otsikko-tyyli :virhe}
+                                     [:div
+                                      [:p "Virheet:"]
+                                      (into [:ul] (mapv (fn [virhe]
+                                                          [:li virhe])
+                                                        (:validointivirheet vastaus)))])
+                                   (do (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+                                       (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus))
+                                       (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
+                                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))))]
+        [:div.paallystysilmoituslomake
 
-      :tila
-      (sort-by
-        (juxt (fn [toteuma] (case (:tila toteuma)
-                              :lukittu 0
-                              :valmis 1
-                              :aloitettu 3
-                              4))
-              (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                              :hyvaksytty 0
-                              :hylatty 1
-                              3)))
-        paallystysilmoitukset))))
+         [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+
+         (when lukittu?
+           [lomake/lomake-lukittu-huomautus lukko])
+
+         [:h2 "Päällystysilmoitus"]
+         (when (= :lukittu (:tila lomakedata-nyt))
+           [poista-lukitus e! app])
+
+         [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit]
+
+         ;[:div {:style {:float "right"}} [historia/kumoa historia]]
+         [paallystysilmoitus-tekninen-osa {:urakka urakka :lomakedata-nyt lomakedata-nyt :tekninen-osa-voi-muokata? tekninen-osa-voi-muokata?
+                                           :alustatoimet-voi-muokata? alustatoimet-voi-muokata? :grid-wrap grid-wrap :wrap-virheet wrap-virheet
+                                           :muokkaa! muokkaa!}]
+
+         [yhteenveto lomakedata-nyt]
+
+         [tallennus urakka lomakedata-nyt valmis-tallennettavaksi? tallennus-onnistui validoinnit]]))))
+
+;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;
 
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
@@ -799,7 +883,13 @@
       :tunniste :paallystyskohde-id
       :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
       :tallenna (fn [rivit]
-                  (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit)))
+                  ;; Tässä käytetään go-blockia koska gridi olettaa saavansa kanavan. Paluu arvolla ei tehdä mitään.
+                  ;; 'takuupvm-tallennus-kaynnissa-kanava' käytetään sen takia, että gridi pitää 'tallenna' nappia
+                  ;; disaploituna niin kauan kuin go-block ei palauta arvoa.
+                  (go
+                    (let [takuupvm-tallennus-kaynnissa-kanava (chan)]
+                      (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit takuupvm-tallennus-kaynnissa-kanava))
+                      (<! takuupvm-tallennus-kaynnissa-kanava))))
       :voi-lisata? false
       :voi-kumota? false
       :voi-poistaa? (constantly false)
@@ -831,8 +921,8 @@
                          [:span "Aloita päällystysilmoitus"]]))}]
      paallystysilmoitukset]))
 
-(defn- nayta-lahetystiedot [rivi]
-  (if (some #(= % (:paallystyskohde-id rivi)) @paallystys/kohteet-yha-lahetyksessa)
+(defn- nayta-lahetystiedot [rivi {kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa}]
+  (if (some #(= % (:paallystyskohde-id rivi)) kohteet-yha-lahetyksessa)
     [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
     (if (:lahetetty rivi)
       (if (:lahetys-onnistunut rivi)
@@ -854,7 +944,7 @@
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 45}
     {:otsikko "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 45
-     :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
+     :komponentti (fn [rivi] [nayta-lahetystiedot rivi app])}
     {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
@@ -882,33 +972,6 @@
                                 :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}]
          [yha-lahetykset-taulukko e! app]]))))
 
-(defn paallystysilmoituslomake-historia [ilmoituslomake]
-  (let [historia (historia/historia ilmoituslomake)]
-    (komp/luo
-      (komp/ulos (historia/kuuntele! historia))
-      (fn [ilmoituslomake]
-        [paallystysilmoituslomake
-         @nav/valittu-urakka
-         @ilmoituslomake
-         @lukko/nykyinen-lukko
-         (partial swap! ilmoituslomake)
-         historia
-         (fn [vastaus]
-           (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
-           (if (:validointivirheet vastaus)
-             (modal/nayta!
-               {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
-                :otsikko-tyyli :virhe}
-               [:div
-                [:p "Virheet:"]
-                (into [:ul] (mapv (fn [virhe]
-                                    [:li virhe])
-                                  (:validointivirheet vastaus)))])
-             (do (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
-                 (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus))
-                 (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
-                 (reset! ilmoituslomake nil))))]))))
-
 (defn valinnat [e! {:keys [urakka] :as app}]
   [:div
    [valinnat/vuosi {}
@@ -918,8 +981,10 @@
     #(do
        (urakka/valitse-urakan-vuosi! %)
        (e! (paallystys/->HaePaallystysilmoitukset)))]
-   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero #(e! (paallystys/->SuodataYllapitokohteet))]
-   [u-valinnat/tienumero yllapito-tiedot/tienumero #(e! (paallystys/->SuodataYllapitokohteet))]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [_]
+                                                                         (e! (paallystys/->SuodataYllapitokohteet)))]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero (fn [_]
+                                                     (e! (paallystys/->SuodataYllapitokohteet)))]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"
     {:valinta @yllapito-tiedot/kohdejarjestys
@@ -942,9 +1007,10 @@
     (fn [e! {:keys [paallystysilmoitus-lomakedata] :as app}]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
-       [debug app "TUCK STATE"]
+       [debug app {:otsikko "TUCK STATE"}]
        (if paallystysilmoitus-lomakedata
-         [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
+         ;[paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
+         [paallystysilmoitus e! app]
          [:div
           [valinnat e! app]
           [ilmoitusluettelo e! app]])])))
