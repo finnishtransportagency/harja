@@ -844,32 +844,36 @@ FROM sahkelahetys
 WHERE onnistunut IS FALSE;
 
 -- name: hae-jarjestelmakayttajan-urakat
-SELECT
-  u.id,
-  u.nimi,
-  u.tyyppi,
-  u.alkupvm,
-  u.loppupvm,
-  u.takuu_loppupvm,
-  u.urakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+SELECT u.id,
+       u.nimi,
+       u.tyyppi,
+       u.alkupvm,
+       u.loppupvm,
+       u.takuu_loppupvm,
+       u.urakkanro AS alueurakkanumero,
+       urk.nimi    AS urakoitsija_nimi,
+       urk.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
-WHERE
-  exists(SELECT klu.id
-         FROM kayttajan_lisaoikeudet_urakkaan klu
-           JOIN kayttaja k ON klu.kayttaja = k.id
-         WHERE klu.urakka = u.id AND
-               k.kayttajanimi = :kayttajanimi AND
-               k.jarjestelma)
-  OR
-  exists(SELECT o.id
-         FROM organisaatio o
-           JOIN kayttaja k ON o.id = k.organisaatio
-         WHERE o.id = urk.id AND
-               k.kayttajanimi = :kayttajanimi AND
-               k.jarjestelma);
+       JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE exists(SELECT klu.id
+             FROM kayttajan_lisaoikeudet_urakkaan klu
+                    JOIN kayttaja k ON klu.kayttaja = k.id
+             WHERE klu.urakka = u.id
+               AND k.kayttajanimi = :kayttajanimi
+               AND k.jarjestelma)
+   OR exists(SELECT o.id
+             FROM organisaatio o
+                    JOIN kayttaja k ON o.id = k.organisaatio
+             WHERE o.id = urk.id
+               AND k.kayttajanimi = :kayttajanimi
+               AND k.jarjestelma)
+   OR exists(SELECT k.id
+             FROM kayttaja k
+                    JOIN organisaatio o ON k.organisaatio = o.id
+             WHERE k.kayttajanimi = :kayttajanimi
+               AND k.jarjestelma IS TRUE
+               AND o.tyyppi = 'liikennevirasto')
+   AND (:urakkatyyppi :: VARCHAR IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
 
 -- name: urakan-paasopimus-id
