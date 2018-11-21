@@ -258,22 +258,3 @@
           virheet/+viallinen-kutsu+
           {:koodi virheet/+viallinen-kutsu+
            :viesti (str/join ", " paallekkaiset-osat)})))))
-
-(defn tarkista-urakkatyyppi [urakkatyyppi]
-  (when urakkatyyppi
-    (let [urakkatyypit #{"hoito"
-                         "paallystys"
-                         "paikkaus"
-                         "tiemerkinta"
-                         "valaistus"
-                         "siltakorjaus"
-                         "tekniset-laitteet"
-                         "vesivayla-hoito"
-                         "vesivayla-ruoppaus"
-                         "vesivayla-turvalaitteiden-korjaus"
-                         "vesivayla-kanavien-hoito"
-                         "vesivayla-kanavien-korjaus"}]
-      (when (not (contains? urakkatyypit urakkatyyppi))
-        (virheet/heita-viallinen-apikutsu-poikkeus
-          {:koodi virheet/+puutteelliset-parametrit+
-           :viesti (format "Tuntematon urakkatyyppi: %s" urakkatyyppi)})))))
