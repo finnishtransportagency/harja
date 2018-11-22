@@ -688,6 +688,11 @@ documentation:
         get:
           is: [secured]
           description: Palauttaa listan urakan ylläpitokohteista. Tiedot tarvitaan, jotta voidana kirjata esim. päällystysilmoitus päällystyskohteelle
+          queryParameters:
+            geometriat:
+              description: Mikäli asetettu "true", palauttaa alikohteiden geometriat GeoJSON muodossa
+              type: boolean
+              example: true
           responses:
             200:
               body:
