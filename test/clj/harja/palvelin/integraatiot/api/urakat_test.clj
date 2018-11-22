@@ -5,9 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.tyokalut.json-validointi :as json]
             [harja.kyselyt.konversio :as konversio]))
 
 (def kayttaja "yit-rakennus")
