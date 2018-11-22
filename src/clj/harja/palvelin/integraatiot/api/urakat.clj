@@ -60,7 +60,6 @@
   (log/debug (format "Haetaan käyttäjän: %s urakat" kayttaja))
   (let [urakkatyyppi (get parametrit "urakkatyyppi")]
     (validointi/tarkista-urakkatyyppi urakkatyyppi)
-    (println "--->>> urakkatyyppi" urakkatyyppi)
     (muodosta-vastaus-urakoiden-haulle
       (konv/vector-mappien-alaviiva->rakenne
         (q-urakat/hae-jarjestelmakayttajan-urakat db kayttajanimi urakkatyyppi)))))
