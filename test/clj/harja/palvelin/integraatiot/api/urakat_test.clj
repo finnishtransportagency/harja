@@ -35,9 +35,10 @@
     (is (= "Oulun alueurakka 2014-2019" (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :nimi]))))
 
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "livi" portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        urakoita-kannassa (ffirst (q "select count(id) from urakka where urakoitsija is not null and hallintayksikko is not null;"))]
     (is (= 200 (:status vastaus)))
-    (is (= 35 (count (:urakat encoodattu-body))))))
+    (is (= urakoita-kannassa (count (:urakat encoodattu-body))))))
 
 (deftest hae-jarjestelmakayttajan-urakat-tyypeittain
   (let [urakkatyyppi "paallystys"
