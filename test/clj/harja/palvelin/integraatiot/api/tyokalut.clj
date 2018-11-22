@@ -14,10 +14,13 @@
 
 (defn get-kutsu
   "Tekee GET-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen."
-  [api-polku-vec kayttaja portti]
-  @(http/get (reduce str (concat ["http://localhost:" portti] api-polku-vec))
-             {:headers {"OAM_REMOTE_USER" kayttaja
-                        "Content-Type"    "application/json"}}))
+  ([api-polku-vec kayttaja portti]
+   (get-kutsu api-polku-vec kayttaja nil portti))
+  ([api-polku-vec kayttaja parametrit portti]
+   @(http/get (reduce str (concat ["http://localhost:" portti] api-polku-vec))
+              (cond-> {:headers {"OAM_REMOTE_USER" kayttaja
+                                 "Content-Type" "application/json"}}
+                      parametrit (assoc :query-params parametrit)))))
 
 (defn put-kutsu
   "Tekee PUT-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
