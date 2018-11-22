@@ -60,21 +60,33 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(urakkaid INTEGER, tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER, threshold INTEGER, alkuaika TIMESTAMP, loppuaika TIMESTAMP) RETURNS TABLE (
-       materiaalikoodi INTEGER,
+       rivinumero BIGINT,
+       materiaali_id INTEGER,
+       materiaali_nimi VARCHAR,
+       pvm TIMESTAMP,
        maara NUMERIC,
-       toteumia INTEGER) AS $$
+       lukumaara INTEGER,
+       toteumaidt INTEGER[]) AS $$
 DECLARE
   g geometry;
 BEGIN
   SELECT tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_) INTO g;
   
-  RETURN QUERY SELECT rp.materiaalikoodi AS materiaalikoodi, SUM(rp.maara)as maara, count(rp.maara)::integer as toteumia
+  RETURN QUERY SELECT row_number() OVER ()            AS rivinumero,
+  	       	      mk.id                           AS materiaali_id,
+  	       	      mk.nimi                         AS materiaali_nimi,
+		      date_trunc('day', tot.alkanut)  AS pvm,
+  	       	      SUM(rp.maara)                   AS maara,
+		      count(rp.maara)::integer        AS lukumaara,
+		      array_agg(tot.id)               AS toteumaidt
     FROM suolatoteuma_reittipiste AS rp
-    LEFT JOIN toteuma tot ON tot.id = rp.toteuma
+      JOIN toteuma tot ON (tot.id = rp.toteuma AND tot.poistettu IS NOT TRUE)
+      JOIN materiaalikoodi mk ON rp.materiaalikoodi = mk.id
+      LEFT JOIN kayttaja k ON tot.luoja = k.id
     WHERE tot.urakka = urakkaid
       AND ST_DWithin(g, rp.sijainti::geometry, threshold)
       AND aika BETWEEN alkuaika AND loppuaika
-    GROUP BY rp.materiaalikoodi;
+    GROUP BY mk.id, tot.alkanut;
 END;
 $$ LANGUAGE plpgsql;
 
