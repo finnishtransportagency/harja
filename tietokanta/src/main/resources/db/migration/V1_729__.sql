@@ -59,7 +59,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER, threshold INTEGER, alkuaika TIMESTAMP, loppuaika TIMESTAMP) RETURNS TABLE (
+CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(urakkaid INTEGER, tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER, threshold INTEGER, alkuaika TIMESTAMP, loppuaika TIMESTAMP) RETURNS TABLE (
        materiaalikoodi INTEGER,
        maara NUMERIC,
        toteumia INTEGER) AS $$
@@ -68,9 +68,11 @@ DECLARE
 BEGIN
   SELECT tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_) INTO g;
   
-  RETURN QUERY SELECT rp.materiaalikoodi as materiaalikoodi, SUM(rp.maara)as maara, count(rp.maara)::integer as toteumia
+  RETURN QUERY SELECT rp.materiaalikoodi AS materiaalikoodi, SUM(rp.maara)as maara, count(rp.maara)::integer as toteumia
     FROM suolatoteuma_reittipiste AS rp
-    WHERE ST_DWithin(g, rp.sijainti::geometry, threshold)
+    LEFT JOIN toteuma tot ON tot.id = rp.toteuma
+    WHERE tot.urakka = urakkaid
+      AND ST_DWithin(g, rp.sijainti::geometry, threshold)
       AND aika BETWEEN alkuaika AND loppuaika
     GROUP BY rp.materiaalikoodi;
 END;
