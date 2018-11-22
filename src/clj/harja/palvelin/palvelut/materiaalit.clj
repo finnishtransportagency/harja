@@ -228,6 +228,9 @@
 (defn hae-suolatoteumat-tr-valille [db user {:keys [urakka-id tie alkuosa alkuet loppuosa loppuet alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
+        (comp
+         (map konv/alaviiva->rakenne)
+         (map #(konv/array->vec % :toteumaidt)))
         (q/hae-suolatoteumat-tr-valille db {:urakka urakka-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm
