@@ -88,12 +88,7 @@
    [lomake/lomake
     {:otsikko "Hae suolatoteumia tieosoiteväliltä"
      :muokkaa! #(reset! tiedot/lomakkeen-tila %)
-     :footer-fn (fn [rivi]
-                  [:div
-                   [napit/yleinen-toissijainen "Hae"
-                    (fn [data]
-                      (js/console.log "Lomakkeen lähetys " (str (:tierekisteriosoite rivi))))
-                    {:ikoni (ikonit/livicon-search)}]])
+     :footer-fn (fn [rivi])
      :ei-borderia? true}
     [{:nimi :tierekisteriosoite
       :otsikko "Tierekisteriosoite"

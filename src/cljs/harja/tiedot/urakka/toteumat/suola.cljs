@@ -12,7 +12,7 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(declare hae-toteumat hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
+(declare hae-toteumat hae-toteumat-tr-valille hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
 
 (defonce suolatoteumissa? (atom false))
 
@@ -27,34 +27,26 @@
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
 
+(defonce lomakkeen-tila (atom nil))
+
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
                urakka @nav/valittu-urakka
-               aikavali @valittu-aikavali]
+               aikavali @valittu-aikavali
+               tr-vali @lomakkeen-tila]
               {:nil-kun-haku-kaynnissa? true}
               (when (and hae? urakka aikavali)
                 (go
-                  (<! (hae-toteumat (:id urakka) aikavali))))))
-
-(defonce lomakkeen-tila (atom nil))
-
-(comment
-  (defonce tr-vali-haulle (atom nil))
-
-  (defonce toteumat-tr-valilla
-    (reaction<! [hae? @suolatoteumissa?
-                 urakka @nav/valittu-urakka
-                 aikavali @valittu-aikavali
-                 tr-vali @tr-vali-haulle]
-                {:nil-kun-haku-kaynnissa? true}
-                (when (and hae? urakka aikavali tr-vali)
-                  (go
-                    (<! (hae-toteumat-tr-valille (:id urakka) aikavali
-                                                 (:tie tr-vali)
-                                                 (:alkuosa tr-vali)
-                                                 (:alkuet tr-vali)
-                                                 (:loppuosa tr-vali)
-                                                 (:loppuet tr-vali))))))))
+                  (let [tr-vali (:tierekisteriosoite tr-vali)]
+                    (if (and (:numero tr-vali)
+                             (:loppuosa tr-vali))
+                      (<! (hae-toteumat-tr-valille (:id urakka) aikavali
+                                                   (:numero tr-vali)
+                                                   (:alkuosa tr-vali)
+                                                   (:alkuetaisyys tr-vali)
+                                                   (:loppuosa tr-vali)
+                                                   (:loppuetaisyys tr-vali)))
+                      (<! (hae-toteumat (:id urakka) aikavali))))))))
 
 (def valitut-toteumat (atom #{}))
 
