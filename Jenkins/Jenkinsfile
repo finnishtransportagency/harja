@@ -66,7 +66,7 @@ node {
         //vähään aikaan.
         if (jenkinsinBuildNumber) {
             // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-            if (!buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+            if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
                 /*
                  * TESTISERVERIKANNAN LUOMINEN
                  */
