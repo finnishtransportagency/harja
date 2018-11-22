@@ -78,9 +78,6 @@
 (defn hae-yllapitokohteet [db parametrit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametrit))
         geometriat? (= "true" (get parametrit "geometriat"))]
-    (println "--->>> parametrit" parametrit)
-    (println "--->>> parametrit" (get parametrit "geometriat"))
-    (println "--->>> parametrit" (type (get parametrit "geometriat")))
     (log/debug (format "Haetaan urakan (id: %s) ylläpitokohteet käyttäjälle: %s (id: %s)."
                        urakka-id
                        (:kayttajanimi kayttaja)
