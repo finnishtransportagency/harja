@@ -231,6 +231,7 @@
         (q/hae-suolatoteumat-tr-valille db {:urakka urakka-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm
+                                            :threshold 50
                                             :tie tie
                                             :alkuosa alkuosa
                                             :alkuet alkuet

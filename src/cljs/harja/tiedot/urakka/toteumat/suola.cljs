@@ -36,6 +36,26 @@
                 (go
                   (<! (hae-toteumat (:id urakka) aikavali))))))
 
+(defonce lomakkeen-tila (atom nil))
+
+(comment
+  (defonce tr-vali-haulle (atom nil))
+
+  (defonce toteumat-tr-valilla
+    (reaction<! [hae? @suolatoteumissa?
+                 urakka @nav/valittu-urakka
+                 aikavali @valittu-aikavali
+                 tr-vali @tr-vali-haulle]
+                {:nil-kun-haku-kaynnissa? true}
+                (when (and hae? urakka aikavali tr-vali)
+                  (go
+                    (<! (hae-toteumat-tr-valille (:id urakka) aikavali
+                                                 (:tie tr-vali)
+                                                 (:alkuosa tr-vali)
+                                                 (:alkuet tr-vali)
+                                                 (:loppuosa tr-vali)
+                                                 (:loppuet tr-vali))))))))
+
 (def valitut-toteumat (atom #{}))
 
 (defonce valitut-toteumat-kartalla
@@ -86,6 +106,17 @@
                 (remove (into #{}
                               (eriteltavat-toteumat toteumat))
                         @valitut-toteumat))))
+
+(defn hae-toteumat-tr-valille [urakka-id [alkupvm loppupvm] tie alkuosa alkuet loppuosa loppuet]
+  {:pre [(int? urakka-id)]}
+  (k/post! :hae-suolatoteumat-tr-valille {:urakka-id urakka-id
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm
+                                          :tie tie
+                                          :alkuosa alkuosa
+                                          :alkuet alkuet
+                                          :loppuosa loppuosa
+                                          :loppuet loppuet}))
 
 (defn hae-toteumat [urakka-id [alkupvm loppupvm]]
   {:pre [(int? urakka-id)]}
