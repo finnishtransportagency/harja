@@ -12,11 +12,11 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [clojure.string :as str])
+            [harja.palvelin.integraatiot.yha.yllapitokohteet :as yllapitokohteet]
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -104,35 +104,6 @@
     (assoc parametrit avain arvo)
     parametrit))
 
-(defn hae-kohteen-paallystysilmoitus [db kohde-id]
-  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
-    (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
-
-(defn hae-alikohteet [db kohde-id paallystysilmoitus]
-  (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
-    (mapv (fn [alikohde]
-            (let [id (:id alikohde)
-                  ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
-              (apply merge ilmoitustiedot alikohde)))
-          alikohteet)))
-
-(defn hae-kohteen-tiedot [db kohde-id]
-  (if-let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))]
-    (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
-                                   db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
-          paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
-          paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
-          alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
-      {:kohde kohde
-       :alikohteet alikohteet
-       :paallystysilmoitus paallystysilmoitus})
-    (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
-      (log/error virhe)
-      (throw+
-        {:type +virhe-kohteen-lahetyksessa+
-         :virheet {:virhe virhe}}))))
-
 (defn hae-urakat-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-nimi sampotunniste vuosi]
   (let [url (str url "urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
@@ -188,7 +159,7 @@
    päällystysilmoituksen lukitaan.
 
    Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
+  [integraatioloki db velho {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
@@ -196,7 +167,7 @@
       (fn [konteksti]
         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
           (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
-                kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
+                kohteet (mapv #(yllapitokohteet/hae-kohteen-tiedot db %) kohde-idt)
                 url (str url "toteumatiedot")
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
                 otsikot {"Content-Type" "text/xml; charset=utf-8"}
@@ -216,6 +187,10 @@
       {:virhekasittelija (fn [_ _]
                            (doseq [kohde-id kohde-idt]
                              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))})
+    
+    (when velho
+      (velho/laheta-paallystysilmoitukset velho urakka-id kohde-idt))
+
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
@@ -231,4 +206,4 @@
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
   (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
+    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) (:velho this) asetukset urakka-id kohde-idt)))

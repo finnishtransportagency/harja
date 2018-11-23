@@ -24,6 +24,7 @@
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+    [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
@@ -267,7 +268,11 @@
 
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))
-                         [:db :integraatioloki])
+                         [:db :integraatioloki :velho])
+
+      :velho (component/using
+               (velho/->Velho (:velho asetukset))
+               [:db :integraatioloki])
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)

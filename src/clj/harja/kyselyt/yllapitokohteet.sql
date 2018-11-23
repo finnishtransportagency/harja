@@ -997,3 +997,6 @@ WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
 -- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.
 SELECT vuodet FROM yllapitokohde
 WHERE id = :id;
+
+-- name: hae-yllapitokohdeosan-geometria
+SELECT st_asgeojson(sijainti) FROM yllapitokohdeosa WHERE id = :id;

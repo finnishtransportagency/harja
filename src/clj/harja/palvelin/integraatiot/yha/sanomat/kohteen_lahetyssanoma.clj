@@ -32,11 +32,13 @@
 
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
-                            lisaaineet] :as alikohde}]
+                            lisaaineet geometria] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
    (tee-tierekisteriosoitevali alikohde)
+   (when geometria
+     [:geometria geometria])
    (when
      (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly tyomenetelma leveys pinta-ala)
      [:paallystystoimenpide
@@ -112,11 +114,11 @@
                    (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]
-             (mapv tee-alikohde alikohteet)))])
+             (mapv #(tee-alikohde %) alikohteet)))])
 
-(defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
+(defn muodosta-sanoma [xmlns {:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
-   {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
+   {:xmlns xmlns}
    [:urakka
     [:yha-id yhaid]
     [:harja-id harjaid]
@@ -125,7 +127,7 @@
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
-  (let [sisalto (muodosta-sanoma urakka kohteet)
+  (let [sisalto (muodosta-sanoma "http://www.liikennevirasto.fi/xsd/yha" urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
