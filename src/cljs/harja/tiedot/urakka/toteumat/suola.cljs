@@ -16,6 +16,8 @@
 
 (defonce suolatoteumissa? (atom false))
 
+(defonce ui-suodatin-valinnat (atom {:suola "Kaikki"}))
+
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
 
 (defonce materiaalit
@@ -23,10 +25,13 @@
               (when hae?
                 (hae-materiaalit))))
 
+(defonce ui-valittu-aikavali (atom nil))
+
 (defonce
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
 
+(defonce ui-lomakkeen-tila (atom nil))
 (defonce lomakkeen-tila (atom nil))
 
 (defonce toteumat

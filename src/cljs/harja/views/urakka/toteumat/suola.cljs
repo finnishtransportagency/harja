@@ -77,18 +77,26 @@
    [kartta/kartan-paikka]
    [:span.valinnat
     [urakka-valinnat/aikavali-nykypvm-taakse urakka
-     tiedot/valittu-aikavali
+     tiedot/ui-valittu-aikavali
      {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
-    [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
+    [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/ui-suodatin-valinnat)
                                      :otsikko "Suola"
-                                     :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
+                                     :valitse-fn #(swap! tiedot/ui-suodatin-valinnat assoc :suola %)
                                      :lisaa-kaikki? true
                                      :materiaalit materiaali-nimet}]]
 
    [lomake/lomake
     {:otsikko "Hae suolatoteumia tieosoiteväliltä"
-     :muokkaa! #(reset! tiedot/lomakkeen-tila %)
-     :footer-fn (fn [rivi])
+     :muokkaa! #(reset! tiedot/ui-lomakkeen-tila %)
+     :footer-fn (fn [rivi]
+                  [:div
+                   [napit/yleinen-toissijainen "Hae"
+                    (fn []
+                      ; aiheuta tiedot/toteumat -reaktio
+                      (reset! tiedot/suodatin-valinnat @tiedot/ui-suodatin-valinnat)
+                      (reset! tiedot/valittu-aikavali @tiedot/ui-valittu-aikavali)
+                      (reset! tiedot/lomakkeen-tila @tiedot/ui-lomakkeen-tila))
+                    {:ikoni (ikonit/livicon-search)}]])
      :ei-borderia? true}
     [{:nimi :tierekisteriosoite
       :otsikko "Tierekisteriosoite"
@@ -96,7 +104,7 @@
       :tyyli :rivitetty
       :sijainti (atom nil)
       :vaadi-vali? true}]
-    @tiedot/lomakkeen-tila]
+    @tiedot/ui-lomakkeen-tila]
 
    [grid/grid {:otsikko "Talvisuolan käyttö"
                :tunniste :rivinumero
