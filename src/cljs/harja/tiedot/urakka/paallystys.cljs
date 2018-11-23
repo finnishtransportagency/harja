@@ -179,6 +179,9 @@
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
+(defrecord HaeTrOsienPituudet [tr-numero tr-alkuosa tr-loppuosa])
+(defrecord HaeTrOsienPituudetOnnistui [vastaus])
+(defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
@@ -224,22 +227,53 @@
     app)
   HaePaallystysilmoitusPaallystyskohteellaOnnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
-    (println "VASTAUS ONNISTUI: " vastaus)
-    (assoc app :paallystysilmoitus-lomakedata
-           (-> vastaus
-               ;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
-               (update-in [:ilmoitustiedot :alustatoimet]
-                          (fn [alustatoimet]
-                            (vec (map #(assoc %1 :id %2)
-                                      alustatoimet (iterate inc 1)))))
-               (assoc
-                 :kirjoitusoikeus?
-                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                           (:id urakka))))))
+    (let [;; Leivotaan jokaiselle kannan JSON-rakenteesta nostetulle alustatoimelle id järjestämistä varten
+          vastaus (-> vastaus
+                      (update-in [:ilmoitustiedot :osoitteet]
+                                 (fn [osoitteet]
+                                   (into {}
+                                         (map #(identity [%1 %2])
+                                              (iterate inc 1) osoitteet))))
+                      (update-in [:ilmoitustiedot :alustatoimet]
+                                 (fn [alustatoimet]
+                                   (vec (map #(assoc %1 :id %2)
+                                             alustatoimet (iterate inc 1))))))
+          perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
+                        :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
+                        :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
+                        :valmispvm-kohde :takuupvm :valmispvm-paallystys
+                                }
+          perustiedot (select-keys vastaus perustiedot-avaimet)
+          muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
+      (println "---> PERUSTIEDOT: " perustiedot)
+      (println "----> MUUT TIEDOT: " muut-tiedot)
+      (-> app
+          (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
+                    (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                              (:id urakka)))
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot]
+                    perustiedot)
+          (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]
-    (println "VASTAUS EPÄONNISTUI: " vastaus)
     (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
+    app)
+  HaeTrOsienPituudet
+  (process-event [{:keys [tr-numero tr-alkuosa tr-loppuosa]} app]
+    (let [parametrit {:tie tr-numero
+                      :aosa tr-alkuosa
+                      :losa tr-loppuosa}]
+      (tuck-apurit/post! app :hae-tr-osien-pituudet
+                         parametrit
+                         {:onnistui ->HaeTrOsienPituudetOnnistui
+                          :epaonnistui ->HaeTrOsienPituudetEpaonnistui})))
+  HaeTrOsienPituudetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (update-in app [:paallystysilmoitus-lomakedata :tr-osien-pituudet] (fn [vanhat]
+                                                                         (merge vanhat vastaus))))
+  HaeTrOsienPituudetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "TR OSIEN PITUUDEN HAKU EPÄONNISTUI: " vastaus)
     app)
   AvaaPaallystysilmoitus
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]

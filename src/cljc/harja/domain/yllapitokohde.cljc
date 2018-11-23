@@ -262,6 +262,24 @@ yllapitoluokkanimi->numero
             (when (not (empty? virheet))
               (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 
+(defn validoi-yllapitokohteen-osoite
+  [osan-pituudet-teille kentta {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                         tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (when osan-pituudet-teille
+    (let [osan-pituudet (osan-pituudet-teille tr-numero)]
+      (or
+        (cond
+          (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
+          (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
+
+          (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
+          (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
+
+        (when (= kentta :tr-alkuetaisyys)
+          (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
+
+        (when (= kentta :tr-loppuetaisyys)
+          (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
 #?(:clj
    (defn yllapitokohteen-tarkka-tila [yllapitokohde]
