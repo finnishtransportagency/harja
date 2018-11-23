@@ -15,6 +15,6 @@ return [// Stage nimet
         testiserverinKannanLuontiAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN),
         testiserverinAppLuontiAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri"].contains(STAGE_ETIAPAIN),
         e2eTestitAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri", "E2E"].contains(STAGE_ETIAPAIN),
-        stagingserverinKannanLuontiAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN),
-        stagingserverinAppLuontiAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri", "Stagingserveri"].contains(STAGE_ETIAPAIN)
+        stagingserverinKannanLuontiAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri", "E2E", "Stagingserveri"].contains(STAGE_ETIAPAIN),
+        stagingserverinAppLuontiAjetaan: ["Kaikki", "JAR ja testit", "Testiserveri", "E2E", "Stagingserveri"].contains(STAGE_ETIAPAIN)
 ]

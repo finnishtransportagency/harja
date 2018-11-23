@@ -2,6 +2,10 @@
 <b>Julkaistu: 27.07.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.38 Julkaistu 22.11.2018
+    - Urakoiden haku palauttaa Liikenneviraston järjestelmille kaikki urkat
+    - Mahdollisuus hakea urakat tyypeittäin.
+    - Mahdollisuus hakea ylläpitokohdeosien geometriat.
 - Versionumero 1.0.37 Julkaistu 27.07.2018
     - Tielupa hyväksyy kaapeliasennustyypiksi "Muuntamo":n
 - Versionumero 1.0.36 Julkaistu 9.7.2018
