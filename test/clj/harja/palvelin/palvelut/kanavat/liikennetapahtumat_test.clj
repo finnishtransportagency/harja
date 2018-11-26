@@ -194,7 +194,7 @@
                                  ::lt-alus/suunta :ylos
                                  ::lt-alus/nimi "HUPILAIVA"}]
                   ::lt/vesipinta-alaraja 500
-                  ::lt/vesipinta-ylaraja 1000
+                  ::lt/vesipinta-ylaraja 1000.9
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
                   ::lt/lisatieto "Sitten mennään"
                   :hakuparametrit hakuparametrit}
@@ -246,7 +246,7 @@
                                  ::lt-alus/lkm 1
                                  ::lt-alus/suunta :ylos}]
                   ::lt/vesipinta-alaraja 500
-                  ::lt/vesipinta-ylaraja 1000
+                  ::lt/vesipinta-ylaraja 1000.9
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
                   ::lt/lisatieto "FOOBAR FOOBAR"
                   :hakuparametrit hakuparametrit}
@@ -294,7 +294,7 @@
                   ::lt/toiminnot []
                   ::lt/alukset []
                   ::lt/vesipinta-alaraja 500
-                  ::lt/vesipinta-ylaraja 1000
+                  ::lt/vesipinta-ylaraja 1000.9
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
                   ::lt/lisatieto "FOOBAR FOOBAR FOOBAR"
                   :hakuparametrit hakuparametrit}
@@ -340,7 +340,7 @@
                                  ::lt-alus/suunta :ylos
                                  ::m/poistettu? true}]
                   ::lt/vesipinta-alaraja 500
-                  ::lt/vesipinta-ylaraja 1000
+                  ::lt/vesipinta-ylaraja 1000.9
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
                   ::lt/lisatieto "FOOBAR FOOBAR FOOBAR"
                   :hakuparametrit hakuparametrit}
@@ -390,7 +390,7 @@
                   ::lt/toiminnot [{::toiminto/id toiminto-id}]
                   ::lt/alukset [{::lt-alus/id laiva-id}]
                   ::lt/vesipinta-alaraja 500
-                  ::lt/vesipinta-ylaraja 1000
+                  ::lt/vesipinta-ylaraja 1000.9
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
                   ::lt/lisatieto "FOOBAR FOOBAR FOOBAR"
                   ::m/poistettu? true
