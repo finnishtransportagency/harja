@@ -98,8 +98,9 @@
      ;; Vesi-väylämuotoon liittyy todellisuudessa monia urakkatyyppejä,
      ;; kuten hoito, ruoppaus, turvalaitteden-korjaus.. kuitenkin toistaiseksi
      ;; näitä kaikkia tyyppejä käsitellään Harjan käyttöliittymässä samalla tavalla.
-     (when (istunto/ominaisuus-kaytossa? :vesivayla)
-       {:nimi "Vesiväylät" :arvo :vesivayla})]))
+     ;; Myös kanavien hoito on Vesiväylät-väylämuodon alla.
+     (when (istunto/ominaisuus-kaytossa? :vesivayla) {:nimi "Vesiväylät" :arvo :vesivayla})
+     (when (istunto/ominaisuus-kaytossa? :vesivayla) {:nimi "Kanavat" :arvo :vesivayla-kanavien-hoito})]))
 
 (def +urakkatyypit-ja-kaikki+
   (into [{:nimi "Kaikki" :arvo :kaikki}]
