@@ -259,7 +259,8 @@
                                          kirjoitusoikeus?)
                       :muokkaa! (fn [uusi]
                                   (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
-                                  (muokkaa! merge uusi))}
+                                  (muokkaa! merge uusi))
+                      :data-cy "paallystysilmoitus-perustiedot"}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
                 (str "#" (:kohdenumero lomakedata-nyt) " " (:tunnus lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))

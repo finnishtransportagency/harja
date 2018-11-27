@@ -26,6 +26,7 @@ describe('POT-lomake', function () {
             .contains('button', 'Aloita päällystysilmoitus').click()
     })
     it('Oikeat aloitustiedot', function () {
+        // Tierekisteritaulukon tienumeroa, ajorataa ja kaistaa ei pitäisi pystyä muutamaan
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] th').then(($otsikot) => {
             let tienumeroIndex;
             let ajorataIndex;
@@ -57,5 +58,11 @@ describe('POT-lomake', function () {
                 }
             })
         })
+        // Pääkohteen tierekisteriosoitetta ei pitäisi pystyä muuttamaan
+        cy.get('[data-cy=paallystysilmoitus-perustiedot]')
+            .contains('Tierekisteriosoite')
+            .parentsUntil('.row.lomakerivi')
+            .contains('Tie ')
+            .should('have.class', 'form-control-static')
     })
 })
