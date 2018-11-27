@@ -819,7 +819,8 @@
     :voi-lisata? false
     :voi-kumota? false
     :voi-poistaa? (constantly false)
-    :voi-muokata? true}
+    :voi-muokata? true
+    :data-cy "paallystysilmoitukset-grid"}
    [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
     {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
     {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}

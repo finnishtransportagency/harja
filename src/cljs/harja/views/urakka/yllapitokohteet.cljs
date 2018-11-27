@@ -479,6 +479,7 @@
                     (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
           :otsikko otsikko
           :id "yllapitokohdeosat"
+          :data-cy (str "yllapitokohdeosat-" otsikko)
           :virheet virheet
           :voi-lisata? false
           :jarjesta-avaimen-mukaan (when jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan)

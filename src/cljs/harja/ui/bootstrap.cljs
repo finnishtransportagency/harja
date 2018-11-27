@@ -43,9 +43,12 @@ The following keys are supported in the configuration:
                [:li {:role  "presentation"
                      :class (when (= keyword active-tab-keyword)
                               "active")}
-                [:a.klikattava {:on-click #(do
-                                             (.preventDefault %)
-                                             (reset! active keyword))}
+                [:a.klikattava (merge
+                                 {:on-click #(do
+                                               (.preventDefault %)
+                                               (reset! active keyword))}
+                                 (when-let [tabs-taso (re-find #"tabs-taso\d" classes)]
+                                   {:data-cy (str tabs-taso "-" title)}))
                  title]])]
             [:div.valilehti active-component]]))))))
 
