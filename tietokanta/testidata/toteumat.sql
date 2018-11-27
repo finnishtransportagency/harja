@@ -377,10 +377,6 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
 -- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
 -- Oikeissa toteumissa nämä tulevat projisoituna tieverkolle, mutta nyt vain tehdään viivat.
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (24, '2008-09-09 00:10.03', 1, 2);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (24, '2008-09-09 00:10.03', 7, 4);
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (24, '2008-09-09 00:10.06', 1, 8);
-
 UPDATE toteuma t
    SET reitti = (SELECT ST_MakeLine(p.sij)
                    FROM (SELECT rp.sijainti::geometry as sij
