@@ -65,7 +65,8 @@ CREATE OR REPLACE FUNCTION tr_valin_suolatoteumat(urakkaid INTEGER, tie_ INTEGER
        pvm TIMESTAMP,
        maara NUMERIC,
        lukumaara INTEGER,
-       toteumaidt INTEGER[]) AS $$
+       toteumaidt INTEGER[],
+       koneellinen BOOLEAN) AS $$
 DECLARE
   g geometry;
 BEGIN
@@ -77,7 +78,8 @@ BEGIN
 		      date_trunc('day', tot.alkanut)  AS pvm,
   	       	      SUM(rp.maara)                   AS maara,
 		      count(rp.maara)::integer        AS lukumaara,
-		      array_agg(tot.id)               AS toteumaidt
+		      array_agg(tot.id)               AS toteumaidt,
+		      TRUE                            AS koneellinen
     FROM suolatoteuma_reittipiste AS rp
       JOIN toteuma tot ON (tot.id = rp.toteuma AND tot.poistettu IS NOT TRUE)
       JOIN materiaalikoodi mk ON rp.materiaalikoodi = mk.id
