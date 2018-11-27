@@ -1622,6 +1622,8 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Laaja toimenpide','20106',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20100') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20100') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20100') );
 SELECT lisaa_toimenpidekoodi(
+    'Päällysteiden paikkaus (hoidon ylläpito)','20107',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20100') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20100') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20100') );
+SELECT lisaa_toimenpidekoodi(
     'Päällystetyn tien tierakenne','20110',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20000') );
 SELECT lisaa_toimenpidekoodi(
     'Kuivatusjärjestelmän korjaus','20111',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20110') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20110') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20110') );
