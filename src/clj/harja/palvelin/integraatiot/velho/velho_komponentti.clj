@@ -39,7 +39,8 @@
                                   :salasana salasana
                                   :otsikot otsikot}]
               (when kutsudata
-                (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata))))))
+                (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata))))
+          true))
       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
         false))))
 

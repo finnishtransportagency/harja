@@ -18,7 +18,7 @@
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))
                   alikohde (if geometriat?
-                             (assoc alikohde :geometria (q-yllapitokohteet/hae-yllapitokohdeosan-geometria db {:id id}))
+                             (assoc alikohde :geometria (:geometria (first (q-yllapitokohteet/hae-yllapitokohdeosan-geometria db {:id id}))))
                              alikohde)]
               (apply merge ilmoitustiedot alikohde)))
           alikohteet)))

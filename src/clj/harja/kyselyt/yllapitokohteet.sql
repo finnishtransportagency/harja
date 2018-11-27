@@ -999,4 +999,4 @@ SELECT vuodet FROM yllapitokohde
 WHERE id = :id;
 
 -- name: hae-yllapitokohdeosan-geometria
-SELECT st_asgeojson(sijainti) FROM yllapitokohdeosa WHERE id = :id;
+SELECT st_asgeojson(sijainti) AS geometria FROM yllapitokohdeosa WHERE id = :id;
