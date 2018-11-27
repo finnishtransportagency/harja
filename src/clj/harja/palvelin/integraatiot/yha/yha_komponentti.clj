@@ -162,34 +162,35 @@
   [integraatioloki db velho {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "yha" "kohteiden-lahetys" nil
-      (fn [konteksti]
-        (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-          (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
-                kohteet (mapv #(yllapitokohteet/hae-kohteen-tiedot db %) kohde-idt)
-                url (str url "toteumatiedot")
-                kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                otsikot {"Content-Type" "text/xml; charset=utf-8"}
-                http-asetukset {:metodi :POST
-                                :url url
-                                :kayttajatunnus kayttajatunnus
-                                :salasana salasana
-                                :otsikot otsikot}
-                {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-            (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
+    (let [onnistui? (integraatiotapahtuma/suorita-integraatio
+                      db integraatioloki "yha" "kohteiden-lahetys" nil
+                      (fn [konteksti]
+                        (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
+                          (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
+                                kohteet (mapv #(yllapitokohteet/hae-kohteen-tiedot db %) kohde-idt)
+                                url (str url "toteumatiedot")
+                                kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
+                                otsikot {"Content-Type" "text/xml; charset=utf-8"}
+                                http-asetukset {:metodi :POST
+                                                :url url
+                                                :kayttajatunnus kayttajatunnus
+                                                :salasana salasana
+                                                :otsikot otsikot}
+                                {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+                            (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
 
-          (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
-            (log/error virhe)
-            (throw+
-              {:type +virhe-kohteen-lahetyksessa+
-               :virheet {:virhe virhe}}))))
-      {:virhekasittelija (fn [_ _]
-                           (doseq [kohde-id kohde-idt]
-                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))})
-    
-    (when velho
-      (velho/laheta-paallystysilmoitukset velho urakka-id kohde-idt))
+                          (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
+                            (log/error virhe)
+                            (throw+
+                              {:type +virhe-kohteen-lahetyksessa+
+                               :virheet {:virhe virhe}}))))
+                      {:virhekasittelija (fn [_ _]
+                                           (doseq [kohde-id kohde-idt]
+                                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))})]
+      (when velho
+        (velho/laheta-paallystysilmoitukset velho urakka-id kohde-idt))
+
+      onnistui?)
 
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))

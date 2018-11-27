@@ -6,7 +6,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def kayttaja "jvh")
@@ -14,9 +15,12 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
+    :velho (component/using
+             (velho/->Velho {})
+             [:db :integraatioloki])
     :yha (component/using
            (yha/->Yha {:url +yha-url+})
-           [:db :http-palvelin :integraatioloki])))
+           [:db :http-palvelin :integraatioloki :velho])))
 
 (use-fixtures :each jarjestelma-fixture)
 
