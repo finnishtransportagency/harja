@@ -23,3 +23,16 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+Cypress.Commands.add("gridOtsikot", { prevSubject: 'element'}, (grid) => {
+    let $otsikkoRivit = grid.find('th')
+    let otsikotIndekseineen = new Map();
+    for (let i = 0; i < $otsikkoRivit.length; i++) {
+        let otsikonTeksti = $otsikkoRivit.eq(i).text().replace(/[\u00AD]+/g, '')
+        otsikotIndekseineen.set(otsikonTeksti, i)
+    }
+    return {
+        grid: grid,
+        otsikot: otsikotIndekseineen
+    }
+})

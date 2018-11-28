@@ -62,8 +62,6 @@ describe('POT-lomake', function () {
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').parent().should('have.class', 'active')
         //cy.wait('@haeUrakanYllapitokohteet')
-        // Piillotetaan kartta, jotta 2017 valinta on näkyvillä valinnassa
-        //cy.get('[data-cy=piilota-kartta]').click()
         // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
         // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
         cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.be.visible')
@@ -109,25 +107,76 @@ describe('POT-lomake', function () {
             .should('have.class', 'form-control-static')
     })
     it('Rivien lisäys', function () {
+        // Lisätään jokunen rivi
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr button')
             .contains('Lisää osa').click().click().click()
+        // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
             .should('have.length', 12)
             .each(($virheet, index, $virheetLista) => {
-            switch (index) {
-                case 0:
-                    expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna loppuosa');
-                    break;
-                case 1:
-                    expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna loppuetäisyys');
-                    break;
-                case 2:
-                    expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna alkuosa');
-                    break;
-                case 3:
-                    expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna alkuetäisyys');
-                    break;
-            }
+                switch (index) {
+                    case 0:
+                        expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna loppuosa');
+                        break;
+                    case 1:
+                        expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna loppuetäisyys');
+                        break;
+                    case 2:
+                        expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna alkuosa');
+                        break;
+                    case 3:
+                        expect($virheet.text().replace(/[\u00AD]+/g, '')).to.contain('Anna alkuetäisyys');
+                        break;
+                }
             })
+        // Katsotaan, että vain ensimmäisellä rivillä on alkuosa ja alkuetäisyys, kun taas viimeisellä rivillä on
+        // loppuosa ja loppuetaisyys
+        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            expect($rivit.first().find('td').eq($otsikot.get('Aosa')).find('input')).to.have.value('1');
+            expect($rivit.first().find('td').eq($otsikot.get('Aet')).find('input')).to.have.value('0');
+            expect($rivit.first().find('td').eq($otsikot.get('Losa')).find('input')).to.be.empty;
+            expect($rivit.first().find('td').eq($otsikot.get('Let')).find('input')).to.be.empty;
+            expect($rivit.last().find('td').eq($otsikot.get('Aosa')).find('input')).to.be.empty;
+            expect($rivit.last().find('td').eq($otsikot.get('Aet')).find('input')).to.be.empty;
+            expect($rivit.last().find('td').eq($otsikot.get('Losa')).find('input')).to.have.value('3');
+            expect($rivit.last().find('td').eq($otsikot.get('Let')).find('input')).to.have.value('0');
+            for (let i = 1; i < $rivit.length - 1; i++) {
+                let sarakkeet = $rivit.eq(i).find('td');
+                expect(sarakkeet.eq($otsikot.get('Aosa')).find('input')).to.be.empty;
+                expect(sarakkeet.eq($otsikot.get('Aet')).find('input')).to.be.empty;
+                expect(sarakkeet.eq($otsikot.get('Losa')).find('input')).to.be.empty;
+                expect(sarakkeet.eq($otsikot.get('Let')).find('input')).to.be.empty;
+            }
+        })
+        // Täytetään väärässä muodoss olevaa dataa
+        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            // Piillotetaan kartta, jotta se ei ole gridin edessä
+            cy.get('[data-cy=piilota-kartta]').click()
+            cy.wrap($rivit.first().find('td').eq($otsikot.get('Aosa')).find('input')).clear().type(2)
+            cy.wrap($rivit.first().find('td').eq($otsikot.get('Losa')).find('input')).type(1)
+            cy.wrap($rivit.first().find('td').eq($otsikot.get('Let')).find('input')).type(100000)
+            cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
+                let $rivi = $gridOtsikotJalkeen.grid.find('tbody tr:first-child');
+                let $otsikotJalkeen = $gridOtsikotJalkeen.otsikot;
+                let virheValinta = function (otsikko) {
+                    return $rivi.find('td').eq($otsikotJalkeen.get(otsikko)).find('.virhe').children().map(function () {
+                        return this.textContent.replace(/[\u00AD]+/g, '').trim()
+                    }).get()
+                };
+                expect(virheValinta('Aosa')).to.have.lengthOf(2)
+                    .and.to.contain('Alkuosa ei voi olla loppuosan jälkeen')
+                    .and.to.contain('Tiellä 22 ei ole osaa 2');
+                expect(virheValinta('Aet')).to.be.empty;
+                expect(virheValinta('Losa')).to.have.lengthOf(1)
+                    .and.to.contain('Loppuosa ei voi olla alkuosaa ennen');
+
+                expect(virheValinta('Let')).to.have.lengthOf(1);
+                expect(virheValinta('Let')[0]).to.contain('Osan 1 maksimietäisyys on ');
+            })
+        })
     })
 })
