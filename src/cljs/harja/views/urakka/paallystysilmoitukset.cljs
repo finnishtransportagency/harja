@@ -213,6 +213,7 @@
                                                    :lomakedata lahetettava-data
                                                    :vuosi vuosi}))
       {:luokka "nappi-ensisijainen"
+       :data-cy "pot-tallenna"
        :id "tallenna-paallystysilmoitus"
        :disabled (or (false? valmis-tallennettavaksi?)
                      (not (oikeudet/voi-kirjoittaa?
@@ -412,6 +413,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
+           :data-cy "paallystystoimenpiteen-tiedot"
            :id "paallystysilmoitus-paallystystoimenpiteet"
            :voi-lisata? false
            :voi-kumota? false
@@ -536,6 +538,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
+           :data-cy "kiviaines-ja-sideaine"
            :rivinumerot? true
            :voi-lisata? false
            :voi-kumota? false
@@ -620,6 +623,7 @@
             [debug @alustalle-tehdyt-toimet {:otsikko "Alustatoimenpiteet"}]
             [:div [grid/muokkaus-grid
                    {:otsikko "Alustalle tehdyt toimet"
+                    :data-cy "alustalle-tehdyt-toimet"
                     :jarjesta jarjestys-fn
                     :voi-muokata? alustatoimet-voi-muokata?
                     :voi-kumota? false
