@@ -3,7 +3,7 @@ CREATE INDEX pohjavesialue_alue_idx ON pohjavesialue USING GIST (alue);
 CREATE TABLE suolatoteuma_reittipiste (
        toteuma INTEGER REFERENCES toteuma(id),
        aika TIMESTAMP DEFAULT NOW(),
-       pohjavesialue INTEGER REFERENCES pohjavesialue(id),
+       pohjavesialue VARCHAR(16),
        sijainti POINT,
        materiaalikoodi INTEGER,
        maara NUMERIC
@@ -14,11 +14,11 @@ CREATE INDEX suolatoteuma_reittipiste_idx ON suolatoteuma_reittipiste USING GIST
 CREATE INDEX suolatoteuma_pohjavesialue_idx ON suolatoteuma_reittipiste (pohjavesialue);
 CREATE INDEX suolatoteuma_pohjavesialue_aika ON suolatoteuma_reittipiste (aika);
 
-CREATE OR REPLACE FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER) RETURNS INTEGER AS $$
+CREATE OR REPLACE FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER) RETURNS VARCHAR AS $$
 DECLARE
-  pohjavesialue INTEGER;
+  pohjavesialue VARCHAR;
 BEGIN
-  SELECT id FROM pohjavesialue
+  SELECT tunnus FROM pohjavesialue
    WHERE ST_DWithin(alue, piste::geometry, threshold)
    ORDER BY ST_Distance(alue, piste::geometry)
    LIMIT 1
