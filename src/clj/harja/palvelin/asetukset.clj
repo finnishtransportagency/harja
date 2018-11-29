@@ -131,7 +131,7 @@
                           :kayttajatunnus s/Str
                           :salasana s/Str}
 
-   (s/optional-key :velho) {:paallystetoteumat-url s/Str}
+   (s/optional-key :velho) {:paallystysilmoitukset-url s/Str}
 
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str

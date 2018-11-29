@@ -21,9 +21,9 @@
         (log/error virheviesti))
       xml)))
 
-(defn laheta-paallystysilmoitukset-velhoon [integraatioloki db {:keys [paallystetoteumat-url kayttajatunnus salasana]} urakka-id kohde-idt]
-  (log/debug (format "Lähetetään urakan (id: %s) kohteiden: %s paallystystoteumat Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteumat-url))
-  (when paallystetoteumat-url
+(defn laheta-paallystysilmoitukset-velhoon [integraatioloki db {:keys [paallystysilmoitukset-url kayttajatunnus salasana]} urakka-id kohde-idt]
+  (log/debug (format "Lähetetään urakan (id: %s) kohteiden: %s paallystystoteumat Velhoon URL:lla: %s." urakka-id kohde-idt paallystysilmoitukset-url))
+  (when paallystysilmoitukset-url
     (try+
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "velho" "laheta-paallystystoteumat" nil
@@ -34,7 +34,7 @@
                   kutsudata (tee-sanoma urakka kohteet)
                   otsikot {"Content-Type" "application/json; charset=utf-8"}
                   http-asetukset {:metodi :POST
-                                  :url paallystetoteumat-url
+                                  :url paallystysilmoitukset-url
                                   :kayttajatunnus kayttajatunnus
                                   :salasana salasana
                                   :otsikot otsikot}]

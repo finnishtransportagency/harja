@@ -16,7 +16,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :velho (component/using
-             (velho/->Velho {:paallystetoteumat-url +velho-paallystetoteumat-url+})
+             (velho/->Velho {:paallystysilmoitukset-url +velho-paallystetoteumat-url+})
              [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
