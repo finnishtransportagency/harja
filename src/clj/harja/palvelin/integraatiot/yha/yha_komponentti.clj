@@ -16,7 +16,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yllapitokohteet :as yllapitokohteet]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho])
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
+            [clojure.core.async :as async])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -188,7 +189,8 @@
                                            (doseq [kohde-id kohde-idt]
                                              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))})]
       (when velho
-        (velho/laheta-paallystysilmoitukset velho urakka-id kohde-idt))
+        (async/thread
+          (velho/laheta-paallystysilmoitukset velho urakka-id kohde-idt)))
 
       onnistui?)
 
