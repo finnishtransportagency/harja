@@ -117,7 +117,7 @@
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?
-                            sticky? ikoninappi? title style] :as optiot}]
+                            sticky? ikoninappi? title style data-cy] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -144,17 +144,20 @@
                                   (r/dom-node %))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?] :as optiot}]
          [:button
-          {:class (str (when disabled "disabled ")
-                       (when @naulattu? "nappi-naulattu ")
-                       (when ikoninappi? "nappi-ikoni ")
-                       luokka)
-           :disabled disabled
-           :style style
-           :title title
-           :on-click #(do
-                        (.preventDefault %)
-                        (.stopPropagation %)
-                        (toiminto))}
+          (merge
+            {:class (str (when disabled "disabled ")
+                         (when @naulattu? "nappi-naulattu ")
+                         (when ikoninappi? "nappi-ikoni ")
+                         luokka)
+             :disabled disabled
+             :style style
+             :title title
+             :on-click #(do
+                          (.preventDefault %)
+                          (.stopPropagation %)
+                          (toiminto))}
+            (when data-cy
+              {:data-cy data-cy}))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
           (when tallennus-kaynnissa?

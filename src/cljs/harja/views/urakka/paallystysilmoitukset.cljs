@@ -95,7 +95,8 @@
       {:otsikko ""
        :muokkaa! (fn [uusi]
                    (muokkaa! assoc :asiatarkastus uusi))
-       :voi-muokata? muokattava?}
+       :voi-muokata? muokattava?
+       :data-cy "paallystysilmoitus-asiatarkastus"}
       [{:otsikko "Tarkastettu"
         :nimi :tarkastusaika
         :tyyppi :pvm
@@ -129,7 +130,8 @@
     [lomake/lomake
      {:otsikko otsikko
       :muokkaa! muokkaa!
-      :voi-muokata? muokattava?}
+      :voi-muokata? muokattava?
+      :data-cy "paallystysilmoitus-kasittelytiedot"}
      [{:otsikko "Käsitelty"
        :nimi :kasittelyaika
        :pakollinen? (when (:paatos osa) true)
