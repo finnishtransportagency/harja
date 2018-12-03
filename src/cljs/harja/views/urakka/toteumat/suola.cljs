@@ -19,6 +19,8 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
@@ -69,6 +71,7 @@
     (fn [rivi urakka]
       [suolankayton-paivan-erittely @vetolaatikon-rivit])))
 
+
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
   [:div.suolatoteumat
    [kartta/kartan-paikka]
@@ -82,11 +85,34 @@
                                      :lisaa-kaikki? true
                                      :materiaalit materiaali-nimet}]]
 
+   [lomake/lomake
+    {:otsikko "Hae suolatoteumia tieosoiteväliltä"
+     :muokkaa! #(reset! tiedot/ui-lomakkeen-tila %)
+     :footer-fn (fn [rivi]
+                  [:div
+                   [napit/yleinen-toissijainen "Hae"
+                    (fn []
+                      ; aiheuta tiedot/toteumat -reaktio
+                      (reset! tiedot/lomakkeen-tila @tiedot/ui-lomakkeen-tila))
+                    {:ikoni (ikonit/livicon-search)}]
+                   [napit/yleinen-toissijainen "Tyhjennä tieosoiteväli"
+                    (fn []
+                      (reset! tiedot/lomakkeen-tila nil)
+                      (reset! tiedot/ui-lomakkeen-tila nil))]])
+     :ei-borderia? true}
+    [{:nimi :tierekisteriosoite
+      :otsikko "Tierekisteriosoite"
+      :tyyppi :tierekisteriosoite
+      :tyyli :rivitetty
+      :sijainti (atom nil)
+      :vaadi-vali? true}]
+    @tiedot/ui-lomakkeen-tila]
+
    [grid/grid {:otsikko "Talvisuolan käyttö"
                :tunniste :rivinumero
                :tallenna (if (oikeudet/voi-kirjoittaa?
-                               oikeudet/urakat-toteumat-suola
-                               (:id @nav/valittu-urakka))
+                              oikeudet/urakat-toteumat-suola
+                              (:id @nav/valittu-urakka))
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
                                   (paivita! tiedot/toteumat)))
                            :ei-mahdollinen)
@@ -139,10 +165,10 @@
                                          (piilota-toteumat-kartalla toteumat)
                                          (nayta-toteumat-kartalla toteumat))}
                            (ikonit/ikoni-ja-teksti
-                             (ikonit/map-marker)
-                             (if (valittu?)
-                               "Piilota kartalta"
-                               "Näytä kartalla"))]])))}]
+                            (ikonit/map-marker)
+                            (if (valittu?)
+                              "Piilota kartalta"
+                              "Näytä kartalla"))]])))}]
     listaus]
 
    (when-not (empty? @tiedot/toteumat)
