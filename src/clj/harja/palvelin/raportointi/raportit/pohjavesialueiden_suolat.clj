@@ -18,6 +18,9 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/pohjavesialueiden_suolat.sql")
 
+(defn rivi-xf [rivi]
+  [{:nimi "foo"}])
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [tulos (hae-urakan-pohjavesialueiden-suolatoteumat db {:urakkaid urakka-id
                                                               :alkupvm alkupvm
@@ -29,4 +32,4 @@
        {:leveys 5 :otsikko "Toteutunut talvisuola yhteensä t"}
        {:leveys 5 :otsikko "Toteutunut talvisuola t/km"}
        {:leveys 5 :otsikko "Käyttöraja t/km"}]
-      (into [] tulos)]]))
+      (into [] rivi-xf tulos)]]))

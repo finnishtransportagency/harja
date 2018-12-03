@@ -4,10 +4,10 @@ SELECT pv.tunnus,
        pv.nimi,
        sum(rp.maara) AS maara_t_per_km,
        sum(rp.maara)*sum(st_length(pv.alue)) AS yhteensa,
-       0 AS kayttoraja
+       ts.talvisuolaraja AS kayttoraja
 FROM suolatoteuma_reittipiste rp
   INNER JOIN toteuma tot ON tot.id = rp.toteuma
   INNER JOIN pohjavesialue pv ON pv.tunnus = rp.pohjavesialue
-WHERE tot.urakka = :urakkaid
-  AND rp.aika BETWEEN :alkupvm AND :loppupvm
-GROUP BY pv.tunnus, pv.nimi;
+  LEFT JOIN pohjavesialue_talvisuola ts on ts.pohjavesialue = rp.pohjavesialue
+WHERE rp.aika BETWEEN :alkupvm AND :loppupvm
+GROUP BY pv.tunnus, pv.nimi, ts.talvisuolaraja;
