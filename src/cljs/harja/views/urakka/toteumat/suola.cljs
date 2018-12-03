@@ -77,11 +77,11 @@
    [kartta/kartan-paikka]
    [:span.valinnat
     [urakka-valinnat/aikavali-nykypvm-taakse urakka
-     tiedot/ui-valittu-aikavali
+     tiedot/valittu-aikavali
      {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
-    [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/ui-suodatin-valinnat)
+    [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
-                                     :valitse-fn #(swap! tiedot/ui-suodatin-valinnat assoc :suola %)
+                                     :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
                                      :lisaa-kaikki? true
                                      :materiaalit materiaali-nimet}]]
 
@@ -93,10 +93,12 @@
                    [napit/yleinen-toissijainen "Hae"
                     (fn []
                       ; aiheuta tiedot/toteumat -reaktio
-                      (reset! tiedot/suodatin-valinnat @tiedot/ui-suodatin-valinnat)
-                      (reset! tiedot/valittu-aikavali @tiedot/ui-valittu-aikavali)
                       (reset! tiedot/lomakkeen-tila @tiedot/ui-lomakkeen-tila))
-                    {:ikoni (ikonit/livicon-search)}]])
+                    {:ikoni (ikonit/livicon-search)}]
+                   [napit/yleinen-toissijainen "Tyhjennä tieosoiteväli"
+                    (fn []
+                      (reset! tiedot/lomakkeen-tila nil)
+                      (reset! tiedot/ui-lomakkeen-tila nil))]])
      :ei-borderia? true}
     [{:nimi :tierekisteriosoite
       :otsikko "Tierekisteriosoite"
