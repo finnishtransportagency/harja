@@ -3,7 +3,7 @@
 SELECT pv.tunnus,
        pv.nimi,
        sum(rp.maara) AS maara_t_per_km,
-       sum(rp.maara)*sum(st_length(pv.alue)) AS yhteensa,
+       sum(rp.maara)*sum(st_length(pv.alue))/1000 AS yhteensa,
        ts.talvisuolaraja AS kayttoraja
 FROM suolatoteuma_reittipiste rp
   INNER JOIN toteuma tot ON tot.id = rp.toteuma
