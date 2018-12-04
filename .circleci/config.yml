@@ -81,7 +81,6 @@ jobs:
             echo +++++++++++++++++++
             echo
 
-            cd /tmp/cypress-run && npm i cypress@1.x && $(npm bin)/cypress verify
             cd /tmp/cypress-run && $(npm bin)/cypress run --browser chrome
       - store_artifacts:
           path: cypress/screenshots

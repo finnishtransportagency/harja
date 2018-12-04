@@ -382,7 +382,7 @@ describe('Korjaa virhedata', function () {
             .parentsUntil('tbody')
             .contains('button', 'Päällystysilmoitus').click()
     })
-    it('Tetaa isoa rivimäärää', function () {
+    it('Tetaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
         cy.server()
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
