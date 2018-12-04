@@ -1,10 +1,9 @@
+import transit from '../support/node_modules/transit-js/transit'
+
 let valitse2017 = function () {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.be.visible')
-    /*cy.get('[data-cy=valinnat-vuosi] button').click()
-    cy.get('[data-cy=valinnat-vuosi] .dropdown-menu').should('have.css', 'display').and('match', /block/)
-    cy.contains('[data-cy=valinnat-vuosi] ul li a', '2017').click({force: true})*/
+    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
     cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: '2017'})
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('be.visible')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
@@ -14,9 +13,9 @@ describe('Aloita päällystysilmoitus', function () {
     // Lisätään kantaan puhdas testidata
     before(function () {
         cy.POTTestienAlustus()
-        cy.server()
     })
     it('Avaa vanha POT-lomake', function () {
+
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa ja Kainuu').click()
         cy.get('[data-cy=murupolku-urakkatyyppi] button').click()
@@ -24,20 +23,18 @@ describe('Aloita päällystysilmoitus', function () {
         // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,
         // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
         // poistaa DOM:ista.
-        cy.route('POST', '**/_/urakan-paallystysilmoitukset').as('haeUrakanPaallystysilmoitukset')
         cy.contains('[data-cy=murupolku-urakkatyyppi] ul li a', 'Päällystys').should('be.visible').click()
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka').click()
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
         cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').parent().should('have.class', 'active')
-        //cy.wait('@haeUrakanYllapitokohteet')
         valitse2017();
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
-                cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
-                    expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
-                })
+            cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
+                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
             })
+        })
         cy.get('[data-cy=paallystysilmoitukset-grid] tr')
             .contains('E2E-Testi')
             .parentsUntil('tbody')
@@ -224,114 +221,41 @@ describe('Aloita päällystysilmoitus', function () {
             cy.wrap(valitseInput(3, 'Aet')).clear().type(300)
             cy.wrap(valitseInput(3, 'Losa')).clear().type(1)
             cy.wrap(valitseInput(3, 'Let')).clear().type(400)
-            //Tehdään paljon rivejä lisää
-            /*   let j = 2;
-               let k = 0;
-               for (let i = 0; i < 32; i++) {
-                   if (i / (j - 1) === 3) {
-                       j = j + 1;
-                       k = 0;
-                   }
-                   let kS=k;
-                   let jS=j;
-                   cy.get('[data-cy=lisaa-osa-Tierekisteriosoitteet]').eq(k * j).click()
-                   cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
-                       let $rivitJalkeen = $gridOtsikotJalkeen.grid.find('tbody tr');
-                       let $otsikotJalkeen = $gridOtsikotJalkeen.otsikot;
-                       let valitseInputJalkeen = function (rivi, otsikko) {
-                           console.log("RIVI: " + rivi);
-                           console.log("OTSIKKO: " + otsikko);
-                           return $rivitJalkeen.eq(rivi).find('td').eq($otsikotJalkeen.get(otsikko)).find('input')
-                       }
-                       cy.wrap(valitseInputJalkeen(kS * jS, 'Losa')).type(1)
-                       cy.wrap(valitseInputJalkeen(kS * jS, 'Let')).type(kS * 100 + jS)
-                       cy.wrap(valitseInputJalkeen(kS * jS + 1, 'Aosa')).type(1)
-                       cy.wrap(valitseInputJalkeen(kS * jS + 1, 'Aet')).type(kS * 100 + jS)
-                   })
-                   k = k + 1;
-               }*/
         })
-        /* cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
-             let $rivit = $gridOtsikot.grid.find('tbody tr');
-             let $otsikot = $gridOtsikot.otsikot;
-             let valitseInput = function (rivi, otsikko) {
-                 return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
-             }
-             expect(valitseInput(0, 'Let')).to.have.value('100');
-             expect(valitseInput(11, 'Let')).to.have.value('200');
-             expect(valitseInput(23, 'Let')).to.have.value('300');
-             expect(valitseInput(35, 'Let')).to.have.value('400');
-         })
-         cy.get('[data-cy=paallystystoimenpiteen-tiedot]').gridOtsikot().then(($gridOtsikot) => {
-             let $rivit = $gridOtsikot.grid.find('tbody tr');
-             let $otsikot = $gridOtsikot.otsikot;
-             let valitseInput = function (rivi, otsikko) {
-                 return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
-             }
-             cy.wrap(valitseInput(2, 'Raekoko')).type(2)
-             cy.wrap(valitseInput(33, 'Raekoko')).type(33)
-         })*/
+        cy.get('[data-cy=paallystystoimenpiteen-tiedot]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            let valitseInput = function (rivi, otsikko) {
+                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
+            }
+            // Täytetään taulukkoon oikean muotoisia tietoja
+            cy.wrap(valitseInput(0, 'Raekoko')).type(1).then(($raekokoInput) => {
+                cy.wrap($raekokoInput.parentsUntil('td')).contains('button', 'Täytä').click()
+            })
+            cy.wrap(valitseInput(0, 'Leveys (m)')).type(1)
+            cy.wrap(valitseInput(1, 'Leveys (m)')).type(2).then(($leveysInput) => {
+                cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click().then(($eiKayteta) => {
+                    for (let i = 0; i < $rivit.length; i++) {
+                        let sarakkeet = $rivit.eq(i).find('td');
+                        expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
+                        if (i === 0 || i === 2) {
+                            expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('1');
+                        } else {
+                            expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('2');
+                        }
+                    }
+                })
+            })
+        })
         cy.get('[data-cy=paallystysilmoitus-perustiedot] [type=checkbox]').check()
         cy.get('[data-cy=pot-tallenna]').click()
     })
 })
 
 describe('Käsittele päälystysilmoitus', function () {
-    /*before(function () {
-        cy.POTTestienAlustus()
-        cy.terminaaliKomento().then((terminaaliKomento) => {
-            let muokkaaKohdeosaa = '"UPDATE yllapitokohdeosa ' +
-                '  SET tr_loppuosa = 1, ' +
-                '      tr_loppuetaisyys = 100 ' +
-                'WHERE nimi=\'E2E-Testi-kohdeosa\';"';
-            let lisaaKohdeosia = '"INSERT INTO yllapitokohdeosa (yllapitokohde, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,' +
-                '                              tr_ajorata, tr_kaista, sijainti)' +
-                ' VALUES' +
-                '  ((SELECT id' +
-                '    FROM yllapitokohde' +
-                '    WHERE nimi = \'E2E-Testi\'), 22, 1, 100, 1, 200, 1, 1,' +
-                '   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
-                '    FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 100, 1, 200, 1))),' +
-                '  ((SELECT id' +
-                '    FROM yllapitokohde' +
-                '    WHERE nimi = \'E2E-Testi\'), 22, 1, 200, 1, 300, 1, 1,' +
-                '   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
-                '    FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 200, 1, 300, 1))),' +
-                '  ((SELECT id' +
-                '    FROM yllapitokohde' +
-                '    WHERE nimi = \'E2E-Testi\'), 22, 1, 300, 1, 400, 1, 1,' +
-                '   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
-                '    FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 300, 1, 400, 1)));"';
-            let lisaaPaallystysilmoitus = '"DO \\$$' +
-                ' DECLARE' +
-                '  kohdeosat   JSONB;' +
-                '  kohdeosa_id INTEGER;' +
-                ' BEGIN' +
-                '  kohdeosat = \'[]\' :: JSONB;' +
-                '  FOR kohdeosa_id IN (SELECT id' +
-                '                      FROM yllapitokohdeosa' +
-                '                      WHERE yllapitokohde = (SELECT id' +
-                '                                             FROM yllapitokohde' +
-                '                                             WHERE nimi = \'E2E-Testi\')) LOOP' +
-                '    kohdeosat = kohdeosat || jsonb_build_array(jsonb_build_object(\'kohdeosa-id\', kohdeosa_id));' +
-                '  END LOOP;' +
-                '  INSERT INTO paallystysilmoitus (paallystyskohde, ilmoitustiedot, luotu, tila)' +
-                '  VALUES' +
-                '    ((SELECT id' +
-                '      FROM yllapitokohde' +
-                '      WHERE nimi = \'E2E-Testi\'),' +
-                '     jsonb_build_object(\'osoitteet\', kohdeosat, \'alustatoimet\', \'[]\' :: JSONB),' +
-                '     NOW(), \'valmis\' :: PAALLYSTYSTILA);' +
-                ' END;' +
-                ' \\$$ LANGUAGE plpgsql;"'
-            cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + muokkaaKohdeosaa)
-            cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + lisaaKohdeosia)
-            cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + lisaaPaallystysilmoitus)
-        })
-    })*/
-
     it('Palaa lomakkeelle', function () {
         //valitse2017();
+        cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
@@ -357,17 +281,13 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
         cy.contains('Käsitelty').parent().should('have.class', 'required')
         //TODO Korjaa bugi, tuohon ei pitäisi tarvita ensin kirjottaa jotain, että virheviestit näkyisivät
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').type('01.01.2017')
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot]').click('bottomRight')
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').clear()
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot]').click('bottomRight')
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).clear()
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .virhe').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna käsittelypvm')
         })
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').type('01.01.2017')
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot]').click('bottomRight')
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .virhe').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
@@ -381,17 +301,13 @@ describe('Käsittele päälystysilmoitus', function () {
         })
 
         // Asiatarkastuksen tarkastus
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').type('01.01.2017')
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus]').click('bottomRight')
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').clear()
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus]').click('bottomRight')
+        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).clear()
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .virhe').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna tarkastuspäivämäärä')
         })
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').type('01.01.2017')
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus]').click('bottomRight')
+        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .virhe').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
@@ -404,13 +320,54 @@ describe('Käsittele päälystysilmoitus', function () {
             })
         })
     })
-    it('Laita oikea data ja tallenna', function() {
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').clear().type('01.12.2017')
+    it('Laita oikea data ja tallenna', function () {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.12.2017'})
         cy.get('[data-cy=pot-tallenna]').click()
     })
 })
 
-describe('Korjaa virhedata', function() {
+describe('Korjaa virhedata', function () {
+    before(function () {
+        cy.terminaaliKomento().then((terminaaliKomento) => {
+            let lisaaKohdeosia = '"DO \\$$' +
+                ' DECLARE' +
+                ' BEGIN' +
+                '  FOR i IN 0..32 LOOP' +
+                '    INSERT INTO yllapitokohdeosa (yllapitokohde, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,' +
+                '                                  tr_ajorata, tr_kaista, sijainti)' +
+                '      VALUES ((SELECT id' +
+                '                FROM yllapitokohde' +
+                '                WHERE nimi = \'E2E-Testi\'), 22, 1, 400+i*2, 1, 400+(i+1)*2, 1, 1,' +
+                '                (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
+                '                 FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 400+i*2, 1, 400+(i+1)*2, 1)));' +
+                '  END LOOP;' +
+                ' END;' +
+                ' \\$$ LANGUAGE plpgsql;"';
+            let muokkaaPaallystysilmoitus = '"DO \\$$' +
+                ' DECLARE' +
+                '  kohdeosat   JSONB;' +
+                '  kohdeosa_id INTEGER;' +
+                ' BEGIN' +
+                '  kohdeosat = \'[]\' :: JSONB;' +
+                '  FOR kohdeosa_id IN (SELECT id' +
+                '                      FROM yllapitokohdeosa' +
+                '                      WHERE yllapitokohde = (SELECT id' +
+                '                                             FROM yllapitokohde' +
+                '                                             WHERE nimi = \'E2E-Testi\')) LOOP' +
+                '    kohdeosat = kohdeosat || jsonb_build_array(jsonb_build_object(\'kohdeosa-id\', kohdeosa_id));' +
+                '  END LOOP;' +
+                '  UPDATE paallystysilmoitus' +
+                '  SET' +
+                '     ilmoitustiedot = jsonb_build_object(\'osoitteet\', kohdeosat, \'alustatoimet\', \'[]\' :: JSONB)' +
+                '  WHERE paallystyskohde = (SELECT id' +
+                '                            FROM yllapitokohde' +
+                '                            WHERE nimi = \'E2E-Testi\');' +
+                ' END;' +
+                ' \\$$ LANGUAGE plpgsql;"';
+            cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + lisaaKohdeosia)
+            cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' + muokkaaPaallystysilmoitus)
+        })
+    })
     it('Palaa lomakkeelle', function () {
         //valitse2017();
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
@@ -424,5 +381,55 @@ describe('Korjaa virhedata', function() {
             .contains('E2E-Testi')
             .parentsUntil('tbody')
             .contains('button', 'Päällystysilmoitus').click()
+    })
+    it('Tetaa isoa rivimäärää', function () {
+        cy.server()
+        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            let valitseInput = function (rivi, otsikko) {
+                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
+            }
+            cy.wrap(valitseInput(11, 'Let')).clear().type('415');
+            cy.wrap(valitseInput(12, 'Aet')).clear().type('415').then(($input12) => {
+                expect(valitseInput(0, 'Let')).to.have.value('100');
+                expect(valitseInput(11, 'Let')).to.have.value('415');
+                expect(valitseInput(23, 'Let')).to.have.value('440');
+                expect(valitseInput(35, 'Let')).to.have.value('464');
+            });
+        })
+        cy.get('[data-cy=paallystystoimenpiteen-tiedot]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            let valitseInput = function (rivi, otsikko) {
+                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
+            }
+            cy.wrap(valitseInput(2, 'Raekoko')).type(2)
+            cy.wrap(valitseInput(33, 'Raekoko')).type(33)
+        })
+        cy.get('[data-cy=kiviaines-ja-sideaine]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            let valitseInput = function (rivi, otsikko) {
+                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
+            }
+            cy.wrap(valitseInput(2, 'KM-arvo')).type(2)
+            cy.wrap(valitseInput(33, 'KM-arvo')).type(33)
+        })
+        cy.route('POST','_/tallenna-paallystysilmoitus').as('tallenna-paallystysilmoitus')
+        cy.get('[data-cy=pot-tallenna]').click()
+        cy.wait('@tallenna-paallystysilmoitus').then(($xhr) => {
+            let reader = transit.reader("json");
+            let kutsu = reader.read(JSON.stringify($xhr.requestBody));
+            let trData = kutsu.get(transit.keyword('paallystysilmoitus')).get(transit.keyword('ilmoitustiedot')).get(transit.keyword('osoitteet')).rep;
+            expect(trData[2].get(transit.keyword('tr-alkuetaisyys'))).to.equal(200)
+            expect(trData[2].get(transit.keyword('tr-loppuetaisyys'))).to.equal(300)
+            expect(trData[2].get(transit.keyword('toimenpide-raekoko'))).to.equal(2)
+            expect(trData[2].get(transit.keyword('km-arvo'))).to.equal('2')
+            expect(trData[33].get(transit.keyword('tr-alkuetaisyys'))).to.equal(458)
+            expect(trData[33].get(transit.keyword('tr-loppuetaisyys'))).to.equal(460)
+            expect(trData[33].get(transit.keyword('toimenpide-raekoko'))).to.equal(33)
+            expect(trData[33].get(transit.keyword('km-arvo'))).to.equal('33')
+        })
     })
 })

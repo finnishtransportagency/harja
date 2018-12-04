@@ -61,6 +61,17 @@ Cypress.Commands.add("valinnatValitse", { prevSubject: 'element'}, ($valinnat, p
     cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('be.visible').click({force: true})
 })
 
+Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) => {
+    cy.wrap($pvm).clear()
+    cy.wrap($pvm).focus()
+    cy.wrap($pvm.parent()).find('table').should('exist')
+    cy.wrap($pvm).type(parametrit.pvm)
+    cy.wrap(Cypress.$('#app')).click('topRight', {force: true})
+    cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
+        return $pvm
+    })
+})
+
 Cypress.Commands.add("POTTestienAlustus", () => {
     let lisaaPallystyskohdeKomento = '"INSERT INTO yllapitokohde ' +
         '(yllapitoluokka, urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,' +
