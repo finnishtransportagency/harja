@@ -17,6 +17,7 @@
             [harja.palvelin.palvelut.yha :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+            [harja.kyselyt.yha :as yha-kyselyt]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use org.httpkit.fake))
 
@@ -336,3 +337,12 @@
                                                             :losa 4
                                                             :let 200})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 0))))
+
+(deftest paattele-yhaan-lahetettava-sampoid-onnistuu
+  "Palveluurakasta lähetetään palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."
+  (let [muhos-kokonaisurakka-urakkaid (ffirst (q "select id from urakka where sampoid = '4242523-TES2'"))
+        oulu-palvelusopimus-urakkaid (ffirst (q "select id from urakka where sampoid = '666343-TES6'"))
+        muhos-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db jarjestelma) {:urakka muhos-kokonaisurakka-urakkaid}))
+        oulu-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db jarjestelma) {:urakka oulu-palvelusopimus-urakkaid}))]
+    (is (= "4242523-TES2" (yha-integraatio/yhaan-lahetettava-sampoid muhos-urakka)))
+    (is (= "TYP-3003" (yha-integraatio/yhaan-lahetettava-sampoid oulu-urakka)))))
