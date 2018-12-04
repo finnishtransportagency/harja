@@ -342,7 +342,7 @@
   "Palveluurakasta lähetetään palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."
   (let [muhos-kokonaisurakka-urakkaid (ffirst (q "select id from urakka where sampoid = '4242523-TES2'"))
         oulu-palvelusopimus-urakkaid (ffirst (q "select id from urakka where sampoid = '666343-TES6'"))
-        muhos-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db harja.palvelin.main/harja-jarjestelma) {:urakka muhos-kokonaisurakka-urakkaid}))
-        oulu-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db harja.palvelin.main/harja-jarjestelma) {:urakka oulu-palvelusopimus-urakkaid}))]
+        muhos-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db jarjestelma) {:urakka muhos-kokonaisurakka-urakkaid}))
+        oulu-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db jarjestelma) {:urakka oulu-palvelusopimus-urakkaid}))]
     (is (= "4242523-TES2" (yha-integraatio/yhaan-lahetettava-sampoid muhos-urakka)))
     (is (= "TYP-3003" (yha-integraatio/yhaan-lahetettava-sampoid oulu-urakka)))))
