@@ -338,7 +338,6 @@
                                                             :let 200})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 0))))
 
-
 (deftest paattele-yhaan-lahetettava-sampoid-onnistuu
   "Palveluurakasta lähetetään palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."
   (let [muhos-kokonaisurakka-urakkaid (ffirst (q "select id from urakka where sampoid = '4242523-TES2'"))

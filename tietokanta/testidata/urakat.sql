@@ -1,4 +1,3 @@
-
 -- Luodaan alueurakoita
 INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue)
 VALUES ('1242141-AGSG', (SELECT id

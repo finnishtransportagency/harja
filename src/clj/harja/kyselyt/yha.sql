@@ -23,7 +23,7 @@ SELECT
   sidonta_lukittu          AS "sidonta-lukittu",
   u.sopimustyyppi          AS "sopimustyyppi",
   u.sampoid                AS "urakka-sampoid",
-  'TYP-' || u.urakkanro    AS "palvelusopimus-sampoid" -- koskee vain urakoita, joiden sopimustyyppi on palvelusopimus
+  'TYP-' || u.urakkanro    AS "palvelusopimus-sampoid"  -- koskee vain urakoita, joiden sopimustyyppi on palvelusopimus
 FROM yhatiedot yt
   LEFT JOIN urakka u ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja

@@ -182,7 +182,6 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-
 (defn yhaan-lahetettava-sampoid
   "Palveluurakasta lähetetään YHA:an palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."
   [urakan-yha-tiedot]
