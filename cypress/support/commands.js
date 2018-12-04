@@ -57,6 +57,10 @@ Cypress.Commands.add("terminaaliKomento", () => {
 
 Cypress.Commands.add("valinnatValitse", { prevSubject: 'element'}, ($valinnat, parametrit) => {
     cy.wrap($valinnat.find('button')).click()
+    // Pudotusvalikoissa pitää tarkistaa ensin, että onhan ne vaihtoehdot näkyvillä. Tämä siksi, että valikon
+    // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,
+    // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
+    // poistaa DOM:ista.
     cy.wrap($valinnat).should('have.class', 'open')
     cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('be.visible').click({force: true})
 })
@@ -65,7 +69,20 @@ Cypress.Commands.add("pvmValitse", {prevSubject: 'element'}, ($pvm, parametrit) 
     cy.wrap($pvm).clear()
     cy.wrap($pvm).focus()
     cy.wrap($pvm.parent()).find('table').should('exist')
-    cy.wrap($pvm).type(parametrit.pvm)
+    cy.wrap($pvm).type(parametrit.pvm).then(($pvmUudestaan) => {
+        // Joskus Cypress ei vain kirjoita koko tekstiä kenttään
+        if ($pvmUudestaan.val() !== parametrit.pvm) {
+            cy.wrap($pvmUudestaan).clear().type(parametrit.pvm)
+        }
+    })
+    cy.wrap(Cypress.$('#app')).click('topRight', {force: true})
+    cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
+        return $pvm
+    })
+})
+
+Cypress.Commands.add("pvmTyhjenna", {prevSubject: 'element'}, ($pvm) => {
+    cy.wrap($pvm).clear()
     cy.wrap(Cypress.$('#app')).click('topRight', {force: true})
     cy.wrap($pvm.parent()).find('table').should('not.exist').then(($table) => {
         return $pvm

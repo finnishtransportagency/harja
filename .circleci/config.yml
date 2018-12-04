@@ -54,10 +54,9 @@ jobs:
             cd /tmp/cypress-run
             tar xf /tmp/harja/testidata.tar
 
-            cd cypress/support
             npm install transit-js
 
-            cd ../../tietokanta
+            cd tietokanta
             mvn flyway:migrate
             psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
             psql -h localhost -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"

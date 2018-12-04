@@ -18,12 +18,8 @@ describe('Aloita päällystysilmoitus', function () {
 
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa ja Kainuu').click()
-        cy.get('[data-cy=murupolku-urakkatyyppi] button').click()
-        // Pudotusvalikoissa pitää tarkistaa ensin, että onhan ne vaihtoehdot näkyvillä. Tämä siksi, että valikon
-        // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,
-        // että Cypress saattaa keretä napata tuolla seuraavalla 'contains' käskyllä elementin, jonka React
-        // poistaa DOM:ista.
-        cy.contains('[data-cy=murupolku-urakkatyyppi] ul li a', 'Päällystys').should('be.visible').click()
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
         cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
@@ -139,6 +135,8 @@ describe('Aloita päällystysilmoitus', function () {
             cy.wrap(valitseInput(2, 'Losa')).type(3)
             cy.wrap(valitseInput(2, 'Let')).type(25)
             cy.wrap(valitseInput(2, 'Nimi')).type('Foo')
+            // varmistelua
+            cy.contains('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] .virhe', 'Kohteenosa on päällekkäin osan Foo kanssa')
             cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
                 let $rivitJalkeen = $gridOtsikotJalkeen.grid.find('tbody tr');
                 let $otsikotJalkeen = $gridOtsikotJalkeen.otsikot;
@@ -157,9 +155,9 @@ describe('Aloita päällystysilmoitus', function () {
                 expect(virheValinta(0, 'Let')).to.have.lengthOf(1);
                 expect(virheValinta(0, 'Let')[0]).to.contain('Osan 1 maksimietäisyys on ');
                 ['Aosa', 'Aet', 'Losa', 'Let'].forEach((otsikko) => {
-                    expect(virheValinta(1, otsikko)).to.have.length(1)
+                    expect(virheValinta(1, otsikko)).to.have.lengthOf(1)
                         .and.to.contain('Kohteenosa on päällekkäin osan Foo kanssa')
-                    expect(virheValinta(2, otsikko)).to.have.length(1)
+                    expect(virheValinta(2, otsikko)).to.have.lengthOf(1)
                         .and.to.contain('Kohteenosa on päällekkäin toisen osan kanssa')
                 })
             })
@@ -222,6 +220,8 @@ describe('Aloita päällystysilmoitus', function () {
             cy.wrap(valitseInput(3, 'Losa')).clear().type(1)
             cy.wrap(valitseInput(3, 'Let')).clear().type(400)
         })
+        // Varmistetaan, että input kenttiä löytyy (eli grid ei ole epävalidissa tilassa)
+        cy.get('[data-cy=paallystystoimenpiteen-tiedot] input')
         cy.get('[data-cy=paallystystoimenpiteen-tiedot]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
@@ -235,6 +235,7 @@ describe('Aloita päällystysilmoitus', function () {
             cy.wrap(valitseInput(0, 'Leveys (m)')).type(1)
             cy.wrap(valitseInput(1, 'Leveys (m)')).type(2).then(($leveysInput) => {
                 cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click().then(($eiKayteta) => {
+                    cy.wrap(valitseInput($rivit.length-1, 'Leveys (m)')).should('have.value', '2')
                     for (let i = 0; i < $rivit.length; i++) {
                         let sarakkeet = $rivit.eq(i).find('td');
                         expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
@@ -254,7 +255,13 @@ describe('Aloita päällystysilmoitus', function () {
 
 describe('Käsittele päälystysilmoitus', function () {
     it('Palaa lomakkeelle', function () {
-        //valitse2017();
+        // TODO: Tässä on sellainen bugi, että joskus 2017 jää valituksi ja toisinaan oletusvuosi on otettu takaisin
+        cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
+            if ($valinta.find('.valittu').text().trim() === '2018') {
+                valitse2017()
+            }
+        })
         cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
@@ -281,7 +288,7 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
         cy.contains('Käsitelty').parent().should('have.class', 'required')
         //TODO Korjaa bugi, tuohon ei pitäisi tarvita ensin kirjottaa jotain, että virheviestit näkyisivät
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).clear()
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .virhe').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
@@ -301,7 +308,7 @@ describe('Käsittele päälystysilmoitus', function () {
         })
 
         // Asiatarkastuksen tarkastus
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).clear()
+        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .virhe').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
@@ -315,8 +322,7 @@ describe('Käsittele päälystysilmoitus', function () {
         })
         cy.contains('[data-cy=paallystysilmoitus-asiatarkastus] label', 'Tarkastaja').then(($tarkastaja) => {
             cy.wrap($tarkastaja.parent().find('input')).type('foo').clear().then(($input) => {
-                expect(virheTekstit($tarkastaja.parent().find('.virhe'))).to.have.lengthOf(1)
-                    .and.to.contain('Anna tarkastaja')
+                cy.wrap($input.parent()).find('.virhe').should('have.lengthOf', 1).and('contain', 'Anna tarkastaja')
             })
         })
     })
@@ -398,6 +404,8 @@ describe('Korjaa virhedata', function () {
                 expect(valitseInput(35, 'Let')).to.have.value('464');
             });
         })
+        // Varmistetaan, että input kenttiä löytyy (eli grid ei ole epävalidissa tilassa)
+        cy.get('[data-cy=paallystystoimenpiteen-tiedot] input')
         cy.get('[data-cy=paallystystoimenpiteen-tiedot]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
