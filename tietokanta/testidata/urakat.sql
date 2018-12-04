@@ -1234,6 +1234,10 @@ VALUES (
   '3003'
 );
 
+INSERT INTO yhatiedot (urakka, yhaid, yhatunnus) VALUES ((SELECT id
+                                                          FROM urakka
+                                                          WHERE nimi = 'Oulun päällystyksen palvelusopimus'), 87823, 'YHA45545');
+
 -- Tampereen rantatunneli
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
 VALUES ('PIR RATU IHJU 2016-2022, H', '2016-01-01', '2023-12-31', 'PR00031633');

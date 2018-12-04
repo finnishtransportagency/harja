@@ -20,8 +20,12 @@ SELECT
   kohdeluettelo_paivittaja AS "kohdeluettelo-paivittaja",
   k.etunimi                AS "kohdeluettelo-paivittaja-etunimi",
   k.sukunimi               AS "kohdeluettelo-paivittaja-sukunimi",
-  sidonta_lukittu          AS "sidonta-lukittu"
+  sidonta_lukittu          AS "sidonta-lukittu",
+  u.sopimustyyppi          AS "sopimustyyppi",
+  u.sampoid                AS "urakka-sampoid",
+  'TYP-' || u.urakkanro    AS "palvelusopimus-sampoid" -- koskee vain urakoita, joiden sopimustyyppi on palvelusopimus
 FROM yhatiedot yt
+  LEFT JOIN urakka u ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
 WHERE urakka = :urakka;
 
