@@ -1,4 +1,4 @@
-import transit from '../support/node_modules/transit-js/transit'
+import transit from '../../node_modules/transit-js/transit'
 
 let valitse2017 = function () {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
