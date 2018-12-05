@@ -1,18 +1,29 @@
 import transit from '../../node_modules/transit-js/transit'
 
-let valitse2017 = function () {
+let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
-    cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: '2017'})
+    cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('be.visible')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
-describe('Aloita päällystysilmoitus', function () {
+describe('Aloita päällystysilmoitus vanha', function () {
     // Lisätään kantaan puhdas testidata
     before(function () {
-        cy.POTTestienAlustus()
+        cy.POTTestienAlustus(
+            {
+                yllapitoluokka: 8,
+                ajorata: 1,
+                kaista: 1,
+                vuosi: 2017,
+                kvl: 500
+            },
+            {
+                ajorata: 1,
+                kaista: 1
+            })
     })
     it('Avaa vanha POT-lomake', function () {
 
@@ -24,7 +35,8 @@ describe('Aloita päällystysilmoitus', function () {
         cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
         cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').parent().should('have.class', 'active')
-        valitse2017();
+        valitseVuosi(2017);
+        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]').should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
@@ -235,7 +247,7 @@ describe('Aloita päällystysilmoitus', function () {
             cy.wrap(valitseInput(0, 'Leveys (m)')).type(1)
             cy.wrap(valitseInput(1, 'Leveys (m)')).type(2).then(($leveysInput) => {
                 cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click().then(($eiKayteta) => {
-                    cy.wrap(valitseInput($rivit.length-1, 'Leveys (m)')).should('have.value', '2')
+                    cy.wrap(valitseInput($rivit.length - 1, 'Leveys (m)')).should('have.value', '2')
                     for (let i = 0; i < $rivit.length; i++) {
                         let sarakkeet = $rivit.eq(i).find('td');
                         expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
@@ -259,7 +271,7 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
             if ($valinta.find('.valittu').text().trim() === '2018') {
-                valitse2017()
+                valitseVuosi(2017)
             }
         })
         cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
@@ -375,7 +387,7 @@ describe('Korjaa virhedata', function () {
         })
     })
     it('Palaa lomakkeelle', function () {
-        //valitse2017();
+        //valitseVuosi(2017);
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
@@ -424,7 +436,7 @@ describe('Korjaa virhedata', function () {
             cy.wrap(valitseInput(2, 'KM-arvo')).type(2)
             cy.wrap(valitseInput(33, 'KM-arvo')).type(33)
         })
-        cy.route('POST','_/tallenna-paallystysilmoitus').as('tallenna-paallystysilmoitus')
+        cy.route('POST', '_/tallenna-paallystysilmoitus').as('tallenna-paallystysilmoitus')
         cy.get('[data-cy=pot-tallenna]').click()
         cy.wait('@tallenna-paallystysilmoitus').then(($xhr) => {
             let reader = transit.reader("json");
@@ -438,6 +450,58 @@ describe('Korjaa virhedata', function () {
             expect(trData[33].get(transit.keyword('tr-loppuetaisyys'))).to.equal(460)
             expect(trData[33].get(transit.keyword('toimenpide-raekoko'))).to.equal(33)
             expect(trData[33].get(transit.keyword('km-arvo'))).to.equal('33')
+        })
+    })
+})
+describe('Aloita päällystysilmoitus uusi', function () {
+    // Lisätään kantaan puhdas testidata
+    before(function () {
+        cy.POTTestienAlustus(
+            {
+                yllapitoluokka: null,
+                ajorata: null,
+                kaista: null,
+                vuosi: 2018,
+                kvl: null
+            },
+            {
+                ajorata: 1,
+                kaista: 1
+            })
+    })
+    it('Avaa uusi POT-lomake', function () {
+
+        cy.visit("/")
+        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
+        cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
+        cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
+        cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').parent().should('have.class', 'active')
+        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
+        cy.get('[data-cy=paallystysilmoitukset-grid]')
+            .gridOtsikot().then(($gridOtsikot) => {
+            cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
+                expect($rivi.find('td').eq($gridOtsikot.otsikot.get('Tila')).text().trim()).to.contain('-')
+            })
+        })
+        cy.get('[data-cy=paallystysilmoitukset-grid] tr')
+            .contains('E2E-Testi')
+            .parentsUntil('tbody')
+            .contains('button', 'Aloita päällystysilmoitus').click()
+    })
+    it('Oikeat aloitustiedot', function () {
+        // Tierekisteritaulukon tienumeroa, ajorataa ja kaistaa ei pitäisi pystyä muutamaan
+        cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            let valitseInput = function (rivi, otsikko) {
+                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
+            }
+            valitseInput(0, 'Ajorata')
+            valitseInput(0, 'Kaista')
+            valitseInput(0, 'Tienumero')
         })
     })
 })
