@@ -80,9 +80,9 @@ jobs:
             echo +++++++++++++++++++
             echo
 
-            cd /tmp/cypress-run && $(npm bin)/cypress run --browser chrome
+            cd /tmp/cypress-run && $(npm bin)/cypress run
       - store_artifacts:
-          path: cypress/screenshots
+          path: /tmp/cypress-run/cypress/screenshots
 
 workflows:
   version: 2
