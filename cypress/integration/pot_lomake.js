@@ -272,6 +272,8 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
             if ($valinta.find('.valittu').text().trim() === '2018') {
+                cy.get('[data-cy=piilota-kartta]').click()
+                cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
                 valitseVuosi(2017)
             }
         })
