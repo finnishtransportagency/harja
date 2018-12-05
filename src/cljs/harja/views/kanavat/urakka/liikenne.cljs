@@ -288,9 +288,11 @@
 
                       [{:otsikko "Alapinta"
                         :tyyppi :positiivinen-numero
+                        :desimaalien-maara 2
                         :nimi ::lt/vesipinta-alaraja}
                        {:otsikko "Yläpinta"
                         :tyyppi :positiivinen-numero
+                        :desimaalien-maara 2
                         :nimi ::lt/vesipinta-ylaraja}])
 
                     (when (and uusi-tapahtuma?

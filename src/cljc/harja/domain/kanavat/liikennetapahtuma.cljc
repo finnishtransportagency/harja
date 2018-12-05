@@ -152,6 +152,10 @@
 
 (s/def ::hakuparametrit ::hae-liikennetapahtumat-kysely)
 
+;; Override koska frontilta ei saa bigdecimal-muodossa. Kannassa NUMERIC.
+(s/def ::vesipinta-alaraja (s/and number? #(>= % 0)))
+(s/def ::vesipinta-ylaraja (s/and number? #(>= % 0)))
+
 (s/def ::tallenna-liikennetapahtuma-kysely (s/keys :req [::aika
                                                          ::sopimus-id
                                                          ::urakka-id

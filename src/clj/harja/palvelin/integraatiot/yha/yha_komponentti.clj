@@ -184,6 +184,13 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
+(defn yhaan-lahetettava-sampoid
+  "Palveluurakasta lähetetään YHA:an palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."
+  [urakan-yha-tiedot]
+  (if (= (:sopimustyyppi urakan-yha-tiedot) "palvelusopimus")
+    (:palvelusopimus-sampoid urakan-yha-tiedot)
+    (:urakka-sampoid urakan-yha-tiedot)))
+
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet YHA:an. Mikäli kohteiden lähetys epäonnistuu, niiden päällystysilmoituksen
    lukko avataan, jotta mahdollisesti virheelliset tiedot voidaan korjata. Jos lähetys onnistuu, kohteiden
@@ -197,7 +204,8 @@
       db integraatioloki "yha" "kohteiden-lahetys" nil
       (fn [konteksti]
         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-          (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
+          (let [urakka (assoc urakka :harjaid urakka-id
+                                     :sampoid (yhaan-lahetettava-sampoid urakka))
                 kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
                 url (str url "toteumatiedot")
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)

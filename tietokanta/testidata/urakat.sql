@@ -1,4 +1,3 @@
-
 -- Luodaan alueurakoita
 INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue)
 VALUES ('1242141-AGSG', (SELECT id
@@ -1243,6 +1242,10 @@ VALUES (
   'paallystys' :: urakkatyyppi,
   '3003'
 );
+
+INSERT INTO yhatiedot (urakka, yhaid, yhatunnus) VALUES ((SELECT id
+                                                          FROM urakka
+                                                          WHERE nimi = 'Oulun päällystyksen palvelusopimus'), 87823, 'YHA45545');
 
 -- Tampereen rantatunneli
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
