@@ -28,7 +28,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     it('Avaa vanha POT-lomake', function () {
 
         cy.visit("/")
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa ja Kainuu').click()
+        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
         cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
