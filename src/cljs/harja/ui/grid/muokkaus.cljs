@@ -401,7 +401,7 @@
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan
-                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
+                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys
@@ -417,9 +417,12 @@
              (aseta-grid ohj ohjaus))
 
            [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
-            {:class (str (str/join " " luokat)
-                         (if voi-muokata? " nappeja"))
-             :id (:id opts)}
+            (merge
+              {:class (str (str/join " " luokat)
+                           (if voi-muokata? " nappeja"))
+               :id (:id opts)}
+              (when data-cy
+                {:data-cy data-cy}))
             (when muokkauspaneeli?
               (muokkauspaneeli {:otsikko otsikko :voi-muokata? voi-muokata? :historia historia
                                 :voi-kumota? voi-kumota? :muokatut muokatut :virheet virheet-atom

@@ -257,7 +257,8 @@
                                               "Kaikki"
                                               (str %))
                                             "Valitse")
-                          :class "alasveto-vuosi"}
+                          :class "alasveto-vuosi"
+                          :data-cy "valinnat-vuosi"}
      (let [vuodet (range ensimmainen-vuosi (inc viimeinen-vuosi))
            vuodet (if kaanteinen-jarjestys?
                     (reverse vuodet)
