@@ -362,7 +362,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     (when validoi-alussa?
       (muokkaa! (validoi data skeema)))
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata? ei-borderia? validoitavat-avaimet] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy] :as opts} skeema
          {muokatut ::muokatut
           :as data}]
       (when validoitavat-avaimet
@@ -388,8 +388,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
-             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
-                          luokka)}
+             (merge
+               {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
+                            luokka)}
+               (when data-cy
+                 {:data-cy data-cy}))
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall

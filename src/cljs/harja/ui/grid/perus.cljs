@@ -975,7 +975,7 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
-                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti] :as opts}
+                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1004,8 +1004,11 @@
                        (conj luokat "livi-grid-infolaatikolla")
                        luokat)
               muokattu? (not (empty? @historia))]
-          [:div.panel.panel-default.livi-grid {:id (:id opts)
-                                               :class (clojure.string/join " " luokat)}
+          [:div.panel.panel-default.livi-grid (merge
+                                                {:id (:id opts)
+                                                 :class (clojure.string/join " " luokat)}
+                                                (when data-cy
+                                                  {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
            (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                              :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?

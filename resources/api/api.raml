@@ -79,6 +79,31 @@ documentation:
   /haku:
     is: [secured]
     description: Urakoiden massahaku.
+    get:
+      is: [secured]
+      description: Hakee kaikki urakat, joihin järjestelmätunnuksella on oikeudet. Liikenneviraston järjestelmille palauttaa kaikki urakat.
+      queryParameters:
+        urakkatyyppi:
+          description: Rajaa urakoiden haun annettuun tyyppiin. Sallitut tyypit hoito, paallystys, paikkaus, tiemerkinta, valaistus, siltakorjaus, tekniset-laitteet, vesivayla-hoito, vesivayla-ruoppaus, vesivayla-turvalaitteiden-korjaus, vesivayla-kanavien-hoito, vesivayla-kanavien-korjaus.
+          type: string
+          example: hoito
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/urakoiden-haku-response.json
+              schema: urakoiden-haku-response
+        400:
+           body:
+             application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        500:
+           body:
+             application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+
     /{ytunnus}:
       get:
         is: [secured]
@@ -663,6 +688,11 @@ documentation:
         get:
           is: [secured]
           description: Palauttaa listan urakan ylläpitokohteista. Tiedot tarvitaan, jotta voidana kirjata esim. päällystysilmoitus päällystyskohteelle
+          queryParameters:
+            geometriat:
+              description: Mikäli asetettu "true", palauttaa alikohteiden geometriat GeoJSON muodossa
+              type: boolean
+              example: true
           responses:
             200:
               body:

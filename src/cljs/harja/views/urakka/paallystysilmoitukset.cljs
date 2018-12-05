@@ -106,7 +106,8 @@
                    (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
        :validoi-alussa? true
        :validoitavat-avaimet #{:pakollinen :validoi}
-       :voi-muokata? muokattava?}
+       :voi-muokata? muokattava?
+       :data-cy "paallystysilmoitus-asiatarkastus"}
       [{:otsikko "Tarkastettu"
         :nimi :tarkastusaika
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
@@ -152,7 +153,8 @@
        :muokkaa! #(muokkaa! assoc-in [:perustiedot :tekninen-osa] %)
        :validoi-alussa? true
        :validoitavat-avaimet #{:pakollinen :validoi}
-       :voi-muokata? muokattava?}
+       :voi-muokata? muokattava?
+       :data-cy "paallystysilmoitus-kasittelytiedot"}
       [{:otsikko "Käsitelty"
         :nimi :kasittelyaika
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :kasittelyaika)
@@ -220,6 +222,7 @@
                                                    :lomakedata lahetettava-data
                                                    :vuosi vuosi}))
       {:luokka "nappi-ensisijainen"
+       :data-cy "pot-tallenna"
        :id "tallenna-paallystysilmoitus"
        :disabled (or (false? valmis-tallennettavaksi?)
                      (not (oikeudet/voi-kirjoittaa?
@@ -274,7 +277,8 @@
                                   (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                   (muokkaa! update :perustiedot (fn [vanha]
                                                                   (merge vanha uusi))))
-                      :validoi-alussa? true}
+                      :validoi-alussa? true
+                      :data-cy "paallystysilmoitus-perustiedot"}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
                 (str "#" kohdenumero " " tunnus " " kohdenimi))
@@ -429,6 +433,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
+           :data-cy "paallystystoimenpiteen-tiedot"
            :id "paallystysilmoitus-paallystystoimenpiteet"
            :voi-lisata? false
            :voi-kumota? false
@@ -553,6 +558,7 @@
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
+           :data-cy "kiviaines-ja-sideaine"
            :rivinumerot? true
            :voi-lisata? false
            :voi-kumota? false
@@ -637,6 +643,7 @@
             [debug @alustalle-tehdyt-toimet {:otsikko "Alustatoimenpiteet"}]
             [:div [grid/muokkaus-grid
                    {:otsikko "Alustalle tehdyt toimet"
+                    :data-cy "alustalle-tehdyt-toimet"
                     :jarjesta jarjestys-fn
                     :voi-muokata? alustatoimet-voi-muokata?
                     :voi-kumota? false
@@ -1339,7 +1346,8 @@
       :voi-lisata? false
       :voi-kumota? false
       :voi-poistaa? (constantly false)
-      :voi-muokata? true}
+      :voi-muokata? true
+      :data-cy "paallystysilmoitukset-grid"}
      [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
       {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
       {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}

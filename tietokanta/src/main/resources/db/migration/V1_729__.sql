@@ -1,4 +1,10 @@
-ALTER TABLE yllapitokohdeosa
-  ADD COLUMN keskimaarainen_vuorokausiliikenne INTEGER,
-  ADD COLUMN yllapitoluokka INTEGER,
-  ADD COLUMN nykyinen_paallyste INTEGER;
+-- Päivitä kanavien toimenpiteen puuttuva tuotekoodi
+UPDATE toimenpidekoodi SET
+  tuotenumero = 201,
+  muokattu = current_timestamp,
+  muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') where
+  koodi ='27100' and nimi = 'Vesiliikenteen käyttöpalvelut';
+
+
+
+
