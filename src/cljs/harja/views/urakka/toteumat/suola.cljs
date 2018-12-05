@@ -93,7 +93,8 @@
                    [napit/yleinen-toissijainen "Hae"
                     (fn []
                       ; aiheuta tiedot/toteumat -reaktio
-                      (reset! tiedot/lomakkeen-tila @tiedot/ui-lomakkeen-tila))
+                      (reset! tiedot/lomakkeen-tila {:tierekisteriosoite (:tierekisteriosoite @tiedot/ui-lomakkeen-tila)
+                                                     :refresh (inc (:refresh @tiedot/lomakkeen-tila))}))
                     {:ikoni (ikonit/livicon-search)}]
                    [napit/yleinen-toissijainen "Tyhjennä tieosoiteväli"
                     (fn []
