@@ -180,7 +180,7 @@
 (defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
 (defrecord HaeTrOsienPituudet [tr-numero tr-alkuosa tr-loppuosa])
-(defrecord HaeTrOsienPituudetOnnistui [vastaus])
+(defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
@@ -210,7 +210,6 @@
     (let [parametrit {:urakka-id urakka-id
                       :sopimus-id (first valittu-sopimusnumero)
                       :vuosi valittu-urakan-vuosi}]
-      (println "HAETAAN PARAMETRILLA " parametrit)
       (-> app
           (tuck-apurit/post! :urakan-paallystysilmoitukset
                              parametrit
@@ -219,11 +218,9 @@
           (assoc :kiintioiden-haku-kaynnissa? true))))
   HaePaallystysilmoituksetOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "VASTAUS ONNISTUI: " vastaus)
     (assoc app :paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus (get-in app [:yllapito-tila :kohdejarjestys]))))
   HaePaallystysilmoituksetEpaonnisuti
   (process-event [{vastaus :vastaus} app]
-    (println "VASTAUS EPÄONNISTUI: " vastaus)
     app)
   HaePaallystysilmoitusPaallystyskohteellaOnnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
@@ -245,8 +242,6 @@
                                 }
           perustiedot (select-keys vastaus perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
-      (println "---> PERUSTIEDOT: " perustiedot)
-      (println "----> MUUT TIEDOT: " muut-tiedot)
       (-> app
           (assoc-in [:paallystysilmoitus-lomakedata :kirjoitusoikeus?]
                     (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
@@ -266,14 +261,16 @@
       (tuck-apurit/post! app :hae-tr-osien-pituudet
                          parametrit
                          {:onnistui ->HaeTrOsienPituudetOnnistui
+                          :onnistui-parametrit [tr-numero]
                           :epaonnistui ->HaeTrOsienPituudetEpaonnistui})))
   HaeTrOsienPituudetOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{:keys [vastaus tr-numero]} app]
     (update-in app [:paallystysilmoitus-lomakedata :tr-osien-pituudet] (fn [vanhat]
-                                                                         (merge vanhat vastaus))))
+                                                                         (update vanhat tr-numero
+                                                                                 (fn [vanhat-osuudet]
+                                                                                   (merge vanhat-osuudet vastaus))))))
   HaeTrOsienPituudetEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (println "TR OSIEN PITUUDEN HAKU EPÄONNISTUI: " vastaus)
     app)
   AvaaPaallystysilmoitus
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
