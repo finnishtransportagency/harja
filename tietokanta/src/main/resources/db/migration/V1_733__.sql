@@ -4,7 +4,7 @@ INSERT INTO urakkatyypin_indeksi (urakkatyyppi, indeksinimi, raakaaine, koodi) V
 UPDATE urakka set indeksi = 'Palvelujen tuottajahintaindeksi 2010' where tyyppi = 'vesivayla-kanavien-hoito'; -- Saimaan kanava
 
 CREATE OR REPLACE FUNCTION aseta_urakan_oletusindeksi()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger AS $$
 BEGIN
 
   IF NEW.tyyppi = 'hoito' THEN
@@ -33,10 +33,9 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION indeksilaskennan_perusluku (urakka_id integer) RETURNS numeric
-	LANGUAGE plpgsql
 AS $$
 DECLARE
   kilpailutusta_edeltava_vuosi INTEGER;
@@ -119,5 +118,5 @@ BEGIN
     END IF;
   END IF;
 END;
-$$
+$$ LANGUAGE plpgsql;
 
