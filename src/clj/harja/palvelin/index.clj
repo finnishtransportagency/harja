@@ -51,7 +51,7 @@
         [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
         [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-        [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]]
+        [:script {:type "text/javascript" :src "js/less-3.9-0.js"}]]
        [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
         [:div#app]
         [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
@@ -110,7 +110,7 @@
           [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
           [:script {:type "text/javascript" :src "js/json3.min.js"}]
           [:script {:type "text/javascript" :src "js/proj4.js"}]
-          [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]
+          [:script {:type "text/javascript" :src "js/less-3.9-0.js"}]
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
