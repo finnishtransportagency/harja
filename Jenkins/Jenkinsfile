@@ -62,10 +62,8 @@ node {
         //vähään aikaan.
         if (jenkinsinBuildNumber) {
             // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-            if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
-                /*
-                 * TESTISERVERIKANNAN LUOMINEN
-                 */
+            /*if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+                
 
                 dir('Harja') {
                     omatFunktiot.checkoutHarja('*/develop')
@@ -76,9 +74,7 @@ node {
 
                 dir('CI') {
                     omatFunktiot.checkoutCI()
-                    /*
-                     * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-                     */
+                    
 
                     stage(omatVarit.testiserverinAppLuonti) {
                         omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
@@ -87,14 +83,12 @@ node {
 
                 dir('E2E') {
                     omatFunktiot.checkoutE2E()
-                    /*
-                     * E2E TESTIT
-                     */
+                    
                     stage(omatVarit.e2eTestit) {
                         omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
                     }
                 }
-            }
+            }*/
 
             dir('Harja') {
                 omatFunktiot.checkoutHarja('*/develop')
