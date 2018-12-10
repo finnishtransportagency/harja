@@ -175,6 +175,9 @@
    (when-not (empty? @tiedot/toteumat)
      [:div.bold kaytetty-yhteensa])])
 
+(defn pohjavesialueen-suola []
+  [:div "foo"])
+
 (defn suolatoteumat []
   (komp/luo
     (komp/lippu tiedot/suolatoteumissa?

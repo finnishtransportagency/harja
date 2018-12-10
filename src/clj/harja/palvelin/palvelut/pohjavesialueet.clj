@@ -13,6 +13,10 @@
         (geo/muunna-pg-tulokset :alue)
         (q/hae-pohjavesialueet db hallintayksikko)))
 
+(defn hae-urakan-pohjavesialueet [db user urakka-id]
+  (into []
+        (geo/muunna-pg-tulokset :alue)
+        (q/hae-urakan-pohjavesialueet db {:urakka urakka-id})))
 
 (defrecord Pohjavesialueet []
   component/Lifecycle
@@ -22,6 +26,11 @@
                       (fn [user hallintayksikko]
                         (oikeudet/ei-oikeustarkistusta!)
                         (hae-pohjavesialueet (:db this) user hallintayksikko)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-urakan-pohjavesialueet
+                      (fn [user urakka-id]
+                        (oikeudet/ei-oikeustarkistusta!)
+                        (hae-pohjavesialueet (:db this) user urakka-id)))
     this)
 
   (stop [this]
