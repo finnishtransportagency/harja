@@ -38,16 +38,12 @@ node {
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-    stage('Siivoa workspace') {
-        cleanWs()
-    }
-
     if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
         if (params.ARCHIVE_BUILD_NUMBER) {
             slackSend([color  : '#3232ff',
                        message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
             jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
-            if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+            if (!omatFunktiot.onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
                 slackSend([color  : 'warning',
                            message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
                 error([message: "JAR:ia ei löytynyt halutulla numerolla"])
