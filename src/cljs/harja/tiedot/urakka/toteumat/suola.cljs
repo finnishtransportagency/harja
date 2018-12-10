@@ -14,6 +14,8 @@
 
 (declare hae-toteumat hae-toteumat-tr-valille hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
 
+(defonce urakan-pohjavesialueet (atom nil))
+
 (defonce suolatoteumissa? (atom false))
 
 (defonce ui-suodatin-valinnat (atom {:suola "Kaikki"}))
@@ -96,6 +98,10 @@
           (into #{}
                 (concat @valitut-toteumat
                         (eriteltavat-toteumat toteumat)))))
+
+(defn hae-urakan-pohjavesialueet [urakka-id]
+  {:pre [(int? urakka-id)]}
+  (k/post! :hae-urakan-pohjavesialueet {:urakka-id urakka-id}))
 
 (defn poista-valituista-suolatoteumista [toteumat]
   (reset! valitut-toteumat

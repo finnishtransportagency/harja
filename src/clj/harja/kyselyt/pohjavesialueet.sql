@@ -12,10 +12,9 @@ WHERE hallintayksikko = :hallintayksikko AND suolarajoitus IS TRUE;
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet
 SELECT
   p.nimi,
-  p.tunnus,
-  p.alue
+  p.tunnus
 FROM pohjavesialueet_urakoittain p
-WHERE p.urakka = :urakka AND suolarajoitus IS TRUE;
+WHERE p.urakka = :urakka-id AND suolarajoitus IS TRUE;
 
 -- name: poista-pohjavesialueet!
 -- Poistaa kaikki pohjavesialueet

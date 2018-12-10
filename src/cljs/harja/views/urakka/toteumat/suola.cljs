@@ -176,7 +176,22 @@
      [:div.bold kaytetty-yhteensa])])
 
 (defn pohjavesialueen-suola []
-  [:div "foo"])
+  (komp/luo
+   (komp/sisaan
+    (fn []
+      (let [urakkaid @nav/valittu-urakka-id]
+        (go
+          (reset! tiedot/urakan-pohjavesialueet (<! (tiedot/hae-urakan-pohjavesialueet urakkaid)))))))
+   (fn []
+     (let [alueet @tiedot/urakan-pohjavesialueet]
+       [grid/grid {:otsikko "Urakan pohjavesialueet"
+                   :tunniste :tunnus
+                   :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
+                            [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
+                            "Ei pohjavesialueita")}
+        [{:otsikko "Tunnus" :nimi :tunnus :leveys 10}
+         {:otsikko "Nimi" :nimi :nimi}]
+        alueet]))))
 
 (defn suolatoteumat []
   (komp/luo
