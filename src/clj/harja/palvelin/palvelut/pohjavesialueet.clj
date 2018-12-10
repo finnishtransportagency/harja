@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.geo :as geo]
             [harja.kyselyt.pohjavesialueet :as q]
+            [harja.kyselyt.materiaalit :as m]
 
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -15,6 +16,9 @@
 
 (defn hae-urakan-pohjavesialueet [db user urakka-id]
   (into [] (q/hae-urakan-pohjavesialueet db urakka-id)))
+
+(defn hae-pohjavesialueen-suolatoteuma [db user pohjavesialue]
+  (into [] (m/hae-pohjavesialueen-suolatoteuma db pohjavesialue)))
 
 (defrecord Pohjavesialueet []
   component/Lifecycle
@@ -29,6 +33,11 @@
                       (fn [user urakka-id]
                         (oikeudet/ei-oikeustarkistusta!)
                         (hae-urakan-pohjavesialueet (:db this) user urakka-id)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-pohjavesialueen-suolatoteuma
+                      (fn [user pohjavesialue]
+                        (oikeudet/ei-oikeustarkistusta!)
+                        (hae-pohjavesialueen-suolatoteuma (:db this) user pohjavesialue)))
     this)
 
   (stop [this]

@@ -82,9 +82,7 @@
                yksittaiset-toteumat))
         #(constantly false)))))
 
-(defn hae-toteuman-sijainti [toteuma]
-  (:sijainti (first (filter #(= (:tid toteuma) (:id %))
-                            @valitut-toteumat-kartalla))))
+(defonce pohjavesialueen-toteuma (atom nil))
 
 (defn eriteltavat-toteumat [toteumat]
   (map #(hash-map :tid (:tid %)) toteumat))
@@ -102,6 +100,9 @@
 (defn hae-urakan-pohjavesialueet [urakka-id]
   {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-pohjavesialueet {:urakka-id urakka-id}))
+
+(defn hae-pohjavesialueen-suolatoteuma [pohjavesialue]
+  (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue}))
 
 (defn poista-valituista-suolatoteumista [toteumat]
   (reset! valitut-toteumat
