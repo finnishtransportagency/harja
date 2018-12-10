@@ -33,8 +33,8 @@ describe('Aloita päällystysilmoitus vanha', function () {
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
         cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
-        cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
-        cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').parent().should('have.class', 'active')
+        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
+        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
         cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
         valitseVuosi(2017);
         cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]').should('not.exist')
@@ -480,8 +480,8 @@ describe('Aloita päällystysilmoitus uusi', function () {
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: 10000}).click()
         cy.get('[data-cy=tabs-taso1-Kohdeluettelo]').click()
-        cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').click()
-        cy.get('[data-cy=tabs-taso2-Päällystysilmoitukset]').parent().should('have.class', 'active')
+        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
+        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
         cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: 10000}).should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {

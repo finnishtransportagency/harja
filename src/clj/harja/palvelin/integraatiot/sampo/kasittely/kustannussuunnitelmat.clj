@@ -82,7 +82,7 @@
       (tee-oletus-vuosisummat vuodet))))
 
 (defn valitse-lpk-tilinumero [numero toimenpidekoodi tuotenumero]
-  (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
+  (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179")  (= toimenpidekoodi "20107"))
     "43020000"
     ; Hoitotuotteet 110 - 150, 536
     (if (nil? tuotenumero)
