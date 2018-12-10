@@ -62,33 +62,29 @@ node {
         //vähään aikaan.
         if (jenkinsinBuildNumber) {
             // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-            /*if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+            // if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
                 
 
-                dir('Harja') {
-                    omatFunktiot.checkoutHarja('*/develop')
-                    stage(omatVarit.testiserverinKannanLuonti) {
-                        omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
-                    }
-                }
+            //    dir('Harja') {
+            //        omatFunktiot.checkoutHarja('*/develop')
+            //        stage(omatVarit.testiserverinKannanLuonti) {
+            //            omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
+            //        }
+            //    }
 
-                dir('CI') {
-                    omatFunktiot.checkoutCI()
-                    
-
-                    stage(omatVarit.testiserverinAppLuonti) {
-                        omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
-                    }
-                }
-
-                dir('E2E') {
-                    omatFunktiot.checkoutE2E()
-                    
-                    stage(omatVarit.e2eTestit) {
-                        omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-                    }
-                }
-            }*/
+            //    dir('CI') {
+            //        omatFunktiot.checkoutCI()
+            //        stage(omatVarit.testiserverinAppLuonti) {
+            //            omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
+            //        }
+            //    }
+            //    dir('E2E') {
+            //        omatFunktiot.checkoutE2E()        
+            //        stage(omatVarit.e2eTestit) {
+            //            omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+            //        }
+            //    }
+            //}
 
             dir('Harja') {
                 omatFunktiot.checkoutHarja('*/develop')
