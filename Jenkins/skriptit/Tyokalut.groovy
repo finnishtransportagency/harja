@@ -50,7 +50,9 @@ def changeSets2String() {
 }
 
 def onkoTiedostoOlemassa(absolutePath) {
-    return true
+    loytyikoTiedosto = sh([script      : "[ -f " + absolutePath + " ]",
+                           returnStatus: true])
+    return loytyikoTiedosto == 0
 }
 
 @NonCPS
