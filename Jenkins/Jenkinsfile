@@ -47,7 +47,7 @@ node {
             slackSend([color  : '#3232ff',
                        message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
             jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
-            if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+            if (!omatFunktiot.onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
                 slackSend([color  : 'warning',
                            message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
                 error([message: "JAR:ia ei löytynyt halutulla numerolla"])
