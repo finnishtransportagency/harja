@@ -118,8 +118,7 @@
                          :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
                          :class (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
-                         :disabled (boolean @nav/valittu-urakka)
-                         :data-cy "murupolku-urakkatyyppi"}
+                         :disabled (boolean @nav/valittu-urakka)}
     nav/+urakkatyypit-ja-kaikki+]])
 
 (defn murupolku
