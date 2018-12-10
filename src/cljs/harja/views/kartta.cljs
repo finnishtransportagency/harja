@@ -281,8 +281,7 @@
                                                            :XL :M))}
           ikoni muuta-kokoa-teksti]
 
-         [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)
-                                             :data-cy "piilota-kartta"}
+         [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
           (ikonit/compress) " Piilota kartta"]])]]))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)

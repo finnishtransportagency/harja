@@ -203,7 +203,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy]} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)
               valitse-fn (or valitse-fn (constantly nil))
@@ -214,13 +214,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                            [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                             (if itemit-komponentteja?
                               vaihtoehto
-                              [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                              (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                                   (reset! auki? false)
-                                                                  nil)])])]
-          [:div.dropdown.livi-alasveto (merge
-                                         {:class (str class " " (when @auki? "open"))}
-                                         (when data-cy
-                                           {:data-cy data-cy}))
+                                                                  nil)))])]
+          [:div.dropdown.livi-alasveto {:class (str class " " (when @auki? "open"))}
            [:button.nappi-alasveto
             {:class (when disabled "disabled")
              :type "button"
