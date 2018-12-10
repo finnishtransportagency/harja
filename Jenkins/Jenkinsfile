@@ -38,10 +38,6 @@ node {
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-    stage('Siivoa workspace') {
-        cleanWs()
-    }
-
     if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
         if (params.ARCHIVE_BUILD_NUMBER) {
             slackSend([color  : '#3232ff',
@@ -66,39 +62,29 @@ node {
         //vähään aikaan.
         if (jenkinsinBuildNumber) {
             // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-            if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
-                /*
-                 * TESTISERVERIKANNAN LUOMINEN
-                 */
+            // if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+                
 
-                dir('Harja') {
-                    omatFunktiot.checkoutHarja('*/develop')
-                    stage(omatVarit.testiserverinKannanLuonti) {
-                        omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
-                    }
-                }
+            //    dir('Harja') {
+            //        omatFunktiot.checkoutHarja('*/develop')
+            //        stage(omatVarit.testiserverinKannanLuonti) {
+            //            omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
+            //        }
+            //    }
 
-                dir('CI') {
-                    omatFunktiot.checkoutCI()
-                    /*
-                     * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-                     */
-
-                    stage(omatVarit.testiserverinAppLuonti) {
-                        omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
-                    }
-                }
-
-                dir('E2E') {
-                    omatFunktiot.checkoutE2E()
-                    /*
-                     * E2E TESTIT
-                     */
-                    stage(omatVarit.e2eTestit) {
-                        omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-                    }
-                }
-            }
+            //    dir('CI') {
+            //        omatFunktiot.checkoutCI()
+            //        stage(omatVarit.testiserverinAppLuonti) {
+            //            omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
+            //        }
+            //    }
+            //    dir('E2E') {
+            //        omatFunktiot.checkoutE2E()        
+            //        stage(omatVarit.e2eTestit) {
+            //            omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+            //        }
+            //    }
+            //}
 
             dir('Harja') {
                 omatFunktiot.checkoutHarja('*/develop')
