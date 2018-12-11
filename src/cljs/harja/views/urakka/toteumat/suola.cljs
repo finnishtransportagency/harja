@@ -184,8 +184,12 @@
           (reset! tiedot/pohjavesialueen-toteuma nil)
           (reset! tiedot/urakan-pohjavesialueet (<! (tiedot/hae-urakan-pohjavesialueet urakkaid)))))))
    (fn []
-     (let [alueet @tiedot/urakan-pohjavesialueet]
+     (let [alueet @tiedot/urakan-pohjavesialueet
+           urakka @nav/valittu-urakka]
        [:div
+        [urakka-valinnat/aikavali-nykypvm-taakse urakka
+         tiedot/valittu-aikavali
+         {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
         [grid/grid {:otsikko "Urakan pohjavesialueet"
                     :tunniste :tunnus
                     :rivi-klikattu
@@ -204,7 +208,8 @@
           (when toteuma
             [grid/grid
              {:otsikko "Pohjavesialueen suolatoteuma"
-              :tunniste :maara_t_per_km}
+              :tunniste :maara_t_per_km
+              }
              [{:otsikko "Määrä t/km"
                :nimi :maara_t_per_km
                :leveys 10}
