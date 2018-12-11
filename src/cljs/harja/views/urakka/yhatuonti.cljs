@@ -84,7 +84,7 @@
                                           (modal/piilota!)
                                           (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
                                           (yha/paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? false}))}]))}]
-     tulokset]))
+     (sort-by :yhatunnus tulokset)]))
 
 (defn- sidonta-kaynnissa []
   [ajax-loader "Sidonta käynnissä..."])

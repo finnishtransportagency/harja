@@ -60,10 +60,10 @@
               jarjestelma-fixture)
 
 (def pot-testidata
-  {:aloituspvm (pvm/luo-pvm 2005 9 1)
-   :valmispvm-kohde (pvm/luo-pvm 2005 9 2)
-   :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
-   :takuupvm (pvm/luo-pvm 2005 9 3)
+  {:aloituspvm (pvm/luo-pvm 2019 9 1)
+   :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
+   :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
+   :takuupvm (pvm/luo-pvm 2019 9 3)
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :nimi "Tie 666"
                                  :tr-numero 666
@@ -126,7 +126,10 @@
                                  :pitoisuus 54
                                  :lisaaineet "asd"}]
 
-                    :alustatoimet [{:tr-alkuosa 2
+                    :alustatoimet [{:tr-numero 666
+                                    :tr-kaista 1
+                                    :tr-ajorata 1
+                                    :tr-alkuosa 2
                                     :tr-alkuetaisyys 3
                                     :tr-loppuosa 4
                                     :tr-loppuetaisyys 5
@@ -138,11 +141,11 @@
                                     :tekninen-toimenpide 1}]}})
 
 (deftest skeemavalidointi-toimii
-  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
+  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
-    (let [urakka-id @muhoksen-paallystysurakan-id
-          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:ilmoitustiedot :ylimaarainen-keyword]
                                            "Huonoa dataa, jota ei saa päästää kantaan."))
@@ -170,11 +173,11 @@
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
 (deftest skeemavalidointi-toimii-ilman-kaikkia-avaimia
-  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
+  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
-    (let [urakka-id @muhoksen-paallystysurakan-id
-          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :ilmoitustiedot
                                         {:osoitteet [{;; Alikohteen tiedot
@@ -208,7 +211,10 @@
                                                       :pitoisuus 54
                                                       :lisaaineet "asd"}]
 
-                                         :alustatoimet [{:tr-alkuosa 2
+                                         :alustatoimet [{:tr-numero 666
+                                                         :tr-kaista 1
+                                                         :tr-ajorata 1
+                                                         :tr-alkuosa 2
                                                          :tr-alkuetaisyys 3
                                                          :tr-loppuosa 4
                                                          :tr-loppuetaisyys 5
@@ -226,7 +232,10 @@
 
 (deftest testidata-on-validia
   ;; On kiva jos testaamme näkymää ja meidän testidata menee validoinnista läpi
-  (let [ilmoitustiedot (q "SELECT ilmoitustiedot FROM paallystysilmoitus")]
+  (let [ilmoitustiedot (q "SELECT pi.ilmoitustiedot
+                           FROM paallystysilmoitus pi
+                           JOIN yllapitokohde yk ON yk.id = pi.paallystyskohde
+                           WHERE yk.vuodet[1] >= 2019")]
     (doseq [[ilmoitusosa] ilmoitustiedot]
       (is (skeema/validoi pot-domain/+paallystysilmoitus+
                           (konv/jsonb->clojuremap ilmoitusosa))))))
@@ -336,23 +345,23 @@
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
-  (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
+  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
-    (let [urakka-id @muhoksen-paallystysurakan-id
-          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
                                                   :valmis-kasiteltavaksi true)
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                :sopimus-id sopimus-id
-                                                                               :vuosi 2017
+                                                                               :vuosi 2019
                                                                                :paallystysilmoitus paallystysilmoitus})]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset
-      (is (= (count (:yllapitokohteet vastaus)) 6))
-      (is (= (count (:paallystysilmoitukset vastaus)) 6))
+      (is (= (count (:yllapitokohteet vastaus)) 3))
+      (is (= (count (:paallystysilmoitukset vastaus)) 3))
 
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -364,11 +373,14 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 3968))
+        (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 4753.95M))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
+                                :tr-numero 666
+                                :tr-kaista 1
+                                :tr-ajorata 1
                                 :tr-alkuetaisyys 3
                                 :tr-alkuosa 2
                                 :tr-loppuetaisyys 5
@@ -410,7 +422,7 @@
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 (deftest uuden-paallystysilmoituksen-tallennus-eri-urakkaan-ei-onnistu
-  (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
+  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -422,11 +434,11 @@
                                                                                           :paallystysilmoitus paallystysilmoitus}))))))
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
-  (let [paallystyskohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
-    (let [urakka-id @muhoksen-paallystysurakan-id
-          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> (assoc pot-testidata
                                    :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
@@ -458,6 +470,9 @@
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
+                                :tr-numero 666
+                                :tr-kaista 1
+                                :tr-ajorata 1
                                 :tr-alkuetaisyys 3
                                 :tr-alkuosa 2
                                 :tr-loppuetaisyys 5
@@ -512,11 +527,11 @@
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
 (deftest lisaa-kohdeosa
-  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)]
+  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
-    (let [urakka-id @muhoksen-paallystysurakan-id
-          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+          sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
           hae-kohteiden-maara #(count (q (str "SELECT * FROM yllapitokohdeosa"
                                               " WHERE poistettu IS NOT TRUE "
