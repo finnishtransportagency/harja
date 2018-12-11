@@ -101,8 +101,10 @@
   {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-pohjavesialueet {:urakka-id urakka-id}))
 
-(defn hae-pohjavesialueen-suolatoteuma [pohjavesialue]
-  (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue}))
+(defn hae-pohjavesialueen-suolatoteuma [pohjavesialue [alkupvm loppupvm]]
+  (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm}))
 
 (defn poista-valituista-suolatoteumista [toteumat]
   (reset! valitut-toteumat

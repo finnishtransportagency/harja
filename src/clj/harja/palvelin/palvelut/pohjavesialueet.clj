@@ -17,8 +17,10 @@
 (defn hae-urakan-pohjavesialueet [db user urakka-id]
   (into [] (q/hae-urakan-pohjavesialueet db urakka-id)))
 
-(defn hae-pohjavesialueen-suolatoteuma [db user pohjavesialue]
-  (into [] (m/hae-pohjavesialueen-suolatoteuma db pohjavesialue)))
+(defn hae-pohjavesialueen-suolatoteuma [db user pohjavesialue alkupvm loppupvm]
+  (into [] (m/hae-pohjavesialueen-suolatoteuma db {:pohjavesialue pohjavesialue
+                                                   :alkupvm alkupvm
+                                                   :loppupvm loppupvm})))
 
 (defrecord Pohjavesialueet []
   component/Lifecycle
@@ -35,9 +37,9 @@
                         (hae-urakan-pohjavesialueet (:db this) user urakka-id)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-pohjavesialueen-suolatoteuma
-                      (fn [user pohjavesialue]
+                      (fn [user tiedot]
                         (oikeudet/ei-oikeustarkistusta!)
-                        (hae-pohjavesialueen-suolatoteuma (:db this) user pohjavesialue)))
+                        (hae-pohjavesialueen-suolatoteuma (:db this) user (:pohjavesialue tiedot) (:alkupvm tiedot) (:loppupvm tiedot))))
     this)
 
   (stop [this]

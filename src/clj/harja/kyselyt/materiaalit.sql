@@ -357,4 +357,5 @@ FROM suolatoteuma_reittipiste rp
   INNER JOIN pohjavesialue pv ON pv.tunnus = rp.pohjavesialue
   LEFT JOIN pohjavesialue_talvisuola ts on ts.pohjavesialue = rp.pohjavesialue
 WHERE rp.pohjavesialue=:pohjavesialue
+  AND rp.aika BETWEEN :alkupvm AND :loppupvm
 GROUP BY pv.tunnus, ts.talvisuolaraja;

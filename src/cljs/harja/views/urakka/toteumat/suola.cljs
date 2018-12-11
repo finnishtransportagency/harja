@@ -189,14 +189,14 @@
        [:div
         [urakka-valinnat/aikavali-nykypvm-taakse urakka
          tiedot/valittu-aikavali
-         {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
+         {:aikavalin-rajoitus [12 :kuukausi]}]
         [grid/grid {:otsikko "Urakan pohjavesialueet"
                     :tunniste :tunnus
                     :rivi-klikattu
                     (fn [rivi]
                       (go
                         (reset! tiedot/pohjavesialueen-toteuma
-                                (<! (tiedot/hae-pohjavesialueen-suolatoteuma (:tunnus rivi))))))
+                                (<! (tiedot/hae-pohjavesialueen-suolatoteuma (:tunnus rivi) @tiedot/valittu-aikavali)))))
                          
                     :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
                              [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
@@ -209,6 +209,8 @@
             [grid/grid
              {:otsikko "Pohjavesialueen suolatoteuma"
               :tunniste :maara_t_per_km
+              :tyhja (if (empty? toteuma)
+                       "Ei tietoja")
               }
              [{:otsikko "Määrä t/km"
                :nimi :maara_t_per_km
