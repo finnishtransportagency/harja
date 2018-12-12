@@ -274,12 +274,13 @@
     (schema/optional-key :poistettu) schema/Bool}])
 
 (def paallystysilmoitus-alustatoimet
-  (->> paallystysilmoitus-alustatoimet-vanha
-       first
-       (merge {:tr-numero schema/Int
-               :tr-ajorata schema/Int
-               :tr-kaista schema/Int})
-       vector))
+  (-> paallystysilmoitus-alustatoimet-vanha
+      first
+      (dissoc (schema/optional-key :tr-numero))
+      (merge {:tr-numero schema/Int
+              :tr-ajorata schema/Int
+              :tr-kaista schema/Int})
+      vector))
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
