@@ -19,8 +19,6 @@
         kohteen-tierekisteriosoite (:tierekisteriosoitevali (first (:kohteet vastaus)))
         alikohteen-tierekisteriosoite (:tierekisteriosoitevali (first (:alikohteet (first (:kohteet vastaus)))))]
     (is (= {:karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-            :ajorata 0
-            :kaista 11
             :aosa 3
             :aet 3
             :losa 3
