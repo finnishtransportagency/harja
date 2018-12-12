@@ -192,6 +192,9 @@
          {:aikavalin-rajoitus [12 :kuukausi]}]
         [grid/grid {:otsikko "Urakan pohjavesialueet"
                     :tunniste :tunnus
+                    :mahdollista-rivin-valinta? true
+                    :rivi-valinta-peruttu (fn [rivi]
+                                            (reset! tiedot/pohjavesialueen-toteuma nil))
                     :rivi-klikattu
                     (fn [rivi]
                       (go
@@ -209,6 +212,7 @@
             [grid/grid
              {:otsikko "Pohjavesialueen suolatoteuma"
               :tunniste :maara_t_per_km
+              :piilota-toiminnot? true
               :tyhja (if (empty? toteuma)
                        "Ei tietoja")
               }
@@ -216,8 +220,10 @@
                :nimi :maara_t_per_km
                :leveys 10}
               {:otsikko "Yhteensä"
+               :leveys 10
                :nimi :yhteensa}
               {:otsikko "Käyttöraja"
+               :leveys 10
                :nimi :kayttoraja}]
              toteuma]))]))))
 
