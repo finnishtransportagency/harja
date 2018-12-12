@@ -13,10 +13,9 @@
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
-            [clojure.string :as string]
+            [clojure.string :as clj-str]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [clojure.string :as str])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -42,7 +41,7 @@
       urakat)))
 
 (defn kasittele-urakan-kohdehakuvastaus [sisalto otsikot]
-  (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (log/debug (format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (urakan-kohdehakuvastaus/lue-sanoma sisalto)
         kohteet (:kohteet vastaus)
         virhe (:virhe vastaus)]
@@ -55,7 +54,7 @@
       kohteet)))
 
 (defn muodosta-kohteiden-lahetysvirheet [virheet]
-  (let [virhe-viestit (string/join ", " (mapv (fn [{:keys [kohde-yha-id selite]}]
+  (let [virhe-viestit (clj-str/join ", " (mapv (fn [{:keys [kohde-yha-id selite]}]
                                                 (str (when kohde-yha-id (str "Kohde id: " kohde-yha-id ", ")) "Virhe: " selite))
                                               virheet))]
     (str "YHA palautti seuraavat virheet: " virhe-viestit)))
@@ -84,7 +83,7 @@
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
             virhe-viesti (when (not kohteen-lahetys-onnistunut?)
                            (or (:selite virhe)
-                               (str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
+                               (clj-str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
 
         (if kohteen-lahetys-onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
@@ -118,7 +117,10 @@
           alikohteet)))
 
 (defn hae-kohteen-tiedot [db kohde-id]
-  (if-let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))]
+  (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+                     first
+                     ;; Uudessa YHA-mallissa pääkohteella ei ole ajorataa taikka kaistaa
+                     (dissoc :tr-ajorata :tr-kaista))]
     (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)

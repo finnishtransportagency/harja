@@ -479,6 +479,7 @@
                     (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
           :otsikko otsikko
           :id "yllapitokohdeosat"
+          :data-cy (str "yllapitokohdeosat-" otsikko)
           :virheet virheet
           :voi-lisata? false
           :jarjesta-avaimen-mukaan (when jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan)
@@ -533,6 +534,7 @@
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
                                                 (= (:yllapitokohdetyyppi yllapitokohde) :sora))
+                                  :data-cy (str "lisaa-osa-" otsikko)
                                   :luokka "btn-xs"}]
                                 [napit/kielteinen "Poista"
                                  #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))

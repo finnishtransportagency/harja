@@ -60,31 +60,35 @@
             sulkemisfunktio #(reset! nayta-virheviesti? false)
             kun-valmis (:kun-valmis asetukset)
             kun-virhe (:kun-virhe asetukset)
-            kun-onnistuu (:kun-onnistuu asetukset)]
+            kun-onnistuu (:kun-onnistuu asetukset)
+            data-cy (:data-cy asetukset)]
 
         [:span
          [:button
-          {:id (:id asetukset)
-           :disabled (or @kysely-kaynnissa? (:disabled asetukset))
-           :class (if (or @kysely-kaynnissa? (:disabled asetukset))
-                    (str luokka " disabled")
-                    luokka)
-           :on-click #(do
-                        (.preventDefault %)
-                        (reset! kysely-kaynnissa? true)
-                        (reset! nayta-virheviesti? false)
-                        (go (let [tulos (<! (kysely))]
-                              (when kun-valmis (kun-valmis tulos))
-                              (if (not (k/virhe? tulos))
-                                (do
-                                  (reset! kysely-kaynnissa? false)
-                                  (when kun-onnistuu (kun-onnistuu tulos)))
-                                (do
-                                  (reset! kysely-kaynnissa? false)
-                                  (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
-                                  (reset! nayta-virheviesti? true)
-                                  (when kun-virhe (kun-virhe tulos)))))))
-           :title (:title asetukset)}
+          (merge
+            {:id (:id asetukset)
+             :disabled (or @kysely-kaynnissa? (:disabled asetukset))
+             :class (if (or @kysely-kaynnissa? (:disabled asetukset))
+                      (str luokka " disabled")
+                      luokka)
+             :on-click #(do
+                          (.preventDefault %)
+                          (reset! kysely-kaynnissa? true)
+                          (reset! nayta-virheviesti? false)
+                          (go (let [tulos (<! (kysely))]
+                                (when kun-valmis (kun-valmis tulos))
+                                (if (not (k/virhe? tulos))
+                                  (do
+                                    (reset! kysely-kaynnissa? false)
+                                    (when kun-onnistuu (kun-onnistuu tulos)))
+                                  (do
+                                    (reset! kysely-kaynnissa? false)
+                                    (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
+                                    (reset! nayta-virheviesti? true)
+                                    (when kun-virhe (kun-virhe tulos)))))))
+             :title (:title asetukset)}
+            (when data-cy
+              {:data-cy data-cy}))
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
          (when @nayta-virheviesti?
@@ -113,7 +117,7 @@
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?
-                            sticky? ikoninappi? title style] :as optiot}]
+                            sticky? ikoninappi? title style data-cy] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -140,17 +144,20 @@
                                   (r/dom-node %))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?] :as optiot}]
          [:button
-          {:class (str (when disabled "disabled ")
-                       (when @naulattu? "nappi-naulattu ")
-                       (when ikoninappi? "nappi-ikoni ")
-                       luokka)
-           :disabled disabled
-           :style style
-           :title title
-           :on-click #(do
-                        (.preventDefault %)
-                        (.stopPropagation %)
-                        (toiminto))}
+          (merge
+            {:class (str (when disabled "disabled ")
+                         (when @naulattu? "nappi-naulattu ")
+                         (when ikoninappi? "nappi-ikoni ")
+                         luokka)
+             :disabled disabled
+             :style style
+             :title title
+             :on-click #(do
+                          (.preventDefault %)
+                          (.stopPropagation %)
+                          (toiminto))}
+            (when data-cy
+              {:data-cy data-cy}))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
           (when tallennus-kaynnissa?

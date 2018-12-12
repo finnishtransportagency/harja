@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.37</b>
+<b>Nykyinen versio: 1.0.38</b>
 <b>Julkaistu: 27.07.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.39 Julkaistu
+    - Päällystysilmoituksen kirjaus rajapinta on muuttunut. Pääkohteelle ei ilmoiteta kaistaa eikä ajorataa, mutta nämä tiedot on annettava alikohteille sekä alustalle tehdyille toimenpiteille.
 - Versionumero 1.0.38 Julkaistu 22.11.2018
     - Urakoiden haku palauttaa Liikenneviraston järjestelmille kaikki urkat
     - Mahdollisuus hakea urakat tyypeittäin.
