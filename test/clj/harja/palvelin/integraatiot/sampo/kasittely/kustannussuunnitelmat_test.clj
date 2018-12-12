@@ -65,6 +65,8 @@
 (deftest tarkista-lkp-tilinnumeron-paattely
   (is (= "43020000" (valitse-lpk-tilinumero 1 "20112" nil))
       "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "43020000" (valitse-lpk-tilinumero 1 "20107" nil))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
   (is (= "43020000" (valitse-lpk-tilinumero 1 nil 112))
       "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
   (is (= "43020000" (valitse-lpk-tilinumero 1 nil 536))

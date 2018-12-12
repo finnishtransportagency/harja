@@ -1,6 +1,6 @@
 describe('Päänäkymien avaamiset', function () {
     beforeEach(function () {
-        cy.visit("http://localhost:3000/#urakat/yleiset?")
+        cy.visit("/")
     })
 
     it("Urakkavalinta listan kautta toimii", function () {

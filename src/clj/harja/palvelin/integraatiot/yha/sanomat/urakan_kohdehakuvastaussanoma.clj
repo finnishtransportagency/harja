@@ -26,7 +26,13 @@
     {:karttapaivamaara (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
     (into {}
           (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
-          [:ajorata :kaista :aosa :aet :losa :let :tienumero])))
+          [:aosa :aet :losa :let :tienumero])))
+
+(defn lue-tierekisteriosoitevali-kaistalla-ja-ajoradalla [tierekisteriosoitevali]
+  (merge (lue-tierekisteriosoitevali tierekisteriosoitevali)
+         (into {}
+               (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
+               [:ajorata :kaista])))
 
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
@@ -40,9 +46,12 @@
   (mapv (fn [alikohde]
           (hash-map
             :yha-id (z/xml1-> alikohde :yha-id z/text xml/parsi-kokonaisluku)
-            :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
+            :tierekisteriosoitevali (lue-tierekisteriosoitevali-kaistalla-ja-ajoradalla (z/xml1-> alikohde :tierekisteriosoitevali))
             :tunnus (z/xml1-> alikohde :tunnus z/text)
-            :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)))
+            :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)
+            :yllapitoluokka (z/xml1-> alikohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
+            :keskimaarainen-vuorokausiliikenne (z/xml1-> alikohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
+            :nykyinen-paallyste (z/xml1-> alikohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)))
         (z/xml-> alikohteet :alikohde)))
 
 (defn kasittele-kohdetyyppi [tyyppi]
@@ -60,9 +69,6 @@
                     :yllapitokohdetyotyyppi (z/xml1-> kohde :kohdetyotyyppi z/text keyword)
                     :nimi (z/xml1-> kohde :nimi z/text)
                     :tunnus (z/xml1-> kohde :tunnus z/text)
-                    :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
-                    :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
-                    :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)
                     :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> kohde :tierekisteriosoitevali))
                     :alikohteet (lue-alikohteet (z/xml1-> kohde :alikohteet))))
         (z/xml-> data :kohteet :kohde)))

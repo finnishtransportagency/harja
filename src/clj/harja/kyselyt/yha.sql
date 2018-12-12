@@ -64,7 +64,10 @@ SELECT
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
 WHERE yllapitokohde = :yllapitokohde AND
-      poistettu IS NOT TRUE;
+      -- Tämä ottaa pois kaikki ne jotka on luotu Harjassa ja sen jälkeen poistettu,
+      -- eli eivät ole edes käyneet YHA:ssa missään välissä
+      NOT (poistettu IS TRUE AND
+           yhaid IS NULL);
 
 -- name: hae-urakoiden-sidontatiedot
 SELECT
@@ -77,9 +80,7 @@ WHERE yt.yhaid IN (:yhaidt);
 -- name: luo-yllapitokohde<!
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- tr_ajorata, tr_kaista,
- tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
- nykyinen_paallyste, nimi, vuodet)
+ tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, nimi, vuodet)
 VALUES (
   :urakka,
   (SELECT id
@@ -90,17 +91,12 @@ VALUES (
   :tr_alkuetaisyys,
   :tr_loppuosa,
   :tr_loppuetaisyys,
-  :tr_ajorata,
-  :tr_kaista,
   :tunnus,
   :yhaid,
   :yha_kohdenumero,
   :kohdenumero,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-  :yllapitoluokka,
-  :keskimaarainen_vuorokausiliikenne,
-  :nykyinen_paallyste,
   :nimi,
   :vuodet :: INTEGER []);
 

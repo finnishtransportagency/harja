@@ -41,10 +41,20 @@ VALUES ('4242523-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                             WHERE lyhenne = 'POP'), 'Muhoksen päällystysurakka',
         '2014-10-01', '2018-09-30', 'paallystys', 'muho1', (SELECT id
                                                             FROM organisaatio
-                                                            WHERE ytunnus = '0651792-4'));
-INSERT INTO yhatiedot (urakka, yhaid, yhatunnus) VALUES ((SELECT id
-                                                          FROM urakka
-                                                          WHERE nimi = 'Muhoksen päällystysurakka'), 76745, 'YHA34434');
+                                                            WHERE ytunnus = '0651792-4')),
+       ('1337133-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
+                                                            FROM organisaatio
+                                                            WHERE lyhenne = 'POP'), 'Utajärven päällystysurakka',
+        '2019-10-01', '2023-09-30', 'paallystys', 'uta1', (SELECT id
+                                                           FROM organisaatio
+                                                           WHERE ytunnus = '0651792-4'));
+INSERT INTO yhatiedot (urakka, yhaid, yhatunnus)
+  VALUES ((SELECT id
+           FROM urakka
+           WHERE nimi = 'Muhoksen päällystysurakka'), 76745, 'YHA34434'),
+          ((SELECT id
+            FROM urakka
+            WHERE nimi = 'Utajärven päällystysurakka'), 1337, 'YHA7331');
 
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija, urakkanro)
 VALUES ('4242566-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
