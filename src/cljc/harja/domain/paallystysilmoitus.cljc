@@ -260,7 +260,8 @@
     (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
 (def paallystysilmoitus-alustatoimet-vanha
-  [{:tr-alkuosa schema/Int
+  [{(schema/optional-key :tr-numero) (schema/maybe schema/Int)
+    :tr-alkuosa schema/Int
     :tr-alkuetaisyys schema/Int
     :tr-loppuosa schema/Int
     :tr-loppuetaisyys schema/Int
