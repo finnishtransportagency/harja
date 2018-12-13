@@ -6,11 +6,12 @@
 
 (defn vie-pohjavesialue [db pohjavesialue]
   (if (:the_geom pohjavesialue)
-    (let [nimi (:pvteksti pohjavesialue)
+    (let [nimi (:pvnimi pohjavesialue)
           tunnus (:pvnro pohjavesialue)
           suorarajoitus (= 1.0 (:pvsuola pohjavesialue))
-          geometria (.toString (:the_geom pohjavesialue))]
-      (p/luo-pohjavesialue! db nimi tunnus geometria suorarajoitus))
+          geometria (.toString (:the_geom pohjavesialue))
+          tie (:tie pohjavesialue)]
+      (p/luo-pohjavesialue! db nimi tunnus geometria suorarajoitus tie))
     (log/warn "Pohjavesialuetta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error pohjavesialue))))
 
 (defn vie-pohjavesialueet-kantaan [db shapefile]

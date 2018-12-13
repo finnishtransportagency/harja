@@ -119,3 +119,5 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER toteuman_reittipisteet_trigger AFTER INSERT OR UPDATE ON toteuman_reittipisteet
    FOR EACH ROW EXECUTE PROCEDURE toteuman_reittipisteet_trigger_fn();
+
+ALTER TABLE pohjavesialue ADD COLUMN tie INTEGER NOT NULL;

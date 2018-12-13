@@ -21,8 +21,8 @@ WHERE p.urakka = :urakka-id AND suolarajoitus IS TRUE;
 DELETE FROM pohjavesialue;
 
 -- name: luo-pohjavesialue!
-INSERT INTO pohjavesialue (nimi, tunnus, alue, suolarajoitus) VALUES
-  (:nimi, :tunnus, ST_GeomFromText(:geometria) :: GEOMETRY, :suolarajoitus);
+INSERT INTO pohjavesialue (nimi, tunnus, alue, suolarajoitus, tie) VALUES
+  (:nimi, :tunnus, ST_GeomFromText(:geometria) :: GEOMETRY, :suolarajoitus, :tie);
 
 -- name: paivita-pohjavesialueet
 SELECT paivita_pohjavesialueet();
