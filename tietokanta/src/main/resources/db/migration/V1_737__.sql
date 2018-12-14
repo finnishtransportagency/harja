@@ -1,7 +1,7 @@
 CREATE INDEX pohjavesialue_alue_idx ON pohjavesialue USING GIST (alue);
 
 CREATE TABLE suolatoteuma_reittipiste (
-       toteuma INTEGER REFERENCES toteuma(id),
+       toteuma INTEGER,
        aika TIMESTAMP DEFAULT NOW(),
        pohjavesialue VARCHAR(16),
        sijainti POINT,
