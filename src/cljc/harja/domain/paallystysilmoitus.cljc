@@ -260,7 +260,8 @@
     (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
 (def paallystysilmoitus-alustatoimet-vanha
-  [{:tr-alkuosa schema/Int
+  [{(schema/optional-key :tr-numero) (schema/maybe schema/Int)
+    :tr-alkuosa schema/Int
     :tr-alkuetaisyys schema/Int
     :tr-loppuosa schema/Int
     :tr-loppuetaisyys schema/Int
@@ -273,12 +274,13 @@
     (schema/optional-key :poistettu) schema/Bool}])
 
 (def paallystysilmoitus-alustatoimet
-  (->> paallystysilmoitus-alustatoimet-vanha
-       first
-       (merge {:tr-numero schema/Int
-               :tr-ajorata schema/Int
-               :tr-kaista schema/Int})
-       vector))
+  (-> paallystysilmoitus-alustatoimet-vanha
+      first
+      (dissoc (schema/optional-key :tr-numero))
+      (merge {:tr-numero schema/Int
+              :tr-ajorata schema/Int
+              :tr-kaista schema/Int})
+      vector))
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
