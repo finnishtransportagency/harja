@@ -56,7 +56,6 @@
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.yllapitokohde :as ypk-domain]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -72,13 +71,13 @@
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
-            [clojure.string :as str])
+            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
-(defn hae-yllapitokohteet [db parametit kayttaja]
-  (let [urakka-id (Integer/parseInt (:id parametit))]
+(defn hae-yllapitokohteet [db parametrit kayttaja]
+  (let [urakka-id (Integer/parseInt (:id parametrit))
+        geometriat? (= "true" (get parametrit "geometriat"))]
     (log/debug (format "Haetaan urakan (id: %s) ylläpitokohteet käyttäjälle: %s (id: %s)."
                        urakka-id
                        (:kayttajanimi kayttaja)
@@ -92,7 +91,7 @@
                             yllapitokohteet
                             {:kohdeosa :alikohteet}
                             :id)]
-      (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet karttapvm))))
+      (yllapitokohdesanomat/rakenna-kohteet geometriat? yllapitokohteet karttapvm))))
 
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]
   (when (and (some? (:paallystys-valmis aikataulu))
@@ -191,7 +190,6 @@
           paallystysilmoitus (:paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-          ;; TODO HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
           alikohteet (mapv #(assoc-in (:alikohde %)
                                       [:sijainti :numero]
                                       (get-in % [:alikohde :sijainti :numero]
