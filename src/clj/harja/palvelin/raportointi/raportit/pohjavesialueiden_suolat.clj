@@ -20,6 +20,7 @@
 
 (defn rivi-xf [rivi]
   [(str (:tunnus rivi) " - " (:nimi rivi))
+   (str (:tie rivi))
    (format "%.1f" (:yhteensa rivi))
    (format "%.1f" (:maara_t_per_km rivi))
    (if (nil? (:kayttoraja rivi))
@@ -36,6 +37,7 @@
                 :orientaatio :landscape}
      [:taulukko {:otsikko "Suolatoteumat"}
       [{:leveys 7 :otsikko "Pohjavesialue"}
+       {:leveys 5 :otsikko "Tie"}
        {:leveys 5 :otsikko "Toteutunut talvisuola yhteensä t"}
        {:leveys 5 :otsikko "Toteutunut talvisuola t/km"}
        {:leveys 5 :otsikko "Käyttöraja t/km"}]
