@@ -22,8 +22,33 @@ WHERE p.urakka = :urakka AND suolarajoitus IS TRUE;
 DELETE FROM pohjavesialue;
 
 -- name: luo-pohjavesialue!
-INSERT INTO pohjavesialue (nimi, tunnus, alue, suolarajoitus) VALUES
-  (:nimi, :tunnus, ST_GeomFromText(:geometria) :: GEOMETRY, :suolarajoitus);
+INSERT INTO pohjavesialue
+    (nimi,
+     tunnus,
+     alue,
+     suolarajoitus,
+     tr_numero,
+     tr_alkuosa,
+     tr_alkuetaisyys,
+     tr_loppuosa,
+     tr_loppuetaisyys,
+     tr_ajorata,
+     luotu,
+     luoja,
+     aineisto_id) VALUES
+    (:nimi,
+     :tunnus,
+     ST_GeomFromText(:geometria) :: GEOMETRY,
+     :suolarajoitus,
+     :tr_numero,
+     :tr_alkuosa,
+     :tr_alkuetaisyys,
+     :tr_loppuosa,
+     :tr_loppuetaisyys,
+     :tr_ajorata,
+     current_timestamp,
+     (select id from kayttaja where kayttajanimi = 'Integraatio'),
+     :aineisto_id);
 
 -- name: paivita-pohjavesialueet
 SELECT paivita_pohjavesialueet();
