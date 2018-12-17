@@ -265,7 +265,7 @@
   :luomisen-jalkeen               Funktio, joka ajetaan heti taulukon luomisen jälkeen. Saa argumentikseen Gridin tilan
   :muokkauspaneeli?               Tämä on sitä varten, ettei gridin päälle jää tyhjää tilaa muokkauspaneelista laittamalla
                                   tämä falseksi."
-  [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
+  [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli?] :as opts}
@@ -398,7 +398,7 @@
     (r/create-class
 
       {:reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
+       (fn [{:keys [otsikko yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy] :as opts} skeema muokatut]
@@ -435,10 +435,11 @@
                [:tr
                 (if rivinumerot? [:th {:width "40px"} " "])
                 (map-indexed
-                  (fn [i {:keys [otsikko leveys nimi tasaa]}]
+                  (fn [i {:keys [otsikko yksikko leveys nimi tasaa]}]
                     ^{:key (str i nimi)}
                     [:th.rivinumero {:width (or leveys "5%")
-                                     :class (y/tasaus-luokka tasaa)} otsikko]) skeema)
+                                     :class (y/tasaus-luokka tasaa)} otsikko (when yksikko
+                                                                               [:span.kentan-yksikko yksikko])]) skeema)
                 (when-not piilota-toiminnot?
                   [:th.toiminnot {:width "40px"} " "])]]
 
