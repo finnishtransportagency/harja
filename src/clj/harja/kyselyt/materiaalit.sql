@@ -343,3 +343,8 @@ FROM materiaalikoodi;
 SELECT id
   FROM toimenpidekoodi
  WHERE nimi = 'Suolaus' AND taso = 4;
+
+-- name: hae-suolatoteumat-tr-valille
+SELECT *
+FROM tr_valin_suolatoteumat(:urakka::integer, :tie::integer, :alkuosa::integer, :alkuet::integer, :loppuosa::integer, :loppuet::integer, :threshold::integer, 
+		    :alkupvm, :loppupvm);
