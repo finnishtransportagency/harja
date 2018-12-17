@@ -268,7 +268,7 @@
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli?] :as opts}
+           virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -277,6 +277,27 @@
                               (atom #{}))
         fokus (atom nil)
         meta-atom (atom nil)
+        hoida-taulukkotason-virheet (fn [uudet-tiedot virheet]
+                                      (let [taulukon-virheet (validointi/validoi-taulukko uudet-tiedot skeema taulukko-validointi)
+                                            edelliset-taulukkotason-virheiden-rivit (:taulukkovirheiden-rivit @meta-atom)
+                                            virheet (reduce-kv (fn [m rivi-indeksi vanhat-rivin-taulukkotason-virheet]
+                                                                 (update m rivi-indeksi (fn [rivin-virheet]
+                                                                                          (reduce-kv (fn [m2 sarakkeen-nimi virheet-vektori]
+                                                                                                       (let [virheet (remove (fn [virheviesti]
+                                                                                                                               (some #(= virheviesti %)
+                                                                                                                                     (sarakkeen-nimi vanhat-rivin-taulukkotason-virheet)))
+                                                                                                                             virheet-vektori)]
+                                                                                                         (when-not (empty? virheet)
+                                                                                                           (assoc m2 sarakkeen-nimi virheet))))
+                                                                                                     {} rivin-virheet))))
+                                                               virheet edelliset-taulukkotason-virheiden-rivit)]
+                                        (swap! meta-atom assoc :taulukkovirheiden-rivit taulukon-virheet)
+                                        (reduce-kv (fn [m rivi-indeksi uudet-rivin-taulukkotason-virheet]
+                                                     (update m rivi-indeksi (fn [rivin-virheet]
+                                                                              (reduce-kv (fn [m2 sarakkeen-nimi virhe-vektori]
+                                                                                           (update m2 sarakkeen-nimi concat virhe-vektori))
+                                                                                         rivin-virheet uudet-rivin-taulukkotason-virheet))))
+                                                   virheet taulukon-virheet)))
         ohjaus-fn (fn [muokatut virheet skeema]
                     (reify Grid
                       (lisaa-rivi! [this rivin-tiedot]
@@ -289,10 +310,15 @@
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
                           (when-not ulkoinen-validointi?
                             (swap! virheet (fn [virheet]
-                                             (let [rivin-virheet (validointi/validoi-rivi uudet-tiedot (get uudet-tiedot id) skeema)]
-                                               (if (empty? rivin-virheet)
-                                                 (dissoc virheet id)
-                                                 (assoc virheet id rivin-virheet))))))
+                                             (let [rivin-virheet (validointi/validoi-rivi uudet-tiedot (get uudet-tiedot id) (if rivi-validointi
+                                                                                                                               (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                                                               skeema))
+                                                   virheet (if (empty? rivin-virheet)
+                                                             (dissoc virheet id)
+                                                             (assoc virheet id rivin-virheet))]
+                                               (if taulukko-validointi
+                                                 (hoida-taulukkotason-virheet uudet-tiedot virheet)
+                                                 virheet)))))
                           (when muutos
                             (muutos this))))
                       (hae-muokkaustila [_]
@@ -340,7 +366,22 @@
                       (avaa-vetolaatikko! [_ id]
                         (swap! vetolaatikot-auki conj id))
                       (sulje-vetolaatikko! [_ id]
-                        (swap! vetolaatikot-auki disj id))))
+                        (swap! vetolaatikot-auki disj id))
+                      (validoi-grid [_]
+                        (let [gridin-tiedot @muokatut
+                              rivi-virheet (into {}
+                                                 (keep (fn [[id rivin-tiedot]]
+                                                         (let [rivin-virheet (when-not (:poistettu rivin-tiedot)
+                                                                               (validointi/validoi-rivi gridin-tiedot rivin-tiedot (if rivi-validointi
+                                                                                                                                     (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                                                                     skeema)))]
+                                                           (when-not (empty? rivin-virheet)
+                                                             [id rivin-virheet])))
+                                                       gridin-tiedot))
+                              kaikki-virheet (if taulukko-validointi
+                                               (hoida-taulukkotason-virheet gridin-tiedot rivi-virheet)
+                                               rivi-virheet)]
+                          (reset! virheet kaikki-virheet)))))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [muokatut virheet skeema id funktio & argumentit]
@@ -354,23 +395,30 @@
                                                (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
                                                  (when uusi-rivi
                                                    (if virheet-dataan?
+                                                     ;; TODO taulukko-valikointi tällekkin
                                                      (assoc uusi-rivi
                                                             :harja.ui.grid/virheet (validointi/validoi-rivi
                                                                                      (assoc muokatut id uusi-rivi)
                                                                                      uusi-rivi
-                                                                                     skeema))
+                                                                                     (if rivi-validointi
+                                                                                       (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                       skeema)))
                                                      uusi-rivi)))))))]
-
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (when-not ulkoinen-validointi?
                          (swap! virheet (fn [virheet]
                                           (let [uusi-rivi (get uudet-tiedot id)
                                                 rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                                (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema))]
-                                            (if (empty? rivin-virheet)
-                                              (dissoc virheet id)
-                                              (assoc virheet id rivin-virheet)))))))
+                                                                (validointi/validoi-rivi uudet-tiedot uusi-rivi (if rivi-validointi
+                                                                                                                  (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                                                  skeema)))
+                                                virheet (if (empty? rivin-virheet)
+                                                          (dissoc virheet id)
+                                                          (assoc virheet id rivin-virheet))]
+                                            (if taulukko-validointi
+                                              (hoida-taulukkotason-virheet uudet-tiedot virheet)
+                                              virheet))))))
                      (when muutos
                        (muutos (ohjaus-fn muokatut virheet skeema)))))
 
@@ -393,7 +441,7 @@
                                                                            :muokatut-atom muokatut}))]
                           (reset! muokatut (with-meta jarjestetyt-arvot
                                              (:arvot @meta-atom)))
-                          (swap! meta-atom :paivita? false)))
+                          (swap! meta-atom assoc :paivita? false)))
         muokkauspaneeli? (if (some? muokkauspaneeli?) muokkauspaneeli? true)]
     (r/create-class
 

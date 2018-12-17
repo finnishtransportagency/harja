@@ -17,6 +17,7 @@
 (def poista-idt protokollat/poista-idt)
 (def poista-poistetut protokollat/poista-poistetut)
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
+(def validoi-grid protokollat/validoi-grid)
 (def vakiosivutus 250)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)

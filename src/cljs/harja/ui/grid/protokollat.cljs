@@ -72,7 +72,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
   (aseta-virhe! [this rivin-id kentta virheteksti] "Asettaa ulkoisesti virheen rivin kentälle")
-  (poista-virhe! [this rivin-id kentta] "Poistaa rivin kentän virheen ulkoisesti"))
+  (poista-virhe! [this rivin-id kentta] "Poistaa rivin kentän virheen ulkoisesti")
+  (validoi-grid [this] "Validoi gridin"))
 
 (defprotocol GridKahva
   "Sisäinen protokolla, jolle grid asettaa itsensä."
@@ -124,6 +125,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (aseta-virhe! @gridi rivin-id kentta virheteksti))
       (poista-virhe! [_ rivin-id kentta]
         (poista-virhe! @gridi rivin-id kentta))
+      (validoi-grid [_]
+        (validoi-grid @gridi))
 
       GridKahva
       (aseta-grid [_ grid]

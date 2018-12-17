@@ -72,83 +72,95 @@
 (defn tierekisteriosoite-sarakkeet
   "Perusleveys on leveys, jota kentille käytetään, ellei määritetä kenttäkohtaista leveyttä.
    Nimi-kenttä on kaksi kertaa perusleveys, ellei määritetä kenttäkohtaista leveyttä."
-  [perusleveys
-   [nimi tie ajorata kaista aosa aet losa let pituus]]
-  (into []
-        (remove
-          nil?
-          [(when nimi
-             {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
-              :leveys (or (:leveys nimi) (* perusleveys 2))
-              :pituus-max 30
-              :muokattava? (or (:muokattava? nimi) (constantly true))})
-           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
-            :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
-            :validoi (into [[:ei-tyhja "Anna tienumero"]] (:validoi tie))
-            :kokonaisluku? true
-            :muokattava? (or (:muokattava? tie) (constantly true))}
-           (when ajorata
-             {:otsikko "Ajo\u00ADrata"
-              :nimi (:nimi ajorata)
-              :muokattava? (or (:muokattava? ajorata) (constantly true))
-              :tyyppi :valinta
-              :tasaa :oikea
-              :valinta-arvo :koodi
-              :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
-              :valinta-nayta (fn [arvo muokattava?]
-                               (if arvo (:nimi arvo) (if muokattava?
-                                                       "- Ajorata -"
-                                                       "")))
-              :valinnat pot/+ajoradat-numerona+
-              :leveys perusleveys
-              :validoi (:validoi ajorata)})
-           (when kaista
-             {:otsikko "Kais\u00ADta"
-              :muokattava? (or (:muokattava? kaista) (constantly true))
-              :nimi (:nimi kaista)
-              :tyyppi :valinta
-              :tasaa :oikea
-              :valinta-arvo :koodi
-              :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
-              :valinta-nayta (fn [arvo muokattava?]
-                               (if arvo (:nimi arvo) (if muokattava?
-                                                       "- Kaista -"
-                                                       "")))
-              :valinnat pot/+kaistat+
-              :leveys perusleveys
-              :validoi (:validoi kaista)})
-           {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea :kokonaisluku? true
-            :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
-                            yllapitokohteet-domain/alkuosa-ei-lopun-jalkeen]
-                           (:validoi aosa))
-            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aosa)
-            :muokattava? (or (:muokattava? aosa) (constantly true))}
-           {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea :kokonaisluku? true
-            :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
-                            yllapitokohteet-domain/alkuetaisyys-ei-lopun-jalkeen]
-                           (:validoi aet))
-            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aet)
-            :muokattava? (or (:muokattava? aet) (constantly true))}
-           {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea :kokonaisluku? true
-            :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
-                            yllapitokohteet-domain/loppuosa-ei-alkua-ennen]
-                           (:validoi losa))
-            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? losa)
-            :muokattava? (or (:muokattava? losa) (constantly true))}
-           {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea :kokonaisluku? true
-            :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
-                            yllapitokohteet-domain/loppuetaisyys-ei-alkua-ennen]
-                           (:validoi let))
-            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? let)
-            :muokattava? (or (:muokattava? let) (constantly true))}
-           (merge
-             {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
-              :muokattava? (constantly false)}
-             pituus)])))
+  ([perusleveys skeemaosat] (tierekisteriosoite-sarakkeet perusleveys skeemaosat false))
+  ([perusleveys
+    [nimi tie ajorata kaista aosa aet losa let pituus]
+    vain-nama-validoinnit?]
+   (into []
+         (remove
+           nil?
+           [(when nimi
+              {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
+               :leveys (or (:leveys nimi) (* perusleveys 2))
+               :pituus-max 30
+               :muokattava? (or (:muokattava? nimi) (constantly true))})
+            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
+             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
+             :validoi (if vain-nama-validoinnit?
+                        (:validoi tie)
+                        (into [[:ei-tyhja "Anna tienumero"]] (:validoi tie)))
+             :kokonaisluku? true
+             :muokattava? (or (:muokattava? tie) (constantly true))}
+            (when ajorata
+              {:otsikko "Ajo\u00ADrata"
+               :nimi (:nimi ajorata)
+               :muokattava? (or (:muokattava? ajorata) (constantly true))
+               :tyyppi :valinta
+               :tasaa :oikea
+               :valinta-arvo :koodi
+               :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
+               :valinta-nayta (fn [arvo muokattava?]
+                                (if arvo (:nimi arvo) (if muokattava?
+                                                        "- Ajorata -"
+                                                        "")))
+               :valinnat pot/+ajoradat-numerona+
+               :leveys perusleveys
+               :validoi (:validoi ajorata)})
+            (when kaista
+              {:otsikko "Kais\u00ADta"
+               :muokattava? (or (:muokattava? kaista) (constantly true))
+               :nimi (:nimi kaista)
+               :tyyppi :valinta
+               :tasaa :oikea
+               :valinta-arvo :koodi
+               :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
+               :valinta-nayta (fn [arvo muokattava?]
+                                (if arvo (:nimi arvo) (if muokattava?
+                                                        "- Kaista -"
+                                                        "")))
+               :valinnat pot/+kaistat+
+               :leveys perusleveys
+               :validoi (:validoi kaista)})
+            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
+             :tasaa :oikea :kokonaisluku? true
+             :validoi (if vain-nama-validoinnit?
+                        (:validoi aosa)
+                        (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
+                               yllapitokohteet-domain/alkuosa-ei-lopun-jalkeen]
+                              (:validoi aosa)))
+             :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aosa)
+             :muokattava? (or (:muokattava? aosa) (constantly true))}
+            {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
+             :tasaa :oikea :kokonaisluku? true
+             :validoi (if vain-nama-validoinnit?
+                        (:validoi aet)
+                        (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
+                               yllapitokohteet-domain/alkuetaisyys-ei-lopun-jalkeen]
+                              (:validoi aet)))
+             :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aet)
+             :muokattava? (or (:muokattava? aet) (constantly true))}
+            {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
+             :tasaa :oikea :kokonaisluku? true
+             :validoi (if vain-nama-validoinnit?
+                        (:validoi losa)
+                        (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
+                               yllapitokohteet-domain/loppuosa-ei-alkua-ennen]
+                              (:validoi losa)))
+             :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? losa)
+             :muokattava? (or (:muokattava? losa) (constantly true))}
+            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
+             :tasaa :oikea :kokonaisluku? true
+             :validoi (if vain-nama-validoinnit?
+                        (:validoi let)
+                        (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
+                               yllapitokohteet-domain/loppuetaisyys-ei-alkua-ennen]
+                              (:validoi let)))
+             :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? let)
+             :muokattava? (or (:muokattava? let) (constantly true))}
+            (merge
+              {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+               :muokattava? (constantly false)}
+              pituus)]))))
 
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
@@ -253,7 +265,7 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
-(defn yllapitokohdeosat-sarakkeet [{:keys [muokattava-tie? muokattava-ajorata-ja-kaista? validoi hae-fn]}]
+(defn yllapitokohdeosat-sarakkeet [{:keys [muokattava-tie? muokattava-ajorata-ja-kaista? validoi vain-nama-validoinnit? hae-fn]}]
   (vec (remove nil?
                (concat
                  (tierekisteriosoite-sarakkeet
@@ -269,7 +281,8 @@
                     {:nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validoi)}
                     {:nimi :tr-loppuosa :validoi (:tr-loppuosa validoi)}
                     {:nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validoi)}
-                    {:hae hae-fn}])
+                    {:hae hae-fn}]
+                   vain-nama-validoinnit?)
                  [(assoc paallystys-tiedot/paallyste-grid-skeema
                     :leveys paallyste-leveys
                     :tayta-alas? #(not (nil? %))
@@ -375,18 +388,20 @@
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
         pituus (fn [osan-pituus tieosa]
-                 (tr/laske-tien-pituus osan-pituus tieosa))]
+                 (tr/laske-tien-pituus osan-pituus tieosa))
+        g (grid/grid-ohjaus)]
     (fn [{{{:keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys] :as perustiedot} :perustiedot
            tr-osien-pituudet :tr-osien-pituudet} :paallystysilmoitus-lomakedata
           urakka :urakka :as app}
-         {:keys [rivinumerot? voi-muokata? validoinnit hae-tr-osien-pituudet muokattava-ajorata-ja-kaista?
+         {:keys [rivinumerot? voi-muokata? validoinnit vain-nama-validoinnit? hae-tr-osien-pituudet muokattava-ajorata-ja-kaista?
                  muokattava-tie? kohdeosat kohdeosat-virheet virheviesti otsikko jarjesta-avaimen-mukaan jarjesta-kun-kasketaan]}]
       (let [yllapitokohde (select-keys perustiedot [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
             rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
             voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
             skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                                  :muokattava-tie? muokattava-tie?
-                                                 :validoi (-> validoinnit :tekninen-osa :tr-osoitteet)
+                                                 :validoi (:tr-osoitteet validoinnit)
+                                                 :vain-nama-validoinnit? vain-nama-validoinnit?
                                                  :hae-fn (fn [rivi]
                                                            (tr/laske-tien-pituus (get tr-osien-pituudet (:tr-numero rivi))
                                                                                  rivi))})
@@ -396,7 +411,7 @@
                                        uudet-kohdeosat (if jarjesta-kun-kasketaan
                                                          (vary-meta uudet-kohdeosat assoc :jarjesta-gridissa true)
                                                          uudet-kohdeosat)
-                                       uudet-virheet (into {}
+                                       #_#_uudet-virheet (into {}
                                                            (keep (fn [[id rivi]]
                                                                    (let [rivin-virheet (validointi/validoi-rivi
                                                                                          uudet-kohdeosat rivi skeema)]
@@ -405,10 +420,10 @@
                                                                  uudet-kohdeosat))]
                                    (swap! kohdeosat (fn [_]
                                                       uudet-kohdeosat))
-                                   (swap! kohdeosat-virheet (fn [_]
+                                   (grid/validoi-grid g)
+                                   #_(swap! kohdeosat-virheet (fn [_]
                                                               uudet-virheet))))
             muutos-fn (fn [grid]
-                        (validoi-kohdeosien-paallekkyys (grid/hae-muokkaustila grid) kohdeosat-virheet)
                         (doseq [tie (tiet-joilla-ei-pituutta tr-osien-pituudet (grid/hae-muokkaustila grid))]
                           (hae-tr-osien-pituudet tie)))
             uusi-rivi-fn (fn [rivi]
@@ -430,12 +445,15 @@
                                                (tiedot/lisaa-uusi-kohdeosa vanhat-kohdeosat 1 yllapitokohde)))
                         {:ikoni (ikonit/livicon-arrow-down)
                          :luokka "btn-xs"}]])])
+          :ohjaus g
+          :taulukko-validointi (:_taulukko validoinnit)
           :rivinumerot? rivinumerot?
           :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
           :virhe-viesti virheviesti
           :muutos muutos-fn
           :otsikko otsikko
           :id "yllapitokohdeosat"
+          :data-cy (str "yllapitokohdeosat-" otsikko)
           :virheet kohdeosat-virheet
           :voi-lisata? false
           :jarjesta-avaimen-mukaan (when jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan)
