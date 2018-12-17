@@ -233,8 +233,9 @@
                                               (iterate inc 1) osoitteet))))
                       (update-in [:ilmoitustiedot :alustatoimet]
                                  (fn [alustatoimet]
-                                   (vec (map #(assoc %1 :id %2)
-                                             alustatoimet (iterate inc 1))))))
+                                   (into {}
+                                         (map #(identity [%1 (assoc %2 :id %1)])
+                                              (iterate inc 1) alustatoimet)))))
           perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
                         :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
                         :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa

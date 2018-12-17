@@ -292,7 +292,9 @@
                                                                     (when (and (sarakkeet nimi) virhe)
                                                                       virhe))
                                                                   taulukko-virheet))]
-                          (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema))))]))
+                          (if (empty? taulukkovirheet-sarakkeelle)
+                            (recur v skeema)
+                            (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema)))))]))
                taulukko))))
 
 (defn tyhja-tr-osoite? [arvo]

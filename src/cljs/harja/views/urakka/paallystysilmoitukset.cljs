@@ -732,17 +732,10 @@
 
 (defn paallystysilmoitus-tekninen-osa
   [e! {lomakedata-nyt :paallystysilmoitus-lomakedata :as app}
-   muokkaa! tekninen-osa-voi-muokata? validoinnit]
-  ;; Grid olettaa saavansa atomin. Tämän takia pitää tehdä tämmöiset atomit.
-  (let [yllapitokohdeosat-tila (atom (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet]))
-        yllapitokohdeosat-virhe (atom (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alikohteet]))
-        paallystystoimenpide-virhe (atom (get-in lomakedata-nyt [:ilmoitustiedot :virheet :paallystystoimenpide]))
-        kiviaines-virhe (atom (get-in lomakedata-nyt [:ilmoitustiedot :virheet :kiviaines]))
-        alustan-toimet-tila (atom (get-in lomakedata-nyt [:ilmoitustiedot :alustatoimet]))
-        alustan-toimet-virheet (atom (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alustalle-tehdyt-toimet]))
-        tr-osoite-muokkaus! (fn [uusi-arvo]
+   muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
+  (let [tr-osoite-muokkaus! (fn [uusi-arvo]
                               (muokkaa! assoc-in [:ilmoitustiedot :osoitteet]
-                                        (vec (grid/filteroi-uudet-poistetut uusi-arvo))))
+                                        uusi-arvo))
         tr-osoite-virheet-muokkaus! (fn [uusi-arvo]
                                       (muokkaa! assoc-in [:ilmoitustiedot :virheet :alikohteet]
                                                 uusi-arvo))
@@ -753,396 +746,393 @@
                                     (muokkaa! assoc-in [:ilmoitustiedot :virheet :kiviaines]
                                               uusi-arvo))
         alustan-muokkaus! (fn [uusi-arvo]
-                                           (muokkaa! assoc-in [:ilmoitustiedot :alustatoimet]
-                                                     (vec (grid/filteroi-uudet-poistetut uusi-arvo))))
+                            (muokkaa! assoc-in [:ilmoitustiedot :alustatoimet]
+                                      uusi-arvo))
         alustan-virheet-muokkaus! (fn [uusi-arvo]
-                                                   (muokkaa! assoc-in [:ilmoitustiedot :virheet :alustalle-tehdyt-toimet]
-                                                             uusi-arvo))]
-    (komp/luo
-      (komp/sisaan-ulos #(do
-                           (add-watch yllapitokohdeosat-tila :pot-yllapitokohdeosat-tila
-                                      (fn [_ _ _ uusi]
-                                        (tr-osoite-muokkaus! uusi)))
-                           (add-watch yllapitokohdeosat-virhe :pot-yllapitokohdeosat-virhe
-                                      (fn [_ _ _ uusi]
-                                        (tr-osoite-virheet-muokkaus! uusi)))
-                           (add-watch paallystystoimenpide-virhe :pot-paallystystoimenpide-virhe
-                                      (fn [_ _ _ uusi]
-                                        (tr-osoite-virheet-muokkaus! uusi)))
-                           (add-watch kiviaines-virhe :pot-kiviaines-virhe
-                                      (fn [_ _ _ uusi]
-                                        (tr-osoite-virheet-muokkaus! uusi)))
-                           (add-watch alustan-toimet-tila :pot-alustan-toimet-tila
-                                      (fn [_ _ _ uusi]
-                                        (alustan-muokkaus! uusi)))
-                           (add-watch alustan-toimet-virheet :pot-alustan-toimet-virheet
-                                      (fn [_ _ _ uusi]
-                                        (alustan-virheet-muokkaus! uusi))))
-                        #(do
-                           (remove-watch yllapitokohdeosat-tila :pot-yllapitokohdeosat-tila)
-                           (remove-watch yllapitokohdeosat-virhe :pot-yllapitokohdeosat-virhe)
-                           (remove-watch yllapitokohdeosat-virhe :pot-paallystystoimenpide-virhe)
-                           (remove-watch yllapitokohdeosat-virhe :pot-kiviaines-virhe)
-                           (remove-watch alustan-toimet-tila :pot-alustan-toimet-tila)
-                           (remove-watch alustan-toimet-virheet :pot-alustan-toimet-virheet)))
-      (fn [e! {urakka :urakka
-               {{:keys [tr-osien-pituudet tr-numero tr-ajorata tr-kaista]} :perustiedot
-                :as lomakedata-nyt} :paallystysilmoitus-lomakedata :as app}
-           muokkaa! tekninen-osa-voi-muokata? validoinnit]
-        (let [#_#_paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
-              #_#_alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
-              #_#_yllapitokohde-virheet (wrap-virheet :alikohteet)
-              muokkaus-mahdollista? (and tekninen-osa-voi-muokata?
-                                         ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
-                                         ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
-                                         ;; kenttien virheet tyhjät.
-                                         #_(or (empty? @yllapitokohde-virheet)
-                                               (empty? (flatten (map vals (vals @yllapitokohde-virheet))))))
-              jarjestys-fn :id
-              paakohteella-ajorata-ja-kaista? (boolean (and tr-ajorata
-                                                            tr-kaista))]
-          [:fieldset.lomake-osa
-           [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
-            {:otsikko "Päällystysilmoituksen täytön vihjeet"}
-            [leijuke/multipage-vihjesisalto
-             [:div
-              [:h6 "Arvon kopiointi alaspäin"]
-              [:figure
-               [:img {:src "images/pot_taytto1.gif"
-                      ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
-                      :style {:height "260px"}}]
-               [:figcaption
-                [:p "Voit kopioida kentän arvon alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]
-             [:div
-              [:h6 "Arvojen toistaminen alaspäin"]
-              [:figure
-               [:img {:src "images/pot_taytto2.gif"
-                      :style {:height "260px"}}]
-               [:figcaption
-                [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
+                                    (println "ALUSTATOIMEN VIRHEET: " uusi-arvo)
+                                    (muokkaa! assoc-in [:ilmoitustiedot :virheet :alustatoimet]
+                                              uusi-arvo))]
+    (fn [e! {urakka :urakka
+             {{:keys [tr-osien-pituudet tr-numero tr-ajorata tr-kaista]} :perustiedot
+              tr-osien-pituudet :tr-osien-pituudet
+              :as lomakedata-nyt} :paallystysilmoitus-lomakedata :as app}
+         muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata?
+         {{tietojen-validointi :paallystystoimenpiteen-tiedot alustatoimien-validointi :alustatoimenpiteet} :tekninen-osa :as validoinnit}]
+      (let [#_#_paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
+            #_#_alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
+            #_#_yllapitokohde-virheet (wrap-virheet :alikohteet)
+            muokkaus-mahdollista? (and tekninen-osa-voi-muokata?
+                                       ;; Jostain osassa tilanteita, kentät tulevat virheiden mukana, mutta niissä ei
+                                       ;; ole virheitä. Tällöin pitää erikseen tarkitaa kenttäkohtaisesti, ovatko
+                                       ;; kenttien virheet tyhjät.
+                                       #_(or (empty? @yllapitokohde-virheet)
+                                             (empty? (flatten (map vals (vals @yllapitokohde-virheet))))))
+            _ (println "VALIDOINNIT: " validoinnit)
+            _ (println "ALUSTATOIMIEN VALIDOINNIT: " alustatoimien-validointi)
+            jarjestys-fn :id
+            paakohteella-ajorata-ja-kaista? (boolean (and tr-ajorata
+                                                          tr-kaista))
+            ;; Grid olettaa saavansa atomin. Tämän takia pitää tehdä tämmöiset wrapit.
+            yllapitokohdeosat-tila (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
+                                           (fn [uusi-arvo]
+                                             (println "UUSI ARVO: " uusi-arvo)
+                                             (tr-osoite-muokkaus! uusi-arvo)))
+            yllapitokohdeosat-virhe (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alikohteet])
+                                            (fn [uusi-arvo]
+                                              (tr-osoite-virheet-muokkaus! uusi-arvo)))
+            paallystystoimenpide-virhe (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :virheet :paallystystoimenpide])
+                                               (fn [uusi-arvo]
+                                                 (paallystystoimenpide-virhe-muokkaus! uusi-arvo)))
+            kiviaines-virhe (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :virheet :kiviaines])
+                                    (fn [uusi-arvo]
+                                      (kiviaines-virhe-muokkaus! uusi-arvo)))
+            alustan-toimet-tila (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :alustatoimet])
+                                        (fn [uusi-arvo]
+                                          (println "UUDET ALUSTATOIMET: " uusi-arvo)
+                                          (alustan-muokkaus! uusi-arvo)))
+            alustan-toimet-virheet (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alustatoimet])
+                                           (fn [uusi-arvo]
+                                             (alustan-virheet-muokkaus! uusi-arvo)))]
+        [:fieldset.lomake-osa
+         [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
+          {:otsikko "Päällystysilmoituksen täytön vihjeet"}
+          [leijuke/multipage-vihjesisalto
+           [:div
+            [:h6 "Arvon kopiointi alaspäin"]
+            [:figure
+             [:img {:src "images/pot_taytto1.gif"
+                    ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
+                    :style {:height "260px"}}]
+             [:figcaption
+              [:p "Voit kopioida kentän arvon alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]
+           [:div
+            [:h6 "Arvojen toistaminen alaspäin"]
+            [:figure
+             [:img {:src "images/pot_taytto2.gif"
+                    :style {:height "260px"}}]
+             [:figcaption
+              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
-           [yllapitokohteet/yllapitokohdeosat-tuck app {:rivinumerot? true
-                                                        :voi-muokata? muokkaus-mahdollista?
-                                                        :validoinnit {:tr-osoitteet (-> validoinnit :tekninen-osa :tr-osoitteet (dissoc :_taulukko))
-                                                                      :_taulukko (-> validoinnit :tekninen-osa :tr-osoitteet :_taulukko)}
-                                                        :vain-nama-validoinnit? true
-                                                        :hae-tr-osien-pituudet #(e! (paallystys/->HaeTrOsienPituudet % nil nil))
-                                                        :muokattava-tie? (fn [rivi]
-                                                                           false)
-                                                        :kohdeosat yllapitokohdeosat-tila
-                                                        :kohdeosat-virheet yllapitokohdeosat-virhe
+         [yllapitokohteet/yllapitokohdeosat-tuck app {:rivinumerot? true
+                                                      :voi-muokata? muokkaus-mahdollista?
+                                                      :validoinnit {:tr-osoitteet (-> validoinnit :tekninen-osa :tr-osoitteet (dissoc :_taulukko))
+                                                                    :_taulukko (-> validoinnit :tekninen-osa :tr-osoitteet :_taulukko)}
+                                                      :vain-nama-validoinnit? true
+                                                      :hae-tr-osien-pituudet #(e! (paallystys/->HaeTrOsienPituudet % nil nil))
+                                                      :muokattava-tie? (fn [rivi]
+                                                                         false)
+                                                      :kohdeosat yllapitokohdeosat-tila
+                                                      :kohdeosat-virheet yllapitokohdeosat-virhe
 
-                                                        :muokattava-ajorata-ja-kaista? (fn [rivi]
-                                                                                         (let [osan-tie-paakohteella? (= (:tr-numero rivi) tr-numero)]
-                                                                                           (if paakohteella-ajorata-ja-kaista?
-                                                                                             ;; Pääkohteella ajorata ja kaista, saman tien kohdeosien täytyy siis olla
-                                                                                             ;; samalla ajoradalla ja kaistalla. Muiden teiden kohdeosat saa määrittää
-                                                                                             ;; vapaasti.
-                                                                                             (if osan-tie-paakohteella?
-                                                                                               false
-                                                                                               true)
-                                                                                             ;; Pääkohteella ei ajorataa & kaistaa, saa muokata kohdeosille vapaasti
-                                                                                             true)))
-                                                        :otsikko "Tierekisteriosoitteet"
-                                                        :jarjesta-kun-kasketaan first}]
+                                                      :muokattava-ajorata-ja-kaista? (fn [rivi]
+                                                                                       (let [osan-tie-paakohteella? (= (:tr-numero rivi) tr-numero)]
+                                                                                         (if paakohteella-ajorata-ja-kaista?
+                                                                                           ;; Pääkohteella ajorata ja kaista, saman tien kohdeosien täytyy siis olla
+                                                                                           ;; samalla ajoradalla ja kaistalla. Muiden teiden kohdeosat saa määrittää
+                                                                                           ;; vapaasti.
+                                                                                           (if osan-tie-paakohteella?
+                                                                                             false
+                                                                                             true)
+                                                                                           ;; Pääkohteella ei ajorataa & kaistaa, saa muokata kohdeosille vapaasti
+                                                                                           true)))
+                                                      :otsikko "Tierekisteriosoitteet"
+                                                      :jarjesta-kun-kasketaan first}]
 
-           [grid/muokkaus-grid
-            {:otsikko "Päällystystoimenpiteen tiedot"
-             :id "paallystysilmoitus-paallystystoimenpiteet"
-             :data-cy "paallystystoimenpiteen-tiedot"
-             :voi-lisata? false
-             :voi-kumota? false
-             :voi-poistaa? (constantly false)
-             :voi-muokata? muokkaus-mahdollista?
-             :virheet paallystystoimenpide-virhe
-             :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                      tekninen-osa-voi-muokata?)
-                             "Tierekisterikohteet taulukko on virheellisessä tilassa")
-             :rivinumerot? true
-             :jarjesta jarjestys-fn}
-            [(assoc paallystys/paallyste-grid-skeema
-                    :nimi :toimenpide-paallystetyyppi
-                    :leveys 30
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi toistettava-rivi))))
-             (assoc paallystys/raekoko-grid-skeema
-                    :nimi :toimenpide-raekoko :leveys 10
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi))))
-             {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
-              :nimi :massamenekki
-              :tyyppi :positiivinen-numero :desimaalien-maara 0
-              :tasaa :oikea :leveys 10
-              :tayta-alas? #(not (nil? %))
-              :tayta-fn (fn [lahtorivi tama-rivi]
-                          (assoc tama-rivi :massamenekki (:massamenekki lahtorivi)))
-              :tayta-sijainti :ylos
-              :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
-              :tayta-alas-toistuvasti? #(not (nil? %))
-              :tayta-toistuvasti-fn
-              (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :massamenekki (:massamenekki toistettava-rivi)))}
-             {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
-              :tasaa :oikea :pituus-max 100
-              :validoi [[:rajattu-numero 0 100]]
-              :tayta-alas? #(not (nil? %))
-              :tayta-fn (fn [lahtorivi tama-rivi]
-                          (assoc tama-rivi :rc% (:rc% lahtorivi)))
-              :tayta-sijainti :ylos
-              :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"
-              :tayta-alas-toistuvasti? #(not (nil? %))
-              :tayta-toistuvasti-fn
-              (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-             (assoc paallystys/tyomenetelma-grid-skeema
-                    :nimi :toimenpide-tyomenetelma
-                    :leveys 30
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma toistettava-rivi))))
-             {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
-              :tasaa :oikea
-              :tayta-alas? #(not (nil? %))
-              :tayta-fn (fn [lahtorivi tama-rivi]
-                          (assoc tama-rivi :leveys (:leveys lahtorivi)))
-              :tayta-sijainti :ylos
-              :tayta-tooltip "Kopioi sama leveys alla oleville riveille"
-              :tayta-alas-toistuvasti? #(not (nil? %))
-              :tayta-toistuvasti-fn
-              (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :leveys (:leveys toistettava-rivi)))}
-             {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
-              :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10
-              :tayta-alas? #(not (nil? %))
-              :tayta-fn (fn [lahtorivi tama-rivi]
-                          (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara lahtorivi)))
-              :tayta-sijainti :ylos
-              :tayta-tooltip "Kopioi sama kokonaismassamäärä alla oleville riveille"
-              :tayta-alas-toistuvasti? #(not (nil? %))
-              :tayta-toistuvasti-fn
-              (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara toistettava-rivi)))}
-             {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
-              :tasaa :oikea
-              :tayta-alas? #(not (nil? %))
-              :tayta-fn (fn [lahtorivi tama-rivi]
-                          (assoc tama-rivi :pinta-ala (:pinta-ala lahtorivi)))
-              :tayta-sijainti :ylos
-              :tayta-tooltip "Kopioi sama pinta-ala alla oleville riveille"
-              :tayta-alas-toistuvasti? #(not (nil? %))
-              :tayta-toistuvasti-fn
-              (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :pinta-ala (:pinta-ala toistettava-rivi)))}
-             {:otsikko "Kuulamylly"
-              :nimi :kuulamylly
-              :tyyppi :valinta
-              :valinta-arvo :koodi
-              :valinta-nayta #(:nimi %)
-              :valinnat pot/+kyylamyllyt-ja-nil+
-              :leveys 30
-              :tayta-alas? #(not (nil? %))
-              :tayta-fn (fn [lahtorivi tama-rivi]
-                          (assoc tama-rivi :kuulamylly (:kuulamylly lahtorivi)))
-              :tayta-sijainti :ylos
-              :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
-              :tayta-alas-toistuvasti? #(not (nil? %))
-              :tayta-toistuvasti-fn
-              (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}]
-            yllapitokohdeosat-tila]
+         [grid/muokkaus-grid
+          {:otsikko "Päällystystoimenpiteen tiedot"
+           :id "paallystysilmoitus-paallystystoimenpiteet"
+           :data-cy "paallystystoimenpiteen-tiedot"
+           :voi-lisata? false
+           :voi-kumota? false
+           :voi-poistaa? (constantly false)
+           :voi-muokata? muokkaus-mahdollista?
+           :virheet paallystystoimenpide-virhe
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    tekninen-osa-voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
+           :rivinumerot? true
+           :jarjesta jarjestys-fn}
+          [(assoc paallystys/paallyste-grid-skeema
+                  :nimi :toimenpide-paallystetyyppi
+                  :leveys 30
+                  :tayta-alas? #(not (nil? %))
+                  :tayta-fn (fn [lahtorivi tama-rivi]
+                              (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi lahtorivi)))
+                  :tayta-sijainti :ylos
+                  :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille"
+                  :tayta-alas-toistuvasti? #(not (nil? %))
+                  :tayta-toistuvasti-fn
+                  (fn [toistettava-rivi tama-rivi]
+                    (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi toistettava-rivi))))
+           (assoc paallystys/raekoko-grid-skeema
+                  :nimi :toimenpide-raekoko :leveys 10
+                  :tayta-alas? #(not (nil? %))
+                  :tayta-fn (fn [lahtorivi tama-rivi]
+                              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
+                  :tayta-sijainti :ylos
+                  :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
+                  :tayta-alas-toistuvasti? #(not (nil? %))
+                  :tayta-toistuvasti-fn
+                  (fn [toistettava-rivi tama-rivi]
+                    (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi))))
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
+            :nimi :massamenekki
+            :tyyppi :positiivinen-numero :desimaalien-maara 0
+            :tasaa :oikea :leveys 10
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :massamenekki (:massamenekki lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :massamenekki (:massamenekki toistettava-rivi)))}
+           {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
+            :tasaa :oikea :pituus-max 100
+            :validoi (:rc tietojen-validointi)
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :rc% (:rc% lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           (assoc paallystys/tyomenetelma-grid-skeema
+                  :nimi :toimenpide-tyomenetelma
+                  :leveys 30
+                  :tayta-alas? #(not (nil? %))
+                  :tayta-fn (fn [lahtorivi tama-rivi]
+                              (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma lahtorivi)))
+                  :tayta-sijainti :ylos
+                  :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
+                  :tayta-alas-toistuvasti? #(not (nil? %))
+                  :tayta-toistuvasti-fn
+                  (fn [toistettava-rivi tama-rivi]
+                    (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma toistettava-rivi))))
+           {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :leveys (:leveys lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama leveys alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :leveys (:leveys toistettava-rivi)))}
+           {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
+            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kokonaismassamäärä alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara toistettava-rivi)))}
+           {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :pinta-ala (:pinta-ala lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama pinta-ala alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :pinta-ala (:pinta-ala toistettava-rivi)))}
+           {:otsikko "Kuulamylly"
+            :nimi :kuulamylly
+            :tyyppi :valinta
+            :valinta-arvo :koodi
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+kyylamyllyt-ja-nil+
+            :leveys 30
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kuulamylly (:kuulamylly lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}]
+          yllapitokohdeosat-tila]
 
-           [grid/muokkaus-grid
-              {:otsikko "Kiviaines ja sideaine"
-               :rivinumerot? true
-               :voi-lisata? false
-               :voi-kumota? false
-               :voi-poistaa? (constantly false)
-               :voi-muokata? muokkaus-mahdollista?
-               :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                        tekninen-osa-voi-muokata?)
-                               "Tierekisterikohteet taulukko on virheellisessä tilassa")
-               :virheet kiviaines-virhe
-               :jarjesta jarjestys-fn}
-              [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
-                :leveys 30
-                :tayta-alas? #(not (nil? %))
-                :tayta-fn (fn [lahtorivi tama-rivi]
-                            (assoc tama-rivi :esiintyma (:esiintyma lahtorivi)))
-                :tayta-sijainti :ylos
-                :tayta-tooltip "Kopioi sama esiintymä alla oleville riveille"
-                :tayta-alas-toistuvasti? #(not (nil? %))
-                :tayta-toistuvasti-fn
-                (fn [toistettava-rivi tama-rivi]
-                  (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-               {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
-                :tayta-alas? #(not (nil? %))
-                :tayta-fn (fn [lahtorivi tama-rivi]
-                            (assoc tama-rivi :km-arvo (:km-arvo lahtorivi)))
-                :tayta-sijainti :ylos
-                :tayta-tooltip "Kopioi sama KM-arvo alla oleville riveille"
-                :tayta-alas-toistuvasti? #(not (nil? %))
-                :tayta-toistuvasti-fn
-                (fn [toistettava-rivi tama-rivi]
-                  (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-               {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
-                :leveys 20
-                :tayta-alas? #(not (nil? %))
-                :tayta-fn (fn [lahtorivi tama-rivi]
-                            (assoc tama-rivi :muotoarvo (:muotoarvo lahtorivi)))
-                :tayta-sijainti :ylos
-                :tayta-tooltip "Kopioi sama muotoarvo alla oleville riveille"
-                :tayta-alas-toistuvasti? #(not (nil? %))
-                :tayta-toistuvasti-fn
-                (fn [toistettava-rivi tama-rivi]
-                  (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-               {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
-                :tyyppi :valinta
-                :valinta-arvo :koodi
-                :valinta-nayta #(:nimi %)
-                :valinnat pot/+sideainetyypit-ja-nil+
-                :tayta-alas? #(not (nil? %))
-                :tayta-fn (fn [lahtorivi tama-rivi]
-                            (assoc tama-rivi :sideainetyyppi (:sideainetyyppi lahtorivi)))
-                :tayta-sijainti :ylos
-                :tayta-tooltip "Kopioi sama sideainetyyppi alla oleville riveille"
-                :tayta-alas-toistuvasti? #(not (nil? %))
-                :tayta-toistuvasti-fn
-                (fn [toistettava-rivi tama-rivi]
-                  (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-               {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
-                :tayta-alas? #(not (nil? %))
-                :tayta-fn (fn [lahtorivi tama-rivi]
-                            (assoc tama-rivi :pitoisuus (:pitoisuus lahtorivi)))
-                :tayta-sijainti :ylos
-                :tayta-tooltip "Kopioi sama pitoisuus alla oleville riveille"
-                :tayta-alas-toistuvasti? #(not (nil? %))
-                :tayta-toistuvasti-fn
-                (fn [toistettava-rivi tama-rivi]
-                  (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-               {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
-                :pituus-max 256
-                :tayta-alas? #(not (nil? %))
-                :tayta-fn (fn [lahtorivi tama-rivi]
-                            (assoc tama-rivi :lisaaineet (:lisaaineet lahtorivi)))
-                :tayta-sijainti :ylos
-                :tayta-tooltip "Kopioi sama tieto alla oleville riveille"
-                :tayta-alas-toistuvasti? #(not (nil? %))
-                :tayta-toistuvasti-fn
-                (fn [toistettava-rivi tama-rivi]
-                  (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}]
-            yllapitokohdeosat-tila]
-
-           #_(let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
-               [:div
-                [debug @alustalle-tehdyt-toimet {:otsikko "Alustatoimenpiteet"}]
-                [:div [grid/muokkaus-grid
-                       {:otsikko "Alustalle tehdyt toimet"
-                        :jarjesta jarjestys-fn
-                        :voi-muokata? alustatoimet-voi-muokata?
-                        :voi-kumota? false
-                        :uusi-id (inc (count @alustalle-tehdyt-toimet))
-                        :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
-                       [{:otsikko "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
-                         :pituus-max 256
-                         ;; TODO HAR-7831 Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä.
-                         :validoi [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero :leveys 10
-                         :pituus-max 256
-                         :validoi [[:ei-tyhja "Ajorata puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero :leveys 10
-                         :pituus-max 256
-                         :validoi [[:ei-tyhja "Kaista puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
-                         :pituus-max 256
-                         :validoi [[:ei-tyhja "Alkuosa puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                         :validoi [[:ei-tyhja "Alkuetäisyys puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                         :validoi [[:ei-tyhja "Loppuosa puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                         :validoi [[:ei-tyhja "Loppuetäisyys puuttuu"] #_tr-validaattori]
-                         :tasaa :oikea
-                         :kokonaisluku? true}
-                        {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
-                         :muokattava? (constantly false)
-                         :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
-                         :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-                        {:otsikko "Käsittely\u00ADmenetelmä"
-                         :nimi :kasittelymenetelma
-                         :tyyppi :valinta
-                         :valinta-arvo :koodi
-                         :valinta-nayta (fn [rivi]
-                                          (if rivi
-                                            (str (:lyhenne rivi) " - " (:nimi rivi))
-                                            "- Valitse menetelmä -"))
-                         :valinnat pot/+alustamenetelmat+
-                         :leveys 30
-                         :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-                        {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
-                         :tyyppi :positiivinen-numero :tasaa :oikea
-                         :desimaalien-maara 0
-                         :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-                        {:otsikko "Verkko\u00ADtyyppi"
-                         :nimi :verkkotyyppi
-                         :tyyppi :valinta
-                         :valinta-arvo :koodi
-                         :valinta-nayta #(:nimi %)
-                         :valinnat pot/+verkkotyypit-ja-nil+
-                         :leveys 25}
-                        {:otsikko "Verkon sijainti"
-                         :nimi :verkon-sijainti
-                         :tyyppi :valinta
-                         :valinta-arvo :koodi
-                         :valinta-nayta #(:nimi %)
-                         :valinnat pot/+verkon-sijainnit-ja-nil+
-                         :leveys 25}
-                        {:otsikko "Verkon tarkoitus"
-                         :nimi :verkon-tarkoitus
-                         :tyyppi :valinta
-                         :valinta-arvo :koodi
-                         :valinta-nayta #(:nimi %)
-                         :valinnat pot/+verkon-tarkoitukset-ja-nil+
-                         :leveys 25}
-                        {:otsikko "Tekninen toimen\u00ADpide"
-                         :nimi :tekninen-toimenpide
-                         :tyyppi :valinta
-                         :valinta-arvo :koodi
-                         :valinta-nayta #(:nimi %)
-                         :valinnat pot/+tekniset-toimenpiteet-ja-nil+
-                         :leveys 30}]
-                       alustalle-tehdyt-toimet]]])])))))
+         [grid/muokkaus-grid
+          {:otsikko "Kiviaines ja sideaine"
+           :rivinumerot? true
+           :voi-lisata? false
+           :voi-kumota? false
+           :voi-poistaa? (constantly false)
+           :voi-muokata? muokkaus-mahdollista?
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    tekninen-osa-voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
+           :virheet kiviaines-virhe
+           :jarjesta jarjestys-fn}
+          [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
+            :leveys 30
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :esiintyma (:esiintyma lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama esiintymä alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :km-arvo (:km-arvo lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama KM-arvo alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
+            :leveys 20
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :muotoarvo (:muotoarvo lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama muotoarvo alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
+            :tyyppi :valinta
+            :valinta-arvo :koodi
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+sideainetyypit-ja-nil+
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :sideainetyyppi (:sideainetyyppi lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama sideainetyyppi alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :pitoisuus (:pitoisuus lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama pitoisuus alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
+            :pituus-max 256
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :lisaaineet (:lisaaineet lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama tieto alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}]
+          yllapitokohdeosat-tila]
+         [:div
+          [debug @alustan-toimet-tila {:otsikko "Alustatoimenpiteet"}]
+          [:div [grid/muokkaus-grid
+                 {:otsikko "Alustalle tehdyt toimet"
+                  :jarjesta jarjestys-fn
+                  :voi-muokata? alustatoimet-voi-muokata?
+                  :voi-kumota? false
+                  :uusi-id (inc (count @alustan-toimet-tila))
+                  :virheet alustan-toimet-virheet}
+                 [{:otsikko "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
+                   :pituus-max 256
+                   :validoi (:tr-numero alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero :leveys 10
+                   :pituus-max 256
+                   :validoi (:tr-ajorata alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero :leveys 10
+                   :pituus-max 256
+                   :validoi (:tr-kaista alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
+                   :pituus-max 256
+                   :validoi (:tr-alkuosa alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
+                   :validoi (:tr-alkuetaisyys alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
+                   :validoi (:tr-loppuosa alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
+                   :validoi (:tr-loppuetaisyys alustatoimien-validointi)
+                   :tasaa :oikea
+                   :kokonaisluku? true}
+                  {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
+                   :muokattava? (constantly false)
+                   :hae (fn [rivi]
+                          (tierekisteri-domain/laske-tien-pituus (get tr-osien-pituudet (:tr-numero rivi)) rivi))
+                   :validoi (:pituus alustatoimien-validointi)}
+                  {:otsikko "Käsittely\u00ADmenetelmä"
+                   :nimi :kasittelymenetelma
+                   :tyyppi :valinta
+                   :valinta-arvo :koodi
+                   :valinta-nayta (fn [rivi]
+                                    (if rivi
+                                      (str (:lyhenne rivi) " - " (:nimi rivi))
+                                      "- Valitse menetelmä -"))
+                   :valinnat pot/+alustamenetelmat+
+                   :leveys 30
+                   :validoi (:kasittelymenetelma alustatoimien-validointi)}
+                  {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
+                   :tyyppi :positiivinen-numero :tasaa :oikea
+                   :desimaalien-maara 0
+                   :validoi (:paksuus alustatoimien-validointi)}
+                  {:otsikko "Verkko\u00ADtyyppi"
+                   :nimi :verkkotyyppi
+                   :tyyppi :valinta
+                   :valinta-arvo :koodi
+                   :valinta-nayta #(:nimi %)
+                   :valinnat pot/+verkkotyypit-ja-nil+
+                   :leveys 25}
+                  {:otsikko "Verkon sijainti"
+                   :nimi :verkon-sijainti
+                   :tyyppi :valinta
+                   :valinta-arvo :koodi
+                   :valinta-nayta #(:nimi %)
+                   :valinnat pot/+verkon-sijainnit-ja-nil+
+                   :leveys 25}
+                  {:otsikko "Verkon tarkoitus"
+                   :nimi :verkon-tarkoitus
+                   :tyyppi :valinta
+                   :valinta-arvo :koodi
+                   :valinta-nayta #(:nimi %)
+                   :valinnat pot/+verkon-tarkoitukset-ja-nil+
+                   :leveys 25}
+                  {:otsikko "Tekninen toimen\u00ADpide"
+                   :nimi :tekninen-toimenpide
+                   :tyyppi :valinta
+                   :valinta-arvo :koodi
+                   :valinta-nayta #(:nimi %)
+                   :valinnat pot/+tekniset-toimenpiteet-ja-nil+
+                   :leveys 30}]
+                 alustan-toimet-tila]]]]))))
 
 #_(defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                   _ muokkaa! historia tallennus-onnistui]
@@ -1271,6 +1261,7 @@
                                                  (when-not (empty? paallekkaiset-osat)
                                                    (apply str (interpose ", "
                                                                          (map :viesti paallekkaiset-osat)))))))
+            tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
             ;; Koko POT-lomakkeen validoinnit on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä
             validoinnit {:perustiedot {:tekninen-osa (with-meta
                                                        {:kasittelyaika (if (:paatos tekninen-osa)
@@ -1302,7 +1293,20 @@
                                                                      yllapitokohde-domain/loppuosa-ei-alkua-ennen]
                                                        :tr-loppuetaisyys [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
                                                                           [:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
-                                                                          yllapitokohde-domain/loppuetaisyys-ei-alkua-ennen]}}}
+                                                                          yllapitokohde-domain/loppuetaisyys-ei-alkua-ennen]}
+                                        :paallystystoimenpiteen-tiedot {:rc [[:rajattu-numero 0 100]]}
+                                        :alustatoimenpiteet
+                                        ;; TODO HAR-7831 Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä.
+                                        {:tr-numero [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
+                                         :tr-ajorata [[:ei-tyhja "Ajorata puuttuu"] #_tr-validaattori]
+                                         :tr-kaista [[:ei-tyhja "Kaista puuttuu"] #_tr-validaattori]
+                                         :tr-alkuosa [[:ei-tyhja "Alkuosa puuttuu"] #_tr-validaattori]
+                                         :tr-alkuetaisyys [[:ei-tyhja "Alkuetäisyys puuttuu"] #_tr-validaattori]
+                                         :tr-loppuosa [[:ei-tyhja "Loppuosa puuttuu"] #_tr-validaattori]
+                                         :tr-loppuetaisyys [[:ei-tyhja "Loppuetäisyys puuttuu"] #_tr-validaattori]
+                                         :pituus [[:ei-tyhja "Tieto puuttuu"]]
+                                         :kasittelymenetelma [[:ei-tyhja "Tieto puuttuu"]]
+                                         :paksuus [[:ei-tyhja "Tieto puuttuu"]]}}}
             pakollisten-kenttien-virheet (fn [validoinnit-polku virheet]
                                            (let [pakolliset-kentat (-> validoinnit (get-in validoinnit-polku) meta :pakolliset)]
                                              (if pakolliset-kentat
@@ -1360,7 +1364,7 @@
          [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit]
 
          ;[:div {:style {:float "right"}} [historia/kumoa historia]]
-         [paallystysilmoitus-tekninen-osa e! app muokkaa! tekninen-osa-voi-muokata? validoinnit]
+         [paallystysilmoitus-tekninen-osa e! app muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
 
          [yhteenveto lomakedata-nyt]
 
