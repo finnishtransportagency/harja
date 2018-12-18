@@ -4,9 +4,7 @@
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]
     [harja.tyokalut.tuck :as tuck-apurit]
-    [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
-    [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<! put!]]
@@ -21,7 +19,10 @@
     [harja.domain.urakka :as urakka-domain]
     [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
     [harja.domain.yllapitokohde :as yllapitokohde-domain]
-    [harja.ui.viesti :as viesti])
+    [harja.ui.viesti :as viesti]
+    [harja.ui.modal :as modal]
+    [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
+    [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -40,12 +41,6 @@
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                           :sopimus-id sopimus-id
                                           :vuosi vuosi}))
-
-(defn tallenna-paallystysilmoitus! [{:keys [urakka-id sopimus-id vuosi lomakedata]}]
-  (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
-                                         :sopimus-id sopimus-id
-                                         :vuosi vuosi
-                                         :paallystysilmoitus lomakedata}))
 
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -183,6 +178,9 @@
 (defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord TallennaPaallystysilmoitus [])
+(defrecord TallennaPaallystysilmoitusOnnistui [vastaus])
+(defrecord TallennaPaallystysilmoitusEpaonnistui [vastaus])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
@@ -215,7 +213,8 @@
                              parametrit
                              {:onnistui ->HaePaallystysilmoituksetOnnnistui
                               :epaonnistui ->HaePaallystysilmoituksetEpaonnisuti})
-          (assoc :kiintioiden-haku-kaynnissa? true))))
+          (assoc :kiintioiden-haku-kaynnissa? true)
+          (dissoc :paallystysilmoitukset))))
   HaePaallystysilmoituksetOnnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus (get-in app [:yllapito-tila :kohdejarjestys]))))
@@ -282,6 +281,57 @@
                          parametrit
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  TallennaPaallystysilmoitus
+  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuos]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
+    (let [lahetettava-data (-> paallystysilmoitus-lomakedata
+                               (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
+                               (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
+                               (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               ;; Filteröidään uudet poistetut
+                               (update-in [:ilmoitustiedot :osoitteet] gridin-muokkaus/filteroi-uudet-poistetut)
+                               (update-in [:ilmoitustiedot :alustatoimet] gridin-muokkaus/filteroi-uudet-poistetut)
+                               ;; POT-lomake tallentuu kantaan JSONina, eikä se tarvitse id-tietoja.
+                               (gridin-muokkaus/poista-idt [:ilmoitustiedot :osoitteet])
+                               (gridin-muokkaus/poista-idt [:ilmoitustiedot :alustatoimet])
+                               ;; Poistetaan poistetut elementit
+                               (gridin-muokkaus/poista-poistetut [:ilmoitustiedot :osoitteet])
+                               (gridin-muokkaus/poista-poistetut [:ilmoitustiedot :alustatoimet])
+
+                               (update-in [:ilmoitustiedot :osoitteet] (fn [osoitteet]
+                                                                         (map (fn [osoite]
+                                                                                (dissoc osoite :jarjestys-gridissa))
+                                                                              osoitteet))))]
+      (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str paallystysilmoitus-lomakedata))
+      (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
+      (tuck-apurit/post! app :tallenna-paallystysilmoitus
+                         {:urakka-id urakka-id
+                          :sopimus-id (first valittu-sopimusnumero)
+                          :vuosi valittu-urakan-vuos
+                          :paallystysilmoitus lahetettava-data}
+                         {:onnistui ->TallennaPaallystysilmoitusOnnistui
+                          :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui})))
+  TallennaPaallystysilmoitusOnnistui
+  (process-event [vastaus {{urakka-id :id :as urakka} :urakka :as app}]
+    (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
+    (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+    ;; TODO Nämä pois, kun refaktorointi valmis
+    (reset! paallystysilmoitukset (:paallystysilmoitukset vastaus))
+    (reset! yllapitokohteet (:yllapitokohteet vastaus))
+    (assoc app :paallystysilmoitus-lomakedata nil))
+  TallennaPaallystysilmoitusEpaonnistui
+  (process-event [vastaus app]
+    (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
+    (modal/nayta!
+      {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
+       :otsikko-tyyli :virhe}
+      (when (:virhe vastaus)
+        [:div
+         [:p "Virheet:"]
+         (into [:ul] (mapv (fn [virhe]
+                             [:li virhe])
+                           (:virhe vastaus)))]))
+    app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
                    takuupvm-tallennus-kaynnissa-kanava :takuupvm-tallennus-kaynnissa-kanava}

@@ -64,7 +64,8 @@
          (tarkkaile-toisen-tilaa e! yllapito-tiedot/kohdejarjestys :pot-kohdeluettelo-yllapito-kohdejarjestys [:yllapito-tila :kohdejarjestys])
          (tarkkaile-toisen-tilaa e! u/valittu-sopimusnumero :pot-kohdeluettelo-urakka-valittu-sopimusnumero [:urakka-tila :valittu-sopimusnumero])
          (tarkkaile-toisen-tilaa e! u/valittu-urakan-vuosi :pot-kohdeluettelo-valittu-urakan-vuosi [:urakka-tila :valittu-urakan-vuosi])
-         (tarkkaile-toisen-tilaa e! lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko [:lukko]))
+         (tarkkaile-toisen-tilaa e! lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko [:lukko])
+         (tarkkaile-toisen-tilaa e! istunto/kayttaja :pot-kohdeluettelo-kayttaja [:kayttaja]))
       #(do
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (tiedot-kartta/kasittele-infopaneelin-linkit! nil)
@@ -73,7 +74,8 @@
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-tienumero)
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-kohdejarjestys)
          (remove-watch u/valittu-sopimusnumero :pot-kohdeluettelo-valittu-urakan-vuosi)
-         (remove-watch lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko)))
+         (remove-watch lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko)
+         (remove-watch istunto/kayttaja :pot-kohdeluettelo-kayttaja)))
     (fn [e! {ur :urakka :as app}]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo

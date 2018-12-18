@@ -2,12 +2,10 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
-            [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]
-            [clojure.string :as str]
+            [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -104,7 +102,7 @@
     (or viesti (str "Arvon pitää löytyä joukosta " (clojure.string/join ", " @setti-atom)))))
 
 (defmethod validoi-saanto :ei-tyhja [_ _ data _ _ & [viesti]]
-  (when (str/blank? data)
+  (when (str-clj/blank? data)
     (or viesti "Anna arvo")))
 
 (defmethod validoi-saanto :ei-negatiivinen-jos-avaimen-arvo [_ _ data rivi _ & [avain arvo viesti]]
@@ -114,7 +112,7 @@
 
 (defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-nil
   [_ _ data rivi _ & [toinen-avain viesti]]
-  (when (and (str/blank? data)
+  (when (and (str-clj/blank? data)
              (not (toinen-avain rivi)))
     (or viesti "Anna arvo")))
 
@@ -135,7 +133,7 @@
                  (str "Anna joku näistä: "
                       (clojure.string/join ", "
                                            (map (comp clojure.string/capitalize name) avaimet))))]
-    (when-not (some #(not (str/blank? (% rivi))) avaimet) viesti)))
+    (when-not (some #(not (str-clj/blank? (% rivi))) avaimet) viesti)))
 
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
@@ -213,9 +211,9 @@
   (and
     data
     (let [ ;; Halkaistaan tunnus välimerkin kohdalta
-          [tunnus tarkastusmerkki :as halkaistu] (str/split data #"-")
+          [tunnus tarkastusmerkki :as halkaistu] (str-clj/split data #"-")
           ;; Kun pudotetaan pois numerot, pitäisi tulos olla ["" "-" nil]
-          [etuosa valimerkki loppuosa] (str/split data #"\d+")]
+          [etuosa valimerkki loppuosa] (str-clj/split data #"\d+")]
       (when-not (and (= 9 (count data))
                      (= 2 (count halkaistu))
                      (= 7 (count tunnus))
@@ -303,7 +301,7 @@
 
 (defn tyhja-arvo? [arvo]
   (or (nil? arvo)
-      (str/blank? arvo)))
+      (str-clj/blank? arvo)))
 
 (defn puuttuvat-pakolliset-kentat
   "Palauttaa pakolliset kenttäskeemat, joiden arvo puuttuu"

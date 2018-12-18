@@ -36,8 +36,8 @@ describe('Aloita päällystysilmoitus vanha', function () {
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
         cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
+        cy.get('[data-cy=piilota-kartta]').click()
         valitseVuosi(2017);
-        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]').should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {
@@ -84,7 +84,9 @@ describe('Aloita päällystysilmoitus vanha', function () {
     it('Rivien lisäys', function () {
         // Lisätään jokunen rivi
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody tr button')
-            .contains('Lisää osa').click().click().click()
+        //Käytetään forcea sen takia, kun joskus Cypressin scrollaus ei oikein toimi järkevästi. Tuo "Näytä kartta"
+        // nappi saattaa tulla tuon 'Lisää osa' napin päälle, joka ei oikeasti ole mikään ongelma.
+            .contains('Lisää osa').click({force: true}).click({force: true}).click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
             .should('have.length', 12)
@@ -134,8 +136,6 @@ describe('Aloita päällystysilmoitus vanha', function () {
             let valitseInput = function (rivi, otsikko) {
                 return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
             }
-            // Piillotetaan kartta, jotta se ei ole gridin edessä
-            cy.get('[data-cy=piilota-kartta]').click()
             cy.wrap(valitseInput(0, 'Aosa')).clear().type(2)
             cy.wrap(valitseInput(0, 'Losa')).type(1)
             cy.wrap(valitseInput(0, 'Let')).type(100000)

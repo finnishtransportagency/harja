@@ -69,6 +69,7 @@ ja kaikki pakolliset kentät on täytetty"
   [data]
   (validi? data))
 
+;;TODO siirry käyttämään lomakkeen-muokkaus ns:ssa tätä
 (defn ilman-lomaketietoja
   "Palauttaa lomakkeen datan ilman lomakkeen ohjaustietoja"
   [data]

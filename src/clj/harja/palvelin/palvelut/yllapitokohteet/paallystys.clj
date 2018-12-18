@@ -363,6 +363,7 @@
 
 (defn- paivita-paallystysilmoitus [db user urakka-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]
+  ;; TODO ei luoteta fronttivalidointiin
   ;; Ilmoituksen kaikki tiedot lähetetään aina tallennettavaksi, vaikka käyttäjällä olisi oikeus
   ;; muokata vain tiettyä osaa ilmoituksesta. Frontissa on estettyä muokkaamasta sellaisia asioita, joita
   ;; käyttäjä ei saa muokata. Täällä ilmoitus päivitetään osa kerrallaan niin, että jokaista
@@ -494,7 +495,10 @@
 
 
       (if (:validointivirheet paivitetyt-kohdeosat)
-        paivitetyt-kohdeosat
+        ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
+        (-> paivitetyt-kohdeosat
+            (assoc :virhe (:validointivirheet paivitetyt-kohdeosat))
+            (dissoc :validointivirheet))
 
         (let [paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
               vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
