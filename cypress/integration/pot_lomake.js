@@ -241,6 +241,14 @@ describe('Aloita päällystysilmoitus vanha', function () {
             let valitseInput = function (rivi, otsikko) {
                 return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
             }
+            // Täytetään ensin väärää tietoa ja katsotaan virheviestit ja tallennusnapin disaplointi
+            cy.wrap(valitseInput(0, 'RC-%')).type(200).parentsUntil('tr').find('.virhe')
+                .should('have.lengthOf', 1).and('contain', 'Anna arvo välillä 0 - 100')
+            cy.wrap(valitseInput(0, 'RC-%')).clear()
+            cy.wrap(valitseInput(0, 'Raekoko')).type(200).parentsUntil('tr').find('.virhe')
+                .should('have.lengthOf', 1).and('contain', 'Anna arvo välillä 0 - 99')
+            cy.wrap(valitseInput(0, 'Raekoko')).clear()
+
             // Täytetään taulukkoon oikean muotoisia tietoja
             cy.wrap(valitseInput(0, 'Raekoko')).type(1).then(($raekokoInput) => {
                 cy.wrap($raekokoInput.parentsUntil('td')).contains('button', 'Täytä').click()
@@ -326,8 +334,9 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
-            expect(virheet).to.have.lengthOf(1)
+            expect(virheet).to.have.lengthOf(2)
                 .and.to.contain('Anna tarkastuspäivämäärä')
+                .and.to.contain('Anna tarkastaja')
         })
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {
