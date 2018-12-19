@@ -277,8 +277,8 @@ describe('Käsittele päälystysilmoitus', function () {
                 valitseVuosi(2017)
             }
         })
-        cy.get('img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
+        cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
             cy.wrap($gridOtsikot.grid.find('tbody')).contains('E2E-Testi').parentsUntil('tbody').then(($rivi) => {

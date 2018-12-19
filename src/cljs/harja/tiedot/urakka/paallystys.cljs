@@ -314,7 +314,7 @@
                          {:onnistui ->TallennaPaallystysilmoitusOnnistui
                           :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui})))
   TallennaPaallystysilmoitusOnnistui
-  (process-event [vastaus {{urakka-id :id :as urakka} :urakka :as app}]
+  (process-event [{vastaus :vastaus} {{urakka-id :id :as urakka} :urakka :as app}]
     (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
     (urakka/lukitse-urakan-yha-sidonta! urakka-id)
     ;; TODO Nämä pois, kun refaktorointi valmis
