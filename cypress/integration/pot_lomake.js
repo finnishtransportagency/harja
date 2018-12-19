@@ -273,11 +273,11 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.get('[data-cy=valinnat-vuosi]').then(($valinta) => {
             if ($valinta.find('.valittu').text().trim() === '2018') {
                 cy.get('[data-cy=piilota-kartta]').click()
-                cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
+                cy.get('img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
                 valitseVuosi(2017)
             }
         })
-        cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
+        cy.get('img[src="images/ajax-loader.gif"]', { timeout: 10000 }).should('not.exist')
         cy.contains('[data-cy=valinnat-vuosi] .valittu', '2017').should('be.visible')
         cy.get('[data-cy=paallystysilmoitukset-grid]')
             .gridOtsikot().then(($gridOtsikot) => {
@@ -304,19 +304,19 @@ describe('Käsittele päälystysilmoitus', function () {
         cy.contains('Käsitelty').parent().should('have.class', 'required')
         //TODO Korjaa bugi, tuohon ei pitäisi tarvita ensin kirjottaa jotain, että virheviestit näkyisivät
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .virhe').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna käsittelypvm')
         })
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .virhe').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Käsittely ei voi olla ennen valmistumista')
         })
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] textarea').type('a').clear()
-        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] textarea').parentsUntil('div.lomakerivi').find('.virhe').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] textarea').parentsUntil('div.lomakerivi').find('.huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna päätöksen selitys')
@@ -324,21 +324,17 @@ describe('Käsittele päälystysilmoitus', function () {
 
         // Asiatarkastuksen tarkastus
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .virhe').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
             expect(virheet).to.have.lengthOf(1)
                 .and.to.contain('Anna tarkastuspäivämäärä')
         })
         cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .pvm.form-control').pvmValitse({pvm: '01.01.2017'})
-        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .virhe').then(($virhe) => {
+        cy.get('[data-cy=paallystysilmoitus-asiatarkastus] .huomautus').then(($virhe) => {
             let virheet = virheTekstit($virhe)
-            expect(virheet).to.have.lengthOf(1)
+            expect(virheet).to.have.lengthOf(2)
                 .and.to.contain('Tarkastus ei voi olla ennen valmistumista')
-        })
-        cy.contains('[data-cy=paallystysilmoitus-asiatarkastus] label', 'Tarkastaja').then(($tarkastaja) => {
-            cy.wrap($tarkastaja.parent().find('input')).type('foo').clear().then(($input) => {
-                cy.wrap($input.parent()).find('.virhe').should('have.lengthOf', 1).and('contain', 'Anna tarkastaja')
-            })
+                .and.to.contain('Anna tarkastaja')
         })
     })
     it('Laita oikea data ja tallenna', function () {

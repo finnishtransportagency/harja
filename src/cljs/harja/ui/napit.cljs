@@ -76,13 +76,12 @@
                           (reset! kysely-kaynnissa? true)
                           (reset! nayta-virheviesti? false)
                           (go (let [tulos (<! (kysely))]
+                                (reset! kysely-kaynnissa? false)
                                 (when kun-valmis (kun-valmis tulos))
                                 (if (not (k/virhe? tulos))
+                                  (when kun-onnistuu
+                                    (kun-onnistuu tulos))
                                   (do
-                                    (reset! kysely-kaynnissa? false)
-                                    (when kun-onnistuu (kun-onnistuu tulos)))
-                                  (do
-                                    (reset! kysely-kaynnissa? false)
                                     (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
                                     (reset! nayta-virheviesti? true)
                                     (when kun-virhe (kun-virhe tulos)))))))

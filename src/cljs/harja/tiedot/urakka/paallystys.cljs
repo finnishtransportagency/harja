@@ -284,7 +284,9 @@
   TallennaPaallystysilmoitus
   (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuos]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
+                               ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
+                               (update :ilmoitustiedot dissoc :virheet)
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
@@ -318,7 +320,8 @@
     ;; TODO Nämä pois, kun refaktorointi valmis
     (reset! paallystysilmoitukset (:paallystysilmoitukset vastaus))
     (reset! yllapitokohteet (:yllapitokohteet vastaus))
-    (assoc app :paallystysilmoitus-lomakedata nil))
+    (assoc app :paallystysilmoitus-lomakedata nil
+           :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [vastaus app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))

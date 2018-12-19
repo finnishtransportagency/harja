@@ -361,7 +361,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         edellinen-skeema (when validoitavat-avaimet
                            (atom (validoi-avaimet skeema)))]
     (when validoi-alussa?
-      (muokkaa! (validoi data skeema)))
+      (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
                  voi-muokata? ei-borderia? validoitavat-avaimet data-cy] :as opts} skeema
          {muokatut ::muokatut

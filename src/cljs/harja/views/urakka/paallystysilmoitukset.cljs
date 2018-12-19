@@ -111,12 +111,12 @@
         :nimi :tarkastusaika
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
         :tyyppi :pvm
-        :validoi tarkastusaika}
+        :huomauta tarkastusaika}
        {:otsikko "Tarkastaja"
         :nimi :tarkastaja
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastaja)
         :tyyppi :string
-        :validoi tarkastaja
+        :huomauta tarkastaja
         :pituus-max 1024}
        {:teksti "Hyväksytty"
         :nimi :hyvaksytty
@@ -157,14 +157,14 @@
         :nimi :kasittelyaika
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :kasittelyaika)
         :tyyppi :pvm
-        :validoi kasittelyaika}
+        :huomauta kasittelyaika}
 
        {:otsikko "Päätös"
         :nimi :paatos
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :paatos)
         :tyyppi :valinta
         :valinnat [:hyvaksytty :hylatty]
-        :validoi paatos
+        :huomauta paatos
         :valinta-nayta #(cond
                           % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
                           muokattava? "- Valitse päätös -"
@@ -179,7 +179,7 @@
           :koko [60 3]
           :pituus-max 2048
           :palstoja 2
-          :validoi perustelu})]
+          :huomauta perustelu})]
       tekninen-osa]]))
 
 (defn tallennus
@@ -197,7 +197,9 @@
 
      [napit/palvelinkutsu-nappi
       "Tallenna"
-      #(e! (paallystys/->TallennaPaallystysilmoitus))
+      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
+      #(go
+         (e! (paallystys/->TallennaPaallystysilmoitus)))
       {:luokka "nappi-ensisijainen"
        :data-cy "pot-tallenna"
        :id "tallenna-paallystysilmoitus"
@@ -220,7 +222,7 @@
                                            :perustiedot} :paallystysilmoitus-lomakedata}
                                       lukittu?
                                       muokkaa!
-                                      validoinnit]
+                                      validoinnit huomautukset]
   (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
     [:div.row
      [:div.col-md-6
@@ -286,8 +288,8 @@
      [:div.col-md-6
       (when nayta-kasittelyosiot?
         [:div
-         [kasittely urakka perustiedot-nyt lukittu? muokkaa! validoinnit]
-         [asiatarkastus urakka perustiedot-nyt lukittu? muokkaa! validoinnit]])]]))
+         [kasittely urakka perustiedot-nyt lukittu? muokkaa! huomautukset]
+         [asiatarkastus urakka perustiedot-nyt lukittu? muokkaa! huomautukset]])]]))
 
 (defn poista-lukitus [e! {urakka :urakka lomakedata-nyt :paallystysilmoitus-lomakedata :as app}]
   (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
@@ -728,9 +730,8 @@
                     valmispvm-kohde]} perustiedot
             lukittu? (lukko/nakyma-lukittu? lukko)
             virheet (conj []
-                          ;; Tarkista pitäisikö näiden olla pakollisia
-                          #_(-> perustiedot :tekninen-osa ::lomake/virheet)
-                          #_(-> perustiedot :asiatarkastus ::lomake/virheet)
+                          (-> perustiedot :tekninen-osa ::lomake/virheet)
+                          (-> perustiedot :asiatarkastus ::lomake/virheet)
                           (reduce (fn [kaikki-virheet [taulukon-avain taulukon-virheet]]
                                     (let [taulukon-virheviestit (apply concat
                                                                        (keep #(let [rivin-virheviestit (flatten (vals %))]
@@ -776,22 +777,8 @@
                                                    (apply str (interpose ", "
                                                                          (map :viesti paallekkaiset-osat)))))))
             tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
-            ;; Koko POT-lomakkeen validoinnit on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä
-            validoinnit {:perustiedot {:tekninen-osa (with-meta
-                                                       {:kasittelyaika (if (:paatos tekninen-osa)
-                                                                         [[:ei-tyhja "Anna käsittelypvm"]
-                                                                          [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Käsittely ei voi olla ennen valmistumista"]]
-                                                                         [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Käsittely ei voi olla ennen valmistumista"]])
-                                                        :paatos [[:ei-tyhja "Anna päätös"]]}
-                                                       {:pakolliset #{(when (:paatos tekninen-osa)
-                                                                        :kasittelyaika)}})
-                                       :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
-                                                                       [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                        "Tarkastus ei voi olla ennen valmistumista"]]
-                                                       :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}
-                         :tekninen-osa {:tr-osoitteet {:_taulukko [{:fn validoi-kohteen-paallekkaisyys
+            ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä
+            validoinnit {:tekninen-osa {:tr-osoitteet {:_taulukko [{:fn validoi-kohteen-paallekkaisyys
                                                                     :sarakkeet #{:tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}}]
                                                        :tr-numero [[:ei-tyhja "Anna tienumero"]]
                                                        :tr-ajorata [[:ei-tyhja "Anna ajorata"]]
@@ -822,22 +809,25 @@
                                          :pituus [[:ei-tyhja "Tieto puuttuu"]]
                                          :kasittelymenetelma [[:ei-tyhja "Tieto puuttuu"]]
                                          :paksuus [[:ei-tyhja "Tieto puuttuu"]]}}}
-            pakollisten-kenttien-virheet (fn [validoinnit-polku virheet]
-                                           (let [pakolliset-kentat (-> validoinnit (get-in validoinnit-polku) meta :pakolliset)]
-                                             (if pakolliset-kentat
-                                               (reduce (fn [virhe-viestit [k v]]
-                                                         (if (pakolliset-kentat k)
-                                                           (concat virhe-viestit v)
-                                                           virhe-viestit))
-                                                       [] virheet)
-                                               [])))
-            perustietojen-kasittelemattomat-virheet (mapcat #(pakollisten-kenttien-virheet (first %) (second %))
-                                                            [[[:perustiedot :tekninen-osa] (::lomake/virheet tekninen-osa)]
-                                                             [[:perustiedot :asiatarkastus] (::lomake/virheet asiatarkastus)]])
+            ;; Tarkista pitäisikö näiden olla ihan virheitä
+            huomautukset {:perustiedot {:tekninen-osa (with-meta
+                                                        {:kasittelyaika (if (:paatos tekninen-osa)
+                                                                          [[:ei-tyhja "Anna käsittelypvm"]
+                                                                           [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                            "Käsittely ei voi olla ennen valmistumista"]]
+                                                                          [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                            "Käsittely ei voi olla ennen valmistumista"]])
+                                                         :paatos [[:ei-tyhja "Anna päätös"]]
+                                                         :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
+                                                        {:pakolliset #{(when (:paatos tekninen-osa)
+                                                                         :kasittelyaika)}})
+                                        :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                                                                        [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                         "Tarkastus ei voi olla ennen valmistumista"]]
+                                                        :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}}
             valmis-tallennettavaksi? (and
                                        (not (= tila :lukittu))
                                        (empty? (flatten (keep vals virheet)))
-                                       (empty? perustietojen-kasittelemattomat-virheet)
                                        (false? lukittu?))]
         [:div.paallystysilmoituslomake
 
@@ -850,7 +840,7 @@
          (when (= :lukittu tila)
            [poista-lukitus e! app])
 
-         [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit]
+         [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit huomautukset]
 
          ;[:div {:style {:float "right"}} [historia/kumoa historia]]
          [paallystysilmoitus-tekninen-osa e! app muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
