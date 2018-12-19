@@ -739,20 +739,22 @@
 (defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
 (defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')\n
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
+                   AND poistettu IS FALSE"))))
 
 (defn hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')\n
-                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
+                   AND poistettu IS FALSE"))))
 
 (defn hae-tiemerkintaurakkaan-osoitettu-yllapitokohde [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
