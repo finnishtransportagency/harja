@@ -111,7 +111,7 @@
 ;; Apurit
 
 ;; Nämä on vectoreita, koska valintajärjestyksellä väliä
-(def vikaluokat [:sahkotekninen_vika :konetekninen_vika :liikennevaurio])
+(def vikaluokat [:sahkotekninen_vika :konetekninen_vika :liikennevaurio :ilkivalta :sahkokatko :muut_viat])
 (def vikaluokat+kaikki (vec (concat [nil] vikaluokat)))
 (def korjauksen-tlat [:kesken :valmis])
 (def korjauksen-tlat+kaikki (vec (concat [nil] korjauksen-tlat)))
@@ -119,7 +119,10 @@
 (def fmt-vikaluokka
   {:sahkotekninen_vika "Sähkötekninen vika"
    :konetekninen_vika "Konetekninen vika"
-   :liikennevaurio "Liikennevaurio"})
+   :liikennevaurio "Liikennevaurio"
+   :ilkivalta "Ilkivalta"
+   :sahkokatko "Sähkökatko"
+   :muut_viat "Muut viat"})
 
 (def fmt-korjauksen-tila
   {:kesken "Kesken"
