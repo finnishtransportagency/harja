@@ -677,6 +677,11 @@
 (defn hae-muhoksen-paallystysurakan-testikohteen-id []
   (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
 
+(defn hae-utajarven-paallystysurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Utajärven päällystysurakka'"))))
+
 (defn hae-oulun-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -721,6 +726,10 @@
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null)"))))
 
+(defn hae-utajarven-paallystysurakan-paasopimuksen-id []
+  (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
+                           (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka') AND paasopimus IS null)"))))
+
 (defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
@@ -732,6 +741,18 @@
                    WHERE
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')\n
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')\n
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
 (defn hae-tiemerkintaurakkaan-osoitettu-yllapitokohde [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk

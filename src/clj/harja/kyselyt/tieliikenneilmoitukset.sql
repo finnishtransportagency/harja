@@ -472,7 +472,7 @@ INSERT INTO ilmoitustoimenpide
 VALUES
   (:ilmoitus,
     :ilmoitusid,
-    :kuitattu,
+    current_timestamp,
     :vakiofraasi,
     :vapaateksti,
     :kuittaustyyppi,
