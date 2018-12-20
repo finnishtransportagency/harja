@@ -302,7 +302,13 @@
                    {:arvo :konetekninen_vika
                     :nimi "Konetekninen vika"}
                    {:arvo :liikennevaurio
-                    :nimi "Liikennevaurio"}]}
+                    :nimi "Liikennevaurio"}
+                   {:arvo :ilkivalta
+                    :nimi "Ilkivalta"}
+                   {:arvo :sahkokatko
+                    :nimi "Sähkökatko"}
+                   {:arvo :muut_viat
+                    :nimi "Muut viat"}]}
        {:otsikko "Häiriön syy"
         :nimi ::hairiotilanne/syy
         :palstoja 2

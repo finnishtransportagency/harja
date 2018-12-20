@@ -12,9 +12,11 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(declare hae-toteumat hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
+(declare hae-toteumat hae-toteumat-tr-valille hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
 
 (defonce suolatoteumissa? (atom false))
+
+(defonce ui-suodatin-valinnat (atom {:suola "Kaikki"}))
 
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
 
@@ -23,18 +25,33 @@
               (when hae?
                 (hae-materiaalit))))
 
+(defonce ui-valittu-aikavali (atom nil))
+
 (defonce
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
 
+(defonce ui-lomakkeen-tila (atom nil))
+(defonce lomakkeen-tila (atom nil))
+
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
                urakka @nav/valittu-urakka
-               aikavali @valittu-aikavali]
+               aikavali @valittu-aikavali
+               tr-vali @lomakkeen-tila]
               {:nil-kun-haku-kaynnissa? true}
               (when (and hae? urakka aikavali)
                 (go
-                  (<! (hae-toteumat (:id urakka) aikavali))))))
+                  (let [tr-vali (:tierekisteriosoite tr-vali)]
+                    (if (and (:numero tr-vali)
+                             (:loppuosa tr-vali))
+                      (<! (hae-toteumat-tr-valille (:id urakka) aikavali
+                                                   (:numero tr-vali)
+                                                   (:alkuosa tr-vali)
+                                                   (:alkuetaisyys tr-vali)
+                                                   (:loppuosa tr-vali)
+                                                   (:loppuetaisyys tr-vali)))
+                      (<! (hae-toteumat (:id urakka) aikavali))))))))
 
 (def valitut-toteumat (atom #{}))
 
@@ -86,6 +103,17 @@
                 (remove (into #{}
                               (eriteltavat-toteumat toteumat))
                         @valitut-toteumat))))
+
+(defn hae-toteumat-tr-valille [urakka-id [alkupvm loppupvm] tie alkuosa alkuet loppuosa loppuet]
+  {:pre [(int? urakka-id)]}
+  (k/post! :hae-suolatoteumat-tr-valille {:urakka-id urakka-id
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm
+                                          :tie tie
+                                          :alkuosa alkuosa
+                                          :alkuet alkuet
+                                          :loppuosa loppuosa
+                                          :loppuet loppuet}))
 
 (defn hae-toteumat [urakka-id [alkupvm loppupvm]]
   {:pre [(int? urakka-id)]}
