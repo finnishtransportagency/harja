@@ -13,10 +13,10 @@
   (laheta-kohteet [this urakka-id kohde-idt]))
 
 (defn laheta-kohteet-velhoon [integraatioloki db {:keys [url autorisaatio]} urakka-id kohde-idt]
-  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
+  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "yha" "kohteiden-lahetys" nil
+      db integraatioloki "velho" "kohteiden-lahetys" nil
       (fn [konteksti]
         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
           (let [urakka (assoc urakka :harjaid urakka-id

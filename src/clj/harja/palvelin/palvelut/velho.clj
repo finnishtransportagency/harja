@@ -4,12 +4,12 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn laheta-kohteet-velhoon
   "Lähettää annetut kohteet Velhoon."
-  [velho user {:keys [urakka-id  kohde-idt ]}]
+  [velho user {:keys [urakka-id kohde-idt]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug (format "Lähetetään kohteet: %s Velhoon" kohde-idt))
   (velho/laheta-kohteet velho urakka-id kohde-idt))
@@ -19,9 +19,7 @@
   (start [this]
     (let [http (:http-palvelin this)
           velho (:yha-integraatio this)]
-      (julkaise-palvelu http :laheta-kohteet-velhoon
-                        (fn [user data]
-                          (laheta-kohteet-velhoon velho user data))))
+      (julkaise-palvelu http :laheta-kohteet-velhoon (fn [user data] (laheta-kohteet-velhoon velho user data))))
     this)
   (stop [this]
     (poista-palvelut
