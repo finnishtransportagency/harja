@@ -1,7 +1,7 @@
 
 # Harja Info (harja-info)
 
-> Liikenneviraston kunnossapidon seurannan ja raportoinnin info-sivut
+> Väylän kunnossapidon seurannan ja raportoinnin info-sivut
 
 ## Install
 
@@ -82,7 +82,7 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 		"title": "Tiedote #3",
 		"short": "Lorem ipsum dolor sit amet",
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		"images": ["/images/Tripla.jpg", "http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
+		"images": ["/images/Tripla.jpg", "http://www.vayla.fi/documents/20473/251256/vayla_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
 	},
 	{
 		"date": "2011-01-10",
@@ -91,7 +91,7 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 	{
 		"date": "2011-02-30",
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		"images": ["http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
+		"images": ["http://www.vayla.fi/documents/20473/251256/vayla_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
 	}
 ]
 ```

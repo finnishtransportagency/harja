@@ -1,7 +1,7 @@
 {
   "name": "harja-info",
   "version": "0.1.0",
-  "description": "Harja Info: Liikenneviraston kunnossapidon seurannan ja raportoinnin info-sivut",
+  "description": "Harja Info: Väylän kunnossapidon seurannan ja raportoinnin info-sivut",
   "author": "Antti Ahola",
   "homepage": "http://finnishtransportagency.github.io/harja/",
   "repository": {
