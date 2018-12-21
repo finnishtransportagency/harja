@@ -119,10 +119,10 @@
                         :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV.tl261_H.shz"
                         :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
 
-                       ; Inspire-asetukset
-                       ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
-                       ; :siltojen-osoite "https://julkinen.liikennevirasto.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
-                       ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
+                        ; Inspire-asetukset
+                        ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
+                        ; :siltojen-osoite "https://julkinen.liikennevirasto.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
+                        ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
                         :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"
@@ -156,6 +156,9 @@
  :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
        :kayttajatunnus "restusr"
        :salasana #=(slurp "../.harja/yha-salasana")}
+
+ :velho {:paallystetoteuma-url "http://stg.velho.online"
+         :autorisaatio "kissa"}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti {:url "http://localhost:28080/sendsms"
@@ -209,8 +212,8 @@
           :paivitysvali-paivissa 60}
 
  :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
-                 :paivittainen-tarkistusaika [12 17 00]
-                 :paivitysvali-paivissa 60}
+                :paivittainen-tarkistusaika [12 17 00]
+                :paivitysvali-paivissa 60}
 
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
@@ -220,4 +223,4 @@
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
-}
+ }
