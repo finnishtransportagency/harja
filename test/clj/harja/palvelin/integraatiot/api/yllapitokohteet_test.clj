@@ -99,8 +99,8 @@
     (is (str/includes? (:body vastaus) "tuntematon-urakka"))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         ;; Testiä varten tuhoa kohteen olemassa oleva POT, kirjataan siis uusi
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
@@ -131,82 +131,84 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (tarkista-map-arvot  {:alustatoimet [{:kasittelymenetelma 1
-                                            :paksuus 1
-                                            :tekninen-toimenpide 1
-                                            :tr-numero 21
-                                            :tr-alkuetaisyys 1
-                                            :tr-alkuosa 1
-                                            :tr-loppuetaisyys 5
-                                            :tr-loppuosa 3
-                                            :verkkotyyppi 1
-                                            :verkon-sijainti 1
-                                            :verkon-tarkoitus 5}]
-                            :osoitteet [{:esiintyma "testi"
-                                         :km-arvo "testi"
-                                         :kohdeosa-id 14
-                                         :kokonaismassamaara 12.3
-                                         :kuulamylly 4
-                                         :leveys 1.2
-                                         :lisaaineet "lisäaineet"
-                                         :massamenekki 22
-                                         :muotoarvo "testi"
-                                         :paallystetyyppi 11
-                                         :pinta-ala 2.2
-                                         :pitoisuus 1.2
-                                         :raekoko 12
-                                         :rc% 54
-                                         :sideainetyyppi 1
-                                         :tyomenetelma 72}
-                                        {:esiintyma "testi2"
-                                         :km-arvo "testi2"
-                                         :kohdeosa-id 15
-                                         :kokonaismassamaara 12.3
-                                         :kuulamylly 4
-                                         :leveys 1.2
-                                         :lisaaineet "lisäaineet"
-                                         :massamenekki 22
-                                         :muotoarvo "testi2"
-                                         :paallystetyyppi 11
-                                         :pinta-ala 2.2
-                                         :pitoisuus 1.2
-                                         :raekoko 12
-                                         :rc% 54
-                                         :sideainetyyppi 1
-                                         :tyomenetelma 72}]}
-                           ilmoitustiedot-kannassa )
+      (tarkista-map-arvot {:alustatoimet [{:kasittelymenetelma 1
+                                           :paksuus 1
+                                           :tekninen-toimenpide 1
+                                           :tr-numero 22
+                                           :tr-alkuetaisyys 1
+                                           :tr-alkuosa 1
+                                           :tr-loppuetaisyys 5
+                                           :tr-loppuosa 3
+                                           :tr-ajorata 1
+                                           :tr-kaista 1
+                                           :verkkotyyppi 1
+                                           :verkon-sijainti 1
+                                           :verkon-tarkoitus 5}]
+                           :osoitteet [{:esiintyma "testi"
+                                        :km-arvo "testi"
+                                        :kohdeosa-id 14
+                                        :kokonaismassamaara 12.3
+                                        :kuulamylly 4
+                                        :leveys 1.2
+                                        :lisaaineet "lisäaineet"
+                                        :massamenekki 22
+                                        :muotoarvo "testi"
+                                        :paallystetyyppi 11
+                                        :pinta-ala 2.2
+                                        :pitoisuus 1.2
+                                        :raekoko 12
+                                        :rc% 54
+                                        :sideainetyyppi 1
+                                        :tyomenetelma 72}
+                                       {:esiintyma "testi2"
+                                        :km-arvo "testi2"
+                                        :kohdeosa-id 15
+                                        :kokonaismassamaara 12.3
+                                        :kuulamylly 4
+                                        :leveys 1.2
+                                        :lisaaineet "lisäaineet"
+                                        :massamenekki 22
+                                        :muotoarvo "testi2"
+                                        :paallystetyyppi 11
+                                        :pinta-ala 2.2
+                                        :pitoisuus 1.2
+                                        :raekoko 12
+                                        :rc% 54
+                                        :sideainetyyppi 1
+                                        :tyomenetelma 72}]}
+                          ilmoitustiedot-kannassa)
       (tarkista-map-arvot
-                          {:massamaara nil
-                           :nimi "1. testialikohde"
-                           :paallystetyyppi nil
-                           :raekoko nil
-                           :toimenpide nil
-                           :tr_ajorata 1
-                           :tr_alkuetaisyys 1
-                           :tr_alkuosa 1
-                           :tr_kaista 1
-                           :tr_loppuetaisyys 0
-                           :tr_loppuosa 2
-                           :tr_numero 20
-                           :tyomenetelma nil
-                           :yllapitokohde 1}
-                          (dissoc kohdeosa-1-kannassa :id))
+        {:massamaara nil
+         :nimi "1. testialikohde"
+         :paallystetyyppi nil
+         :raekoko nil
+         :toimenpide nil
+         :tr_ajorata 1
+         :tr_alkuetaisyys 1
+         :tr_alkuosa 1
+         :tr_kaista 1
+         :tr_loppuetaisyys 0
+         :tr_loppuosa 2
+         :tr_numero 22
+         :tyomenetelma nil
+         :yllapitokohde kohde-id}
+        (dissoc kohdeosa-1-kannassa :id))
       (tarkista-map-arvot
-       {:massamaara nil
-        :nimi "2. testialikohde"
-        :paallystetyyppi nil
-        :raekoko nil
-        :toimenpide nil
-        :tr_ajorata 1
-        :tr_alkuetaisyys 0
-        :tr_alkuosa 2
-        :tr_kaista 1
-        :tr_loppuetaisyys 5
-        :tr_loppuosa 3
-        :tr_numero 20
-        :tyomenetelma nil
-        :yllapitokohde 1}
-       (dissoc kohdeosa-2-kannassa :id))
+        {:massamaara nil
+         :nimi "2. testialikohde"
+         :paallystetyyppi nil
+         :raekoko nil
+         :toimenpide nil
+         :tr_ajorata 1
+         :tr_alkuetaisyys 0
+         :tr_alkuosa 2
+         :tr_kaista 1
+         :tr_loppuetaisyys 5
+         :tr_loppuosa 3
+         :tr_numero 22
+         :tyomenetelma nil
+         :yllapitokohde kohde-id}
+        (dissoc kohdeosa-2-kannassa :id))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
@@ -216,63 +218,23 @@
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
-(deftest uuden-paallystysilmoituksen-kirjaaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+(deftest uuden-paallystysilmoituksen-kirjaaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimi
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         ;; Testiä varten tuhoa kohteen olemassa oleva POT, kirjataan siis uusi
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus_ilman_alikohteen_ajorataa_ja_kaistaa.json"
                                              slurp
-                                             (.replace "__VALMIS__" (str false))))
-        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
-        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
-        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
-        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
+                                             (.replace "__VALMIS__" (str false))))]
 
-    (is (= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
-
-    ;; Kohdeosille tallentui pääkohteen ajorata ja kaista
-    (tarkista-map-arvot
-     {:massamaara nil
-      :nimi "1. testialikohde"
-      :paallystetyyppi nil
-      :raekoko nil
-      :toimenpide nil
-      :tr_ajorata 1
-      :tr_alkuetaisyys 1
-      :tr_alkuosa 101
-      :tr_kaista 1
-      :tr_loppuetaisyys 15
-      :tr_loppuosa 101
-      :tr_numero 4
-      :tyomenetelma nil
-      :yllapitokohde 1}
-     (dissoc kohdeosa-1-kannassa :id))
-    (tarkista-map-arvot
-     {:massamaara nil
-      :nimi "2. testialikohde"
-      :paallystetyyppi nil
-      :raekoko nil
-      :toimenpide nil
-      :tr_ajorata 1
-      :tr_alkuetaisyys 0
-      :tr_alkuosa 2
-      :tr_kaista 1
-      :tr_loppuetaisyys 5
-      :tr_loppuosa 3
-      :tr_numero 20
-      :tyomenetelma nil
-      :yllapitokohde 1}
-     (dissoc kohdeosa-2-kannassa :id))))
+    (is (= 400 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "JSON ei ole validia"))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-kasiteltavaksi-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         ;; Poista päällystysilmoitus testiä varten
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
@@ -289,8 +251,8 @@
       (is (= tila "valmis")))))
 
 (deftest paallystysilmoituksen-paivittaminen-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
         vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
@@ -309,10 +271,10 @@
           ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
           kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
           kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
@@ -324,11 +286,13 @@
              {:alustatoimet [{:kasittelymenetelma 1
                               :paksuus 1
                               :tekninen-toimenpide 1
-                              :tr-numero 21
+                              :tr-numero 22
                               :tr-alkuetaisyys 1
                               :tr-alkuosa 1
                               :tr-loppuetaisyys 5
                               :tr-loppuosa 3
+                              :tr-ajorata 1
+                              :tr-kaista 1
                               :verkkotyyppi 1
                               :verkon-sijainti 1
                               :verkon-tarkoitus 5}]
@@ -375,9 +339,11 @@
               :tr_alkuosa 1
               :tr_loppuetaisyys 0
               :tr_loppuosa 2
-              :tr_numero 20
+              :tr_numero 22
+              :tr_ajorata 1
+              :tr_kaista 1
               :tyomenetelma nil
-              :yllapitokohde 1}))
+              :yllapitokohde 22}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
              {:massamaara nil
               :nimi "2. testialikohde"
@@ -388,14 +354,16 @@
               :tr_alkuosa 2
               :tr_loppuetaisyys 5
               :tr_loppuosa 3
-              :tr_numero 20
+              :tr_numero 22
+              :tr_ajorata 1
+              :tr_kaista 1
               :tyomenetelma nil
-              :yllapitokohde 1}))
+              :yllapitokohde 22}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
 (deftest paallystysilmoituksen-paivittaminen-muiden-kohdeosien-paalle-ei-onnistu
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
@@ -407,8 +375,8 @@
     (is (not (str/includes? (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti.")))))
 
 (deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         _ (u "UPDATE paallystysilmoitus SET tila = 'lukittu' WHERE paallystyskohde = " kohde-id)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
@@ -420,7 +388,7 @@
     (is (str/includes? (:body vastaus) "Päällystysilmoitus on lukittu"))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          "LX123456789" portti
@@ -430,7 +398,7 @@
     (is (= 403 (:status vastaus)))))
 
 (deftest paallystysilmoituksen-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
@@ -440,8 +408,8 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -521,15 +489,15 @@
         (reset! sahkoposti-valitetty false)
         ;; FIXME Onkohan tämä bugi? Maili ei kai saisi lähteä jos pvm on sama kuin ennen. Nyt näyttää siltä että joskus menee testi läpi ja joskus ei
         #_(let [vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
-                                               kayttaja-tiemerkinta portti
-                                               (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
-          (is (= 200 (:status vastaus)))
-          (<!! (timeout 5000))
-          (is (false? @sahkoposti-valitetty) "Maili ei lähtenyt, eikä pitänytkään"))))))
+                                                 kayttaja-tiemerkinta portti
+                                                 (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
+            (is (= 200 (:status vastaus)))
+            (<!! (timeout 5000))
+            (is (false? @sahkoposti-valitetty) "Maili ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -539,8 +507,8 @@
     (is (not (str/includes? (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))))
 
 (deftest aikataulun-kirjaaminen-paallystysurakan-kohteelle-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vanhat-aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
                                                  tiemerkinta_loppu FROM yllapitokohteen_aikataulu
@@ -592,8 +560,8 @@
 
 
 (deftest aikataulun-kirjaaminen-paallystykseen-ei-toimi-ilman-oikeuksia
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          "LX123456789" portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -610,8 +578,8 @@
     (is (= 403 (:status vastaus)))))
 
 (deftest tiemerkinnan-aikataulun-kirjaus-ei-onnistu-paallystysurakalle
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
@@ -630,8 +598,8 @@
     (is (str/includes? (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkintapvm-vaarin
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_tiemerkintapvm_ilman_paallystyksen_loppua.json"))]
@@ -642,8 +610,8 @@
           (str/includes? (:body vastaus) "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu.")))))
 
 (deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-paallystyksen-valmispvm-vaarin
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_paallystys_valmis_ilman_paallystyksen_alkua.json"))]
@@ -662,8 +630,8 @@
     (is (str/includes? (:body vastaus) "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."))))
 
 (deftest aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu.json"))]
@@ -681,7 +649,7 @@
     (is (str/includes? (:body vastaus) "Kun annetaan tiemerkinnän aloitusaika, anna myös tiemerkinnän valmistumisen aika tai aika-arvio"))))
 
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
@@ -714,8 +682,8 @@
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
-                                                 kayttaja-paallystys portti
-                                                 payload)]
+                                        kayttaja-paallystys portti
+                                        payload)]
     (is (= 200 (:status vastaus)))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
@@ -754,62 +722,27 @@
             "Kaikilla alikohteilla on sijainti & tienumero")))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-paallekain-ei-onnistu
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-paallekkain-request.json")
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
-                                                 kayttaja-paallystys portti
-                                                 payload)]
+                                        kayttaja-paallystys portti
+                                        payload)]
     (is (not= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "Kohde: 'Päällekkäinen testialikohde' menee päällekkäin urakan: 'Muhoksen päällystysurakka' kohteen: 'Leppäjärven ramppi' kohdeosan: 'Leppäjärven kohdeosa' kanssa"))))
+    (is (str/includes? (:body vastaus) "Kohde: 'Päällekkäinen testialikohde' menee päällekkäin urakan: 'Utajärven päällystysurakka' kohteen: 'Ouluntie' kohdeosan: 'Ouluntien kohdeosa' kanssa"))))
 
-(deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+(deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimii
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-ilman-alikohteen-ajorataa-ja-kaistaa-request.json")
         {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                  kayttaja-paallystys portti
                                                  payload)]
-    (is (= 200 status))
-
-    (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-          oletettu-tr-osoite {:aet 1
-                              :ajorata 1
-                              :aosa 14
-                              :kaista 1
-                              :loppuet 1
-                              :losa 17
-                              :numero 20}
-          alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))
-          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
-                                                     :ajorata 1
-                                                     :aosa 14
-                                                     :kaista 1
-                                                     :loppuet 666
-                                                     :losa 14
-                                                     :numero 20}
-          oletettu-toisen-alikohteen-tr-osoite {:aet 666
-                                                :ajorata 1
-                                                :aosa 14
-                                                :kaista 1
-                                                :loppuet 1
-                                                :losa 17
-                                                :numero 20}]
-
-      (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
-      (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
-          "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
-      (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
-          "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
-
-      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
-        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
-            "Kaikilla alikohteilla on sijainti & tienumero")))))
+    (is (= 400 status))))
 
 (deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+  (let [urakka (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
         {status :status body :body} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                             kayttaja-paallystys portti
@@ -819,10 +752,10 @@
         "Virheelliselle kirjaukselle palautetaan oikea virhekoodi.")))
 
 (deftest maaramuutosten-kirjaaminen-kohteelle-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         _ (u "INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, poistettu, luoja, luotu, muokkaaja, muokattu, jarjestelma, ulkoinen_id, ennustettu_maara)
-              VALUES (" kohde-id ", 'ajoradan_paallyste', 'Esimerkki työ', 'm2', 12, 14.2, 666, FALSE, 10, '2017-01-31 15:34:32', NULL, NULL, NULL, NULL, NULL)")
+              VALUES (" kohde-id ", 'ajoradan_paallyste', 'Esimerkki työ', 'm2', 12, 14.2, 666, FALSE, 10, '2019-01-31 15:34:32', NULL, NULL, NULL, NULL, NULL)")
         hae-maaramuutokset #(q-map "SELECT * FROM yllapitokohteen_maaramuutos WHERE yllapitokohde = " kohde-id)
         maaramuutokset-ennen-kirjausta (hae-maaramuutokset)
         harjan-kautta-kirjattu (first maaramuutokset-ennen-kirjausta)
@@ -857,7 +790,7 @@
       (is (= "Esimerkki työ" (:tyo (second maaramuutokset-kirjauksen-jalkeen)))))))
 
 (deftest maaramuutosten-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka-id)
         kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
@@ -866,8 +799,8 @@
     (is (str/includes? (:body vastaus) "tuntematon-yllapitokohde"))))
 
 (deftest tarkastuksen-kirjaaminen-kohteelle-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         ;; Testiä varten poista POT
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         hae-tarkastukset #(q-map "SELECT * FROM tarkastus WHERE yllapitokohde =" kohde-id)
@@ -879,7 +812,7 @@
         tarkastus (first tarkastukset-kirjauksen-jalkeen)]
 
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
-    (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
+    (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")))
     (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
         "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
 
@@ -895,7 +828,7 @@
       (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
       (is (= (count tarkastukset-kirjauksen-jalkeen) (count tarkastukset-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
 
-      (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: " kohde-id ".")))
+      (is (str/includes? (:body vastaus) (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")))
       (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))
 
     (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
@@ -910,8 +843,8 @@
       (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
 
 (deftest useamman-tarkastuksen-kirjaamisessa-transaktio-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        kohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
         hae-tarkastukset #(q-map "SELECT * FROM tarkastus WHERE yllapitokohde =" kohde-id)
         tarkastukset-ennen-kirjausta (hae-tarkastukset)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
@@ -978,33 +911,34 @@
 (deftest osoitteiden-muunnos-vkmn-kanssa
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+
         ;; Testiä varten tuhoa POT
         _ (u "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id ";")
         vkm-vastaus (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.txt")]
     (with-fake-http [+testi-vkm+ vkm-vastaus
                      #".*api\/urakat.*" :allow]
-      (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
-            vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
-                                            kayttaja-paallystys portti
-                                            payload)]
-        (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
+                    (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
+                          vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                          kayttaja-paallystys portti
+                                                          payload)]
+                      (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
 
-        (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-              oletettu-tr-osoite {:numero 20
-                                  :aosa 1
-                                  :aet 1
-                                  :losa 4
-                                  :loppuet 100
-                                  :ajorata 1
-                                  :kaista 1}
-              odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
-              odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
-              alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
+                      (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
+                            oletettu-tr-osoite {:numero 20
+                                                :aosa 1
+                                                :aet 1
+                                                :losa 4
+                                                :loppuet 100
+                                                :ajorata 1
+                                                :kaista 1}
+                            odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
+                            odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
+                            alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
 
-          (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-          (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
-          (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
-          (is (alikohteiden-tr-osoitteet odotettu-2-alikohteen-osoite)))))))
+                        (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
+                        (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
+                        (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
+                        (is (alikohteiden-tr-osoitteet odotettu-2-alikohteen-osoite)))))))
 
 (deftest muutettavat-alikohteet
   (let [alikohteet [{:alikohde {:tunniste {:id 1},

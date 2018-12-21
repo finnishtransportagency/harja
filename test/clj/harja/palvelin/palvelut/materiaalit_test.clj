@@ -234,6 +234,23 @@
                                                           :maara {:yksikko "t"
                                                                   :maara 3}}]}}]}})
 
+(deftest hae-suolatoteumien-trvali-haku
+  (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-suolatoteumat-tr-valille +kayttaja-jvh+ {:urakka-id 2
+                                                                            :tie 20
+                                                                            :alkuosa 14
+                                                                            :alkuet 0
+                                                                            :loppuosa 18
+                                                                            :loppuet 10
+                                                                            :threshold 50
+                                                                            :alkupvm #inst "2000-02-17T00:00:00.000-00:00"
+                                                                            :loppupvm #inst "2018-02-17T00:00:00.000-00:00"})]
+    (is (= 2 (count tulos)))
+    (let [rivi (first tulos)]
+      (is (= 1 (:rivinumero rivi)))
+      (is (= 2 (:lukumaara rivi)))
+      (is (= {:id 1 :nimi "Talvisuolaliuos NaCl"} (:materiaali rivi))))))
+
 (deftest hae-suolatoteumien-haku
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         testidatasta (kutsu-palvelua

@@ -36,8 +36,8 @@
   (u (format "UPDATE yllapitokohde SET lahetetty = NULL, lahetys_onnistunut = NULL WHERE id = %s" kohde-id)))
 
 (deftest tarkista-yllapitokohteen-lahetys
-  (let [kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
+        urakka-id (hae-utajarven-paallystysurakan-id)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         url (tee-url)
         onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
@@ -59,18 +59,18 @@
 
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Leppäjärven ramppi"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2017-05-19"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2017-05-21"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) ["2017-05-24"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2005-12-20"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["7248.95"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Ouluntie"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2019-05-19"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2019-05-21"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) ["2019-05-24"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2020-12-20"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5043.95"]))
 
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["0"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["3"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["0"])))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["22"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["12"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["4336"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["12"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["9477"])))
          ;; Palautetaan vastaus
          onnistunut-kirjaus-vastaus)]
 
@@ -82,8 +82,8 @@
       (tyhjenna-kohteen-lahetystiedot kohde-id))))
 
 (deftest tarkista-yllapitokohteen-lahetys-ilman-yha-yhteytta
-  (let [kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
+        urakka-id (hae-utajarven-paallystysurakan-id)
         onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
         lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
     (is (false? onnistui?))

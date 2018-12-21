@@ -225,6 +225,22 @@
                                                              :loppupvm loppupvm}))]
     toteumat))
 
+(defn hae-suolatoteumat-tr-valille [db user {:keys [urakka-id tie alkuosa alkuet loppuosa loppuet alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (into []
+        (comp
+         (map konv/alaviiva->rakenne)
+         (map #(konv/array->vec % :toteumaidt)))
+        (q/hae-suolatoteumat-tr-valille db {:urakka urakka-id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm
+                                            :threshold 50
+                                            :tie tie
+                                            :alkuosa alkuosa
+                                            :alkuet alkuet
+                                            :loppuosa loppuosa
+                                            :loppuet loppuet})))
+
 (defn hae-suolamateriaalit [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (into []
@@ -332,6 +348,11 @@
                       (fn [user tiedot]
                         (log/debug "hae-suolatoteumat: tiedot" tiedot)
                         (hae-suolatoteumat (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-suolatoteumat-tr-valille
+                      (fn [user tiedot]
+                        (log/debug "hae-suolatoteumat-tr-valille: tiedot" tiedot)
+                        (hae-suolatoteumat-tr-valille (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-suolatoteumien-tarkat-tiedot
                       (fn [user tiedot]

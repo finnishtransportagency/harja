@@ -200,11 +200,16 @@
                              [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
                                :hae #(hae-pohjavesialueen-nimi %)}
                               {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
-                              {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
+                              {:otsikko "Käyttöraja"
+                               :nimi :talvisuolaraja
+                               :tyyppi :positiivinen-numero
+                               :yksikko "t/km"
                                :aseta (fn [rivi arvo]
                                         (reset! pohjavesialueita-muokattu? true)
                                         (assoc rivi :talvisuolaraja arvo))
-                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
+                               :placeholder "Ei rajoitusta"
+                               :leveys "30%"
+                               :muokattava? (constantly saa-muokata?)}]
                              (pohjavesialueet-muokkausdata)])})]
           tiedot]
 

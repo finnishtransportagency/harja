@@ -32,13 +32,12 @@
 
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
-                            lisaaineet geometria] :as alikohde}]
+                            lisaaineet poistettu] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
+   [:poistettu (if poistettu 1 0)]
    (tee-tierekisteriosoitevali alikohde)
-   (when geometria
-     [:geometria geometria])
    (when
      (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly tyomenetelma leveys pinta-ala)
      [:paallystystoimenpide
@@ -64,7 +63,7 @@
      [:lisa-aineet lisaaineet]]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                                              verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
+                                              tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
                                               verkon-sijainti]}
                                       kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
@@ -78,7 +77,9 @@
     [:aosa tr-alkuosa]
     [:aet tr-alkuetaisyys]
     [:losa tr-loppuosa]
-    [:let tr-loppuetaisyys]]
+    [:let tr-loppuetaisyys]
+    [:ajorata tr-ajorata]
+    [:kaista tr-kaista]]
    [:kasittelymenetelma kasittelymenetelma]
    [:kasittelypaksuus paksuus]
    (when verkkotyyppi
@@ -107,18 +108,18 @@
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
    [:toteutunuthinta (laske-hinta-kokonaishinta paallystysilmoitus)]
-   (tee-tierekisteriosoitevali kohde)
+   (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
              (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
                    (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]
-             (mapv #(tee-alikohde %) alikohteet)))])
+             (mapv tee-alikohde alikohteet)))])
 
-(defn muodosta-sanoma [xmlns {:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
+(defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
-   {:xmlns xmlns}
+   {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
    [:urakka
     [:yha-id yhaid]
     [:harja-id harjaid]
@@ -127,7 +128,7 @@
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
-  (let [sisalto (muodosta-sanoma "http://www.liikennevirasto.fi/xsd/yha" urakka kohteet)
+  (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]

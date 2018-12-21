@@ -33,6 +33,37 @@
       "minimum": 0,
       "required": true
     },
+    "ajr": {
+      "id": "urn:harja/sijainti/tie/ajr",
+      "type": "integer",
+      "minimum": 0,
+      "required": true
+    },
+    "kaista": {
+      "id": "urn:harja/sijainti/tie/kaista",
+      "required": true,
+      "enum": [
+        1,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ]
+    },
     "karttapvm": {
       "id": "urn:harja/sijainti/tie/karttapvm",
       "type": "string",

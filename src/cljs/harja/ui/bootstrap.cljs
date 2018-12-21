@@ -2,7 +2,8 @@
   "Common Bootstrap components for Reagent UI."
   (:require [reagent.core :refer [atom]]
             [harja.loki :refer [log]]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [clojure.string :as clj-str]))
 
 
 
@@ -43,9 +44,18 @@ The following keys are supported in the configuration:
                [:li {:role  "presentation"
                      :class (when (= keyword active-tab-keyword)
                               "active")}
-                [:a.klikattava {:on-click #(do
-                                             (.preventDefault %)
-                                             (reset! active keyword))}
+                [:a.klikattava (merge
+                                 {:on-click #(do
+                                               (.preventDefault %)
+                                               (reset! active keyword))}
+                                 (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
+                                       cy-title (-> title
+                                                    str
+                                                    (clj-str/replace #"ä" "a")
+                                                    (clj-str/replace #"ö" "o"))]
+                                   (if tabs-taso
+                                     {:data-cy (str tabs-taso "-" cy-title)}
+                                     {:data-cy cy-title})))
                  title]])]
             [:div.valilehti active-component]]))))))
 

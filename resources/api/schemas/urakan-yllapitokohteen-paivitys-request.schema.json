@@ -54,7 +54,7 @@
                     "id": "urn:harja/yllapitokohde/tiesijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tieosoitevali-kaistalla-ja-ajoradalla.schema.json"
                   },
                   "toimenpide": {
                     "id": "urn:harja/yllapitokohde/nimi",
