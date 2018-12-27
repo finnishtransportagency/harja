@@ -67,6 +67,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.yha :as yha]
+    [harja.palvelin.palvelut.velho :as velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -448,6 +449,11 @@
       :yha (component/using
              (yha/->Yha)
              [:http-palvelin :db :pois-kytketyt-ominaisuudet :yha-integraatio])
+
+
+      :velho (component/using
+               (velho/->Velho)
+               [:http-palvelin :db :pois-kytketyt-ominaisuudet :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)

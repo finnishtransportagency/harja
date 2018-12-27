@@ -36,7 +36,7 @@
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :tr-haku
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma

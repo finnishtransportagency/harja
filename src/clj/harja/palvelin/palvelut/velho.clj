@@ -14,12 +14,14 @@
   (log/debug (format "Lähetetään kohteet: %s Velhoon" kohde-idt))
   (velho/laheta-kohteet velho urakka-id kohde-idt))
 
-(defrecord Yha []
+(defrecord Velho []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          velho (:yha-integraatio this)]
-      (julkaise-palvelu http :laheta-kohteet-velhoon (fn [user data] (laheta-kohteet-velhoon velho user data))))
+          velho (:velho-integraatio this)]
+      (julkaise-palvelu http :laheta-kohteet-velhoon
+                        (fn [user data]
+                          (laheta-kohteet-velhoon velho user data))))
     this)
   (stop [this]
     (poista-palvelut
