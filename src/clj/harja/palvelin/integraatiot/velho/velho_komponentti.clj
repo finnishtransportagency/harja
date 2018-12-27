@@ -30,8 +30,8 @@
                  http-asetukset {:metodi :POST
                                  :url paallystetoteuma-url
                                  :otsikot otsikot}]
-             (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)
-             (log/error (format "Päällystysilmoitusta ei voida lähettää Velhoon: Urakan (id: %s) YHA-tietoja ei löydy." urakka-id))))
+             (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata))
+           (log/error (format "Päällystysilmoitusta ei voida lähettää Velhoon: Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)))
          {:virhekasittelija (fn [_ _] (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui"))}))
      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
        (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
