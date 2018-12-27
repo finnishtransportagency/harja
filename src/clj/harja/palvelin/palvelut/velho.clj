@@ -12,7 +12,8 @@
   [velho user {:keys [urakka-id kohde-idt]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug (format "Lähetetään kohteet: %s Velhoon" kohde-idt))
-  (velho/laheta-kohteet velho urakka-id kohde-idt))
+  (velho/laheta-kohteet velho urakka-id kohde-idt)
+  true)
 
 (defrecord Velho []
   component/Lifecycle
