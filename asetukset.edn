@@ -157,6 +157,9 @@
        :kayttajatunnus "restusr"
        :salasana #=(slurp "../.harja/yha-salasana")}
 
+ :velho {:paallystetoteuma-url ""
+         :autorisaatio ""}
+
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti {:url "http://localhost:28080/sendsms"
               :kayttajatunnus "solita-2"
@@ -209,8 +212,8 @@
           :paivitysvali-paivissa 60}
 
  :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
-                 :paivittainen-tarkistusaika [12 17 00]
-                 :paivitysvali-paivissa 60}
+                :paivittainen-tarkistusaika [12 17 00]
+                :paivitysvali-paivissa 60}
 
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
@@ -220,4 +223,4 @@
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
-}
+ }

@@ -2,7 +2,6 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]
-            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
