@@ -3,6 +3,8 @@
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [cljs.core.async :refer [<! chan]]
+            [cljs-time.core :as t]
+            [goog.events.EventType :as event-type]
 
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -42,7 +44,6 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
-            [cljs-time.core :as t]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.views.urakka.valinnat :as u-valinnat]
             [harja.ui.leijuke :as leijuke]
@@ -318,6 +319,7 @@
   [e! {lomakedata-nyt :paallystysilmoitus-lomakedata :as app}
    muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
   (let [tr-osoite-muokkaus! (fn [uusi-arvo]
+                              (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet]))
                               (muokkaa! assoc-in [:ilmoitustiedot :osoitteet]
                                         uusi-arvo))
         tr-osoite-virheet-muokkaus! (fn [uusi-arvo]
@@ -330,6 +332,7 @@
                                     (muokkaa! assoc-in [:ilmoitustiedot :virheet :kiviaines]
                                               uusi-arvo))
         alustan-muokkaus! (fn [uusi-arvo]
+                            (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet]))
                             (muokkaa! assoc-in [:ilmoitustiedot :alustatoimet]
                                       uusi-arvo))
         alustan-virheet-muokkaus! (fn [uusi-arvo]
@@ -350,8 +353,12 @@
             jarjestys-fn :id
             paakohteella-ajorata-ja-kaista? (boolean (and tr-ajorata
                                                           tr-kaista))
+            lomakedatan-osoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             ;; Grid olettaa saavansa atomin. Tämän takia pitää tehdä tämmöiset wrapit.
-            yllapitokohdeosat-tila (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
+            yllapitokohdeosat-tila (r/wrap (if (nil? (meta lomakedatan-osoitteet))
+                                             (with-meta lomakedatan-osoitteet
+                                                        {:jarjesta-gridissa true})
+                                             lomakedatan-osoitteet)
                                            (fn [uusi-arvo]
                                              (println "UUSI ARVO: " uusi-arvo)
                                              (tr-osoite-muokkaus! uusi-arvo)))
@@ -715,139 +722,160 @@
                    :leveys 30}]
                  alustan-toimet-tila]]]]))))
 
+(defn kumoa
+  "Hyvinkin pitkälti sama, kuin harja.ui.historia/kumoa. Ei vain käytetä erikoisatomia"
+  [e! app]
+  (komp/luo
+    (komp/dom-kuuntelija js/window event-type/KEYDOWN
+                         (fn [event]
+                           (when (and (= 90 (.-keyCode event))
+                                      (or (.-ctrlKey event)
+                                          (.-metaKey event)))
+                             (.stopPropagation event)
+                             (.preventDefault event)
+                             (e! (paallystys/->HoidaCtrl+Z)))))
+    (fn [e! {{historia :historia} :paallystysilmoitus-lomakedata :as app}]
+      [:button.nappi-toissijainen.kumoa-nappi
+       {:disabled (empty? historia)
+        :on-click #(do (.stopPropagation %)
+                       (.preventDefault %)
+                       (e! (paallystys/->KumoaHistoria)))}
+       [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])))
+
+
 (defn paallystysilmoitus [e! {{yllapitokohde-id :yllapitokohde-id
                                {:keys [tr-alkuosa tr-loppuosa tr-numero]} :perustiedot} :paallystysilmoitus-lomakedata :as app}]
-  (komp/luo
-    ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
-    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
-    (komp/sisaan-ulos #(do
-                         (e! (paallystys/->MuutaTila [:paallystysilmoitus-historia] []))
-                         (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa)))
-                      #(e! (paallystys/->MuutaTila [:paallystysilmoitus-historia] nil)))
-    (fn [e! {lukko :lukko urakka :urakka paallystysilmoitus-historia :paallystysilmoitus-historia
-             {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet] :as lomakedata-nyt} :paallystysilmoitus-lomakedata :as app}]
-      (let [{:keys [tila yllapitokohdetyyppi tekninen-osa asiatarkastus
-                    valmispvm-kohde]} perustiedot
-            lukittu? (lukko/nakyma-lukittu? lukko)
-            virheet (conj []
-                          (-> perustiedot :tekninen-osa ::lomake/virheet)
-                          (-> perustiedot :asiatarkastus ::lomake/virheet)
-                          (reduce (fn [kaikki-virheet [taulukon-avain taulukon-virheet]]
-                                    (let [taulukon-virheviestit (apply concat
-                                                                       (keep #(let [rivin-virheviestit (flatten (vals %))]
-                                                                                (when-not (empty? rivin-virheviestit)
-                                                                                  rivin-virheviestit))
-                                                                             (vals taulukon-virheet)))]
-                                      (if-not (empty? taulukon-virheviestit)
-                                        (assoc kaikki-virheet taulukon-avain taulukon-virheviestit)
-                                        kaikki-virheet)))
-                                  {} (:virheet ilmoitustiedot)))
-            tekninen-osa-voi-muokata? (and (not= :lukittu tila)
-                                           (not= :hyvaksytty
-                                                 (:paatos tekninen-osa))
-                                           (false? lukittu?)
-                                           kirjoitusoikeus?)
-            alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
-                                           (not (= "sora" yllapitokohdetyyppi)))
-            muokkaa! (fn [f & args]
-                       (e! (paallystys/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
-                                                                                        (apply f vanha-arvo args)))))
-            yllapitokohde (select-keys perustiedot [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
-            validoi-kohteen-osoite (fn [kentta _ rivi _]
-                                     (let [kohteen-osoite-vaarin (when (kentta rivi)
-                                                                   (yllapitokohde-domain/validoi-yllapitokohteen-osoite tr-osien-pituudet kentta rivi))]
-                                       (when kohteen-osoite-vaarin
-                                         (if (and (tr/tr-vali-leikkaa-tr-valin? yllapitokohde rivi)
-                                                  (not (tr/tr-vali-paakohteen-sisalla? yllapitokohde rivi)))
-                                           (println "PITÄÄ MUUTTAA PÄÄKOHDETTA")
-                                           (println "EI PIDÄ MUUTTAA PÄÄKOHDETTA"))
-                                         kohteen-osoite-vaarin)))
-            validoi-kohteen-paallekkaisyys (fn [rivi-indeksi rivi taulukko]
-                                             (when (and (:tr-alkuosa rivi) (:tr-alkuetaisyys rivi)
-                                                        (:tr-loppuosa rivi) (:tr-loppuetaisyys rivi))
-                                               (let [rivit-joilla-tarvittava-tieto (keep (fn [[indeksi kohdeosa]]
-                                                                                           (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
-                                                                                                      (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
-                                                                                             (assoc kohdeosa :valiaikainen-id indeksi)))
-                                                                                         taulukko)
-                                                     paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain rivit-joilla-tarvittava-tieto
-                                                                                                            :valiaikainen-id
-                                                                                                            rivi-indeksi)]
-                                                 (when-not (empty? paallekkaiset-osat)
-                                                   (apply str (interpose ", "
-                                                                         (map :viesti paallekkaiset-osat)))))))
-            tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
-            ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä
-            validoinnit {:tekninen-osa {:tr-osoitteet {:_taulukko [{:fn validoi-kohteen-paallekkaisyys
-                                                                    :sarakkeet #{:tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}}]
-                                                       :tr-numero [[:ei-tyhja "Anna tienumero"]]
-                                                       :tr-ajorata [[:ei-tyhja "Anna ajorata"]]
-                                                       :tr-kaista [[:ei-tyhja "Anna kaista"]]
-                                                       :tr-alkuosa [(partial validoi-kohteen-osoite :tr-alkuosa)
-                                                                    [:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
-                                                                    yllapitokohde-domain/alkuosa-ei-lopun-jalkeen]
-                                                       :tr-alkuetaisyys [(partial validoi-kohteen-osoite :tr-alkuetaisyys)
-                                                                         [:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
-                                                                         yllapitokohde-domain/alkuetaisyys-ei-lopun-jalkeen]
-                                                       :tr-loppuosa [(partial validoi-kohteen-osoite :tr-loppuosa)
-                                                                     [:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
-                                                                     yllapitokohde-domain/loppuosa-ei-alkua-ennen]
-                                                       :tr-loppuetaisyys [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
-                                                                          [:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
-                                                                          yllapitokohde-domain/loppuetaisyys-ei-alkua-ennen]}
-                                        :paallystystoimenpiteen-tiedot {:rc [[:rajattu-numero 0 100]]
-                                                                        :toimenpide-raekoko [[:rajattu-numero 0 99]]}
-                                        :alustatoimenpiteet
-                                        ;; TODO HAR-7831 Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä.
-                                        {:tr-numero [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
-                                         :tr-ajorata [[:ei-tyhja "Ajorata puuttuu"] #_tr-validaattori]
-                                         :tr-kaista [[:ei-tyhja "Kaista puuttuu"] #_tr-validaattori]
-                                         :tr-alkuosa [[:ei-tyhja "Alkuosa puuttuu"] #_tr-validaattori]
-                                         :tr-alkuetaisyys [[:ei-tyhja "Alkuetäisyys puuttuu"] #_tr-validaattori]
-                                         :tr-loppuosa [[:ei-tyhja "Loppuosa puuttuu"] #_tr-validaattori]
-                                         :tr-loppuetaisyys [[:ei-tyhja "Loppuetäisyys puuttuu"] #_tr-validaattori]
-                                         :pituus [[:ei-tyhja "Tieto puuttuu"]]
-                                         :kasittelymenetelma [[:ei-tyhja "Tieto puuttuu"]]
-                                         :paksuus [[:ei-tyhja "Tieto puuttuu"]]}}}
-            ;; Tarkista pitäisikö näiden olla ihan virheitä
-            huomautukset {:perustiedot {:tekninen-osa (with-meta
-                                                        {:kasittelyaika (if (:paatos tekninen-osa)
-                                                                          [[:ei-tyhja "Anna käsittelypvm"]
-                                                                           [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                            "Käsittely ei voi olla ennen valmistumista"]]
-                                                                          [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                            "Käsittely ei voi olla ennen valmistumista"]])
-                                                         :paatos [[:ei-tyhja "Anna päätös"]]
-                                                         :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
-                                                        {:pakolliset #{(when (:paatos tekninen-osa)
-                                                                         :kasittelyaika)}})
-                                        :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
-                                                                        [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                         "Tarkastus ei voi olla ennen valmistumista"]]
-                                                        :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}}
-            valmis-tallennettavaksi? (and
-                                       (not (= tila :lukittu))
-                                       (empty? (flatten (keep vals virheet)))
-                                       (false? lukittu?))]
-        [:div.paallystysilmoituslomake
+  (let [lukon-id (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id)]
+    (komp/luo
+      ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
+      (komp/lukko lukon-id)
+      (komp/sisaan #(do
+                      (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
+                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))))
+      (fn [e! {lukko :lukko urakka :urakka
+               {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet] :as lomakedata-nyt} :paallystysilmoitus-lomakedata :as app}]
+        (let [{:keys [tila yllapitokohdetyyppi tekninen-osa asiatarkastus
+                      valmispvm-kohde]} perustiedot
+              lukittu? (lukko/nakyma-lukittu? lukko)
+              virheet (conj []
+                            (-> perustiedot :tekninen-osa ::lomake/virheet)
+                            (-> perustiedot :asiatarkastus ::lomake/virheet)
+                            (reduce (fn [kaikki-virheet [taulukon-avain taulukon-virheet]]
+                                      (let [taulukon-virheviestit (apply concat
+                                                                         (keep #(let [rivin-virheviestit (flatten (vals %))]
+                                                                                  (when-not (empty? rivin-virheviestit)
+                                                                                    rivin-virheviestit))
+                                                                               (vals taulukon-virheet)))]
+                                        (if-not (empty? taulukon-virheviestit)
+                                          (assoc kaikki-virheet taulukon-avain taulukon-virheviestit)
+                                          kaikki-virheet)))
+                                    {} (:virheet ilmoitustiedot)))
+              tekninen-osa-voi-muokata? (and (not= :lukittu tila)
+                                             (not= :hyvaksytty
+                                                   (:paatos tekninen-osa))
+                                             (false? lukittu?)
+                                             kirjoitusoikeus?)
+              alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
+                                             (not (= "sora" yllapitokohdetyyppi)))
+              muokkaa! (fn [f & args]
+                         (e! (paallystys/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
+                                                                                          (apply f vanha-arvo args)))))
+              yllapitokohde (select-keys perustiedot [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
+              validoi-kohteen-osoite (fn [kentta _ rivi _]
+                                       (let [kohteen-osoite-vaarin (when (kentta rivi)
+                                                                     (yllapitokohde-domain/validoi-yllapitokohteen-osoite tr-osien-pituudet kentta rivi))]
+                                         (when kohteen-osoite-vaarin
+                                           (if (and (tr/tr-vali-leikkaa-tr-valin? yllapitokohde rivi)
+                                                    (not (tr/tr-vali-paakohteen-sisalla? yllapitokohde rivi)))
+                                             (println "PITÄÄ MUUTTAA PÄÄKOHDETTA")
+                                             (println "EI PIDÄ MUUTTAA PÄÄKOHDETTA"))
+                                           kohteen-osoite-vaarin)))
+              validoi-kohteen-paallekkaisyys (fn [rivi-indeksi rivi taulukko]
+                                               (when (and (:tr-alkuosa rivi) (:tr-alkuetaisyys rivi)
+                                                          (:tr-loppuosa rivi) (:tr-loppuetaisyys rivi))
+                                                 (let [rivit-joilla-tarvittava-tieto (keep (fn [[indeksi kohdeosa]]
+                                                                                             (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
+                                                                                                        (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
+                                                                                               (assoc kohdeosa :valiaikainen-id indeksi)))
+                                                                                           taulukko)
+                                                       paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain rivit-joilla-tarvittava-tieto
+                                                                                                              :valiaikainen-id
+                                                                                                              rivi-indeksi)]
+                                                   (when-not (empty? paallekkaiset-osat)
+                                                     (apply str (interpose ", "
+                                                                           (map :viesti paallekkaiset-osat)))))))
+              tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
+              ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä
+              validoinnit {:tekninen-osa {:tr-osoitteet {:_taulukko [{:fn validoi-kohteen-paallekkaisyys
+                                                                      :sarakkeet #{:tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}}]
+                                                         :tr-numero [[:ei-tyhja "Anna tienumero"]]
+                                                         :tr-ajorata [[:ei-tyhja "Anna ajorata"]]
+                                                         :tr-kaista [[:ei-tyhja "Anna kaista"]]
+                                                         :tr-alkuosa [(partial validoi-kohteen-osoite :tr-alkuosa)
+                                                                      [:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
+                                                                      yllapitokohde-domain/alkuosa-ei-lopun-jalkeen]
+                                                         :tr-alkuetaisyys [(partial validoi-kohteen-osoite :tr-alkuetaisyys)
+                                                                           [:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
+                                                                           yllapitokohde-domain/alkuetaisyys-ei-lopun-jalkeen]
+                                                         :tr-loppuosa [(partial validoi-kohteen-osoite :tr-loppuosa)
+                                                                       [:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
+                                                                       yllapitokohde-domain/loppuosa-ei-alkua-ennen]
+                                                         :tr-loppuetaisyys [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
+                                                                            [:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
+                                                                            yllapitokohde-domain/loppuetaisyys-ei-alkua-ennen]}
+                                          :paallystystoimenpiteen-tiedot {:rc [[:rajattu-numero 0 100]]
+                                                                          :toimenpide-raekoko [[:rajattu-numero 0 99]]}
+                                          :alustatoimenpiteet
+                                          ;; TODO HAR-7831 Korvaa nykyinen tr_validaattori: tsekkaa, että jonkun kohdeosan sisällä.
+                                          {:tr-numero [[:ei-tyhja "Tienumero puuttuu"] #_tr-validaattori]
+                                           :tr-ajorata [[:ei-tyhja "Ajorata puuttuu"] #_tr-validaattori]
+                                           :tr-kaista [[:ei-tyhja "Kaista puuttuu"] #_tr-validaattori]
+                                           :tr-alkuosa [[:ei-tyhja "Alkuosa puuttuu"] #_tr-validaattori]
+                                           :tr-alkuetaisyys [[:ei-tyhja "Alkuetäisyys puuttuu"] #_tr-validaattori]
+                                           :tr-loppuosa [[:ei-tyhja "Loppuosa puuttuu"] #_tr-validaattori]
+                                           :tr-loppuetaisyys [[:ei-tyhja "Loppuetäisyys puuttuu"] #_tr-validaattori]
+                                           :pituus [[:ei-tyhja "Tieto puuttuu"]]
+                                           :kasittelymenetelma [[:ei-tyhja "Tieto puuttuu"]]
+                                           :paksuus [[:ei-tyhja "Tieto puuttuu"]]}}}
+              ;; Tarkista pitäisikö näiden olla ihan virheitä
+              huomautukset {:perustiedot {:tekninen-osa (with-meta
+                                                          {:kasittelyaika (if (:paatos tekninen-osa)
+                                                                            [[:ei-tyhja "Anna käsittelypvm"]
+                                                                             [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                              "Käsittely ei voi olla ennen valmistumista"]]
+                                                                            [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                              "Käsittely ei voi olla ennen valmistumista"]])
+                                                           :paatos [[:ei-tyhja "Anna päätös"]]
+                                                           :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
+                                                          {:pakolliset #{(when (:paatos tekninen-osa)
+                                                                           :kasittelyaika)}})
+                                          :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                                                                          [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                           "Tarkastus ei voi olla ennen valmistumista"]]
+                                                          :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}}
+              valmis-tallennettavaksi? (and
+                                         (not (= tila :lukittu))
+                                         (empty? (flatten (keep vals virheet)))
+                                         (false? lukittu?))]
+          [:div.paallystysilmoituslomake
 
-         [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+           [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
 
-         (when lukittu?
-           [lomake/lomake-lukittu-huomautus lukko])
+           (when lukittu?
+             [lomake/lomake-lukittu-huomautus lukko])
 
-         [:h2 "Päällystysilmoitus"]
-         (when (= :lukittu tila)
-           [poista-lukitus e! app])
+           [:h2 "Päällystysilmoitus"]
+           (when (= :lukittu tila)
+             [poista-lukitus e! app])
 
-         [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit huomautukset]
+           [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit huomautukset]
 
-         ;[:div {:style {:float "right"}} [historia/kumoa historia]]
-         [paallystysilmoitus-tekninen-osa e! app muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
+           [:div {:style {:float "right"}} [kumoa e! app]]
+           [paallystysilmoitus-tekninen-osa e! app muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
 
-         [yhteenveto lomakedata-nyt]
+           [yhteenveto lomakedata-nyt]
 
-         [tallennus e! app valmis-tallennettavaksi?]]))))
+           [tallennus e! app valmis-tallennettavaksi?]])))))
 
 ;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;
 
@@ -949,9 +977,9 @@
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
-                                :vuosi valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
-                                :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}]
+         #_[yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
+                                  :vuosi valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
+                                  :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}]
          [yha-lahetykset-taulukko e! app]]))))
 
 (defn valinnat [e! {:keys [urakka] :as app}]
@@ -991,7 +1019,6 @@
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
        (if paallystysilmoitus-lomakedata
-         ;[paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [paallystysilmoitus e! app]
          [:div
           [valinnat e! app]

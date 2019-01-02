@@ -94,13 +94,13 @@
                                                                       @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
-  (reaction (let [taso @karttataso-paallystyskohteet
-                  paallystyskohteet @yhan-paallystyskohteet
-                  lomakedata @paallystysilmoitus-lomakedata]
-              (when (and taso paallystyskohteet)
-                (yllapitokohteet/yllapitokohteet-kartalle
-                  paallystyskohteet
-                  lomakedata)))))
+         (reaction (let [taso @karttataso-paallystyskohteet
+                         paallystyskohteet @yhan-paallystyskohteet
+                         lomakedata @paallystysilmoitus-lomakedata]
+                     (when (and taso paallystyskohteet)
+                       (yllapitokohteet/yllapitokohteet-kartalle
+                         paallystyskohteet
+                         lomakedata)))))
 
 ;; Yhteiset UI-asiat
 
@@ -166,9 +166,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
-(defrecord MuutaTila [polku arvo])
-(defrecord PaivitaTila [polku f])
-(defrecord SuodataYllapitokohteet [])
+(defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
@@ -177,7 +175,12 @@
 (defrecord HaeTrOsienPituudet [tr-numero tr-alkuosa tr-loppuosa])
 (defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
-(defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord HoidaCtrl+Z [])
+(defrecord KumoaHistoria [])
+(defrecord MuutaTila [polku arvo])
+(defrecord PaivitaTila [polku f])
+(defrecord SuodataYllapitokohteet [])
+(defrecord TallennaHistoria [polku])
 (defrecord TallennaPaallystysilmoitus [])
 (defrecord TallennaPaallystysilmoitusOnnistui [vastaus])
 (defrecord TallennaPaallystysilmoitusEpaonnistui [vastaus])
@@ -236,9 +239,9 @@
                                          (map #(identity [%1 (assoc %2 :id %1)])
                                               (iterate inc 1) alustatoimet)))))
           perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
-                        :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                        :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
-                        :valmispvm-kohde :takuupvm :valmispvm-paallystys
+                                :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
+                                :valmispvm-kohde :takuupvm :valmispvm-paallystys
                                 }
           perustiedot (select-keys vastaus perustiedot-avaimet)
           muut-tiedot (apply dissoc vastaus perustiedot-avaimet)]
@@ -272,6 +275,19 @@
   HaeTrOsienPituudetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     app)
+  HoidaCtrl+Z
+  (process-event [_ {{historia :historia} :paallystysilmoitus-lomakedata :as app}]
+    (process-event (->KumoaHistoria) app))
+  KumoaHistoria
+  (process-event [_ {{historia :historia} :paallystysilmoitus-lomakedata :as app}]
+    (if-not (empty? historia)
+      (let [[polku eroavat-arvot] (first historia)]
+        (-> app
+            (assoc-in polku eroavat-arvot)
+            (update-in [:paallystysilmoitus-lomakedata :historia]
+                       (fn [vanha-historia]
+                         (rest vanha-historia)))))
+      app))
   AvaaPaallystysilmoitus
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
     (let [parametrit {:urakka-id (:id urakka)
@@ -281,6 +297,11 @@
                          parametrit
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  TallennaHistoria
+  (process-event [{polku :polku} app]
+    (let [vanha-arvo (get-in app polku)]
+      (update-in app [:paallystysilmoitus-lomakedata :historia] (fn [vanha-historia]
+                                                                  (cons [polku vanha-arvo] vanha-historia)))))
   TallennaPaallystysilmoitus
   (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuos]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata

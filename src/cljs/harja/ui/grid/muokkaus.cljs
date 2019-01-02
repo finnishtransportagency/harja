@@ -161,7 +161,7 @@
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata? jarjesta-kun-kasketaan
                              disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                             vetolaatikot-auki virheet-ylos? toimintonappi-fn meta-atom]}]
+                             vetolaatikot-auki virheet-ylos? toimintonappi-fn]}]
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
@@ -174,8 +174,7 @@
              virheet-ylos-fn (if virheet-ylos?
                                #(nil? (get kaikki-virheet (:id %)))
                                (fn [_] nil))
-             kasketty-jarjestamaan? (and jarjesta-kun-kasketaan (or (:jarjesta-gridissa (meta muokatut))
-                                                                    (not (:jarjestetty-kerran? (meta muokatut)))))
+             kasketty-jarjestamaan? (and jarjesta-kun-kasketaan (:jarjesta-gridissa (meta muokatut)))
              jarjestetty-data (cond
                                 jarjesta (sort-by (comp (juxt virheet-ylos-fn jarjesta) second) (seq muokatut))
                                 jarjesta-avaimen-mukaan (sort-by (comp (juxt virheet-ylos-fn jarjesta-avaimen-mukaan) first) (seq muokatut))
@@ -183,11 +182,7 @@
                                 (and jarjesta-kun-kasketaan (not (:jarjesta-gridissa (meta muokatut)))) (sort-by (fn [[i rivi]]
                                                                                                                    (conj ((juxt virheet-ylos-fn :jarjestys-gridissa) rivi) i))
                                                                                                                  (seq muokatut))
-                                :else (seq muokatut))
-             metan-lisays-fn #(reset! meta-atom (merge (meta muokatut) {:arvot {:jarjesta-gridissa false
-                                                                                :jarjestetty-kerran? true}
-                                                                        :paivita? true}))]
-         (when kasketty-jarjestamaan? (metan-lisays-fn))
+                                :else (seq muokatut))]
          (doall
            (mapcat
              identity
@@ -501,15 +496,9 @@
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
-                             :toimintonappi-fn (or toimintonappi-fn (constantly nil))
-                             :meta-atom meta-atom})]
+                             :toimintonappi-fn (or toimintonappi-fn (constantly nil))})]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))
        :component-did-mount (fn [this]
-                              (when jarjesta-kun-kasketaan
-                                (lisaa-meta-fn @muokatut @virheet-atom))
                               (when luomisen-jalkeen
-                                (luomisen-jalkeen @muokatut)))
-       :component-did-update (fn [this [_ _ _ muokatut]]
-                               (when (:paivita? @meta-atom)
-                                 (lisaa-meta-fn @muokatut @virheet-atom)))})))
+                                (luomisen-jalkeen @muokatut)))})))

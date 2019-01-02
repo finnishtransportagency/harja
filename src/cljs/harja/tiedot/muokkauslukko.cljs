@@ -4,11 +4,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as t]
-            [cljs.core.async :refer [<! >! timeout chan]]
-            [harja.loki :refer [tarkkaile!]]
-            [harja.loki :refer [log tarkkaile!]]
-
-            [cljs.core.async :refer [chan <! >! close!]])
+            [cljs.core.async :refer [<! >! timeout chan close!]]
+            [harja.loki :refer [log tarkkaile!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
