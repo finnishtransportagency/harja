@@ -319,7 +319,9 @@
   [e! {lomakedata-nyt :paallystysilmoitus-lomakedata :as app}
    muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
   (let [tr-osoite-muokkaus! (fn [uusi-arvo]
-                              (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet]))
+                              ;; Ei haluta tallentaa historiaa, kun ollaan kumoamassa historiaa
+                              (when-not (:ei-historiaa? (meta uusi-arvo))
+                                (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet])))
                               (muokkaa! assoc-in [:ilmoitustiedot :osoitteet]
                                         uusi-arvo))
         tr-osoite-virheet-muokkaus! (fn [uusi-arvo]
@@ -332,7 +334,8 @@
                                     (muokkaa! assoc-in [:ilmoitustiedot :virheet :kiviaines]
                                               uusi-arvo))
         alustan-muokkaus! (fn [uusi-arvo]
-                            (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet]))
+                            (when-not (:ei-historiaa? (meta uusi-arvo))
+                              (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet])))
                             (muokkaa! assoc-in [:ilmoitustiedot :alustatoimet]
                                       uusi-arvo))
         alustan-virheet-muokkaus! (fn [uusi-arvo]
@@ -752,12 +755,16 @@
                      (.preventDefault %)
                      (case muokattu-osoite
                        :osoitteet (let [ohjauskahva (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :tierekisteriosoitteet])]
-                                    (grid/aseta-muokkaustila! ohjauskahva (get-in uusi-app-tila [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet]))
+                                    (grid/aseta-muokkaustila! ohjauskahva (with-meta
+                                                                            (get-in uusi-app-tila [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet])
+                                                                            {:ei-historiaa? true}))
                                     (grid/validoi-grid ohjauskahva)
                                     (grid/validoi-grid (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystystoimenpiteen-tiedot]))
                                     (grid/validoi-grid (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :kiviaines-ja-sideaine])))
                        :alustatoimet (let [ohjauskahva (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :alustalle-tehdyt-toimet])]
-                                       (grid/aseta-muokkaustila! ohjauskahva (get-in uusi-app-tila [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet]))
+                                       (grid/aseta-muokkaustila! ohjauskahva (with-meta
+                                                                               (get-in uusi-app-tila [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet])
+                                                                               {:ei-historiaa? true}))
                                        (grid/validoi-grid ohjauskahva))
                        nil))}
        [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])))
