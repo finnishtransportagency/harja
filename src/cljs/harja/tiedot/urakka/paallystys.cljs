@@ -230,14 +230,16 @@
           vastaus (-> vastaus
                       (update-in [:ilmoitustiedot :osoitteet]
                                  (fn [osoitteet]
-                                   (into {}
-                                         (map #(identity [%1 %2])
-                                              (iterate inc 1) osoitteet))))
+                                   (let [osoitteet-jarjestyksessa (tr-domain/jarjesta-tiet osoitteet)]
+                                     (into {}
+                                           (map #(identity [%1 %2])
+                                                (iterate inc 1) osoitteet-jarjestyksessa)))))
                       (update-in [:ilmoitustiedot :alustatoimet]
                                  (fn [alustatoimet]
-                                   (into {}
-                                         (map #(identity [%1 (assoc %2 :id %1)])
-                                              (iterate inc 1) alustatoimet)))))
+                                   (let [alustatoimet-jarjestyksessa (tr-domain/jarjesta-tiet alustatoimet)]
+                                     (into {}
+                                           (map #(identity [%1 (assoc %2 :id %1)])
+                                                (iterate inc 1) alustatoimet-jarjestyksessa))))))
           perustiedot-avaimet #{:aloituspvm :asiatarkastus :tila :kohdenumero :tunnus :kohdenimi
                                 :tr-ajorata :tr-kaista :tr-numero :tr-alkuosa :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
@@ -312,8 +314,12 @@
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
                                ;; Filteröidään uudet poistetut
-                               (update-in [:ilmoitustiedot :osoitteet] gridin-muokkaus/filteroi-uudet-poistetut)
-                               (update-in [:ilmoitustiedot :alustatoimet] gridin-muokkaus/filteroi-uudet-poistetut)
+                               (update-in [:ilmoitustiedot :osoitteet] #(gridin-muokkaus/filteroi-uudet-poistetut
+                                                                          (into (sorted-map)
+                                                                                %)))
+                               (update-in [:ilmoitustiedot :alustatoimet] #(gridin-muokkaus/filteroi-uudet-poistetut
+                                                                             (into (sorted-map)
+                                                                                   %)))
                                ;; POT-lomake tallentuu kantaan JSONina, eikä se tarvitse id-tietoja.
                                (gridin-muokkaus/poista-idt [:ilmoitustiedot :osoitteet])
                                (gridin-muokkaus/poista-idt [:ilmoitustiedot :alustatoimet])

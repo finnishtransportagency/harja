@@ -109,7 +109,8 @@
   "Poistaa valitun kohdeosan annetulla avaimella. Huolehtii siitä, että osat pysyvät järjestyksessä
    eikä väliin jää puuttumaan avaimia."
   [kohdeosat key]
-  (let [kohdeosat (dissoc kohdeosat key)
+  (let [kohdeosat (into (sorted-map)
+                        (dissoc kohdeosat key))
         kohdeosat-uusilla-avaimilla (map-indexed (fn [index [vanha-avain rivi]]
                                                    [(inc index) rivi])
                                                  kohdeosat)

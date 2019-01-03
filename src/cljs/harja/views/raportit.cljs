@@ -522,8 +522,7 @@
                                                  (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
                                                "urakka"
                                                (raportit/urakkaraportin-parametrit
-                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))
-                                  _ (println "vie raportti, parametrit:  " (pr-str parametrit))]
+                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))]

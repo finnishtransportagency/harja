@@ -339,7 +339,6 @@
                             (muokkaa! assoc-in [:ilmoitustiedot :alustatoimet]
                                       uusi-arvo))
         alustan-virheet-muokkaus! (fn [uusi-arvo]
-                                    (println "ALUSTATOIMEN VIRHEET: " uusi-arvo)
                                     (muokkaa! assoc-in [:ilmoitustiedot :virheet :alustatoimet]
                                               uusi-arvo))
         paallystystoimenpiteen-tiedot-ohjauskahva (grid/grid-ohjaus)
@@ -359,7 +358,6 @@
                                                         (when-not (empty? rivin-virheviestit)
                                                           rivin-virheviestit))
                                                      (vals (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alikohteet])))))
-            jarjestys-fn :id
             paakohteella-ajorata-ja-kaista? (boolean (and tr-ajorata
                                                           tr-kaista))
             lomakedatan-osoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
@@ -369,7 +367,6 @@
                                                         {:jarjesta-gridissa true})
                                              lomakedatan-osoitteet)
                                            (fn [uusi-arvo]
-                                             (println "UUSI ARVO: " uusi-arvo)
                                              (tr-osoite-muokkaus! uusi-arvo)))
             yllapitokohdeosat-virhe (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alikohteet])
                                             (fn [uusi-arvo]
@@ -382,7 +379,6 @@
                                       (kiviaines-virhe-muokkaus! uusi-arvo)))
             alustan-toimet-tila (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :alustatoimet])
                                         (fn [uusi-arvo]
-                                          (println "UUDET ALUSTATOIMET: " uusi-arvo)
                                           (alustan-muokkaus! uusi-arvo)))
             alustan-toimet-virheet (r/wrap (get-in lomakedata-nyt [:ilmoitustiedot :virheet :alustatoimet])
                                            (fn [uusi-arvo]
@@ -446,7 +442,7 @@
                                     tekninen-osa-voi-muokata?)
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :rivinumerot? true
-           :jarjesta jarjestys-fn}
+           :jarjesta-avaimen-mukaan identity}
           [(assoc paallystys/paallyste-grid-skeema
                   :nimi :toimenpide-paallystetyyppi
                   :leveys 30
@@ -572,7 +568,7 @@
                                     tekninen-osa-voi-muokata?)
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :virheet kiviaines-virhe
-           :jarjesta jarjestys-fn}
+           :jarjesta-avaimen-mukaan identity}
           [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
             :leveys 30
             :tayta-alas? #(not (nil? %))
@@ -647,7 +643,7 @@
                  {:otsikko "Alustalle tehdyt toimet"
                   :data-cy "alustalle-tehdyt-toimet"
                   :ohjaus alustalle-tehdyt-toimet-ohjauskahva
-                  :jarjesta jarjestys-fn
+                  :jarjesta-avaimen-mukaan identity
                   :voi-muokata? alustatoimet-voi-muokata?
                   :voi-kumota? false
                   :uusi-id (inc (count @alustan-toimet-tila))

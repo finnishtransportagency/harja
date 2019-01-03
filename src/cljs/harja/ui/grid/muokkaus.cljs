@@ -390,7 +390,7 @@
                                                (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
                                                  (when uusi-rivi
                                                    (if virheet-dataan?
-                                                     ;; TODO taulukko-valikointi tällekkin
+                                                     ;; TODO taulukko-validointi tällekkin
                                                      (assoc uusi-rivi
                                                             :harja.ui.grid/virheet (validointi/validoi-rivi
                                                                                      (assoc muokatut id uusi-rivi)

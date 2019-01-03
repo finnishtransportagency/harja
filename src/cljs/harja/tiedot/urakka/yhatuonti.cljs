@@ -192,9 +192,7 @@
                :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
               (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                     yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                    _ (println "---> YHDISTETYT KOHTEET: " (pr-str yhdistetyt-kohteet))
                     yhdistyksessa-epaonnistuneet-kohteet (filterv :virhe yhdistetyt-kohteet)
-                    _ (println "---> YHDISTETYT KOHTEET: " (pr-str yhdistyksessa-epaonnistuneet-kohteet))
                     yhdistyksessa-onnistuneet-kohteet (filterv (comp not :virhe) yhdistetyt-kohteet)
                     _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistyksessa-onnistuneet-kohteet))
                     {:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}

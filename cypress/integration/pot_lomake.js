@@ -9,6 +9,9 @@ let valitseVuosi = function (vuosi) {
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
+// TODO: Tänne voisi tehdä vielä testit rivin poistamisesta ison rivimäärän kanssa. Lisäksi voisi testata
+// 'Kumoa' napin painelemista. Myös alustatoimille pitäisi kirjoitella testejä
+
 describe('Aloita päällystysilmoitus vanha', function () {
     // Lisätään kantaan puhdas testidata
     before(function () {
