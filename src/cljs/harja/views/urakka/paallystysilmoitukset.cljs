@@ -338,7 +338,13 @@
         alustan-virheet-muokkaus! (fn [uusi-arvo]
                                     (println "ALUSTATOIMEN VIRHEET: " uusi-arvo)
                                     (muokkaa! assoc-in [:ilmoitustiedot :virheet :alustatoimet]
-                                              uusi-arvo))]
+                                              uusi-arvo))
+        paallystystoimenpiteen-tiedot-ohjauskahva (grid/grid-ohjaus)
+        kiviaines-ja-sideaine-ohjauskahva (grid/grid-ohjaus)
+        alustalle-tehdyt-toimet-ohjauskahva (grid/grid-ohjaus)]
+    (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystystoimenpiteen-tiedot] paallystystoimenpiteen-tiedot-ohjauskahva))
+    (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :kiviaines-ja-sideaine] kiviaines-ja-sideaine-ohjauskahva))
+    (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :alustalle-tehdyt-toimet] alustalle-tehdyt-toimet-ohjauskahva))
     (fn [e! {urakka :urakka
              {{:keys [tr-osien-pituudet tr-numero tr-ajorata tr-kaista]} :perustiedot
               tr-osien-pituudet :tr-osien-pituudet
@@ -408,7 +414,7 @@
                                                                          false)
                                                       :kohdeosat yllapitokohdeosat-tila
                                                       :kohdeosat-virheet yllapitokohdeosat-virhe
-
+                                                      :ohjauskahvan-asetus #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :tierekisteriosoitteet] %))
                                                       :muokattava-ajorata-ja-kaista? (fn [rivi]
                                                                                        (let [osan-tie-paakohteella? (= (:tr-numero rivi) tr-numero)]
                                                                                          (if paakohteella-ajorata-ja-kaista?
@@ -427,6 +433,7 @@
           {:otsikko "Päällystystoimenpiteen tiedot"
            :id "paallystysilmoitus-paallystystoimenpiteet"
            :data-cy "paallystystoimenpiteen-tiedot"
+           :ohjaus paallystystoimenpiteen-tiedot-ohjauskahva
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
@@ -552,6 +559,7 @@
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
            :data-cy "kiviaines-ja-sideaine"
+           :ohjaus kiviaines-ja-sideaine-ohjauskahva
            :rivinumerot? true
            :voi-lisata? false
            :voi-kumota? false
@@ -635,6 +643,7 @@
           [:div [grid/muokkaus-grid
                  {:otsikko "Alustalle tehdyt toimet"
                   :data-cy "alustalle-tehdyt-toimet"
+                  :ohjaus alustalle-tehdyt-toimet-ohjauskahva
                   :jarjesta jarjestys-fn
                   :voi-muokata? alustatoimet-voi-muokata?
                   :voi-kumota? false
@@ -737,9 +746,20 @@
     (fn [e! {{historia :historia} :paallystysilmoitus-lomakedata :as app}]
       [:button.nappi-toissijainen.kumoa-nappi
        {:disabled (empty? historia)
-        :on-click #(do (.stopPropagation %)
-                       (.preventDefault %)
-                       (e! (paallystys/->KumoaHistoria)))}
+        :on-click #(let [muokattu-osoite (-> app (get-in [:paallystysilmoitus-lomakedata :historia]) ffirst last)
+                         uusi-app-tila (e! (paallystys/->KumoaHistoria))]
+                     (.stopPropagation %)
+                     (.preventDefault %)
+                     (case muokattu-osoite
+                       :osoitteet (let [ohjauskahva (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :tierekisteriosoitteet])]
+                                    (grid/aseta-muokkaustila! ohjauskahva (get-in uusi-app-tila [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet]))
+                                    (grid/validoi-grid ohjauskahva)
+                                    (grid/validoi-grid (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystystoimenpiteen-tiedot]))
+                                    (grid/validoi-grid (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :kiviaines-ja-sideaine])))
+                       :alustatoimet (let [ohjauskahva (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :alustalle-tehdyt-toimet])]
+                                       (grid/aseta-muokkaustila! ohjauskahva (get-in uusi-app-tila [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet]))
+                                       (grid/validoi-grid ohjauskahva))
+                       nil))}
        [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])))
 
 
@@ -870,7 +890,8 @@
 
            [paallystysilmoitus-perustiedot e! app lukittu? muokkaa! validoinnit huomautukset]
 
-           [:div {:style {:float "right"}} [kumoa e! app]]
+           [:div {:style {:float "right"}}
+            [kumoa e! app]]
            [paallystysilmoitus-tekninen-osa e! app muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
 
            [yhteenveto lomakedata-nyt]

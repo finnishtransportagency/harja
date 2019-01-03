@@ -373,7 +373,7 @@
             (kohdeosien-tallennusvirheet virheet))))))
 
 (defn yllapitokohdeosat-tuck [{urakka :urakka :as app}
-                              asetukset]
+                              {ohjauskahvan-asetus :ohjauskahvan-asetus :as asetukset}]
   (let [tiet-joilla-ei-pituutta (fn [tr-osien-pituudet grid-state]
                                   (let [tiet (into #{}
                                                    (map (comp :tr-numero second))
@@ -390,6 +390,8 @@
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))
         g (grid/grid-ohjaus)]
+    (when ohjauskahvan-asetus
+      (ohjauskahvan-asetus g))
     (fn [{{{:keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys] :as perustiedot} :perustiedot
            tr-osien-pituudet :tr-osien-pituudet} :paallystysilmoitus-lomakedata
           urakka :urakka :as app}

@@ -15,6 +15,7 @@
 (def hae-virheet protokollat/hae-virheet)
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
 (def validoi-grid protokollat/validoi-grid)
+(def aseta-muokkaustila! protokollat/aseta-muokkaustila!)
 (def vakiosivutus 250)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)
