@@ -32,14 +32,14 @@ export default React.createClass({
     const feedbackSubject = "";
     const feedbackHref = "mailto:" + feedbackAddress + "?subject=" +feedbackSubject;
 
-    const harjaLink = "https://extranet.liikennevirasto.fi/harja/";
-    const testiHarjaLink = "https://testiextranet.liikennevirasto.fi/harja/";
+    const harjaLink = "https://extranet.vayla.fi/harja/";
+    const testiHarjaLink = "https://testiextranet.vayla.fi/harja/";
 
     return (
       <nav>
         <div className="harja-header title-bar show-for-large">
           <div className="top-bar-left">
-            <img className="livi-header-logo" src="images/livi_logo_blue.png" alt="liikennevirasto logo" />
+            <img className="livi-header-logo" src="images/VAYLArgb.png" alt="väylä logo" />
             <img className="harja-header-logo" src="images/harja_logo_text.png" alt="harja logo" srcSet="images/harja_logo_text.svg" />
           </div>
           <div className="top-bar-right">
@@ -49,7 +49,7 @@ export default React.createClass({
               <div className="column medium-4 harja-feedback"><a href={feedbackHref}>Palautetta!</a></div>
             </div>
             <div className="row">
-              <div className="harja-title-bar-title column medium-12">Liikenneviraston Harja-projekti</div>
+              <div className="harja-title-bar-title column medium-12">Väylän Harja-projekti</div>
             </div>
           </div>
         </div>

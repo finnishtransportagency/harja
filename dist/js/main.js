@@ -8630,7 +8630,7 @@ module.exports = factory;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 function makeEmptyFunction(arg) {
@@ -32996,7 +32996,7 @@ module.exports = CSSPropertyOperations;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -34669,7 +34669,7 @@ module.exports = EventPluginHub;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -35609,7 +35609,7 @@ module.exports = HTMLDOMPropertyConfig;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -35805,7 +35805,7 @@ module.exports = LinkedValueUtils;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -36418,7 +36418,7 @@ module.exports = ReactComponentBrowserEnvironment;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -40362,7 +40362,7 @@ module.exports = ReactDOMUnknownPropertyHook;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -40872,7 +40872,7 @@ module.exports = {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -40919,7 +40919,7 @@ module.exports = ReactEmptyComponent;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -41179,7 +41179,7 @@ module.exports = ReactEventListener;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -41267,7 +41267,7 @@ module.exports = ReactHostComponent;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -41497,7 +41497,7 @@ module.exports = ReactInstanceMap;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -41521,7 +41521,7 @@ module.exports = { debugTool: debugTool };
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -42590,7 +42590,7 @@ module.exports = ReactMultiChild;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -42630,7 +42630,7 @@ module.exports = ReactNodeTypes;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -42723,7 +42723,7 @@ module.exports = ReactOwner;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -42747,7 +42747,7 @@ module.exports = ReactPropTypeLocationNames;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -43106,7 +43106,7 @@ module.exports = ReactReconciler;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -43284,7 +43284,7 @@ module.exports = ReactServerRenderingTransaction;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -44406,7 +44406,7 @@ module.exports = SelectEventPlugin;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -45451,7 +45451,7 @@ module.exports = SyntheticWheelEvent;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -45702,7 +45702,7 @@ module.exports = ViewportMetrics;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -45759,7 +45759,7 @@ module.exports = accumulateInto;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -46178,7 +46178,7 @@ module.exports = findDOMNode;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -46253,7 +46253,7 @@ module.exports = flattenChildren;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -46542,7 +46542,7 @@ module.exports = getHostComponentFromComposite;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -47091,7 +47091,7 @@ module.exports = isEventSupported;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -47164,7 +47164,7 @@ module.exports = quoteAttributeValueForBrowser;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 'use strict';
 
@@ -48129,7 +48129,7 @@ module.exports = camelizeStyleName;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 var isTextNode = require('./isTextNode');
@@ -48690,7 +48690,7 @@ module.exports = isTextNode;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  * @typechecks static-only
  */
 
@@ -48772,7 +48772,7 @@ module.exports = performanceNow;
  * LICENSE file in the root directory of this source tree.
  *
  * @typechecks
- * 
+ *
  */
 
 /*eslint-disable no-self-compare */
@@ -49311,7 +49311,7 @@ module.exports = ReactChildren;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -49689,7 +49689,7 @@ module.exports = ReactComponentTreeHook;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -50602,7 +50602,7 @@ arguments[4][457][0].apply(exports,arguments)
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -50737,7 +50737,7 @@ arguments[4][490][0].apply(exports,arguments)
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * 
+ *
  */
 
 'use strict';
@@ -52690,7 +52690,7 @@ exports.default = _react2.default.createClass({
         _react2.default.createElement(
           "div",
           { className: "columns show-for-medium medium-4 large-4" },
-          _react2.default.createElement("img", { className: "livi-footer-logo", src: "images/livi_logo_white.png", alt: "liikennevirasto logo" })
+          _react2.default.createElement("img", { className: "livi-footer-logo", src: "images/VAYLAwhite.png", alt: "väylä logo" })
         ),
         _react2.default.createElement(
           "div",
@@ -52704,8 +52704,8 @@ exports.default = _react2.default.createClass({
               null,
               _react2.default.createElement(
                 "a",
-                { href: "http://www.liikennevirasto.fi/", target: "_blank" },
-                "Liikennevirasto"
+                { href: "http://www.vayla.fi/", target: "_blank" },
+                "Väylä"
               )
             )
           )
@@ -53020,8 +53020,8 @@ exports.default = _react2.default.createClass({
     var feedbackSubject = "";
     var feedbackHref = "mailto:" + feedbackAddress + "?subject=" + feedbackSubject;
 
-    var harjaLink = "https://extranet.liikennevirasto.fi/harja/";
-    var testiHarjaLink = "https://testiextranet.liikennevirasto.fi/harja/";
+    var harjaLink = "https://extranet.vayla.fi/harja/";
+    var testiHarjaLink = "https://testiextranet.vayla.fi/harja/";
 
     return _react2.default.createElement(
       'nav',
@@ -53032,7 +53032,7 @@ exports.default = _react2.default.createClass({
         _react2.default.createElement(
           'div',
           { className: 'top-bar-left' },
-          _react2.default.createElement('img', { className: 'livi-header-logo', src: 'images/livi_logo_blue.png', alt: 'liikennevirasto logo' }),
+          _react2.default.createElement('img', { className: 'livi-header-logo', src: 'images/VAYLArgb.png', alt: 'väylä logo' }),
           _react2.default.createElement('img', { className: 'harja-header-logo', src: 'images/harja_logo_text.png', alt: 'harja logo', srcSet: 'images/harja_logo_text.svg' })
         ),
         _react2.default.createElement(
@@ -53075,7 +53075,7 @@ exports.default = _react2.default.createClass({
             _react2.default.createElement(
               'div',
               { className: 'harja-title-bar-title column medium-12' },
-              'Liikenneviraston Harja-projekti'
+              'Väylän Harja-projekti'
             )
           )
         )
