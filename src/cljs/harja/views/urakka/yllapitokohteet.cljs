@@ -448,7 +448,8 @@
                         {:ikoni (ikonit/livicon-arrow-down)
                          :luokka "btn-xs"}]])])
           :ohjaus g
-          :taulukko-validointi (:_taulukko validoinnit)
+          :taulukko-validointi (:taulukko validoinnit)
+          :rivi-validointi (:rivi validoinnit)
           :rivinumerot? rivinumerot?
           :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
           :virhe-viesti virheviesti

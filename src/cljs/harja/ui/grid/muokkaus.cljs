@@ -306,7 +306,7 @@
                           (when-not ulkoinen-validointi?
                             (swap! virheet (fn [virheet]
                                              (let [rivin-virheet (validointi/validoi-rivi uudet-tiedot (get uudet-tiedot id) (if rivi-validointi
-                                                                                                                               (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                                                               (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                                                                skeema))
                                                    virheet (if (empty? rivin-virheet)
                                                              (dissoc virheet id)
@@ -368,7 +368,7 @@
                                                  (keep (fn [[id rivin-tiedot]]
                                                          (let [rivin-virheet (when-not (:poistettu rivin-tiedot)
                                                                                (validointi/validoi-rivi gridin-tiedot rivin-tiedot (if rivi-validointi
-                                                                                                                                     (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                                                                     (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                                                                      skeema)))]
                                                            (when-not (empty? rivin-virheet)
                                                              [id rivin-virheet])))
@@ -396,7 +396,7 @@
                                                                                      (assoc muokatut id uusi-rivi)
                                                                                      uusi-rivi
                                                                                      (if rivi-validointi
-                                                                                       (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                       (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                        skeema)))
                                                      uusi-rivi)))))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
@@ -406,7 +406,7 @@
                                           (let [uusi-rivi (get uudet-tiedot id)
                                                 rivin-virheet (when-not (:poistettu uusi-rivi)
                                                                 (validointi/validoi-rivi uudet-tiedot uusi-rivi (if rivi-validointi
-                                                                                                                  (conj skeema {:_rivi-validointi rivi-validointi})
+                                                                                                                  (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                                                   skeema)))
                                                 virheet (if (empty? rivin-virheet)
                                                           (dissoc virheet id)
