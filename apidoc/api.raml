@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: Harja API
-version: 1.0.37
-baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
+version: 1.0.40
+baseUri: https://testioag.vayla.fi/harja/api (testi) & https://oag.vayla.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
 
@@ -79,6 +79,31 @@ documentation:
   /haku:
     is: [secured]
     description: Urakoiden massahaku.
+    get:
+      is: [secured]
+      description: Hakee kaikki urakat, joihin järjestelmätunnuksella on oikeudet. Väylän järjestelmille palauttaa kaikki urakat.
+      queryParameters:
+        urakkatyyppi:
+          description: Rajaa urakoiden haun annettuun tyyppiin. Sallitut tyypit hoito, paallystys, paikkaus, tiemerkinta, valaistus, siltakorjaus, tekniset-laitteet, vesivayla-hoito, vesivayla-ruoppaus, vesivayla-turvalaitteiden-korjaus, vesivayla-kanavien-hoito, vesivayla-kanavien-korjaus.
+          type: string
+          example: hoito
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/urakoiden-haku-response.json
+              schema: urakoiden-haku-response
+        400:
+           body:
+             application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        500:
+           body:
+             application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+
     /{ytunnus}:
       get:
         is: [secured]
@@ -663,6 +688,11 @@ documentation:
         get:
           is: [secured]
           description: Palauttaa listan urakan ylläpitokohteista. Tiedot tarvitaan, jotta voidana kirjata esim. päällystysilmoitus päällystyskohteelle
+          queryParameters:
+            geometriat:
+              description: Mikäli asetettu "true", palauttaa alikohteiden geometriat GeoJSON muodossa
+              type: boolean
+              example: true
           responses:
             200:
               body:
@@ -1080,12 +1110,10 @@ documentation:
           description: Päivämäärä jonka aikana varusteiden on oltava voimassa. Esim. 2015-01-01.
           type: date
           required: true
-          example: 2015-01-01
         tilannepvm:
           description: Lähdejärjestelmän tieverkon version päivämäärä. Esim. 2015-01-01. Osoitteet palautetaan annetun päivämäärän tieverkon mukaan.
           type: date
           required: true
-          example: 2015-01-01
         puoli:
           description: Tien puoli, jolta varusteet haetaan
           type: integer
@@ -1149,7 +1177,6 @@ documentation:
             description: Lähdejärjestelmän tieverkon version päivämäärä. Esim. 2015-01-01. Osoitteet palautetaan annetun päivämäärän tieverkon mukaan.
             type: date
             required: true
-            example: 2015-01-01
       responses:
         200:
           body:
@@ -1359,11 +1386,11 @@ documentation:
             required: true
             example: 0414332119
           alkaen:
-            description: Päivystykset alkaen. Esim. 2015-01-01.
+            description: Päivystykset alkaen.
             type: date
             example: 2015-01-01
           paattyen:
-            description: Päivystykset päättyen. Esim. 2015-01-01.
+            description: Päivystykset päättyen.
             type: date
             example: 2015-01-01
         responses:
@@ -1403,11 +1430,11 @@ documentation:
             required: true
             example: 7210782
           alkaen:
-            description: Päivystykset alkaen.  Esim. 2015-01-01.
+            description: Päivystykset alkaen.
             type: integer
             example: 2015-01-01
           paattyen:
-            description: Päivystykset päättyen.  Esim. 2015-01-01.
+            description: Päivystykset päättyen.
             type: date
             example: 2015-01-01
         responses:

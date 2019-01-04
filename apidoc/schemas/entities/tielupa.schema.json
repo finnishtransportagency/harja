@@ -62,6 +62,10 @@
           "type": "string",
           "required": true
         },
+        "liite-url": {
+          "id": "urn:harja/tielupa/perustiedot/liite-url",
+          "type": "string"
+        },
         "katselmus-url": {
           "id": "urn:harja/tielupa/perustiedot/katselmus-url",
           "type": "string"
@@ -78,12 +82,24 @@
             "Kaakkois-Suomi",
             "Varsinais-Suomi",
             "Pohjois-Savo",
-            "Pirkanmaa"
+            "Pirkanmaa",
+            "Ahvenanmaa",
+            "Etelä-Savo",
+            "Häme",
+            "Kainuu",
+            "Pohjanmaa",
+            "Pohjois-Karjala",
+            "Satakunta"
           ]
         },
         "alueurakka": {
           "id": "urn:harja/tielupa/perustiedot/alueurakka",
-          "type": "string"
+          "type": "array",
+          "maxItems" : 2000,
+          "items": {
+            "id": "urn:harja/tielupa/perustiedot/alueurakka/0",
+            "type": "string"
+          }
         },
         "kunta": {
           "id": "urn:harja/tielupa/perustiedot/kunta",
@@ -322,13 +338,14 @@
                       "45 kV ilmajohto",
                       "110 kV ilmajohto",
                       "Ilmajohto",
-                      "Puistomuuntamo",
-                      "Pylväsmuuntamo",
                       "Jakokaappi",
                       "Telekaapeli",
                       "Kaukolämpöjohto",
                       "Maakaasuputki",
-                      "Sähkömaakaapeli"
+                      "Sähkömaakaapeli",
+                      "Puistomuuntamo",
+                      "Pylväsmuuntamo",
+                      "Muuntamo"
                     ]
                   },
                   "asennustyyppi": {
