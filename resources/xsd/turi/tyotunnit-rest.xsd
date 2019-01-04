@@ -7,7 +7,7 @@
 				<xs:element name="sampohankenimi" minOccurs="1" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>
-							Työtunti-ilmoitusta koskevan hankkeen nimi Liikenneviraston Sampo-järjestelmässä.
+							Työtunti-ilmoitusta koskevan hankkeen nimi Väylän Sampo-järjestelmässä.
 						</xs:documentation>
 					</xs:annotation>
 					<xs:simpleType>
@@ -19,7 +19,7 @@
 				<xs:element name="sampohankeid" minOccurs="1" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>
-							Työtunti-ilmoitusta koskevan hankkeen tunniste Liikenneviraston Sampo-järjestelmässä.
+							Työtunti-ilmoitusta koskevan hankkeen tunniste Väylän Sampo-järjestelmässä.
 						</xs:documentation>
 					</xs:annotation>
 					<xs:simpleType>
@@ -79,7 +79,7 @@
 				<xs:element name="sampourakkanimi" minOccurs="1" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>
-							Työtunti-ilmoitusta koskevan urakan nimi Liikenneviraston Sampo-järjestelmässä.
+							Työtunti-ilmoitusta koskevan urakan nimi Väylän Sampo-järjestelmässä.
 						</xs:documentation>
 					</xs:annotation>
 					<xs:simpleType>
@@ -91,7 +91,7 @@
 				<xs:element name="sampourakkaid" minOccurs="1" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>
-							Työtunti-ilmoitusta koskevan urakan tunniste Liikenneviraston Sampo-järjestelmässä.
+							Työtunti-ilmoitusta koskevan urakan tunniste Väylän Sampo-järjestelmässä.
 						</xs:documentation>
 					</xs:annotation>
 					<xs:simpleType>

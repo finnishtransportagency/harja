@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.yha-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
@@ -11,8 +10,6 @@
             [clojure.core.match :refer [match]]
             [harja.jms-test :refer [feikki-sonja]]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
-            [clojure.java.io :as io]
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yha :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]

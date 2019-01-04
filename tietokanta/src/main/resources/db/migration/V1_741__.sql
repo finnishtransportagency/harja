@@ -1,0 +1,1 @@
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'kohteiden-lahetys');
