@@ -248,10 +248,10 @@
                   (remove ::rivi-validointi skeema)
                   skeema)
          rivi-virheet (when rivi-validointi
-                        {::rivi-virheet (vec (keep (fn [[sarakkeet virhe]]
-                                                     (when (sarakkeet ::rivi)
-                                                       virhe))
-                                                   rivi-virheet-sarakkeille))})
+                        {::rivi-virheet (keep (fn [[sarakkeet virhe]]
+                                                (when (sarakkeet ::rivi)
+                                                  virhe))
+                                              rivi-virheet-sarakkeille)})
          sarake-virheet (loop [v {}
                                [s & skeema] skeema]
                           (if-not s

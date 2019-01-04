@@ -14,6 +14,7 @@
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.historia :as historia]
+            [harja.ui.kentat :as kentat]
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
@@ -218,19 +219,22 @@
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
 
 (defn paallystysilmoitus-perustiedot [e! {urakka :urakka
-                                          {{:keys [tila kirjoitusoikeus? kohdenumero tunnus kohdenimi
-                                                   tr-ajorata tr-kaista uusi-kommentti kommentit takuupvm] :as perustiedot-nyt}
-                                           :perustiedot} :paallystysilmoitus-lomakedata}
+                                          {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
+                                                   tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                                   uusi-kommentti kommentit takuupvm] :as perustiedot-nyt}
+                                           :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
+                                           ohjauskahvat :ohjauskahvat} :paallystysilmoitus-lomakedata}
                                       lukittu?
                                       muokkaa!
                                       validoinnit huomautukset]
-  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
+  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
+        muokattava? (boolean (and (not= :lukittu tila)
+                                  (false? lukittu?)
+                                  kirjoitusoikeus?))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
-      [lomake/lomake {:voi-muokata? (and (not= :lukittu tila)
-                                         (false? lukittu?)
-                                         kirjoitusoikeus?)
+      [lomake/lomake {:voi-muokata? muokattava?
                       :muokkaa! (fn [uusi]
                                   (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                   (muokkaa! update :perustiedot (fn [vanha]
@@ -242,12 +246,38 @@
                 (str "#" kohdenumero " " tunnus " " kohdenimi))
          :muokattava? (constantly false)
          :palstoja 1}
-        {:otsikko "Tierekisteriosoite"
-         :nimi :tr-osoite
-         :hae identity
-         :fmt tierekisteri-domain/tierekisteriosoite-tekstina
-         :muokattava? (constantly false)
-         :palstoja 1}
+        (merge
+          {:nimi :tr-osoite
+           :palstoja 1}
+          (if muokattava?
+            {:tyyppi :komponentti
+             :komponentti (fn [_]
+                            (let [muuta! (fn [kentta]
+                                           #(let [v (-> % .-target .-value)]
+                                              (when (and (not (= "" v))
+                                                         (re-matches #"\d*" v))
+                                                (muokkaa! update :perustiedot assoc kentta (js/parseInt v))
+                                                (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))))]
+                              [:table
+                               [:thead
+                                [:th "Aosa"]
+                                [:th "Aet"]
+                                [:th "Losa"]
+                                [:th "Let"]]
+                               [:tbody
+                                [:tr
+                                 [:td [kentat/tr-kentan-elementti true muuta! nil
+                                       "Aosa" tr-alkuosa :tr-alkuosa false ""]]
+                                 [:td [kentat/tr-kentan-elementti true muuta! nil
+                                       "Aet" tr-alkuetaisyys :tr-alkuetaisyys false ""]]
+                                 [:td [kentat/tr-kentan-elementti true muuta! nil
+                                       "Losa" tr-loppuosa :tr-loppuosa false ""]]
+                                 [:td [kentat/tr-kentan-elementti true muuta! nil
+                                       "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]))}
+            {:otsikko "Tierekisteriosoite"
+             :hae identity
+             :fmt tierekisteri-domain/tierekisteriosoite-tekstina
+             :muokattava? (constantly false)}))
         (when (or tr-ajorata tr-kaista)
           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
 
@@ -402,7 +432,6 @@
                     :style {:height "260px"}}]
              [:figcaption
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
-
          [yllapitokohteet/yllapitokohdeosat-tuck app {:rivinumerot? true
                                                       :voi-muokata? tekninen-osa-voi-muokata?
                                                       :validoinnit {:tr-osoitteet (-> validoinnit :tekninen-osa :tr-osoitteet (dissoc :taulukko :rivi))
@@ -770,26 +799,29 @@
 (defn paallystysilmoitus [e! {{yllapitokohde-id :yllapitokohde-id
                                {:keys [tr-alkuosa tr-loppuosa tr-numero]} :perustiedot} :paallystysilmoitus-lomakedata :as app}]
   (let [lukon-id (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id)
-        paakohteen-sisalla-validointi (fn [app rivi taulukko]
-                                        (let [yllapitokohde (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot]) [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
-                                              ohjauskahva (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :tierekisteriosoitteet])]
+        validoi-kohteen-paallekkaisyys (fn [rivi-indeksi rivi taulukko]
+                                         (when (and (:tr-alkuosa rivi) (:tr-alkuetaisyys rivi)
+                                                    (:tr-loppuosa rivi) (:tr-loppuetaisyys rivi))
+                                           (let [rivit-joilla-tarvittava-tieto (keep (fn [[indeksi kohdeosa]]
+                                                                                       (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
+                                                                                                  (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
+                                                                                         (assoc kohdeosa :valiaikainen-id indeksi)))
+                                                                                     taulukko)
+                                                 paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain rivit-joilla-tarvittava-tieto
+                                                                                                        :valiaikainen-id
+                                                                                                        rivi-indeksi)]
+                                             (when-not (empty? paallekkaiset-osat)
+                                               (apply str (interpose ", "
+                                                                     (map :viesti paallekkaiset-osat)))))))
+        paakohteen-sisalla-validointi (fn [rivi taulukko]
+                                        ;; Tila pitää dereffata, sillä muuten tähän jää ensimmäinen perustietojen tila
+                                        ;; eikä muutokset ilmenny täällä. Ei auta vaikka tämän määrittelisi tuossa vähän
+                                        ;; alempana reagent-render fnktiossa, johtuen muokkaus-gridin toteutuksesta.
+                                        (let [perustiedot (get-in @paallystys/tila [:paallystysilmoitus-lomakedata :perustiedot])
+                                              yllapitokohde (select-keys perustiedot [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
                                           (when (and (= (:tr-numero yllapitokohde) (:tr-numero rivi))
-                                                     (tr/tr-vali-leikkaa-tr-valin? yllapitokohde rivi)
                                                      (not (tr/tr-vali-paakohteen-sisalla? yllapitokohde rivi)))
-                                            (println "PITÄÄ MUUTTAA PÄÄKOHDETTA")
-                                            (e! (paallystys/->PaivitaTila [:paallystysilmoitus-lomakedata :perustiedot]
-                                                                          (fn [perustiedot]
-                                                                            (let [perustiedot (cond-> perustiedot
-                                                                                                      (< (:tr-alkuosa rivi) (:tr-alkuosa perustiedot)) (assoc :tr-alkuosa (:tr-alkuosa rivi))
-                                                                                                      (< (:tr-loppuosa perustiedot) (:tr-loppuosa rivi)) (assoc :tr-loppuosa (:tr-loppuosa rivi)))]
-                                                                              (cond-> perustiedot
-                                                                                      (and (= (:tr-alkuosa rivi) (:tr-alkuosa perustiedot))
-                                                                                           (< (:tr-alkuetaisyys rivi) (:tr-alkuetaisyys perustiedot))) (assoc :tr-alkuetaisyys (:tr-alkuetaisyys rivi))
-                                                                                      (and (= (:tr-loppuosa rivi) (:tr-loppuosa perustiedot))
-                                                                                           (< (:tr-loppuetaisyys perustiedot) (:tr-loppuetaisyys rivi))) (assoc :tr-loppuetaisyys (:tr-loppuetaisyys rivi)))))))
-                                            ;; Pitää validoida uudestaan gridi, jotta rivivirhe ei jää atomiin. Virheen jääminen tilaan estää tallentamisen
-                                            ;; ja muiden gridien muokkaamisen.
-                                            (grid/validoi-grid ohjauskahva))))]
+                                            "Alikohde ei voi olla pääkohteen ulkopuolella")))]
     (komp/luo
       ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
       (komp/lukko lukon-id)
@@ -827,31 +859,17 @@
               validoi-kohteen-osoite (fn [kentta _ rivi _]
                                        (when (kentta rivi)
                                          (yllapitokohde-domain/validoi-yllapitokohteen-osoite tr-osien-pituudet kentta rivi)))
-              validoi-kohteen-paallekkaisyys (fn [rivi-indeksi rivi taulukko]
-                                               (when (and (:tr-alkuosa rivi) (:tr-alkuetaisyys rivi)
-                                                          (:tr-loppuosa rivi) (:tr-loppuetaisyys rivi))
-                                                 (let [rivit-joilla-tarvittava-tieto (keep (fn [[indeksi kohdeosa]]
-                                                                                             (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
-                                                                                                        (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
-                                                                                               (assoc kohdeosa :valiaikainen-id indeksi)))
-                                                                                           taulukko)
-                                                       paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain rivit-joilla-tarvittava-tieto
-                                                                                                              :valiaikainen-id
-                                                                                                              rivi-indeksi)]
-                                                   (when-not (empty? paallekkaiset-osat)
-                                                     (apply str (interpose ", "
-                                                                           (map :viesti paallekkaiset-osat)))))))
               tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
               ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä.
 
               ;; TODO: nämä validoinnit eivät pelkästään validoi vaan tekevät jonku sivueffektin samalla. Yleensä
-              ;; palauttavat tekstin, joka näytetään UI:lla, mutta 'paakohteen-sisalla-validointi' saattaa muokata pääkohdetta.
+              ;; palauttavat tekstin, joka näytetään UI:lla.
               ;; Kaikki validoinnit olisi hyvä saada cljc filuun, josta samoja validointeja käyttäisi sekä frontti, back, että API kutsujen
               ;; validointi.
               validoinnit {:tekninen-osa {:tr-osoitteet {:taulukko [{:fn validoi-kohteen-paallekkaisyys
-                                                                      :sarakkeet #{:tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}}]
-                                                         :rivi [{:fn (partial paakohteen-sisalla-validointi app)
-                                                                 :sarakkeet #{::v/rivi}}]
+                                                                     :sarakkeet #{:tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}}]
+                                                         :rivi [{:fn paakohteen-sisalla-validointi
+                                                                 :sarakkeet #{:tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}}]
                                                          :tr-numero [[:ei-tyhja "Anna tienumero"]]
                                                          :tr-ajorata [[:ei-tyhja "Anna ajorata"]]
                                                          :tr-kaista [[:ei-tyhja "Anna kaista"]]

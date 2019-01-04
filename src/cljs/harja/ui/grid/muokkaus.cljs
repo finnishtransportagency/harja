@@ -282,8 +282,9 @@
                                                                                                                                (some #(= virheviesti %)
                                                                                                                                      (sarakkeen-nimi vanhat-rivin-taulukkotason-virheet)))
                                                                                                                              virheet-vektori)]
-                                                                                                         (when-not (empty? virheet)
-                                                                                                           (assoc m2 sarakkeen-nimi virheet))))
+                                                                                                         (if-not (empty? virheet)
+                                                                                                           (assoc m2 sarakkeen-nimi virheet)
+                                                                                                           m2)))
                                                                                                      {} rivin-virheet))))
                                                                virheet edelliset-taulukkotason-virheiden-rivit)]
                                         (swap! meta-atom assoc :taulukkovirheiden-rivit taulukon-virheet)

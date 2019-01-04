@@ -873,17 +873,19 @@
       (tasot/poista-geometria! :tr-valittu-osoite)
       (reset! virheet nil))))
 
-(defn tr-kentan-elementti [lomake? muuta! blur placeholder value key disabled?]
-  [:input.tierekisteri {:class (str
-                                 "tr-" (name key) " "
-                                 (when lomake? "form-control ")
-                                 (when disabled? "disabled "))
-                        :size 5 :max-length 10
-                        :placeholder placeholder
-                        :value value
-                        :disabled disabled?
-                        :on-change (muuta! key)
-                        :on-blur blur}])
+(defn tr-kentan-elementti
+  ([lomake? muuta! blur placeholder value key disabled?] (tr-kentan-elementti lomake? muuta! blur placeholder value key disabled? (str "tr-" (name key))))
+  ([lomake? muuta! blur placeholder value key disabled? luokat]
+   [:input.tierekisteri {:class (str
+                                  luokat " "
+                                  (when lomake? "form-control ")
+                                  (when disabled? "disabled "))
+                         :size 5 :max-length 10
+                         :placeholder placeholder
+                         :value value
+                         :disabled disabled?
+                         :on-change (muuta! key)
+                         :on-blur blur}]))
 
 (defn piste-tai-eka [arvo]
   (if (vector? (:geometria arvo))
