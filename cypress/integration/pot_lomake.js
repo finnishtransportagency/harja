@@ -77,12 +77,14 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 });
             })
         })
-        // Pääkohteen tierekisteriosoitetta ei pitäisi pystyä muuttamaan
-        cy.get('[data-cy=paallystysilmoitus-perustiedot]')
-            .contains('Tierekisteriosoite')
-            .parentsUntil('.row.lomakerivi')
-            .contains('Tie ')
-            .should('have.class', 'form-control-static')
+        // Pääkohteen tierekisteriosoitetta pitäisi pystyä muuttamaan
+        cy.get('[data-cy=paallystysilmoitus-perustiedot] table td').then(($trTd) => {
+            expect($trTd.eq(0).find('input')).to.have.value('22');
+            expect($trTd.eq(1).find('input')).to.have.value('1');
+            expect($trTd.eq(2).find('input')).to.have.value('0');
+            expect($trTd.eq(3).find('input')).to.have.value('3');
+            expect($trTd.eq(4).find('input')).to.have.value('100');
+        })
     })
     it('Rivien lisäys', function () {
         // Lisätään jokunen rivi
@@ -149,7 +151,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             cy.wrap(valitseInput(2, 'Aosa')).type(3)
             cy.wrap(valitseInput(2, 'Aet')).type(15)
             cy.wrap(valitseInput(2, 'Losa')).type(3)
-            cy.wrap(valitseInput(2, 'Let')).type(25)
+            cy.wrap(valitseInput(2, 'Let')).type(125)
             cy.wrap(valitseInput(2, 'Nimi')).type('Foo')
             // varmistelua
             cy.contains('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] .virhe', 'Kohteenosa on päällekkäin osan Foo kanssa')
@@ -173,8 +175,9 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 ['Aosa', 'Aet', 'Losa', 'Let'].forEach((otsikko) => {
                     expect(virheValinta(1, otsikko)).to.have.lengthOf(1)
                         .and.to.contain('Kohteenosa on päällekkäin osan Foo kanssa')
-                    expect(virheValinta(2, otsikko)).to.have.lengthOf(1)
+                    expect(virheValinta(2, otsikko)).to.have.lengthOf(2)
                         .and.to.contain('Kohteenosa on päällekkäin toisen osan kanssa')
+                        .and.to.contain('Alikohde ei voi olla pääkohteen ulkopuolella')
                 })
             })
             cy.get('[data-cy=paallystystoimenpiteen-tiedot]').then(($ptGrid) => {
