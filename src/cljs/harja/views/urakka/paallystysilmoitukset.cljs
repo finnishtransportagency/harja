@@ -260,11 +260,12 @@
                                                 (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))))]
                               [:table
                                [:thead
-                                [:th "Tie"]
-                                [:th "Aosa"]
-                                [:th "Aet"]
-                                [:th "Losa"]
-                                [:th "Let"]]
+                                [:tr
+                                 [:th "Tie"]
+                                 [:th "Aosa"]
+                                 [:th "Aet"]
+                                 [:th "Losa"]
+                                 [:th "Let"]]]
                                [:tbody
                                 [:tr
                                  [:td [kentat/tr-kentan-elementti true muuta! nil
