@@ -182,41 +182,66 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            {:bottom "calc(100% - 1px)"
             :top "auto"})))
 
-(defn livi-pudotusvalikko
-  "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
-   format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
-  [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
-  (let [auki? (atom false)
-        avautumissuunta (atom :alas)
+(defn lista-item [vaihtoehto li-luokka-fn itemit-komponentteja? format-fn valitse-fn auki?]
+  [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
+   (if itemit-komponentteja?
+     vaihtoehto
+     [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                         (reset! auki? false)
+                                         nil)])])
+
+(defn pudotusvalikon-vaihtoehdot [vaihtoehdot {:keys [itemit-komponentteja? ryhmittely
+                                                      li-luokka-fn nayta-ryhmat ryhman-otsikko] :as asetukset}
+                                  auki? format-fn valitse-fn]
+  (let [avautumissuunta (atom :alas)
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
-                                                  (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
-                                                    (reset! avautumissuunta (:suunta maaritys))
-                                                    (reset! max-korkeus (:max-korkeus maaritys))))]
+                                                  (when @auki?
+                                                    (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
+                                                      (swap! avautumissuunta (fn [_] (:suunta maaritys)))
+                                                      (swap! max-korkeus (fn [_] (:max-korkeus maaritys))))))]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
                            EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
       {:component-did-mount
        (fn [this]
-         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
-
-      (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy]} vaihtoehdot]
-        (let [term (atom "")
-              format-fn (or format-fn str)
-              valitse-fn (or valitse-fn (constantly nil))
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))
+       :should-component-update (fn [this _ _]
+                                  @auki?)}
+      (fn [vaihtoehdot {:keys [itemit-komponentteja? li-luokka-fn nayta-ryhmat ryhman-otsikko] :as asetukset}
+           auki? format-fn valitse-fn]
+        (let [dropdown-tyyli (avautumissuunta-ja-korkeus-tyylit
+                               @max-korkeus @avautumissuunta)
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
-              ryhmissa? (not (nil? ryhmitellyt-itemit))
-              lista-item (fn [vaihtoehto]
-                           [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                            (if itemit-komponentteja?
-                              vaihtoehto
-                              [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                  (reset! auki? false)
-                                                                  nil)])])]
+              ryhmissa? (not (nil? ryhmitellyt-itemit))]
+          [:ul.dropdown-menu.livi-alasvetolista {:style dropdown-tyyli}
+           (doall
+             (if ryhmissa?
+               (for [ryhma nayta-ryhmat]
+                 ^{:key ryhma}
+                 [:div.harja-alasvetolista-ryhma
+                  [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
+                  (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
+                    ^{:key (hash vaihtoehto)}
+                    [lista-item vaihtoehto li-luokka-fn itemit-komponentteja? format-fn valitse-fn auki?])])
+               (for [vaihtoehto vaihtoehdot]
+                 ^{:key (hash vaihtoehto)}
+                 [lista-item vaihtoehto li-luokka-fn itemit-komponentteja? format-fn valitse-fn auki?])))])))))
+
+(defn livi-pudotusvalikko
+  "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
+   format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
+  [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
+  (let [auki? (atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
+      (fn [{:keys [valinta format-fn valitse-fn class disabled naytettava-arvo
+                   on-focus title data-cy] :as asetukset} vaihtoehdot]
+        (let [term (atom "")
+              format-fn (or format-fn str)
+              valitse-fn (or valitse-fn (constantly nil))]
           [:div.dropdown.livi-alasveto (merge
                                          {:class (str class " " (when @auki? "open"))}
                                          (when data-cy
@@ -279,20 +304,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
-                                                           @max-korkeus @avautumissuunta)}
-            (doall
-              (if ryhmissa?
-                (for [ryhma nayta-ryhmat]
-                  ^{:key ryhma}
-                  [:div.harja-alasvetolista-ryhma
-                   [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
-                   (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
-                     ^{:key (hash vaihtoehto)}
-                     [lista-item vaihtoehto])])
-                (for [vaihtoehto vaihtoehdot]
-                  ^{:key (hash vaihtoehto)}
-                  [lista-item vaihtoehto])))]])))))
+           [pudotusvalikon-vaihtoehdot vaihtoehdot asetukset auki? format-fn valitse-fn]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
