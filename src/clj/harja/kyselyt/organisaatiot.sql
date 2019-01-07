@@ -66,7 +66,7 @@ WHERE elynumero = :elynumero;
 -- name: hae-ely-id-sampo-hashilla
 SELECT id
 FROM organisaatio
-WHERE sampo_ely_hash = :ely_hash;
+WHERE sampo_ely_hash = replace(:ely_hash, 'KP3310', 'KP941');
 
 -- name: listaa-organisaatiot
 SELECT
