@@ -11,7 +11,7 @@ CREATE TABLE suolatoteuma_reittipiste (
 
 CREATE INDEX suolatoteuma_toteuma_idx ON suolatoteuma_reittipiste (toteuma);
 CREATE INDEX suolatoteuma_reittipiste_idx ON suolatoteuma_reittipiste USING GIST(sijainti);
--- CREATE INDEX suolatoteuma_pohjavesialue_idx ON suolatoteuma_reittipiste (pohjavesialue);
+CREATE INDEX suolatoteuma_pohjavesialue_idx ON suolatoteuma_reittipiste (pohjavesialue);
 CREATE INDEX suolatoteuma_pohjavesialue_aika ON suolatoteuma_reittipiste (aika);
 
 CREATE OR REPLACE FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER) RETURNS VARCHAR AS $$
