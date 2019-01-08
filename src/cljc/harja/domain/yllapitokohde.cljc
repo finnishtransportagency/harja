@@ -218,6 +218,69 @@ yllapitoluokkanimi->numero
          (tarkista-alikohteiden-ajorata-ja-kaista alikohteet)
          (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
+(defn kohteeet-paallekkain? [kohde verrattava-kohde]
+  (boolean
+    (and (not= (:id kohde) (:id verrattava-kohde))
+         (and (= (:tr-numero kohde) (:tr-numero verrattava-kohde))
+              (= (:tr-ajorata kohde) (:tr-ajorata verrattava-kohde))
+              (= (:tr-kaista kohde) (:tr-kaista verrattava-kohde)))
+         (tr-domain/tr-vali-leikkaa-tr-valin? kohde verrattava-kohde))))
+
+(defn losa>aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
+  (and tr-alkuosa tr-loppuosa (> tr-loppuosa tr-alkuosa)))
+
+(defn let>aet? [{:keys [tr-alkuetaisyys tr-loppuetaisyys]}]
+  (and tr-alkuetaisyys tr-loppuetaisyys
+       (> tr-loppuetaisyys tr-alkuetaisyys)))
+
+(defn losa=aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
+  (and tr-alkuosa tr-loppuosa
+       (= tr-alkuosa tr-loppuosa)))
+
+(defn let=aet? [{:keys [tr-alkuetaisyys tr-loppuetaisyys]}]
+  (and tr-alkuetaisyys tr-loppuetaisyys
+       (= tr-alkuetaisyys tr-loppuetaisyys)))
+
+(defn oikean-muotoinen-tr
+  "Tarkistaa, että annetussa tr-osoitteessa on tien numero, aosa, aet, losa ja let annettuna.
+   Niiden tulee olla myös oikein järjestetty."
+  [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr}]
+  (cond-> {}
+          ;; Tarkistetaan, että arvot on annettu
+          (not (and tr-numero (integer? tr-numero))) (update :tr-numero assoc :vaara-muotoinen tr-numero)
+          (not (and tr-alkuosa (integer? tr-alkuosa))) (update :tr-alkuosa assoc :vaara-muotoinen tr-alkuosa)
+          (not (and tr-alkuetaisyys (integer? tr-alkuetaisyys))) (update :tr-alkuetaisyys assoc :vaara-muotoinen tr-alkuetaisyys)
+          (not (and tr-loppuosa (integer? tr-loppuosa))) (update :tr-loppuosa assoc :vaara-muotoinen tr-loppuosa)
+          (not (and tr-loppuetaisyys (integer? tr-loppuetaisyys))) (update :tr-loppuetaisyys assoc :vaara-muotoinen tr-loppuetaisyys)
+          ;; Tarkistetaan, että ne on oikein
+          (not (or (losa>aosa? tr)
+                   (losa=aosa? tr))) (-> (update :tr-alkuosa assoc :liian-iso tr-alkuosa)
+                                         (update :tr-loppuosa assoc :liian-pieni tr-loppuosa))
+          (and (losa=aosa? tr)
+               (not (or (let>aet? tr)
+                        (let=aet? tr)))) (-> (update :tr-alkuetaisyys assoc :liian-iso tr-alkuetaisyys)
+                                             (update :tr-loppuetaisyys assoc :liian-pieni tr-loppuetaisyys))))
+
+(defn validoi-kohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [kohde toiset-kohteet muut-alikohteet])
+
+(defn validoi-alikohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [alikohde toiset-alikohteet kohde])
+
+(defn validoi-muukohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [muu-kohde kohde toiset-kohteet])
+
+(defn validoi-alustatoimenpide
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [alustatoimenpide kohde])
+
+(defn validoi-alustatoimenpide-muukohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [alustatoimenpide kohde toiset-kohteet])
+
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
      "Tarkistaa, että annettu kohde on validi ja alikohteet ovat sen sen sisällä oikein."
