@@ -37,8 +37,41 @@
             (map konv/alaviiva->rakenne))
           (q/hae-urakoiden-geometriat db urakka-idt))))
 
-(defn hae-urakka-idt-sijainnilla
+(defn hae-urakka-id-sijainnilla
+  [db urakkatyyppi x y]
+  (loop [radius 50
+         k 1]
+    ;; Palautetaan nil, jos ei löydy urakkaa kilometrin säteeltä tai
+    ;; ollaan loopattu jo 10 kertaa eikä olla löydätty vain yhtä urakkaa
+    (when (and (< radius 1000)
+               (< k 10))
+      (let [urakat (q/hae-urakka-sijainnilla db urakkatyyppi x y radius)]
+        (cond
+          (empty? urakat) (recur (* 2 radius) (inc k))
+          (> (count urakat) 1) (recur (* 0.75 radius) (inc k))
+          :else (:id (first urakat)))))))
+
+(defn hae-lahin-urakka-id-sijainnilla
   "Hakee annetun tyyppisen urakan sijainnilla. Mikäli tyyppiä vastaavaa urakkaa ei löydy, haetaan alueella toimiva
+  hoidon alueurakka. Mikäli alueelta ei löydy alueurakkaa, haetaan lähin hoidon alueurakka"
+  [db urakkatyyppi {:keys [x y]}]
+  ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
+  (let [urakka-id (hae-urakka-id-sijainnilla db urakkatyyppi x y)
+        loytynyt-hoidon-urakka-id (fn []
+                                    (let [;; Jos ei löytynyt urakkaa annetulla tyypillä, haetaan alueella toimiva hoidon alueurakka
+                                          hoidon-urakka-id (if (not= "hoito" urakkatyyppi)
+                                                             (hae-urakka-id-sijainnilla db "hoito" x y)
+                                                             urakka-id)]
+                                      (if hoidon-urakka-id
+                                        hoidon-urakka-id
+                                        ; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
+                                        (:id (first (q/hae-lahin-hoidon-alueurakka db x y 10000))))))]
+    (if urakka-id
+      urakka-id
+      (loytynyt-hoidon-urakka-id))))
+
+(defn hae-urakka-idt-sijainnilla
+  "Hakee annetun tyyppisen urakat sijainnilla. Mikäli tyyppiä vastaavia urakoita ei löydy, haetaan alueella toimiva
   hoidon alueurakka. Mikäli alueelta ei löydy alueurakkaa, haetaan lähin hoidon alueurakka"
   [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
