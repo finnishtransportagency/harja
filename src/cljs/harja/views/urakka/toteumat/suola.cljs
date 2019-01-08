@@ -175,6 +175,58 @@
    (when-not (empty? @tiedot/toteumat)
      [:div.bold kaytetty-yhteensa])])
 
+(defn pohjavesialueen-suola []
+  (komp/luo
+   (komp/sisaan
+    (fn []
+      (let [urakkaid @nav/valittu-urakka-id]
+        (go
+          (reset! tiedot/pohjavesialueen-toteuma nil)
+          (reset! tiedot/urakan-pohjavesialueet (<! (tiedot/hae-urakan-pohjavesialueet urakkaid)))))))
+   (fn []
+     (let [alueet @tiedot/urakan-pohjavesialueet
+           urakka @nav/valittu-urakka]
+       [:div
+        [urakka-valinnat/aikavali-nykypvm-taakse urakka
+         tiedot/valittu-aikavali
+         {:aikavalin-rajoitus [12 :kuukausi]}]
+        [grid/grid {:otsikko "Urakan pohjavesialueet"
+                    :tunniste :tunnus
+                    :mahdollista-rivin-valinta? true
+                    :rivi-valinta-peruttu (fn [rivi]
+                                            (reset! tiedot/pohjavesialueen-toteuma nil))
+                    :rivi-klikattu
+                    (fn [rivi]
+                      (go
+                        (reset! tiedot/pohjavesialueen-toteuma
+                                (<! (tiedot/hae-pohjavesialueen-suolatoteuma (:tunnus rivi) @tiedot/valittu-aikavali)))))
+                         
+                    :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
+                             [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
+                             "Ei pohjavesialueita")}
+         [{:otsikko "Tunnus" :nimi :tunnus :leveys 10}
+          {:otsikko "Nimi" :nimi :nimi}]
+         alueet]
+        (let [toteuma @tiedot/pohjavesialueen-toteuma]
+          (when toteuma
+            [grid/grid
+             {:otsikko "Pohjavesialueen suolatoteuma"
+              :tunniste :maara_t_per_km
+              :piilota-toiminnot? true
+              :tyhja (if (empty? toteuma)
+                       "Ei tietoja")
+              }
+             [{:otsikko "Määrä t/km"
+               :nimi :maara_t_per_km
+               :leveys 10}
+              {:otsikko "Yhteensä"
+               :leveys 10
+               :nimi :yhteensa}
+              {:otsikko "Käyttöraja"
+               :leveys 10
+               :nimi :kayttoraja}]
+             toteuma]))]))))
+
 (defn suolatoteumat []
   (komp/luo
     (komp/lippu tiedot/suolatoteumissa?
