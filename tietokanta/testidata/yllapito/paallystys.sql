@@ -862,7 +862,18 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    113, 'L13', 'Puolangalle menevä (EI SAA NÄKYÄ)', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13373,
-   837, 1, 136, 1, 546, NULL, NULL, NULL, '{2019}', TRUE);
+   837, 1, 136, 1, 546, NULL, NULL, NULL, '{2019}', TRUE),
+  ((SELECT id
+    FROM urakka
+    WHERE nimi = 'Utajärven päällystysurakka'),
+    (SELECT id
+     FROM sopimus
+     WHERE urakka = (SELECT id
+                     FROM urakka
+                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
+    114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, 13374,
+    22, 13, 0, 13, 3888, NULL, NULL, NULL, '{2019}', FALSE);
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
@@ -888,7 +899,16 @@ VALUES
    '2019-06-21', '2019-07-04'),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+  ((SELECT id
+    FROM yllapitokohde
+    WHERE nimi = 'Ouluntie 2'), '2019-05-19',
+                              '2019-05-19', '2019-05-21', '2019-05-22',
+                              '2019-05-23',
+                              '2019-05-24', (SELECT id
+                                             FROM kayttaja
+                                             WHERE kayttajanimi = 'jvh'), NOW(),
+                              '2019-05-21', '2019-06-04');
 
 INSERT INTO yllapitokohdeosa (id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu)
 VALUES (313, (SELECT id
@@ -903,6 +923,23 @@ VALUES (313, (SELECT id
               FROM yllapitokohde
               WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), 'Puolangalle menevän kohdeosa', 837, 1, 136, 1, 546, 1, 1, ST_GeomFromText(
                  'MULTILINESTRING((472232.2118663851 7181868.216653759,472234.14499999955 7181870.535,472262.98000000045 7181905.555,472277.3269999996 7181922.000999998,472277.70799999963 7181922.467,472310.926 7181963.146000002,472331.7450000001 7181989.028999999,472334.2709999997 7181992.050000001,472334.983 7181992.888999999,472384.61099999957 7182049.7179999985,472416.6579999998 7182084.666999999,472433.176 7182102.636,472459.9689999996 7182122.691,472485.9369999999 7182140.669,472511.26800000016 7182155.986000001,472516.87106485467 7182159.262039106))'), 8, 2, TRUE);
+
+
+DO $$
+DECLARE
+BEGIN
+ FOR i IN 0..32 LOOP
+   INSERT INTO yllapitokohdeosa (yllapitokohde, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+                                 tr_ajorata, tr_kaista, sijainti)
+     VALUES ((SELECT id
+               FROM yllapitokohde
+               WHERE nimi = 'Ouluntie 2'), 22, 13, 0+i*5, 13, 0+(i+1)*5, 1, 1,
+               (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+                FROM tierekisteriosoitteelle_viiva_ajr(22, 13, 0+i*5, 13, 0+(i+1)*5, 1))
+            );
+ END LOOP;
+END;
+$$ LANGUAGE plpgsql;
 
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, 100, 4543.95, 0),
