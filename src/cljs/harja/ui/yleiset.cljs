@@ -195,18 +195,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   auki? format-fn valitse-fn]
   (let [avautumissuunta (atom :alas)
         max-korkeus (atom 0)
-        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
-                                                  (when @auki?
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [aja? this _]
+                                                  (when (or @auki?
+                                                            aja?)
                                                     (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
                                                       (swap! avautumissuunta (fn [_] (:suunta maaritys)))
                                                       (swap! max-korkeus (fn [_] (:max-korkeus maaritys))))))]
     (komp/luo
       (komp/dom-kuuntelija js/window
-                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
-                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
+                           EventType/SCROLL (partial pudotusvalikon-korkeuden-kasittelija-fn false)
+                           EventType/RESIZE (partial pudotusvalikon-korkeuden-kasittelija-fn false))
       {:component-did-mount
        (fn [this]
-         (pudotusvalikon-korkeuden-kasittelija-fn this nil))
+         (pudotusvalikon-korkeuden-kasittelija-fn true this nil))
        :should-component-update (fn [this _ _]
                                   @auki?)}
       (fn [vaihtoehdot {:keys [itemit-komponentteja? li-luokka-fn nayta-ryhmat ryhman-otsikko] :as asetukset}
