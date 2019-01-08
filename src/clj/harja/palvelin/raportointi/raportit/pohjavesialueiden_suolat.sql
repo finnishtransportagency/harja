@@ -9,5 +9,5 @@ FROM suolatoteuma_reittipiste rp
   INNER JOIN toteuma tot ON tot.id = rp.toteuma
   INNER JOIN pohjavesialue pv ON pv.tunnus = rp.pohjavesialue
   LEFT JOIN pohjavesialue_talvisuola ts on ts.pohjavesialue = rp.pohjavesialue
-WHERE rp.aika BETWEEN :alkupvm AND :loppupvm
+WHERE tot.urakka=:urakkaid AND rp.aika BETWEEN :alkupvm AND :loppupvm
 GROUP BY pv.tunnus, pv.tr_numero, pv.nimi, ts.talvisuolaraja;
