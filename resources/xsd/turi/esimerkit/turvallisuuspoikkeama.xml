@@ -9,7 +9,7 @@
         <tilaajanvastuuhenkilokayttajatunnus>L947582</tilaajanvastuuhenkilokayttajatunnus>
         <tilaajanvastuuhenkiloetunimi>Ylermi</tilaajanvastuuhenkiloetunimi>
         <tilaajanvastuuhenkilosukunimi>Yhteyshenkilö</tilaajanvastuuhenkilosukunimi>
-        <tilaajanvastuuhenkilosposti>ylermi.yhteyshenkilo@liikennevirasto.invalid</tilaajanvastuuhenkilosposti>
+        <tilaajanvastuuhenkilosposti>ylermi.yhteyshenkilo@vayla.invalid</tilaajanvastuuhenkilosposti>
         <sampourakkanimi>Esimerkkiurakka</sampourakkanimi>
         <sampourakkaid>1</sampourakkaid>
         <urakanpaattymispvm>2017-05-01</urakanpaattymispvm>
@@ -78,7 +78,7 @@
         <vastuuhenkilokayttajatunnus>L937581</vastuuhenkilokayttajatunnus>
         <vastuuhenkiloetunimi>Virpi</vastuuhenkiloetunimi>
         <vastuuhenkilosukunimi>Vastuuhenkilö</vastuuhenkilosukunimi>
-        <vastuuhenkilosposti>virpi.vastuuhenkilo@liikennevirasto.invalid</vastuuhenkilosposti>
+        <vastuuhenkilosposti>virpi.vastuuhenkilo@vayla.invalid</vastuuhenkilosposti>
         <toteuttaja>N. N.</toteuttaja>
         <toteutus>Toteutus</toteutus>
         <tila>1</tila>
@@ -91,7 +91,7 @@
         <vastuuhenkilokayttajatunnus>L917482</vastuuhenkilokayttajatunnus>
         <vastuuhenkiloetunimi>Veijo</vastuuhenkiloetunimi>
         <vastuuhenkilosukunimi>Vastuuhenkilö</vastuuhenkilosukunimi>
-        <vastuuhenkilosposti>veijo.vastuuhenkilo@liikennevirasto.invalid</vastuuhenkilosposti>
+        <vastuuhenkilosposti>veijo.vastuuhenkilo@vayla.invalid</vastuuhenkilosposti>
         <toteuttaja>N. N.</toteuttaja>
         <toteutus>Toteutus</toteutus>
         <tila>1</tila>
