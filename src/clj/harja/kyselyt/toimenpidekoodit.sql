@@ -96,9 +96,39 @@ WHERE
   tpk.hinnoittelu @> '{kokonaishintainen}';
 
 -- name: hae-hinnoittelu
+-- Suljetaa pois tehtävät, joille ei saa kirjata toteumia.
 SELECT hinnoittelu
 FROM toimenpidekoodi
-WHERE id = :id;
+WHERE id = :id and id not in
+-- Hoidon päällystyksen paikkauksen vanhat koodit.
+(5979,
+5980,
+1434,
+1433,
+1421,
+6968,
+6970,
+6987,
+6877,
+6967,
+6966,
+6868,
+6951,
+1420,
+1418,
+1419,
+6962,
+1417,
+1416,
+1415,
+6963,
+1410,
+6954,
+1409,
+1397,
+1401,
+1400,
+1399);
 
 -- name: hae-tehtavan-id
 SELECT tk4.id
