@@ -1,3 +1,6 @@
+ALTER TABLE kan_kohde
+  ADD COLUMN jarjestys INTEGER;
+
 CREATE OR REPLACE FUNCTION paivita_kanavakohteiden_jarjestys()
   RETURNS VOID AS $$
 
