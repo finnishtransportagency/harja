@@ -49,7 +49,8 @@
 (def perustiedot
   #{::id
     ::nimi
-    ::sijainti})
+    ::sijainti
+    ::jarjestys})
 
 (def kohde-ylos
   #{[::ylos perustiedot]})
