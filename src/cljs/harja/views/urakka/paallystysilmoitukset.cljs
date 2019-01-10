@@ -335,28 +335,21 @@
          [kasittely urakka perustiedot-nyt lukittu? muokkaa! huomautukset]
          [asiatarkastus urakka perustiedot-nyt lukittu? muokkaa! huomautukset]])]]))
 
-(defn poista-lukitus [e! {urakka :urakka lomakedata-nyt :paallystysilmoitus-lomakedata :as app}]
+(defn poista-lukitus [e! {urakka :urakka :as app}]
   (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))
-        lahetettava-data {:urakka-id (:id urakka)
-                          :kohde-id (:paallystyskohde-id lomakedata-nyt)
-                          :tila :valmis}]
+                                               (:id urakka))]
     [:div
      [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
      [napit/palvelinkutsu-nappi
       "Avaa lukitus"
-      #(when paatosoikeus?
-         (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data))
+      #(go
+         (e! (paallystys/->AvaaPaallystysilmoituksenLukitus)))
       {:luokka "nappi-kielteinen avaa-lukitus-nappi"
        :id "poista-paallystysilmoituksen-lukitus"
        :disabled (not paatosoikeus?)
        :ikoni (ikonit/livicon-wrench)
-       :virheviesti "Lukituksen avaaminen epäonnistui"
-       :kun-onnistuu (fn [vastaus]
-                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :tila] (:tila vastaus)))
-                       ;; Tämä on tässä vielä tukemassa vanhaa koodia
-                       (harja.atom/paivita! paallystys/paallystysilmoitukset))}]]))
+       :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
 
 (defn paallystysilmoitus-tekninen-osa
   [e! {lomakedata-nyt :paallystysilmoitus-lomakedata :as app}
