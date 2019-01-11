@@ -10,6 +10,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.pvm :as pvm]
+            [harja.ui.viesti :as viesti]
             [cljs-time.core :as t]
             [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -128,11 +129,14 @@
 
   HakuValmis
   (process-event [{tulokset :tulokset} tienakyma]
-    (let [kaikki-tulokset (vec
+    (let [{tulokset :tulos timeout? :timeout?} tulokset
+          kaikki-tulokset (vec
                            (map-indexed (fn [i tulos]
                                           (assoc tulos :idx i))
                                         tulokset))]
       (log "Tienäkymän haku löysi " (count kaikki-tulokset) " tulosta")
+      (when timeout?
+        (viesti/nayta! "Kaikkia tuloksia ei keretty hakea! Uusi haku hetken kuluttua saattaa auttaa." :warning viesti/viestin-nayttoaika-keskipitka))
       (kartalle
        (assoc tienakyma
               :kaikki-tulokset kaikki-tulokset

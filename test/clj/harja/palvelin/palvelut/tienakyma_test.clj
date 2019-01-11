@@ -47,9 +47,9 @@
                                     +kayttaja-urakan-vastuuhenkilo+ parametrit)))
 
 (deftest tienakymahaku
-  (let [tulos-kaikki-jvh (kutsu +kayttaja-jvh+ parametrit)
+  (let [tulos-kaikki-jvh (:tulos (kutsu +kayttaja-jvh+ parametrit))
         tulos-jvh (group-by :id tulos-kaikki-jvh)
-        tulos-tero (group-by :id (kutsu +kayttaja-tero+ parametrit))]
+        tulos-tero (group-by :id (:tulos (kutsu +kayttaja-tero+ parametrit)))]
     (is (= tulos-jvh tulos-tero) "Kaikki tilaajan käyttäjät saavat saman tuloksen")
     (is (= 7 (count tulos-jvh) (count tulos-tero)))
 
