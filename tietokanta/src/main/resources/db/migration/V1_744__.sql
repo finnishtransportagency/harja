@@ -102,9 +102,9 @@ BEGIN
                       (vuosi = kilpailutusvuosi AND kuukausi = 3)
                -- 6)
                WHEN urakkatyyppi = 'vesivayla-kanavien-hoito'
-                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 1) OR
-                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 2) OR
-                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 3)
+                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 8) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10)
               END
           );
     RAISE NOTICE 'Laskettiin urakan id:llä % indeksilaskennan perusluvuksi:  %, käytetty indeksi: %, urakkatyyppi: %', urakka_id, tulosrivi.perusluku, indeksinimi, urakkatyyppi;
