@@ -19,7 +19,7 @@
                       :yhteyspoolin-koko 32
                       :kayttaja "harja"
                       :salasana "harja123"}
- :fim {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
+ :fim {:url "https://testisonja.vayla.fi/FIM/Person.svc/"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        :hipchat {:taso :warn
@@ -83,11 +83,11 @@
                         :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
 
                         :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
-                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
+                        :turvalaitteiden-osoite "https://ava.vayla.fi/harja/Turvalaitteet.shz"
                         :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
                         :kanavien-shapefile "file://shp/Vesivaylien_kanavat/Kanavat.shp"
-                        :kanavien-osoite "https://ava.liikennevirasto.fi/harja/Kanavat.shz"
+                        :kanavien-osoite "https://ava.vayla.fi/harja/Kanavat.shz"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Kanavat.shz"
 
                         }

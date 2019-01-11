@@ -439,7 +439,7 @@
                            (if sposti-urakan-valvojalle?
                              "valmis käsiteltäväksi"
                              (str "on " (if (= "hylatty" uusi-paatos) "hylätty" "hyväksytty")))))
-          url (str "https://extranet.liikennevirasto.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
+          url (str "https://extranet.vayla.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
                    "&hy=" hallintayksikko-id
                    "&u=" urakka-id)
           kayttajaroolit (if sposti-urakan-valvojalle? #{"ely urakanvalvoja"} #{"urakan vastuuhenkilö"})

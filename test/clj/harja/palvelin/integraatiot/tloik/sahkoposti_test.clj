@@ -66,7 +66,7 @@
 
       ;; Lähetä aloitettu kuittaus
       (sonja/laheta (:sonja jarjestelma) "email-to-harja"
-                    (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
+                    (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
                                        (:otsikko saapunut)
                                        (str "[Vastaanotettu] " viesti)))
 
@@ -79,7 +79,7 @@
 
         ;; Lähetä lopetettu toimenpitein kuittaus
         (sonja/laheta (:sonja jarjestelma) "email-to-harja"
-                      (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
+                      (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
                                          (:otsikko saapunut)
                                          (str "[Lopetettu toimenpitein] " viesti)))
         

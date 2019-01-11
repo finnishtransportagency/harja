@@ -42,7 +42,7 @@
   (let [{:keys [viesti-id lahettaja vastaanottaja otsikko sisalto]}
         (sanomat/lue-sahkoposti (slurp +sahkoposti-esimerkki+))]
     (is (= viesti-id "21EC2020-3AEA-4069-A2DD-08002B30309D"))
-    (is (= lahettaja "harja@liikennevirasto.fi"))
+    (is (= lahettaja "harja@vayla.fi"))
     (is (= vastaanottaja "erkki.esimerkki@example.com"))
     (is (= otsikko "Testiviesti"))
     (is (= sisalto "Tämä on testiviesti!"))))
