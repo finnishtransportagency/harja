@@ -45,11 +45,10 @@ SELECT t.id,
        vt.arvot
   FROM varustetoteuma vt
        JOIN toteuma t ON vt.toteuma = t.id
-       JOIN urakka u ON t.urakka = u.id
  WHERE ST_Intersects(t.envelope, :sijainti)
    AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
-   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu))
+   AND t.alkanut >= :alku
+   AND t.paattynyt <= :loppu
 
 -- name: hae-tarkastukset
 -- fetch-size: 64
