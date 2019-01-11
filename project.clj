@@ -2,7 +2,7 @@
                     (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
-  :description "Liikenneviraston Harja"
+  :description "Väylän Harja"
 
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.10.238"]
