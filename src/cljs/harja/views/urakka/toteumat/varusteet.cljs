@@ -290,7 +290,7 @@
                                                                       (:liitteet varustetoteuma))]
                                            (e! (v/->PaivitaLiitteet uudet-liitteet))))}))}])})
 
-(def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
+(def tietolajien-sisaltojen-kuvaukset-url "http://www.vayla.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
 
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)

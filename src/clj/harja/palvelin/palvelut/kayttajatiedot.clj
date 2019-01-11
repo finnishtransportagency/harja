@@ -170,7 +170,7 @@
         sisalto-html (str "<html><body>" (.replace sisalto-sanitoitu "\n" "<br>") "</body>")]
     (doseq [{sahkopostiosoite :sahkoposti} vastaanottajat]
       (sahkoposti/laheta-viesti!
-        sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto-html)))
+        sahkoposti "harja-ala-vastaa@vayla.fi" sahkopostiosoite otsikko sisalto-html)))
   true)
 
 (defrecord Kayttajatiedot []

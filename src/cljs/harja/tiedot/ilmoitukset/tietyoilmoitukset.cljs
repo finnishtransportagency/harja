@@ -31,10 +31,10 @@
      ["Turku" "turku.liikennekeskus_TESTI@example.org"]]
 
     ;; Tuotantoversion osoitteet
-    [["Helsinki" "helsinki.liikennekeskus@liikennevirasto.fi"]
-     ["Oulu" "oulu.liikennekeskus@liikennevirasto.fi"]
-     ["Tampere" "tampere.liikennekeskus@liikennevirasto.fi"]
-     ["Turku" "turku.liikennekeskus@liikennevirasto.fi"]]))
+    [["Helsinki" "helsinki.liikennekeskus@vayla.fi"]
+     ["Oulu" "oulu.liikennekeskus@vayla.fi"]
+     ["Tampere" "tampere.liikennekeskus@vayla.fi"]
+     ["Turku" "turku.liikennekeskus@vayla.fi"]]))
 
 (def luonti-aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
                        {:nimi "1 päivän ajalta" :tunteja 24}
