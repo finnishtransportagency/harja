@@ -20,9 +20,9 @@ SELECT t.id,
        JOIN urakka u ON t.urakka=u.id
        JOIN kayttaja k ON t.luoja = k.id
  WHERE ST_Intersects(t.envelope, :sijainti)
-   AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
-   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu))
+       AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
+       AND t.alkanut >= :alku
+       AND t.paattynyt <= :loppu
 
 -- name: hae-varustetoteumat
 -- fetch-size: 64
