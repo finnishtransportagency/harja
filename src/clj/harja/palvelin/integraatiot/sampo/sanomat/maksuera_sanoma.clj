@@ -56,7 +56,7 @@
                  :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja (pvm/vuoden-viim-pvm (pvm/vuosi loppupvm))) "00:00:00" "17:00:00")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
-                 :managerUserName       "5332106" ;; Aina sama käyttäjä. SAMPO:n määritys. HAR-8804. Vastuuhenkilö lisäkentässä owner_id_t.
+                 :managerUserName       "L934498" ;; Aina sama käyttäjä. SAMPO:n määritys. HAR-8804. Vastuuhenkilö lisäkentässä owner_id_t.
                  :objectID              maksueranumero
                  :financialLocation     "Kpito"}
        [:InvestmentAssociations
