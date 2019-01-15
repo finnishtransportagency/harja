@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<urakoiden-hakuvastaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
+<urakoiden-hakuvastaus xmlns="http://www.vayla.fi/xsd/yha">
     <urakat>
         <urakka>
             <yha-id>3</yha-id>

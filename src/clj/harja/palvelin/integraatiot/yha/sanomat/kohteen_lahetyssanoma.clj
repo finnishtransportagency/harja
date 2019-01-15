@@ -119,7 +119,7 @@
 
 (defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
-   {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
+   {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
     [:yha-id yhaid]
     [:harja-id harjaid]
