@@ -142,7 +142,7 @@ WHERE tk4.nimi=:nimi AND
 -- Suljetaa pois tehtävät, joille ei saa kirjata toteumia.
 SELECT hinnoittelu
 FROM toimenpidekoodi
-WHERE id = :id and id not in
+WHERE id = :id 
 -- Hoidon päällystyksen paikkauksen vanhat koodit TUOTANNOSSA.
                                     and id not in
                                         (select id from toimenpidekoodi where id in (
