@@ -203,8 +203,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
    data muokattava? muokkaa arvo]
   (let [kentta (if (= tyyppi :komponentti)
-                 [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                 :data data})]
+                 [:div.komponentti [komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                 :data data}]]
                  (if muokattava?
                    (if (and valitse-ainoa?
                             (= :valinta tyyppi)

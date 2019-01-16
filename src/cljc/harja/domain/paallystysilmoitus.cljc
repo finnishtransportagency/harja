@@ -333,3 +333,12 @@
 
 (s/def ::aseta-paallystysilmoituksen-tila
   (s/keys :req [::urakka/id ::paallystyskohde-id ::tila]))
+
+(s/def ::sopimus-id integer?)
+(s/def ::vuosi integer?)
+(s/def ::urakka-id integer?)
+;; Tässä on paljon muutakin, mutta tuo päällystyskohteen id pitää olla ainakin
+(s/def ::paallystysilmoitus #(integer? (:paallystyskohde-id %)))
+
+(s/def ::tallenna-paallystysilmoitus-kysely
+  (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))

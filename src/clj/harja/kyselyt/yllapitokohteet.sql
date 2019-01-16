@@ -957,6 +957,7 @@ VALUES (:yllapitokohde, 0, 0, 0, 0, 0);
 SELECT
   ypk.id,
   u.nimi           AS "urakka",
+  u.id             AS "urakka-id",
   ypk.nimi,
   kohdenumero,
   tr_numero        AS "tr-numero",

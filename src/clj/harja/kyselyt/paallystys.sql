@@ -369,3 +369,16 @@ UPDATE paallystysilmoitus
 SET
   takuupvm = :takuupvm
 WHERE id = :id;
+
+-- name: paivita-yllapitokohde!
+-- Päivittää ylläpitokohteen
+UPDATE yllapitokohde
+SET
+  tr_alkuosa                        = :tr-alkuosa,
+  tr_alkuetaisyys                   = :tr-alkuetaisyys,
+  tr_loppuosa                       = :tr-loppuosa,
+  tr_loppuetaisyys                  = :tr-loppuetaisyys,
+  muokattu                          = now(),
+  muokkaaja                         = :muokkaaja
+WHERE id = :id
+      AND urakka = :urakka;

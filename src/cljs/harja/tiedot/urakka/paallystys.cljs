@@ -323,7 +323,7 @@
       (update-in app [:paallystysilmoitus-lomakedata :historia] (fn [vanha-historia]
                                                                   (cons [polku vanha-arvo] vanha-historia)))))
   TallennaPaallystysilmoitus
-  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuos]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
+  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
@@ -354,10 +354,11 @@
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
                          {:urakka-id urakka-id
                           :sopimus-id (first valittu-sopimusnumero)
-                          :vuosi valittu-urakan-vuos
+                          :vuosi valittu-urakan-vuosi
                           :paallystysilmoitus lahetettava-data}
                          {:onnistui ->TallennaPaallystysilmoitusOnnistui
-                          :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui})))
+                          :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui
+                          :paasta-virhe-lapi? true})))
   TallennaPaallystysilmoitusOnnistui
   (process-event [{vastaus :vastaus} {{urakka-id :id :as urakka} :urakka :as app}]
     (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
@@ -368,7 +369,7 @@
     (assoc app :paallystysilmoitus-lomakedata nil
            :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
   TallennaPaallystysilmoitusEpaonnistui
-  (process-event [vastaus app]
+  (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (modal/nayta!
       {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
