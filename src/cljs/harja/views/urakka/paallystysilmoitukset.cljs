@@ -218,30 +218,26 @@
              (> valmispvm-paallystys takuupvm))
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
 
-(defn tr-kentan-elementti
-  [data muuta! placeholder arvo avain disabled?]
-  (let [virheet (get-in (::lomake/virheet data) [:tr-osoite avain])
-        muokattu? (get-in (::lomake/muokatut data) [:tr-osoite avain])]
-    [:td
-     [kentat/tr-kentan-elementti true muuta! nil
-      placeholder arvo avain disabled? ""]
-     (when (and muokattu?
-                (not (empty? virheet)))
-       [virheen-ohje virheet :virhe])]))
 
-(defn tr-kentta [{:keys [muokkaa-lomaketta data]}
-                 {:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}
-                 ohjauskahvat]
+(defn tr-kentta [e!
+                 {{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} :perustiedot
+                  ohjauskahvat :ohjauskahvat}]
 
   (let [muuta! (fn [kentta]
-                 #(let [v (-> % .-target .-value)]
-                    (when (and (not (= "" v))
-                               (re-matches #"\d*" v))
-                      (muokkaa-lomaketta (-> data
-                                             (assoc-in [:tr-osoite kentta] (js/parseInt v))
-                                             (assoc kentta (js/parseInt v))))
-                      (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat))
-                      (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat)))))]
+                 #(do
+                    (.preventDefault %)
+                    (let [v (-> % .-target .-value)]
+                      (when (re-matches #"\d*" v)
+                        (let [arvo (if (= "" v)
+                                     nil
+                                     (js/parseInt v))]
+                          (e! (paallystys/->PaivitaTila [:perustiedot]
+                                                        (fn [perustiedot]
+                                                          (-> perustiedot
+                                                              (assoc-in [:tr-osoite kentta] arvo)
+                                                              (assoc kentta arvo)))))
+                          (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat))
+                          (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat)))))))]
     [:table
      [:thead
       [:tr
@@ -252,17 +248,32 @@
        [:th "Let"]]]
      [:tbody
       [:tr
-       [tr-kentan-elementti data muuta! "Tie" tr-numero :tr-numero true]
-       [tr-kentan-elementti data muuta! "Aosa" tr-alkuosa :tr-alkuosa false]
-       [tr-kentan-elementti data muuta! "Aet" tr-alkuetaisyys :tr-alkuetaisyys false]
-       [tr-kentan-elementti data muuta! "Losa" tr-loppuosa :tr-loppuosa false]
-       [tr-kentan-elementti data muuta! "Let" tr-loppuetaisyys :tr-loppuetaisyys false]]]]))
+       [:td
+        [kentat/tr-kentan-elementti true muuta! nil
+         "Tie" tr-numero :tr-numero true ""]]
+       [:td
+        [kentat/tr-kentan-elementti true muuta! nil
+         "Aosa" tr-alkuosa :tr-alkuosa false ""]]
+       [:td
+        [kentat/tr-kentan-elementti true muuta! nil
+         "Aet" tr-alkuetaisyys :tr-alkuetaisyys false ""]]
+       [:td
+        [kentat/tr-kentan-elementti true muuta! nil
+         "Losa" tr-loppuosa :tr-loppuosa false ""]]
+       [:td
+        [kentat/tr-kentan-elementti true muuta! nil
+         "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]))
+
+(defn perustiedot-tr-osoite [_]
+  (let [tila (r/cursor paallystys/tila [:paallystysilmoitus-lomakedata])]
+    (fn [_]
+      [tuck/tuck tila tr-kentta {}])))
 
 (defn paallystysilmoitus-perustiedot [e! {{perustiedot :perustiedot} :paallystysilmoitus-lomakedata}
                                       lukittu?
                                       muokkaa!
                                       validoinnit huomautukset]
-  ;; TODO tätä logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
+  ;; TODO tr-osoite logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
   ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
   ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
   (muokkaa! update-in [:perustiedot :tr-osoite] (fn [_]
@@ -301,10 +312,10 @@
             {:nimi :tr-osoite
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
             (if muokattava?
-              {:tyyppi :komponentti
-               :komponentti (fn [lomake-tiedot]
-                              [tr-kentta lomake-tiedot perustiedot-nyt ohjauskahvat])
-               :validoi (get-in validoinnit [:perustiedot :tr-osoite])}
+              {:tyyppi :reagent-komponentti
+               :komponentti perustiedot-tr-osoite
+               :validoi (get-in validoinnit [:perustiedot :tr-osoite])
+               :sisallon-leveys? true}
               {:otsikko "Tierekisteriosoite"
                :hae identity
                :fmt tierekisteri-domain/tierekisteriosoite-tekstina
@@ -855,7 +866,10 @@
                                           (when (and (= (:tr-numero yllapitokohde) (:tr-numero rivi))
                                                      (every? #(not (nil? %)) (vals (select-keys rivi [:tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])))
                                                      (not (tr/tr-vali-paakohteen-sisalla? yllapitokohde rivi)))
-                                            "Alikohde ei voi olla pääkohteen ulkopuolella")))]
+                                            "Alikohde ei voi olla pääkohteen ulkopuolella")))
+        tyhja-tr-arvo (fn [kentta viesti tr rivi taulukko]
+                        (when (nil? (kentta tr))
+                          viesti))]
     (komp/luo
       ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
       (komp/lukko lukon-id)
@@ -870,6 +884,7 @@
               virheet (conj []
                             (-> perustiedot :tekninen-osa ::lomake/virheet)
                             (-> perustiedot :asiatarkastus ::lomake/virheet)
+                            (-> perustiedot ::lomake/virheet)
                             (reduce (fn [kaikki-virheet [taulukon-avain taulukon-virheet]]
                                       (let [taulukon-virheviestit (apply concat
                                                                          (keep #(let [rivin-virheviestit (flatten (vals %))]
@@ -933,11 +948,14 @@
                                            :pituus [[:ei-tyhja "Tieto puuttuu"]]
                                            :kasittelymenetelma [[:ei-tyhja "Tieto puuttuu"]]
                                            :paksuus [[:ei-tyhja "Tieto puuttuu"]]}}
-                           :perustiedot {:tr-osoite [(fn [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr} rivi taulukko]
-                                                       (validoi-kohteen-osoite :tr-alkuosa tr rivi taulukko))
-                                                     (fn [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr} rivi taulukko]
-                                                       (when (nil? tr-alkuosa)
-                                                         (conj "An\u00ADna al\u00ADku\u00ADo\u00ADsa")))]}}
+                           :perustiedot {:tr-osoite [(partial validoi-kohteen-osoite :tr-alkuosa)
+                                                     (partial validoi-kohteen-osoite :tr-alkuetaisyys)
+                                                     (partial validoi-kohteen-osoite :tr-loppuosa)
+                                                     (partial validoi-kohteen-osoite :tr-loppuetaisyys)
+                                                     (partial tyhja-tr-arvo :tr-alkuosa "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
+                                                     (partial tyhja-tr-arvo :tr-alkuetaisyys "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys")
+                                                     (partial tyhja-tr-arvo :tr-loppuosa "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
+                                                     (partial tyhja-tr-arvo :tr-loppuetaisyys "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")]}}
               ;; Tarkista pitäisikö näiden olla ihan virheitä
               huomautukset {:perustiedot {:tekninen-osa (with-meta
                                                           {:kasittelyaika (if (:paatos tekninen-osa)
