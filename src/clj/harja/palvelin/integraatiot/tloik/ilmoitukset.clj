@@ -31,7 +31,7 @@
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
   (let [ilmoituksen-urakkatyyppi (ilmoitus/urakkatyyppi urakkatyyppi)
         hae-urakka (fn [urakkatyyppi]
-                     (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi sijainti))]
+                     (when-let [urakka-id (urakkapalvelu/hae-lahin-urakka-id-sijainnilla db urakkatyyppi sijainti)]
                        (first (urakat/hae-urakka db urakka-id))))
         urakka (hae-urakka ilmoituksen-urakkatyyppi)]
 

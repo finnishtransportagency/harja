@@ -10,7 +10,7 @@
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.toteumat.varusteet :as varusteet]
-            [harja.views.urakka.toteumat.suola :refer [suolatoteumat]]
+            [harja.views.urakka.toteumat.suola :refer [suolatoteumat pohjavesialueen-suola]]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -55,6 +55,11 @@
                  (= :hoito (:tyyppi ur)))
         [suolatoteumat])
 
+      "Pohjavesialueet" :pohjavesialueet
+      (when (and (oikeudet/urakat-toteumat-suola id)
+                 (= :hoito (:tyyppi ur)))
+        [pohjavesialueen-suola])
+      
       "Materiaalit" :materiaalit
       (when (oikeudet/urakat-toteumat-materiaalit id)
         [materiaalit-nakyma ur])

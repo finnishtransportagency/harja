@@ -27,7 +27,7 @@ var password = system.args[2];
 
 var jquery_url = 'https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js';
 
-page.open('https://testiextranet.liikennevirasto.fi/harja/#tilannekuva?', function(status) {
+page.open('https://testiextranet.vayla.fi/harja/#tilannekuva?', function(status) {
     if(status === "success") {
 	page.includeJs(jquery_url, function() {
 	    page.onLoadFinished = function(status) {

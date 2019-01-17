@@ -192,7 +192,7 @@
 
 (defn tarkista-onko-liikenneviraston-jarjestelma [db kayttaja]
   (when-not (kayttajat-q/liikenneviraston-jarjestelma? db (:kayttajanimi kayttaja))
-    (log/error (format "Kayttajatunnus %s ei ole Liikenneviraston järjestelmä eikä sillä ole oikeutta kutsuttuun resurssiin."
+    (log/error (format "Kayttajatunnus %s ei ole Väylän järjestelmä eikä sillä ole oikeutta kutsuttuun resurssiin."
                        (:kayttajatunnus kayttaja)))
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+

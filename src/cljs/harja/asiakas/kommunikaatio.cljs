@@ -335,7 +335,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
   (-> 
-    "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+    "https://extranet.vayla.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
@@ -348,4 +348,4 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
         (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
            "harja-test.solitaservices.fi"
            "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
-           "testiextranet.liikennevirasto.fi"} host))))
+           "testiextranet.vayla.fi"} host))))

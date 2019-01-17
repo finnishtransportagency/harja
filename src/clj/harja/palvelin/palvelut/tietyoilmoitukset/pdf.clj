@@ -379,7 +379,7 @@
        [:fo:block {:text-align "center"}
         [:fo:block {:font-weight "bold"}
          [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
-         [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
+         [:fo:block "VÄYLÄN LIIKENNEKESKUKSEEN"]]
         [:fo:block
          "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
          " urakoitsijan linjalle 0200 21200"]]

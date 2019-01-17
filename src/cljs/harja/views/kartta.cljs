@@ -796,7 +796,7 @@
                                :id :enc-merikartta
                                :nimi "ENC merikartta"
                                :icon  (ikonit/ankkuri-24 16 16)
-                               :url "https://julkinen.liikennevirasto.fi/s57/wms?request=GetCapabilities&service=WMS"
+                               :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
                                :layer "cells"
                                :style "style-id-202"
                                :default false}]}]))))

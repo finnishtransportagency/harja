@@ -9,7 +9,7 @@
   (:require-macros [harja.views.about :refer [lue-gitlog]]))
 
 (defn harja-info []
-  [:p "Tämä on Liikenneviraston Harja-palvelu, joka mahdollistaa alkuvaiheessa mm. teiden hoito- ja ylläpitourakoiden
+  [:p "Tämä on Väylän Harja-palvelu, joka mahdollistaa alkuvaiheessa mm. teiden hoito- ja ylläpitourakoiden
       kustannusten suunnittelua ja toteutumien seurantaa."])
 
 (defn gitlog []
