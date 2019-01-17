@@ -61,7 +61,7 @@
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
       (is (= hoitourakan-kokonaishintaiset
              (set (distinct (map (comp :selite :tehtava) kokonaishintaiset)))))
-      (is (= 55 (count yksikkohintaiset)))
+      (is (= 43 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia

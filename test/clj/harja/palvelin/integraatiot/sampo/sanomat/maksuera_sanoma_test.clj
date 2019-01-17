@@ -40,7 +40,7 @@
   (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/maksuera-xml +maksuera+)) "UTF-8"))))]
     (is (= "2015-10-01T00:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
     (is (= "2017-12-31T17:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish)))) ;; Taloushallinnon speksaus: viimeiselle maksuerälle annetaan puskuri
-    (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))
+    (is (= "L934498" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product (z/attr :name))))
     (is (= "HA123456789" (z/xml1-> maksuera-xml :Products :Product (z/attr :objectID))))
     (is (= "SAMPOID" (z/xml1-> maksuera-xml :Products :Product :InvestmentAssociations :Allocations :ParentInvestment (z/attr :InvestmentID))))
@@ -49,6 +49,7 @@
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task (z/attr :name))))
     (is (= "polku/talousosasto" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "LiiviKP") (z/attr :unitPath))))
     (is (= "polku/tuote" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "tuote2013") (z/attr :unitPath))))
+    (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "owner_id_t") z/text)))
     (is (= "00LZM-0033600" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_tilaus") z/text)))
     (is (= "2" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_me_type") z/text)))
     (is (= "123456789" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_inst_no") z/text)))

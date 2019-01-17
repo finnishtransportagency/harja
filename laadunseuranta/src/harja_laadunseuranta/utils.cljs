@@ -119,7 +119,7 @@
 (defn stg-ymparistossa? []
   "Tarkistaa ollaanko stg-ympäristössä"
   (let [host (.-host js/location)]
-    (#{"testiextranet.liikennevirasto.fi"} host)))
+    (#{"testiextranet.vayla.fi"} host)))
 
 (defn kehitysymparistossa? []
   "Tarkistaa ollaanko kehitysympäristössä"

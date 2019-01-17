@@ -15,7 +15,7 @@ SELECT
   p.tunnus,
   p.alue
 FROM pohjavesialueet_urakoittain p
-WHERE p.urakka = :urakka AND suolarajoitus IS TRUE;
+WHERE p.urakka = :urakka-id AND suolarajoitus IS TRUE;
 
 -- name: poista-pohjavesialueet!
 -- Poistaa kaikki pohjavesialueet
