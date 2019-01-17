@@ -63,7 +63,12 @@
   {:perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
                  :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
                  :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
-                 :takuupvm (pvm/luo-pvm 2019 9 3)}
+                 :takuupvm (pvm/luo-pvm 2019 9 3)
+                 :tr-numero 666
+                 :tr-alkuosa 2
+                 :tr-alkuetaisyys 1
+                 :tr-loppuosa 4
+                 :tr-loppuetaisyys 5}
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :nimi "Tie 666"
                                  :tr-numero 666
@@ -162,6 +167,7 @@
                                    :tallenna-paallystysilmoitus
                                    +kayttaja-jvh+ {:urakka-id urakka-id
                                                    :sopimus-id sopimus-id
+                                                   :vuosi 2019
                                                    :paallystysilmoitus paallystysilmoitus})))
       (let [maara-pyynnon-jalkeen
             (ffirst
@@ -228,6 +234,7 @@
                       :tallenna-paallystysilmoitus
                       +kayttaja-jvh+ {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi 2019
                                       :paallystysilmoitus paallystysilmoitus}))))
 
 (deftest testidata-on-validia
@@ -432,6 +439,7 @@
       (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                           :sopimus-id sopimus-id
+                                                                                          :vuosi 2019
                                                                                           :paallystysilmoitus paallystysilmoitus}))))))
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
@@ -449,6 +457,7 @@
                       :tallenna-paallystysilmoitus +kayttaja-jvh+
                       {:urakka-id urakka-id
                        :sopimus-id sopimus-id
+                       :vuosi 2019
                        :paallystysilmoitus paallystysilmoitus})
       (let [paallystysilmoitus-kannassa
             (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -519,6 +528,7 @@
                                                        :tallenna-paallystysilmoitus +kayttaja-jvh+
                                                        {:urakka-id urakka-id
                                                         :sopimus-id sopimus-id
+                                                        :vuosi 2019
                                                         :paallystysilmoitus paallystysilmoitus})))
 
         (u (str "UPDATE paallystysilmoitus SET
@@ -542,6 +552,7 @@
                       :tallenna-paallystysilmoitus +kayttaja-jvh+
                       {:urakka-id urakka-id
                        :sopimus-id sopimus-id
+                       :vuosi 2019
                        :paallystysilmoitus paallystysilmoitus})
 
       (let [kohteita-ennen-lisaysta (hae-kohteiden-maara)
@@ -583,6 +594,7 @@
                         :tallenna-paallystysilmoitus +kayttaja-jvh+
                         {:urakka-id urakka-id
                          :sopimus-id sopimus-id
+                         :vuosi 2019
                          :paallystysilmoitus paallystysilmoitus})
 
         (is (= (inc kohteita-ennen-lisaysta) (hae-kohteiden-maara)) "Kohteita on nyt 1 enemmän")))))
@@ -603,6 +615,7 @@
                                    :tallenna-paallystysilmoitus +kayttaja-tero+
                                    {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
+                                    :vuosi 2018
                                     :paallystysilmoitus paallystysilmoitus}))))))
 
 
@@ -754,6 +767,7 @@
                       :tallenna-paallystysilmoitus
                       +kayttaja-jvh+ {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi 2018
                                       :paallystysilmoitus paallystysilmoitus}))
 
     (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
@@ -772,6 +786,7 @@
                         :tallenna-paallystysilmoitus
                         +kayttaja-jvh+ {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
+                                        :vuosi 2018
                                         :paallystysilmoitus paallystysilmoitus}))
       (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
       (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")

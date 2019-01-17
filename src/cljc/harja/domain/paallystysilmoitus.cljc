@@ -338,7 +338,8 @@
 (s/def ::vuosi integer?)
 (s/def ::urakka-id integer?)
 ;; Tässä on paljon muutakin, mutta tuo päällystyskohteen id pitää olla ainakin
-(s/def ::paallystysilmoitus #(integer? (:paallystyskohde-id %)))
+(s/def ::paallystysilmoitus #(and (integer? (:paallystyskohde-id %))
+                                  (every? integer? (vals (select-keys (:perustiedot %) #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})))))
 
 (s/def ::tallenna-paallystysilmoitus-kysely
   (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))
