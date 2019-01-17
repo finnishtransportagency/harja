@@ -383,7 +383,9 @@
                               (when-not (:ei-historiaa? (meta uusi-arvo))
                                 (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :osoitteet])))
                               (muokkaa! assoc-in [:ilmoitustiedot :osoitteet]
-                                        uusi-arvo))
+                                        (if (:ei-historiaa? (meta uusi-arvo))
+                                          (vary-meta uusi-arvo dissoc :ei-historiaa?)
+                                          uusi-arvo)))
         tr-osoite-virheet-muokkaus! (fn [uusi-arvo]
                                       (muokkaa! assoc-in [:ilmoitustiedot :virheet :alikohteet]
                                                 uusi-arvo))
@@ -397,7 +399,9 @@
                             (when-not (:ei-historiaa? (meta uusi-arvo))
                               (e! (paallystys/->TallennaHistoria [:paallystysilmoitus-lomakedata :ilmoitustiedot :alustatoimet])))
                             (muokkaa! assoc-in [:ilmoitustiedot :alustatoimet]
-                                      uusi-arvo))
+                                      (if (:ei-historiaa? (meta uusi-arvo))
+                                        (vary-meta uusi-arvo dissoc :ei-historiaa?)
+                                        uusi-arvo)))
         alustan-virheet-muokkaus! (fn [uusi-arvo]
                                     (muokkaa! assoc-in [:ilmoitustiedot :virheet :alustatoimet]
                                               uusi-arvo))
@@ -796,7 +800,7 @@
   (komp/luo
     (komp/dom-kuuntelija js/window event-type/KEYDOWN
                          (fn [event]
-                           (when (and (= 90 (.-keyCode event))
+                           (when (and (= "z" (.-key event))
                                       (or (.-ctrlKey event)
                                           (.-metaKey event)))
                              (.stopPropagation event)
