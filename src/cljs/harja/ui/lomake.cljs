@@ -200,13 +200,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
+  [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
    data muokattava? muokkaa arvo]
   (let [kentta (cond
-                 (= tyyppi :komponentti) [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                         :data data})]
-                 (= tyyppi :reagent-komponentti) [:div.komponentti [komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                                 :data data}]]
+                 (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data data} komponentti-args)]
+                 (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                                              :data data}]
+                                                                                komponentti-args))]
                  :else (if muokattava?
                          (if (and valitse-ainoa?
                                   (= :valinta tyyppi)

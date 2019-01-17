@@ -219,10 +219,9 @@
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
 
 
-(defn tr-kentta [e!
+(defn tr-kentta [{:keys [muokkaa-lomaketta data]} e!
                  {{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} :perustiedot
                   ohjauskahvat :ohjauskahvat}]
-
   (let [muuta! (fn [kentta]
                  #(do
                     (.preventDefault %)
@@ -231,11 +230,9 @@
                         (let [arvo (if (= "" v)
                                      nil
                                      (js/parseInt v))]
-                          (e! (paallystys/->PaivitaTila [:perustiedot]
-                                                        (fn [perustiedot]
-                                                          (-> perustiedot
-                                                              (assoc-in [:tr-osoite kentta] arvo)
-                                                              (assoc kentta arvo)))))
+                          (muokkaa-lomaketta (-> data
+                                                 (assoc-in [:tr-osoite kentta] arvo)
+                                                 (assoc kentta arvo)))
                           (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat))
                           (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat)))))))]
     [:table
@@ -264,28 +261,16 @@
         [kentat/tr-kentan-elementti true muuta! nil
          "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]))
 
-(defn perustiedot-tr-osoite [_]
-  (let [tila (r/cursor paallystys/tila [:paallystysilmoitus-lomakedata])]
-    (fn [_]
-      [tuck/tuck tila tr-kentta {}])))
-
 (defn paallystysilmoitus-perustiedot [e! {{perustiedot :perustiedot} :paallystysilmoitus-lomakedata}
                                       lukittu?
                                       muokkaa!
                                       validoinnit huomautukset]
-  ;; TODO tr-osoite logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
-  ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
-  ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
-  (muokkaa! update-in [:perustiedot :tr-osoite] (fn [_]
-                                                  (select-keys perustiedot
-                                                               #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                                                 :tr-loppuosa :tr-loppuetaisyys})))
   (fn [e! {urakka :urakka
            {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                     tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                     uusi-kommentti kommentit takuupvm] :as perustiedot-nyt}
             :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
-            ohjauskahvat :ohjauskahvat} :paallystysilmoitus-lomakedata}
+            ohjauskahvat :ohjauskahvat :as paallystysilmoitus-nyt} :paallystysilmoitus-lomakedata}
        lukittu?
        muokkaa!
        validoinnit huomautukset]
@@ -313,7 +298,8 @@
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
             (if muokattava?
               {:tyyppi :reagent-komponentti
-               :komponentti perustiedot-tr-osoite
+               :komponentti tr-kentta
+               :komponentti-args [e! paallystysilmoitus-nyt]
                :validoi (get-in validoinnit [:perustiedot :tr-osoite])
                :sisallon-leveys? true}
               {:otsikko "Tierekisteriosoite"

@@ -271,6 +271,13 @@
                                               (:id urakka)))
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot]
                     perustiedot)
+          ;; TODO tätä logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
+          ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
+          ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
+                    (select-keys perustiedot
+                                 #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                   :tr-loppuosa :tr-loppuetaisyys}))
           (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]
