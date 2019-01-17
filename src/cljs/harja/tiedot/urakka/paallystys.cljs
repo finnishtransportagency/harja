@@ -42,6 +42,7 @@
                                           :sopimus-id sopimus-id
                                           :vuosi vuosi}))
 
+;; Nämä reactionit ovat tässä vielä, koska paallystyskohteet ns käyttää näitä.
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
@@ -131,13 +132,6 @@
                       (:nimi rivi)))
    :valinnat pot/+tyomenetelmat-ja-nil+})
 
-(defn avaa-paallystysilmoituksen-lukitus!
-  [{:keys [urakka-id kohde-id tila]}]
-  (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
-                                              ::pot/paallystyskohde-id kohde-id
-                                              ::pot/tila tila}))
-
-
 (defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
   (when paallystysilmoitukset
     (case jarjestys
@@ -166,6 +160,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
+(defrecord AvaaPaallystysilmoituksenLukitus [])
+(defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus])
+(defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
@@ -191,19 +188,40 @@
 (defrecord YHAVientiEpaonnistui [paallystysilmoitukset])
 
 (extend-protocol tuck/Event
+  AvaaPaallystysilmoituksenLukitus
+  (process-event [_ {{urakka-id :id} :urakka
+                     {:keys [paallystyskohde-id]} :paallystysilmoitus-lomakedata :as app}]
+    (let [parametrit {::urakka-domain/id urakka-id
+                      ::pot/paallystyskohde-id paallystyskohde-id
+                      ::pot/tila :valmis}]
+      (tuck-apurit/post! app
+                         :aseta-paallystysilmoituksen-tila
+                         parametrit
+                         {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
+                          :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  AvaaPaallystysilmoituksenLukitusOnnistui
+  (process-event [vastaus app]
+    ;; TODO Tämä on tässä vielä tukemassa vanhaa koodia
+    (harja.atom/paivita! paallystysilmoitukset)
+    (assoc-in app [:paallystysilmoitus-lomakedata :tila] (:tila vastaus)))
+  AvaaPaallystysilmoituksenLukitusEpaonnistui
+  (process-event [vastaus app]
+    (viesti/nayta! "Lukituksen avaus epäonnistui" :warning)
+    app)
   MuutaTila
-  (process-event [{:keys [polku arvo]} tila]
-    (assoc-in tila polku arvo))
+  (process-event [{:keys [polku arvo]} app]
+    (assoc-in app polku arvo))
   PaivitaTila
-  (process-event [{:keys [polku f]} tila]
-    (update-in tila polku f))
+  (process-event [{:keys [polku f]} app]
+    (update-in app polku f))
   SuodataYllapitokohteet
   (process-event [_ {paallystysilmoitukset :paallystysilmoitukset
-                     {:keys [tienumero kohdenumero]} :yllapito-tila :as tila}]
-    (when paallystysilmoitukset
-      (yllapitokohteet/suodata-yllapitokohteet paallystysilmoitukset {:tienumero tienumero
-                                                                      :kohdenumero kohdenumero}))
-    tila)
+                     {:keys [tienumero kohdenumero]} :yllapito-tila :as app}]
+    (if paallystysilmoitukset
+      (assoc app :paallystysilmoitukset
+             (yllapitokohteet/suodata-yllapitokohteet paallystysilmoitukset {:tienumero tienumero
+                                                                             :kohdenumero kohdenumero}))
+      app))
   HaePaallystysilmoitukset
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
@@ -253,6 +271,13 @@
                                               (:id urakka)))
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot]
                     perustiedot)
+          ;; TODO tätä logikkaa voisi refaktoroida. Nyt kohteen tr-osoitetta säliytetään yhtäaikaa kahdessa
+          ;; eri paikassa. Yksi on :perustiedot avaimen alla, jota oikeasti käytetään aikalaila kaikeen muuhun
+          ;; paitsi validointiin. Validointi hoidetaan [:perustiedot :tr-osoite] polun alta.
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
+                    (select-keys perustiedot
+                                 #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                   :tr-loppuosa :tr-loppuetaisyys}))
           (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]
@@ -305,7 +330,7 @@
       (update-in app [:paallystysilmoitus-lomakedata :historia] (fn [vanha-historia]
                                                                   (cons [polku vanha-arvo] vanha-historia)))))
   TallennaPaallystysilmoitus
-  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuos]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
+  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
@@ -336,10 +361,11 @@
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
                          {:urakka-id urakka-id
                           :sopimus-id (first valittu-sopimusnumero)
-                          :vuosi valittu-urakan-vuos
+                          :vuosi valittu-urakan-vuosi
                           :paallystysilmoitus lahetettava-data}
                          {:onnistui ->TallennaPaallystysilmoitusOnnistui
-                          :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui})))
+                          :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui
+                          :paasta-virhe-lapi? true})))
   TallennaPaallystysilmoitusOnnistui
   (process-event [{vastaus :vastaus} {{urakka-id :id :as urakka} :urakka :as app}]
     (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
@@ -350,7 +376,7 @@
     (assoc app :paallystysilmoitus-lomakedata nil
            :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
   TallennaPaallystysilmoitusEpaonnistui
-  (process-event [vastaus app]
+  (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (modal/nayta!
       {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"

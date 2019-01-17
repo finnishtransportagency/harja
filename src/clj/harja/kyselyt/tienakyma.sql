@@ -2,27 +2,29 @@
 -- fetch-size: 64
 -- row-fn: muunna-toteuma
 -- Hakee kaikki toteumat
+WITH haetut_toteumat AS (
+  --Käytetään tämmöstä WITH hommaa, jotta tämä kysely käyttäisi molempia indeksejä (alku ja envelope)
+    SELECT *
+    FROM toteuma
+    WHERE alkanut >= :alku AND ST_Intersects(envelope, :sijainti)
+)
 SELECT t.id,
-       t.tyyppi,
-       t.reitti,
-       t.alkanut, t.paattynyt,
-       t.suorittajan_nimi AS suorittaja_nimi,
-       (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
-          FROM toteuma_tehtava tt
- 	       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-	 WHERE tt.toteuma = t.id) as tehtavat,
-       t.tr_numero AS tierekisteriosoite_numero,
-       t.tr_alkuosa AS tierekisteriosoite_alkuosa,
-       t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
-       t.tr_loppuosa AS tierekisteriosoite_loppuosa,
-       t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
-  FROM toteuma t
-       JOIN urakka u ON t.urakka=u.id
-       JOIN kayttaja k ON t.luoja = k.id
- WHERE ST_Intersects(t.envelope, :sijainti)
-   AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
-   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu))
+  t.tyyppi,
+  t.reitti,
+  t.alkanut, t.paattynyt,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
+   FROM toteuma_tehtava tt
+     JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+   WHERE tt.toteuma = t.id) as tehtavat,
+  t.tr_numero AS tierekisteriosoite_numero,
+  t.tr_alkuosa AS tierekisteriosoite_alkuosa,
+  t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+  t.tr_loppuosa AS tierekisteriosoite_loppuosa,
+  t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
+FROM haetut_toteumat t
+WHERE ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
+      AND t.paattynyt <= :loppu
 
 -- name: hae-varustetoteumat
 -- fetch-size: 64
@@ -45,11 +47,10 @@ SELECT t.id,
        vt.arvot
   FROM varustetoteuma vt
        JOIN toteuma t ON vt.toteuma = t.id
-       JOIN urakka u ON t.urakka = u.id
  WHERE ST_Intersects(t.envelope, :sijainti)
    AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
-   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
-        (t.paattynyt BETWEEN :alku AND :loppu))
+   AND t.alkanut >= :alku
+   AND t.paattynyt <= :loppu
 
 -- name: hae-tarkastukset
 -- fetch-size: 64

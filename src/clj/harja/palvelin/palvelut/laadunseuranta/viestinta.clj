@@ -16,7 +16,7 @@
 ;; Viestien muodostus
 
 (defn- laatupoikkeama-harja-url [urakka-id hallintayksikko-id]
-  (str "https://extranet.liikennevirasto.fi/harja/#urakat/laadunseuranta/laatupoikkeamat?&hy="
+  (str "https://extranet.vayla.fi/harja/#urakat/laadunseuranta/laatupoikkeamat?&hy="
        hallintayksikko-id "&u=" urakka-id))
 
 (defn- sahkoposti-laatupoikkeamasta-pyydetty-selvitys

@@ -200,28 +200,31 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
+  [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
    data muokattava? muokkaa arvo]
-  (let [kentta (if (= tyyppi :komponentti)
-                 [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                 :data data})]
-                 (if muokattava?
-                   (if (and valitse-ainoa?
-                            (= :valinta tyyppi)
-                            (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
-                     (do (reset! arvo (if-let [hae (:valinta-arvo s)]
-                                        (hae (first (:valinnat s)))
-                                        (first (:valinnat s))))
-                         [:div.form-control-static
-                          ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
-                          (nayta-arvo s arvo)])
+  (let [kentta (cond
+                 (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data data} komponentti-args)]
+                 (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                                              :data data}]
+                                                                                komponentti-args))]
+                 :else (if muokattava?
+                         (if (and valitse-ainoa?
+                                  (= :valinta tyyppi)
+                                  (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
+                           (do (reset! arvo (if-let [hae (:valinta-arvo s)]
+                                              (hae (first (:valinnat s)))
+                                              (first (:valinnat s))))
+                               [:div.form-control-static
+                                ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
+                                (nayta-arvo s arvo)])
 
-                     (do (have #(contains? % :tyyppi) s)
-                         [tee-kentta (assoc s :lomake? true) arvo]))
-                   [:div.form-control-static
-                    (if fmt
-                      (fmt ((or hae #(get % nimi)) data))
-                      (nayta-arvo s arvo))]))]
+                           (do (have #(contains? % :tyyppi) s)
+                               [tee-kentta (assoc s :lomake? true) arvo]))
+                         [:div.form-control-static
+                          (if fmt
+                            (fmt ((or hae #(get % nimi)) data))
+                            (nayta-arvo s arvo))]))]
     (if yksikko-kentalle
       [:div.kentta-ja-yksikko
        kentta
@@ -230,7 +233,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen?] :as s}
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?] :as s}
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
@@ -250,24 +253,26 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     " sisaltaa-varoituksen")
                                   (when-not (empty? huomautukset)
                                     " sisaltaa-huomautuksen"))}
-     (when-not (+piilota-label+ tyyppi)
-       [:label.control-label {:for nimi}
-        [:span
-         [:span.kentan-label otsikko]
-         (when yksikko [:span.kentan-yksikko yksikko])]])
-     [kentan-input s data muokattava? muokkaa arvo]
+     [:div {:class (when sisallon-leveys?
+                     "sisallon-leveys")}
+      (when-not (+piilota-label+ tyyppi)
+        [:label.control-label {:for nimi}
+         [:span
+          [:span.kentan-label otsikko]
+          (when yksikko [:span.kentan-yksikko yksikko])]])
+      [kentan-input s data muokattava? muokkaa arvo]
 
-     (when (and muokattu?
-                (not (empty? virheet)))
-       [virheen-ohje virheet :virhe])
-     (when (and muokattu?
-                (not (empty? varoitukset)))
-       [virheen-ohje varoitukset :varoitus])
-     (when (and muokattu?
-                (not (empty? huomautukset)))
-       [virheen-ohje huomautukset :huomautus])
+      (when (and muokattu?
+                 (not (empty? virheet)))
+        [virheen-ohje virheet :virhe])
+      (when (and muokattu?
+                 (not (empty? varoitukset)))
+        [virheen-ohje varoitukset :varoitus])
+      (when (and muokattu?
+                 (not (empty? huomautukset)))
+        [virheen-ohje huomautukset :huomautus])
 
-     [kentan-vihje s]]))
+      [kentan-vihje s]]]))
 
 (def ^:private col-luokat
   ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua

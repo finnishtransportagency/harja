@@ -90,7 +90,7 @@
       (lopeta-fn))
     this))
 
-;; esim (harja.palvelin.ajastetut-tehtavat.vaylien-geometriat/kutsu-interaktiivisesti "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json")
+;; esim (harja.palvelin.ajastetut-tehtavat.vaylien-geometriat/kutsu-interaktiivisesti "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json")
 
 (defn kutsu-interaktiivisesti [geometria-url]
   (let [j (deref (ns-resolve 'harja.palvelin.main 'harja-jarjestelma))]

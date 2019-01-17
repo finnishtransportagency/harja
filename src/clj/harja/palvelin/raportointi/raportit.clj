@@ -39,6 +39,7 @@
   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
+  [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -327,7 +328,14 @@
     :konteksti #{}
     :kuvaus "Liikennetapahtumat"
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
-    :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}
+
+   {:nimi :pohjavesialueiden-suolatoteumat
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :kuvaus "Pohjavesialueiden suolatoteumat"
+    :suorita #'harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat/suorita
+    :urakkatyyppi #{:hoito}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
