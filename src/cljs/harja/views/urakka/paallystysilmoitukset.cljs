@@ -509,6 +509,7 @@
            :jarjesta-avaimen-mukaan identity}
           [(assoc paallystys/paallyste-grid-skeema
                   :nimi :toimenpide-paallystetyyppi
+                  :fokus-klikin-jalkeen? true
                   :leveys 30
                   :tayta-alas? #(not (nil? %))
                   :tayta-fn (fn [lahtorivi tama-rivi]
@@ -558,6 +559,7 @@
               (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
            (assoc paallystys/tyomenetelma-grid-skeema
                   :nimi :toimenpide-tyomenetelma
+                  :fokus-klikin-jalkeen? true
                   :leveys 30
                   :tayta-alas? #(not (nil? %))
                   :tayta-fn (fn [lahtorivi tama-rivi]
@@ -603,6 +605,7 @@
               (assoc tama-rivi :pinta-ala (:pinta-ala toistettava-rivi)))}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
+            :fokus-klikin-jalkeen? true
             :tyyppi :valinta
             :valinta-arvo :koodi
             :valinta-nayta #(:nimi %)
@@ -667,6 +670,7 @@
               (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
            {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
             :tyyppi :valinta
+            :fokus-klikin-jalkeen? true
             :valinta-arvo :koodi
             :valinta-nayta #(:nimi %)
             :valinnat pot/+sideainetyypit-ja-nil+

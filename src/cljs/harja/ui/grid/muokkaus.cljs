@@ -110,13 +110,13 @@
                        [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
                         (when tayta-alas
-                          (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                          [grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
                                                           :fokus-id fokus-id
                                                           :arvo arvo :tayta-alas tayta-alas
                                                           :rivi-index rivi-index
                                                           :tulevat-rivit tulevat-rivit
                                                           :hae hae
-                                                          :sarake sarake :ohjaus ohjaus :rivi rivi}))
+                                                          :sarake sarake :ohjaus ohjaus :rivi rivi}])
 
                         [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
                          (r/wrap
@@ -152,11 +152,7 @@
            (ikonit/livicon-warning-sign)])])]))
 
 (defn- kasketty-jarjestys [{:keys [virheet-ylos-fn jarjesta-kun-kasketaan muokatut muokatut-atom]}]
-  (let [jarjestys-alussa (sort-by (juxt #(virheet-ylos-fn (second %)) #(jarjesta-kun-kasketaan %)) (seq muokatut))
-        tallennettu-jarjestys (map-indexed (fn [i [id rivi]]
-                                             [id (assoc rivi :jarjestys-gridissa i)])
-                                           jarjestys-alussa)]
-    tallennettu-jarjestys))
+  (sort-by (juxt #(virheet-ylos-fn (second %)) #(jarjesta-kun-kasketaan %)) (seq muokatut)))
 
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata? jarjesta-kun-kasketaan
@@ -165,9 +161,7 @@
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
-         colspan (inc (count skeema))
-         tulevat-rivit (fn [aloitus-idx]
-                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))]
+         colspan (inc (count skeema))]
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
        (let [kaikki-virheet @virheet
@@ -180,9 +174,13 @@
                                 jarjesta-avaimen-mukaan (sort-by (comp (juxt virheet-ylos-fn jarjesta-avaimen-mukaan) first) (seq muokatut))
                                 kasketty-jarjestamaan? (kasketty-jarjestys {:virheet-ylos-fn virheet-ylos-fn :jarjesta-kun-kasketaan jarjesta-kun-kasketaan :muokatut muokatut :muokatut-atom muokatut-atom})
                                 (and jarjesta-kun-kasketaan (not (:jarjesta-gridissa (meta muokatut)))) (sort-by (fn [[i rivi]]
-                                                                                                                   (conj ((juxt virheet-ylos-fn :jarjestys-gridissa) rivi) i))
+                                                                                                                   (conj ((juxt virheet-ylos-fn) rivi) i))
                                                                                                                  (seq muokatut))
-                                :else (seq muokatut))]
+                                :else (seq muokatut))
+             tulevat-rivit (fn [aloitus-idx]
+                             (keep #(when (< (inc aloitus-idx) (first %))
+                                      (second %))
+                                   jarjestetty-data))]
          (doall
            (mapcat
              identity
@@ -342,19 +340,14 @@
                       (muokkaa-rivit! [this funktio args]
                         ;; Käytetään annettua funktiota päivittämään data niin, että mapissa olevat avaimet
                         ;; viittaavat aina samaan päivitettyyn riviin
-                        (let [avain-rivi-parit (map (fn [avain]
-                                                      (-> [avain (get @muokatut avain)]))
-                                                    (keys @muokatut))
+                        (let [avain-rivi-parit (sort-by first (seq @muokatut))
                               rivit (map second avain-rivi-parit)
                               uudet-rivit (apply funktio rivit args)
                               uudet-avain-rivi-parit (map-indexed
-                                                       (fn [index pari]
-                                                         (-> [(first pari) (nth uudet-rivit index)]))
+                                                       (fn [i [avain _]]
+                                                         [avain (nth uudet-rivit i)])
                                                        avain-rivi-parit)
-                              uudet-rivit (reduce (fn [mappi pari]
-                                                    (assoc mappi (first pari) (second pari)))
-                                                  {}
-                                                  uudet-avain-rivi-parit)]
+                              uudet-rivit (into {} uudet-avain-rivi-parit)]
                           (reset! muokatut uudet-rivit)))
 
                       (vetolaatikko-auki? [_ id]

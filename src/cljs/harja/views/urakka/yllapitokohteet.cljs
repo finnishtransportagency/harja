@@ -284,6 +284,7 @@
                     {:hae hae-fn}]
                    vain-nama-validoinnit?)
                  [(assoc paallystys-tiedot/paallyste-grid-skeema
+                         :fokus-klikin-jalkeen? true
                     :leveys paallyste-leveys
                     :tayta-alas? #(not (nil? %))
                     :tayta-fn (fn [lahtorivi tama-rivi]
@@ -306,6 +307,7 @@
                     (fn [toistettava-rivi tama-rivi]
                       (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
                   (assoc paallystys-tiedot/tyomenetelma-grid-skeema
+                         :fokus-klikin-jalkeen? true
                     :leveys tyomenetelma-leveys
                     :tayta-alas? #(not (nil? %))
                     :tayta-fn (fn [lahtorivi tama-rivi]

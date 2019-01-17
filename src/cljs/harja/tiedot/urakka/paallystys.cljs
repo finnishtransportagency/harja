@@ -350,12 +350,7 @@
                                (gridin-muokkaus/poista-idt [:ilmoitustiedot :alustatoimet])
                                ;; Poistetaan poistetut elementit
                                (gridin-muokkaus/poista-poistetut [:ilmoitustiedot :osoitteet])
-                               (gridin-muokkaus/poista-poistetut [:ilmoitustiedot :alustatoimet])
-
-                               (update-in [:ilmoitustiedot :osoitteet] (fn [osoitteet]
-                                                                         (map (fn [osoite]
-                                                                                (dissoc osoite :jarjestys-gridissa))
-                                                                              osoitteet))))]
+                               (gridin-muokkaus/poista-poistetut [:ilmoitustiedot :alustatoimet]))]
       (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str paallystysilmoitus-lomakedata))
       (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus

@@ -47,6 +47,7 @@
                      [rivi & rivit] rivit]
                 (if-not rivi
                   uudet-rivit
+                  ;; Tässä oletetaan, että kaikki rivit ovat uniikkeja
                   (if (= lahtorivi rivi)
                     (recur (conj uudet-rivit rivi) true rivit)
                     (if-not alku
@@ -71,7 +72,7 @@
           (tayta-fn (nth rivit toistettava-rivi) rivi))))
     rivit))
 
-(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo rivi-index
+(defn tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo rivi-index
                                  tulevat-rivit hae sarake ohjaus rivi]}]
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)

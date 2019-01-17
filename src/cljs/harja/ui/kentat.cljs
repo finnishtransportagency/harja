@@ -527,7 +527,7 @@
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja
-                                        jos-tyhja-fn disabled?
+                                        jos-tyhja-fn disabled? fokus-klikin-jalkeen?
                                         nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
@@ -542,6 +542,7 @@
                                                (if valinta-arvo
                                                  (valinta-arvo %)
                                                  %))
+                          :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
                           :nayta-ryhmat nayta-ryhmat
                           :ryhmittely ryhmittely
                           :ryhman-otsikko ryhman-otsikko
