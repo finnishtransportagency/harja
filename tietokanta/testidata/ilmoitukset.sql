@@ -1097,3 +1097,38 @@ VALUES ((SELECT id
          WHERE ilmoitusid = 50024794), 50024794, '2017-08-01 10:07:00', 'vastaanotto' ,
         'Mikael', 'Pöytä', '04428671283', '0509288383', 'mikael.poyta@valittavaurakoitsija.fi',
         'Välittävä Urakoitsija', '9184629-5', 'sisaan'::viestisuunta, 'sms'::viestikanava);
+
+-- Aktiivinen oulu-urakka
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, paikankuvaus, lisatieto, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Aktiivinen Oulu Testi'), 1, NOW(), NOW(), TRUE,
+                                                     'Soittakaa Sepolle (Taas)', 'Voisko joku soittaa?', 'Taas ollaan pulassa',
+                                                     ST_MakePoint(452935, 7186873) :: GEOMETRY, 6, 6, 6, 6, 6, 'kysely' :: ilmoitustyyppi,
+                                                                                                      ARRAY ['saveaTiella', 'vettaTiella'],
+                                                                                                      (SELECT tyyppi
+                                                                                                       FROM urakka
+                                                                                                       WHERE nimi = 'Aktiivinen Oulu Testi'),
+                                                                                                      'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@example.com', 'asukas' ,
+        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, paikankuvaus, lisatieto, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Aktiivinen Oulu Päällystys Testi'), 2, NOW(), NOW(), TRUE,
+                                                'Soittakaa Jollekkin', 'Voisko joku soittaa?', 'Päällystys pulassa',
+                                                ST_MakePoint(452935, 7186873) :: GEOMETRY, 6, 6, 6, 6, 6, 'kysely' :: ilmoitustyyppi,
+                                                                                                 ARRAY ['saveaTiella', 'vettaTiella'],
+                                                                                                 (SELECT tyyppi
+                                                                                                  FROM urakka
+                                                                                                  WHERE nimi = 'Aktiivinen Oulu Päällystys Testi'),
+                                                                                                 'Joku', 'Jokela', '0441231234', '0441231234', 'joku.jokea@example.com', 'asukas' ,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.com');
