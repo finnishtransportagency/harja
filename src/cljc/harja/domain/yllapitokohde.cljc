@@ -226,6 +226,22 @@ yllapitoluokkanimi->numero
               (= (:tr-kaista kohde) (:tr-kaista verrattava-kohde)))
          (tr-domain/tr-vali-leikkaa-tr-valin? kohde verrattava-kohde))))
 
+(defn validoi-tr-osan-pituus
+  "Olettaa, että tr-osoite on oikeamuotoinen"
+  [osan-pituudet-teille {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                 tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (when osan-pituudet-teille
+    (let [osan-pituudet (osan-pituudet-teille tr-numero)]
+      (cond-> {}
+              (nil? osan-pituudet) (assoc :tr-numero :ei-olemassa)
+              (not (contains? osan-pituudet tr-alkuosa)) (update :tr-alkuosa assoc :ei-olemassa tr-alkuosa)
+              (not (contains? osan-pituudet tr-loppuosa)) (update :tr-loppuosa assoc :ei-olemassa tr-loppuosa)
+
+              (and (contains? osan-pituudet tr-alkuosa)
+                   (> tr-alkuetaisyys (get osan-pituudet tr-alkuosa))) (update :tr-alkuetaisyys assoc :liian-iso [tr-alkuetaisyys (get osan-pituudet tr-alkuosa)])
+              (and (contains? osan-pituudet tr-loppuosa)
+                   (> tr-loppuetaisyys (get osan-pituudet tr-loppuosa))) (update :tr-loppuetaisyys assoc :liian-iso [tr-loppuetaisyys (get osan-pituudet tr-loppuosa)])))))
+
 (defn losa>aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
   (and tr-alkuosa tr-loppuosa (> tr-loppuosa tr-alkuosa)))
 

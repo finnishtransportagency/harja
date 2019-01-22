@@ -374,7 +374,7 @@
              :otsikko-tyyli :virhe}
             (kohdeosien-tallennusvirheet virheet))))))
 
-(defn yllapitokohdeosat-tuck [{urakka :urakka :as app}
+(defn yllapitokohdeosat-tuck [_ urakka
                               {ohjauskahvan-asetus :ohjauskahvan-asetus :as asetukset}]
   (let [tiet-joilla-ei-pituutta (fn [tr-osien-pituudet grid-state]
                                   (let [tiet (into #{}
@@ -394,9 +394,9 @@
         g (grid/grid-ohjaus)]
     (when ohjauskahvan-asetus
       (ohjauskahvan-asetus g))
-    (fn [{{{:keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys] :as perustiedot} :perustiedot
-           tr-osien-pituudet :tr-osien-pituudet} :paallystysilmoitus-lomakedata
-          urakka :urakka :as app}
+    (fn [{{:keys [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys] :as perustiedot} :perustiedot
+          tr-osien-pituudet :tr-osien-pituudet}
+         urakka
          {:keys [rivinumerot? voi-muokata? validoinnit vain-nama-validoinnit? hae-tr-osien-pituudet muokattava-ajorata-ja-kaista?
                  muokattava-tie? kohdeosat kohdeosat-virheet virheviesti otsikko jarjesta-avaimen-mukaan jarjesta-kun-kasketaan]}]
       (let [yllapitokohde (select-keys perustiedot [:tr-numero :tr-kaista :tr-ajorata :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])

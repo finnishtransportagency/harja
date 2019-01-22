@@ -226,12 +226,19 @@
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]
-  (keep (fn [saanto]
-          (if (fn? saanto)
-            (saanto data rivi taulukko)
-            (let [[saanto & optiot] saanto]
-              (apply validoi-saanto saanto nimi data rivi taulukko optiot))))
-        saannot))
+  (sequence
+    (comp
+      (keep (fn [saanto]
+              (cond
+                (fn? saanto) (saanto data rivi taulukko)
+                (map? saanto) (apply (:fn saanto) data rivi taulukko (:args saanto))
+                :else (let [[saanto & optiot] saanto]
+                        (apply validoi-saanto saanto nimi data rivi taulukko optiot)))))
+      (mapcat (fn [virhe]
+                (if (vector? virhe)
+                  virhe
+                  [virhe]))))
+    saannot))
 
 (defn validoi-rivi
   "Tekee validoinnin yhden rivin / lomakkeen kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori.

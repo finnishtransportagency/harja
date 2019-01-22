@@ -200,7 +200,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
+  [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
    data muokattava? muokkaa arvo]
   (let [kentta (cond
                  (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
@@ -224,11 +224,15 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                          [:div.form-control-static
                           (if fmt
                             (fmt ((or hae #(get % nimi)) data))
-                            (nayta-arvo s arvo))]))]
-    (if yksikko-kentalle
-      [:div.kentta-ja-yksikko
-       kentta
-       [:span.kentan-yksikko yksikko-kentalle]]
+                            (nayta-arvo s arvo))]))
+        kentta (if yksikko-kentalle
+                 [:div.kentta-ja-yksikko
+                  kentta
+                  [:span.kentan-yksikko yksikko-kentalle]]
+                 kentta)]
+    (if sisallon-leveys?
+      [:div.kentan-leveys
+       kentta]
       kentta)))
 
 (defn kentta
@@ -254,7 +258,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                   (when-not (empty? huomautukset)
                                     " sisaltaa-huomautuksen"))}
      [:div {:class (when sisallon-leveys?
-                     "sisallon-leveys")}
+                     "sisallon-leveys lomake-kentan-leveys")}
       (when-not (+piilota-label+ tyyppi)
         [:label.control-label {:for nimi}
          [:span
