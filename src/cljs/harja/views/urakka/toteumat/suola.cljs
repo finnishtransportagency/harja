@@ -92,7 +92,7 @@
                   [:div
                    [napit/yleinen-toissijainen "Hae"
                     (fn []
-                      ; aiheuta tiedot/toteumat -reaktio
+                                        ; aiheuta tiedot/toteumat -reaktio
                       (reset! tiedot/lomakkeen-tila {:tierekisteriosoite (:tierekisteriosoite @tiedot/ui-lomakkeen-tila)
                                                      :refresh (inc (:refresh @tiedot/lomakkeen-tila))}))
                     {:ikoni (ikonit/livicon-search)}]
@@ -171,9 +171,31 @@
                               "Piilota kartalta"
                               "Näytä kartalla"))]])))}]
     listaus]
-
-   (when-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa])])
+   (if-not (empty? @tiedot/toteumat)
+     [:div.bold kaytetty-yhteensa]
+     [:div ""])
+   [lomake/lomake {:otsikko "Käsinsyöttö"
+                   :muokkaa! #(reset! tiedot/kasinsyottolomake %)
+                   :footer-fn (fn [rivi]
+                                [napit/yleinen-toissijainen "Tallenna"
+                                 (fn []
+                                   (tiedot/tallenna-kasinsyotetty-toteuma urakka sopimus-id {}))
+                                 {:ikoni (ikonit/save)}])}
+    [{:otsikko "Tierekisteriosoite"
+      :nimi :tierekisteriosoite
+      :tyyppi :tierekisteriosoite}
+     {:otsikko "Materiaali"
+      :nimi :suolatyyppi
+      :fmt :nimi
+      :leveys 10
+      :tyyppi :valinta
+      :validoi [[:ei-tyhja "Valitse materiaali"]]
+      :valinta-nayta #(or (:nimi %) "- valitse -")
+      :valinnat []}
+     {:otsikko "Käytetty määrä (t/km)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
+      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 10
+      :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}]
+    @tiedot/kasinsyottolomake]])
 
 (defn pohjavesialueen-suola []
   (komp/luo

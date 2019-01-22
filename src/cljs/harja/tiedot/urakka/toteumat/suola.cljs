@@ -22,6 +22,8 @@
 
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
 
+(defonce kasinsyottolomake (atom {}))
+
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
@@ -144,6 +146,10 @@
              {:urakka-id urakka-id
               :sopimus-id sopimus-id
               :toteumat tallennettavat})))
+
+(defn tallenna-kasinsyotetty-toteuma [urakka-id sopimus-id rivi]
+  {:pre [(int? urakka-id)]}
+  (k/post! :tallenna-kasinsyotetty-suolatoteuma {:urakka-id urakka-id :sopimus-id sopimus-id :toteuma rivi}))
 
 (defn hae-materiaalit []
   (k/get! :hae-suolamateriaalit))
