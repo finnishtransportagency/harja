@@ -263,7 +263,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
-    (luo-suolatoteuma db user urakka-id sopimus-id toteuma)))
+    (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
+    (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                           :alkupvm (:pvm toteuma)})))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)

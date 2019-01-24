@@ -174,12 +174,20 @@
    (if-not (empty? @tiedot/toteumat)
      [:div.bold kaytetty-yhteensa]
      [:div ""])
+   [:hr]
    [lomake/lomake {:otsikko "Käsinsyöttö"
                    :muokkaa! #(reset! tiedot/kasinsyottolomake %)
+                   :ei-borderia? true
                    :footer-fn (fn [rivi]
                                 [napit/yleinen-toissijainen "Tallenna"
                                  (fn []
-                                   (tiedot/tallenna-kasinsyotetty-toteuma urakka sopimus-id {}))
+                                   (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
+                                                                          sopimus-id
+                                                                          (merge {}
+                                                                                 (:tierekisteriosoite @tiedot/kasinsyottolomake)
+                                                                                 {:urakka (:id urakka)
+                                                                                  :tyyppi "kokonaishintainen"
+                                                                                  :kayttaja (:id user)})))
                                  {:ikoni (ikonit/save)}])}
     [{:otsikko "Tierekisteriosoite"
       :nimi :tierekisteriosoite
@@ -191,7 +199,7 @@
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse materiaali"]]
       :valinta-nayta #(or (:nimi %) "- valitse -")
-      :valinnat []}
+      :valinnat (or @tiedot/materiaalit [])}
      {:otsikko "Käytetty määrä (t/km)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 10
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}]

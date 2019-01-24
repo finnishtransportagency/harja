@@ -149,7 +149,10 @@
 
 (defn tallenna-kasinsyotetty-toteuma [urakka-id sopimus-id rivi]
   {:pre [(int? urakka-id)]}
-  (k/post! :tallenna-kasinsyotetty-suolatoteuma {:urakka-id urakka-id :sopimus-id sopimus-id :toteuma rivi}))
+  (k/post! :tallenna-kasinsyotetty-suolatoteuma
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :toteuma rivi}))
 
 (defn hae-materiaalit []
   (k/get! :hae-suolamateriaalit))
