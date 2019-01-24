@@ -36,7 +36,8 @@
 
 (def kohteen-tiedot
   #{[::kohde #{:harja.domain.kanavat.kohde/nimi
-               :harja.domain.kanavat.kohde/id}]})
+               :harja.domain.kanavat.kohde/id
+               :harja.domain.kanavat.kohde/jarjestys}]})
 
 (def fmt-kohteenosa-tyyppi
   {:sulku "sulku"
