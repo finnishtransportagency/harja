@@ -507,12 +507,12 @@
                                                  {::m/muokkaaja-id (:id user)
                                                   ::m/muokattu (pvm/nyt)}
                                                  (-> tapahtuma
-                                                     (update ::lt/vesipinta-alaraja bigdec)
-                                                     (update ::lt/vesipinta-ylaraja bigdec)
+                                                     (update ::lt/vesipinta-alaraja #(when-not (nil? %)
+                                                                                       (bigdec %)))
+                                                     (update ::lt/vesipinta-ylaraja #(when-not (nil? %)
+                                                                                       (bigdec %)))
                                                      (dissoc ::lt/alukset ::lt/toiminnot)))
-                                               {::lt/id (::lt/id tapahtuma)})
-                               ;; Palautetaan päivitetty tapahtuma
-                               tapahtuma)
+                                               {::lt/id (::lt/id tapahtuma)}))
                              (specql/insert! db
                                              ::lt/liikennetapahtuma
                                              (merge
