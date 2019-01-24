@@ -512,7 +512,10 @@
                                                      (update ::lt/vesipinta-ylaraja #(when-not (nil? %)
                                                                                        (bigdec %)))
                                                      (dissoc ::lt/alukset ::lt/toiminnot)))
-                                               {::lt/id (::lt/id tapahtuma)}))
+                                               {::lt/id (::lt/id tapahtuma)})
+                               ;; Palautetaan tapahtuma alkuperäisenä, koska update palauttaa vain ykkösen.
+                               ;; Ei haeta kannasta uudelleen, koska se on turhaa.
+                               tapahtuma)
                              (specql/insert! db
                                              ::lt/liikennetapahtuma
                                              (merge
@@ -521,7 +524,6 @@
                                                        ::lt/id
                                                        ::lt/alukset
                                                        ::lt/toiminnot))))]
-
         (doseq [osa (::lt/toiminnot tapahtuma)]
           (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
 
