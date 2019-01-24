@@ -35,6 +35,7 @@
 (def kohteet
   #{[::kohteet #{:harja.domain.kanavat.kohde/id
                  :harja.domain.kanavat.kohde/nimi
+                 :harja.domain.kanavat.kohde/jarjestys
                  [:harja.domain.kanavat.kohde/kohteenosat osa/perustiedot]}]})
 
 (def kohteet-sijainteineen

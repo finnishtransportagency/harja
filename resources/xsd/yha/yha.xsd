@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema targetNamespace="http://www.liikennevirasto.fi/xsd/yha"
+<xs:schema targetNamespace="http://www.vayla.fi/xsd/yha"
            attributeFormDefault="unqualified"
            elementFormDefault="qualified"
-           xmlns="http://www.liikennevirasto.fi/xsd/yha"
+           xmlns="http://www.vayla.fi/xsd/yha"
            xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
     <!--Kutsujen ja vastausten sisällöt-->
