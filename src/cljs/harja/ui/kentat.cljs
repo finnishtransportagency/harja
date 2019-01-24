@@ -27,7 +27,7 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
 
-            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
@@ -64,13 +64,13 @@
 
 (defmulti tee-kentta
           "Tekee muokattavan kentän tyypin perusteella"
-          (fn [t _] (:tyyppi t)))
+          (fn [t & args] (:tyyppi t)))
 
 (defmulti nayta-arvo
           "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella.
           Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä
           vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
-          (fn [t _] (:tyyppi t)))
+          (fn [t & args] (:tyyppi t)))
 
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
@@ -232,7 +232,7 @@
                        (.getElementsByTagName "textarea")
                        (aget 0))
                  erotus (- (.-scrollHeight n) (.-clientHeight n))]
-             (when (> erotus 1) ;; IE11 näyttää aluksi 24 vs 25
+             (when (> erotus 1)                             ;; IE11 näyttää aluksi 24 vs 25
                (swap! rivit + (/ erotus 19)))))})
 
       (fn [{:keys [nimi koko on-focus lomake?]} data]
@@ -266,6 +266,21 @@
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
+      {:should-component-update (fn [_ old-argv new-argv]
+                                  (when (= "yllapitokohdeosat-Tierekisteriosoitteet" (:data-cy (nth new-argv 1)))
+                                    (when (not= (rest old-argv) (rest new-argv))
+                                      (println "-------- NUMERO KENTTÄÄ PÄIVITETÄÄN -------")
+                                      (println (:data-cy (nth new-argv 1)))
+                                      (println "NIMI: " (:nimi (nth new-argv 1))))
+                                    (doseq [[k v] (nth old-argv 1)
+                                            :let [new-v (get (nth new-argv 1) k)]
+                                            :when (not= v new-v)]
+                                      (println (str "VANHA " k ": " v))
+                                      (println (str "UUSI " k ": " new-v)))
+                                    (when (not= (nth old-argv 2) (nth new-argv 2))
+                                      (println "VANHA DATA: " (nth old-argv 2))
+                                      (println "UUSI DATA: " (nth new-argv 2))))
+                                  true)}
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f] :as kentta} data]
         (let [nykyinen-data @data
@@ -309,7 +324,7 @@
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
-                            :tyyppi :numero) data])
+                     :tyyppi :numero) data])
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   (nayta-arvo (assoc kentta :tyyppi :numero) data))
@@ -525,33 +540,61 @@
                         radiobuttonit)]]
          radiobuttonit))]))
 
-(defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
-                                        valinnat valinnat-fn rivi on-focus jos-tyhja
-                                        jos-tyhja-fn disabled? fokus-klikin-jalkeen?
-                                        nayta-ryhmat ryhmittely ryhman-otsikko]} data]
-  ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
-  ;; esim. :id
-  (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
-  (let [nykyinen-arvo @data
-        valinnat (or valinnat (valinnat-fn rivi))]
-    [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
-                          :valinta (if valinta-arvo
-                                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
-                                     nykyinen-arvo)
-                          :valitse-fn #(reset! data
-                                               (if valinta-arvo
-                                                 (valinta-arvo %)
-                                                 %))
-                          :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                          :nayta-ryhmat nayta-ryhmat
-                          :ryhmittely ryhmittely
-                          :ryhman-otsikko ryhman-otsikko
-                          :on-focus on-focus
-                          :format-fn (if (empty? valinnat)
-                                       (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                       (or (and valinta-nayta #(valinta-nayta % true)) str))
-                          :disabled disabled?}
-     valinnat]))
+(defmethod tee-kentta :valinta
+  ([{:keys [alasveto-luokka valinta-nayta valinta-arvo
+            valinnat valinnat-fn rivi on-focus jos-tyhja
+            jos-tyhja-fn disabled? fokus-klikin-jalkeen?
+            nayta-ryhmat ryhmittely ryhman-otsikko]} data]
+    ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
+    ;; esim. :id
+    (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+    (let [nykyinen-arvo @data
+          valinnat (or valinnat (valinnat-fn rivi))]
+      [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
+                            :valinta (if valinta-arvo
+                                       (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
+                                       nykyinen-arvo)
+                            :valitse-fn #(reset! data
+                                                 (if valinta-arvo
+                                                   (valinta-arvo %)
+                                                   %))
+                            :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                            :nayta-ryhmat nayta-ryhmat
+                            :ryhmittely ryhmittely
+                            :ryhman-otsikko ryhman-otsikko
+                            :on-focus on-focus
+                            :format-fn (if (empty? valinnat)
+                                         (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                                         (or (and valinta-nayta #(valinta-nayta % true)) str))
+                            :disabled disabled?}
+       valinnat]))
+  ([{:keys [jos-tyhja]} data data-muokkaus-fn]
+    ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
+    (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]
+      (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
+                   valinnat valinnat-fn rivi on-focus jos-tyhja
+                   jos-tyhja-fn disabled? fokus-klikin-jalkeen?
+                   nayta-ryhmat ryhmittely ryhman-otsikko]} data data-muokkaus-fn]
+        (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
+        (assert (fn? data-muokkaus-fn) "Data-muokkaus-fn pitäisi olla funktio, joka muuttaa näytettävää dataa jotenkin")
+        (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+        (let [valinnat (or valinnat (valinnat-fn rivi))]
+          [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
+                                :valinta (if valinta-arvo
+                                           (some #(when (= (valinta-arvo %) data) %) valinnat)
+                                           data)
+                                :valitse-fn data-muokkaus-fn
+                                :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                                :nayta-ryhmat nayta-ryhmat
+                                :ryhmittely ryhmittely
+                                :ryhman-otsikko ryhman-otsikko
+                                :on-focus on-focus
+                                :format-fn (if (empty? valinnat)
+                                             (or jos-tyhja-fn jos-tyhja-default-fn)
+                                             (or valinta-nayta str))
+                                :disabled disabled?
+                                :data-cy data-cy}
+           valinnat])))))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi hae
@@ -595,8 +638,8 @@
 
    [:div {:style {:width "65px" :display "inline-block" :margin "5px"}}
     [tee-kentta (assoc kellonaika :tyyppi :valinta
-                                  :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
-                                  :alasveto-luokka "inline-block")
+                       :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
+                       :alasveto-luokka "inline-block")
      (r/wrap
        (:kellonaika @data)
        #(swap! data assoc :kellonaika %))]]
@@ -985,7 +1028,7 @@
         voi-valita-kartalta? (if (some? voi-valita-kartalta?)
                                voi-valita-kartalta?
                                true)
-        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
+        hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
         virheet (atom nil)
@@ -1031,16 +1074,16 @@
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
-        (when-let [arvo (<! tr-osoite-ch)]
-          (log "VKM/TR: " (pr-str arvo))
-          (reset! @sijainti-atom
-                  (if-not (= arvo :virhe)
-                    (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
-                        (piste-tai-eka arvo))
-                    (do
-                      (tasot/poista-geometria! :tr-valittu-osoite)
-                      nil)))
-          (recur))))
+               (when-let [arvo (<! tr-osoite-ch)]
+                 (log "VKM/TR: " (pr-str arvo))
+                 (reset! @sijainti-atom
+                         (if-not (= arvo :virhe)
+                           (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
+                               (piste-tai-eka arvo))
+                           (do
+                             (tasot/poista-geometria! :tr-valittu-osoite)
+                             nil)))
+                 (recur))))
 
     (komp/luo
       (komp/vanhat-ja-uudet-parametrit
@@ -1171,9 +1214,9 @@
         karttavalinta-kaynnissa? (atom false)]
     (when paikannus-kaynnissa?-atom
       (add-watch paikannus-kaynnissa?
-        :paikannus?
-        (fn [avain ref vanha uusi]
-          (reset! paikannus-kaynnissa?-atom uusi))))
+                 :paikannus?
+                 (fn [avain ref vanha uusi]
+                   (reset! paikannus-kaynnissa?-atom uusi))))
 
     (komp/luo
       (komp/sisaan #(do

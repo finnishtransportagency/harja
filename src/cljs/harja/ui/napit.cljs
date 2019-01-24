@@ -141,7 +141,7 @@
        (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                 (dom/elementin-etaisyys-dokumentin-ylareunaan
                                   (r/dom-node %))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args] :as optiot}]
          [:button
           (merge
             {:class (str (when disabled "disabled ")
@@ -154,7 +154,7 @@
              :on-click #(do
                           (.preventDefault %)
                           (.stopPropagation %)
-                          (toiminto))}
+                          (apply toiminto toiminto-args))}
             (when data-cy
               {:data-cy data-cy}))
           (when tallennus-kaynnissa?

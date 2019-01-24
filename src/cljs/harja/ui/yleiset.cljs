@@ -238,14 +238,29 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
   (let [auki? (atom false)
-        nappi-id (str (gensym "pv"))]
+        nappi-id (str (gensym "pv"))
+        nil-fn (constantly nil)]
     (komp/luo
+      {:should-component-update (fn [_ old-argv new-argv]
+                                  (when (= "yllapitokohdeosat-Tierekisteriosoitteet" (:data-cy (nth new-argv 1)))
+                                    (when (not= (rest old-argv) (rest new-argv))
+                                      (println "-------- LIVI PUDOTUSVALIKKO PÄIVITETÄÄN -------")
+                                      (println (:naytettava-arvo (nth new-argv 1))))
+                                    (doseq [[k v] (nth old-argv 1)
+                                            :let [new-v (get (nth new-argv 1) k)]
+                                            :when (not= v new-v)]
+                                      (println (str "VANHA " k ": " v))
+                                      (println (str "UUSI " k ": " new-v)))
+                                    (when (not= (nth old-argv 2) (nth new-argv 2))
+                                      (println "VANHA VAIHTOEHDOT: " (nth old-argv 2))
+                                      (println "UUSI VAIHTOEHDOT: " (nth new-argv 2))))
+                                  true)}
       (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (fn [{:keys [valinta format-fn valitse-fn class disabled naytettava-arvo
                    on-focus title data-cy] :as asetukset} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)
-              valitse-fn (or valitse-fn (constantly nil))]
+              valitse-fn (or valitse-fn nil-fn)]
           [:div.dropdown.livi-alasveto (merge
                                          {:class (str class " " (when @auki? "open"))}
                                          (when data-cy

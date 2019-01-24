@@ -87,7 +87,7 @@
                         (grid-yleiset/tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
                                                         :arvo arvo :tayta-alas tayta-alas
                                                         :rivi-index rivi-index
-                                                        :tulevat-rivit tulevat-rivit :hae hae
+                                                        :tulevat-elementit (map hae tulevat-rivit)
                                                         :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
                       [tee-kentta (assoc sarake

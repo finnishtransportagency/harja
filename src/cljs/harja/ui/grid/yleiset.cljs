@@ -72,53 +72,63 @@
           (tayta-fn (nth rivit toistettava-rivi) rivi))))
     rivit))
 
-(defn tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo rivi-index
-                                 tulevat-rivit hae sarake ohjaus rivi]}]
-  (when (and (= fokus fokus-id)
-             (tayta-alas arvo)
-             (not (nil? arvo))
-             ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
-             (not (empty? tulevat-rivit))
-             (every? str/blank? (map hae tulevat-rivit)))
-    (let [napin-sijainti (cond
-                           ;; Asemoi kutsujan mukaan
-                           (:tayta-sijainti sarake) (:tayta-sijainti sarake)
-                           ;; Useampi kuin yksi nappi, asemoi ylös
-                           (and (:tayta-alas? sarake) (:tayta-alas-toistuvasti? sarake)) :ylos
-                           ;; Muuten piirretään kentän sisään
-                           :default :sisalla)]
-      [:div {:class (if (= :oikea (:tasaa sarake))
-                      "pull-left"
-                      "pull-right")}
-       [:div {:style {:width "100%"
-                      :position "absolute"
-                      :left 0
-                      :height 0 ; Tärkeä, ettei voida vahingossa focusoida pois kentästä nappeihin
-                      :top "-3px"
-                      :display "flex"}}
-        [napit/yleinen-toissijainen "Täytä"
-         #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
-         {:title (:tayta-tooltip sarake)
-          :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
-          :style (case napin-sijainti
-                   :ylos
-                   {:transform "translateY(-100%)"}
-                   :sisalla
-                   (merge
-                     {:position "absolute"}
-                     (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
-          :ikoni (ikonit/livicon-arrow-down)}]
-        (when (and (:tayta-alas-toistuvasti? sarake)
-                   (> rivi-index 0)) ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
-          [napit/yleinen-toissijainen "Toista"
-           #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
-           {:title "Toista tämä ja edelliset rivit alla oleville riveille."
-            :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
-            :style (case napin-sijainti
-                     :ylos
-                     {:transform "translateY(-100%)"}
-                     :sisalla
-                     (merge
-                       {:position "absolute"}
-                       (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
-            :ikoni (ikonit/livicon-arrow-down)}])]])))
+(defn tayta-alas-nappi [judui]
+  (r/create-class
+    {:should-component-update (fn [_ old-argv new-argv]
+                                (doseq [[k v] (nth old-argv 1)
+                                        :let [new-v (get (nth new-argv 1) k)]
+                                        :when (not= v new-v)]
+                                  (println "FOKUS ID: " (:fokus-id (nth old-argv 1)))
+                                  (println (str "VANHA " k ": " v))
+                                  (println (str "UUSI " k ": " new-v))))
+     :reagent-render
+     (fn [{:keys [fokus tayta-alas fokus-id arvo rivi-index
+                 tulevat-elementit sarake ohjaus rivi]}]
+       (when (and (= fokus fokus-id)
+                  (tayta-alas arvo)
+                  (not (nil? arvo))
+                  ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
+                  (not (empty? tulevat-elementit))
+                  (every? str/blank? tulevat-elementit))
+         (let [napin-sijainti (cond
+                                ;; Asemoi kutsujan mukaan
+                                (:tayta-sijainti sarake) (:tayta-sijainti sarake)
+                                ;; Useampi kuin yksi nappi, asemoi ylös
+                                (and (:tayta-alas? sarake) (:tayta-alas-toistuvasti? sarake)) :ylos
+                                ;; Muuten piirretään kentän sisään
+                                :default :sisalla)]
+           [:div {:class (if (= :oikea (:tasaa sarake))
+                           "pull-left"
+                           "pull-right")}
+            [:div {:style {:width "100%"
+                           :position "absolute"
+                           :left 0
+                           :height 0                        ; Tärkeä, ettei voida vahingossa focusoida pois kentästä nappeihin
+                           :top "-3px"
+                           :display "flex"}}
+             [napit/yleinen-toissijainen "Täytä"
+              #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+              {:title (:tayta-tooltip sarake)
+               :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+               :style (case napin-sijainti
+                        :ylos
+                        {:transform "translateY(-100%)"}
+                        :sisalla
+                        (merge
+                          {:position "absolute"}
+                          (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
+               :ikoni (ikonit/livicon-arrow-down)}]
+             (when (and (:tayta-alas-toistuvasti? sarake)
+                        (> rivi-index 0))                   ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
+               [napit/yleinen-toissijainen "Toista"
+                #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
+                {:title "Toista tämä ja edelliset rivit alla oleville riveille."
+                 :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+                 :style (case napin-sijainti
+                          :ylos
+                          {:transform "translateY(-100%)"}
+                          :sisalla
+                          (merge
+                            {:position "absolute"}
+                            (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
+                 :ikoni (ikonit/livicon-arrow-down)}])]])))}))
