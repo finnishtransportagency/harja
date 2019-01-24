@@ -400,7 +400,6 @@ SET nimi            = :nimi,
     hanke_sampoid   = :hanke_sampoid,
     tyyppi          = :urakkatyyppi :: URAKKATYYPPI,
     hallintayksikko = :hallintayksikko,
-    sopimustyyppi   = :sopimustyyppi :: SOPIMUSTYYPPI,
     urakkanro       = :urakkanro,
     urakoitsija     = :urakoitsija
 
