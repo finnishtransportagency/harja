@@ -180,7 +180,7 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? toiminta-f]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus on-blur lomake? toiminta-f]
                                 :as kentta} data]
   [:input {:class (when lomake? "form-control")
            :placeholder (placeholder kentta data)
@@ -190,6 +190,7 @@
                            (when toiminta-f
                              (toiminta-f v))))
            :on-focus on-focus
+           :on-blur on-blur
            :value @data
            :max-length pituus-max}])
 
@@ -202,7 +203,7 @@
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
-(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake? pituus-max toiminta-f]} data]
+(defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake? pituus-max toiminta-f]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -235,11 +236,12 @@
              (when (> erotus 1)                             ;; IE11 näyttää aluksi 24 vs 25
                (swap! rivit + (/ erotus 19)))))})
 
-      (fn [{:keys [nimi koko on-focus lomake?]} data]
+      (fn [{:keys [nimi koko on-focus on-blur lomake?]} data]
         [:span.kentta-text
          [:textarea {:value @data
                      :on-change #(muuta! data %)
                      :on-focus on-focus
+                     :on-blur on-blur
                      :cols (or koko-sarakkeet 80)
                      :rows @rivit
                      :class (when lomake? "form-control")
@@ -282,7 +284,7 @@
                                       (println "UUSI DATA: " (nth new-argv 2))))
                                   true)}
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -294,8 +296,10 @@
           [:input {:class (when lomake? "form-control")
                    :type "text"
                    :placeholder (placeholder kentta data)
-                   :on-focus (:on-focus kentta)
-                   :on-blur #(reset! teksti nil)
+                   :on-focus #(when on-focus (on-focus))
+                   :on-blur #(do (when on-blur
+                                   (on-blur %))
+                                 (reset! teksti nil))
                    :value nykyinen-teksti
                    :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
                                      v (if vaadi-ei-negatiivinen?
@@ -348,28 +352,30 @@
 (defmethod nayta-arvo :big [{:keys [desimaalien-maara]} data]
   [:span (some-> @data (big/fmt desimaalien-maara))])
 
-(defmethod tee-kentta :email [{:keys [on-focus lomake?] :as kentta} data]
+(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake?] :as kentta} data]
   [:input {:class (when lomake? "form-control")
            :type "email"
            :value @data
            :on-focus on-focus
+           :on-blur on-blur
            :on-change #(reset! data (-> % .-target .-value))}])
 
 
 
-(defmethod tee-kentta :puhelin [{:keys [on-focus pituus lomake? placeholder] :as kentta} data]
+(defmethod tee-kentta :puhelin [{:keys [on-focus on-blur pituus lomake? placeholder] :as kentta} data]
   [:input {:class (when lomake? "form-control")
            :type "tel"
            :value @data
            :max-length pituus
            :on-focus on-focus
+           :on-blur on-blur
            :placeholder placeholder
            :on-change #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"\+?(\s|\d)*" uusi)
                            (reset! data uusi)))}])
 
 
-(defmethod tee-kentta :radio [{:keys [valinta-nayta valinta-arvo valinnat on-focus]} data]
+(defmethod tee-kentta :radio [{:keys [valinta-nayta valinta-arvo valinnat on-focus on-blur]} data]
   (let [arvo (or valinta-arvo identity)
         nayta (or valinta-nayta str)
         nykyinen-arvo @data]
@@ -542,7 +548,7 @@
 
 (defmethod tee-kentta :valinta
   ([{:keys [alasveto-luokka valinta-nayta valinta-arvo
-            valinnat valinnat-fn rivi on-focus jos-tyhja
+            valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen?
             nayta-ryhmat ryhmittely ryhman-otsikko]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
@@ -563,6 +569,7 @@
                             :ryhmittely ryhmittely
                             :ryhman-otsikko ryhman-otsikko
                             :on-focus on-focus
+                            :on-blur on-blur
                             :format-fn (if (empty? valinnat)
                                          (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
                                          (or (and valinta-nayta #(valinta-nayta % true)) str))
@@ -572,7 +579,7 @@
     ;; HUOM!! Erona 2-arity tapaukseen, valinta-nayta funktiolle annetaan vain yksi argumentti kahden sijasta
     (let [jos-tyhja-default-fn (constantly (or jos-tyhja "Ei valintoja"))]
       (fn [{:keys [alasveto-luokka valinta-nayta valinta-arvo data-cy
-                   valinnat valinnat-fn rivi on-focus jos-tyhja
+                   valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
                    jos-tyhja-fn disabled? fokus-klikin-jalkeen?
                    nayta-ryhmat ryhmittely ryhman-otsikko]} data data-muokkaus-fn]
         (assert (not (satisfies? IDeref data)) "Jos käytät tee-kentta 3 aritylla, data ei saa olla derefable. Tämä sen takia, ettei React turhaan renderöi elementtiä")
@@ -589,6 +596,7 @@
                                 :ryhmittely ryhmittely
                                 :ryhman-otsikko ryhman-otsikko
                                 :on-focus on-focus
+                                :on-blur on-blur
                                 :format-fn (if (empty? valinnat)
                                              (or jos-tyhja-fn jos-tyhja-default-fn)
                                              (or valinta-nayta str))
@@ -611,7 +619,7 @@
 
 
 
-(defmethod tee-kentta :kombo [{:keys [valinnat on-focus lomake?]} data]
+(defmethod tee-kentta :kombo [{:keys [valinnat on-focus on-blur lomake?]} data]
   (let [auki (atom false)]
     (fn [{:keys [valinnat]} data]
       (let [nykyinen-arvo (or @data "")]
@@ -619,6 +627,7 @@
          [:input.kombo {:class (when lomake? "form-control")
                         :type "text" :value nykyinen-arvo
                         :on-focus on-focus
+                        :on-blur on-blur
                         :on-change #(reset! data (-> % .-target .-value))}]
          [:button {:on-click #(do (swap! auki not) nil)}
           [:span.caret ""]]
@@ -702,7 +711,7 @@
                             ""))))
 
        :reagent-render
-       (fn [{:keys [on-focus placeholder rivi]} data]
+       (fn [{:keys [on-focus on-blur placeholder rivi]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
@@ -724,6 +733,8 @@
                                          (reset! auki false)
                                          true)
                          :on-blur #(do
+                                     (when on-blur
+                                       (on-blur))
                                      (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
@@ -757,7 +768,7 @@
               (re-matches +aika-regex+ aika-text))
       (aseta-fn! aika-text))))
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]}
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus on-blur lomake? pakota-suunta]}
                                  data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
@@ -855,7 +866,7 @@
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                             (reset! auki false)
                                             %)
-                            :on-blur #(do (koske-pvm!) (aseta! false) %)}]
+                            :on-blur #(do (when on-blur (on-blur)) (koske-pvm!) (aseta! false) %)}]
                (when @auki
                  [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                   (muuta-pvm! (pvm/pvm %))
@@ -1346,7 +1357,7 @@
       (subs t 0 5)
       t)))
 
-(defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
+(defmethod tee-kentta :aika [{:keys [placeholder on-focus on-blur lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
     [:input {:class (str (when lomake? "form-control")
                          (when-not (:tunnit @data) " puuttuva-arvo"))
@@ -1368,10 +1379,13 @@
                                        :sekunnit nil
                                        :keskenerainen v)))))
              :on-focus on-focus
-             :on-blur #(when-let [t (:keskenerainen @data)]
-                         (when (and (re-matches #"\d+" t)
-                                    (<= 0 (js/parseInt t) 23))
-                           (reset! data (pvm/->Aika (js/parseInt t) 0 nil))))
+             :on-blur #(do
+                         (when on-blur
+                           (on-blur))
+                         (when-let [t (:keskenerainen @data)]
+                           (when (and (re-matches #"\d+" t)
+                                      (<= 0 (js/parseInt t) 23))
+                             (reset! data (pvm/->Aika (js/parseInt t) 0 nil)))))
              :value (or keskenerainen (fmt/aika aika))}]))
 
 (defmethod tee-kentta :toggle [{:keys [paalle-teksti pois-teksti toggle!]} data]

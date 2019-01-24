@@ -257,7 +257,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   true)}
       (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (fn [{:keys [valinta format-fn valitse-fn class disabled naytettava-arvo
-                   on-focus title data-cy] :as asetukset} vaihtoehdot]
+                   on-focus on-blur title data-cy] :as asetukset} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)
               valitse-fn (or valitse-fn nil-fn)]
@@ -276,6 +276,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                             (swap! auki? not)
                             nil)
                :on-focus on-focus
+               :on-blur on-blur
                :on-key-down #(let [kc (.-keyCode %)
                                    vaihtoehdot (if (map? vaihtoehdot)
                                                  (mapv (fn [avain]

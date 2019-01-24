@@ -115,8 +115,8 @@
    style                      Nappiin liitettävä style
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?
-                            sticky? ikoninappi? title style data-cy] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
+                            sticky? ikoninappi? title style] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -141,7 +141,7 @@
        (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                 (dom/elementin-etaisyys-dokumentin-ylareunaan
                                   (r/dom-node %))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes] :as optiot}]
          [:button
           (merge
             {:class (str (when disabled "disabled ")
@@ -155,8 +155,10 @@
                           (.preventDefault %)
                           (.stopPropagation %)
                           (apply toiminto toiminto-args))}
-            (when data-cy
-              {:data-cy data-cy}))
+            (when (and data-attributes (every? #(and (keyword? %)
+                                                     (re-find #"^data-" (name %)))
+                                               (keys data-attributes)))
+              data-attributes))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
           (when tallennus-kaynnissa?

@@ -78,13 +78,13 @@
                                 (doseq [[k v] (nth old-argv 1)
                                         :let [new-v (get (nth new-argv 1) k)]
                                         :when (not= v new-v)]
-                                  (println "FOKUS ID: " (:fokus-id (nth old-argv 1)))
                                   (println (str "VANHA " k ": " v))
-                                  (println (str "UUSI " k ": " new-v))))
+                                  (println (str "UUSI " k ": " new-v)))
+                                true)
      :reagent-render
-     (fn [{:keys [fokus tayta-alas fokus-id arvo rivi-index
-                 tulevat-elementit sarake ohjaus rivi]}]
-       (when (and (= fokus fokus-id)
+     (fn [{:keys [tayta-alas arvo rivi-index
+                  tulevat-elementit sarake ohjaus rivi fokus?]}]
+       (when (and fokus?
                   (tayta-alas arvo)
                   (not (nil? arvo))
                   ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
@@ -117,6 +117,7 @@
                         (merge
                           {:position "absolute"}
                           (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
+               :data-attributes {:data-komponentin-nimi "tayta-alas-nappi"}
                :ikoni (ikonit/livicon-arrow-down)}]
              (when (and (:tayta-alas-toistuvasti? sarake)
                         (> rivi-index 0))                   ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
@@ -131,4 +132,5 @@
                           (merge
                             {:position "absolute"}
                             (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
+                 :data-attributes {:data-komponentin-nimi "tayta-alas-nappi"}
                  :ikoni (ikonit/livicon-arrow-down)}])]])))}))

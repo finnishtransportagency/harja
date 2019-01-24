@@ -64,7 +64,7 @@
 
 (defn- muokkauselementin-tila
   [{:keys [aseta nimi valinta-arvo hae]}
-   {:keys [muokkaa! muokatut-atom virheet skeema id fokus i rivi]}
+   {:keys [muokkaa! muokatut-atom virheet skeema id i rivi]}
    rivi-disabloitu? kentan-virheet
    tulevat-elementit]
   (let [grid-tilan-muokkaus-fn (atom (fn [uusi]
@@ -80,8 +80,12 @@
                                               uusi)]
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
+        fokus? (atom false)
 
-        resetoi-fokus #(reset! fokus [i nimi])
+        fokus-elementille #(reset! fokus? true)
+        fokus-pois-elementilta #(let [fokusoidun-komponentin-nimi (-> % .-relatedTarget (.getAttribute "data-komponentin-nimi"))]
+                                  (when-not (= fokusoidun-komponentin-nimi "tayta-alas-nappi")
+                                    (reset! fokus? false)))
         seuranta-avain (keyword (str (gensym (str i nimi))))]
     (r/create-class
       {:should-component-update (fn [_ old-argv new-argv]
@@ -138,15 +142,14 @@
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa
                     komponentti hae kentta-arity-3? komponentti-args] :as sarake}
             {:keys [ohjaus id rivi rivi-index data-cy
-                    nayta-virheet? nykyinen-fokus i voi-muokata? fokus
+                    nayta-virheet? i voi-muokata?
                     muokatut-atom muokkaa! virheet skeema]}
             rivi-disabloitu? kentan-virheet tulevat-elementit]
          (let [sarake (assoc sarake :rivi rivi)
                hae-fn (or hae #(get % nimi))
                arvo (hae-fn rivi)
                tasaus-luokka (y/tasaus-luokka tasaa)
-               tayta-alas (:tayta-alas? sarake)
-               fokus-id [i nimi]]
+               tayta-alas (:tayta-alas? sarake)]
            (if (or (nil? muokattava?) (muokattava? rivi i))
              [:td {:class (str "muokattava "
                                tasaus-luokka
@@ -154,7 +157,7 @@
                                  " sisaltaa-virheen"))}
               (when (and (not (empty? kentan-virheet))
                          (case nayta-virheet?
-                           :fokus (= nykyinen-fokus [i nimi])
+                           :fokus @fokus?
                            :aina true))
                 (virheen-ohje kentan-virheet))
 
@@ -173,18 +176,19 @@
                 voi-muokata? [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
                               (when tayta-alas
-                                [grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
-                                                                :fokus-id fokus-id
+                                [grid-yleiset/tayta-alas-nappi {:fokus? @fokus?
                                                                 :arvo arvo :tayta-alas tayta-alas
                                                                 :rivi-index rivi-index
                                                                 :tulevat-elementit tulevat-elementit
                                                                 :sarake sarake :ohjaus ohjaus :rivi rivi}])
                               (if kentta-arity-3?
-                                [tee-kentta (assoc sarake :on-focus resetoi-fokus
+                                [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                   :on-blur fokus-pois-elementilta
                                                    :data-cy data-cy)
                                  arvo
                                  @data-muokkaus-fn]
-                                [tee-kentta (assoc sarake :on-focus resetoi-fokus
+                                [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                   :on-blur fokus-pois-elementilta
                                                    :data-cy data-cy)
                                  arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
@@ -248,7 +252,7 @@
                                 true)
      :reagent-render
      (fn [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
-                  nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
+                  nayta-virheet? i voi-muokata? tulevat-rivit
                   muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                   disabloi-rivi?
                   voi-poistaa? toimintonappi-fn] :as rivi-asetukset}]
@@ -263,8 +267,8 @@
               (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
                 (let [kentan-virheet (get rivin-virheet nimi)
                       elementin-asetukset (select-keys rivi-asetukset #{:ohjaus :vetolaatikot :id :rivi :rivi-index
-                                                                        :nayta-virheet? :nykyinen-fokus :i :voi-muokata?
-                                                                        :fokus :muokatut-atom :muokkaa!
+                                                                        :nayta-virheet? :i :voi-muokata?
+                                                                        :muokatut-atom :muokkaa!
                                                                         :virheet :skeema :data-cy})
                       hae (or hae #(get % nimi))
                       tulevat-elementit (when tayta-alas?
@@ -297,7 +301,7 @@
                                       (second %))
                                    jarjestetty-data))]
     (fn [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
-                 nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata? jarjesta-kun-kasketaan
+                 nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan
                  disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                  vetolaatikot-auki virheet-ylos? toimintonappi-fn data-cy tyhja-komponentti? tyhja-args]}]
       (let [muokatut-atom muokatut
@@ -324,37 +328,6 @@
                                                                                                                        (conj ((juxt virheet-ylos-fn) rivi) i))
                                                                                                                      (seq muokatut))
                                     :else (seq muokatut))]
-             #_(doall
-               (mapcat
-                 identity
-                 (keep-indexed
-                   (fn [i [id rivi]]
-                     (let [rivin-virheet (get kaikki-virheet id)
-                           otsikko (valiotsikot id)
-                           tulevat-rivit (tulevat-rivit i jarjestetty-data)
-                           bbar (fn [foo] (println "KKKKKKK: " foo) foo)]
-                       (when-not (:poistettu rivi)
-                         (doall
-                           (into (if otsikko
-                                   [^{:key (str "otsikko" i)}
-                                   [:tr.otsikko
-                                    [:td {:colSpan colspan}
-                                     (:teksti otsikko)]]]
-                                   [])
-                                 [;^{:key (str i "-" id)}
-                                  (muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
-                                                 :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
-                                                 :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
-                                                 :i i :voi-muokata? voi-muokata? :fokus fokus
-                                                 :tulevat-rivit tulevat-rivit :rivi-index i
-                                                 :muokatut-atom muokatut-atom :muokkaa! muokkaa!
-                                                 :disabloi-rivi? disabloi-rivi? :data-cy data-cy
-                                                 :virheet virheet :piilota-toiminnot? piilota-toiminnot?
-                                                 :skeema skeema :voi-poistaa? voi-poistaa?
-                                                 :toimintonappi-fn toimintonappi-fn})
-
-                                  (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))))
-                   jarjestetty-data)))
              (doall
                  (loop [i 0
                         [rivi-indeksineen & loput-rivit] jarjestetty-data
@@ -380,8 +353,8 @@
                                                   [^{:key (str i "-" id)}
                                                    [muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
                                                                   :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
-                                                                  :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
-                                                                  :i i :voi-muokata? voi-muokata? :fokus fokus
+                                                                  :nayta-virheet? nayta-virheet?
+                                                                  :i i :voi-muokata? voi-muokata?
                                                                   :tulevat-rivit tulevat-rivit :rivi-index i
                                                                   :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                                                   :disabloi-rivi? disabloi-rivi? :data-cy data-cy
@@ -467,7 +440,6 @@
         virheet-atom (or (:virheet opts) (atom {})) ;; validointivirheet: (:id rivi) => [virheet]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
-        fokus (atom nil)
         meta-atom (atom nil)
         hoida-taulukkotason-virheet (fn [uudet-tiedot virheet]
                                       (let [taulukon-virheet (validointi/validoi-taulukko uudet-tiedot skeema taulukko-validointi)
@@ -667,7 +639,6 @@
                voi-muokata? (if (nil? voi-muokata?)
                               true
                               voi-muokata?)
-               nykyinen-fokus @fokus
                valiotsikot (or valiotsikot {})]
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
@@ -692,9 +663,9 @@
                              :virheet virheet :valiotsikot valiotsikot
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
-                             :nykyinen-fokus nykyinen-fokus :peru! peru!
+                             :peru! peru!
                              :disabloi-rivi? disabloi-rivi? :jarjesta-kun-kasketaan jarjesta-kun-kasketaan
-                             :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
+                             :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?

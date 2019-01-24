@@ -84,7 +84,7 @@
                      [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
                       (when tayta-alas
-                        (grid-yleiset/tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
+                        (grid-yleiset/tayta-alas-nappi {:fokus? (= fokus fokus-id)
                                                         :arvo arvo :tayta-alas tayta-alas
                                                         :rivi-index rivi-index
                                                         :tulevat-elementit (map hae tulevat-rivit)
