@@ -269,7 +269,7 @@
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
       {:should-component-update (fn [_ old-argv new-argv]
-                                  (when (= "yllapitokohdeosat-Tierekisteriosoitteet" (:data-cy (nth new-argv 1)))
+                                  (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
                                     (when (not= (rest old-argv) (rest new-argv))
                                       (println "-------- NUMERO KENTTÄÄ PÄIVITETÄÄN -------")
                                       (println (:data-cy (nth new-argv 1)))
@@ -734,7 +734,7 @@
                                          true)
                          :on-blur #(do
                                      (when on-blur
-                                       (on-blur))
+                                       (on-blur %))
                                      (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
@@ -866,7 +866,7 @@
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                             (reset! auki false)
                                             %)
-                            :on-blur #(do (when on-blur (on-blur)) (koske-pvm!) (aseta! false) %)}]
+                            :on-blur #(do (when on-blur (on-blur %)) (koske-pvm!) (aseta! false) %)}]
                (when @auki
                  [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                   (muuta-pvm! (pvm/pvm %))
@@ -1381,7 +1381,7 @@
              :on-focus on-focus
              :on-blur #(do
                          (when on-blur
-                           (on-blur))
+                           (on-blur %))
                          (when-let [t (:keskenerainen @data)]
                            (when (and (re-matches #"\d+" t)
                                       (<= 0 (js/parseInt t) 23))
