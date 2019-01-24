@@ -507,11 +507,14 @@
                                                  {::m/muokkaaja-id (:id user)
                                                   ::m/muokattu (pvm/nyt)}
                                                  (-> tapahtuma
-                                                     (update ::lt/vesipinta-alaraja bigdec)
-                                                     (update ::lt/vesipinta-ylaraja bigdec)
+                                                     (update ::lt/vesipinta-alaraja #(when-not (nil? %)
+                                                                                       (bigdec %)))
+                                                     (update ::lt/vesipinta-ylaraja #(when-not (nil? %)
+                                                                                       (bigdec %)))
                                                      (dissoc ::lt/alukset ::lt/toiminnot)))
                                                {::lt/id (::lt/id tapahtuma)})
-                               ;; Palautetaan päivitetty tapahtuma
+                               ;; Palautetaan tapahtuma alkuperäisenä, koska update palauttaa vain ykkösen.
+                               ;; Ei haeta kannasta uudelleen, koska se on turhaa.
                                tapahtuma)
                              (specql/insert! db
                                              ::lt/liikennetapahtuma
@@ -521,7 +524,6 @@
                                                        ::lt/id
                                                        ::lt/alukset
                                                        ::lt/toiminnot))))]
-
         (doseq [osa (::lt/toiminnot tapahtuma)]
           (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
 
