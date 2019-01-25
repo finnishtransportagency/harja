@@ -21,8 +21,8 @@
   (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])]
       (when urakka-id (validointi/tarkista-urakka db urakka-id))
-      (validointi/tarkista-koordinaattien-jarjestys (get-in havainto [:havainto :sijainti :koordinaatit]))
-      (tks/tallenna-tyokonehavainto<!
+      ;(validointi/tarkista-koordinaattien-jarjestys (get-in havainto [:havainto :sijainti :koordinaatit]))
+      (tks/tallenna-tyokonehavainto-viivageometrialla<!
        db
        {:jarjestelma (get-in data [:otsikko :lahettaja :jarjestelma])
         :organisaationimi (get-in data [:otsikko :lahettaja :organisaatio :nimi])
@@ -31,8 +31,9 @@
         :lahetysaika (get-in data [:otsikko :lahetysaika])
         :tyokoneid (get-in havainto [:havainto :tyokone :id])
         :tyokonetyyppi (get-in havainto [:havainto :tyokone :tyokonetyyppi])
-        :xkoordinaatti (get-in havainto [:havainto :sijainti :koordinaatit :x])
-        :ykoordinaatti (get-in havainto [:havainto :sijainti :koordinaatit :y])
+        ;:xkoordinaatti (get-in havainto [:havainto :sijainti :koordinaatit :x])
+        ;:ykoordinaatti (get-in havainto [:havainto :sijainti :koordinaatit :y])
+        :viivageometria (get-in havainto [:havainto :sijainti :viivageometria :coordinates])
         :suunta (get-in havainto [:havainto :suunta])
         :urakkaid urakka-id
         :tehtavat (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat]))})))

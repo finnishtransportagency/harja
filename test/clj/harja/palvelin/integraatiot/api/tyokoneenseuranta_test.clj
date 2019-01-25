@@ -61,7 +61,7 @@
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
   (let [kutsu (api-tyokalut/post-kutsu
                 ;; kokonaan uusi tyokone, kantaan pitäisi tulla uusi rivi
-                ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
+                ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                               slurp
                                                               (.replace "__TEHTAVA__" "suolaus")))]
     (let [[sijainti] (first (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))
@@ -86,7 +86,7 @@
 (deftest kaikkien-tehtavien-kirjaus-toimii
   (doseq [tehtava skeeman-tehtavat]
     (let [kutsu (api-tyokalut/post-kutsu
-                  ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
+                  ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                                 slurp
                                                                 (.replace "__TEHTAVA__" tehtava)))]
       (let [tehtavat-kannassa (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))
@@ -95,3 +95,14 @@
         (is (= 200 (:status kutsu)))
         (is (= tehtava-kannassa tehtava)
             (str "Tehtävä '" tehtava "' raportoitu onnistuneesti"))))))
+
+(deftest tallenna-tyokoneen-seurantakirjaus-viivageometrialla
+  (let [kutsu (api-tyokalut/post-kutsu
+                ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneenseurannan-kirjaus-viivageometrialla-request.json"
+                                                              slurp))]
+    (let [[sijainti] (first (q "SELECT  st_asgeojson(sijainti) FROM tyokonehavainto WHERE tyokoneid=666"))
+          tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY tehtavat"))
+                       (konv/array->set))]
+      (is (= 200 (:status kutsu)))
+      (is (= (str sijainti) "{\"type\":\"LineString\",\"coordinates\":[[498919,7247099],[499271,7248395],[499399,7249019],[499820,7249885],[498519,7247299],[499371,7248595],[499499,7249319],[499520,7249685]]}"))
+      (is (= tehtavat #{"auraus ja sohjonpoisto" "suolaus"})))))
