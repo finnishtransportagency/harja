@@ -511,7 +511,7 @@
                         (:lisatieto t)
                         nil
                         nil nil nil nil nil nil
-                        "harja-ui")))]
+                        "harja-ui" nil nil)))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
       (doseq [tm toteumamateriaalit]
@@ -665,7 +665,7 @@
                                    nil
                                    sijainti
                                    nil nil nil nil nil
-                                   "harja-ui")))
+                                   "harja-ui" nil nil)))
           varustetoteuma {:id id
                           :tunniste tunniste
                           :toteuma toteuma-id

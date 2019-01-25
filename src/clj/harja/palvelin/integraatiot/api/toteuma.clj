@@ -50,7 +50,9 @@
             :sopimus sopimus-id
             :id (get-in toteuma [:tunniste :id])
             :urakka urakka-id
-            :luoja (:id kirjaaja)}))))
+            :luoja (:id kirjaaja)
+            :tyokonetyyppi (get-in toteuma [:tyokone :tyyppi])
+            :tyokonetunniste (get-in toteuma [:tyokone :tunniste])}))))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
@@ -95,7 +97,9 @@
            (get-in toteuma [:tunniste :id])
            (:reitti toteuma)
            nil nil nil nil nil
-           "harja-api"))))
+           "harja-api"
+           (get-in toteuma [:tyokone :tyyppi])
+           (get-in toteuma [:tyokone :tunniste])))))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (q-toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja) urakka-id)
