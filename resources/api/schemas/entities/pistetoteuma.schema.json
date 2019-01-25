@@ -16,6 +16,13 @@
       "additionalProperties": false,
       "required": true,
       "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
+    },
+    "tyokone": {
+      "id": "urn:harja/pistetoteuma/tyokone",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tyokone.schema.json",
+      "required": false
     }
   }
 }
