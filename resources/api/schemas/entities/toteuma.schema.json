@@ -65,6 +65,34 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json"
+    },
+    "tyokone": {
+      "id": "urn:harja/toteumat/0/toteuma/tyokone",
+      "type": "object",
+      "additionalProperties": false,
+      "required": false,
+      "properties": {
+        "id": {
+          "id": "urn:harja/toteumat/0/toteuma/tyokone/id",
+          "type": "integer",
+          "required": true
+        },
+        "tyokonetyyppi": {
+          "id": "urn:harja/toteumat/0/toteuma/tyokone/tyyppi",
+          "required": true,
+          "enum": [
+            "Henkilöauto",
+            "Jyrä",
+            "Kaivinkone",
+            "Kuorma-auto",
+            "Levittäjä",
+            "Pakettiauto",
+            "Pyörökuormaaja",
+            "Tiehöylä",
+            "Traktori"
+          ]
+        }
+      }
     }
   }
 }
