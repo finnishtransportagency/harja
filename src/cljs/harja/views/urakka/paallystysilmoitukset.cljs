@@ -415,7 +415,7 @@
         tayta-toimenpide-paallystetyyppi (tayta-fn :toimenpide-paallystetyyppi)
         tayta-raekoko (tayta-fn :toimenpide-raekoko)
         tayta-massamenekki (tayta-fn :massamenekki)
-        tayta-rc (tayta-fn :rc)
+        tayta-rc (tayta-fn :rc%)
         tayta-toimenpide-tyomenetelma (tayta-fn :toimenpide-tyomenetelma)
         tayta-leveys (tayta-fn :leveys)
         tayta-kokonaismassamaara (tayta-fn :kokonaismassamaara)

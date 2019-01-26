@@ -194,7 +194,7 @@
                     disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
                                      (when (and tayta-alas voi-muokata?)
-                                       [grid-yleiset/tayta-alas-nappi {:fokus? @fokus?
+                                       [grid-yleiset/tayta-alas-nappi {:fokus? @fokus? :fokus-atom fokus?
                                                                        :arvo arvo :tayta-alas tayta-alas
                                                                        :rivi-index rivi-index
                                                                        :tulevat-elementit tulevat-elementit

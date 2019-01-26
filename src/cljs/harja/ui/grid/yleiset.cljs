@@ -32,7 +32,7 @@
 
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin käyttäen tayta-fn funktiota."
-  [rivit sarake lahtorivi tayta-fn]
+  [rivit sarake lahtorivi tayta-fn rivi-index]
   (let [tayta-fn (or tayta-fn
                      ;; Oletusfunktio kopioi tiedon sellaisenaan
                      (let [nimi (:nimi sarake)
@@ -43,17 +43,18 @@
                        (fn [_ taytettava]
                          (aseta taytettava lahtoarvo))))
         tulos (loop [uudet-rivit (list)
+                     index 0
                      alku false
                      [rivi & rivit] rivit]
                 (if-not rivi
                   uudet-rivit
-                  ;; Tässä oletetaan, että kaikki rivit ovat uniikkeja
-                  (if (= lahtorivi rivi)
-                    (recur (conj uudet-rivit rivi) true rivit)
+                  (if (= rivi-index index)
+                    (recur (conj uudet-rivit rivi) (inc index) true rivit)
                     (if-not alku
-                      (recur (conj uudet-rivit rivi) false rivit)
+                      (recur (conj uudet-rivit rivi) (inc index) false rivit)
                       (recur (conj uudet-rivit
                                    (tayta-fn lahtorivi rivi))
+                             (inc index)
                              true
                              rivit)))))]
     ;; Palautetaan rivit alkuperäisessä järjestyksessä
@@ -75,24 +76,24 @@
 (defn tayta-alas-nappi [judui]
   (r/create-class
     {#_#_:should-component-update (fn [_ old-argv new-argv]
-                                (println "TÄYTÄ ALAS NAPPI")
-                                (doseq [[k v] (nth old-argv 1)
-                                        :let [new-v (get (nth new-argv 1) k)]
-                                        :when (not= v new-v)]
-                                  (if (= k :sarake)
-                                    (do
-                                      (println "SARKE ON ERI")
-                                      (doseq [[k-sarake v-sarake] v
-                                              :let [new-v-sarake (get v-sarake k-sarake)]
-                                              :when (not= v new-v)]
-                                        (println (str "VANHA " k-sarake ": " v-sarake))
-                                        (println (str "UUSI " k-sarake ": " new-v-sarake))))
-                                    (do
-                                      (println (str "VANHA " k ": " v))
-                                      (println (str "UUSI " k ": " new-v)))))
-                                true)
+                                    (println "TÄYTÄ ALAS NAPPI")
+                                    (doseq [[k v] (nth old-argv 1)
+                                            :let [new-v (get (nth new-argv 1) k)]
+                                            :when (not= v new-v)]
+                                      (if (= k :sarake)
+                                        (do
+                                          (println "SARKE ON ERI")
+                                          (doseq [[k-sarake v-sarake] v
+                                                  :let [new-v-sarake (get v-sarake k-sarake)]
+                                                  :when (not= v new-v)]
+                                            (println (str "VANHA " k-sarake ": " v-sarake))
+                                            (println (str "UUSI " k-sarake ": " new-v-sarake))))
+                                        (do
+                                          (println (str "VANHA " k ": " v))
+                                          (println (str "UUSI " k ": " new-v)))))
+                                    true)
      :reagent-render
-     (fn [{:keys [tayta-alas arvo rivi-index
+     (fn [{:keys [tayta-alas arvo rivi-index fokus-atom
                   tulevat-elementit sarake ohjaus rivi fokus?]}]
        (when (and fokus?
                   (tayta-alas arvo)
@@ -117,7 +118,10 @@
                            :top "-3px"
                            :display "flex"}}
              [napit/yleinen-toissijainen "Täytä"
-              #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+              #(do
+                 (when fokus-atom
+                   (reset! fokus-atom false))
+                 (muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake) rivi-index]))
               {:title (:tayta-tooltip sarake)
                :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
                :style (case napin-sijainti
@@ -132,7 +136,10 @@
              (when (and (:tayta-alas-toistuvasti? sarake)
                         (> rivi-index 0))                   ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
                [napit/yleinen-toissijainen "Toista"
-                #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
+                #(do
+                   (when fokus-atom
+                     (reset! fokus-atom false))
+                   (muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)]))
                 {:title "Toista tämä ja edelliset rivit alla oleville riveille."
                  :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
                  :style (case napin-sijainti
