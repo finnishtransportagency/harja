@@ -77,6 +77,7 @@
                 {::m/poistettu? false}))
 
 (defn hae-kokonaisuudet-ja-kohteet [db user]
+  (sort-by :harja.domain.kanavat.kohdekokonaisuus/id
   (hae-kokonaisuudet-ja-kohteet*
     (specql/fetch db
                   ::kok/kohdekokonaisuus
@@ -86,7 +87,7 @@
                   {::m/poistettu? false
                    ::kok/kohteet (op/or {::m/poistettu? op/null?}
                                         {::m/poistettu? false})})
-    (partial hae-kohteiden-urakkatiedot db user)))
+    (partial hae-kohteiden-urakkatiedot db user))))
 
 (defn hae-urakan-kohteet [db user urakka-id]
   (->>

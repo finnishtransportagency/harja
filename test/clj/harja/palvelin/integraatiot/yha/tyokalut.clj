@@ -4,7 +4,7 @@
 
 (def +onnistunut-urakoiden-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-   <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+   <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat>
       <urakka>
        <yha-id>3</yha-id>
@@ -22,20 +22,20 @@
 
 (def +virhevastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat/>
     <virhe>Tapahtui virhe</virhe>
   </urakoiden-hakuvastaus>")
 
 (def +urakoiden-tyhja-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat/>
   </urakoiden-hakuvastaus>")
 
 (def +invalidi-urakoiden-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <tagi-jonka-ei-kuulunut-elaa/>
     <urakat/>
     <virhe>Tapahtui virhe</virhe>
@@ -43,7 +43,7 @@
 
 (def +usean-urakan-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat>
       <urakka>
        <yha-id>3</yha-id>
@@ -74,7 +74,7 @@
 
 (def +onnistunut-urakan-kohdehakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
@@ -148,7 +148,7 @@
 
 (def +urakan-kohdehakuvastaus-jossa-toisen-urakan-sidottu-kohde+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
@@ -287,7 +287,7 @@
 
 (def +invalidi-urakan-kohdehakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns:yha=\"http://www.vayla.fi/xsd/yha\">
     <tagi-jonka-ei-kuulunut-elaa/>
     <kohteet/>
     <virhe>Tapahtui virhe</virhe>
@@ -295,6 +295,6 @@
 
 (def +tyhja-urakan-kohteidenhakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet/>
   </urakan-kohdehakuvastaus>")
