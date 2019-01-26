@@ -110,7 +110,7 @@
                                  disabled? (str "disabled"))
                   :value @teksti
                   :placeholder placeholder
-                  :disabled? disabled?
+                  :disabled disabled?
                   :size pituus
                   :on-change #(when (= (.-activeElement js/document) (.-target %))
                                 ;; tehdään haku vain jos elementti on fokusoitu
@@ -249,7 +249,7 @@
                      :on-change #(muuta! data %)
                      :on-focus on-focus
                      :on-blur on-blur
-                     :disabled? disabled?
+                     :disabled disabled?
                      :cols (or koko-sarakkeet 80)
                      :rows @rivit
                      :class (cond-> nil
