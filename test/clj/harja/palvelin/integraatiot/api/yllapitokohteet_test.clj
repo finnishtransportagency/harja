@@ -146,7 +146,6 @@
                                            :verkon-tarkoitus 5}]
                            :osoitteet [{:esiintyma "testi"
                                         :km-arvo "testi"
-                                        :kohdeosa-id 14
                                         :kokonaismassamaara 12.3
                                         :kuulamylly 4
                                         :leveys 1.2
@@ -162,7 +161,6 @@
                                         :tyomenetelma 72}
                                        {:esiintyma "testi2"
                                         :km-arvo "testi2"
-                                        :kohdeosa-id 15
                                         :kokonaismassamaara 12.3
                                         :kuulamylly 4
                                         :leveys 1.2
@@ -176,7 +174,9 @@
                                         :rc% 54
                                         :sideainetyyppi 1
                                         :tyomenetelma 72}]}
-                          ilmoitustiedot-kannassa)
+                          (update ilmoitustiedot-kannassa :osoitteet
+                                  (fn [osoitteet]
+                                    (mapv #(dissoc % :kohdeosa-id) osoitteet))))
       (tarkista-map-arvot
         {:massamaara nil
          :nimi "1. testialikohde"
@@ -298,7 +298,7 @@
                               :verkon-tarkoitus 5}]
               :osoitteet [{:esiintyma "testi"
                            :km-arvo "testi"
-                           :kohdeosa-id 14
+                           :kohdeosa-id (:id kohdeosa-1-kannassa)
                            :kokonaismassamaara 12.3
                            :kuulamylly 4
                            :leveys 1.2
@@ -314,7 +314,7 @@
                            :tyomenetelma 72}
                           {:esiintyma "testi2"
                            :km-arvo "testi2"
-                           :kohdeosa-id 15
+                           :kohdeosa-id (:id kohdeosa-2-kannassa)
                            :kokonaismassamaara 12.3
                            :kuulamylly 4
                            :leveys 1.2
