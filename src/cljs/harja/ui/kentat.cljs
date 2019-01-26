@@ -79,7 +79,7 @@
   (let [komponentti (:komponentti skeema)]
     [komponentti data]))
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
@@ -105,9 +105,12 @@
       (fn [_ data]
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
-         [:input {:class (when lomake? "form-control")
+         [:input {:class (cond-> nil
+                                 lomake? (str "form-control ")
+                                 disabled? (str "disabled"))
                   :value @teksti
                   :placeholder placeholder
+                  :disabled? disabled?
                   :size pituus
                   :on-change #(when (= (.-activeElement js/document) (.-target %))
                                 ;; tehdään haku vain jos elementti on fokusoitu
@@ -151,7 +154,8 @@
          (when (zero? hae-kun-yli-n-merkkia)
            [:button.nappi-hakualasveto
             {:on-click #(go (reset! tulokset (<! (hae lahde "")))
-                            (reset! valittu-idx nil))}
+                            (reset! valittu-idx nil))
+             :disabled disabled?}
             [:span.livicon-chevron-down]])
 
          [:ul.hakukentan-lista.dropdown-menu {:role "menu"
@@ -180,15 +184,18 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus on-blur lomake? toiminta-f]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus on-blur lomake? toiminta-f disabled?]
                                 :as kentta} data]
-  [:input {:class (when lomake? "form-control")
+  [:input {:class (cond-> nil
+                          lomake? (str "form-control ")
+                          disabled? (str "disabled"))
            :placeholder (placeholder kentta data)
            :on-change #(let [v (-> % .-target .-value)]
                          (when (or (not regex) (re-matches regex v))
                            (reset! data v)
                            (when toiminta-f
                              (toiminta-f v))))
+           :disabled disabled?
            :on-focus on-focus
            :on-blur on-blur
            :value @data
@@ -236,15 +243,18 @@
              (when (> erotus 1)                             ;; IE11 näyttää aluksi 24 vs 25
                (swap! rivit + (/ erotus 19)))))})
 
-      (fn [{:keys [nimi koko on-focus on-blur lomake?]} data]
+      (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?]} data]
         [:span.kentta-text
          [:textarea {:value @data
                      :on-change #(muuta! data %)
                      :on-focus on-focus
                      :on-blur on-blur
+                     :disabled? disabled?
                      :cols (or koko-sarakkeet 80)
                      :rows @rivit
-                     :class (when lomake? "form-control")
+                     :class (cond-> nil
+                                    lomake? (str "form-control ")
+                                    disabled? (str "disabled"))
                      :placeholder placeholder}]
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
@@ -268,7 +278,7 @@
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
-      {:should-component-update (fn [_ old-argv new-argv]
+      {#_#_:should-component-update (fn [_ old-argv new-argv]
                                   (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
                                     (when (not= (rest old-argv) (rest new-argv))
                                       (println "-------- NUMERO KENTTÄÄ PÄIVITETÄÄN -------")
@@ -284,7 +294,7 @@
                                       (println "UUSI DATA: " (nth new-argv 2))))
                                   true)}
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data))
@@ -293,8 +303,11 @@
               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
                                                         (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                         "})?"))]
-          [:input {:class (when lomake? "form-control")
+          [:input {:class (cond-> nil
+                                  lomake? (str "form-control ")
+                                  disabled? (str "disabled"))
                    :type "text"
+                   :disabled disabled?
                    :placeholder (placeholder kentta data)
                    :on-focus #(when on-focus (on-focus))
                    :on-blur #(do (when on-blur
@@ -331,16 +344,19 @@
                      :tyyppi :numero) data])
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
-  (nayta-arvo (assoc kentta :tyyppi :numero) data))
+  [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
 
 (defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
   (let [fmt #(big/fmt % desimaalien-maara)
         teksti (atom (some-> @data fmt))
         pattern (re-pattern (str "^(\\d+([.,]\\d{0," desimaalien-maara "})?)?$"))]
-    (fn [{:keys [lomake? desimaalien-maara]} data]
-      [:input {:class (when lomake? "form-control")
+    (fn [{:keys [lomake? desimaalien-maara disabled?]} data]
+      [:input {:class (cond-> nil
+                              lomake? (str "form-control ")
+                              disabled? (str "disabled"))
                :placeholder placeholder
+               :disabled disabled?
                :type "text"
                :value @teksti
                :on-change #(let [txt (-> % .-target .-value)]
@@ -352,21 +368,27 @@
 (defmethod nayta-arvo :big [{:keys [desimaalien-maara]} data]
   [:span (some-> @data (big/fmt desimaalien-maara))])
 
-(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake?] :as kentta} data]
-  [:input {:class (when lomake? "form-control")
+(defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? disabled?] :as kentta} data]
+  [:input {:class (cond-> nil
+                          lomake? (str "form-control ")
+                          disabled? (str "disabled"))
            :type "email"
            :value @data
+           :disabled disabled?
            :on-focus on-focus
            :on-blur on-blur
            :on-change #(reset! data (-> % .-target .-value))}])
 
 
 
-(defmethod tee-kentta :puhelin [{:keys [on-focus on-blur pituus lomake? placeholder] :as kentta} data]
-  [:input {:class (when lomake? "form-control")
+(defmethod tee-kentta :puhelin [{:keys [on-focus on-blur pituus lomake? placeholder disabled?] :as kentta} data]
+  [:input {:class (cond-> nil
+                          lomake? (str "form-control ")
+                          disabled? (str "disabled"))
            :type "tel"
            :value @data
            :max-length pituus
+           :disabled disabled?
            :on-focus on-focus
            :on-blur on-blur
            :placeholder placeholder
@@ -375,7 +397,7 @@
                            (reset! data uusi)))}])
 
 
-(defmethod tee-kentta :radio [{:keys [valinta-nayta valinta-arvo valinnat on-focus on-blur]} data]
+(defmethod tee-kentta :radio [{:keys [valinta-nayta valinta-arvo valinnat on-focus on-blur disabled?]} data]
   (let [arvo (or valinta-arvo identity)
         nayta (or valinta-nayta str)
         nykyinen-arvo @data]
@@ -388,6 +410,7 @@
                 :on-click valitse}
          [:input {:type "radio"
                   :value 1
+                  :disabled disabled?
                   :checked (= nykyinen-arvo arvo)
                   :on-change valitse}]
          (when-not (str/blank? label)
@@ -401,6 +424,7 @@
                           [:span.radiovalinta
                            [:input {:type "radio"
                                     :value i
+                                    :disabled disabled?
                                     :checked (= nykyinen-arvo arvo)
                                     :on-change #(reset! data arvo)}]
                            [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
@@ -491,7 +515,7 @@
     (komp/luo
       (komp/piirretty paivita-valitila)
       (komp/kun-muuttui paivita-valitila)
-      (fn [{:keys [teksti nayta-rivina?]} data]
+      (fn [{:keys [teksti nayta-rivina? disabled?]} data]
         (let [arvo (if (nil? @data)
                      false
                      @data)]
@@ -500,6 +524,7 @@
                            [:label {:on-click #(.stopPropagation %)}
                             [:input {:id input-id
                                      :type "checkbox"
+                                     :disabled disabled?
                                      :checked arvo
                                      :on-change #(let [valittu? (-> % .-target .-checked)]
                                                    (reset! data valittu?))}]
@@ -619,17 +644,20 @@
 
 
 
-(defmethod tee-kentta :kombo [{:keys [valinnat on-focus on-blur lomake?]} data]
+(defmethod tee-kentta :kombo [{:keys [valinnat on-focus on-blur lomake? disabled?]} data]
   (let [auki (atom false)]
     (fn [{:keys [valinnat]} data]
       (let [nykyinen-arvo (or @data "")]
         [:div.dropdown {:class (when @auki "open")}
-         [:input.kombo {:class (when lomake? "form-control")
+         [:input.kombo {:class (cond-> nil
+                                       lomake? (str "form-control ")
+                                       disabled? (str "disabled"))
                         :type "text" :value nykyinen-arvo
                         :on-focus on-focus
                         :on-blur on-blur
+                        :disabled disabled?
                         :on-change #(reset! data (-> % .-target .-value))}]
-         [:button {:on-click #(do (swap! auki not) nil)}
+         [:button {:on-click #(do (swap! auki not) nil) :disabled disabled?}
           [:span.caret ""]]
          [:ul.dropdown-menu {:role "menu"}
           (for [v (filter #(not= -1 (.indexOf (.toLowerCase (str %)) (.toLowerCase nykyinen-arvo))) valinnat)]

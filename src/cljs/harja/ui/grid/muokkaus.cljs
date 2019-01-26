@@ -64,7 +64,7 @@
 
 (defn- muokkauselementin-tila
   [{:keys [aseta nimi valinta-arvo hae]}
-   {:keys [muokkaa! muokatut-atom virheet skeema id i rivi]}
+   {:keys [muokkaa! muokatut-atom virheet skeema id i rivi data-cy]}
    rivi-disabloitu? kentan-virheet
    tulevat-elementit]
   (let [grid-tilan-muokkaus-fn (atom (fn [uusi]
@@ -90,7 +90,7 @@
                                     (reset! fokus? false)))
         seuranta-avain (keyword (str (gensym (str i nimi))))]
     (r/create-class
-      {:should-component-update (fn [_ old-argv new-argv]
+      {#_#_:should-component-update (fn [_ old-argv new-argv]
                                   (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 2)))
                                     (when (not= (rest old-argv) (rest new-argv))
                                       (println "-------- MUOKKAUS GRID TILA PÄIVITETÄÄN -------")
@@ -99,8 +99,17 @@
                                             :let [new-v (get (nth new-argv 2) k)]
                                             :when (not= v new-v)]
                                       (println "RIVI NUMERO: " (:i (nth old-argv 2)))
-                                      (println (str "VANHA " k ": " v))
-                                      (println (str "UUSI " k ": " new-v)))
+                                      (if (= k :sarake)
+                                        (do
+                                          (println "SARKE ON ERI")
+                                          (doseq [[k-sarake v-sarake] v
+                                                  :let [new-v-sarake (get v-sarake k-sarake)]
+                                                  :when (not= v new-v)]
+                                            (println (str "VANHA " k-sarake ": " v-sarake))
+                                            (println (str "UUSI " k-sarake ": " new-v-sarake))))
+                                        (do
+                                          (println (str "VANHA " k ": " v))
+                                          (println (str "UUSI " k ": " new-v)))))
                                     (when (not= (nth old-argv 1) (nth new-argv 1))
                                       (println "VANHA SARAKE: " (nth old-argv 1))
                                       (println "UUSI SARAKE: " (nth new-argv 1)))
@@ -115,15 +124,21 @@
                                       (println "UUSI TULEVAT ELEMENTIT: " (nth new-argv 5))))
                                   true)
        :component-will-mount (fn [& _]
+                               #_(println "-----> MOUNTS: " data-cy " " i " " nimi)
                                (add-watch arvo-atom seuranta-avain
                                           (fn [_ _ _ uusi-arvo]
                                             (@grid-tilan-muokkaus-fn uusi-arvo))))
        :component-will-unmount (fn [& _]
                                  (remove-watch arvo-atom seuranta-avain))
        :component-will-receive-props (fn [this new-argv]
-                                       (let [[_ {vanha-valinta-arvo :valinta-arvo} {vanha-skeema :skeema} _ _] (r/argv this)
-                                             {:keys [aseta nimi valinta-arvo]} (nth new-argv 1)
-                                             {:keys [muokkaa! muokatut-atom virheet skeema id]} (nth new-argv 2)]
+                                       (let [[_ {vanha-valinta-arvo :valinta-arvo}
+                                              {vanha-skeema :skeema vanha-rivi :rivi} _ _] (r/argv this)
+                                             {:keys [aseta nimi valinta-arvo hae kentta-arity-3?]} (nth new-argv 1)
+                                             {:keys [muokkaa! muokatut-atom virheet rivi skeema id]} (nth new-argv 2)
+                                             hae-fn (or hae #(get % nimi))]
+                                         (when (and (not kentta-arity-3?)
+                                                    (not= (hae-fn rivi) (hae-fn vanha-rivi)))
+                                           (reset! arvo-atom (hae-fn rivi)))
                                          (when (not= skeema vanha-skeema)
                                            (reset! grid-tilan-muokkaus-fn
                                                    (fn [uusi]
@@ -144,7 +159,7 @@
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa
                     komponentti hae kentta-arity-3? komponentti-args] :as sarake}
             {:keys [ohjaus id rivi rivi-index data-cy
-                    nayta-virheet? i voi-muokata?
+                    nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema]}
             rivi-disabloitu? kentan-virheet tulevat-elementit]
          (let [sarake (assoc sarake :rivi rivi)
@@ -175,24 +190,27 @@
                 (= tyyppi :komponentti) (apply komponentti rivi {:index i :muokataan? true} komponentti-args)
                 (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index i :muokataan? true}]
                                                              komponentti-args))
-                voi-muokata? [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+                (or voi-muokata?
+                    disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
-                              (when tayta-alas
-                                [grid-yleiset/tayta-alas-nappi {:fokus? @fokus?
-                                                                :arvo arvo :tayta-alas tayta-alas
-                                                                :rivi-index rivi-index
-                                                                :tulevat-elementit tulevat-elementit
-                                                                :sarake sarake :ohjaus ohjaus :rivi rivi}])
-                              (if kentta-arity-3?
-                                [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                   :on-blur fokus-pois-elementilta
-                                                   :data-cy data-cy)
-                                 arvo
-                                 @data-muokkaus-fn]
-                                [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                   :on-blur fokus-pois-elementilta
-                                                   :data-cy data-cy)
-                                 arvo-atom])]
+                                     (when (and tayta-alas voi-muokata?)
+                                       [grid-yleiset/tayta-alas-nappi {:fokus? @fokus?
+                                                                       :arvo arvo :tayta-alas tayta-alas
+                                                                       :rivi-index rivi-index
+                                                                       :tulevat-elementit tulevat-elementit
+                                                                       :sarake sarake :ohjaus ohjaus :rivi rivi}])
+                                     (if kentta-arity-3?
+                                       [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                          :on-blur fokus-pois-elementilta
+                                                          :data-cy data-cy
+                                                          :disabled? (not voi-muokata?))
+                                        arvo
+                                        @data-muokkaus-fn]
+                                       [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                          :on-blur fokus-pois-elementilta
+                                                          :data-cy data-cy
+                                                          :disabled? (not voi-muokata?))
+                                        arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
              [ei-muokattava-elementti tasaus-luokka fmt arvo])))})))
@@ -202,7 +220,7 @@
                           rivi-disabloitu? kentan-virheet
                           tulevat-elementit]
   (r/create-class
-    {:should-component-update (fn [_ old-argv new-argv]
+    {#_#_:should-component-update (fn [_ old-argv new-argv]
                                 (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 2)))
                                   (when (not= (rest old-argv) (rest new-argv))
                                     (println "-------- MUOKKAUS GRID ELEMENTTIÄ PÄIVITETÄÄN -------")
@@ -240,7 +258,7 @@
 
 (defn- muokkausrivi [riviasetukset]
   (r/create-class
-    {:should-component-update (fn [_ old-argv new-argv]
+    {#_#_:should-component-update (fn [_ old-argv new-argv]
                                 (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
                                   (when (not= (rest old-argv) (rest new-argv))
                                     (println "-------- MUOKKAUS GRID RIVIÄ PÄIVITETÄÄN -------")
@@ -253,7 +271,7 @@
                                     (println (str "UUSI " k ": " new-v))))
                                 true)
      :reagent-render
-     (fn [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
+     (fn [{:keys [rivinumerot? ohjaus vetolaatikot id rivi #_rivin-virheet rivi-index
                   nayta-virheet? i voi-muokata? tulevat-rivit
                   muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                   disabloi-rivi?
@@ -267,10 +285,10 @@
           (doall
             (map-indexed
               (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
-                (let [kentan-virheet (get rivin-virheet nimi)
+                (let [kentan-virheet (-> @virheet (get id) nimi) #_(get rivin-virheet nimi)
                       elementin-asetukset (select-keys rivi-asetukset #{:ohjaus :vetolaatikot :id :rivi :rivi-index
                                                                         :nayta-virheet? :i :voi-muokata?
-                                                                        :muokatut-atom :muokkaa!
+                                                                        :muokatut-atom :muokkaa! :disable-input?
                                                                         :virheet :skeema :data-cy})
                       hae (or hae #(get % nimi))
                       tulevat-elementit (when tayta-alas?
@@ -279,25 +297,26 @@
                   [muokkauselementti sarake elementin-asetukset rivi-disabloitu? kentan-virheet tulevat-elementit]))
               skeema))
           (when-not piilota-toiminnot?
-            [:td.toiminnot
-             (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
-                 (when (and (not= false voi-muokata?)
-                            (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-                   [:span.klikattava {:on-click
-                                      #(do (.preventDefault %)
-                                           (muokkaa! muokatut-atom
-                                                     virheet skeema
-                                                     id assoc
-                                                     :poistettu true))}
-                    (ikonit/livicon-trash)]))
-             (when-not (empty? rivin-virheet)
-               [:span.rivilla-virheita
-                (ikonit/livicon-warning-sign)])])]))}))
+            (let [rivin-virheet (get @virheet id)]
+              [:td.toiminnot
+               (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
+                   (when (and (not= false voi-muokata?)
+                              (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
+                     [:span.klikattava {:on-click
+                                        #(do (.preventDefault %)
+                                             (muokkaa! muokatut-atom
+                                                       virheet skeema
+                                                       id assoc
+                                                       :poistettu true))}
+                      (ikonit/livicon-trash)]))
+               (when-not (empty? rivin-virheet)
+                 [:span.rivilla-virheita
+                  (ikonit/livicon-warning-sign)])]))]))}))
 
 (defn- kasketty-jarjestys [{:keys [virheet-ylos-fn jarjesta-kun-kasketaan muokatut muokatut-atom]}]
   (sort-by (juxt #(virheet-ylos-fn (second %)) #(jarjesta-kun-kasketaan %)) (seq muokatut)))
 
-(defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
+(defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot disable-input?
                              nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                              disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                              vetolaatikot-auki virheet-ylos? toimintonappi-fn data-cy tyhja-komponentti? tyhja-args]}]
@@ -305,7 +324,7 @@
         muokatut @muokatut
         colspan (inc (count skeema))]
     [:tbody
-     (when (= "paallystystoimenpiteen-tiedot" data-cy)
+     #_(when (= "paallystystoimenpiteen-tiedot" data-cy)
        (println "FUUUUU"))
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan}
@@ -343,7 +362,7 @@
                         (map second (rest loput-rivit))
                         muokkausrivit)
                  (let [[id rivi] rivi-indeksineen
-                       rivin-virheet (get kaikki-virheet id)
+                       #_#_rivin-virheet (get kaikki-virheet id)
                        otsikko (valiotsikot id)
                        muokkausrivi (doall
                                       (into (if otsikko
@@ -354,8 +373,8 @@
                                               [])
                                             [^{:key (str i "-" id)}
                                             [muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
-                                                           :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
-                                                           :nayta-virheet? nayta-virheet?
+                                                           :vetolaatikot vetolaatikot :id id :rivi rivi #_#_:rivin-virheet rivin-virheet
+                                                           :nayta-virheet? nayta-virheet? :disable-input? disable-input?
                                                            :i i :voi-muokata? voi-muokata?
                                                            :tulevat-rivit tulevat-rivit :rivi-index i
                                                            :muokatut-atom muokatut-atom :muokkaa! muokkaa!
@@ -439,9 +458,9 @@
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi] :as opts}
    skeema muokatut]
-  (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
+  (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
-        virheet-atom (or (:virheet opts) (atom {})) ;; validointivirheet: (:id rivi) => [virheet]
+        virheet-atom (or (:virheet opts) (atom {}))         ;; validointivirheet: (:id rivi) => [virheet]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
         meta-atom (atom nil)
@@ -604,7 +623,7 @@
                                                                            :muokatut muokatut-arvot
                                                                            :muokatut-atom muokatut}))]
                           (reset! muokatut (with-meta jarjestetyt-arvot
-                                             (:arvot @meta-atom)))
+                                                      (:arvot @meta-atom)))
                           (swap! meta-atom assoc :paivita? false)))
         muokkauspaneeli? (if (some? muokkauspaneeli?) muokkauspaneeli? true)
         virheet (or (:virheet opts) virheet-atom)
@@ -612,28 +631,28 @@
         nil-fn (constantly nil)]
     (r/create-class
 
-      {:should-component-update (fn [_ old-argv new-argv]
-                                  (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
-                                    (when (not= (rest old-argv) (rest new-argv))
-                                      (println "-------- MUOKKAUS GRID PÄIVITETÄÄN -------")
-                                      (println (:data-cy (nth new-argv 1))))
-                                    (when-not (= (nth old-argv 1) (nth new-argv 1))
-                                      (doseq [[k v] (nth old-argv 1)
-                                              :let [new-v (get (nth new-argv 1) k)]
-                                              :when (not= v new-v)]
-                                        (println (str "VANHA " k ": " v))
-                                        (println (str "UUSI " k ": " new-v))))
-                                    (when-not (= (nth old-argv 2) (nth new-argv 2))
-                                      (println "VANHA skeema: " (nth old-argv 2))
-                                      (println "UUSI skeema: " (nth new-argv 2)))
-                                    (when-not (= (nth old-argv 3) (nth new-argv 3))
-                                      (println "VANHA muokatut: " (nth old-argv 3))
-                                      (println "UUSI muokatut: " (nth new-argv 3))))
-                                  true)
+      {#_#_:should-component-update (fn [_ old-argv new-argv]
+                                      (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
+                                        (when (not= (rest old-argv) (rest new-argv))
+                                          (println "-------- MUOKKAUS GRID PÄIVITETÄÄN -------")
+                                          (println (:data-cy (nth new-argv 1))))
+                                        (when-not (= (nth old-argv 1) (nth new-argv 1))
+                                          (doseq [[k v] (nth old-argv 1)
+                                                  :let [new-v (get (nth new-argv 1) k)]
+                                                  :when (not= v new-v)]
+                                            (println (str "VANHA " k ": " v))
+                                            (println (str "UUSI " k ": " new-v))))
+                                        (when-not (= (nth old-argv 2) (nth new-argv 2))
+                                          (println "VANHA skeema: " (nth old-argv 2))
+                                          (println "UUSI skeema: " (nth new-argv 2)))
+                                        (when-not (= (nth old-argv 3) (nth new-argv 3))
+                                          (println "VANHA muokatut: " (nth old-argv 3))
+                                          (println "UUSI muokatut: " (nth new-argv 3))))
+                                      true)
        :reagent-render
        (fn [{:keys [otsikko yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
-                    vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet
+                    vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
@@ -664,7 +683,7 @@
              [:table.grid
               [gridin-otsikot skeema rivinumerot? piilota-toiminnot?]
               [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja :data-cy data-cy
-                             :virheet virheet :valiotsikot valiotsikot
+                             :virheet virheet :valiotsikot valiotsikot :disable-input? disable-input?
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
                              :peru! peru! :rivin-avaimet rivin-avaimet

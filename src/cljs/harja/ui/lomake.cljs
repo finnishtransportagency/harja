@@ -237,7 +237,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?] :as s}
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
+           piilota-label?] :as s}
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
@@ -259,7 +260,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     " sisaltaa-huomautuksen"))}
      [:div {:class (when sisallon-leveys?
                      "sisallon-leveys lomake-kentan-leveys")}
-      (when-not (+piilota-label+ tyyppi)
+      (when-not (or (+piilota-label+ tyyppi)
+                    piilota-label?)
         [:label.control-label {:for nimi}
          [:span
           [:span.kentan-label otsikko]

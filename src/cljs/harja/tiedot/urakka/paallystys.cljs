@@ -338,6 +338,15 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               ;; Poistetaan pituus
+                               (update-in [:ilmoitustiedot :osoitteet] #(do (println %) (into (sorted-map)
+                                                                                              (map (fn [[id rivi]]
+                                                                                                     [id (dissoc rivi :pituus)])
+                                                                                                   %))))
+                               (update-in [:ilmoitustiedot :alustatoimet] #(into (sorted-map)
+                                                                                 (map (fn [[id rivi]]
+                                                                                        [id (dissoc rivi :pituus)])
+                                                                                      %)))
                                ;; Filteröidään uudet poistetut
                                (update-in [:ilmoitustiedot :osoitteet] #(gridin-muokkaus/filteroi-uudet-poistetut
                                                                           (into (sorted-map)

@@ -299,7 +299,7 @@
                                       (false? lukittu?)
                                       kirjoitusoikeus?))]
         [:div.row
-         [:div.col-md-6
+         [:div.col-sm-12.col-md-6
           [:h3 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
                           :muokkaa! (fn [uusi]
@@ -315,9 +315,10 @@
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
             (merge
               {:nimi :tr-osoite
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
               (if muokattava?
                 {:tyyppi :reagent-komponentti
+                 :piilota-label? true
                  :komponentti tr-kentta
                  :komponentti-args [e! paallystysilmoituksen-osa]
                  :validoi (get-in validoinnit [:perustiedot :tr-osoite])
@@ -395,6 +396,10 @@
        :ikoni (ikonit/livicon-wrench)
        :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
 
+(defn tayta-fn [avain]
+  (fn [toistettava-rivi tama-rivi]
+    (assoc tama-rivi avain (avain toistettava-rivi))))
+
 (defn paallystystoimenpiteen-tiedot
   [yllapitokohdeosat-tila paallystystoimenpiteen-tiedot-ohjauskahva false-fn muokkaus-mahdollista?
    paallystystoimenpide-virhe tekninen-osa-voi-muokata? tietojen-validointi]
@@ -407,9 +412,6 @@
                                                   (str (:lyhenne rivi) " - " (:nimi rivi))
                                                   (:nimi rivi)))
         kuulamylly-valinta-nayta #(:nimi %)
-        tayta-fn (fn [avain]
-                   (fn [toistettava-rivi tama-rivi]
-                     (assoc tama-rivi avain (avain toistettava-rivi))))
         tayta-toimenpide-paallystetyyppi (tayta-fn :toimenpide-paallystetyyppi)
         tayta-raekoko (tayta-fn :toimenpide-raekoko)
         tayta-massamenekki (tayta-fn :massamenekki)
@@ -421,7 +423,7 @@
         tayta-kuulamylly (tayta-fn :kuulamylly)
         tayta-alas?-fn #(not (nil? %))]
     (komp/luo
-      {:should-component-update (fn [_ old-argv new-argv]
+      {#_#_:should-component-update (fn [_ old-argv new-argv]
                                   (when (not= (rest old-argv) (rest new-argv))
                                     (println "-------- PÄÄLLYSTYSTOIMENPITEET PÄIVITETÄÄN -------"))
                                   (when-not (= (nth old-argv 1) (nth new-argv 1))
@@ -457,6 +459,7 @@
           :voi-kumota? false
           :voi-poistaa? false-fn
           :voi-muokata? muokkaus-mahdollista?
+          :disable-input? true
           :virheet paallystystoimenpide-virhe
           :virhe-viesti (when (and (not muokkaus-mahdollista?)
                                    tekninen-osa-voi-muokata?)
@@ -494,8 +497,7 @@
            :tayta-fn tayta-massamenekki
            :tayta-sijainti :ylos
            :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
-           :tayta-alas-toistuvasti? tayta-alas?-fn
-           :tayta-toistuvasti-fn tayta-massamenekki}
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
           {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
            :tasaa :oikea :pituus-max 100
            :validoi (:rc tietojen-validointi)
@@ -503,8 +505,7 @@
            :tayta-fn tayta-rc
            :tayta-sijainti :ylos
            :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"
-           :tayta-alas-toistuvasti? tayta-alas?-fn
-           :tayta-toistuvasti-fn tayta-rc}
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
           (assoc paallystys/tyomenetelma-grid-skeema
                  :nimi :toimenpide-tyomenetelma
                  :fokus-klikin-jalkeen? true
@@ -514,7 +515,6 @@
                  :tayta-sijainti :ylos
                  :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
                  :tayta-alas-toistuvasti? tayta-alas?-fn
-                 :tayta-toistuvasti-fn tayta-toimenpide-tyomenetelma
                  :valinta-nayta toimenpide-tyomenetelma-valinta-nayta)
           {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
            :tasaa :oikea
@@ -522,24 +522,21 @@
            :tayta-fn tayta-leveys
            :tayta-sijainti :ylos
            :tayta-tooltip "Kopioi sama leveys alla oleville riveille"
-           :tayta-alas-toistuvasti? tayta-alas?-fn
-           :tayta-toistuvasti-fn tayta-leveys}
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
           {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10
            :tayta-alas? tayta-alas?-fn
            :tayta-fn tayta-kokonaismassamaara
            :tayta-sijainti :ylos
            :tayta-tooltip "Kopioi sama kokonaismassamäärä alla oleville riveille"
-           :tayta-alas-toistuvasti? tayta-alas?-fn
-           :tayta-toistuvasti-fn tayta-kokonaismassamaara}
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
           {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
            :tasaa :oikea
            :tayta-alas? tayta-alas?-fn
            :tayta-fn tayta-pinta-ala
            :tayta-sijainti :ylos
            :tayta-tooltip "Kopioi sama pinta-ala alla oleville riveille"
-           :tayta-alas-toistuvasti? tayta-alas?-fn
-           :tayta-toistuvasti-fn tayta-pinta-ala}
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
           {:otsikko "Kuulamylly"
            :nimi :kuulamylly
            :fokus-klikin-jalkeen? true
@@ -553,125 +550,109 @@
            :tayta-fn tayta-kuulamylly
            :tayta-sijainti :ylos
            :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
-           :tayta-alas-toistuvasti? tayta-alas?-fn
-           :tayta-toistuvasti-fn tayta-kuulamylly}]
+           :tayta-alas-toistuvasti? tayta-alas?-fn}]
          yllapitokohdeosat-tila]))))
 
 (defn kiviaines-ja-sideaine
   [yllapitokohdeosat-tila kiviaines-ja-sideaine-ohjauskahva false-fn muokkaus-mahdollista? tekninen-osa-voi-muokata? kiviaines-virhe]
-  (komp/luo
-    {:should-component-update (fn [_ old-argv new-argv]
-                                (when (not= (rest old-argv) (rest new-argv))
-                                    (println "--------- KIVIAINES JA SIDEAINE RENDER ----------"))
-                                (when-not (= (nth old-argv 1) (nth new-argv 1))
-                                  (println "VANHA yllapitokohdeosat-tila: " (nth old-argv 1))
-                                  (println "UUSI yllapitokohdeosat-tila: " (nth new-argv 1)))
-                                (when-not (= (nth old-argv 2) (nth new-argv 2))
-                                  (println "VANHA kiviaines-ja-sideaine-ohjauskahva: " (nth old-argv 2))
-                                  (println "UUSI kiviaines-ja-sideaine-ohjauskahva: " (nth new-argv 2)))
-                                (when-not (= (nth old-argv 3) (nth new-argv 3))
-                                  (println "VANHA false-fn: " (nth old-argv 3))
-                                  (println "UUSI false-fn: " (nth new-argv 3)))
-                                (when-not (= (nth old-argv 4) (nth new-argv 4))
-                                  (println "VANHA muokkaus-mahdollista?: " (nth old-argv 4))
-                                  (println "UUSI muokkaus-mahdollista?: " (nth new-argv 4)))
-                                (when-not (= (nth old-argv 5) (nth new-argv 5))
-                                  (println "VANHA tekninen-osa-voi-muokata?: " (nth old-argv 5))
-                                  (println "UUSI tekninen-osa-voi-muokata?: " (nth new-argv 5)))
-                                (when-not (= (nth old-argv 6) (nth new-argv 6))
-                                  (println "VANHA kiviaines-virhe: " (nth old-argv 6))
-                                  (println "UUSI kiviaines-virhe: " (nth new-argv 6)))
-                                true)}
-    (fn [yllapitokohdeosat-tila kiviaines-ja-sideaine-ohjauskahva false-fn muokkaus-mahdollista? tekninen-osa-voi-muokata? kiviaines-virhe]
-      [grid/muokkaus-grid
-       {:otsikko "Kiviaines ja sideaine"
-        :data-cy "kiviaines-ja-sideaine"
-        :ohjaus kiviaines-ja-sideaine-ohjauskahva
-        :rivinumerot? true
-        :voi-lisata? false
-        :voi-kumota? false
-        :voi-poistaa? false-fn
-        :voi-muokata? muokkaus-mahdollista?
-        :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                 tekninen-osa-voi-muokata?)
-                        "Tierekisterikohteet taulukko on virheellisessä tilassa")
-        :virheet kiviaines-virhe
-        :jarjesta-avaimen-mukaan identity}
-       [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
-         :leveys 30
-         :tayta-alas? #(not (nil? %))
-         :tayta-fn (fn [lahtorivi tama-rivi]
-                     (assoc tama-rivi :esiintyma (:esiintyma lahtorivi)))
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama esiintymä alla oleville riveille"
-         :tayta-alas-toistuvasti? #(not (nil? %))
-         :tayta-toistuvasti-fn
-         (fn [toistettava-rivi tama-rivi]
-           (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-        {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
-         :tayta-alas? #(not (nil? %))
-         :tayta-fn (fn [lahtorivi tama-rivi]
-                     (assoc tama-rivi :km-arvo (:km-arvo lahtorivi)))
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama KM-arvo alla oleville riveille"
-         :tayta-alas-toistuvasti? #(not (nil? %))
-         :tayta-toistuvasti-fn
-         (fn [toistettava-rivi tama-rivi]
-           (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-        {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
-         :leveys 20
-         :tayta-alas? #(not (nil? %))
-         :tayta-fn (fn [lahtorivi tama-rivi]
-                     (assoc tama-rivi :muotoarvo (:muotoarvo lahtorivi)))
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama muotoarvo alla oleville riveille"
-         :tayta-alas-toistuvasti? #(not (nil? %))
-         :tayta-toistuvasti-fn
-         (fn [toistettava-rivi tama-rivi]
-           (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-        {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
-         :tyyppi :valinta
-         :fokus-klikin-jalkeen? true
-         :valinta-arvo :koodi
-         :valinta-nayta #(:nimi %)
-         :valinnat pot/+sideainetyypit-ja-nil+
-         :tayta-alas? #(not (nil? %))
-         :tayta-fn (fn [lahtorivi tama-rivi]
-                     (assoc tama-rivi :sideainetyyppi (:sideainetyyppi lahtorivi)))
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama sideainetyyppi alla oleville riveille"
-         :tayta-alas-toistuvasti? #(not (nil? %))
-         :tayta-toistuvasti-fn
-         (fn [toistettava-rivi tama-rivi]
-           (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-        {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
-         :tayta-alas? #(not (nil? %))
-         :tayta-fn (fn [lahtorivi tama-rivi]
-                     (assoc tama-rivi :pitoisuus (:pitoisuus lahtorivi)))
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama pitoisuus alla oleville riveille"
-         :tayta-alas-toistuvasti? #(not (nil? %))
-         :tayta-toistuvasti-fn
-         (fn [toistettava-rivi tama-rivi]
-           (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
-        {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
-         :pituus-max 256
-         :tayta-alas? #(not (nil? %))
-         :tayta-fn (fn [lahtorivi tama-rivi]
-                     (assoc tama-rivi :lisaaineet (:lisaaineet lahtorivi)))
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama tieto alla oleville riveille"
-         :tayta-alas-toistuvasti? #(not (nil? %))
-         :tayta-toistuvasti-fn
-         (fn [toistettava-rivi tama-rivi]
-           (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}]
-       yllapitokohdeosat-tila])))
+  (let [tayta-esiintyma (tayta-fn :esiintyma)
+        tayta-km-arvo (tayta-fn :km-arvo)
+        tayta-muotoarvo (tayta-fn :muotoarvo)
+        tayta-sideainetyyppi (tayta-fn :sideainetyyppi)
+        tayta-pitoisuus (tayta-fn :pitoisuus)
+        tayta-lisaaineet (tayta-fn :lisaaineet)
+        tayta-alas?-fn #(not (nil? %))]
+    (komp/luo
+      {#_#_:should-component-update (fn [_ old-argv new-argv]
+                                      (when (not= (rest old-argv) (rest new-argv))
+                                        (println "--------- KIVIAINES JA SIDEAINE RENDER ----------"))
+                                      (when-not (= (nth old-argv 1) (nth new-argv 1))
+                                        (println "VANHA yllapitokohdeosat-tila: " (nth old-argv 1))
+                                        (println "UUSI yllapitokohdeosat-tila: " (nth new-argv 1)))
+                                      (when-not (= (nth old-argv 2) (nth new-argv 2))
+                                        (println "VANHA kiviaines-ja-sideaine-ohjauskahva: " (nth old-argv 2))
+                                        (println "UUSI kiviaines-ja-sideaine-ohjauskahva: " (nth new-argv 2)))
+                                      (when-not (= (nth old-argv 3) (nth new-argv 3))
+                                        (println "VANHA false-fn: " (nth old-argv 3))
+                                        (println "UUSI false-fn: " (nth new-argv 3)))
+                                      (when-not (= (nth old-argv 4) (nth new-argv 4))
+                                        (println "VANHA muokkaus-mahdollista?: " (nth old-argv 4))
+                                        (println "UUSI muokkaus-mahdollista?: " (nth new-argv 4)))
+                                      (when-not (= (nth old-argv 5) (nth new-argv 5))
+                                        (println "VANHA tekninen-osa-voi-muokata?: " (nth old-argv 5))
+                                        (println "UUSI tekninen-osa-voi-muokata?: " (nth new-argv 5)))
+                                      (when-not (= (nth old-argv 6) (nth new-argv 6))
+                                        (println "VANHA kiviaines-virhe: " (nth old-argv 6))
+                                        (println "UUSI kiviaines-virhe: " (nth new-argv 6)))
+                                      true)}
+      (fn [yllapitokohdeosat-tila kiviaines-ja-sideaine-ohjauskahva false-fn muokkaus-mahdollista? tekninen-osa-voi-muokata? kiviaines-virhe]
+        [grid/muokkaus-grid
+         {:otsikko "Kiviaines ja sideaine"
+          :data-cy "kiviaines-ja-sideaine"
+          :ohjaus kiviaines-ja-sideaine-ohjauskahva
+          :rivinumerot? true
+          :voi-lisata? false
+          :voi-kumota? false
+          :voi-poistaa? false-fn
+          :voi-muokata? muokkaus-mahdollista?
+          #_#_:disable-input? true
+          :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                   tekninen-osa-voi-muokata?)
+                          "Tierekisterikohteet taulukko on virheellisessä tilassa")
+          :virheet kiviaines-virhe
+          :jarjesta-avaimen-mukaan identity
+          :rivin-avaimet #{:esiintyma :km-arvo :muotoarvo :sideainetyyppi :pitoisuus :lisaaineet}}
+         [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
+           :leveys 30
+           :tayta-alas? tayta-alas?-fn
+           :tayta-fn tayta-esiintyma
+           :tayta-sijainti :ylos
+           :tayta-tooltip "Kopioi sama esiintymä alla oleville riveille"
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
+          {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
+           :tayta-alas? tayta-alas?-fn
+           :tayta-fn tayta-km-arvo
+           :tayta-sijainti :ylos
+           :tayta-tooltip "Kopioi sama KM-arvo alla oleville riveille"
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
+          {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
+           :leveys 20
+           :tayta-alas? tayta-alas?-fn
+           :tayta-fn tayta-muotoarvo
+           :tayta-sijainti :ylos
+           :tayta-tooltip "Kopioi sama muotoarvo alla oleville riveille"
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
+          {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
+           :tyyppi :valinta
+           :fokus-klikin-jalkeen? true
+           :valinta-arvo :koodi
+           :valinta-nayta #(:nimi %)
+           :valinnat pot/+sideainetyypit-ja-nil+
+           :tayta-alas? tayta-alas?-fn
+           :tayta-fn tayta-sideainetyyppi
+           :tayta-sijainti :ylos
+           :tayta-tooltip "Kopioi sama sideainetyyppi alla oleville riveille"
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
+          {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+           :tayta-alas? tayta-alas?-fn
+           :tayta-fn tayta-pitoisuus
+           :tayta-sijainti :ylos
+           :tayta-tooltip "Kopioi sama pitoisuus alla oleville riveille"
+           :tayta-alas-toistuvasti? tayta-alas?-fn}
+          {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
+           :pituus-max 256
+           :tayta-alas? tayta-alas?-fn
+           :tayta-fn tayta-lisaaineet
+           :tayta-sijainti :ylos
+           :tayta-tooltip "Kopioi sama tieto alla oleville riveille"
+           :tayta-alas-toistuvasti? tayta-alas?-fn}]
+         yllapitokohdeosat-tila]))))
 
 (defn alustalle-tehdyt-toimet
   [alustan-toimet-tila alustalle-tehdyt-toimet-ohjauskahva alustatoimet-voi-muokata? alustan-toimet-virheet
    alustatoimien-validointi tr-osien-pituudet false-fn]
   (komp/luo
-    {:should-component-update (fn [_ old-argv new-argv]
+    {#_#_:should-component-update (fn [_ old-argv new-argv]
                                 (when (not= (rest old-argv) (rest new-argv))
                                   (println "--------- ALUSTALLE TEHDYT TOIMET RENDERÖIDÄÄN ----------"))
                                 (when-not (= (nth old-argv 1) (nth new-argv 1))

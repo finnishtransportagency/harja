@@ -74,12 +74,22 @@
 
 (defn tayta-alas-nappi [judui]
   (r/create-class
-    {:should-component-update (fn [_ old-argv new-argv]
+    {#_#_:should-component-update (fn [_ old-argv new-argv]
+                                (println "TÄYTÄ ALAS NAPPI")
                                 (doseq [[k v] (nth old-argv 1)
                                         :let [new-v (get (nth new-argv 1) k)]
                                         :when (not= v new-v)]
-                                  (println (str "VANHA " k ": " v))
-                                  (println (str "UUSI " k ": " new-v)))
+                                  (if (= k :sarake)
+                                    (do
+                                      (println "SARKE ON ERI")
+                                      (doseq [[k-sarake v-sarake] v
+                                              :let [new-v-sarake (get v-sarake k-sarake)]
+                                              :when (not= v new-v)]
+                                        (println (str "VANHA " k-sarake ": " v-sarake))
+                                        (println (str "UUSI " k-sarake ": " new-v-sarake))))
+                                    (do
+                                      (println (str "VANHA " k ": " v))
+                                      (println (str "UUSI " k ": " new-v)))))
                                 true)
      :reagent-render
      (fn [{:keys [tayta-alas arvo rivi-index
