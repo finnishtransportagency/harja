@@ -12,17 +12,17 @@
     ]
   },
   "coordinates": {
-    "$id": "#/properties/sijainti/properties/coordinates",
+    "id": "#/properties/sijainti/properties/coordinates",
     "type": "array",
     "required": true,
     "title": "Viivageometrian koordinaattitaulukko",
     "items": {
-      "$id": "#/properties/sijainti/properties/coordinates/items",
+      "id": "#/properties/sijainti/properties/coordinates/items",
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
       "items": {
-        "$id": "#/properties/sijainti/properties/coordinates/items/items",
+        "id": "#/properties/sijainti/properties/coordinates/items/items",
         "type": "number"
       }
     }
