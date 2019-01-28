@@ -64,11 +64,11 @@
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                               slurp
                                                               (.replace "__TEHTAVA__" "suolaus")))]
-    (let [[sijainti] (first (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))
+    (let [[sijainti] (first (q "SELECT st_astext(sijainti) FROM tyokonehavainto WHERE tyokoneid=666"))
           tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
                        (konv/array->set))]
       (is (= 200 (:status kutsu)))
-      (is (= (str sijainti) "(429015.0,7198161.0)"))
+      (is (= (str sijainti) "POINT(429015 7198161)"))
       (is (= tehtavat #{"suolaus"})))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-olemassaoleva
@@ -98,10 +98,10 @@
 
 (deftest tallenna-tyokoneen-seurantakirjaus-viivageometrialla
   (let [kutsu (api-tyokalut/post-kutsu
-                ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneenseurannan-kirjaus-viivageometrialla-request.json"
+                ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneenseurannan-kirjaus-viivageometrialla-testi.json"
                                                               slurp))]
-    (let [[sijainti] (first (q "SELECT  st_asgeojson(sijainti) FROM tyokonehavainto WHERE tyokoneid=666"))
-          tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY tehtavat"))
+    (let [[sijainti] (first (q "SELECT  st_asgeojson(sijainti) FROM tyokonehavainto WHERE tyokoneid=999"))
+          tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=999 ORDER BY tehtavat"))
                        (konv/array->set))]
       (is (= 200 (:status kutsu)))
       (is (= (str sijainti) "{\"type\":\"LineString\",\"coordinates\":[[498919,7247099],[499271,7248395],[499399,7249019],[499820,7249885],[498519,7247299],[499371,7248595],[499499,7249319],[499520,7249685]]}"))
