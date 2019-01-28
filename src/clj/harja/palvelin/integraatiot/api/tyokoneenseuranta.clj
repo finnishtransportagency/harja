@@ -58,7 +58,7 @@
   (validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
                                                                (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
                                                                kayttaja)
-  (doseq [havainto (into[] (:havainto data))]
+  (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])
           tallenna-havainto (if (= nil (get-in havainto [:havainto :sijainti :viivageometria]))
                               tallenna-tyokoneen-koordinaatti
