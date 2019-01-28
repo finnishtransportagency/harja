@@ -184,7 +184,7 @@
                                    (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
                                                                           sopimus-id
                                                                           {:tierekisteriosoite (:tierekisteriosoite @tiedot/kasinsyottolomake)
-                                                                           :lisatieto "käsinsyötetty"
+                                                                           :lisatieto (:lisatieto @tiedot/kasinsyottolomake)
                                                                            :materiaali (:materiaali @tiedot/kasinsyottolomake)
                                                                            :maara (:maara @tiedot/kasinsyottolomake)
                                                                            :pvm (pvm/nyt)}))
@@ -202,7 +202,10 @@
       :valinnat (or @tiedot/materiaalit [])}
      {:otsikko "Käytetty määrä (t/km)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 10
-      :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}]
+      :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
+     {:otsikko "Lisätiedot"
+      :nimi :lisatieto
+      :tyyppi :text}]
     @tiedot/kasinsyottolomake]])
 
 (defn pohjavesialueen-suola []
