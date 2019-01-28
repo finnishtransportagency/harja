@@ -14,7 +14,7 @@
     "paikkauskustannukset": {
       "id": "urn:harja/paikkauskustannukset",
       "type": "array",
-      "maxItems": 100,
+      "maxItems": 200,
       "required": true,
       "items": {
         "id": "urn:harja/paikkauskustannukset/0",
