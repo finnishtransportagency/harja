@@ -71,6 +71,7 @@
     (fn [rivi urakka]
       [suolankayton-paivan-erittely @vetolaatikon-rivit])))
 
+(defonce tallennetaan (atom false))
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
   [:div.suolatoteumat
@@ -92,7 +93,7 @@
                   [:div
                    [napit/yleinen-toissijainen "Hae"
                     (fn []
-                      ; aiheuta tiedot/toteumat -reaktio
+                                        ; aiheuta tiedot/toteumat -reaktio
                       (reset! tiedot/lomakkeen-tila {:tierekisteriosoite (:tierekisteriosoite @tiedot/ui-lomakkeen-tila)
                                                      :refresh (inc (:refresh @tiedot/lomakkeen-tila))}))
                     {:ikoni (ikonit/livicon-search)}]
@@ -171,9 +172,49 @@
                               "Piilota kartalta"
                               "Näytä kartalla"))]])))}]
     listaus]
-
-   (when-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa])])
+   (if-not (empty? @tiedot/toteumat)
+     [:div.bold kaytetty-yhteensa]
+     [:div ""])
+   [:hr]
+   [lomake/lomake {:otsikko "Käsinsyöttö"
+                   :muokkaa! #(reset! tiedot/kasinsyottolomake %)
+                   :ei-borderia? true
+                   :footer-fn (fn [rivi]
+                                [:span
+                                 [napit/yleinen-toissijainen "Tallenna"
+                                  (fn []
+                                    (reset! tallennetaan true)
+                                    (go
+                                      (<!
+                                       (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
+                                                                              sopimus-id
+                                                                              {:tierekisteriosoite (:tierekisteriosoite @tiedot/kasinsyottolomake)
+                                                                               :lisatieto (:lisatieto @tiedot/kasinsyottolomake)
+                                                                               :materiaali (:materiaali @tiedot/kasinsyottolomake)
+                                                                               :maara (:maara @tiedot/kasinsyottolomake)
+                                                                               :pvm (pvm/nyt)}))
+                                      (reset! tallennetaan false)))
+                                  {:ikoni (ikonit/save)}]
+                                 (if @tallennetaan
+                                   [yleiset/ajax-loader "Tallennetaan"])])}
+    [{:otsikko "Tierekisteriosoite"
+      :nimi :tierekisteriosoite
+      :tyyppi :tierekisteriosoite}
+     {:otsikko "Materiaali"
+      :nimi :materiaali
+      :fmt :nimi
+      :leveys 10
+      :tyyppi :valinta
+      :validoi [[:ei-tyhja "Valitse materiaali"]]
+      :valinta-nayta #(or (:nimi %) "- valitse -")
+      :valinnat (or @tiedot/materiaalit [])}
+     {:otsikko "Käytetty määrä (t/km)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
+      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 10
+      :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
+     {:otsikko "Lisätiedot"
+      :nimi :lisatieto
+      :tyyppi :text}]
+    @tiedot/kasinsyottolomake]])
 
 (defn pohjavesialueen-suola []
   (komp/luo
