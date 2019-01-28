@@ -6,19 +6,32 @@ INSERT INTO tyokonehavainto
 VALUES (:jarjestelma,
         (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
         :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
-	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::POINT,
+	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::GEOMETRY,
 	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
 
 -- name: tallenna-tyokonehavainto-viivageometrialla<!
 -- Luo tai päivittää työkonehavainnon tietokantaan, kun sijainti on saatu viivageometriana (LineString)
 INSERT INTO tyokonehavainto
-       (jarjestelma, organisaatio, viestitunniste, lahetysaika,
-        tyokoneid, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
+               (jarjestelma,
+               organisaatio,
+               viestitunniste,
+               lahetysaika,
+               tyokoneid,
+               tyokonetyyppi,
+               sijainti,
+               urakkaid,
+               tehtavat,
+               suunta)
 VALUES (:jarjestelma,
         (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
-        :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
-	ST_GeomFromGeoJSON(:viivageometria)::GEOMETRY,
-	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
+                :viestitunniste,
+                CAST(:lahetysaika AS TIMESTAMP),
+                :tyokoneid,
+                :tyokonetyyppi,
+                ST_GeomFromGeoJSON(:viivageometria),
+                :urakkaid,
+                :tehtavat::suoritettavatehtava[],
+                 :suunta);
 
 
 -- name: tyokoneet-alueella
