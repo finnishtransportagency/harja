@@ -71,6 +71,7 @@
     (fn [rivi urakka]
       [suolankayton-paivan-erittely @vetolaatikon-rivit])))
 
+(defonce tallennetaan (atom false))
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
   [:div.suolatoteumat
@@ -179,16 +180,23 @@
                    :muokkaa! #(reset! tiedot/kasinsyottolomake %)
                    :ei-borderia? true
                    :footer-fn (fn [rivi]
-                                [napit/yleinen-toissijainen "Tallenna"
-                                 (fn []
-                                   (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
-                                                                          sopimus-id
-                                                                          {:tierekisteriosoite (:tierekisteriosoite @tiedot/kasinsyottolomake)
-                                                                           :lisatieto (:lisatieto @tiedot/kasinsyottolomake)
-                                                                           :materiaali (:materiaali @tiedot/kasinsyottolomake)
-                                                                           :maara (:maara @tiedot/kasinsyottolomake)
-                                                                           :pvm (pvm/nyt)}))
-                                 {:ikoni (ikonit/save)}])}
+                                [:span
+                                 [napit/yleinen-toissijainen "Tallenna"
+                                  (fn []
+                                    (reset! tallennetaan true)
+                                    (go
+                                      (<!
+                                       (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
+                                                                              sopimus-id
+                                                                              {:tierekisteriosoite (:tierekisteriosoite @tiedot/kasinsyottolomake)
+                                                                               :lisatieto (:lisatieto @tiedot/kasinsyottolomake)
+                                                                               :materiaali (:materiaali @tiedot/kasinsyottolomake)
+                                                                               :maara (:maara @tiedot/kasinsyottolomake)
+                                                                               :pvm (pvm/nyt)}))
+                                      (reset! tallennetaan false)))
+                                  {:ikoni (ikonit/save)}]
+                                 (if @tallennetaan
+                                   [yleiset/ajax-loader "Tallennetaan"])])}
     [{:otsikko "Tierekisteriosoite"
       :nimi :tierekisteriosoite
       :tyyppi :tierekisteriosoite}
