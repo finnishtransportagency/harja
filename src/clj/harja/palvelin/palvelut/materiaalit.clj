@@ -254,7 +254,7 @@
             (:id user) "" ""
             (:lisatieto toteuma)
             nil nil nil nil nil nil nil
-            "harja-ui")]
+            "harja-ui" nil nil)]
     (toteumat-q/luo-toteuma-materiaali<!
       db (:id t) (:id (:materiaali toteuma))
       (:maara toteuma) (:id user))))
