@@ -183,17 +183,17 @@
                                  (fn []
                                    (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
                                                                           sopimus-id
-                                                                          (merge {}
-                                                                                 (:tierekisteriosoite @tiedot/kasinsyottolomake)
-                                                                                 {:urakka (:id urakka)
-                                                                                  :tyyppi "kokonaishintainen"
-                                                                                  :kayttaja (:id user)})))
+                                                                          {:tierekisteriosoite (:tierekisteriosoite @tiedot/kasinsyottolomake)
+                                                                           :lisatieto "käsinsyötetty"
+                                                                           :materiaali (:materiaali @tiedot/kasinsyottolomake)
+                                                                           :maara (:maara @tiedot/kasinsyottolomake)
+                                                                           :pvm (pvm/nyt)}))
                                  {:ikoni (ikonit/save)}])}
     [{:otsikko "Tierekisteriosoite"
       :nimi :tierekisteriosoite
       :tyyppi :tierekisteriosoite}
      {:otsikko "Materiaali"
-      :nimi :suolatyyppi
+      :nimi :materiaali
       :fmt :nimi
       :leveys 10
       :tyyppi :valinta

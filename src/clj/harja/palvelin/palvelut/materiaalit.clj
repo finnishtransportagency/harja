@@ -264,8 +264,22 @@
   (jdbc/with-db-transaction [db db]
     (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
     (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
-    (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                           :alkupvm (:pvm toteuma)})))
+    (let [nyt (konv/sql-date (pvm/nyt))]
+      (toteumat-q/paivita-toteuma<! db
+                                    {:alkanut (:pvm nyt)
+                                     :paattynyt (:pvm nyt)
+                                     :tyyppi "kokonaishintainen"
+                                     :kayttaja (:id user)
+                                     :suorittaja (:suorittajan-nimi toteuma)
+                                     :ytunnus (:suorittajan-ytunnus toteuma)
+                                     :lisatieto (:lisatieto toteuma)
+                                     :numero (:numero (:tierekisteriosoite toteuma))
+                                     :alkuosa (:alkuosa (:tierekisteriosoite toteuma))
+                                     :alkuetaisyys nil
+                                     :loppuosa nil
+                                     :loppuetaisyys nil
+                                     :id (:tid toteuma)
+                                     :urakka urakka-id}))))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
