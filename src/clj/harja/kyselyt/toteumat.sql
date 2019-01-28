@@ -328,7 +328,7 @@ SET alkanut           = :alkanut,
   tyyppi              = :tyyppi :: toteumatyyppi,
   sopimus             = :sopimus,
   poistettu           = FALSE,
-  tyokonetyyppi       = :tyokonetyyppi,
+  tyokonetyyppi       = :tyokonetyyppi ::tyokone,
   tyokonetunniste     = :tyokonetunniste
 WHERE ulkoinen_id = :id AND urakka = :urakka AND luoja = :luoja;
 
@@ -343,7 +343,7 @@ INTO toteuma
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
                  FALSE, :suorittaja, :ytunnus, :lisatieto, :ulkoinen_id, :reitti,
         :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys, :lahde :: lahde,
-        :tyokonetyyppi, :tyokonetunniste);
+        :tyokonetyyppi::tyokone, :tyokonetunniste);
 
 -- name: poista-toteuma!
 UPDATE toteuma
