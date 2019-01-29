@@ -7,6 +7,7 @@
             [goog.events.EventType :as event-type]
 
             [harja.ui.grid :as grid]
+            [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
@@ -1152,11 +1153,11 @@
            (when (= :lukittu tila)
              [poista-lukitus e! urakka])
 
-           [paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
+           [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
 
            [:div {:style {:float "right"}}
             [kumoa e! historia ohjauskahvat]]
-           [paallystysilmoitus-tekninen-osa e! lomakedata-nyt urakka muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
+           [dom/lataus-komponentille {:viesti "Teknisiätietoja ladataan..."} paallystysilmoitus-tekninen-osa e! lomakedata-nyt urakka muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
 
            [yhteenveto lomakedata-nyt]
 
