@@ -368,8 +368,8 @@
                                                                                :paallystysilmoitus paallystysilmoitus})]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
-      (is (= (count (:yllapitokohteet vastaus)) 2))
-      (is (= (count (:paallystysilmoitukset vastaus)) 2))
+      (is (= (count (:yllapitokohteet vastaus)) 3))
+      (is (= (count (:paallystysilmoitukset vastaus)) 3))
 
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -382,7 +382,8 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 4753.95M))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+        (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
+                                                                                         (dissoc osoite :kohdeosa-id)))
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
@@ -398,7 +399,6 @@
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :kohdeosa-id 14
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
@@ -476,7 +476,8 @@
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
         (is (not (some #(= (:nimi %) "Tie 555")
                        (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+        (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
+                                                                                         (dissoc osoite :kohdeosa-id)))
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
@@ -492,7 +493,6 @@
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :kohdeosa-id 14
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
