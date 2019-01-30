@@ -1,12 +1,14 @@
 (ns harja.kyselyt.paikkaus
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
+            [specql.op :as op]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.pvm :as pvm]
             [harja.kyselyt.tieverkko :as q-tr]
-            [harja.id :refer [id-olemassa?]]))
+            [harja.id :refer [id-olemassa?]]
+            [taoensso.timbre :as log]))
 
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
@@ -85,6 +87,68 @@
         (::paikkaus/id (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id}))
         (::paikkaus/id (tallenna-paikkauskohde db kayttaja-id paikkauskohde)))))
 
+(defn paivita-paikkaustoteumat-poistetuksi [db kayttaja-id urakka-id paikkaustoteuma-idt]
+  (update! db ::paikkaus/paikkaustoteuma
+           {::muokkaustiedot/poistettu? true
+            ::muokkaustiedot/muokkaaja-id kayttaja-id
+            ::muokkaustiedot/muokattu (pvm/nyt)}
+           {::muokkaustiedot/poistettu? false
+            ::muokkaustiedot/luoja-id kayttaja-id
+            ::paikkaus/urakka-id urakka-id
+            ::paikkaus/ulkoinen-id (op/in (into #{} paikkaustoteuma-idt))}))
+
+(defn paivita-paikauskohteiden-toteumat-poistetuksi [db kayttaja-id urakka-id paikkauskohde-idt]
+  (update! db ::paikkaus/paikkaustoteuma
+           {::muokkaustiedot/poistettu? true
+            ::muokkaustiedot/muokkaaja-id kayttaja-id
+            ::muokkaustiedot/muokattu (pvm/nyt)}
+           {::muokkaustiedot/poistettu? false
+            ::muokkaustiedot/luoja-id kayttaja-id
+            ::paikkaus/urakka-id urakka-id
+            ::paikkaus/id (op/in (into #{} paikkauskohde-idt))}))
+
+(defn paivita-paikkaukset-poistetuksi [db kayttaja-id urakka-id paikkaus-idt]
+  (update! db ::paikkaus/paikkaus
+           {::muokkaustiedot/poistettu? true
+            ::muokkaustiedot/muokkaaja-id kayttaja-id
+            ::muokkaustiedot/muokattu (pvm/nyt)}
+           {::muokkaustiedot/poistettu? false
+            ::muokkaustiedot/luoja-id kayttaja-id
+            ::paikkaus/urakka-id urakka-id
+            ::paikkaus/ulkoinen-id (op/in (into #{} paikkaus-idt))}))
+
+(defn paivita-paikauskohteiden-paikkaukset-poistetuksi [db kayttaja-id urakka-id paikkauskohde-idt]
+  (update! db ::paikkaus/paikkaus
+           {::muokkaustiedot/poistettu? true
+            ::muokkaustiedot/muokkaaja-id kayttaja-id
+            ::muokkaustiedot/muokattu (pvm/nyt)}
+           {::muokkaustiedot/poistettu? false
+            ::muokkaustiedot/luoja-id kayttaja-id
+            ::paikkaus/urakka-id urakka-id
+            ::paikkaus/id (op/in (into #{} paikkauskohde-idt))}))
+
+(defn paivita-paikkauskohteet-poistetuksi [db kayttaja-id urakka-id paikkauskohde-idt]
+  (let [sisaiset-idt (fetch db ::paikkaus/paikkauskohde
+                            #{::paikkaus/id}
+                            {::muokkaustiedot/poistettu? false
+                             ::muokkaustiedot/luoja-id kayttaja-id
+                             ::paikkaus/urakka-id urakka-id
+                             ::paikkaus/ulkoinen-id (op/in (into #{} paikkauskohde-idt))})]
+
+    (paivita-paikauskohteiden-paikkaukset-poistetuksi db kayttaja-id urakka-id (map ::paikkaus/id sisaiset-idt))
+    (paivita-paikauskohteiden-toteumat-poistetuksi db kayttaja-id urakka-id (map ::paikkaus/id sisaiset-idt)))
+    (update! db ::paikkaus/paikkauskohde
+             {::muokkaustiedot/poistettu? true
+              ::muokkaustiedot/muokkaaja-id kayttaja-id
+              ::muokkaustiedot/muokattu (pvm/nyt)}
+             {::muokkaustiedot/poistettu? false
+              ::muokkaustiedot/luoja-id kayttaja-id
+              ::paikkaus/urakka-id urakka-id
+              ::paikkaus/ulkoinen-id (op/in (into #{} paikkauskohde-idt))})
+
+  )
+
+
 (defn- paivita-paikkaus [db paikkaus]
   (let [id (::paikkaus/id paikkaus)
         luoja-id (::muokkaustiedot/luoja-id paikkaus)
@@ -147,10 +211,12 @@
     (::paikkaus/id (luo-paikkaustoteuma db uusi-toteuma))))
 
 (defn hae-urakan-paikkaukset [db urakka-id]
-  (hae-paikkaukset db {::paikkaus/urakka-id urakka-id}))
+  (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
+                       ::muokkaustiedot/poistettu false}))
 
 (defn hae-urakan-paikkaustoteumat [db urakka-id]
-  (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id}))
+  (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id
+                            ::muokkaustiedot/poistettu false}))
 
 (defn poista-paikkaustoteumat [db kayttaja-id ulkoinen-id]
   (delete! db ::paikkaus/paikkaustoteuma {::muokkaustiedot/luoja-id kayttaja-id
