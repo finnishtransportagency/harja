@@ -11,12 +11,32 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "varusteen-poisto": {
-      "id": "urn:harja/varusteen-poisto",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json",
-      "required": true
+    "poistettavat-paikkauskohteet": {
+      "id": "urn:harja/poistettavat-paikkauskohteet",
+      "type": "array",
+      "maxItems": 200,
+      "required": false,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "poistettavat-paikkaukset": {
+      "id": "urn:harja/poistettavat-paikkaukset",
+      "type": "array",
+      "maxItems": 200,
+      "required": false,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "poistettavat-paikkauskustannukset": {
+      "id": "urn:harja/poistettavat-paikkauskustannukset",
+      "type": "array",
+      "maxItems": 200,
+      "required": false,
+      "items": {
+        "type": "integer"
+      }
     }
   }
 }
