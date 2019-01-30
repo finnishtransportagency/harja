@@ -1251,9 +1251,6 @@
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
-    (komp/kuuntelija :avaa-paallystysilmoitus
-                     (fn [_ rivi]
-                       (e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id rivi)))))
     (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset :as app}]
       (let [urakka-id (:id urakka)

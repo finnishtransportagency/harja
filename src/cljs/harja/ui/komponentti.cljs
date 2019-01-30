@@ -89,7 +89,8 @@
       :component-will-unmount (fn [this _]
                                 (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                   (doseq [k kuuntelijat]
-                                    (k))))}))
+                                    (k))
+                                  (swap! (r/state-atom this) dissoc ::kuuntelijat)))}))
 
 (defn dom-kuuntelija
   "Mixin DOM tapahtumien kuuntelemiseen annetussa elementissä.
