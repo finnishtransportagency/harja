@@ -142,14 +142,13 @@ maksimi-linnuntien-etaisyys 200)
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
-(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja reittitoteuma]
-  (let [reitti (:reitti reittitoteuma)
-        toteuma (assoc (:toteuma reittitoteuma)
+(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]}]
+  (let [toteuma (assoc toteuma
                   ;; Reitti liitetään lopuksi
                   :reitti nil)
         toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
     (jdbc/with-db-transaction [db db]
-      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)]
         (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
         (log/debug "Aloitetaan toteuman tehtävien tallennus")
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)

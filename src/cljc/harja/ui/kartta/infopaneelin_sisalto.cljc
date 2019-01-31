@@ -455,7 +455,9 @@
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
                                                        #{[:suorittaja :nimi]}
-                                                       #(get-in % [:suorittaja :nimi]))}]
+                                                       #(get-in % [:suorittaja :nimi]))}
+                         (when (:tyokonetyyppi toteuma)
+                           {:otsikko "Työkonetyyppi" :nimi :tyokonetyyppi})]
 
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
                           {:otsikko toimenpide
