@@ -48,13 +48,13 @@
 (defn tallenna-paikkaus [db urakka-id kayttaja-id {paikkaukset :paikkaukset}]
   (let [paikkaukset (map #(paikkaussanoma/api->domain urakka-id (:paikkaus %)) paikkaukset)]
     (doseq [paikkaus paikkaukset]
-      (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaus))))
+      (paikkaus-q/tallenna-paikkaus db urakka-id kayttaja-id paikkaus))))
 
 (defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id {paikkauskustannukset :paikkauskustannukset}]
   (let [toteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkauskustannus %)) paikkauskustannukset)]
     (doseq [[ulkoinen-id toteumat] (group-by ::paikkaus/ulkoinen-id (apply concat toteumat))]
       (doseq [toteuma toteumat]
-        (paikkaus-q/tallenna-paikkaustoteuma db kayttaja-id toteuma)))))
+        (paikkaus-q/tallenna-paikkaustoteuma db urakka-id kayttaja-id toteuma)))))
 
 (defn kirjaa-paikkaus [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
@@ -116,5 +116,7 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :kirjaa-paikkaus :kirjaa-paikkaustoteuma)
+    (poista-palvelut http :kirjaa-paikkaus
+                     :kirjaa-paikkaustoteuma
+                     :poista-paikkaustiedot)
     this))
