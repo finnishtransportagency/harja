@@ -7,3 +7,6 @@ ADD COLUMN "muokkaaja-id" INTEGER,
 ADD COLUMN muokattu TIMESTAMP,
 ADD COLUMN "urakka-id" INTEGER;
 
+ALTER TABLE paikkauskohde DROP CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja;
+ALTER TABLE paikkauskohde ADD CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja_urakka UNIQUE ("ulkoinen-id", "urakka-id", "luoja-id");
+
