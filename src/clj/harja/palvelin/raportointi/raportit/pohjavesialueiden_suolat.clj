@@ -23,6 +23,13 @@
 
 (defn rivi-xf [rivi]
   [(str (:tie rivi))
+   (str (:alkuosa rivi))
+   (str (:alkuet rivi))
+   (str (:loppuosa rivi))
+   (str (:loppuet rivi))
+   (if (:pituus rivi)
+     (format "%.1f" (:pituus rivi))
+     "")
    (format "%.1f" (:yhteensa rivi))
    (if (:maara_t_per_km rivi)
      (format "%.1f" (:maara_t_per_km rivi))
@@ -32,7 +39,12 @@
      "")])
 
 (defn sarakkeet []
-  [{:leveys 5 :otsikko "Tie"}
+  [{:leveys 3 :otsikko "Tie"}
+   {:leveys 2 :otsikko "Alkuosa"}
+   {:leveys 2 :otsikko "Alkuetäisyys"}
+   {:leveys 2 :otsikko "Loppuosa"}
+   {:leveys 2 :otsikko "Loppuetäisyys"}
+   {:leveys 3 :otsikko "Pituus"}
    {:leveys 5 :otsikko "Toteutunut talvisuola yhteensä t"}
    {:leveys 5 :otsikko "Toteutunut talvisuola t/km"}
    {:leveys 5 :otsikko "Käyttöraja t/km"}])

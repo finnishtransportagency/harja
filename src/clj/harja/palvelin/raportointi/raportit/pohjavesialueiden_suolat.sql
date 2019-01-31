@@ -2,6 +2,11 @@
 SELECT pv.tunnus,
        pv.nimi,
        pv.tr_numero AS tie,
+       min(pv.tr_alkuosa) AS alkuosa,
+       min(pv.tr_alkuetaisyys) AS alkuet,
+       max(pv.tr_loppuosa) AS loppuosa,
+       max(pv.tr_loppuetaisyys) AS loppuet,
+       sum(st_length(pv.alue)) AS pituus,
        sum(rp.maara) AS maara_t_per_km,
        sum(rp.maara)*sum(st_length(pv.alue))/1000 AS yhteensa,
        ts.talvisuolaraja AS kayttoraja
