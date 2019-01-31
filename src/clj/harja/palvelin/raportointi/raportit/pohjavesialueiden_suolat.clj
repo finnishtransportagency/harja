@@ -18,20 +18,11 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/pohjavesialueiden_suolat.sql")
 
-(def testidata [{:tunnus "abc" :nimi "foo" :tie 20 :yhteensa 10.2 :maara_t_per_km 100.2 :kayttoraja 5}
-                {:tunnus "abc" :nimi "foo" :tie 20 :yhteensa 10.2 :maara_t_per_km 100.2 :kayttoraja 5}
-                {:tunnus "xyz" :nimi "foo" :tie 20 :yhteensa 10.2 :maara_t_per_km 100.2 :kayttoraja 5}
-                {:tunnus "xyz" :nimi "foo" :tie 20 :yhteensa 10.2 :maara_t_per_km 100.2 :kayttoraja 5}
-                {:tunnus "ijk" :nimi "foo" :tie 20 :yhteensa 10.2 :maara_t_per_km 100.2 :kayttoraja 5}])
-
 (defn loppusumma [tulos]
   (vec (concat tulos [{:tie "Yhteensä" :yhteensa (reduce + (map :yhteensa tulos))}])))
 
 (defn rivi-xf [rivi]
-  [#_(if (:tunnus rivi)
-     (str (:tunnus rivi) " - " (:nimi rivi))
-     "")
-   (str (:tie rivi))
+  [(str (:tie rivi))
    (format "%.1f" (:yhteensa rivi))
    (if (:maara_t_per_km rivi)
      (format "%.1f" (:maara_t_per_km rivi))
