@@ -33,7 +33,7 @@
 
 (defn poista-paikkaustiedot [db {id :id} data kayttaja]
   (log/debug (format "Poistetaan paikkaustietoja urakasta: %s käyttäjän: %s toimesta"
-                     (count (:paikkaus data)) id kayttaja))
+                     id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -50,15 +50,18 @@
     (doseq [paikkaus paikkaukset]
       (paikkaus-q/tallenna-paikkaus db urakka-id kayttaja-id paikkaus))))
 
-(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id {paikkauskustannukset :paikkauskustannukset}]
+(defn tallenna-paikkaustoteuma
+  "Tallentaa paikkauskustannuksiin liittyvät tiedot. Poistaa sitä ennen kannasta."
+  [db urakka-id kayttaja-id {paikkauskustannukset :paikkauskustannukset}]
   (let [toteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkauskustannus %)) paikkauskustannukset)]
     (doseq [[ulkoinen-id toteumat] (group-by ::paikkaus/ulkoinen-id (apply concat toteumat))]
+      (paikkaus-q/poista-paikkaustoteuma db kayttaja-id urakka-id ulkoinen-id)
       (doseq [toteuma toteumat]
         (paikkaus-q/tallenna-paikkaustoteuma db urakka-id kayttaja-id toteuma)))))
 
 (defn kirjaa-paikkaus [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
-                     (count (:paikkaus data)) id kayttaja))
+                     (count (:paikkaukset data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -67,7 +70,7 @@
 
 (defn kirjaa-paikkaustoteuma [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
-                     (count (:paikkaus data)) id kayttaja))
+                     (count (:paikkauskustannukset data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
