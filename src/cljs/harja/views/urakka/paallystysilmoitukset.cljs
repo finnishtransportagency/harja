@@ -409,7 +409,7 @@
         :virheet paallystystoimenpide-virhe
         :virhe-viesti (when (and (not muokkaus-mahdollista?)
                                  tekninen-osa-voi-muokata?)
-                        "Tierekisterikohteet taulukko on virheellisessä tilassa")
+                        "Tarkista kohteen tr-osoite ennen tallentamista")
         :rivinumerot? true
         :jarjesta-avaimen-mukaan identity
         :rivin-avaimet #{:toimenpide-paallystetyyppi :toimenpide-raekoko :massamenekki :rc% :toimenpide-tyomenetelma
@@ -521,7 +521,7 @@
         :disable-input? true
         :virhe-viesti (when (and (not muokkaus-mahdollista?)
                                  tekninen-osa-voi-muokata?)
-                        "Tierekisterikohteet taulukko on virheellisessä tilassa")
+                        "Tarkista kohteen tr-osoite ennen tallentamista")
         :virheet kiviaines-virhe
         :jarjesta-avaimen-mukaan identity
         :rivin-avaimet #{:esiintyma :km-arvo :muotoarvo :sideainetyyppi :pitoisuus :lisaaineet}}
