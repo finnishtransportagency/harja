@@ -1141,7 +1141,7 @@
                                   :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}]
          [yha-lahetykset-taulukko e! app]]))))
 
-(defn valinnat [e! {:keys [urakka] :as app}]
+(defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div
    [valinnat/vuosi {}
     (t/year (:alkupvm urakka))
@@ -1162,8 +1162,8 @@
                                                      (e! (paallystys/->SuodataYllapitokohteet)))]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"
-    {:valinta @yllapito-tiedot/kohdejarjestys
-     :valitse-fn #(reset! yllapito-tiedot/kohdejarjestys %)
+    {:valinta pot-jarjestys
+     :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
      :format-fn {:tila "Tilan mukaan"
                  :kohdenumero "Kohdenumeron mukaan"
                  :muokkausaika "Muokkausajan mukaan"}}
@@ -1186,5 +1186,5 @@
        (if paallystysilmoitus-lomakedata
          [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
          [:div
-          [valinnat e! app]
+          [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
           [ilmoitusluettelo e! app]])])))

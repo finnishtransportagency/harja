@@ -61,7 +61,6 @@
          (e! (paallystys/->MuutaTila [:kohdeluettelossa?] true))
          (tarkkaile-toisen-tilaa e! yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-kohdenumero [:yllapito-tila :kohdenumero])
          (tarkkaile-toisen-tilaa e! yllapito-tiedot/tienumero :pot-kohdeluettelo-yllapito-tienumero [:yllapito-tila :tienumero])
-         (tarkkaile-toisen-tilaa e! yllapito-tiedot/kohdejarjestys :pot-kohdeluettelo-yllapito-kohdejarjestys [:yllapito-tila :kohdejarjestys])
          (tarkkaile-toisen-tilaa e! u/valittu-sopimusnumero :pot-kohdeluettelo-urakka-valittu-sopimusnumero [:urakka-tila :valittu-sopimusnumero])
          (tarkkaile-toisen-tilaa e! u/valittu-urakan-vuosi :pot-kohdeluettelo-valittu-urakan-vuosi [:urakka-tila :valittu-urakan-vuosi])
          (tarkkaile-toisen-tilaa e! lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko [:lukko])
@@ -72,7 +71,6 @@
          ;;TUCK Lisäykset
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-kohdenumero)
          (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-tienumero)
-         (remove-watch yllapito-tiedot/kohdenumero :pot-kohdeluettelo-yllapito-kohdejarjestys)
          (remove-watch u/valittu-sopimusnumero :pot-kohdeluettelo-valittu-urakan-vuosi)
          (remove-watch lukko/nykyinen-lukko :pot-kohdeluettelo-nykyinen-lukko)
          (remove-watch istunto/kayttaja :pot-kohdeluettelo-kayttaja)))

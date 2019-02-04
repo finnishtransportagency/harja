@@ -8,6 +8,7 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<! put!]]
+    [cljs-time.core :as t]
     [harja.atom :refer [paivita!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
@@ -32,7 +33,7 @@
 (def paallystysilmoitukset-tai-kohteet-nakymassa? (atom false))
 (def validointivirheet-modal (atom nil))
 ;; Tämä tila on tuckia varten
-(defonce tila (atom nil))
+(defonce tila (atom {:pot-jarjestys :tila}))
 ;; Tämän alla on joitain kursoreita tilaan, jotta vanhat jutut toimisi.
 ;; Näitä ei pitäisi tarvita refaktoroinnin päätteeksi
 (defonce yllapitokohde-id (r/cursor tila [:paallystysilmoitus-lomakedata :yllapitokohde-id]))
@@ -140,7 +141,7 @@
 
       :muokkausaika
       ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
-      (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
+      (concat (sort-by :muokattu t/after? (filter #(some? (:muokattu %)) paallystysilmoitukset))
               (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
                        (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
 
@@ -173,6 +174,7 @@
 (defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
 (defrecord HoidaCtrl+Z [])
+(defrecord JarjestaYllapitokohteet [jarjestys])
 (defrecord KumoaHistoria [])
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -238,8 +240,8 @@
           (assoc :kiintioiden-haku-kaynnissa? true)
           (dissoc :paallystysilmoitukset))))
   HaePaallystysilmoituksetOnnnistui
-  (process-event [{vastaus :vastaus} app]
-    (let [paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus (get-in app [:yllapito-tila :kohdejarjestys]))]
+  (process-event [{vastaus :vastaus} {pot-jarjestys :pot-jarjestys :as app}]
+    (let [paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus pot-jarjestys)]
       ;; :paallystysilmoitukset ja :kaikki-paallystysilmoitukset ero on siinä, että :paallystysilmoitukset
       ;; sisältää vain ne päällystysilmoitukset, joita käyttäjä ei ole filtteröinyt pois. Pidetään kummiskin
       ;; kaikki päällystysilmoitukset :kaikki-paallystysilmoitukset avaimen sisällä, jottei tarvitse aina
@@ -322,6 +324,10 @@
                        (fn [vanha-historia]
                          (rest vanha-historia)))))
       app))
+  JarjestaYllapitokohteet
+  (process-event [{jarjestys :jarjestys} {paallystysilmoitukset :paallystysilmoitukset :as app}]
+    (assoc app :paallystysilmoitukset (jarjesta-paallystysilmoitukset paallystysilmoitukset jarjestys)
+           :pot-jarjestys jarjestys))
   AvaaPaallystysilmoitus
   (process-event [{paallystyskohde-id :paallystyskohde-id} {urakka :urakka :as app}]
     (let [parametrit {:urakka-id (:id urakka)
@@ -378,14 +384,16 @@
                           :epaonnistui ->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
   TallennaPaallystysilmoitusOnnistui
-  (process-event [{vastaus :vastaus} {{urakka-id :id :as urakka} :urakka :as app}]
+  (process-event [{vastaus :vastaus} {{urakka-id :id :as urakka} :urakka jarjestys :pot-jarjestys :as app}]
     (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
-    (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-    ;; TODO Nämä pois, kun refaktorointi valmis
-    (reset! paallystysilmoitukset (:paallystysilmoitukset vastaus))
-    (reset! yllapitokohteet (:yllapitokohteet vastaus))
-    (assoc app :paallystysilmoitus-lomakedata nil
-           :paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+    (let [jarjestetyt-ilmoitukset (jarjesta-paallystysilmoitukset (:paallystysilmoitukset vastaus) jarjestys)]
+      (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+      ;; TODO Nämä pois, kun refaktorointi valmis
+      (reset! paallystysilmoitukset jarjestetyt-ilmoitukset)
+      (reset! yllapitokohteet (:yllapitokohteet vastaus))
+      (assoc app :paallystysilmoitus-lomakedata nil
+             :kaikki-paallystysilmoitukset jarjestetyt-ilmoitukset
+             :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
