@@ -318,7 +318,8 @@
                                        (reset! data numero)
                                        (reset! data nil))
                                      (when toiminta-f
-                                       (toiminta-f numero)))))}])))))
+                                       (toiminta-f (when-not (js/isNaN numero)
+                                                     numero))))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)

@@ -1150,9 +1150,15 @@
     #(do
        (urakka/valitse-urakan-vuosi! %)
        (e! (paallystys/->HaePaallystysilmoitukset)))]
-   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [_]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [valittu-arvo]
+                                                                         ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
+                                                                         ;; joskus refaktoroitua
+                                                                         (reset! yllapito-tiedot/kohdenumero valittu-arvo)
                                                                          (e! (paallystys/->SuodataYllapitokohteet)))]
-   [u-valinnat/tienumero yllapito-tiedot/tienumero (fn [_]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero (fn [valittu-arvo]
+                                                     ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
+                                                     ;; joskus refaktoroitua
+                                                     (reset! yllapito-tiedot/tienumero valittu-arvo)
                                                      (e! (paallystys/->SuodataYllapitokohteet)))]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"

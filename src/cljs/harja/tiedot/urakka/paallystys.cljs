@@ -216,10 +216,11 @@
     (update-in app polku f))
   SuodataYllapitokohteet
   (process-event [_ {paallystysilmoitukset :paallystysilmoitukset
+                     kaikki-paallystysilmoitukset :kaikki-paallystysilmoitukset
                      {:keys [tienumero kohdenumero]} :yllapito-tila :as app}]
     (if paallystysilmoitukset
       (assoc app :paallystysilmoitukset
-             (yllapitokohteet/suodata-yllapitokohteet paallystysilmoitukset {:tienumero tienumero
+             (yllapitokohteet/suodata-yllapitokohteet kaikki-paallystysilmoitukset {:tienumero tienumero
                                                                              :kohdenumero kohdenumero}))
       app))
   HaePaallystysilmoitukset
@@ -238,7 +239,13 @@
           (dissoc :paallystysilmoitukset))))
   HaePaallystysilmoituksetOnnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus (get-in app [:yllapito-tila :kohdejarjestys]))))
+    (let [paallystysilmoitukset (jarjesta-paallystysilmoitukset vastaus (get-in app [:yllapito-tila :kohdejarjestys]))]
+      ;; :paallystysilmoitukset ja :kaikki-paallystysilmoitukset ero on siinä, että :paallystysilmoitukset
+      ;; sisältää vain ne päällystysilmoitukset, joita käyttäjä ei ole filtteröinyt pois. Pidetään kummiskin
+      ;; kaikki päällystysilmoitukset :kaikki-paallystysilmoitukset avaimen sisällä, jottei tarvitse aina
+      ;; filtteröinnin yhteydessä tehdä kantakyselyä
+      (assoc app :paallystysilmoitukset paallystysilmoitukset
+             :kaikki-paallystysilmoitukset paallystysilmoitukset)))
   HaePaallystysilmoituksetEpaonnisuti
   (process-event [{vastaus :vastaus} app]
     app)
