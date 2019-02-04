@@ -816,5 +816,5 @@
         [:span
          (when-not @raportit/suoritettu-raportti
            [kartta/kartan-paikka])
-         (raporttivalinnat-ja-raportti)]
+         [raporttivalinnat-ja-raportti]]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
