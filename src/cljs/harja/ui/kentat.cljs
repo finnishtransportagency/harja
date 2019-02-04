@@ -278,21 +278,7 @@
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (komp/luo
-      {#_#_:should-component-update (fn [_ old-argv new-argv]
-                                  (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
-                                    (when (not= (rest old-argv) (rest new-argv))
-                                      (println "-------- NUMERO KENTTÄÄ PÄIVITETÄÄN -------")
-                                      (println (:data-cy (nth new-argv 1)))
-                                      (println "NIMI: " (:nimi (nth new-argv 1))))
-                                    (doseq [[k v] (nth old-argv 1)
-                                            :let [new-v (get (nth new-argv 1) k)]
-                                            :when (not= v new-v)]
-                                      (println (str "VANHA " k ": " v))
-                                      (println (str "UUSI " k ": " new-v)))
-                                    (when (not= (nth old-argv 2) (nth new-argv 2))
-                                      (println "VANHA DATA: " (nth old-argv 2))
-                                      (println "UUSI DATA: " (nth new-argv 2))))
-                                  true)}
+      (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?] :as kentta} data]
         (let [nykyinen-data @data

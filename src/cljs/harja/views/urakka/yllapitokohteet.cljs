@@ -514,6 +514,8 @@
                                                        (= (:yllapitokohdetyyppi yllapitokohde) :sora))
                                          :luokka "btn-xs"
                                          :toiminto-args [index]}]]))))
+        ;; Nämä funktiot annetaan skeemaan. Skeemassa itsessään ei kannata määritellä funktiota, koska se aiheuttaa komponentin uudelleen renderöitymisen, kun jokin
+        ;; muu osa muuttuu.
         [true-fn false-fn ajorata-fmt-fn kaista-fmt-fn ajorata-valinta-nayta-fn kaista-valinta-nayta-fn] [(constantly true) (constantly false) #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
                                                                                                           #(pot/arvo-koodilla pot/+kaistat+ %) (fn [arvo muokattava?]
                                                                                                                                                  (if arvo (:nimi arvo) (if muokattava?

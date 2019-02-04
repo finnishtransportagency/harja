@@ -209,9 +209,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                            EventType/RESIZE (partial pudotusvalikon-korkeuden-kasittelija-fn false))
       {:component-did-mount
        (fn [this]
-         (pudotusvalikon-korkeuden-kasittelija-fn true this nil))
-       #_#_:should-component-update (fn [this _ _]
-                                  @auki?)}
+         (pudotusvalikon-korkeuden-kasittelija-fn true this nil))}
       (fn [vaihtoehdot {:keys [itemit-komponentteja? li-luokka-fn nayta-ryhmat ryhman-otsikko] :as asetukset}
            auki? format-fn valitse-fn]
         (let [dropdown-tyyli (avautumissuunta-ja-korkeus-tyylit
@@ -241,20 +239,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         nappi-id (str (gensym "pv"))
         nil-fn (constantly nil)]
     (komp/luo
-      {:should-component-update (fn [_ old-argv new-argv]
-                                  (when (= "yllapitokohdeosat-Tierekisteriosoitteet" (:data-cy (nth new-argv 1)))
-                                    (when (not= (rest old-argv) (rest new-argv))
-                                      (println "-------- LIVI PUDOTUSVALIKKO PÄIVITETÄÄN -------")
-                                      (println (:naytettava-arvo (nth new-argv 1))))
-                                    (doseq [[k v] (nth old-argv 1)
-                                            :let [new-v (get (nth new-argv 1) k)]
-                                            :when (not= v new-v)]
-                                      (println (str "VANHA " k ": " v))
-                                      (println (str "UUSI " k ": " new-v)))
-                                    (when (not= (nth old-argv 2) (nth new-argv 2))
-                                      (println "VANHA VAIHTOEHDOT: " (nth old-argv 2))
-                                      (println "UUSI VAIHTOEHDOT: " (nth new-argv 2))))
-                                  true)}
+      (komp/nimi "Livi-pudotusvalikko")
       (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (fn [{:keys [valinta format-fn valitse-fn class disabled naytettava-arvo
                    on-focus on-blur title data-cy] :as asetukset} vaihtoehdot]

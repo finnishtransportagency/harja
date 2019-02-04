@@ -64,7 +64,7 @@
 
 (defn- muokkauselementin-tila
   [{:keys [aseta nimi valinta-arvo hae]}
-   {:keys [muokkaa! muokatut-atom virheet skeema id i rivi data-cy]}
+   {:keys [muokkaa! muokatut-atom virheet skeema id i rivi]}
    rivi-disabloitu? kentan-virheet
    tulevat-elementit]
   (let [grid-tilan-muokkaus-fn (atom (fn [uusi]
@@ -90,41 +90,8 @@
                                     (reset! fokus? false)))
         seuranta-avain (keyword (str (gensym (str i nimi))))]
     (r/create-class
-      {#_#_:should-component-update (fn [_ old-argv new-argv]
-                                  (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 2)))
-                                    (when (not= (rest old-argv) (rest new-argv))
-                                      (println "-------- MUOKKAUS GRID TILA PÄIVITETÄÄN -------")
-                                      (println (:data-cy (nth new-argv 2))))
-                                    (doseq [[k v] (nth old-argv 2)
-                                            :let [new-v (get (nth new-argv 2) k)]
-                                            :when (not= v new-v)]
-                                      (println "RIVI NUMERO: " (:i (nth old-argv 2)))
-                                      (if (= k :sarake)
-                                        (do
-                                          (println "SARKE ON ERI")
-                                          (doseq [[k-sarake v-sarake] v
-                                                  :let [new-v-sarake (get v-sarake k-sarake)]
-                                                  :when (not= v new-v)]
-                                            (println (str "VANHA " k-sarake ": " v-sarake))
-                                            (println (str "UUSI " k-sarake ": " new-v-sarake))))
-                                        (do
-                                          (println (str "VANHA " k ": " v))
-                                          (println (str "UUSI " k ": " new-v)))))
-                                    (when (not= (nth old-argv 1) (nth new-argv 1))
-                                      (println "VANHA SARAKE: " (nth old-argv 1))
-                                      (println "UUSI SARAKE: " (nth new-argv 1)))
-                                    (when (not= (nth old-argv 3) (nth new-argv 3))
-                                      (println "VANHA RIVI DISABLOITU?: " (nth old-argv 3))
-                                      (println "UUSI RIVI DISABLOITU?: " (nth new-argv 3)))
-                                    (when (not= (nth old-argv 4) (nth new-argv 4))
-                                      (println "VANHA KENTAN VIRHEET: " (nth old-argv 4))
-                                      (println "UUSI KENTAN VIRHEET: " (nth new-argv 4)))
-                                    (when (not= (nth old-argv 5) (nth new-argv 5))
-                                      (println "VANHA TULEVAT ELEMENTIT: " (nth old-argv 5))
-                                      (println "UUSI TULEVAT ELEMENTIT: " (nth new-argv 5))))
-                                  true)
+      {:display-name "Muokkauselementin-tila"
        :component-will-mount (fn [& _]
-                               #_(println "-----> MOUNTS: " data-cy " " i " " nimi)
                                (add-watch arvo-atom seuranta-avain
                                           (fn [_ _ _ uusi-arvo]
                                             (@grid-tilan-muokkaus-fn uusi-arvo))))
@@ -158,7 +125,7 @@
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa
                     komponentti hae kentta-arity-3? komponentti-args] :as sarake}
-            {:keys [ohjaus id rivi rivi-index data-cy
+            {:keys [ohjaus id rivi rivi-index
                     nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema]}
             rivi-disabloitu? kentan-virheet tulevat-elementit]
@@ -202,116 +169,68 @@
                                      (if kentta-arity-3?
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                           :on-blur fokus-pois-elementilta
-                                                          :data-cy data-cy
                                                           :disabled? (not voi-muokata?))
                                         arvo
                                         @data-muokkaus-fn]
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                           :on-blur fokus-pois-elementilta
-                                                          :data-cy data-cy
                                                           :disabled? (not voi-muokata?))
                                         arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
              [ei-muokattava-elementti tasaus-luokka fmt arvo])))})))
 
-(defn- muokkauselementti [sarake
-                          elementin-asetukset
-                          rivi-disabloitu? kentan-virheet
-                          tulevat-elementit]
-  (r/create-class
-    {#_#_:should-component-update (fn [_ old-argv new-argv]
-                                (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 2)))
-                                  (when (not= (rest old-argv) (rest new-argv))
-                                    (println "-------- MUOKKAUS GRID ELEMENTTIÄ PÄIVITETÄÄN -------")
-                                    (println (:data-cy (nth new-argv 2)))
-                                    (println (:nimi (nth old-argv 1))))
-                                  (doseq [[k v] (nth old-argv 2)
-                                          :let [new-v (get (nth new-argv 2) k)]
-                                          :when (not= v new-v)]
-                                    (println "RIVI NUMERO: " (:i (nth old-argv 2)))
-                                    (println (str "VANHA " k ": " v))
-                                    (println (str "UUSI " k ": " new-v)))
-                                  (when (not= (nth old-argv 1) (nth new-argv 1))
-                                    (println "VANHA SARAKE: " (nth old-argv 1))
-                                    (println "UUSI SARAKE: " (nth new-argv 1)))
-                                  (when (not= (nth old-argv 3) (nth new-argv 3))
-                                    (println "VANHA RIVI DISABLOITU?: " (nth old-argv 3))
-                                    (println "UUSI RIVI DISABLOITU?: " (nth new-argv 3)))
-                                  (when (not= (nth old-argv 4) (nth new-argv 4))
-                                    (println "VANHA KENTAN VIRHEET: " (nth old-argv 4))
-                                    (println "UUSI KENTAN VIRHEET: " (nth new-argv 4)))
-                                  (when (not= (nth old-argv 5) (nth new-argv 5))
-                                    (println "VANHA TULEVAT ELEMENTIT: " (nth old-argv 5))
-                                    (println "UUSI TULEVAT ELEMENTIT: " (nth new-argv 5))))
-                                true)
-     :reagent-render
-     (fn [{:keys [tyyppi hae nimi] :as sarake}
-          {:keys [ohjaus vetolaatikot id tulevat-rivit i] :as elementin-asetukset}
-          rivi-disabloitu? kentan-virheet tulevat-elementit]
-       (let [elementin-asetukset (dissoc elementin-asetukset :vetolaatikot :tulevat-rivit)]
-         (if (= :vetolaatikon-tila tyyppi)
-           ^{:key (str "vetolaatikontila" id)}
-           [vetolaatikon-tila ohjaus vetolaatikot id]
-           ^{:keys (str i "-" nimi)}
-           [muokkauselementin-tila sarake elementin-asetukset rivi-disabloitu? kentan-virheet tulevat-elementit])))}))
+(defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
+                          {:keys [ohjaus vetolaatikot id tulevat-rivit i] :as elementin-asetukset}
+                          rivi-disabloitu? kentan-virheet tulevat-elementit]
+  (let [elementin-asetukset (dissoc elementin-asetukset :vetolaatikot :tulevat-rivit)]
+    (if (= :vetolaatikon-tila tyyppi)
+      ^{:key (str "vetolaatikontila" id)}
+      [vetolaatikon-tila ohjaus vetolaatikot id]
+      ^{:keys (str i "-" nimi)}
+      [muokkauselementin-tila sarake elementin-asetukset rivi-disabloitu? kentan-virheet tulevat-elementit])))
 
-(defn- muokkausrivi [riviasetukset]
-  (r/create-class
-    {#_#_:should-component-update (fn [_ old-argv new-argv]
-                                (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
-                                  (when (not= (rest old-argv) (rest new-argv))
-                                    (println "-------- MUOKKAUS GRID RIVIÄ PÄIVITETÄÄN -------")
-                                    (println (:data-cy (nth new-argv 1))))
-                                  (doseq [[k v] (nth old-argv 1)
-                                          :let [new-v (get (nth new-argv 1) k)]
-                                          :when (not= v new-v)]
-                                    (println "RIVI NUMERO: " (:i (nth old-argv 1)))
-                                    (println (str "VANHA " k ": " v))
-                                    (println (str "UUSI " k ": " new-v))))
-                                true)
-     :reagent-render
-     (fn [{:keys [rivinumerot? ohjaus vetolaatikot id rivi #_rivin-virheet rivi-index
-                  nayta-virheet? i voi-muokata? tulevat-rivit
-                  muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
-                  disabloi-rivi?
-                  voi-poistaa? toimintonappi-fn] :as rivi-asetukset}]
-       (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
-         [:tr.muokataan {:class (str (if (even? (+ i 1))
-                                       "parillinen "
-                                       "pariton ")
-                                     (when rivi-disabloitu? "disabloitu-rivi"))}
-          (when rivinumerot? [:td.rivinumero (+ i 1)])
-          (doall
-            (map-indexed
-              (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
-                (let [kentan-virheet (-> @virheet (get id) nimi) #_(get rivin-virheet nimi)
-                      elementin-asetukset (select-keys rivi-asetukset #{:ohjaus :vetolaatikot :id :rivi :rivi-index
-                                                                        :nayta-virheet? :i :voi-muokata?
-                                                                        :muokatut-atom :muokkaa! :disable-input?
-                                                                        :virheet :skeema :data-cy})
-                      hae (or hae #(get % nimi))
-                      tulevat-elementit (when tayta-alas?
-                                          (map hae tulevat-rivit))]
-                  ^{:key (str j nimi)}
-                  [muokkauselementti sarake elementin-asetukset rivi-disabloitu? kentan-virheet tulevat-elementit]))
-              skeema))
-          (when-not piilota-toiminnot?
-            (let [rivin-virheet (get @virheet id)]
-              [:td.toiminnot
-               (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
-                   (when (and (not= false voi-muokata?)
-                              (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-                     [:span.klikattava {:on-click
-                                        #(do (.preventDefault %)
-                                             (muokkaa! muokatut-atom
-                                                       virheet skeema
-                                                       id assoc
-                                                       :poistettu true))}
-                      (ikonit/livicon-trash)]))
-               (when-not (empty? rivin-virheet)
-                 [:span.rivilla-virheita
-                  (ikonit/livicon-warning-sign)])]))]))}))
+(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
+                             nayta-virheet? i voi-muokata? tulevat-rivit
+                             muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
+                             disabloi-rivi?
+                             voi-poistaa? toimintonappi-fn] :as rivi-asetukset}]
+  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
+    [:tr.muokataan {:class (str (if (even? (+ i 1))
+                                  "parillinen "
+                                  "pariton ")
+                                (when rivi-disabloitu? "disabloitu-rivi"))}
+     (when rivinumerot? [:td.rivinumero (+ i 1)])
+     (doall
+       (map-indexed
+         (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
+           (let [kentan-virheet (-> @virheet (get id) nimi)
+                 elementin-asetukset (select-keys rivi-asetukset #{:ohjaus :vetolaatikot :id :rivi :rivi-index
+                                                                   :nayta-virheet? :i :voi-muokata?
+                                                                   :muokatut-atom :muokkaa! :disable-input?
+                                                                   :virheet :skeema})
+                 hae (or hae #(get % nimi))
+                 tulevat-elementit (when tayta-alas?
+                                     (map hae tulevat-rivit))]
+             ^{:key (str j nimi)}
+             [muokkauselementti sarake elementin-asetukset rivi-disabloitu? kentan-virheet tulevat-elementit]))
+         skeema))
+     (when-not piilota-toiminnot?
+       (let [rivin-virheet (get @virheet id)]
+         [:td.toiminnot
+          (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
+              (when (and (not= false voi-muokata?)
+                         (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
+                [:span.klikattava {:on-click
+                                   #(do (.preventDefault %)
+                                        (muokkaa! muokatut-atom
+                                                  virheet skeema
+                                                  id assoc
+                                                  :poistettu true))}
+                 (ikonit/livicon-trash)]))
+          (when-not (empty? rivin-virheet)
+            [:span.rivilla-virheita
+             (ikonit/livicon-warning-sign)])]))]))
 
 (defn- kasketty-jarjestys [{:keys [virheet-ylos-fn jarjesta-kun-kasketaan muokatut muokatut-atom]}]
   (sort-by (juxt #(virheet-ylos-fn (second %)) #(jarjesta-kun-kasketaan %)) (seq muokatut)))
@@ -319,13 +238,11 @@
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot disable-input?
                              nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                              disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                             vetolaatikot-auki virheet-ylos? toimintonappi-fn data-cy tyhja-komponentti? tyhja-args]}]
+                             vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args]}]
   (let [muokatut-atom muokatut
         muokatut @muokatut
         colspan (inc (count skeema))]
     [:tbody
-     #_(when (= "paallystystoimenpiteen-tiedot" data-cy)
-       (println "FUUUUU"))
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan}
                    (if tyhja-komponentti?
@@ -362,7 +279,6 @@
                         (map second (rest loput-rivit))
                         muokkausrivit)
                  (let [[id rivi] rivi-indeksineen
-                       #_#_rivin-virheet (get kaikki-virheet id)
                        otsikko (valiotsikot id)
                        muokkausrivi (doall
                                       (into (if otsikko
@@ -373,12 +289,12 @@
                                               [])
                                             [^{:key (str i "-" id)}
                                             [muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
-                                                           :vetolaatikot vetolaatikot :id id :rivi rivi #_#_:rivin-virheet rivin-virheet
+                                                           :vetolaatikot vetolaatikot :id id :rivi rivi
                                                            :nayta-virheet? nayta-virheet? :disable-input? disable-input?
                                                            :i i :voi-muokata? voi-muokata?
                                                            :tulevat-rivit tulevat-rivit :rivi-index i
                                                            :muokatut-atom muokatut-atom :muokkaa! muokkaa!
-                                                           :disabloi-rivi? disabloi-rivi? :data-cy data-cy
+                                                           :disabloi-rivi? disabloi-rivi?
                                                            :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                                            :skeema skeema :voi-poistaa? voi-poistaa?
                                                            :toimintonappi-fn toimintonappi-fn}]
@@ -631,24 +547,7 @@
         nil-fn (constantly nil)]
     (r/create-class
 
-      {#_#_:should-component-update (fn [_ old-argv new-argv]
-                                      (when (= "paallystystoimenpiteen-tiedot" (:data-cy (nth new-argv 1)))
-                                        (when (not= (rest old-argv) (rest new-argv))
-                                          (println "-------- MUOKKAUS GRID PÄIVITETÄÄN -------")
-                                          (println (:data-cy (nth new-argv 1))))
-                                        (when-not (= (nth old-argv 1) (nth new-argv 1))
-                                          (doseq [[k v] (nth old-argv 1)
-                                                  :let [new-v (get (nth new-argv 1) k)]
-                                                  :when (not= v new-v)]
-                                            (println (str "VANHA " k ": " v))
-                                            (println (str "UUSI " k ": " new-v))))
-                                        (when-not (= (nth old-argv 2) (nth new-argv 2))
-                                          (println "VANHA skeema: " (nth old-argv 2))
-                                          (println "UUSI skeema: " (nth new-argv 2)))
-                                        (when-not (= (nth old-argv 3) (nth new-argv 3))
-                                          (println "VANHA muokatut: " (nth old-argv 3))
-                                          (println "UUSI muokatut: " (nth new-argv 3))))
-                                      true)
+      {:display-name "Muokkausgrid"
        :reagent-render
        (fn [{:keys [otsikko yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
@@ -682,7 +581,7 @@
             [:div.panel-body
              [:table.grid
               [gridin-otsikot skeema rivinumerot? piilota-toiminnot?]
-              [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja :data-cy data-cy
+              [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja
                              :virheet virheet :valiotsikot valiotsikot :disable-input? disable-input?
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
