@@ -181,12 +181,12 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 })
             })
             cy.get('[data-cy=paallystystoimenpiteen-tiedot]').then(($ptGrid) => {
-                expect($ptGrid.find('.panel-heading span').text()).to.contain('Tierekisterikohteet taulukko on virheellisessä tilassa')
-                expect($ptGrid.find('input').get()).to.be.empty;
+                expect($ptGrid.find('.panel-heading span').text()).to.contain('Tarkista kohteen tr-osoite ennen tallentamista')
+                expect($ptGrid.find('input').eq(0)).to.be.disabled;
             })
             cy.get('[data-cy=kiviaines-ja-sideaine]').then(($ksGrid) => {
-                expect($ksGrid.find('.panel-heading span').text()).to.contain('Tierekisterikohteet taulukko on virheellisessä tilassa')
-                expect($ksGrid.find('input').get()).to.be.empty;
+                expect($ksGrid.find('.panel-heading span').text()).to.contain('Tarkista kohteen tr-osoite ennen tallentamista')
+                expect($ksGrid.find('input').eq(0)).to.be.disabled;
             })
             cy.get('[data-cy=pot-tallenna]').should('be.disabled')
         })
@@ -315,7 +315,6 @@ describe('Käsittele päälystysilmoitus', function () {
         }
         // Käsittelytietojen tarkastus
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .livi-alasveto').valinnatValitse({valinta: 'Hylätty'})
-        cy.contains('Käsitelty').parentsUntil('div.lomakerivi').should('have.class', 'required')
         //TODO Korjaa bugi, tuohon ei pitäisi tarvita ensin kirjottaa jotain, että virheviestit näkyisivät
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .pvm.form-control').pvmValitse({pvm: '01.01.2017'}).pvmTyhjenna()
         cy.get('[data-cy=paallystysilmoitus-kasittelytiedot] .huomautus').then(($virhe) => {
