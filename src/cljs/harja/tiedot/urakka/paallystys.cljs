@@ -35,7 +35,7 @@
 (defonce tila (atom nil))
 ;; Tämän alla on joitain kursoreita tilaan, jotta vanhat jutut toimisi.
 ;; Näitä ei pitäisi tarvita refaktoroinnin päätteeksi
-(defonce paallystysilmoitus-lomakedata (r/cursor tila [:paallystysilmoitus-lomakedata]))
+(defonce yllapitokohde-id (r/cursor tila [:paallystysilmoitus-lomakedata :yllapitokohde-id]))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
@@ -97,11 +97,11 @@
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
                          paallystyskohteet @yhan-paallystyskohteet
-                         lomakedata @paallystysilmoitus-lomakedata]
+                         yllapitokohde-id @yllapitokohde-id]
                      (when (and taso paallystyskohteet)
                        (yllapitokohteet/yllapitokohteet-kartalle
                          paallystyskohteet
-                         lomakedata)))))
+                         {:yllapitokohde-id yllapitokohde-id})))))
 
 ;; Yhteiset UI-asiat
 
@@ -339,10 +339,10 @@
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
                                ;; Poistetaan pituus
-                               (update-in [:ilmoitustiedot :osoitteet] #(do (println %) (into (sorted-map)
-                                                                                              (map (fn [[id rivi]]
-                                                                                                     [id (dissoc rivi :pituus)])
-                                                                                                   %))))
+                               (update-in [:ilmoitustiedot :osoitteet] #(into (sorted-map)
+                                                                              (map (fn [[id rivi]]
+                                                                                     [id (dissoc rivi :pituus)])
+                                                                                   %)))
                                (update-in [:ilmoitustiedot :alustatoimet] #(into (sorted-map)
                                                                                  (map (fn [[id rivi]]
                                                                                         [id (dissoc rivi :pituus)])
