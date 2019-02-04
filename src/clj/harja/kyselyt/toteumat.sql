@@ -327,7 +327,9 @@ SET alkanut           = :alkanut,
   lisatieto           = :lisatieto,
   tyyppi              = :tyyppi :: toteumatyyppi,
   sopimus             = :sopimus,
-  poistettu           = FALSE
+  poistettu           = FALSE,
+  tyokonetyyppi       = :tyokonetyyppi ::tyokone,
+  tyokonetunniste     = :tyokonetunniste
 WHERE ulkoinen_id = :id AND urakka = :urakka AND luoja = :luoja;
 
 -- name: luo-toteuma<!
@@ -336,10 +338,12 @@ INSERT
 INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
  poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti,
- tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde)
+ tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde,
+ tyokonetyyppi, tyokonetunniste)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
                  FALSE, :suorittaja, :ytunnus, :lisatieto, :ulkoinen_id, :reitti,
-        :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys, :lahde :: lahde);
+        :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys, :lahde :: lahde,
+        :tyokonetyyppi::tyokone, :tyokonetunniste);
 
 -- name: poista-toteuma!
 UPDATE toteuma

@@ -254,10 +254,32 @@
             (:id user) "" ""
             (:lisatieto toteuma)
             nil nil nil nil nil nil nil
-            "harja-ui")]
+            "harja-ui" nil nil)]
     (toteumat-q/luo-toteuma-materiaali<!
       db (:id t) (:id (:materiaali toteuma))
       (:maara toteuma) (:id user))))
+
+(defn tallenna-kasinsyotetty-toteuma [db user {:keys [urakka-id sopimus-id toteuma]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
+    (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
+    (let [nyt (konv/sql-date (pvm/nyt))]
+      (toteumat-q/paivita-toteuma<! db
+                                    {:alkanut (:pvm nyt)
+                                     :paattynyt (:pvm nyt)
+                                     :tyyppi "kokonaishintainen"
+                                     :kayttaja (:id user)
+                                     :suorittaja (:suorittajan-nimi toteuma)
+                                     :ytunnus (:suorittajan-ytunnus toteuma)
+                                     :lisatieto (:lisatieto toteuma)
+                                     :numero (:numero (:tierekisteriosoite toteuma))
+                                     :alkuosa (:alkuosa (:tierekisteriosoite toteuma))
+                                     :alkuetaisyys nil
+                                     :loppuosa nil
+                                     :loppuetaisyys nil
+                                     :id (:tid toteuma)
+                                     :urakka urakka-id}))))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
@@ -366,6 +388,10 @@
                       :tallenna-suolatoteumat
                       (fn [user tiedot]
                         (tallenna-suolatoteumat (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-kasinsyotetty-suolatoteuma
+                      (fn [user tiedot]
+                        (tallenna-kasinsyotetty-toteuma (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -380,6 +406,7 @@
                      :hae-suolatoteumat
                      :hae-suolatoteumien-tarkat-tiedot
                      :hae-suolamateriaalit
-                     :tallenna-suolatoteumat)
+                     :tallenna-suolatoteumat
+                     :tallenna-kasinsyotetty-suolatoteuma)
 
     this))
