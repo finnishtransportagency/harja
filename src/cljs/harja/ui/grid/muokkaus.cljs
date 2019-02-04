@@ -18,7 +18,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.grid.protokollat :refer
              [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
-              vetolaatikko-rivi vetolaatikon-tila]]
+              vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
             [harja.ui.grid.yleiset :as grid-yleiset])
@@ -371,7 +371,7 @@
                                   on useampi grid saman atomin alla. Tämän avulla voi renderöidä vain tarvittavaa gridiä."
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
-           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
+           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
@@ -545,6 +545,8 @@
         virheet (or (:virheet opts) virheet-atom)
         ohjaus (atom (ohjaus-fn muokatut virheet skeema))
         nil-fn (constantly nil)]
+    (when validoi-alussa?
+      (validoi-grid @ohjaus))
     (r/create-class
 
       {:display-name "Muokkausgrid"

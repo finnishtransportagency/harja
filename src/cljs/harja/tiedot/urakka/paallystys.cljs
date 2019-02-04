@@ -162,7 +162,7 @@
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
 (defrecord AvaaPaallystysilmoituksenLukitus [])
-(defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus])
+(defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord HaePaallystysilmoitukset [])
@@ -199,13 +199,24 @@
       (tuck-apurit/post! app
                          :aseta-paallystysilmoituksen-tila
                          parametrit
-                         {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
-                          :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+                         {:onnistui ->AvaaPaallystysilmoituksenLukitusOnnistui
+                          :onnistui-parametrit [paallystyskohde-id]
+                          :epaonnistui ->AvaaPaallystysilmoituksenLukitusEpaonnistui})))
   AvaaPaallystysilmoituksenLukitusOnnistui
-  (process-event [vastaus app]
+  (process-event [{:keys [vastaus paallystyskohde-id]} app]
     ;; TODO Tämä on tässä vielä tukemassa vanhaa koodia
     (harja.atom/paivita! paallystysilmoitukset)
-    (assoc-in app [:paallystysilmoitus-lomakedata :tila] (:tila vastaus)))
+    (let [{:keys [tila]} vastaus
+          paivitys-fn (fn [paallystysilmoitukset]
+                        (mapv #(if (= (:paallystyskohde-id %) paallystyskohde-id)
+                                 (assoc % :tila tila)
+                                 %)
+                              paallystysilmoitukset))]
+      (-> app
+          (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tila] tila)
+          (assoc-in [:paallystysilmoitus-lomakedata :validoi-lomake?] true)
+          (update :paallystysilmoitukset paivitys-fn)
+          (update :kaikki-paallystysilmoitukset paivitys-fn))))
   AvaaPaallystysilmoituksenLukitusEpaonnistui
   (process-event [vastaus app]
     (viesti/nayta! "Lukituksen avaus epäonnistui" :warning)

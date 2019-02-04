@@ -413,7 +413,8 @@
         :rivinumerot? true
         :jarjesta-avaimen-mukaan identity
         :rivin-avaimet #{:toimenpide-paallystetyyppi :toimenpide-raekoko :massamenekki :rc% :toimenpide-tyomenetelma
-                         :leveys :kokonaismassamaara :pinta-ala :kuulamylly}}
+                         :leveys :kokonaismassamaara :pinta-ala :kuulamylly}
+        :validoi-alussa? true}
        [(assoc paallystys/paallyste-grid-skeema
                :nimi :toimenpide-paallystetyyppi
                :fokus-klikin-jalkeen? true
@@ -522,6 +523,7 @@
         :virhe-viesti (when (and (not muokkaus-mahdollista?)
                                  tekninen-osa-voi-muokata?)
                         "Tarkista kohteen tr-osoite ennen tallentamista")
+        :validoi-alussa? true
         :virheet kiviaines-virhe
         :jarjesta-avaimen-mukaan identity
         :rivin-avaimet #{:esiintyma :km-arvo :muotoarvo :sideainetyyppi :pitoisuus :lisaaineet}}
@@ -583,6 +585,7 @@
            :jarjesta-avaimen-mukaan identity
            :voi-muokata? alustatoimet-voi-muokata?
            :voi-kumota? false
+           :validoi-alussa? true
            :uusi-id (inc (count @alustan-toimet-tila))
            :virheet alustan-toimet-virheet}
           [{:otsikko "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
@@ -926,8 +929,18 @@
                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
                       (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))))
       (fn [e! {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet historia
-                      ohjauskahvat] :as lomakedata-nyt}
+                      ohjauskahvat validoi-lomake?] :as lomakedata-nyt}
            lukko urakka kayttaja]
+        (when validoi-lomake?
+          (when-let [ohjauskahva (:tierekisteriosoitteet ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (when-let [ohjauskahva (:paallystystoimenpiteen-tiedotin ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (when-let [ohjauskahva (:kiviaines-ja-sideaine ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (when-let [ohjauskahva (:alustalle-tehdyt-toimet ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :validoi-lomake?] false)))
         (let [{:keys [tila yllapitokohdetyyppi tekninen-osa asiatarkastus
                       valmispvm-kohde]} perustiedot
               lukittu? (lukko/nakyma-lukittu? lukko)

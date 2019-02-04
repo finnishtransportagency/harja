@@ -579,6 +579,7 @@
         [grid/muokkaus-grid
          {:tyhja tyhja-kohdeosa
           :tyhja-args [voi-muokata?]
+          :validoi-alussa? true
           :tyhja-komponentti? true
           :ohjaus g
           :taulukko-validointi (:taulukko validoinnit)
