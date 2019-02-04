@@ -262,16 +262,17 @@ describe('Aloita päällystysilmoitus vanha', function () {
             cy.wrap(valitseInput(0, 'Leveys (m)')).type(1)
             cy.wrap(valitseInput(1, 'Leveys (m)')).type(2).then(($leveysInput) => {
                 cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click().then(($eiKayteta) => {
-                    cy.wrap(valitseInput($rivit.length - 1, 'Leveys (m)')).should('have.value', '2')
-                    for (let i = 0; i < $rivit.length; i++) {
-                        let sarakkeet = $rivit.eq(i).find('td');
-                        expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
-                        if (i === 0 || i === 2) {
-                            expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('1');
-                        } else {
-                            expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('2');
+                    cy.wrap(valitseInput($rivit.length - 1, 'Leveys (m)')).should('have.value', '2').then(($eiKayteta) => {
+                        for (let i = 0; i < $rivit.length; i++) {
+                            let sarakkeet = $rivit.eq(i).find('td');
+                            expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
+                            if (i === 0 || i === 2) {
+                                expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('1');
+                            } else {
+                                expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('2');
+                            }
                         }
-                    }
+                    })
                 })
             })
         })
