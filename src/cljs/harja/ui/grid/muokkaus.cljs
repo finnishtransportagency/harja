@@ -81,13 +81,14 @@
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
         fokus? (atom false)
-
         fokus-elementille #(reset! fokus? true)
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
                                       fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
                                                                     (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
-                                  (when-not (= fokusoidun-komponentin-nimi "tayta-alas-nappi")
+                                  (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
                                     (reset! fokus? false)))
+        tayta-alas-key (str (gensym "tayta"))
+        kentan-key (str (gensym "kentta"))
         seuranta-avain (keyword (str (gensym (str i nimi))))]
     (r/create-class
       {:display-name "Muokkauselementin-tila"
@@ -161,17 +162,20 @@
                     disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
                                      (when (and tayta-alas voi-muokata?)
+                                       ^{:key tayta-alas-key}
                                        [grid-yleiset/tayta-alas-nappi {:fokus? @fokus? :fokus-atom fokus?
                                                                        :arvo arvo :tayta-alas tayta-alas
                                                                        :rivi-index rivi-index
                                                                        :tulevat-elementit tulevat-elementit
                                                                        :sarake sarake :ohjaus ohjaus :rivi rivi}])
                                      (if kentta-arity-3?
+                                       ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                           :on-blur fokus-pois-elementilta
                                                           :disabled? (not voi-muokata?))
                                         arvo
                                         @data-muokkaus-fn]
+                                       ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                           :on-blur fokus-pois-elementilta
                                                           :disabled? (not voi-muokata?))

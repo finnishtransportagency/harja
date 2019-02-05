@@ -90,13 +90,20 @@
                            :default :sisalla)]
       [:div {:class (if (= :oikea (:tasaa sarake))
                       "pull-left"
-                      "pull-right")}
+                      "pull-right")
+             ;; tabindex tarvitaan sitä varten, että blur eventissä saadaan tämä relatedTarget attribuutista, koska
+             ;; joskus noi nappien klikkailu ottaa jomman kumman näistä diveistä napin sijasta.
+             ;; data-komponentin-nimi käytetään muokkausgridissä fokusin asettamiseen
+             :data-komponentin-nimi "tayta-alas-div"
+             :tabIndex "-1"}
        [:div {:style {:width "100%"
                       :position "absolute"
                       :left 0
                       :height 0                             ; Tärkeä, ettei voida vahingossa focusoida pois kentästä nappeihin
                       :top "-3px"
-                      :display "flex"}}
+                      :display "flex"}
+              :data-komponentin-nimi "tayta-alas-div"
+              :tabIndex "-1"}
         [napit/yleinen-toissijainen "Täytä"
          #(do
             (when fokus-atom
