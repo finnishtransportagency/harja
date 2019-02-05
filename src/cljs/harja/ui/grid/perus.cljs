@@ -42,9 +42,9 @@
     (log "muokkausrivi on nil"))
   [:tr.muokataan {:class luokka}
 
-   (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as sarake} (if (:colspan rivi)
-                                                                                               (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
-                                                                                               skeema)]
+   (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti komponentti-args] :as sarake} (if (:colspan rivi)
+                                                                                                                (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
+                                                                                                                skeema)]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id]
@@ -78,9 +78,14 @@
                      (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)
                      (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus))
 
-                   (if (= tyyppi :komponentti)
-                     (komponentti rivi {:index index
-                                        :muokataan? true})
+                   (cond
+                     (= tyyppi :komponentti) (apply komponentti rivi {:index index
+                                                                      :muokataan? true}
+                                                    komponentti-args)
+                     (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
+                                                                                     :muokataan? true}]
+                                                                  komponentti-args))
+                     :else
                      [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
                       (when tayta-alas
@@ -91,9 +96,9 @@
                                                         :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
                       [tee-kentta (assoc sarake
-                                    :focus (= fokus fokus-id)
-                                    :on-focus #(aseta-fokus! fokus-id)
-                                    :pituus-max (:pituus-max sarake))
+                                         :focus (= fokus fokus-id)
+                                         :on-focus #(aseta-fokus! fokus-id)
+                                         :pituus-max (:pituus-max sarake))
                        (r/wrap
                          arvo
                          (fn [uusi]
@@ -168,7 +173,7 @@
                       :rivi rivi})}
 
    (doall (map-indexed
-            (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
+            (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti komponentti-args
                            solu-klikattu solun-luokka huomio
                            pakota-rivitys? reunus]}]
               (let [haettu-arvo (if hae
@@ -209,10 +214,14 @@
                             rivin-infolaatikko
                             @infolaatikko-nakyvissa?)
                       [rivin-infolaatikko* rivin-infolaatikko rivi data])
-
-                    (if (= tyyppi :komponentti)
-                      (komponentti rivi {:index index
-                                         :muokataan? false})
+                    (cond
+                      (= tyyppi :komponentti) (apply komponentti rivi {:index index
+                                                                       :muokataan? false}
+                                                     komponentti-args)
+                      (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
+                                                                                      :muokataan? false}]
+                                                                   komponentti-args))
+                      :else
                       (if fmt
                         (fmt haettu-arvo)
                         ;; FIXME Tässä annetaan skeema argumenttina nayta-arvo funktiolle. Valitettavasti tuo 'skeema' viittaa
