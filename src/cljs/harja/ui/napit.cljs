@@ -58,6 +58,7 @@
                                  :flash)
             suljettava-virhe? (or (:suljettava-virhe? asetukset) false)
             sulkemisfunktio #(reset! nayta-virheviesti? false)
+            asetukset-nayta-virheviesti? (get asetukset :nayta-virheviesti? true)
             kun-valmis (:kun-valmis asetukset)
             kun-virhe (:kun-virhe asetukset)
             kun-onnistuu (:kun-onnistuu asetukset)
@@ -90,7 +91,7 @@
               {:data-cy data-cy}))
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
-         (when @nayta-virheviesti?
+         (when (and @nayta-virheviesti? asetukset-nayta-virheviesti?)
            (case virheen-esitystapa
              :flash (do
                       (viesti/nayta! virheviesti :warning (or virheviestin-nayttoaika

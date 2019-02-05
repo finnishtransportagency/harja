@@ -158,6 +158,20 @@
                               3)))
         paallystysilmoitukset))))
 
+(defn virhe-modal [vastaus]
+  (let [virhe (:virhe vastaus)]
+    (modal/nayta!
+      {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
+       :otsikko-tyyli :virhe}
+      (when (:virhe vastaus)
+        [:div
+         [:p "Virheet:"]
+         (into [:ul] (mapv (fn [virhe]
+                             [:li virhe])
+                           (if (sequential? virhe)
+                             virhe
+                             [virhe])))]))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
@@ -187,7 +201,7 @@
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratOnnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaaratEpaonnistui [vastaus takuupvm-tallennus-kaynnissa-kanava])
 (defrecord YHAVientiOnnistui [paallystysilmoitukset])
-(defrecord YHAVientiEpaonnistui [paallystysilmoitukset])
+(defrecord YHAVientiEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   AvaaPaallystysilmoituksenLukitus
@@ -408,15 +422,7 @@
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (modal/nayta!
-      {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
-       :otsikko-tyyli :virhe}
-      (when (:virhe vastaus)
-        [:div
-         [:p "Virheet:"]
-         (into [:ul] (mapv (fn [virhe]
-                             [:li virhe])
-                           (:virhe vastaus)))]))
+    (virhe-modal vastaus)
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
@@ -462,6 +468,6 @@
     (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
     (assoc app :paallystysilmoitukset paallystysilmoitukset))
   YHAVientiEpaonnistui
-  (process-event [{paallystysilmoitukset :paallystysilmoitukset} app]
-    (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)
-    (assoc app :paallystysilmoitukset paallystysilmoitukset)))
+  (process-event [{vastaus :vastaus} app]
+    (virhe-modal vastaus)
+    (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))

@@ -382,3 +382,8 @@ SET
   muokkaaja                         = :muokkaaja
 WHERE id = :id
       AND urakka = :urakka;
+
+-- name: virheen-tiedot
+SELECT nimi, tunnus, kohdenumero, yhaid
+FROM yllapitokohde
+WHERE yhaid IN (:ulkoiset-idt);

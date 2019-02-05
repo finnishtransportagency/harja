@@ -1120,13 +1120,13 @@
 (defn- yha-lahetykset-taulukko [e! app]
   (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
         kun-onnistuu-fn #(e! (paallystys/->YHAVientiOnnistui %))
-        kun-epaonnistuu-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
+        kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
         edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-lahetyksessa]
                                             [nayta-lahetystiedot rivi kohteet-yha-lahetyksessa])
-        laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi]
+        laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
                                    [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
                                                           :vuosi valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
-                                                          :kun-onnistuu kun-onnistuu-fn :kun-epaonnistuu kun-epaonnistuu-fn}])
+                                                          :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}])
         false-fn (constantly false)]
     (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
@@ -1144,14 +1144,14 @@
          :komponentti-args [kohteet-yha-lahetyksessa]}
         {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
          :komponentti laheta-yhaan-komponentti
-         :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi]}]
+         :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]}]
        paallystysilmoitukset])))
 
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
     (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-             paallystysilmoitukset :paallystysilmoitukset :as app}]
+             paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
         [:div
@@ -1161,7 +1161,7 @@
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
          #_[yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
                                   :vuosi valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
-                                  :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-epaonnistuu #(e! (paallystys/->YHAVientiEpaonnistui %))}]
+                                  :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-virhe #(e! (paallystys/->YHAVientiEpaonnistui %)) :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
          [yha-lahetykset-taulukko e! (select-keys app #{:urakka :urakka-tila :paallystysilmoitukset :kohteet-yha-lahetyksessa})]]))))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]

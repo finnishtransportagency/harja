@@ -13,6 +13,7 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as clj-str]
+            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -52,50 +53,70 @@
            :virheet {:virhe virhe}}))
       kohteet)))
 
-(defn muodosta-kohteiden-lahetysvirheet [virheet]
-  (let [virhe-viestit (clj-str/join ", " (mapv (fn [{:keys [kohde-yha-id selite]}]
-                                                (str (when kohde-yha-id (str "Kohde id: " kohde-yha-id ", ")) "Virhe: " selite))
-                                              virheet))]
-    (str "YHA palautti seuraavat virheet: " virhe-viestit)))
+(defn muodosta-kohteiden-lahetysvirheet [virheet virheellisen-kohteen-tiedot]
+  (mapv (fn [{:keys [kohde-yha-id selite]}]
+          (str (when kohde-yha-id
+                 (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)
+                                                      %)
+                                                   virheellisen-kohteen-tiedot)]
+                   (str "Kohde id: " kohde-yha-id
+                        (when kohdenumero
+                          (str ", kohdenumero: " kohdenumero))
+                        (when tunnus
+                          (str ", tunnus: " tunnus))
+                        (when nimi
+                          (str ", nimi: " nimi))
+                        ", ")))
+               "Virhe: " selite))
+        virheet))
 
 (defn- kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]
   (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
-  (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
-        virheet (:virheet vastaus)
-        onnistunut? (empty? virheet)
-        virhe-viesti (muodosta-kohteiden-lahetysvirheet virheet)
-        epaonnistuneet (into #{}
-                             ;; Jos on yksikään virhe, jolla ei ole kohde id:tä
-                             ;; katsotaan kaikki kohteet epäonnistuneiksi.
-                             (if (some #(nil? (:kohde-yha-id %)) virheet)
-                               (map #(:yhaid (:kohde %)) kohteet)
-                               (map :kohde-yha-id virheet)))]
+  (jdbc/with-db-transaction [db db]
+    (let [vastaus (try (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
+                       (catch RuntimeException e
+                         {:virheet [{:selite (.getMessage e)}]
+                          :sanoman-lukuvirhe? true}))
+          virheet (:virheet vastaus)
+          onnistunut? (empty? virheet)
+          virheellisen-kohteen-tiedot (when-not onnistunut?
+                                        (q-paallystys/virheen-tiedot db {:ulkoiset-idt (map :kohde-yha-id virheet)}))
+          virhe-viestit (muodosta-kohteiden-lahetysvirheet virheet virheellisen-kohteen-tiedot)
+          virhe-viesti (str "YHA palautti seuraavat virheet: " (clj-str/join ", " virhe-viestit))
+          epaonnistuneet (into #{}
+                               ;; Jos on yksikään virhe, jolla ei ole kohde id:tä
+                               ;; katsotaan kaikki kohteet epäonnistuneiksi.
+                               (if (some #(nil? (:kohde-yha-id %)) virheet)
+                                 (map #(:yhaid (:kohde %)) kohteet)
+                                 (map :kohde-yha-id virheet)))]
 
-    (if onnistunut?
-      (log/info "Kohteiden lähetys YHAan onnistui")
-      (log/error (str "Virheitä kohteiden lähetyksessä YHAan: " virhe-viesti)))
+      (if onnistunut?
+        (log/info "Kohteiden lähetys YHAan onnistui")
+        (log/error (str "Virheitä kohteiden lähetyksessä YHAan: " virhe-viesti)))
 
-    (doseq [kohde kohteet]
-      (let [kohde-id (:id (:kohde kohde))
-            kohde-yha-id (:yhaid (:kohde kohde))
-            kohteen-lahetys-onnistunut? (not (contains? epaonnistuneet kohde-yha-id))
-            virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
-            virhe-viesti (when (not kohteen-lahetys-onnistunut?)
-                           (or (:selite virhe)
-                               (clj-str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
+      (doseq [kohde kohteet]
+        (let [kohde-id (:id (:kohde kohde))
+              kohde-yha-id (:yhaid (:kohde kohde))
+              kohteen-lahetys-onnistunut? (and (not (contains? epaonnistuneet kohde-yha-id))
+                                               (not (:sanoman-lukuvirhe? vastaus)))
+              virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
+              virhe-viesti (when (not kohteen-lahetys-onnistunut?)
+                             (or (:selite virhe)
+                                 (clj-str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
 
-        (if kohteen-lahetys-onnistunut?
-          (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-viesti))
-              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))
+          (if kohteen-lahetys-onnistunut?
+            (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+            (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-viesti))
+                (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))
 
-        (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
-          db
-          {:lahetetty (pvm/nyt)
-           :onnistunut kohteen-lahetys-onnistunut?
-           :lahetysvirhe virhe-viesti
-           :kohdeid kohde-id})))
-    onnistunut?))
+          (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+            db
+            {:lahetetty (pvm/nyt)
+             :onnistunut kohteen-lahetys-onnistunut?
+             :lahetysvirhe virhe-viesti
+             :kohdeid kohde-id})))
+      (when-not onnistunut?
+        {:virhe virhe-viestit}))))
 
 (defn lisaa-http-parametri [parametrit avain arvo]
   (if arvo
