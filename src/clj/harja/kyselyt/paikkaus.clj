@@ -83,8 +83,7 @@
            {::muokkaustiedot/poistettu? true
             ::muokkaustiedot/muokkaaja-id kayttaja-id
             ::muokkaustiedot/muokattu (pvm/nyt)}
-           {::muokkaustiedot/poistettu? false
-            ::muokkaustiedot/luoja-id kayttaja-id
+           {::muokkaustiedot/luoja-id kayttaja-id
             ::paikkaus/urakka-id urakka-id
             ::paikkaus/ulkoinen-id (op/in (into #{} paikkaus-idt))}))
 
@@ -95,10 +94,9 @@
            {::muokkaustiedot/poistettu? true
             ::muokkaustiedot/muokkaaja-id kayttaja-id
             ::muokkaustiedot/muokattu (pvm/nyt)}
-           {::muokkaustiedot/poistettu? false
-            ::muokkaustiedot/luoja-id kayttaja-id
+           {::muokkaustiedot/luoja-id kayttaja-id
             ::paikkaus/urakka-id urakka-id
-            ::paikkaus/id (op/in (into #{} paikkauskohde-idt))}))
+            ::paikkaus/paikkauskohde-id (op/in (into #{} paikkauskohde-idt))}))
 
 (defn paivita-paikkaustoteumat-poistetuksi
   "Poistaa paikkauskustannukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
@@ -107,8 +105,7 @@
            {::muokkaustiedot/poistettu? true
             ::muokkaustiedot/muokkaaja-id kayttaja-id
             ::muokkaustiedot/muokattu (pvm/nyt)}
-           {::muokkaustiedot/poistettu? false
-            ::muokkaustiedot/luoja-id kayttaja-id
+           {::muokkaustiedot/luoja-id kayttaja-id
             ::paikkaus/urakka-id urakka-id
             ::paikkaus/ulkoinen-id (op/in (into #{} paikkaustoteuma-idt))}))
 
@@ -119,18 +116,16 @@
            {::muokkaustiedot/poistettu? true
             ::muokkaustiedot/muokkaaja-id kayttaja-id
             ::muokkaustiedot/muokattu (pvm/nyt)}
-           {::muokkaustiedot/poistettu? false
-            ::muokkaustiedot/luoja-id kayttaja-id
+           {::muokkaustiedot/luoja-id kayttaja-id
             ::paikkaus/urakka-id urakka-id
-            ::paikkaus/id (op/in (into #{} paikkauskohde-idt))}))
+            ::paikkaus/paikkauskohde-id (op/in (into #{} paikkauskohde-idt))}))
 
 (defn paivita-paikkauskohteet-poistetuksi
   "Poistaa paikkauskohteet sekä niihin liittyvät paikkaukset ja paikkauskustannukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
   [db kayttaja-id urakka-id paikkauskohde-idt]
   (let [sisaiset-idt (fetch db ::paikkaus/paikkauskohde
                             #{::paikkaus/id}
-                            {::muokkaustiedot/poistettu? false
-                             ::muokkaustiedot/luoja-id kayttaja-id
+                            {::muokkaustiedot/luoja-id kayttaja-id
                              ::paikkaus/urakka-id urakka-id
                              ::paikkaus/ulkoinen-id (op/in (into #{} paikkauskohde-idt))})]
     (paivita-paikauskohteiden-paikkaukset-poistetuksi db kayttaja-id urakka-id (map ::paikkaus/id sisaiset-idt))
@@ -139,8 +134,7 @@
            {::muokkaustiedot/poistettu? true
             ::muokkaustiedot/muokkaaja-id kayttaja-id
             ::muokkaustiedot/muokattu (pvm/nyt)}
-           {::muokkaustiedot/poistettu? false
-            ::muokkaustiedot/luoja-id kayttaja-id
+           {::muokkaustiedot/luoja-id kayttaja-id
             ::paikkaus/urakka-id urakka-id
             ::paikkaus/ulkoinen-id (op/in (into #{} paikkauskohde-idt))}))
 

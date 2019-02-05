@@ -16,6 +16,15 @@ VALUES ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
     LIMIT 1),
+  666,
+  'Testikohde toisessa urakassa sama urakoitsija ja ulkoinen id',
+  (SELECT id
+    FROM urakka
+    WHERE sampoid = '1245142-KAJ2')),
+  ((SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'destia'
+    LIMIT 1),
    1337,
    'Testikohde 2',
    (SELECT id
@@ -39,6 +48,7 @@ VALUES ((SELECT id
    (SELECT id
     FROM urakka
     WHERE sampoid = '4242523-TES2'));
+
 
 DO $$ DECLARE
   destia_kayttaja              INTEGER := (SELECT id

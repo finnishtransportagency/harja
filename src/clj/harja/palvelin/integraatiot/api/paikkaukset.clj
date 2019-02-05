@@ -19,17 +19,17 @@
 (defn- poista-paikkaustoteumat
   "Merkitsee poistetuksi paikkaustoteumat eli paikkauskustannukset."
   [db urakka-id kayttaja-id paikkaustoteumat]
-    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db urakka-id kayttaja-id paikkaustoteumat))
+    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db kayttaja-id urakka-id paikkaustoteumat))
 
 (defn- poista-paikkaukset
   "Merkitsee poistetuksi paikkaukset."
   [db urakka-id kayttaja-id paikkaukset]
-    (paikkaus-q/paivita-paikkaukset-poistetuksi db urakka-id kayttaja-id paikkaukset))
+    (paikkaus-q/paivita-paikkaukset-poistetuksi db kayttaja-id urakka-id paikkaukset))
 
 (defn- poista-paikkauskohteet
   "Merkitsee poistetuksi paikkauskohteet sekä niistä riippuvaiset paikkaukset ja paikkaustoteumat eli paikkauskustannukset."
   [db urakka-id kayttaja-id paikkauskohteet]
-  (paikkaus-q/paivita-paikkauskohteet-poistetuksi db urakka-id kayttaja-id paikkauskohteet))
+  (paikkaus-q/paivita-paikkauskohteet-poistetuksi db kayttaja-id urakka-id paikkauskohteet))
 
 (defn poista-paikkaustiedot [db {id :id} data kayttaja]
   (log/debug (format "Poistetaan paikkaustietoja urakasta: %s käyttäjän: %s toimesta"
