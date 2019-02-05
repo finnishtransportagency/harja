@@ -257,11 +257,11 @@ describe('Aloita päällystysilmoitus vanha', function () {
 
             // Täytetään taulukkoon oikean muotoisia tietoja
             cy.wrap(valitseInput(0, 'Raekoko')).type(1).then(($raekokoInput) => {
-                cy.wrap($raekokoInput.parentsUntil('td')).contains('button', 'Täytä').click()
+                cy.wrap($raekokoInput.parentsUntil('td')).contains('button', 'Täytä').click({force: true})
             })
             cy.wrap(valitseInput(0, 'Leveys (m)')).type(1)
             cy.wrap(valitseInput(1, 'Leveys (m)')).type(2).then(($leveysInput) => {
-                cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click().then(($eiKayteta) => {
+                cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click({force: true}).then(($eiKayteta) => {
                     cy.wrap(valitseInput($rivit.length - 1, 'Leveys (m)')).should('have.value', '2').then(($eiKayteta) => {
                         for (let i = 0; i < $rivit.length; i++) {
                             let sarakkeet = $rivit.eq(i).find('td');
