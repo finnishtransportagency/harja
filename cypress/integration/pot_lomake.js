@@ -80,10 +80,13 @@ describe('Aloita päällystysilmoitus vanha', function () {
         // Pääkohteen tierekisteriosoitetta pitäisi pystyä muuttamaan
         cy.get('[data-cy=paallystysilmoitus-perustiedot] table td').then(($trTd) => {
             expect($trTd.eq(0).find('input')).to.have.value('22');
+            // Vanhoissa urakoissa on ajorata ja kaista näkyvillä
             expect($trTd.eq(1).find('input')).to.have.value('1');
-            expect($trTd.eq(2).find('input')).to.have.value('0');
-            expect($trTd.eq(3).find('input')).to.have.value('3');
-            expect($trTd.eq(4).find('input')).to.have.value('100');
+            expect($trTd.eq(2).find('input')).to.have.value('1');
+            expect($trTd.eq(3).find('input')).to.have.value('1');
+            expect($trTd.eq(4).find('input')).to.have.value('65');
+            expect($trTd.eq(5).find('input')).to.have.value('3');
+            expect($trTd.eq(6).find('input')).to.have.value('100');
         })
     })
     it('Rivien lisäys', function () {
@@ -117,7 +120,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
             expect($rivit.first().find('td').eq($otsikot.get('Aosa')).find('input')).to.have.value('1');
-            expect($rivit.first().find('td').eq($otsikot.get('Aet')).find('input')).to.have.value('0');
+            expect($rivit.first().find('td').eq($otsikot.get('Aet')).find('input')).to.have.value('65');
             expect($rivit.first().find('td').eq($otsikot.get('Losa')).find('input')).to.be.empty;
             expect($rivit.first().find('td').eq($otsikot.get('Let')).find('input')).to.be.empty;
             expect($rivit.last().find('td').eq($otsikot.get('Aosa')).find('input')).to.be.empty;
@@ -170,8 +173,9 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 expect(virheValinta(0, 'Losa')).to.have.lengthOf(1)
                     .and.to.contain('Loppuosa ei voi olla alkuosaa ennen');
 
-                expect(virheValinta(0, 'Let')).to.have.lengthOf(1);
-                expect(virheValinta(0, 'Let')[0]).to.contain('Osan 1 maksimietäisyys on ');
+                expect(virheValinta(0, 'Let')).to.have.lengthOf(2)
+                    .and.to.contain('Osan 1 maksimietäisyys on 8054')
+                    .and.to.contain('Osan 1 ajoradan 1 maksimipituus on 7989');
                 ['Aosa', 'Aet', 'Losa', 'Let'].forEach((otsikko) => {
                     expect(virheValinta(1, otsikko)).to.have.lengthOf(1)
                         .and.to.contain('Kohteenosa on päällekkäin osan Foo kanssa')
@@ -195,7 +199,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
             expect($rivit.first().find('td').eq($otsikot.get('Aosa')).find('input')).to.have.value('2');
-            expect($rivit.first().find('td').eq($otsikot.get('Aet')).find('input')).to.have.value('0');
+            expect($rivit.first().find('td').eq($otsikot.get('Aet')).find('input')).to.have.value('65');
             expect($rivit.first().find('td').eq($otsikot.get('Losa')).find('input')).to.be.empty;
             expect($rivit.first().find('td').eq($otsikot.get('Let')).find('input')).to.be.empty;
             expect($rivit.last().find('td').eq($otsikot.get('Aosa')).find('input')).to.be.empty;
@@ -223,7 +227,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             }
             // Täytetään taulukkoon oikean muotoisia tietoja
             cy.wrap(valitseInput(0, 'Aosa')).clear().type(1)
-            cy.wrap(valitseInput(0, 'Aet')).clear().type(0)
+            cy.wrap(valitseInput(0, 'Aet')).clear().type(65)
             cy.wrap(valitseInput(0, 'Losa')).clear().type(1)
             cy.wrap(valitseInput(0, 'Let')).clear().type(100)
             cy.wrap(valitseInput(1, 'Aosa')).clear().type(1)

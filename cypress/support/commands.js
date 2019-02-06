@@ -129,7 +129,7 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
             '                       WHERE nimi = \'Muhoksen päällystysurakka\') AND paasopimus IS NULL),' +
             '      ' + vapaaYHANumero + ', \'L' + vapaaYHANumero + '\', \'E2E-Testi\', \'paallyste\' :: yllapitokohdetyyppi,' +
             '      \'paallystys\' ::yllapitokohdetyotyyppi, 3233231,' +
-            '      22, 1, 0, 3, 100, ' + kohde.ajorata + ', ' + kohde.kaista + ', (SELECT id' +
+            '      22, 1, 65, 3, 100, ' + kohde.ajorata + ', ' + kohde.kaista + ', (SELECT id' +
             '                             FROM urakka' +
             '                             WHERE nimi =' +
             '                                   \'Oulun tiemerkinnän palvelusopimus 2013-2018\'),' +
@@ -138,7 +138,7 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
             '(id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)' +
             ' VALUES (3231, (SELECT id' +
             '              FROM yllapitokohde' +
-            '              WHERE nimi = \'E2E-Testi\'), \'E2E-Testi-kohdeosa\', 22, 1, 0, 3, 100, ' + alikohde.ajorata + ', ' + alikohde.kaista + ', ' +
+            '              WHERE nimi = \'E2E-Testi\'), \'E2E-Testi-kohdeosa\', 22, 1, 65, 3, 100, ' + alikohde.ajorata + ', ' + alikohde.kaista + ', ' +
             '         (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
             '          FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 0, 3, 100, ' + alikohde.ajorata + '))' +
             ');"';

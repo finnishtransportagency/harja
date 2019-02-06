@@ -311,7 +311,7 @@
           (assoc-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite]
                     (select-keys perustiedot
                                  #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                   :tr-loppuosa :tr-loppuetaisyys}))
+                                   :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista}))
           (update :paallystysilmoitus-lomakedata #(merge % muut-tiedot)))))
   HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti
   (process-event [{vastaus :vastaus} app]

@@ -250,7 +250,7 @@ yllapitoluokkanimi->numero
                      (> (- tr-loppuetaisyys tr-alkuetaisyys)
                         (get-in osan-pituudet [tr-loppuosa tr-ajorata]))
                      (> tr-loppuetaisyys
-                        (get-in osan-pituudet [tr-alkuosa tr-ajorata])))) (update :tr-loppuetaisyys assoc :liian-iso-ajorata [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa tr-ajorata])])
+                        (get-in osan-pituudet [tr-loppuosa tr-ajorata])))) (update :tr-loppuetaisyys assoc :liian-iso-ajorata [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa tr-ajorata])])
 
               (and (contains? osan-pituudet tr-alkuosa)
                    (> tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus]))) (update :tr-alkuetaisyys assoc :liian-iso-osa [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus])])
