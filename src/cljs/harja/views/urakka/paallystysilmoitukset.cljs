@@ -31,7 +31,6 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.views.kartta :as kartta]
-            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
@@ -297,7 +296,7 @@
              :sisallon-leveys? true}
             {:otsikko "Tierekisteriosoite"
              :hae identity
-             :fmt tierekisteri-domain/tierekisteriosoite-tekstina
+             :fmt tr/tierekisteriosoite-tekstina
              :muokattava? (constantly false)}))
         (when (or tr-ajorata tr-kaista)
           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :string
@@ -623,7 +622,10 @@
            {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
             :muokattava? false-fn
             :hae (fn [rivi]
-                   (tierekisteri-domain/laske-tien-pituus (get tr-osien-pituudet (:tr-numero rivi)) rivi))
+                   (tr/laske-tien-pituus (into {}
+                                               (map (juxt key (comp :pituus val)))
+                                               (get tr-osien-pituudet (:tr-numero rivi)))
+                                         rivi))
             :validoi (:pituus alustatoimien-validointi)}
            {:otsikko "Käsittely\u00ADmenetelmä"
             :nimi :kasittelymenetelma
@@ -904,18 +906,20 @@
                                                                  (empty? (:vaara-muotoinen tr-loppuosa-muoto-virhe))) (conj "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
                                                             (and tr-alkuosa (:liian-pieni tr-loppuosa-muoto-virhe)) (conj "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")))))
         validoi-kohteen-alkuetaisyys (validoi-kohde (fn [{tr-alkuetaisyys-muoto-vrihe :tr-alkuetaisyys} {tr-alkuetaisyys-pituus-virhe :tr-alkuetaisyys}
-                                                         {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuetaisyys]}]
+                                                         {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuetaisyys tr-ajorata]}]
                                                       (when (or tr-alkuetaisyys-pituus-virhe tr-alkuetaisyys-muoto-vrihe)
                                                         (cond-> []
-                                                                (and tr-alkuetaisyys-pituus-virhe tr-alkuetaisyys) (conj (str "Osan " tr-alkuosa " maksimietäisyys on " (last (:liian-iso tr-alkuetaisyys-pituus-virhe))))
+                                                                (and (:liian-iso-osa tr-alkuetaisyys-pituus-virhe) tr-alkuetaisyys) (conj (str "Osan " tr-alkuosa " maksimietäisyys on " (last (:liian-iso-osa tr-alkuetaisyys-pituus-virhe))))
+                                                                (and (:liian-iso-ajorata tr-alkuetaisyys-pituus-virhe) tr-alkuetaisyys) (conj (str "Osan " tr-alkuosa " ajoradan " tr-ajorata " maksimietäisyys on " (last (:liian-iso-ajorata tr-alkuetaisyys-pituus-virhe))))
                                                                 (and (contains? tr-alkuetaisyys-muoto-vrihe :vaara-muotoinen)
                                                                      (empty? (:vaara-muotoinen tr-alkuetaisyys-muoto-vrihe))) (conj "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys")
                                                                 (and tr-loppuetaisyys (:liian-iso tr-alkuetaisyys-muoto-vrihe)) (conj "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")))))
         validoi-kohteen-loppuetaisyys (validoi-kohde (fn [{tr-loppuetaisyys-muoto-virhe :tr-loppuetaisyys} {tr-loppuetaisyys-pituus-virhe :tr-loppuetaisyys}
-                                                          {:keys [tr-loppuosa tr-loppuetaisyys tr-alkuetaisyys]}]
+                                                          {:keys [tr-loppuosa tr-loppuetaisyys tr-alkuetaisyys tr-ajorata]}]
                                                        (when (or tr-loppuetaisyys-pituus-virhe tr-loppuetaisyys-muoto-virhe)
                                                          (cond-> []
-                                                                 (and tr-loppuetaisyys-pituus-virhe tr-loppuetaisyys) (str "Osan " tr-loppuosa " maksimietäisyys on " (last (:liian-iso tr-loppuetaisyys-pituus-virhe)))
+                                                                 (and (:liian-iso-osa tr-loppuetaisyys-pituus-virhe) tr-loppuetaisyys) (conj (str "Osan " tr-loppuosa " maksimietäisyys on " (last (:liian-iso-osa tr-loppuetaisyys-pituus-virhe))))
+                                                                 (and (:liian-iso-ajorata tr-loppuetaisyys-pituus-virhe) tr-loppuetaisyys) (conj (str "Osan " tr-loppuosa " ajoradan " tr-ajorata " maksimietäisyys on " (last (:liian-iso-ajorata tr-loppuetaisyys-pituus-virhe))))
                                                                  (and (contains? tr-loppuetaisyys-muoto-virhe :vaara-muotoinen)
                                                                       (empty? (:vaara-muotoinen tr-loppuetaisyys-muoto-virhe))) (conj "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")
                                                                  (and tr-alkuetaisyys (:liian-pieni tr-loppuetaisyys-muoto-virhe)) (conj "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")))))
@@ -965,7 +969,7 @@
                                              kirjoitusoikeus?)
               alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
                                              (not (= "sora" yllapitokohdetyyppi)))
-              tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
+              tr-validaattori (partial tr/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
               ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä.
 
               ;; TODO: nämä validoinnit eivät pelkästään validoi vaan tekevät jonku sivueffektin samalla. Yleensä

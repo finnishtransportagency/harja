@@ -60,6 +60,14 @@
       [geom]
       {:virhe "Tierekisteriosoitetta ei löydy"})))
 
+(defn hae-tr-pituudet [db params]
+  ;; TODO heti, kun saadaan kaistakohtaiset pituudet, otetaan se käyttöön tässä
+  (reduce (fn [m pituuden-tiedot]
+            (update m (:osa pituuden-tiedot)
+                    (fn [osa]
+                      (assoc osa (:ajorata pituuden-tiedot) (:pituus pituuden-tiedot)))))
+          {} (tv/hae-ajoratojen-pituudet db params)))
+
 (defn hae-osien-pituudet
   "Hakee tierekisteriosien pituudet annetulle tielle ja osan välille.
    Params mäpissä tulee olla :tie, :aosa ja :losa.
@@ -156,7 +164,9 @@
       :hae-tr-osien-pituudet (fn [_ params]
                                (oikeudet/ei-oikeustarkistusta!)
                                (hae-osien-pituudet db params))
-
+      :hae-tr-pituudet (fn [_ params]
+                         (oikeudet/ei-oikeustarkistusta!)
+                         (hae-tr-pituudet db params))
       :hae-tr-osan-ajoradat (fn [_ params]
                               (oikeudet/ei-oikeustarkistusta!)
                               (hae-tieosan-ajoradat db params))

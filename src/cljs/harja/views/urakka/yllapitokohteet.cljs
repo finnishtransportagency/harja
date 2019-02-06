@@ -447,10 +447,15 @@
                                 :tr-kaista (:tr-kaista yllapitokohde))))
         hae-fn (fn [rivi]
                  (let [tr-osien-pituudet (-> @paallystys-tiedot/tila :paallystysilmoitus-lomakedata :tr-osien-pituudet)]
-                   (tr/laske-tien-pituus (get tr-osien-pituudet (:tr-numero rivi))
+                   (tr/laske-tien-pituus (into {}
+                                               (map (juxt key (comp :pituus val)))
+                                               (get tr-osien-pituudet (:tr-numero rivi)))
                                          rivi)))
         pituus (fn [osan-pituus tieosa]
-                 (tr/laske-tien-pituus osan-pituus tieosa))
+                 (tr/laske-tien-pituus (into {}
+                                             (map (juxt key (comp :pituus val)))
+                                             osan-pituus)
+                                       tieosa))
         kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys

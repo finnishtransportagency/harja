@@ -228,7 +228,7 @@ yllapitoluokkanimi->numero
 
 (defn validoi-tr-osan-pituus
   "Olettaa, että tr-osoite on oikeamuotoinen"
-  [osan-pituudet-teille {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+  [osan-pituudet-teille {:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys
                                  tr-loppuosa tr-loppuetaisyys] :as kohde}]
   (when osan-pituudet-teille
     (let [osan-pituudet (osan-pituudet-teille tr-numero)]
@@ -238,9 +238,24 @@ yllapitoluokkanimi->numero
               (not (contains? osan-pituudet tr-loppuosa)) (update :tr-loppuosa assoc :ei-olemassa tr-loppuosa)
 
               (and (contains? osan-pituudet tr-alkuosa)
-                   (> tr-alkuetaisyys (get osan-pituudet tr-alkuosa))) (update :tr-alkuetaisyys assoc :liian-iso [tr-alkuetaisyys (get osan-pituudet tr-alkuosa)])
+                   tr-ajorata
+                   (if (= tr-alkuosa tr-loppuosa)
+                     (> (- tr-loppuetaisyys tr-alkuetaisyys)
+                        (get-in osan-pituudet [tr-alkuosa tr-ajorata]))
+                     (> (- (get-in osan-pituudet [tr-alkuosa :pituus]) tr-alkuetaisyys)
+                        (get-in osan-pituudet [tr-alkuosa tr-ajorata])))) (update :tr-alkuetaisyys assoc :liian-iso-ajorata [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa tr-ajorata])])
               (and (contains? osan-pituudet tr-loppuosa)
-                   (> tr-loppuetaisyys (get osan-pituudet tr-loppuosa))) (update :tr-loppuetaisyys assoc :liian-iso [tr-loppuetaisyys (get osan-pituudet tr-loppuosa)])))))
+                   tr-ajorata
+                   (if (= tr-alkuosa tr-loppuosa)
+                     (> (- tr-loppuetaisyys tr-alkuetaisyys)
+                        (get-in osan-pituudet [tr-loppuosa tr-ajorata]))
+                     (> tr-loppuetaisyys
+                        (get-in osan-pituudet [tr-alkuosa tr-ajorata])))) (update :tr-loppuetaisyys assoc :liian-iso-ajorata [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa tr-ajorata])])
+
+              (and (contains? osan-pituudet tr-alkuosa)
+                   (> tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus]))) (update :tr-alkuetaisyys assoc :liian-iso-osa [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus])])
+              (and (contains? osan-pituudet tr-loppuosa)
+                   (> tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa :pituus]))) (update :tr-loppuetaisyys assoc :liian-iso-osa [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa :pituus])])))))
 
 (defn losa>aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
   (and tr-alkuosa tr-loppuosa (> tr-loppuosa tr-alkuosa)))

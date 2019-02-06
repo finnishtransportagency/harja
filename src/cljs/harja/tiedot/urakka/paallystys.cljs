@@ -322,17 +322,22 @@
     (let [parametrit {:tie tr-numero
                       :aosa tr-alkuosa
                       :losa tr-loppuosa}]
-      (tuck-apurit/post! app :hae-tr-osien-pituudet
+      (tuck-apurit/post! app :hae-tr-pituudet
                          parametrit
                          {:onnistui ->HaeTrOsienPituudetOnnistui
                           :onnistui-parametrit [tr-numero]
                           :epaonnistui ->HaeTrOsienPituudetEpaonnistui})))
   HaeTrOsienPituudetOnnistui
   (process-event [{:keys [vastaus tr-numero]} app]
-    (update-in app [:paallystysilmoitus-lomakedata :tr-osien-pituudet] (fn [vanhat]
-                                                                         (update vanhat tr-numero
-                                                                                 (fn [vanhat-osuudet]
-                                                                                   (merge vanhat-osuudet vastaus))))))
+    (let [pituudet (reduce-kv (fn [m osa v]
+                                (assoc m osa (assoc v :pituus (+ (get v 0 0)
+                                                                 (max (get v 1 0)
+                                                                      (get v 2 0))))))
+                              {} vastaus)]
+      (update-in app [:paallystysilmoitus-lomakedata :tr-osien-pituudet] (fn [vanhat]
+                                                                           (update vanhat tr-numero
+                                                                                   (fn [vanhat-osuudet]
+                                                                                     (merge vanhat-osuudet pituudet)))))))
   HaeTrOsienPituudetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     app)
