@@ -49,7 +49,7 @@
              :ei-kriittinen? true
              :virheet [{:virhe "Tuntematon toimenpidekoodi (vv_operation)"}]}))
   (if (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
-    (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
+    (when (not (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id))
       (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
                :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus
                            viesti-id "Operation"
@@ -70,7 +70,7 @@
                                              vastuuhenkilo-id talousosasto-id
                                              talousosasto-polku tuote-id tuote-polku
                                              urakka-sampo-id sampo-toimenpidekoodi)]
-      (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)
+      (log/debug "Käsiteltävän toimenpiteen id on:" toimenpide-id)
       (maksuerat/paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi db toimenpide-id)
       (maksuerat/perusta-maksuerat-hoidon-urakoille db)
       (log/debug "Toimenpide käsitelty onnistuneesti")
