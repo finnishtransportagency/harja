@@ -32,7 +32,7 @@ echo +++++++++++++++++++
 echo
 mkdir -p cypress/screenshots
 set +e
-$(npm bin)/cypress run --browser chrome # --spec cypress/integration/nakymien_avaus_spec.js
+$(npm bin)/cypress run --browser electron # --spec cypress/integration/nakymien_avaus_spec.js
 cypress_status=$?
 cp -vr cypress/screenshots /jar/
 exit $cypress_status
