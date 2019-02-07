@@ -174,47 +174,7 @@
     listaus]
    (if-not (empty? @tiedot/toteumat)
      [:div.bold kaytetty-yhteensa]
-     [:div ""])
-   [:hr]
-   [lomake/lomake {:otsikko "Käsinsyöttö"
-                   :muokkaa! #(reset! tiedot/kasinsyottolomake %)
-                   :ei-borderia? true
-                   :footer-fn (fn [rivi]
-                                [:span
-                                 [napit/yleinen-toissijainen "Tallenna"
-                                  (fn []
-                                    (reset! tallennetaan true)
-                                    (go
-                                      (<!
-                                       (tiedot/tallenna-kasinsyotetty-toteuma (:id urakka)
-                                                                              sopimus-id
-                                                                              {:tierekisteriosoite (:tierekisteriosoite @tiedot/kasinsyottolomake)
-                                                                               :lisatieto (:lisatieto @tiedot/kasinsyottolomake)
-                                                                               :materiaali (:materiaali @tiedot/kasinsyottolomake)
-                                                                               :maara (:maara @tiedot/kasinsyottolomake)
-                                                                               :pvm (pvm/nyt)}))
-                                      (reset! tallennetaan false)))
-                                  {:ikoni (ikonit/save)}]
-                                 (if @tallennetaan
-                                   [yleiset/ajax-loader "Tallennetaan"])])}
-    [{:otsikko "Tierekisteriosoite"
-      :nimi :tierekisteriosoite
-      :tyyppi :tierekisteriosoite}
-     {:otsikko "Materiaali"
-      :nimi :materiaali
-      :fmt :nimi
-      :leveys 10
-      :tyyppi :valinta
-      :validoi [[:ei-tyhja "Valitse materiaali"]]
-      :valinta-nayta #(or (:nimi %) "- valitse -")
-      :valinnat (or @tiedot/materiaalit [])}
-     {:otsikko "Käytetty määrä (t/km)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
-      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 10
-      :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
-     {:otsikko "Lisätiedot"
-      :nimi :lisatieto
-      :tyyppi :text}]
-    @tiedot/kasinsyottolomake]])
+     [:div ""])])
 
 (defn pohjavesialueen-suola []
   (komp/luo
@@ -259,9 +219,11 @@
               }
              [{:otsikko "Määrä t/km"
                :nimi :maara_t_per_km
+               :fmt #(fmt/desimaaliluku-opt % 1)
                :leveys 10}
               {:otsikko "Yhteensä"
                :leveys 10
+               :fmt #(fmt/desimaaliluku-opt % 1)
                :nimi :yhteensa}
               {:otsikko "Käyttöraja"
                :leveys 10
