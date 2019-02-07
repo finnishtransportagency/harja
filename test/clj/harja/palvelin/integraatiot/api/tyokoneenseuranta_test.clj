@@ -98,7 +98,7 @@
 
 (deftest tallenna-tyokoneen-seurantakirjaus-viivageometrialla
   (let [kutsu (api-tyokalut/post-kutsu
-                ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneenseurannan-kirjaus-viivageometrialla-testi.json"
+                ["/api/seuranta/tyokone/reitti"] kayttaja portti (-> "test/resurssit/api/tyokoneenseurannan-kirjaus-viivageometrialla-testi.json"
                                                               slurp))]
     (let [[sijainti] (first (q "SELECT  st_asgeojson(sijainti) FROM tyokonehavainto WHERE tyokoneid=999"))
           tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=999 ORDER BY tehtavat"))
