@@ -69,8 +69,9 @@
                                                                kayttaja)
   (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])]
-      (when urakka-id (validointi/tarkista-urakka db urakka-id)
-                      (tallenna-tyokoneen-koordinaatti db data havainto urakka-id))))
+      ;; Validointi nakkaa poikkeuksen, jos urakka-id ei ole validi
+      (when urakka-id (validointi/tarkista-urakka db urakka-id))
+      (tallenna-tyokoneen-koordinaatti db data havainto urakka-id)))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defrecord Tyokoneenseuranta []
