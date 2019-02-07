@@ -226,22 +226,22 @@ describe('Aloita päällystysilmoitus vanha', function () {
                 return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).find('input')
             }
             // Täytetään taulukkoon oikean muotoisia tietoja
-            cy.wrap(valitseInput(0, 'Aosa')).clear().type(1)
-            cy.wrap(valitseInput(0, 'Aet')).clear().type(65)
-            cy.wrap(valitseInput(0, 'Losa')).clear().type(1)
-            cy.wrap(valitseInput(0, 'Let')).clear().type(100)
-            cy.wrap(valitseInput(1, 'Aosa')).clear().type(1)
-            cy.wrap(valitseInput(1, 'Aet')).clear().type(100)
-            cy.wrap(valitseInput(1, 'Losa')).clear().type(1)
-            cy.wrap(valitseInput(1, 'Let')).clear().type(200)
-            cy.wrap(valitseInput(2, 'Aosa')).clear().type(1)
-            cy.wrap(valitseInput(2, 'Aet')).clear().type(200)
-            cy.wrap(valitseInput(2, 'Losa')).clear().type(1)
-            cy.wrap(valitseInput(2, 'Let')).clear().type(300)
-            cy.wrap(valitseInput(3, 'Aosa')).clear().type(1)
-            cy.wrap(valitseInput(3, 'Aet')).clear().type(300)
-            cy.wrap(valitseInput(3, 'Losa')).clear().type(1)
-            cy.wrap(valitseInput(3, 'Let')).clear().type(400)
+            cy.wrap(valitseInput(0, 'Aosa')).clear().type(1);
+            cy.wrap(valitseInput(0, 'Aet')).clear().type(65);
+            cy.wrap(valitseInput(0, 'Losa')).clear().type(1);
+            cy.wrap(valitseInput(0, 'Let')).clear().type(100);
+            cy.wrap(valitseInput(1, 'Aosa')).clear().type(1);
+            cy.wrap(valitseInput(1, 'Aet')).clear().type(100);
+            cy.wrap(valitseInput(1, 'Losa')).clear().type(1);
+            cy.wrap(valitseInput(1, 'Let')).clear().type(200);
+            cy.wrap(valitseInput(2, 'Aosa')).clear().type(1);
+            cy.wrap(valitseInput(2, 'Aet')).clear().type(200);
+            cy.wrap(valitseInput(2, 'Losa')).clear().type(1);
+            cy.wrap(valitseInput(2, 'Let')).clear().type(300);
+            cy.wrap(valitseInput(3, 'Aosa')).clear().type(1);
+            cy.wrap(valitseInput(3, 'Aet')).clear().type(300);
+            cy.wrap(valitseInput(3, 'Losa')).clear().type(1);
+            cy.wrap(valitseInput(3, 'Let')).clear().type(400);
         })
         // Varmistetaan, että input kenttiä löytyy (eli grid ei ole epävalidissa tilassa)
         cy.get('[data-cy=paallystystoimenpiteen-tiedot] input')
@@ -261,22 +261,41 @@ describe('Aloita päällystysilmoitus vanha', function () {
 
             // Täytetään taulukkoon oikean muotoisia tietoja
             cy.wrap(valitseInput(0, 'Raekoko')).type(1).then(($raekokoInput) => {
-                cy.wrap($raekokoInput.parentsUntil('td')).contains('button', 'Täytä').click()
+                //oikeampi tapahan tässä olisi kutsusa Cypressin click() metodia sen sijaan, että
+                // dispatchataan oma versio siitä. Näin ei kumminkaan tehdä, koska jostain syystä
+                // CircleCI:ssä se ei toimi. Varmaankin muokkaus gridissä oleva fokus-pois-elementilta ei saa
+                // relatedTarget elementtiä oikein Circlessä tai jtv.
+                cy.wrap($raekokoInput.parentsUntil('td')).contains('button', 'Täytä').then(($nappi) => {
+                    let clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        target: $nappi[0]
+                    });
+                    $nappi[0].dispatchEvent(clickEvent);
+                })
             })
             cy.wrap(valitseInput(0, 'Leveys (m)')).type(1)
             cy.wrap(valitseInput(1, 'Leveys (m)')).type(2).then(($leveysInput) => {
-                cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').click().then(($eiKayteta) => {
-                    cy.wrap(valitseInput($rivit.length - 1, 'Leveys (m)')).should('have.value', '2').then(($eiKayteta) => {
-                        for (let i = 0; i < $rivit.length; i++) {
-                            let sarakkeet = $rivit.eq(i).find('td');
-                            expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
-                            if (i === 0 || i === 2) {
-                                expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('1');
-                            } else {
-                                expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('2');
-                            }
+                cy.wrap($leveysInput.parentsUntil('td')).contains('button', 'Toista').then(($nappi) => {
+                    let clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        target: $nappi[0]
+                    });
+                    $nappi[0].dispatchEvent(clickEvent);
+                })
+                cy.wrap(valitseInput($rivit.length - 1, 'Leveys (m)')).should('have.value', '2').then(($eiKayteta) => {
+                    for (let i = 0; i < $rivit.length; i++) {
+                        let sarakkeet = $rivit.eq(i).find('td');
+                        expect(sarakkeet.eq($otsikot.get('Raekoko')).find('input')).to.have.value('1');
+                        if (i === 0 || i === 2) {
+                            expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('1');
+                        } else {
+                            expect(sarakkeet.eq($otsikot.get('Leveys (m)')).find('input')).to.have.value('2');
                         }
-                    })
+                    }
                 })
             })
         })
