@@ -7,8 +7,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [taoensso.timbre :as log]
-            [clojure.data.json :as json]))
+            [taoensso.timbre :as log]))
 
 (def +tyokone-seurantakirjaus-url+ "/api/seuranta/tyokone")
 (def +tyokone-reitti-url+ "/api/seuranta/tyokone/reitti")
