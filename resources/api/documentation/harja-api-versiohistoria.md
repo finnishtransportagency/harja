@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.40</b>
+<b>Nykyinen versio: 1.0.41</b>
 <b>Julkaistu: 21.12.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.41 Julkaistu 8.2.2019
+    - Työkoneseurannassa voi antaa sijaintitiedon viivageometriana pisteen sijasta.
 - Versionumero 1.0.40 Julkaistu 21.12.2018
     - Organisaatio päivitetty esimerkeissä Väyläksi. Päivitys ei sisällä toiminnallista rajapintamuutosta. 
 - Versionumero 1.0.39 Julkaistu 11.12.2018
