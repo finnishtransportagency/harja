@@ -21,10 +21,20 @@
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
-      "items": {
-        "id": "#/properties/sijainti/properties/coordinates/items/items",
-        "type": "number"
-      }
+      "items": [
+        {
+          "id": "#/properties/sijainti/properties/coordinates/items/items",
+          "type": "number",
+          "minimum": 60000,
+          "maximum": 736400
+        },
+        {
+          "id": "#/properties/sijainti/properties/coordinates/items/items",
+          "type": "number",
+          "minimum": 6500000,
+          "maximum": 7800000
+        }
+      ]
     }
   }
   }

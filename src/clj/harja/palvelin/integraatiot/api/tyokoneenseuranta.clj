@@ -39,6 +39,9 @@
 (defn- tallenna-tyokoneen-reitti
   "Tallentaa työkoneen sijainnin viivageometriana."
   [db data havainto urakka-id]
+  (validointi/viivageometria-annettu havainto)
+  (doseq [koordinaatit (get-in havainto [:havainto :sijainti :viivageometria :coordinates])]
+    (validointi/tarkista-koordinaattien-jarjestys koordinaatit))
   (tks/tallenna-tyokonehavainto-viivageometrialla<!
     db
     {:jarjestelma (get-in data [:otsikko :lahettaja :jarjestelma])
