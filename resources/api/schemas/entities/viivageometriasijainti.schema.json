@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "properties": {
   "type": {
-    "$id": "#/properties/sijainti/properties/type",
+    "id": "#/properties/sijainti/properties/type",
     "required": true,
     "enum": [
       "LineString"
