@@ -16,12 +16,11 @@
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}))
 
-(defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja pistetoteuma]
-  (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in pistetoteuma [:toteuma :tunniste :id]))
-  (let [toteuma (assoc (:toteuma pistetoteuma) :reitti nil)
-        toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)
-        sijainti (:sijainti pistetoteuma)
-        aika (aika-string->java-sql-date (get-in pistetoteuma [:toteuma :alkanut]))]
+(defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja {:keys [toteuma sijainti tyokone]}]
+  (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in toteuma [:tunniste :id]))
+  (let [toteuma (assoc toteuma :reitti nil)
+        toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
+        aika (aika-string->java-sql-date (:alkanut toteuma))]
     (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
     (log/debug "Aloitetaan sijainnin tallennus")
     (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
