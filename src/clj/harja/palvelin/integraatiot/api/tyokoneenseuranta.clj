@@ -92,5 +92,6 @@
                                         tallenna-seurantakirjaus-viivageometriana)))
     this)
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :tallenna-tyokoneenseurantakirjaus)
+    (poista-palvelut http :tallenna-tyokoneenseurantakirjaus
+                          :tallenna-tyokoneen-reitti)
     this))
