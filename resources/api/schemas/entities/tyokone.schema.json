@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tyyppi": {
+      "id": "urn:harja/tyokone/tyyppi",
+      "required": true,
+      "enum": [
+        "Henkilöauto",
+        "Jyrä",
+        "Kaivinkone",
+        "Kuorma-auto",
+        "Levittäjä",
+        "Pakettiauto",
+        "Pyörökuormaaja",
+        "Tiehöylä",
+        "Traktori"
+      ]
+    },
+    "tunniste": {
+      "id": "urn:harja/tyokone/tunniste",
+      "required": true,
+      "type": "string"
+    }
+  }
+}

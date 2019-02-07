@@ -1,3 +1,3 @@
--- Salli sijainniksi pisteen lisäksi viiva
-ALTER TABLE tyokonehavainto
-    ALTER COLUMN sijainti TYPE GEOMETRY USING sijainti::GEOMETRY;
+CREATE TYPE tyokone AS ENUM ('Henkilöauto', 'Jyrä', 'Kaivinkone', 'Kuorma-auto', 'Levittäjä', 'Pakettiauto', 'Pyörökuormaaja', 'Tiehöylä', 'Traktori');
+ALTER TABLE toteuma ADD COLUMN tyokonetyyppi tyokone;
+ALTER TABLE toteuma ADD COLUMN tyokonetunniste TEXT;
