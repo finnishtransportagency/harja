@@ -59,8 +59,8 @@
                                                                kayttaja)
   (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])]
-      (when urakka-id (validointi/tarkista-urakka db urakka-id)
-                      (tallenna-tyokoneen-reitti db data havainto urakka-id))))
+      (when urakka-id (validointi/tarkista-urakka db urakka-id))
+      (tallenna-tyokoneen-reitti db data havainto urakka-id)))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defn- tallenna-seurantakirjaus [_ data kayttaja db]
