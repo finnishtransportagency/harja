@@ -507,15 +507,27 @@
                     ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
                     (do
                       (log/debug "Luodaan uusi toteuma")
-                      (toteumat-q/luo-toteuma<!
-                        c (:urakka t) (:sopimus t) (konv/sql-date (:alkanut t))
-                        (konv/sql-date (:paattynyt t)) (:tyyppi t) (:id user)
-                        (:suorittajan-nimi t)
-                        (:suorittajan-ytunnus t)
-                        (:lisatieto t)
-                        nil
-                        nil nil nil nil nil nil
-                        "harja-ui" nil nil nil)))]
+                      (toteumat-q/luo-toteuma<! c
+                        {:urakka (:urakka t)
+                         :sopimus (:sopimus t)
+                         :alkanut (konv/sql-date (:alkanut t))
+                         :paattynyt (konv/sql-date (:paattynyt t))
+                         :tyyppi (:tyyppi t)
+                         :kayttaja (:id user),
+                         :suorittaja (:suorittajan-nimi t)
+                         :ytunnus (:suorittajan-ytunnus t)
+                         :lisatieto (:lisatieto t)
+                         :ulkoinen_id nil
+                         :reitti nil
+                         :numero nil
+                         :alkuosa nil
+                         :alkuetaisyys nil
+                         :loppuosa nil
+                         :loppuetaisyys nil
+                         :lahde "harja-ui"
+                         :tyokonetyyppi nil
+                         :tyokonetunniste nil
+                         :tyokoneen-lisatieto nil})))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
       (doseq [tm toteumamateriaalit]
@@ -655,21 +667,27 @@
                                                            :loppuetaisyys nil
                                                            :id toteuma-id
                                                            :urakka urakka-id}))
-                       (:id (toteumat-q/luo-toteuma<!
-                                   db
-                                   urakka-id
-                                   sopimus-id
-                                   nyt
-                                   nyt
-                                   "kokonaishintainen"
-                                   (:id user)
-                                   (str (:etunimi user) " " (:sukunimi user))
-                                   (get-in user [:organisaatio :ytunnus])
-                                   lisatieto
-                                   nil
-                                   sijainti
-                                   nil nil nil nil nil
-                                   "harja-ui" nil nil nil)))
+                       (:id (toteumat-q/luo-toteuma<! db
+                              {:urakka urakka-id
+                               :sopimus sopimus-id
+                               :alkanut nyt
+                               :paattynyt nyt
+                               :tyyppi "kokonaishintainen"
+                               :kayttaja (:id user)
+                               :suorittaja (str (:etunimi user) " " (:sukunimi user))
+                               :ytunnus (get-in user [:organisaatio :ytunnus])
+                               :lisatieto lisatieto
+                               :ulkoinen_id nil
+                               :reitti sijainti
+                               :numero nil
+                               :alkuosa nil
+                               :alkuetaisyys nil
+                               :loppuosa nil
+                               :loppuetaisyys nil
+                               :lahde "harja-ui"
+                               :tyokonetyyppi nil
+                               :tyokonetunniste nil
+                               :tyokoneen-lisatieto nil})))
           varustetoteuma {:id id
                           :tunniste tunniste
                           :toteuma toteuma-id
