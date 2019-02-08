@@ -509,7 +509,7 @@ SELECT
   t.paattynyt AS paattynyt,
   t.suorittajan_nimi AS suorittaja_nimi,
   t.tyokonetyyppi,
-  t.tyokoneen_lisatieto,
+  t.tyokoneen_lisatieto AS tyokonelisatieto,
   tpk.nimi           AS tehtava_toimenpide,
   tt.maara           AS tehtava_maara,
   tpk.yksikko        AS tehtava_yksikko,
