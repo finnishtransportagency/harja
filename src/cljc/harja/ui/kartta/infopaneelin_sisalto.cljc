@@ -457,7 +457,9 @@
                                                        #{[:suorittaja :nimi]}
                                                        #(get-in % [:suorittaja :nimi]))}
                          (when (:tyokonetyyppi toteuma)
-                           {:otsikko "Työkonetyyppi" :nimi :tyokonetyyppi})]
+                           {:otsikko "Työkonetyyppi" :nimi :tyokonetyyppi})
+                         (when (:tyokoneen-lisatieto toteuma)
+                           {:otsikko "Työkoneen lisätieto" :nimi :tyokoneen-lisatieto})]
 
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
                           {:otsikko toimenpide

@@ -183,7 +183,8 @@
 
 (defn- luo-toteuma [c user toteuma]
   (let [toteuman-parametrit (-> (toteuman-parametrit toteuma user) (assoc :reitti (geometriaksi (:reitti toteuma))
-                                                                          :tyokonetyyppi nil :tyokonetunniste nil))
+                                                                          :tyokonetyyppi nil :tyokonetunniste nil
+                                                                          :tyokoneen-lisatieto nil))
         uusi (toteumat-q/luo-toteuma<! c toteuman-parametrit)
         id (:id uusi)
         toteumatyyppi (name (:tyyppi toteuma))]
@@ -419,7 +420,8 @@
   [c user toteuma]
   (log/debug "Luodaan uusi toteuma" toteuma)
   (let [toteuman-parametrit (-> (toteuman-parametrit toteuma user) (assoc :reitti (geometriaksi (:reitti toteuma))
-                                                                          :tyokonetyyppi nil :tyokonetunniste nil))
+                                                                          :tyokonetyyppi nil :tyokonetunniste nil
+                                                                          :tyokoneen-lisatieto nil))
         uusi (toteumat-q/luo-toteuma<! c toteuman-parametrit)
         id (:id uusi)
         toteumatyyppi (name (:tyyppi toteuma))
@@ -513,7 +515,7 @@
                         (:lisatieto t)
                         nil
                         nil nil nil nil nil nil
-                        "harja-ui" nil nil)))]
+                        "harja-ui" nil nil nil)))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
       (doseq [tm toteumamateriaalit]
@@ -667,7 +669,7 @@
                                    nil
                                    sijainti
                                    nil nil nil nil nil
-                                   "harja-ui" nil nil)))
+                                   "harja-ui" nil nil nil)))
           varustetoteuma {:id id
                           :tunniste tunniste
                           :toteuma toteuma-id
