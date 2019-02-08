@@ -211,6 +211,6 @@
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         hae-toteuma #(paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id})]
     (paikkaus-q/tallenna-paikkaustoteuma db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuma)
-    (is (= 1 (count (hae-toteuma))) "Paikkaustoteuma löytyy tallennuksen jälkeen")
-    (paikkaus-q/poista-paikkaustoteumat db destian-kayttaja-id testipaikkaustoteuman-ulkoinen-id)
-    (is (= 0 (count (hae-toteuma))) "Paikkaustoteuma ei löydy poiston jälkeen")))
+    (is (= 1 (first(q (str "select count (id) from paikkaustoteuma where \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;")))) "Paikkaustoteuma löytyy tallennuksen jälkeen")
+    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuman-ulkoinen-id)
+    (is (= 0 (first((q (str "select count (id) from paikkaustoteuma where \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" )))) "Paikkaustoteuma ei löydy poiston jälkeen")))
