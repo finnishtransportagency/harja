@@ -1,0 +1,71 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "2163026-3"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2019-01-30T12:00:00+02:00"
+  },
+  "havainnot": [
+    {
+      "havainto": {
+        "tyokone": {
+          "id": 123456789,
+          "tyokonetyyppi": "aura-auto"
+        },
+        "sijainti": {
+          "viivageometria": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                498919,
+                7247099
+              ],
+              [
+                499271,
+                7248395
+              ],
+              [
+                499399,
+                7249019
+              ],
+              [
+                499820,
+                7249885
+              ],
+              [
+                498519,
+                7247299
+              ],
+              [
+                499371,
+                7248595
+              ],
+              [
+                499499,
+                7249319
+              ],
+              [
+                499520,
+                7249685
+              ]
+            ]
+          }
+        },
+        "suunta": 90,
+        "havaintoaika": "2016-01-30T12:00:00+02:00",
+        "urakkaid": 4,
+        "suoritettavatTehtavat": [
+          "auraus ja sohjonpoisto",
+          "suolaus"
+        ]
+      }
+    }
+  ]
+}
