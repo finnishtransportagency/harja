@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+  "type": {
+    "id": "#/properties/sijainti/properties/type",
+    "required": true,
+    "enum": [
+      "LineString"
+    ]
+  },
+  "coordinates": {
+    "id": "#/properties/sijainti/properties/coordinates",
+    "type": "array",
+    "required": true,
+    "title": "Viivageometrian koordinaattitaulukko",
+    "items": {
+      "id": "#/properties/sijainti/properties/coordinates/items",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "id": "#/properties/sijainti/properties/coordinates/items/items/x",
+          "type": "number",
+          "minimum": 60000,
+          "maximum": 736400
+        },
+        {
+          "id": "#/properties/sijainti/properties/coordinates/items/items/y",
+          "type": "number",
+          "minimum": 6500000,
+          "maximum": 7800000
+        }
+      ]
+    }
+  }
+  }
+}
+
