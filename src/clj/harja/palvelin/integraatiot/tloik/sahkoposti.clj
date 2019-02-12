@@ -40,9 +40,14 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopet
   {:otsikko "Kuittausta ei voitu käsitellä"
    :sisalto "Varmista, että vastaat samalla sähköpostiosoitteella, johon ilmoitustiedot toimitettiin."})
 
+(def ^{:doc "Viesti, joka lähetetään jos päivystäjätietoja tai ilmoitustietoja ei voida päätellä" :private true}
++toimenpiteen-aloituksen-tallennus-epaonnistui+
+  {:otsikko "Kuittausta ei voitu käsitellä"
+   :sisalto "Varmista, että vastaat samalla sähköpostiosoitteella, johon ilmoitustiedot toimitettiin. Toimenpiteiden aloitusta ei tallennettu."})
+
 (def ^{:doc "Viesti, joka lähetetään onnistuneen ilmoitustoimenpiteen tallennuksen jälkeen." :private true}
 +onnistunut-viesti+
-  {:otsikko nil ;; tämä täydennetään ilmoituksen otsikolla
+  {:otsikko nil                                             ;; tämä täydennetään ilmoituksen otsikolla
    :sisalto "Kuittaus käsiteltiin onnistuneesti. Kiitos!"})
 
 (def ^{:doc "Template, jolla muodostetaan URL Google static map kuvalle" :private true :const true}
@@ -132,6 +137,20 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                       :vastattu "vastaus"
                       :vaara-urakka "vaara-urakka"})
 
+(defn- tallenna-toimenpiteiden-aloitus [jms-lahettaja db lahettaja {:keys [urakka-id
+                                                                           ilmoitus-id]}]
+  (let [{ilmoitus :id
+         ilmoitustyyppi :ilmoitustyyppi} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))
+        paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))]
+    (if (and paivystaja ilmoitus)
+      (do
+        (ilmoitukset/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db [ilmoitus])
+        (assoc +onnistunut-viesti+
+          :otsikko (otsikko {:ilmoitus-id ilmoitus-id
+                             :urakka-id urakka-id
+                             :ilmoitustyyppi ilmoitustyyppi})))
+      +toimenpiteen-aloituksen-tallennus-epaonnistui+)))
+
 (defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id
                                                                        ilmoitus-id
                                                                        kuittaustyyppi
@@ -141,7 +160,7 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
         {ilmoitus :id
          urakka :urakka
          ilmoitustyyppi :ilmoitustyyppi} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
-    (if-not paivystaja
+    (if-not (and paivystaja ilmoitus)
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
       (let [tallenna (fn [kuittaustyyppi vapaateksti]
                        (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
@@ -161,7 +180,6 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
 
         (let [ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
-
         (assoc +onnistunut-viesti+
           :otsikko (otsikko {:ilmoitus-id ilmoitus-id
                              :urakka-id urakka
@@ -175,7 +193,6 @@ kuittauksen lähettäjälle."
   (let [v (lue-kuittausviesti otsikko sisalto)]
     (if (:ilmoitus-id v)
       (if (= (:kuittaustyyppi v) :toimenpiteet-aloitettu)
-        (when-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id v))))]
-          (ilmoitukset/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db [id]))
+        (tallenna-toimenpiteiden-aloitus jms-lahettaja db lahettaja v)
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
       +virheellinen-toimenpide-viesti+)))

@@ -549,3 +549,16 @@ pisteen [px py]."
                     (<= (math/pisteiden-etaisyys sijainti1 sijainti2) threshold))
                   (:points viiva2)))
           (:points viiva1))))
+
+(defprotocol IPiste
+  (xy [this] "Palauttaa vektorin [x y]"))
+
+(extend-protocol IPiste
+  #?(:clj  clojure.lang.PersistentVector
+     :cljs PersistentVector)
+  (xy [this]
+    this)
+  #?(:clj  clojure.lang.PersistentArrayMap
+     :cljs PersistentArrayMap)
+  (xy [{:keys [x y]}]
+    [x y]))
