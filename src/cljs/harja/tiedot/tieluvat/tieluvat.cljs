@@ -22,6 +22,7 @@
 (def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :voimassaolo :sijainti
                          :myonnetty])
 
+(defrecord MuutaTila [polku arvo])
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [uudet])
 (defrecord HaeTieluvat [valinnat aikaleima])
@@ -122,7 +123,9 @@
         valittu-tielupa))))
 
 (extend-protocol tuck/Event
-
+  MuutaTila
+  (process-event [{:keys [polku arvo]} app]
+    (assoc-in app polku arvo))
   Nakymassa?
   (process-event [{n :nakymassa?} app]
     (assoc app :nakymassa? n))
