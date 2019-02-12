@@ -1,8 +1,8 @@
-<b>Nykyinen versio: 1.0.41</b>
+<b>Nykyinen versio: 1.0.42</b>
 <b>Julkaistu: 8.2.2019</b>
 
 <b>Versiohistoria:</b>
-- Versionumero 1.0.41 Julkaistu 8.2.2019
+- Versionumero 1.0.42 Julkaistu 12.2.2019
     - Piste- ja reittitoteumakirjausten mukana voi nyt ilmoittaa työkonetyypin.
 - Versionumero 1.0.40 Julkaistu 21.12.2018
     - Organisaatio päivitetty esimerkeissä Väyläksi. Päivitys ei sisällä toiminnallista rajapintamuutosta. 
