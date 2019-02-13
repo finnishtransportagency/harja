@@ -8,20 +8,36 @@
       "id": "urn:harja/tyokone/tyyppi",
       "required": true,
       "enum": [
+        "Ei ajoneuvoa",
         "Henkilöauto",
+        "Huoltoauto",
+        "Imulakaisukone",
+        "Jalkautuneena",
         "Jyrä",
         "Kaivinkone",
+        "Kiinteistötraktori",
         "Kuorma-auto",
         "Levittäjä",
+        "Maalausajoneuvo",
+        "Muu",
+        "Niittolaite",
+        "Nostokoriauto",
         "Pakettiauto",
         "Pyörökuormaaja",
+        "Tasoleikkuri",
         "Tiehöylä",
-        "Traktori"
-      ]
+        "Traktori",
+        "Turva-auto",
+        "Työkone"]
     },
     "tunniste": {
       "id": "urn:harja/tyokone/tunniste",
-      "required": true,
+      "required": false,
+      "type": "string"
+    },
+    "lisatieto": {
+      "id": "urn:harja/tyokone/lisatieto",
+      "required": false,
       "type": "string"
     }
   }
