@@ -192,7 +192,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
                                                   (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
                                                     (reset! avautumissuunta (:suunta maaritys))
-                                                    (reset! max-korkeus (:max-korkeus maaritys))))]
+                                                    (reset! max-korkeus (:max-korkeus maaritys))))
+        lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto]
+                     [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
+                      (if itemit-komponentteja?
+                        vaihtoehto
+                        [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                            (reset! auki? false)
+                                                            nil)])])]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
       (komp/dom-kuuntelija js/window
@@ -209,14 +216,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               valitse-fn (or valitse-fn (constantly nil))
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
-              ryhmissa? (not (nil? ryhmitellyt-itemit))
-              lista-item (fn [vaihtoehto]
-                           [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                            (if itemit-komponentteja?
-                              vaihtoehto
-                              [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                  (reset! auki? false)
-                                                                  nil)])])]
+              ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div.dropdown.livi-alasveto (merge
                                          {:class (str class " " (when @auki? "open"))}
                                          (when data-cy
@@ -276,7 +276,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                    vaihtoehdot))]
                                      (valitse-fn itemi)
                                      (reset! auki? false)))) nil))}
-
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
            [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
@@ -289,10 +288,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                    (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                      ^{:key (hash vaihtoehto)}
-                     [lista-item vaihtoehto])])
+                     [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto])])
                 (for [vaihtoehto vaihtoehdot]
                   ^{:key (hash vaihtoehto)}
-                  [lista-item vaihtoehto])))]])))))
+                  [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto])))]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto

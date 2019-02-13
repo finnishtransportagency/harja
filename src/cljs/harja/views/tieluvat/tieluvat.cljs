@@ -18,7 +18,7 @@
     [harja.pvm :as pvm]
     [harja.fmt :as fmt]
     [harja.ui.liitteet :as liitteet]
-    [reagent.core :as r]
+    [reagent.core :as r :refer [atom]]
     [clojure.set :as set]
     [harja.views.kartta.tasot :as tasot]
     [harja.tiedot.kartta :as kartta-tiedot])
@@ -778,9 +778,9 @@
    [napit/takaisin "Takaisin lupataulukkoon" #(e! (tiedot/->ValitseTielupa nil))]
    [tielupalomake e! app]])
 
-(defn suodattimet [e! app]
+(defn suodattimet [e! valinnat]
   (let [luo-atomi (fn [avain]
-                    (atom (get-in app [:valinnat avain])))
+                    (atom (avain valinnat)))
         sijainti-atomi (luo-atomi :sijainti)
         tr-atomi (luo-atomi :tr)
         luvan-numero-atomi (luo-atomi :luvan-numero)
@@ -818,7 +818,7 @@
                            (poista-watch hakija-atomi :hakija)
                            (poista-watch myonnetty-atomi :myonnetty)
                            (poista-watch voimassaolo-atomi :voimassaolo)))
-      (fn [e! app]
+      (fn [e! valinnat]
         [valinnat/urakkavalinnat
          {}
          ^{:key "valinnat"}
@@ -848,9 +848,9 @@
            [valinnat/aikavali myonnetty-atomi {:otsikko "Myönnetty välillä"}]
            [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"}]]]]))))
 
-(defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa?] :as app}]
+(defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa? valinnat] :as app}]
   [:div
-   [suodattimet e! app]
+   [suodattimet e! valinnat]
    [grid/grid
     {:otsikko (if tielupien-haku-kaynnissa?
                 [ajax-loader-pieni "Päivitetään listaa.."]
