@@ -63,23 +63,23 @@
 
 (deftest onko-olemassa-ulkoisella-idlla
   (let [db (tietokanta/luo-tietokanta testitietokanta)]
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)))
-    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 1234 666 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)))
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkauskohteesta.")
+    (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 666 destian-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkauskohde.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 1234 666 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkauskohdetta.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkauskohdetta.")
+    (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkauskohdetta.")
 
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)))
-    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 6661 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db 1234 6661 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)))
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkauksesta.")
+    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 6661 destian-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkaus.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db 1234 6661 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkausta.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkausta.")
+    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkausta.")
 
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)))
-    (is (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkaustoteuman-ulkoinen-id destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db 1234 testipaikkaustoteuman-ulkoinen-id destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)))
-    (is (false? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)))))
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id nil destian-kayttaja-id)) "Nil ei palauta tietoja paikkaustoteumasta.")
+    (is (true? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 133 destian-kayttaja-id)) "Oikeilla tiedoilla löytyy paikkaustoteuma.")
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db 1234 133 destian-kayttaja-id)) "Väärällä urakka-id:llä ei löydy paikkaustoteumaa.")
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345 destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (int) ei paikkaustoteumaa.")
+    (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo" destian-kayttaja-id)) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkaustoteumaa.")))
 
 (defn hae-testipaikkaus [db]
   (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
@@ -208,9 +208,9 @@
               ::paikkaus/tyyppi "kokonaishintainen"})))))
 
 (deftest poista-paikkaustoteuma
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
-        hae-toteuma #(paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id})]
+  (let [db (tietokanta/luo-tietokanta testitietokanta)]
     (paikkaus-q/tallenna-paikkaustoteuma db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuma)
-    (is (= 1 (first(q (str "select count (id) from paikkaustoteuma where \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;")))) "Paikkaustoteuma löytyy tallennuksen jälkeen")
-    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuman-ulkoinen-id)
-    (is (= 0 (first((q (str "select count (id) from paikkaustoteuma where \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" )))) "Paikkaustoteuma ei löydy poiston jälkeen")))
+    (is (= 1 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is not true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;"))))) "Paikkaustoteuma löytyy tallennuksen jälkeen.")
+    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db destian-kayttaja-id oikean-urakan-id [testipaikkaustoteuman-ulkoinen-id])
+    (is (= 0 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is not true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" ))))) "Paikkaustoteuma ei ole voimassa poiston jälkeen.")
+    (is (= 1 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" ))))) "Paikkaustoteuma on merkitty poistetuksi.")))
