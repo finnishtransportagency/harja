@@ -6,17 +6,6 @@
             [harja.pvm :as pvm]))
 
 
-(deftest valinta-wrap
-  (let [atomi (tiedot/valinta-wrap e! {:valinnat {:foo 1}} :foo)]
-    (is (= 1 @atomi))
-
-    ;; Kun arvoa muutetaan, kutsutaan PaivitaValinnat, joka laukaisee haun
-    ;; Paluuarvoa ei oikeen saa testattua - pitäisi tehdä e!:stä versio, joka käyttää
-    ;; täältä annettua app-statea.
-    (vaadi-async-kutsut
-      #{tiedot/->HaeTieluvat}
-      (is (= 2 (reset! atomi 2))))))
-
 (deftest kenttien-nayttaminen
   (let [nayta? (partial
                  tiedot/nayta-kentat?
