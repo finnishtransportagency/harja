@@ -131,3 +131,6 @@
 
 (def +paikkauskustannusten-kirjaus-request+ "api/schemas/paikkauskustannusten-kirjaus-request.schema.json")
 (def paikkauskustannusten-kirjaus-request (tee-validaattori +paikkauskustannusten-kirjaus-request+))
+
+(def +paikkausten-poisto-request+ "api/schemas/paikkausten-poisto-request.schema.json")
+(def paikkausten-poisto-request (tee-validaattori +paikkausten-poisto-request+))
