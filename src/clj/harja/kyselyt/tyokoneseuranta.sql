@@ -6,58 +6,32 @@ INSERT INTO tyokonehavainto
 VALUES (:jarjestelma,
         (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
         :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
-	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::POINT,
+	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::GEOMETRY,
 	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
 
-
--- name: tyokoneet-alueella
--- Etsii kaikki työkoneet annetulta alueelta
-SELECT
-  t.tyokoneid,
-  t.jarjestelma,
-  t.organisaatio,
-  (SELECT nimi
-   FROM organisaatio
-   WHERE id = t.organisaatio) AS organisaationimi,
-  t.viestitunniste,
-  t.lahetysaika,
-  t.vastaanotettu,
-  t.tyokonetyyppi,
-  t.sijainti,
-  t.suunta,
-  t.edellinensijainti,
-  t.urakkaid,
-  (SELECT nimi
-   FROM urakka
-   WHERE id = t.urakkaid)     AS urakkanimi,
-  t.tehtavat
-FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), CAST(sijainti AS GEOMETRY));
-
--- name: urakan-tyokoneet-alueella
--- Etsii urakkaan liittyvät työkoneet annetulta alueelta
-SELECT
-  t.tyokoneid,
-  t.jarjestelma,
-  t.organisaatio,
-  (SELECT nimi
-   FROM organisaatio
-   WHERE id = t.organisaatio) AS organisaationimi,
-  t.viestitunniste,
-  t.lahetysaika,
-  t.vastaanotettu,
-  t.tyokonetyyppi,
-  t.sijainti,
-  t.suunta,
-  t.edellinensijainti,
-  t.urakkaid,
-  (SELECT nimi
-   FROM urakka
-   WHERE id = t.urakkaid)     AS urakkanimi,
-  t.tehtavat
-FROM tyokonehavainto t
-WHERE urakkaid = :urakkaid
-      AND ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), CAST(sijainti AS GEOMETRY));
+-- name: tallenna-tyokonehavainto-viivageometrialla<!
+-- Luo tai päivittää työkonehavainnon tietokantaan, kun sijainti on saatu viivageometriana (LineString)
+INSERT INTO tyokonehavainto
+               (jarjestelma,
+               organisaatio,
+               viestitunniste,
+               lahetysaika,
+               tyokoneid,
+               tyokonetyyppi,
+               sijainti,
+               urakkaid,
+               tehtavat,
+               suunta)
+VALUES (:jarjestelma,
+        (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
+                :viestitunniste,
+                CAST(:lahetysaika AS TIMESTAMP),
+                :tyokoneid,
+                :tyokonetyyppi,
+                ST_GeomFromGeoJSON(:viivageometria),
+                :urakkaid,
+                :tehtavat::suoritettavatehtava[],
+                 :suunta);
 
 -- name: poista-vanhentuneet-havainnot!
 -- Poistaa vanhentuneet havainnot työkoneseurannasta, jos edellinen havainto > 5h vanha

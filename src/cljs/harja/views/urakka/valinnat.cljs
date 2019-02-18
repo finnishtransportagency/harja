@@ -64,7 +64,7 @@
                                                  :valitse-kuukausi-fn u/valitse-hoitokauden-kuukausi!}}]))
 
 (defn aikavali []
-  (valinnat/aikavali u/valittu-aikavali))
+  [valinnat/aikavali u/valittu-aikavali])
 
 (def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
                         ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]

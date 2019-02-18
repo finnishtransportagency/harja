@@ -14,6 +14,7 @@
     [harja.domain.yllapitokohde :as kohteet]
     [harja.kyselyt.paallystys :as paallystys-q]
     [harja.domain.tierekisteri :as tierekisteri]
+    [harja.geo :as geo]
     [cheshire.core :as cheshire]
     [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
     [clojure.string :as str])
@@ -39,10 +40,16 @@
                    (throw+ {:type virheet/+viallinen-kutsu+
                             :virheet [{:koodi virheet/+tuntematon-sopimus-koodi+ :viesti viesti}]}))))))
 
-(defn tarkista-koordinaattien-jarjestys [{:keys [x y]}]
-  (when (> x y)
+(defn viivageometria-annettu [havainto]
+  (when-not (get-in havainto [:havainto :sijainti :viivageometria])
     (throw+ {:type virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]})))
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Sanomasta puuttuu viivageometria"}]})))
+
+(defn tarkista-koordinaattien-jarjestys [koordinaatit]
+  (let [[x y] (geo/xy koordinaatit)]
+    (when (> x y)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]}))))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)

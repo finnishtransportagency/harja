@@ -17,6 +17,10 @@
 (define-tables
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "poistettu" ::muokkaustiedot/poistettu?
     ::paikkaukset (specql.rel/has-many ::id
                                        ::paikkaus
                                        ::paikkauskohde-id)

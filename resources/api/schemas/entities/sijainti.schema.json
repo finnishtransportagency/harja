@@ -21,6 +21,12 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json"
+    },
+    "viivageometria": {
+      "id": "urn:harja/viivageometria",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json"
     }
   }
 }

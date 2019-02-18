@@ -52,7 +52,8 @@
             :urakka urakka-id
             :luoja (:id kirjaaja)
             :tyokonetyyppi (:tyyppi tyokone)
-            :tyokonetunniste (:tunniste tyokone)}))))
+            :tyokonetunniste (:tunniste tyokone)
+            :tyokoneen-lisatieto (:lisatieto tyokone)}))))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
@@ -85,21 +86,26 @@
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
     (:id (q-toteumat/luo-toteuma<!
            db
-           urakka-id
-           sopimus-id
-           (aika-string->java-sql-date (:alkanut toteuma))
-           (aika-string->java-sql-date (:paattynyt toteuma))
-           (:toteumatyyppi toteuma)
-           (:id kirjaaja)
-           (get-in toteuma [:suorittaja :nimi])
-           (get-in toteuma [:suorittaja :ytunnus])
-           ""
-           (get-in toteuma [:tunniste :id])
-           (:reitti toteuma)
-           nil nil nil nil nil
-           "harja-api"
-           (:tyyppi tyokone)
-           (:tunniste tyokone)))))
+           {:urakka urakka-id
+            :sopimus sopimus-id
+            :alkanut (aika-string->java-sql-date (:alkanut toteuma))
+            :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
+            :tyyppi (:toteumatyyppi toteuma)
+            :kayttaja (:id kirjaaja)
+            :suorittaja (get-in toteuma [:suorittaja :nimi])
+            :ytunnus (get-in toteuma [:suorittaja :ytunnus])
+            :lisatieto ""
+            :ulkoinen_id (get-in toteuma [:tunniste :id])
+            :reitti (:reitti toteuma),
+            :numero nil
+            :alkuosa nil
+            :alkuetaisyys nil
+            :loppuosa nil
+            :loppuetaisyys nil
+            :lahde "harja-api"
+            :tyokonetyyppi (:tyyppi tyokone)
+            :tyokonetunniste (:tunniste tyokone)
+            :tyokoneen-lisatieto (:lisatieto tyokone)}))))
 
 (defn paivita-tai-luo-uusi-toteuma
   ([db urakka-id kirjaaja toteuma] (paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma nil))
