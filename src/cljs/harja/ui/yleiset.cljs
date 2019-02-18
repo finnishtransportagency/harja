@@ -182,138 +182,116 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            {:bottom "calc(100% - 1px)"
             :top "auto"})))
 
-(defn lista-item [vaihtoehto li-luokka-fn itemit-komponentteja? format-fn valitse-fn auki? fokus-klikin-jalkeen? nappi-id]
-  [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-   (if itemit-komponentteja?
-     vaihtoehto
-     [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                         (reset! auki? false)
-                                         (when fokus-klikin-jalkeen?
-                                           (.. js/document (getElementById nappi-id) focus))
-                                         nil)])])
-
-(defn pudotusvalikon-vaihtoehdot [vaihtoehdot {:keys [itemit-komponentteja? ryhmittely fokus-klikin-jalkeen?
-                                                      li-luokka-fn nayta-ryhmat ryhman-otsikko] :as asetukset}
-                                  auki? format-fn valitse-fn nappi-id]
-  (let [avautumissuunta (atom :alas)
-        max-korkeus (atom 0)
-        pudotusvalikon-korkeuden-kasittelija-fn (fn [aja? this _]
-                                                  (when (or @auki?
-                                                            aja?)
-                                                    (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
-                                                      (swap! avautumissuunta (fn [_] (:suunta maaritys)))
-                                                      (swap! max-korkeus (fn [_] (:max-korkeus maaritys))))))]
-    (komp/luo
-      (komp/dom-kuuntelija js/window
-                           EventType/SCROLL (partial pudotusvalikon-korkeuden-kasittelija-fn false)
-                           EventType/RESIZE (partial pudotusvalikon-korkeuden-kasittelija-fn false))
-      {:component-did-mount
-       (fn [this]
-         (pudotusvalikon-korkeuden-kasittelija-fn true this nil))}
-      (fn [vaihtoehdot {:keys [itemit-komponentteja? li-luokka-fn nayta-ryhmat ryhman-otsikko] :as asetukset}
-           auki? format-fn valitse-fn]
-        (let [dropdown-tyyli (avautumissuunta-ja-korkeus-tyylit
-                               @max-korkeus @avautumissuunta)
-              ryhmitellyt-itemit (when ryhmittely
-                                   (group-by ryhmittely vaihtoehdot))
-              ryhmissa? (not (nil? ryhmitellyt-itemit))]
-          [:ul.dropdown-menu.livi-alasvetolista {:style dropdown-tyyli}
-           (doall
-             (if ryhmissa?
-               (for [ryhma nayta-ryhmat]
-                 ^{:key ryhma}
-                 [:div.harja-alasvetolista-ryhma
-                  [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
-                  (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
-                    ^{:key (hash vaihtoehto)}
-                    [lista-item vaihtoehto li-luokka-fn itemit-komponentteja? format-fn valitse-fn auki? fokus-klikin-jalkeen? nappi-id])])
-               (for [vaihtoehto vaihtoehdot]
-                 ^{:key (hash vaihtoehto)}
-                 [lista-item vaihtoehto li-luokka-fn itemit-komponentteja? format-fn valitse-fn auki? fokus-klikin-jalkeen? nappi-id])))])))))
-
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{klikattu-ulkopuolelle-params :klikattu-ulkopuolelle-params} vaihtoehdot]
   (let [auki? (atom false)
-        nappi-id (str (gensym "pv"))
-        nil-fn (constantly nil)]
+        avautumissuunta (atom :alas)
+        max-korkeus (atom 0)
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
+                                                  (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
+                                                    (reset! avautumissuunta (:suunta maaritys))
+                                                    (reset! max-korkeus (:max-korkeus maaritys))))
+        lista-item (fn [li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto]
+                     [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
+                      (if itemit-komponentteja?
+                        vaihtoehto
+                        [linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                            (reset! auki? false)
+                                                            nil)])])]
     (komp/luo
-      (komp/nimi "Livi-pudotusvalikko")
       (komp/klikattu-ulkopuolelle #(reset! auki? false) klikattu-ulkopuolelle-params)
-      (fn [{:keys [valinta format-fn valitse-fn class disabled naytettava-arvo
-                   on-focus on-blur title data-cy] :as asetukset} vaihtoehdot]
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
+                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
+      {:component-did-mount
+       (fn [this]
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
+
+      (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)
-              valitse-fn (or valitse-fn nil-fn)]
+              valitse-fn (or valitse-fn (constantly nil))
+              ryhmitellyt-itemit (when ryhmittely
+                                   (group-by ryhmittely vaihtoehdot))
+              ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div.dropdown.livi-alasveto (merge
                                          {:class (str class " " (when @auki? "open"))}
                                          (when data-cy
                                            {:data-cy data-cy}))
            [:button.nappi-alasveto
-            (merge
-              {:class (when disabled "disabled")
-               :id nappi-id
-               :type "button"
-               :disabled (if disabled "disabled" "")
-               :title title
-               :on-click #(when-not (empty? vaihtoehdot)
-                            (swap! auki? not)
-                            nil)
-               :on-focus on-focus
-               :on-blur on-blur
-               :on-key-down #(let [kc (.-keyCode %)
-                                   vaihtoehdot (if (map? vaihtoehdot)
-                                                 (mapv (fn [avain]
-                                                         (-> [avain (get vaihtoehdot avain)]))
-                                                       (keys vaihtoehdot))
-                                                 vaihtoehdot)]
-                               ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
-                               ;; välillä liikkumista ei estetä
-                               (when-not (= kc 9)
-                                 (.preventDefault %)
-                                 (.stopPropagation %)
-                                 (if (or (= kc 38)
-                                         (= kc 40)
-                                         (= kc 13))
-                                   (do
-                                     (when-not (empty? vaihtoehdot)
-                                       (let [nykyinen-valittu-idx (loop [i 0]
-                                                                    (if (= i (count vaihtoehdot))
-                                                                      nil
-                                                                      (if (= (nth vaihtoehdot i) valinta)
-                                                                        i
-                                                                        (recur (inc i)))))]
-                                         (case kc
-                                           38               ;; nuoli ylös
-                                           (if (or (nil? nykyinen-valittu-idx)
-                                                   (= 0 nykyinen-valittu-idx))
-                                             (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
-                                             (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+            {:class (when disabled "disabled")
+             :type "button"
+             :disabled (if disabled "disabled" "")
+             :title title
+             :on-click #(when-not (empty? vaihtoehdot)
+                          (swap! auki? not)
+                          nil)
+             :on-focus on-focus
+             :on-key-down #(let [kc (.-keyCode %)
+                                 vaihtoehdot (if (map? vaihtoehdot)
+                                               (mapv (fn [avain]
+                                                       (-> [avain (get vaihtoehdot avain)]))
+                                                     (keys vaihtoehdot))
+                                               vaihtoehdot)]
+                             ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
+                             ;; välillä liikkumista ei estetä
+                             (when-not (= kc 9)
+                               (.preventDefault %)
+                               (.stopPropagation %)
+                               (if (or (= kc 38)
+                                       (= kc 40)
+                                       (= kc 13))
+                                 (do
+                                   (when-not (empty? vaihtoehdot)
+                                     (let [nykyinen-valittu-idx (loop [i 0]
+                                                                  (if (= i (count vaihtoehdot))
+                                                                    nil
+                                                                    (if (= (nth vaihtoehdot i) valinta)
+                                                                      i
+                                                                      (recur (inc i)))))]
+                                       (case kc
+                                         38 ;; nuoli ylös
+                                         (if (or (nil? nykyinen-valittu-idx)
+                                                 (= 0 nykyinen-valittu-idx))
+                                           (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
+                                           (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
 
-                                           40               ;; nuoli alas
-                                           (if (or (nil? nykyinen-valittu-idx)
-                                                   (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
-                                             (valitse-fn (nth vaihtoehdot 0))
-                                             (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
+                                         40 ;; nuoli alas
+                                         (if (or (nil? nykyinen-valittu-idx)
+                                                 (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
+                                           (valitse-fn (nth vaihtoehdot 0))
+                                           (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
-                                           13               ;; enter
-                                           (reset! auki? false)))))
+                                         13 ;; enter
+                                         (reset! auki? false)))))
 
-                                   (do                      ;; Valitaan inputtia vastaava vaihtoehto
-                                     (reset! term (char kc))
-                                     (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                       (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
-                                                                                    (.toLowerCase @term)) 0))
-                                                                     vaihtoehdot))]
-                                       (valitse-fn itemi)
-                                       (reset! auki? false)))) nil))}
-              (when on-focus
-                {:tabIndex -1}))
-
+                                 (do ;; Valitaan inputtia vastaava vaihtoehto
+                                   (reset! term (char kc))
+                                   (when-let [itemi (first (filter (fn [vaihtoehto]
+                                                                     (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
+                                                                                  (.toLowerCase @term)) 0))
+                                                                   vaihtoehdot))]
+                                     (valitse-fn itemi)
+                                     (reset! auki? false)))) nil))}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [pudotusvalikon-vaihtoehdot vaihtoehdot asetukset auki? format-fn valitse-fn nappi-id]])))))
+           [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
+                                                           @max-korkeus @avautumissuunta)}
+            (doall
+              (if ryhmissa?
+                (for [ryhma nayta-ryhmat]
+                  ^{:key ryhma}
+                  [:div.harja-alasvetolista-ryhma
+                   [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
+                   (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
+                     ^{:key (hash vaihtoehto)}
+                     [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto])])
+                (for [vaihtoehto vaihtoehdot]
+                  ^{:key (hash vaihtoehto)}
+                  [lista-item li-luokka-fn itemit-komponentteja? format-fn valitse-fn vaihtoehto])))]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
