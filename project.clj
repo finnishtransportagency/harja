@@ -127,7 +127,6 @@
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.11.0"] ; TODO Voisi päivittää, mutta 1.12.0 aiheutti ongelman: Unable to find static field: ALIGN_RIGHT in interface org.apache.poi.ss.usermodel.CellStyle, compiling:(harja/palvelin/raportointi/excel.clj:156:44)
 
-                 [com.cemerick/piggieback "0.2.2"]
                  [figwheel-sidecar "0.5.14"]
 
                  ;; Performance metriikat
@@ -150,6 +149,7 @@
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
+                                  [cider/piggieback "0.4.0"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
@@ -299,7 +299,7 @@
                  :init (harja.palvelin.main/-main)
                  :port 4005
                  :timeout 120000
-                 :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+                 :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
