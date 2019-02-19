@@ -158,7 +158,8 @@
          :otsikko "Lähetetty Tierekisteriin"
          :tyyppi :komponentti
          :muokattava? (constantly false)
-         :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
+         :komponentti (fn [{:keys [data]}]
+                        [nayta-varustetoteuman-lahetyksen-tila data])})
       (when (:lahetysvirhe varustetoteuma)
         {:nimi :lahetysvirhe
          :otsikko [:span.tila-virhe "Lähetysvirhe"]
@@ -168,7 +169,8 @@
         {:nimi :varustekortti
          :otsikko "Varustekortti"
          :tyyppi :komponentti
-         :komponentti #(varustekortti-linkki (:data %))}))))
+         :komponentti (fn [{:keys [data]}]
+                        [varustekortti-linkki data])}))))
 
 (defn hae-ajoradat [muokattava? varustetoteuma]
   (if muokattava?

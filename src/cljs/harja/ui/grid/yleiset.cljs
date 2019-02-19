@@ -32,7 +32,7 @@
 
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin käyttäen tayta-fn funktiota."
-  [rivit sarake lahtorivi tayta-fn]
+  [rivit sarake lahtorivi tayta-fn rivi-index]
   (let [tayta-fn (or tayta-fn
                      ;; Oletusfunktio kopioi tiedon sellaisenaan
                      (let [nimi (:nimi sarake)
@@ -43,16 +43,18 @@
                        (fn [_ taytettava]
                          (aseta taytettava lahtoarvo))))
         tulos (loop [uudet-rivit (list)
+                     index 0
                      alku false
                      [rivi & rivit] rivit]
                 (if-not rivi
                   uudet-rivit
-                  (if (= lahtorivi rivi)
-                    (recur (conj uudet-rivit rivi) true rivit)
+                  (if (= rivi-index index)
+                    (recur (conj uudet-rivit rivi) (inc index) true rivit)
                     (if-not alku
-                      (recur (conj uudet-rivit rivi) false rivit)
+                      (recur (conj uudet-rivit rivi) (inc index) false rivit)
                       (recur (conj uudet-rivit
                                    (tayta-fn lahtorivi rivi))
+                             (inc index)
                              true
                              rivit)))))]
     ;; Palautetaan rivit alkuperäisessä järjestyksessä
@@ -71,14 +73,14 @@
           (tayta-fn (nth rivit toistettava-rivi) rivi))))
     rivit))
 
-(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo rivi-index
-                                 tulevat-rivit hae sarake ohjaus rivi]}]
-  (when (and (= fokus fokus-id)
+(defn tayta-alas-nappi [{:keys [tayta-alas arvo rivi-index fokus-atom
+                                tulevat-elementit sarake ohjaus rivi fokus?]}]
+  (when (and fokus?
              (tayta-alas arvo)
              (not (nil? arvo))
              ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
-             (not (empty? tulevat-rivit))
-             (every? str/blank? (map hae tulevat-rivit)))
+             (not (empty? tulevat-elementit))
+             (every? str/blank? tulevat-elementit))
     (let [napin-sijainti (cond
                            ;; Asemoi kutsujan mukaan
                            (:tayta-sijainti sarake) (:tayta-sijainti sarake)
@@ -88,15 +90,25 @@
                            :default :sisalla)]
       [:div {:class (if (= :oikea (:tasaa sarake))
                       "pull-left"
-                      "pull-right")}
+                      "pull-right")
+             ;; tabindex tarvitaan sitä varten, että blur eventissä saadaan tämä relatedTarget attribuutista, koska
+             ;; joskus noi nappien klikkailu ottaa jomman kumman näistä diveistä napin sijasta.
+             ;; data-komponentin-nimi käytetään muokkausgridissä fokusin asettamiseen
+             :data-komponentin-nimi "tayta-alas-div"
+             :tabIndex "-1"}
        [:div {:style {:width "100%"
                       :position "absolute"
                       :left 0
-                      :height 0 ; Tärkeä, ettei voida vahingossa focusoida pois kentästä nappeihin
+                      :height 0                             ; Tärkeä, ettei voida vahingossa focusoida pois kentästä nappeihin
                       :top "-3px"
-                      :display "flex"}}
+                      :display "flex"}
+              :data-komponentin-nimi "tayta-alas-div"
+              :tabIndex "-1"}
         [napit/yleinen-toissijainen "Täytä"
-         #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+         #(do
+            (when fokus-atom
+              (reset! fokus-atom false))
+            (muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake) rivi-index]))
          {:title (:tayta-tooltip sarake)
           :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
           :style (case napin-sijainti
@@ -106,11 +118,15 @@
                    (merge
                      {:position "absolute"}
                      (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
+          :data-attributes {:data-komponentin-nimi "tayta-alas-nappi"}
           :ikoni (ikonit/livicon-arrow-down)}]
         (when (and (:tayta-alas-toistuvasti? sarake)
-                   (> rivi-index 0)) ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
+                   (> rivi-index 0))                        ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
           [napit/yleinen-toissijainen "Toista"
-           #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
+           #(do
+              (when fokus-atom
+                (reset! fokus-atom false))
+              (muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)]))
            {:title "Toista tämä ja edelliset rivit alla oleville riveille."
             :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
             :style (case napin-sijainti
@@ -120,4 +136,5 @@
                      (merge
                        {:position "absolute"}
                        (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
+            :data-attributes {:data-komponentin-nimi "tayta-alas-nappi"}
             :ikoni (ikonit/livicon-arrow-down)}])]])))

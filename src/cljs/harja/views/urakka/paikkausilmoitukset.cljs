@@ -2,6 +2,7 @@
   "Urakan paikkausilmoitukset"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
+            [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
@@ -127,8 +128,8 @@
      [harja.ui.napit/palvelinkutsu-nappi
       "Tallenna"
       #(let [lomake @paikkaus/paikkausilmoitus-lomakedata
-             lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-idt [:ilmoitustiedot :toteumat]))]
+             lahetettava-data (-> (gridin-muokkaus/poista-idt lomake [:ilmoitustiedot :osoitteet])
+                                  (gridin-muokkaus/poista-idt [:ilmoitustiedot :toteumat]))]
         (log "PAI Lomake-data: " (pr-str @paikkaus/paikkausilmoitus-lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
         (paikkaus/tallenna-paikkausilmoitus! urakka-id sopimus-id lahetettava-data))
@@ -168,11 +169,11 @@
                                                                                               [:tie :aosa :aet :losa :let] ;; Tämä tulee aina ylemmäksi kuin :id vertailu (alla), koska pienempi vecotri saa arvoksi 1 compare funktiolla
                                                                                               [:id :tie :aosa :aet :losa :let]))]
                                                                     (funktio %))
-                                                                 (grid/filteroi-uudet-poistetut uusi-arvo))))))
+                                                                 (gridin-muokkaus/filteroi-uudet-poistetut uusi-arvo))))))
               toteutuneet-maarat
               (r/wrap (zipmap (iterate inc 1) (lisaa-suoritteet-tyhjaan-toteumaan (:toteumat (:ilmoitustiedot @paikkaus/paikkausilmoitus-lomakedata))))
                       (fn [uusi-arvo] (reset! paikkaus/paikkausilmoitus-lomakedata
-                                              (assoc-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+                                              (assoc-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat] (gridin-muokkaus/filteroi-uudet-poistetut uusi-arvo)))))
 
               toteutuneet-osoitteet-virheet (atom {})
               toteutuneet-maarat-virheet (atom {})
@@ -338,7 +339,7 @@
          {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20 :hae (fn [rivi]
                                                                                                         (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys 20 :komponentti (fn [rivi]
-                                                                                                                         (paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)))}
+                                                                                                                         [paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)])}
          {:otsikko "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
           :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde-id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]

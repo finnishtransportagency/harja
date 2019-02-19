@@ -15,6 +15,7 @@
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
+            [slingshot.slingshot :refer [try+]]
             [clj-time.core :as t]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
@@ -205,10 +206,15 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
-  (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
+  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id kohde-idt)
+                      (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                        virheet))
+        lahetys-onnistui? (not (contains? lahetys :virhe))
         paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
-    {:paallystysilmoitukset paivitetyt-ilmoitukset
-     :lahetys-onnistui? lahetys-onnistui?}))
+    (merge
+      {:paallystysilmoitukset paivitetyt-ilmoitukset}
+      (when-not lahetys-onnistui?
+        lahetys))))
 
 (defrecord Yha []
   component/Lifecycle

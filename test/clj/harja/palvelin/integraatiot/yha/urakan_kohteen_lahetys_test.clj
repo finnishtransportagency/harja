@@ -69,7 +69,7 @@
          ;; Palautetaan vastaus
          onnistunut-kirjaus-vastaus)]
 
-      (let [onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
+      (let [onnistui? (nil? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id]))
             lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
         (is (true? onnistui?))
         (is (not (nil? (:lahetetty lahetystiedot))) "Lähetysaika on merkitty")

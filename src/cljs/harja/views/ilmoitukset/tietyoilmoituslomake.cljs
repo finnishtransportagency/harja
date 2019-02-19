@@ -448,7 +448,8 @@
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
        :tyyppi :komponentti
-       :komponentti #(->> % :data ::t/tyoajat (tyoajat-komponentti-grid e!))
+       :komponentti (fn [{{tyoajat ::t/tyoajat} :data}]
+                      [tyoajat-komponentti-grid e! tyoajat])
        :validoi [#(when (get-in %2 [:komponentissa-virheita? :tyoajat])
                     "virhe")]
        :palstoja 2}
@@ -479,19 +480,21 @@
                       (assoc tyhja-kentta :nimi :kaistajarjestely-blank))
                     {:otsikko "Nopeusrajoitukset"
                      :tyyppi :komponentti
-                     :komponentti #(->> % :data ::t/nopeusrajoitukset (nopeusrajoitukset-komponentti-grid e!))
+                     :komponentti (fn [{{nopeusrajoitukset ::t/nopeusrajoitukset} :data}]
+                                    [nopeusrajoitukset-komponentti-grid e! nopeusrajoitukset])
                      :nimi ::t/nopeusrajoitukset
 
                      }
                     {:tyyppi :komponentti
                      :nimi :kokorajoitukset
-                     :komponentti #(kokorajoitukset-komponentti e! ilmoitus)
-
+                     :komponentti (fn [_]
+                                    [kokorajoitukset-komponentti e! ilmoitus])
                      }
                     {:otsikko "Tien pinta työmaalla"
                      :nimi ::t/tienpinnat
                      :tyyppi :komponentti
-                     :komponentti #(->> % :data ::t/tienpinnat (tienpinnat-komponentti-grid e! ::t/tienpinnat))
+                     :komponentti (fn [{{tienpinnat ::t/tienpinnat} :data}]
+                                    [tienpinnat-komponentti-grid e! ::t/tienpinnat tienpinnat])
                      }
                     {:nimi ::t/huomautukset
                      ;; jostain syystä tuli virheitä disjoin-operaation käytöstä vektorille
@@ -506,7 +509,8 @@
                     {:otsikko "Kiertotietien pinnat"
                      :nimi ::t/kiertotienpinnat
                      :tyyppi :komponentti
-                     :komponentti #(->> % :data ::t/kiertotienpinnat (tienpinnat-komponentti-grid e! ::t/kiertotienpinnat))}
+                     :komponentti (fn [{{kiertotienpinnat ::t/kiertotienpinnat} :data}]
+                                    [tienpinnat-komponentti-grid e! ::t/kiertotienpinnat kiertotienpinnat])}
                     {:otsikko "Kiertotietien pituus (m)"
                      :nimi ::t/kiertotien-pituus
                      :tyyppi :positiivinen-numero}
@@ -556,7 +560,8 @@
                       {:otsikko ""
                        :nimi :liikenteenohjaus-aikataulu
                        :tyyppi :komponentti
-                       :komponentti #(pysaytys-ajat-komponentti e! ilmoitus)
+                       :komponentti (fn [_]
+                                       [pysaytys-ajat-komponentti e! ilmoitus])
                        :validoi [#(when (get-in %2 [:komponentissa-virheita? :pysaytysajat])
                                     "virhe")]}
                       ;; else
@@ -582,7 +587,8 @@
         {:nimi :email-lahetykset-tloikiin
          :otsikko "PDF:n sähköpostilähetykset Harjasta Tieliikennekeskuksen sähköpostiin"
          :tyyppi :komponentti
-         :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))})]
+         :komponentti (fn [{:keys [data]}]
+                         [tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti data])})]
      ilmoitus]]
 
    (when (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)

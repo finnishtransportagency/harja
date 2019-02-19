@@ -58,6 +58,7 @@
                                  :flash)
             suljettava-virhe? (or (:suljettava-virhe? asetukset) false)
             sulkemisfunktio #(reset! nayta-virheviesti? false)
+            asetukset-nayta-virheviesti? (get asetukset :nayta-virheviesti? true)
             kun-valmis (:kun-valmis asetukset)
             kun-virhe (:kun-virhe asetukset)
             kun-onnistuu (:kun-onnistuu asetukset)
@@ -76,13 +77,12 @@
                           (reset! kysely-kaynnissa? true)
                           (reset! nayta-virheviesti? false)
                           (go (let [tulos (<! (kysely))]
+                                (reset! kysely-kaynnissa? false)
                                 (when kun-valmis (kun-valmis tulos))
                                 (if (not (k/virhe? tulos))
+                                  (when kun-onnistuu
+                                    (kun-onnistuu tulos))
                                   (do
-                                    (reset! kysely-kaynnissa? false)
-                                    (when kun-onnistuu (kun-onnistuu tulos)))
-                                  (do
-                                    (reset! kysely-kaynnissa? false)
                                     (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
                                     (reset! nayta-virheviesti? true)
                                     (when kun-virhe (kun-virhe tulos)))))))
@@ -91,7 +91,7 @@
               {:data-cy data-cy}))
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
-         (when @nayta-virheviesti?
+         (when (and @nayta-virheviesti? asetukset-nayta-virheviesti?)
            (case virheen-esitystapa
              :flash (do
                       (viesti/nayta! virheviesti :warning (or virheviestin-nayttoaika
@@ -116,8 +116,8 @@
    style                      Nappiin liitettävä style
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?
-                            sticky? ikoninappi? title style data-cy] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
+                            sticky? ikoninappi? title style] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -142,7 +142,7 @@
        (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                 (dom/elementin-etaisyys-dokumentin-ylareunaan
                                   (r/dom-node %))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes] :as optiot}]
          [:button
           (merge
             {:class (str (when disabled "disabled ")
@@ -155,9 +155,11 @@
              :on-click #(do
                           (.preventDefault %)
                           (.stopPropagation %)
-                          (toiminto))}
-            (when data-cy
-              {:data-cy data-cy}))
+                          (apply toiminto toiminto-args))}
+            (when (and data-attributes (every? #(and (keyword? %)
+                                                     (re-find #"^data-" (name %)))
+                                               (keys data-attributes)))
+              data-attributes))
           (when tallennus-kaynnissa?
             [y/ajax-loader])
           (when tallennus-kaynnissa?

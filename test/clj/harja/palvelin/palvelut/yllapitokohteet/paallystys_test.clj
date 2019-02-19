@@ -60,10 +60,15 @@
               jarjestelma-fixture)
 
 (def pot-testidata
-  {:aloituspvm (pvm/luo-pvm 2019 9 1)
-   :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
-   :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
-   :takuupvm (pvm/luo-pvm 2019 9 3)
+  {:perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
+                 :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
+                 :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
+                 :takuupvm (pvm/luo-pvm 2019 9 3)
+                 :tr-numero 666
+                 :tr-alkuosa 2
+                 :tr-alkuetaisyys 1
+                 :tr-loppuosa 4
+                 :tr-loppuetaisyys 5}
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :nimi "Tie 666"
                                  :tr-numero 666
@@ -162,6 +167,7 @@
                                    :tallenna-paallystysilmoitus
                                    +kayttaja-jvh+ {:urakka-id urakka-id
                                                    :sopimus-id sopimus-id
+                                                   :vuosi 2019
                                                    :paallystysilmoitus paallystysilmoitus})))
       (let [maara-pyynnon-jalkeen
             (ffirst
@@ -228,6 +234,7 @@
                       :tallenna-paallystysilmoitus
                       +kayttaja-jvh+ {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi 2019
                                       :paallystysilmoitus paallystysilmoitus}))))
 
 (deftest testidata-on-validia
@@ -350,8 +357,9 @@
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-          paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
-                                                  :valmis-kasiteltavaksi true)
+          paallystysilmoitus (-> pot-testidata
+                                 (assoc :paallystyskohde-id paallystyskohde-id)
+                                 (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
@@ -359,7 +367,7 @@
                                                                                :vuosi 2019
                                                                                :paallystysilmoitus paallystysilmoitus})]
 
-      ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset
+      ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
       (is (= (count (:yllapitokohteet vastaus)) 3))
       (is (= (count (:paallystysilmoitukset vastaus)) 3))
 
@@ -374,7 +382,8 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 4753.95M))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+        (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
+                                                                                         (dissoc osoite :kohdeosa-id)))
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
@@ -390,7 +399,6 @@
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :kohdeosa-id 14
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
@@ -431,6 +439,7 @@
       (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                           :sopimus-id sopimus-id
+                                                                                          :vuosi 2019
                                                                                           :paallystysilmoitus paallystysilmoitus}))))))
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
@@ -439,15 +448,16 @@
 
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-          paallystysilmoitus (-> (assoc pot-testidata
-                                   :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
-                                 (assoc-in [:tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
+          paallystysilmoitus (-> pot-testidata
+                                 (assoc :paallystyskohde-id paallystyskohde-id)
+                                 (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
+                                 (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+
                       {:urakka-id urakka-id
                        :sopimus-id sopimus-id
+                       :vuosi 2019
                        :paallystysilmoitus paallystysilmoitus})
       (let [paallystysilmoitus-kannassa
             (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -459,14 +469,15 @@
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :paatos]) :hyvaksytty))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :perustelu])
-               (get-in paallystysilmoitus [:tekninen-osa :perustelu])))
+               (get-in paallystysilmoitus [:perustiedot :tekninen-osa :perustelu])))
 
         ;; Tie 666 tiedot tallentuivat kantaan, mutta tie 555 ei koska oli poistettu
         (is (some #(= (:nimi %) "Tie 666")
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
         (is (not (some #(= (:nimi %) "Tie 555")
                        (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+        (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
+                                                                                         (dissoc osoite :kohdeosa-id)))
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
@@ -482,7 +493,6 @@
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :kohdeosa-id 14
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
@@ -518,6 +528,7 @@
                                                        :tallenna-paallystysilmoitus +kayttaja-jvh+
                                                        {:urakka-id urakka-id
                                                         :sopimus-id sopimus-id
+                                                        :vuosi 2019
                                                         :paallystysilmoitus paallystysilmoitus})))
 
         (u (str "UPDATE paallystysilmoitus SET
@@ -541,6 +552,7 @@
                       :tallenna-paallystysilmoitus +kayttaja-jvh+
                       {:urakka-id urakka-id
                        :sopimus-id sopimus-id
+                       :vuosi 2019
                        :paallystysilmoitus paallystysilmoitus})
 
       (let [kohteita-ennen-lisaysta (hae-kohteiden-maara)
@@ -582,6 +594,7 @@
                         :tallenna-paallystysilmoitus +kayttaja-jvh+
                         {:urakka-id urakka-id
                          :sopimus-id sopimus-id
+                         :vuosi 2019
                          :paallystysilmoitus paallystysilmoitus})
 
         (is (= (inc kohteita-ennen-lisaysta) (hae-kohteiden-maara)) "Kohteita on nyt 1 enemmän")))))
@@ -593,8 +606,8 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
-                                 (assoc-in [:tekninen-osa :perustelu]
+                                 (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
+                                 (assoc-in [:perustiedot :tekninen-osa :perustelu]
                                            "Yritän saada ilmoituksen hyväksytyksi ilman oikeuksia."))]
 
       (is (thrown? RuntimeException
@@ -602,6 +615,7 @@
                                    :tallenna-paallystysilmoitus +kayttaja-tero+
                                    {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
+                                    :vuosi 2018
                                     :paallystysilmoitus paallystysilmoitus}))))))
 
 
@@ -729,9 +743,9 @@
                                                                 "LIMIT 1"))))
         ;; Tehdään ensin sellainen päällystysilmoitus, joka on valmis tarkastettavaksi
         ;; ja lähetetään paallystysilmoituksen valmistumisesta sähköposti ely valvojalle
-        paallystysilmoitus (assoc pot-testidata
-                             :paallystyskohde-id paallystyskohde-id
-                             :valmis-kasiteltavaksi true)
+        paallystysilmoitus (-> pot-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
         sahkoposti-valitetty (atom false)
         sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
@@ -753,6 +767,7 @@
                       :tallenna-paallystysilmoitus
                       +kayttaja-jvh+ {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi 2018
                                       :paallystysilmoitus paallystysilmoitus}))
 
     (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
@@ -763,14 +778,15 @@
     (let [;;Hyväksytään ilmoitus ja lähetetään tästä urakan valvojalle sähköposti
           paallystysilmoitus (-> (assoc pot-testidata
                                    :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
-                                 (assoc-in [:tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
+                                 (assoc-in [:perustiedot :tekninen-osa :paatos] :hyvaksytty)
+                                 (assoc-in [:perustiedot :tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
       (with-fake-http
         [+testi-fim+ fim-vastaus]
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-paallystysilmoitus
                         +kayttaja-jvh+ {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
+                                        :vuosi 2018
                                         :paallystysilmoitus paallystysilmoitus}))
       (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
       (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")

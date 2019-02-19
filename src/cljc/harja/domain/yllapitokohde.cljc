@@ -218,6 +218,100 @@ yllapitoluokkanimi->numero
          (tarkista-alikohteiden-ajorata-ja-kaista alikohteet)
          (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
+(defn kohteeet-paallekkain? [kohde verrattava-kohde]
+  (boolean
+    (and (not= (:id kohde) (:id verrattava-kohde))
+         (and (= (:tr-numero kohde) (:tr-numero verrattava-kohde))
+              (= (:tr-ajorata kohde) (:tr-ajorata verrattava-kohde))
+              (= (:tr-kaista kohde) (:tr-kaista verrattava-kohde)))
+         (tr-domain/tr-vali-leikkaa-tr-valin? kohde verrattava-kohde))))
+
+(defn validoi-tr-osan-pituus
+  "Olettaa, että tr-osoite on oikeamuotoinen"
+  [osan-pituudet-teille {:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys
+                                 tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (when osan-pituudet-teille
+    (let [osan-pituudet (osan-pituudet-teille tr-numero)]
+      (cond-> {}
+              (nil? osan-pituudet) (assoc :tr-numero :ei-olemassa)
+              (not (contains? osan-pituudet tr-alkuosa)) (update :tr-alkuosa assoc :ei-olemassa tr-alkuosa)
+              (not (contains? osan-pituudet tr-loppuosa)) (update :tr-loppuosa assoc :ei-olemassa tr-loppuosa)
+
+              (and (contains? osan-pituudet tr-alkuosa)
+                   tr-ajorata
+                   (if (= tr-alkuosa tr-loppuosa)
+                     (> (- tr-loppuetaisyys tr-alkuetaisyys)
+                        (get-in osan-pituudet [tr-alkuosa tr-ajorata]))
+                     (> (- (get-in osan-pituudet [tr-alkuosa :pituus]) tr-alkuetaisyys)
+                        (get-in osan-pituudet [tr-alkuosa tr-ajorata])))) (update :tr-alkuetaisyys assoc :liian-iso-ajorata [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa tr-ajorata])])
+              (and (contains? osan-pituudet tr-loppuosa)
+                   tr-ajorata
+                   (if (= tr-alkuosa tr-loppuosa)
+                     (> (- tr-loppuetaisyys tr-alkuetaisyys)
+                        (get-in osan-pituudet [tr-loppuosa tr-ajorata]))
+                     (> tr-loppuetaisyys
+                        (get-in osan-pituudet [tr-loppuosa tr-ajorata])))) (update :tr-loppuetaisyys assoc :liian-iso-ajorata [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa tr-ajorata])])
+
+              (and (contains? osan-pituudet tr-alkuosa)
+                   (> tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus]))) (update :tr-alkuetaisyys assoc :liian-iso-osa [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus])])
+              (and (contains? osan-pituudet tr-loppuosa)
+                   (> tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa :pituus]))) (update :tr-loppuetaisyys assoc :liian-iso-osa [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa :pituus])])))))
+
+(defn losa>aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
+  (and tr-alkuosa tr-loppuosa (> tr-loppuosa tr-alkuosa)))
+
+(defn let>aet? [{:keys [tr-alkuetaisyys tr-loppuetaisyys]}]
+  (and tr-alkuetaisyys tr-loppuetaisyys
+       (> tr-loppuetaisyys tr-alkuetaisyys)))
+
+(defn losa=aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
+  (and tr-alkuosa tr-loppuosa
+       (= tr-alkuosa tr-loppuosa)))
+
+(defn let=aet? [{:keys [tr-alkuetaisyys tr-loppuetaisyys]}]
+  (and tr-alkuetaisyys tr-loppuetaisyys
+       (= tr-alkuetaisyys tr-loppuetaisyys)))
+
+(defn oikean-muotoinen-tr
+  "Tarkistaa, että annetussa tr-osoitteessa on tien numero, aosa, aet, losa ja let annettuna.
+   Niiden tulee olla myös oikein järjestetty."
+  [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr}]
+  (cond-> {}
+          ;; Tarkistetaan, että arvot on annettu
+          (not (and tr-numero (integer? tr-numero))) (update :tr-numero assoc :vaara-muotoinen tr-numero)
+          (not (and tr-alkuosa (integer? tr-alkuosa))) (update :tr-alkuosa assoc :vaara-muotoinen tr-alkuosa)
+          (not (and tr-alkuetaisyys (integer? tr-alkuetaisyys))) (update :tr-alkuetaisyys assoc :vaara-muotoinen tr-alkuetaisyys)
+          (not (and tr-loppuosa (integer? tr-loppuosa))) (update :tr-loppuosa assoc :vaara-muotoinen tr-loppuosa)
+          (not (and tr-loppuetaisyys (integer? tr-loppuetaisyys))) (update :tr-loppuetaisyys assoc :vaara-muotoinen tr-loppuetaisyys)
+          ;; Tarkistetaan, että ne on oikein
+          (not (or (losa>aosa? tr)
+                   (losa=aosa? tr))) (-> (update :tr-alkuosa assoc :liian-iso tr-alkuosa)
+                                         (update :tr-loppuosa assoc :liian-pieni tr-loppuosa))
+          (and (losa=aosa? tr)
+               (not (or (let>aet? tr)
+                        (let=aet? tr)))) (-> (update :tr-alkuetaisyys assoc :liian-iso tr-alkuetaisyys)
+                                             (update :tr-loppuetaisyys assoc :liian-pieni tr-loppuetaisyys))))
+
+(defn validoi-kohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [kohde toiset-kohteet muut-alikohteet])
+
+(defn validoi-alikohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [alikohde toiset-alikohteet kohde])
+
+(defn validoi-muukohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [muu-kohde kohde toiset-kohteet])
+
+(defn validoi-alustatoimenpide
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [alustatoimenpide kohde])
+
+(defn validoi-alustatoimenpide-muukohde
+  "Tarkistaa, että annettu kohde on oikean muotoinen."
+  [alustatoimenpide kohde toiset-kohteet])
+
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
      "Tarkistaa, että annettu kohde on validi ja alikohteet ovat sen sen sisällä oikein."
@@ -262,6 +356,61 @@ yllapitoluokkanimi->numero
             (when (not (empty? virheet))
               (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 
+#?(:cljs
+   (defn validoi-osan-maksimipituus [osan-pituus key pituus rivi]
+     (when (integer? pituus)
+       (let [osa (get rivi key)]
+         (when-let [pit (get osan-pituus osa)]
+           (when (> pituus pit)
+             (str "Osan " osa " maksimietäisyys on " pit)))))))
+
+#?(:cljs
+   (defn validoi-yllapitokohteen-osoite
+     [osan-pituudet-teille kentta {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                          tr-loppuosa tr-loppuetaisyys] :as kohde}]
+     (when osan-pituudet-teille
+       (let [osan-pituudet (osan-pituudet-teille tr-numero)]
+         (or
+           (cond
+             (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
+             (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
+
+             (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
+             (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
+
+           (when (= kentta :tr-alkuetaisyys)
+             (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
+
+           (when (= kentta :tr-loppuetaisyys)
+             (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde)))))))
+
+#?(:cljs
+   (defn alkuosa-ei-lopun-jalkeen [aosa {losa :tr-loppuosa}]
+     (when (and aosa losa (> aosa losa))
+       "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen")))
+
+#?(:cljs
+   (defn alkuetaisyys-ei-lopun-jalkeen [alkuet {aosa :tr-alkuosa
+                                                losa :tr-loppuosa
+                                                loppuet :tr-loppuetaisyys}]
+     (when (and aosa losa alkuet loppuet
+                (= aosa losa)
+                (> alkuet loppuet))
+       "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")))
+
+#?(:cljs
+   (defn loppuosa-ei-alkua-ennen [losa {aosa :tr-alkuosa}]
+     (when (and aosa losa (< losa aosa))
+       "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")))
+
+#?(:cljs
+   (defn loppuetaisyys-ei-alkua-ennen [loppuet {aosa :tr-alkuosa
+                                                losa :tr-loppuosa
+                                                alkuet :tr-alkuetaisyys}]
+     (when (and aosa losa alkuet loppuet
+                (= aosa losa)
+                (< loppuet alkuet))
+       "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")))
 
 #?(:clj
    (defn yllapitokohteen-tarkka-tila [yllapitokohde]

@@ -149,3 +149,44 @@
   (let [r (.getBoundingClientRect solmu)
         leveys (.-width r)]
     leveys))
+
+(defn lataus-komponentille
+  "Jos komponentin luominen kestää pitkää, tämän voi wrapata komponentin ympärille, jolloinka
+   näytetään lataus gif sen aikaa, että react on kerennyt mountata komponentin."
+  [& args]
+  (let [naytettava-osio (atom {:loader? true
+                               :komponentti? false})
+        loader (fn [viesti]
+                 [:div
+                  [:img {:src "images/ajax-loader.gif"}]
+                  [:span (str " " viesti)]])
+        komponentti (fn [args naytettava-osio]
+                      (r/create-class
+                        {:component-did-mount (fn [_]
+                                                (when (:komponentti? @naytettava-osio)
+                                                  (swap! naytettava-osio assoc :loader? false)
+                                                  ;; kutsutaa flush, koska reagent ei välittömästi renderöi
+                                                  ;; uutta tilaaa eikä haluta näyttää lataus giffiä ja itse
+                                                  ;; komponenttia yhtäaikaa
+                                                  (r/flush)))
+                         :reagent-render (fn [args naytettava-osio]
+                                           args)}))]
+    (r/create-class
+      {:component-did-mount (fn [this]
+                              (swap! naytettava-osio assoc :komponentti? true))
+       :reagent-render
+       (fn [& args]
+         (let [{:keys [loader? komponentti?]} @naytettava-osio
+               [viesti args] (if (map? (first args))
+                               [(:viesti (first args)) (vec (rest args))]
+                               [nil (vec args)])]
+           [:div
+            ;; Key metadata on näissä olennaiset, koska jos niitä ei anneta, niin komponentti
+            ;; remountataan, silloin kun sen indexi muuttuu ilman avainta. Eli 'loader' ei sinänsä
+            ;; tarvitsisi avainta, mutta komponentti tarvitsee.
+            (when loader?
+              ^{:key "loader"}
+              [loader viesti])
+            (when komponentti?
+              ^{:key "komponentti"}
+              [komponentti args naytettava-osio])]))})))

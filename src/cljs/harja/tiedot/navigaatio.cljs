@@ -205,6 +205,8 @@
    löydy valitun tyyppisten urakoitsijain listasta."
   [ut]
   (go
+    (when (not= @valittu-urakkatyyppi ut)
+      (valitse-urakka! nil))
     (reset! valittu-urakkatyyppi ut)
     (vaihda-vaylamuoto! ut)
     (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))

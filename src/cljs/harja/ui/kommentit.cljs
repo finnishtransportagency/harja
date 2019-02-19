@@ -1,27 +1,11 @@
 (ns harja.ui.kommentit
   "Kommentit-komponentti"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
-            [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.napit :as napit]
-            [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!]])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+            [clojure.string :as clj-str]))
 
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder
@@ -49,7 +33,7 @@
       (when kommentoi!
         [:button.nappi-ensisijainen.uusi-kommentti-tallenna
          {:on-click #(kommentoi! @uusi-kommentti)
-          :disabled (str/blank? (:kommentti @uusi-kommentti))}
+          :disabled (clj-str/blank? (:kommentti @uusi-kommentti))}
          "Tallenna kommentti"])
       (when voi-liittaa? [liitteet/lisaa-liite
                           (:id @nav/valittu-urakka)
