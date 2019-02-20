@@ -11,3 +11,13 @@ CREATE MATERIALIZED VIEW raportti_toteutuneet_materiaalit AS
     JOIN urakka u ON u.id = t.urakka
   WHERE t.poistettu IS NOT TRUE
   GROUP BY "urakka-id", paiva, "materiaali-id";
+
+CREATE OR REPLACE FUNCTION paivita_raportti_cachet()
+  RETURNS VOID
+SECURITY DEFINER
+AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW raportti_toteutuneet_materiaalit;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
