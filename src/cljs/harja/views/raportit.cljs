@@ -226,7 +226,9 @@
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))
         vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
-        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
+        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)
+        korkeintaan-edellinen-paiva (fn [uusi-paiva]
+                                      (not (pvm/sama-tai-jalkeen? uusi-paiva (pvm/nyt) true)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled
@@ -280,7 +282,9 @@
                              :toiminto #(swap! vapaa-aikavali? not)
                              :komponentti (when @vapaa-aikavali?
                                             [:div
-                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]}]
+                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
+                                                                                   :validointi (when (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi))
+                                                                                                 korkeintaan-edellinen-paiva)}]
                                              [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
          @vapaa-aikavali?]])]))
 

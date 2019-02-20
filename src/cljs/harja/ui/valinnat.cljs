@@ -135,7 +135,7 @@
                             (remove-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu)))
        (fn [valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
                                           aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                                          lomake? otsikko]}]
+                                          lomake? otsikko validointi]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
          [:span {:class (if lomake?
@@ -146,10 +146,10 @@
                          (true? nayta-otsikko?)))
             [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
-           [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
+           [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta :validointi validointi}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-           [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
+           [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta :validointi validointi}
             aikavalin-loppu]]])))))
 
 (defn numerovali

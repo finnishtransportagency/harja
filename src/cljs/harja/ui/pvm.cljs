@@ -63,7 +63,9 @@
    :pvm      tämänhetkinen päivämäärä (goog.date.Date)
    :vuosi    näytettävä vuosi, oletus nykyinen
    :kuukausi näytettävä kuukausi (0 - 11)
-   :valitse  funktio, jota kutsutaan kun päivämäärä valitaan"
+   :valitse  funktio, jota kutsutaan kun päivämäärä valitaan
+   :valittava?-fn funktio, jolle annetaan pvm. Paluuarvo truthy, jota
+                  jonka perusteella tarkastetaan voiko päivää valita."
   [optiot]
   (let [pakota-suunta (:pakota-suunta optiot)
         sijainti-atom (atom (or pakota-suunta nil))
@@ -85,7 +87,7 @@
      (komp/dom-kuuntelija js/window
                           EventType/SCROLL scroll-kuuntelija)
 
-     (fn [{:keys [pvm valitse style] :as optiot}]
+     (fn [{:keys [pvm valitse style valittava?-fn] :as optiot}]
        (let [[vuosi kk] @nayta
              naytettava-kk (t/date-time vuosi (inc kk) 1)
              naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
@@ -130,19 +132,27 @@
            (for [paivat (pilko-viikoiksi vuosi kk)]
              ^{:key (pvm/millisekunteina (first paivat))}
              [:tr
-              (for [paiva paivat]
+              (for [paiva paivat
+                    :let [valittava? (or (not (some? valittava?-fn))
+                                         (valittava?-fn paiva))]]
                 ^{:key (pvm/millisekunteina paiva)}
-                [:td.pvm-paiva.klikattava {:class    (str
-                                                       (when (pvm/sama-pvm? (pvm/nyt) paiva) "pvm-tanaan ")
-                                                       (when (and pvm
-                                                                  (= (t/day paiva) (t/day pvm))
-                                                                  (= (t/month paiva) (t/month pvm))
-                                                                  (= (t/year paiva) (t/year pvm)))
-                                                         "pvm-valittu ")
-                                                       (if (naytettava-kk-paiva? paiva)
-                                                         "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
+                [:td.pvm-paiva {:class (str
+                                         (if valittava?
+                                           "klikattava "
+                                           "pvm-disabloitu ")
+                                         (when (pvm/sama-pvm? (pvm/nyt) paiva) "pvm-tanaan ")
+                                         (when (and pvm
+                                                    (= (t/day paiva) (t/day pvm))
+                                                    (= (t/month paiva) (t/month pvm))
+                                                    (= (t/year paiva) (t/year pvm)))
+                                           "pvm-valittu ")
+                                         (if (naytettava-kk-paiva? paiva)
+                                           "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
-                                           :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
+                                :on-click #(do (.stopPropagation %)
+                                               (when valittava?
+                                                 (valitse paiva))
+                                               nil)}
                  (t/day paiva)])])]
           [:tfoot.pvm-tanaan-text
            [:tr [:td {:colSpan 7}
