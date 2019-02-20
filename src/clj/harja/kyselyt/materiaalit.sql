@@ -110,7 +110,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON mk.id = rtm."materiaali-id"
   JOIN urakka u ON u.id = rtm."urakka-id"
 WHERE u.id = :urakka
-      AND rtm.paiva BETWEEN :alku AND :loppu
+      AND rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
@@ -127,7 +127,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
 WHERE u.hallintayksikko = :hallintayksikko AND
       (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
-      rtm.paiva BETWEEN :alku AND :loppu
+      rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
@@ -145,7 +145,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
-      rtm.paiva BETWEEN :alku AND :loppu
+      rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", o.nimi, o.elynumero, mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-urakan-toteumat-materiaalille
