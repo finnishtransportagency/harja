@@ -973,7 +973,6 @@ documentation:
                     example: !include examples/virhe-response.json
                     schema: kirjaus-response
     /paikkaus:
-      is: [secured]
       description: Paikkauskohteiden ja niihin liittyvien paikkausten kirjaus ja päivitys.
       post:
         is: [secured]
@@ -998,7 +997,7 @@ documentation:
              application/json:
                example: !include examples/virhe-response.json
                schema: virhe-response
-       delete:
+      delete:
         is: [secured]
         description: Paikkauskohteiden ja niihin liittyvien paikkausten ja/tai paikkauskustannusten poisto.
                      Kun poistat paikkauskohteen, siihen liittyvät paikkaukset ja paikkauskustannukset poistetaan.
