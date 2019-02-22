@@ -1003,9 +1003,9 @@ documentation:
                      Kun poistat paikkauskohteen, siihen liittyvät paikkaukset ja paikkauskustannukset poistetaan.
                      Paikkauksia ja paikkauskustannuksia voi poistosanoman avulla poistaa myös yksitellen. Tällöin paikkauskohdetta ei poisteta.
         body:
-            application/json:
-              example: !include examples/paikkausten-poisto-request.json
-              schema: paikkausten-kirjaus-request
+          application/json:
+            example: !include examples/paikkausten-poisto-request.json
+            schema: paikkausten-kirjaus-request
         responses:
             200:
             body:
@@ -1249,21 +1249,21 @@ documentation:
           example: !include examples/varusteen-paivitys-request.json
           schema: varusteen-paivitys-request
       responses:
-             200:
-              body:
-                application/json:
-                  example: !include examples/onnistunut-kirjaus-response.json
-                  schema: kirjaus-response
-             500:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
-             400:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
+        200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
     delete:
       is: [secured]
       description: Varusteen poistaminen. Tarkoitettu poistamaan virheellisesti lisätty varuste. Fyysisesti käytöstä poistetun varusteen käsittelemiseen käytetään varusteen päivitystä. Poistaa tiedon tierekisteristä.
@@ -1272,21 +1272,21 @@ documentation:
           example: !include examples/varusteen-poisto-request.json
           schema: varusteen-poisto-request
       responses:
-             200:
-              body:
-                application/json:
-                  example: !include examples/onnistunut-kirjaus-response.json
-                  schema: kirjaus-response
-             500:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
-             400:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
+        200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
 /seuranta:
   is: [secured]
   description: Reaaliaikaisten tapahtumien kirjaus.
