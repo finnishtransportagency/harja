@@ -999,9 +999,7 @@ documentation:
                schema: virhe-response
       delete:
         is: [secured]
-        description: Paikkauskohteiden ja niihin liittyvien paikkausten ja/tai paikkauskustannusten poisto.
-                     Kun poistat paikkauskohteen, siihen liittyvät paikkaukset ja paikkauskustannukset poistetaan.
-                     Paikkauksia ja paikkauskustannuksia voi poistosanoman avulla poistaa myös yksitellen. Tällöin paikkauskohdetta ei poisteta.
+        description: Paikkauskohteiden ja niihin liittyvien paikkausten ja/tai paikkauskustannusten poisto. Kun poistat paikkauskohteen, siihen liittyvät paikkaukset ja paikkauskustannukset poistetaan. Paikkauksia ja paikkauskustannuksia voi poistosanoman avulla poistaa myös yksitellen. Tällöin paikkauskohdetta ei poisteta.
         body:
           application/json:
             example: !include examples/paikkausten-poisto-request.json
