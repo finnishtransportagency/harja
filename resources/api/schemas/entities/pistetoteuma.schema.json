@@ -12,8 +12,6 @@
     },
     "sijainti": {
       "id": "urn:harja/pistetoteuma/sijainti",
-      "type": "object",
-      "additionalProperties": false,
       "required": true,
       "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
     },
