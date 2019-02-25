@@ -81,8 +81,6 @@
               },
               "sijainti": {
                 "id": "urn:harja/ilmoitukset/0/sijainti",
-                "type": "object",
-                "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
