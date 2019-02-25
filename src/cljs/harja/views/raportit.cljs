@@ -229,6 +229,9 @@
         vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)
         korkeintaan-edellinen-paiva (fn [uusi-paiva]
                                       (not (pvm/sama-tai-jalkeen? uusi-paiva (pvm/nyt) true)))
+        hoitokauden-pvm-vali (if (or hoitourakassa? vesivaylaurakassa?)
+                               (u/hoito-tai-sopimuskaudet ur)
+                               (u/edelliset-hoitokaudet 5 false urakkatyyppi))
         ;; Materiaaliraportissa ei näytetä meneillään olevaa päivää
         pvm-rajattu? (boolean (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi)))]
     [:span
@@ -254,10 +257,9 @@
                 (and (= urakkatyyppi :vesivayla)
                      (or vesivaylaurakassa? (nil? ur))))
         [ui-valinnat/hoitokausi
-         {:disabled @vapaa-aikavali?}
-         (if (or hoitourakassa? vesivaylaurakassa?)
-           (u/hoito-tai-sopimuskaudet ur)
-           (u/edelliset-hoitokaudet 5 false urakkatyyppi))
+         {:disabled @vapaa-aikavali?
+          :disabloi-tulevat-hoitokaudet? pvm-rajattu?}
+         hoitokauden-pvm-vali
          valittu-hoitokausi
          #(do
            (reset! valittu-hoitokausi %)

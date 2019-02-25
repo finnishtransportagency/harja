@@ -62,14 +62,20 @@
    (hoitokausi {} hoitokaudet valittu-hoitokausi-atom #(reset! valittu-hoitokausi-atom %)))
   ([hoitokaudet valittu-hoitokausi-atom valitse-fn]
    (hoitokausi {} hoitokaudet valittu-hoitokausi-atom valitse-fn))
-  ([{:keys [disabled]} hoitokaudet valittu-hoitokausi-atom valitse-fn]
-   [:div.label-ja-alasveto.hoitokausi
-    [:span.alasvedon-otsikko "Hoitokausi"]
-    [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                          :disabled disabled
-                          :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
-                          :valitse-fn valitse-fn}
-     hoitokaudet]]))
+  ([{:keys [disabled disabloi-tulevat-hoitokaudet?]} hoitokaudet valittu-hoitokausi-atom valitse-fn]
+   (let [nyt (pvm/nyt)
+         disabled-vaihtoehdot (when disabloi-tulevat-hoitokaudet?
+                                (into #{}
+                                      (filter #(pvm/jalkeen? (first %) nyt))
+                                      hoitokaudet))]
+     [:div.label-ja-alasveto.hoitokausi
+      [:span.alasvedon-otsikko "Hoitokausi"]
+      [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
+                            :disabled disabled
+                            :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
+                            :disabled-vaihtoehdot disabled-vaihtoehdot
+                            :valitse-fn valitse-fn}
+       hoitokaudet]])))
 
 (defn kuukausi [{:keys [disabled nil-valinta disabloi-tulevat-kk?] :or {disabloi-tulevat-kk? false}} kuukaudet valittu-kuukausi-atom]
   (let [nyt (pvm/nyt)
