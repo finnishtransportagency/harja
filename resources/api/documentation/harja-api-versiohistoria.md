@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 1.0.42</b>
+<b>Nykyinen versio: 1.0.44</b>
 <b>Julkaistu: 12.2.2019</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.44 Julkaistu 26.2.2019
+    - Pistetoteuman kirjauksen ja työkoneseurannan kirjauksen sisällössä pitää antaa jotain sijaintikentälle
+- Versionumero 1.0.43 Julkaistu 14.2.2019
+    - Paikkauskohteita voi poistaa uuden rajapinnan kautta
 - Versionumero 1.0.42 Julkaistu 12.2.2019
     - Piste- ja reittitoteumakirjausten mukana voi nyt ilmoittaa työkonetyypin.
 - Versionumero 1.0.41 Julkaistu 8.2.2019
