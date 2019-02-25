@@ -2,50 +2,31 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "type": "object",
-  "oneOf": [
-    {
-      "properties": {
-        "tie": {
-          "id": "urn:harja/tiesijainti",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json",
-          "required": true
-        }
-      }
+  "additionalProperties": false,
+  "properties": {
+    "koordinaatit": {
+      "id": "urn:harja/koordinaattisijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     },
-    {
-      "properties": {
-        "linkki": {
-          "id": "urn:harja/tiesijainti",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json",
-          "required": true
-        }
-      }
+    "tie": {
+      "id": "urn:harja/tiesijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
     },
-    {
-      "properties": {
-        "koordinaatit": {
-          "id": "urn:harja/koordinaattisijainti",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-          "required": true
-        }
-      }
+    "linkki": {
+      "id": "urn:harja/tiesijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json"
     },
-    {
-      "properties": {
-        "viivageometria": {
-          "id": "urn:harja/viivageometria",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json",
-          "required": true
-        }
-      }
+    "viivageometria": {
+      "id": "urn:harja/viivageometria",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json"
     }
-  ]
+  }
 }
