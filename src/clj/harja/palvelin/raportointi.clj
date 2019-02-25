@@ -132,9 +132,6 @@
            pdf-vienti :pdf-vienti
            excel-vienti :excel-vienti
            :as this}]
-
-    ;; Aloita materiaalicachepäivitysten ajastettutehtävä
-    (paivita-raportti-cache-oisin! db)
     ;; Rekisteröidään PDF-vientipalveluun uusi käsittelijä :raportointi, joka
     ;; suorittaa raportin ja prosessoi sen XSL-FO hiccupiksi
     (pdf-vienti/rekisteroi-pdf-kasittelija!
@@ -155,9 +152,11 @@
              (do (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
                  (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
                                        workbook)))))))
-    this)
+    ;; Aloita materiaalicachepäivitysten ajastettutehtävä
+    (assoc this :raportti-cache-ajastus (paivita-raportti-cache-oisin! db)))
 
   (stop [this]
+    ((:raportti-cache-ajastus this))
     this)
 
   RaportointiMoottori
