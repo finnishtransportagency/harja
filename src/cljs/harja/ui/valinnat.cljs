@@ -71,18 +71,30 @@
                           :valitse-fn valitse-fn}
      hoitokaudet]]))
 
-(defn kuukausi [{:keys [disabled nil-valinta]} kuukaudet valittu-kuukausi-atom]
-  [:div.label-ja-alasveto.kuukausi
-   [:span.alasvedon-otsikko "Kuukausi"]
-   [livi-pudotusvalikko {:valinta @valittu-kuukausi-atom
-                         :disabled disabled
-                         :format-fn #(if %
-                                       (let [[alkupvm _] %
-                                             kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
-                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
-                                       (or nil-valinta "Kaikki"))
-                         :valitse-fn #(reset! valittu-kuukausi-atom %)}
-    kuukaudet]])
+(defn kuukausi [{:keys [disabled nil-valinta disabloi-tulevat-kk?] :or {disabloi-tulevat-kk? false}} kuukaudet valittu-kuukausi-atom]
+  (let [nyt (pvm/nyt)
+        format-fn (r/partial
+                    (fn [kuukausi]
+                      (if kuukausi
+                        (let [[alkupvm _] kuukausi
+                              kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
+                        (or nil-valinta "Kaikki"))))
+        valitse-fn (r/partial
+                     (fn [kuukausi]
+                       (reset! valittu-kuukausi-atom kuukausi)))
+        disabled-vaihtoehdot (when disabloi-tulevat-kk?
+                               (into #{}
+                                     (filter #(pvm/jalkeen? (first %) nyt))
+                                     kuukaudet))]
+    [:div.label-ja-alasveto.kuukausi
+     [:span.alasvedon-otsikko "Kuukausi"]
+     [livi-pudotusvalikko {:valinta @valittu-kuukausi-atom
+                           :disabled disabled
+                           :disabled-vaihtoehdot disabled-vaihtoehdot
+                           :format-fn format-fn
+                           :valitse-fn valitse-fn}
+      kuukaudet]]))
 
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]

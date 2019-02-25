@@ -228,7 +228,9 @@
         vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
         vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)
         korkeintaan-edellinen-paiva (fn [uusi-paiva]
-                                      (not (pvm/sama-tai-jalkeen? uusi-paiva (pvm/nyt) true)))]
+                                      (not (pvm/sama-tai-jalkeen? uusi-paiva (pvm/nyt) true)))
+        ;; Materiaaliraportissa ei näytetä meneillään olevaa päivää
+        pvm-rajattu? (boolean (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled
@@ -271,7 +273,8 @@
                                             "Koko vuosi"
 
                                             :else
-                                            "Koko hoitokausi")}
+                                            "Koko hoitokausi")
+                             :disabloi-tulevat-kk? pvm-rajattu?}
        (cond-> @kuukaudet
                vain-kuukausivalinta? rest)
        valittu-kuukausi]]
@@ -283,7 +286,7 @@
                              :komponentti (when @vapaa-aikavali?
                                             [:div
                                              [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
-                                                                                   :validointi (when (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi))
+                                                                                   :validointi (when pvm-rajattu?
                                                                                                  korkeintaan-edellinen-paiva)}]
                                              [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
          @vapaa-aikavali?]])]))

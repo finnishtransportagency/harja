@@ -300,11 +300,12 @@ table.table-striped {
     max-width: 100%;
     width: @leveys;
 
+    .disabled {
+        background-color: @harmaa10;
+        color: @harmaa6;
+    }
+
     .nappi-alasveto {
-        &.disabled {
-            background-color: @harmaa10;
-            color: @harmaa6;
-        }
         height: @input-korkeus;
         .valittu {
             display: inline-block;
@@ -353,21 +354,26 @@ table.table-striped {
 
 .dropdown-menu .harja-alasvetolistaitemi {
     &.bold > a {
-      font-weight: bold;
+        font-weight: bold;
     }
-    &> a {
-      background-color: @valkoinen;
-      border-color: @harmaa7;
-      color: @sininen4;
-      padding: 3px 6px;
-      &:hover,
-      &:focus,
-      &.focus,
-      &:active {
-        background-color: @sininen5;
-        color:            @valkoinen;
-      }
-  }
+    & > a {
+        background-color: @valkoinen;
+        border-color: @harmaa7;
+        color: @sininen4;
+        padding: 3px 6px;
+        &:hover,
+        &:focus,
+        &.focus,
+        &:active {
+            background-color: @sininen5;
+            color: @valkoinen;
+        }
+    }
+    & > span {
+        padding: 3px 6px;
+        display: block;
+        cursor: default;
+    }
 }
 
 .dropdown-menu .harja-alasvetolista-ryhma:not(:last-child) {
