@@ -5,28 +5,6 @@
   "oneOf": [
     {
       "properties": {
-        "tie": {
-          "id": "urn:harja/tiesijainti",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json",
-          "required": true
-        }
-      }
-    },
-    {
-      "properties": {
-        "linkki": {
-          "id": "urn:harja/tiesijainti",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json",
-          "required": true
-        }
-      }
-    },
-    {
-      "properties": {
         "koordinaatit": {
           "id": "urn:harja/koordinaattisijainti",
           "type": "object",
