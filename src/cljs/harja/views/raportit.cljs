@@ -233,7 +233,7 @@
                                (u/hoito-tai-sopimuskaudet ur)
                                (u/edelliset-hoitokaudet 5 false urakkatyyppi))
         ;; Materiaaliraportissa ei näytetä meneillään olevaa päivää
-        pvm-rajattu? (boolean (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi)))]
+        pvm-rajattu-eiliseen? (boolean (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled
@@ -258,7 +258,7 @@
                      (or vesivaylaurakassa? (nil? ur))))
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?
-          :disabloi-tulevat-hoitokaudet? pvm-rajattu?}
+          :disabloi-tulevat-hoitokaudet? true}
          hoitokauden-pvm-vali
          valittu-hoitokausi
          #(do
@@ -276,7 +276,7 @@
 
                                             :else
                                             "Koko hoitokausi")
-                             :disabloi-tulevat-kk? pvm-rajattu?}
+                             :disabloi-tulevat-kk? true}
        (cond-> @kuukaudet
                vain-kuukausivalinta? rest)
        valittu-kuukausi]]
@@ -288,8 +288,9 @@
                              :komponentti (when @vapaa-aikavali?
                                             [:div
                                              [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
-                                                                                   :validointi (when pvm-rajattu?
-                                                                                                 korkeintaan-edellinen-paiva)}]
+                                                                                   :validointi (if pvm-rajattu-eiliseen?
+                                                                                                 korkeintaan-edellinen-paiva
+                                                                                                 :korkeintaan-kuluva-paiva)}]
                                              [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
          @vapaa-aikavali?]])]))
 

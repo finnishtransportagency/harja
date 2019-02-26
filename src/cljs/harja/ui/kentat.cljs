@@ -698,23 +698,21 @@
         teksti (atom (if p
                        (pvm/pvm p)
                        ""))
-
-        validoi? (some? validointi)
-        validoi (fn [uusi-paiva]
-                  (if validoi?
-                    (cond
-                      (fn? validointi) (validointi uusi-paiva)
-                      (nil? uusi-paiva) false
-                      (= :korkeintaan-kuluva-paiva validointi) (pvm/sama-tai-ennen? uusi-paiva (pvm/nyt) true))
-                    true))
+        validoi-fn (fn [validoi? validointi uusi-paiva]
+                     (if validoi?
+                       (cond
+                         (fn? validointi) (validointi uusi-paiva)
+                         (nil? uusi-paiva) false
+                         (= :korkeintaan-kuluva-paiva validointi) (pvm/sama-tai-ennen? uusi-paiva (pvm/nyt) true))
+                       true))
         ;; picker auki?
         auki (atom false)
 
-        teksti-paivamaaraksi! (fn [data t]
+        teksti-paivamaaraksi! (fn [validoi-fn data t]
                                 (let [d (pvm/->pvm t)
                                       eri-pvm? (not (or (pvm/sama-pvm? @data d)
                                                         (and (nil? d) (nil? @data))))]
-                                  (when (validoi d)
+                                  (when (validoi-fn d)
                                     (reset! teksti t)
                                     (when eri-pvm?
                                       (reset! data d)))))
@@ -734,10 +732,12 @@
                             ""))))
 
        :reagent-render
-       (fn [{:keys [on-focus on-blur placeholder rivi]} data]
+       (fn [{:keys [on-focus on-blur placeholder rivi validointi]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
+               validoi? (some? validointi)
+               validoi (r/partial validoi-fn validoi? validointi)
                naytettava-pvm (or
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
@@ -752,7 +752,7 @@
                          :on-change #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                         (teksti-paivamaaraksi! data nykyinen-teksti)
+                                         (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                          (reset! auki false)
                                          true)
                          :on-blur #(let [t (-> % .-target .-value)
@@ -762,7 +762,7 @@
                                      (if (and pvm (not (validoi pvm)))
                                        (do (reset! data nil)
                                            (reset! teksti ""))
-                                       (teksti-paivamaaraksi! data (-> % .-target .-value))))}]
+                                       (teksti-paivamaaraksi! validoi data (-> % .-target .-value))))}]
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
                                                              (reset! auki false)
