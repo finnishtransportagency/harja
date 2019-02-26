@@ -35,8 +35,8 @@
   (raportit-q/paivita_raportti_cachet (:db jarjestelma))
   (async/<!! (async/go-loop
                [k 1]
-               (let [foo (q "SELECT * FROM raportti_toteutuneet_materiaalit")]
-                 (when (and (nil? (ffirst foo))
+               (let [materiaali-cache-ajettu? (ffirst (q "SELECT exists(SELECT 1 FROM raportti_toteutuneet_materiaalit)"))]
+                 (when (and (not materiaali-cache-ajettu?)
                             (< k 10))
                    (async/<! (async/timeout 1000))
                    (recur (inc k))))))
