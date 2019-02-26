@@ -149,7 +149,6 @@
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
-                                  [cider/piggieback "0.4.0"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]
                                   [cider/piggieback "0.4.0"]]
