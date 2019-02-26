@@ -691,25 +691,31 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
         teksti (atom (if p
                        (pvm/pvm p)
                        ""))
-
+        validoi-fn (fn [validoi? validointi uusi-paiva]
+                     (if validoi?
+                       (cond
+                         (fn? validointi) (validointi uusi-paiva)
+                         (nil? uusi-paiva) false
+                         (= :korkeintaan-kuluva-paiva validointi) (pvm/sama-tai-ennen? uusi-paiva (pvm/nyt) true))
+                       true))
         ;; picker auki?
         auki (atom false)
 
-        teksti-paivamaaraksi! (fn [data t]
-                                (reset! teksti t)
+        teksti-paivamaaraksi! (fn [validoi-fn data t]
                                 (let [d (pvm/->pvm t)
                                       eri-pvm? (not (or (pvm/sama-pvm? @data d)
                                                         (and (nil? d) (nil? @data))))]
-                                  (when eri-pvm?
-                                    (reset! data d))))
-
+                                  (when (validoi-fn d)
+                                    (reset! teksti t)
+                                    (when eri-pvm?
+                                      (reset! data d)))))
         muuta! (fn [data t]
                  (when (or (re-matches +pvm-regex+ t)
                            (str/blank? t))
@@ -726,10 +732,12 @@
                             ""))))
 
        :reagent-render
-       (fn [{:keys [on-focus on-blur placeholder rivi]} data]
+       (fn [{:keys [on-focus on-blur placeholder rivi validointi]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
+               validoi? (some? validointi)
+               validoi (r/partial validoi-fn validoi? validointi)
                naytettava-pvm (or
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
@@ -744,19 +752,26 @@
                          :on-change #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                         (teksti-paivamaaraksi! data nykyinen-teksti)
+                                         (teksti-paivamaaraksi! validoi data nykyinen-teksti)
                                          (reset! auki false)
                                          true)
-                         :on-blur #(do
+                         :on-blur #(let [t (-> % .-target .-value)
+                                         pvm (pvm/->pvm t)]
                                      (when on-blur
                                        (on-blur %))
-                                     (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
+                                     (if (and pvm (not (validoi pvm)))
+                                       (do (reset! data nil)
+                                           (reset! teksti ""))
+                                       (teksti-paivamaaraksi! validoi data (-> % .-target .-value))))}]
             (when @auki
-              [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
-                                                               (reset! data %)
-                                                               (reset! teksti (pvm/pvm %)))
+              [pvm-valinta/pvm-valintakalenteri {:valitse #(when (validoi %)
+                                                             (reset! auki false)
+                                                             (reset! data %)
+                                                             (reset! teksti (pvm/pvm %)))
                                                  :pvm naytettava-pvm
-                                                 :pakota-suunta pakota-suunta}])]))})))
+                                                 :pakota-suunta pakota-suunta
+                                                 :valittava?-fn (when validoi?
+                                                                  validoi)}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]

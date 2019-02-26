@@ -40,19 +40,19 @@
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
-                                                                                                            (konv/sql-timestamp alkupvm)
-                                                                                                            (konv/sql-timestamp loppupvm)
-                                                                                                            hallintayksikko-id
-                                                                                                            (when urakkatyyppi (name urakkatyyppi))))]
+                                                                                                            {:alku (konv/sql-timestamp alkupvm)
+                                                                                                             :loppu (konv/sql-timestamp loppupvm)
+                                                                                                             :hallintayksikko hallintayksikko-id
+                                                                                                             :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))}))]
     toteutuneet-materiaalit))
 
 (defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm urakkatyyppi]}]
   (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
-                                                                                                      (konv/sql-timestamp alkupvm)
-                                                                                                      (konv/sql-timestamp loppupvm)
-                                                                                                      (when urakkatyyppi (name urakkatyyppi))))]
+                                                                                                      {:alku (konv/sql-timestamp alkupvm)
+                                                                                                       :loppu (konv/sql-timestamp loppupvm)
+                                                                                                       :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))}))]
     toteutuneet-materiaalit))
 
 (defn- materiaalin-otsikko [t]
