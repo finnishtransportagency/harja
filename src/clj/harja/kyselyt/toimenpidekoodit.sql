@@ -17,6 +17,7 @@ SELECT
   api_seuranta   AS "api-seuranta"
 FROM toimenpidekoodi t
   LEFT JOIN kayttaja k ON t.luoja = k.id
+  WHERE t.piilota IS NOT TRUE
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
