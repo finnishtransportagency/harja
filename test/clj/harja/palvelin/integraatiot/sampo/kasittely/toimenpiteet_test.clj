@@ -64,8 +64,8 @@
       (tuo-duplikaatti-toimenpide)
       (is false "Duplikaatin perustaminen pitäisi aiheuttaa poikkeuksen"))
     (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
-      (is (.contains kuittaus "Project: TESTIURAKKA already has operation: 22111") "Oikea virhe palautetaan kuittauksessa")
-      (is (= "Sampon projektille (id: TESTIURAKKA) on jo perustettu toimenpidekoodi: 22111" (:virhe (first virheet))))))
+      (is (.contains kuittaus "Project: TESTIURAKKA already has operation: 20179") "Oikea virhe palautetaan kuittauksessa")
+      (is (= "Sampon projektille (id: TESTIURAKKA) on jo perustettu toimenpidekoodi: 20179" (:virhe (first virheet))))))
   (is (= 1 (count (hae-toimenpiteet))) "Uutta toimenpidettä jo olemassa olevalla toimenpidekoodilla ei tuotu urakalle.")
   (poista-toimenpide))
 
@@ -80,3 +80,15 @@
 
   (is (= 0 (count (q "select id from toimenpideinstanssi where sampoid = 'TESTITPKTPI';")))
       "Toimenpidekooditonta toimenpidettä ei perusteta."))
+
+(deftest tarkista-toimenpiteiden-perustaminen-virheellinen-toimenpidekoodi
+  (try+
+    (do
+      (tuo-toimenpide-virheellinen-toimenpidekoodi)
+      (is false "Toimenpiteen perustamisen virheellisellä toimenpidekoodilla pitää aiheuttaa poikkeus"))
+    (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
+      (is (.contains kuittaus "Illegal operation code provided.") "Oikea virhe palautetaan kuittauksessa (virheellinen toimenpidekoodi)")
+      (is (= "TAnnettu toimenpidekoodi (vv_operation) ei ole sallittu." (:virhe (first virheet))))))
+
+  (is (= 0 (count (q "select id from toimenpideinstanssi where sampoid = 'TESTITPKTPI2';")))
+      "Toimenpidettä ei perusteta, kun toimenpidekoodi on virheellinen."))
