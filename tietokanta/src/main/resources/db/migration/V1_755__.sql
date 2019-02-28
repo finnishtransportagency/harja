@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 CREATE MATERIALIZED VIEW raportti_toteutuneet_materiaalit AS
   SELECT
     SUM(tm.maara)                AS kokonaismaara,
@@ -22,10 +21,3 @@ BEGIN
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
-=======
-ALTER TABLE toimenpidekoodi
-ADD COLUMN piilota BOOLEAN;
-
-COMMENT ON COLUMN toimenpidekoodi.piilota IS 'Piilottaa toimenpiteen tai tehtävän Harjan hallintaosion listoilta.';
-
->>>>>>> Stashed changes
