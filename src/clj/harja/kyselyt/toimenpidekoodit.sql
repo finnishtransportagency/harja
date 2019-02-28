@@ -203,3 +203,12 @@ WHERE id = :id and piilota IS NOT TRUE
                                                                                    'Reunapalkin ja päällysteen väl. sauman tiivistäminen',
                                                                                    'Päällysteiden paikkaus - massasaumaus',
                                                                                    'Reunapalkin liikuntasauman tiivistämin'));
+
+
+-- name: onko-kaytossa?
+-- Tarkistaa onko toimenpidekoodi käytössä ja saako siihen liittää toimenpideinstanssia.
+-- Piilota = koodi täysin käytöstä poistettu (poistettu = voi olla käytössä jo alkaneissa urakoissa)
+SELECT exists(
+    SELECT id
+    FROM toimenpidekoodi
+    WHERE koodi = :koodi AND piilota IS NOT TRUE);
