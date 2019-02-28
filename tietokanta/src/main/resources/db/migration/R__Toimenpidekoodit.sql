@@ -2823,7 +2823,7 @@ UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavateh
 -- p_emo_taso    INTEGER)
 
 SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, '-', NULL, t.nimi, t.koodi, t.taso)
-FROM toimenpidekoodi t WHERE taso = 3 AND nimi = 'Laaja toimenpide';
+FROM toimenpidekoodi t WHERE taso = 3 AND nimi = 'Laaja toimenpide' AND piilota IS NOT TRUE;
 
 
 UPDATE toimenpidekoodi
