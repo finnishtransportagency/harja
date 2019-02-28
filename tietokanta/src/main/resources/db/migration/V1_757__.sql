@@ -534,30 +534,6 @@ where koodi IN (
 
 
 
--- VAIHE 3: Jäljelle jääneet, toimenpideinstansseihin liittymättömät toimenpidekoodit tasolta 4
-UPDATE toimenpidekoodi SET
-  poistettu = true,
-  piilota = true,
-  muokattu = current_timestamp,
-  muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
-where id IN (
-'2871',
-'12719',
-'12720',
-'12721',
-'12722',
-'12723',
-'12724',
-'12725',
-'12718',
-'12727',
-'12729',
-'6862',
-'6858',
-'6864',
-'6859',
-'12726');
-
 
 -- Päivitä toimenpi
 UPDATE toimenpidekoodi SET nimi = 'Talvihoito laaja TPI', tuotenumero = 203, muokattu = CURRENT_TIMESTAMP, muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') WHERE koodi = '23104' and taso = 3;
