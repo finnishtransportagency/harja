@@ -65,9 +65,10 @@ WHERE id = (SELECT emo
 
 -- name: onko-olemassa?
 -- single?: true
+-- Ei karsi piilotettuja toimenpidekoodeja tarkistuksesta. Tämä auttaa ongelmanselvitystä Sampo-integraatiossa.
 SELECT exists(SELECT id
               FROM toimenpidekoodi
-              WHERE koodi = :toimenpidekoodi AND piilota IS NOT TRUE);
+              WHERE koodi = :toimenpidekoodi);
 
 -- name: onko-olemassa-idlla?
 -- single?: true
