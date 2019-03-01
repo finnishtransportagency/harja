@@ -658,7 +658,7 @@
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
   FROM toimenpidekoodi
-  WHERE nimi = 'Laaja toimenpide' AND taso = 3\nAND
+  WHERE nimi = 'Liikenneympäristön hoito laaja TPI' AND taso = 3\nAND
   emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
 
 (defn hae-yha-paallystysurakan-id []

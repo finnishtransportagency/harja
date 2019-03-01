@@ -53,6 +53,7 @@ SELECT
   yksikko
 FROM toimenpidekoodi
 WHERE poistettu IS NOT TRUE AND
+      piilota IS NOT TRUE AND
       emo = :emo;
 
 --name: hae-emon-nimi
@@ -64,6 +65,7 @@ WHERE id = (SELECT emo
 
 -- name: onko-olemassa?
 -- single?: true
+-- Ei karsi piilotettuja toimenpidekoodeja tarkistuksesta. Tämä auttaa ongelmanselvitystä Sampo-integraatiossa.
 SELECT exists(SELECT id
               FROM toimenpidekoodi
               WHERE koodi = :toimenpidekoodi);
@@ -72,7 +74,7 @@ SELECT exists(SELECT id
 -- single?: true
 SELECT exists(SELECT id
               FROM toimenpidekoodi
-              WHERE id = :id);
+              WHERE id = :id AND piilota IS NOT TRUE);
 
 -- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
 SELECT
@@ -81,7 +83,8 @@ SELECT
   tpk.yksikko
 FROM toimenpidekoodi tpk
 WHERE
-  NOT tpk.poistettu AND
+  tpk.poistettu IS NOT TRUE AND
+  tpk.piilota IS NOT TRUE AND
   tpk.api_seuranta AND
   tpk.hinnoittelu @> '{yksikkohintainen}';
 
@@ -92,44 +95,11 @@ SELECT
   tpk.yksikko
 FROM toimenpidekoodi tpk
 WHERE
-  NOT tpk.poistettu AND
+  tpk.poistettu IS NOT TRUE AND
+  tpk.piilota IS NOT TRUE AND
   tpk.api_seuranta AND
   tpk.hinnoittelu @> '{kokonaishintainen}';
 
--- name: hae-hinnoittelu
--- Suljetaa pois tehtävät, joille ei saa kirjata toteumia.
-SELECT hinnoittelu
-FROM toimenpidekoodi
-WHERE id = :id and id not in
--- Hoidon päällystyksen paikkauksen vanhat koodit.
-(5979,
-5980,
-1434,
-1433,
-1421,
-6968,
-6970,
-6987,
-6877,
-6967,
-6966,
-6868,
-6951,
-1420,
-1418,
-1419,
-6962,
-1417,
-1416,
-1415,
-6963,
-1410,
-6954,
-1409,
-1397,
-1401,
-1400,
-1399);
 
 -- name: hae-tehtavan-id
 SELECT tk4.id
@@ -140,7 +110,7 @@ WHERE tk4.nimi=:nimi AND
                                     (select toimenpide from toimenpideinstanssi where urakka = :urakkaid LIMIT 1));
 
 -- name: hae-hinnoittelu
--- Suljetaa pois tehtävät, joille ei saa kirjata toteumia.
+-- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
 SELECT hinnoittelu
 FROM toimenpidekoodi
 WHERE id = :id and piilota IS NOT TRUE
@@ -203,3 +173,13 @@ WHERE id = :id and piilota IS NOT TRUE
                                                                                    'Reunapalkin ja päällysteen väl. sauman tiivistäminen',
                                                                                    'Päällysteiden paikkaus - massasaumaus',
                                                                                    'Reunapalkin liikuntasauman tiivistämin'));
+
+
+-- name: onko-kaytossa?
+-- single?: true
+-- Tarkistaa onko toimenpidekoodi käytössä ja saako siihen liittää toimenpideinstanssia.
+-- Piilota = koodi täysin käytöstä poistettu (poistettu = voi olla käytössä jo alkaneissa urakoissa)
+SELECT exists(
+    SELECT id
+    FROM toimenpidekoodi
+    WHERE koodi = :koodi AND piilota IS NOT TRUE);

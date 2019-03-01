@@ -44,14 +44,14 @@
   (is (= 8 (count (hae-kustannussuunnitelmat))) "Toimenpiteen päivitys ei saa lisätä uusia kustannussuunnitelmia.")
 
   (let [nimet (hae-maksuerien-nimet)]
-    (is (some #(= (first %) "Laiturialue: Kokonaishintaiset") nimet))
-    (is (some #(= (first %) "Laiturialue: Yksikköhintaiset") nimet))
-    (is (some #(= (first %) "Laiturialue: Lisätyöt") nimet))
-    (is (some #(= (first %) "Laiturialue: Indeksit") nimet))
-    (is (some #(= (first %) "Laiturialue: Bonukset") nimet))
-    (is (some #(= (first %) "Laiturialue: Sakot") nimet))
-    (is (some #(= (first %) "Laiturialue: Äkilliset hoitotyöt") nimet))
-    (is (some #(= (first %) "Laiturialue: Muut") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Kokonaishintaiset") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Yksikköhintaiset") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Lisätyöt") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Indeksit") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Bonukset") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Sakot") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Äkilliset hoitotyöt") nimet))
+    (is (some #(= (first %) "Varuste ja laite (ohjelmoidut korjaukset): Muut") nimet))
     (log/debug "nimet: " nimet))
 
   (poista-toimenpide))
@@ -88,7 +88,7 @@
       (is false "Toimenpiteen perustamisen virheellisellä toimenpidekoodilla pitää aiheuttaa poikkeus"))
     (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
       (is (.contains kuittaus "Illegal operation code provided.") "Oikea virhe palautetaan kuittauksessa (virheellinen toimenpidekoodi)")
-      (is (= "TAnnettu toimenpidekoodi (vv_operation) ei ole sallittu." (:virhe (first virheet))))))
+      (is (= "Annettu toimenpidekoodi (vv_operation) ei ole sallittu." (:virhe (first virheet))))))
 
   (is (= 0 (count (q "select id from toimenpideinstanssi where sampoid = 'TESTITPKTPI2';")))
       "Toimenpidettä ei perusteta, kun toimenpidekoodi on virheellinen."))
