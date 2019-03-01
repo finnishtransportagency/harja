@@ -142,7 +142,7 @@
                id=\"TESTITPKTPI2\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
                name=\"TESTITPKTPI2\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
-               vv_operation=\"666\">
+               vv_operation=\"31114\">
         <documentLinks/>
     </Operation>
 </Sampo2harja>")

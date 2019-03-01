@@ -206,6 +206,7 @@ WHERE id = :id and piilota IS NOT TRUE
 
 
 -- name: onko-kaytossa?
+-- single?: true
 -- Tarkistaa onko toimenpidekoodi käytössä ja saako siihen liittää toimenpideinstanssia.
 -- Piilota = koodi täysin käytöstä poistettu (poistettu = voi olla käytössä jo alkaneissa urakoissa)
 SELECT exists(
