@@ -316,7 +316,31 @@
                            (select-keys tr-tieto
                                         #{:tie :ajorata :kaista :osa :aet :let :tietyyppi}))
                          (lue-csv csv) ;(shapefile/tuo shapefile)
-                         )]
+                         )
+          tr-tiedot (loop [edellinen nil
+                           tiedot []
+                           [m & ms] (sort-by (juxt :tie :osa :ajorata :kaista :aet)
+                                             tr-tiedot)]
+                      (if-not m
+                        tiedot
+                        ;; Data saattaa sisältää kohtia, joissa sama kaistan pätkä on pilkottu useampaan osaan.
+                        ;; Tämä johtuu historiallisista syistä, jolloinka tässä pilkkomiskohdassa on muuttunut
+                        ;; jokin joskus. Tämmöiset turhat pilkkoontumiset pitää korjata.
+                        ;;
+                        ;; esim. {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 3126} ja
+                        ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 3126 :let 4647} tulee yhdistää arvoksi
+                        ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 4647}
+                        ;; Myös tie 5 osa 120 sisältää aika paljon tämmöisiä pätkiä
+                        (let [yhdista? (and (= (dissoc edellinen :aet :let)
+                                               (dissoc m :aet :let))
+                                            (= (:let edellinen)
+                                               (:aet m)))]
+                          (recur m
+                                 (if yhdista?
+                                   (update tiedot (-> tiedot count dec) (fn [edellinen-m]
+                                                                          (assoc edellinen-m :let (:let m))))
+                                   (conj tiedot m))
+                                 ms))))]
       (log/debug (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
       (jdbc/with-db-transaction [db db]
         (k/tuhoa-laajennettu-tien-osien-tiedot! db)

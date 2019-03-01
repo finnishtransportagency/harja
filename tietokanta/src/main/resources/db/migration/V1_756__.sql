@@ -9,6 +9,8 @@ CREATE TABLE tr_osoitteet (
   tietyyppi     INTEGER
 );
 
+CREATE INDEX tr_osoitteet_idx ON tr_osoitteet (tie, osa);
+
 CREATE FUNCTION laske_tr_pituudet(tie_ INTEGER, osa_ INTEGER)
   RETURNS JSONB
 AS $$
@@ -60,6 +62,8 @@ CREATE MATERIALIZED VIEW tr_pituudet AS
           tie,
           osa
         FROM tr_osoitteet) AS tien_osat;
+
+CREATE INDEX tr_pituudet_idx ON tr_pituudet (tie, osa);
 
 CREATE FUNCTION paivita_tr_pituudet()
   RETURNS VOID
