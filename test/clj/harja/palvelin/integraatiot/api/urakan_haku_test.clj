@@ -29,7 +29,6 @@
     "L- ja p-alueiden puhdistus"
     "Koneellinen niitto"
     "Koneellinen vesakonraivaus"
-    "Päällysteiden paikkaus"
     "Sorateiden muokkaushöyläys"
     "Sorateiden pölynsidonta"
     "Harjaus"
