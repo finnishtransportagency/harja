@@ -1,12 +1,14 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as clj-str]
             [harja.kyselyt.tieverkko :as k]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
             [harja.geo :as geo])
   (:import (com.vividsolutions.jts.geom Coordinate LineString MultiLineString GeometryFactory)
            (com.vividsolutions.jts.geom.impl CoordinateArraySequence)
-           (com.vividsolutions.jts.operation.linemerge LineSequencer)))
+           (com.vividsolutions.jts.operation.linemerge LineSequencer)
+           (java.lang Character)))
 
 (defn- line-string-seq
   ([multilinestring]
@@ -269,6 +271,60 @@
         (k/paivita-paloiteltu-tieverkko db))
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+
+(defn- lue-csv
+  "Tämän funktion voi poistaa sitten, kun oikea integraatio on saatu"
+  [tiedosto-polku]
+  (let [raakasisalto (slurp tiedosto-polku)
+        rivit (clj-str/split raakasisalto #"\r")
+        muuta-rivi (fn [rivi f]
+                     (map (fn [kentta]
+                            (->> kentta
+                                 clj-str/trim
+                                 (remove #(Character/isIdentifierIgnorable %))
+                                 (apply str)
+                                 f))
+                          (clj-str/split rivi #";")))
+        otsikot (muuta-rivi (first rivit) keyword)
+        datarivit (map (fn [rivi]
+                         (muuta-rivi rivi identity))
+                       (rest rivit))
+        int-parse (fn [n]
+                    (when n
+                      (Integer. n)))]
+    (sequence
+      (comp
+        (map (fn [datarivi]
+               (zipmap otsikot datarivi)))
+        (map (fn [m]
+               (reduce-kv (fn [m k f]
+                            (update m k f))
+                          m {:tie int-parse
+                             :ajorata int-parse
+                             :kaista int-parse
+                             :osa int-parse
+                             :aet int-parse
+                             :let int-parse
+                             :tietyyppi int-parse}))))
+      datarivit)))
+
+;; TODO: Kato nämä tr-taulukot kuntoon. Käytetään väärää terminologiaa ja muutenkin dublikaatti dataa.
+
+(defn vie-laajennettu-tieverkko-kantaan [db csv]
+  (if csv
+    (let [tr-tiedot (map (fn [tr-tieto]
+                           (select-keys tr-tieto
+                                        #{:tie :ajorata :kaista :osa :aet :let :tietyyppi}))
+                         (lue-csv csv) ;(shapefile/tuo shapefile)
+                         )]
+      (log/debug (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
+      (jdbc/with-db-transaction [db db]
+        (k/tuhoa-laajennettu-tien-osien-tiedot! db)
+        (doseq [tr-tieto tr-tiedot]
+          (k/vie-laajennettu-tien-osa-kantaan<! db tr-tieto))
+        (k/paivita-tr-pituudet db))
+      (log/debug "Laajennetun tieosoiteverkon tuonti kantaan valmis."))
+    (log/debug "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
 ;;(def db (:db harja.palvelin.main/harja-jarjestelma))

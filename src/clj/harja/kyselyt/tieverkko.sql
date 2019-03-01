@@ -92,6 +92,7 @@ ORDER BY ajorata ASC;
 DELETE FROM tr_ajoratojen_pituudet;
 
 -- name: luo-ajoradan-pituus!
+-- Tässä taulussa ajorata ei oikeasti ole ajorata. Ennemminkin suunta.
 INSERT INTO tr_ajoratojen_pituudet (tie, osa, ajorata, pituus) VALUES (:tie, :osa, :ajorata, :pituus);
 
 -- name: hae-ajoratojen-pituudet
@@ -109,6 +110,12 @@ WHERE tie = :tie AND
 SELECT tie, osa
 FROM tr_osan_ajorata
 WHERE tie = :tie AND osa > :osa1 AND osa < :osa2;
+-- name: tuhoa-laajennettu-tien-osien-tiedot!
+TRUNCATE tr_osoitteet;
+
+-- name: vie-laajennettu-tien-osa-kantaan<!
+INSERT INTO tr_osoitteet (tie, ajorata, kaista, osa, alkuetaisyys, loppuetaisyys, tietyyppi)
+    VALUES (:tie, :ajorata, :kaista, :osa, :aet, :let, :tietyyppi)
 
 -- name: onko-osoitteen-etaisyydet-validit?
 -- single?: true
@@ -123,3 +130,5 @@ SELECT ((SELECT (pituus >= :aet)
           WHERE tie = :tie AND osa = :losa
           LIMIT 1))) AS ok;
 
+-- name: paivita-tr-pituudet
+SELECT paivita_tr_pituudet();
