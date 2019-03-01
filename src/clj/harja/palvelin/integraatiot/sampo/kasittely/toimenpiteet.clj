@@ -7,6 +7,7 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
   (:use [slingshot.slingshot :only [throw+]]))
 
+
 (defn paivita-toimenpide [db nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id
                           talousosasto-polku tuote-id tuote-polku urakka-sampo-id
                           sampo-toimenpidekoodi toimenpide-id]
@@ -48,6 +49,12 @@
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Unknown operation code provided.")
              :ei-kriittinen? true
              :virheet [{:virhe "Tuntematon toimenpidekoodi (vv_operation)"}]}))
+
+  (when (not (toimenpidekoodit/onko-kaytossa? db sampo-toimenpidekoodi))
+    (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
+             :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Illegal operation code provided.")
+             :ei-kriittinen? true
+             :virheet [{:virhe "Annettu toimenpidekoodi (vv_operation) ei ole sallittu."}]}))
   (if (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
     (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
       (throw+ {:type virheet/+poikkeus-samposisaanluvussa+

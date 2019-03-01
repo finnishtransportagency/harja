@@ -40,7 +40,7 @@
                    (map :tpi_nimi response))]
     (is (not (nil? response)))
     (is (= (count response) tpi-maara))
-    (is (= (:t3_nimi (first response)) "Laaja toimenpide"))
+    (is (= (:t3_nimi (first response)) "Talvihoito laaja TPI"))
     (is (= (:id (first (sort-by :tpi_id response))) 618))
     (is (contains? tpit "Oulu Talvihoito TP"))
     (is (contains? tpit "Oulu Liikenneympäristön hoito TP"))
