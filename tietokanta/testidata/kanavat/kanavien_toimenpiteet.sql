@@ -16,7 +16,7 @@ BEGIN
 
   INSERT INTO toimenpidekoodi (nimi, taso, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
   VALUES ('Henkilöstö: muutosaskare', 4, now(), 'h', NULL,
-          '{yksikkohintainen}', (SELECT id FROM toimenpidekoodi WHERE koodi='24104'));
+          '{yksikkohintainen}', (SELECT id FROM toimenpidekoodi WHERE koodi='27105'));
   muutosaskare_tpk_id := (SELECT MAX(id) from toimenpidekoodi);
 
   INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus, luoja)
