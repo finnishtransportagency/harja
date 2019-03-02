@@ -418,8 +418,8 @@
   (ffirst (q (str "SELECT id
                      FROM toimenpidekoodi t4
                     WHERE t4.nimi = 'Ei yksilöity' and t4.taso = 4 AND t4.emo = (select id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide' and t3.taso = 3
-                          AND t3.emo = (select id from toimenpidekoodi t2 WHERE t2.nimi = 'Väylänhoito ' and t2.taso = 2
-                          AND t2.emo = (SELECT id FROM toimenpidekoodi t1 WHERE t1.nimi = 'Hoito, meri' AND t1.taso = 1)));"))))
+                          AND t3.emo = (select id from toimenpidekoodi t2 WHERE t2.nimi = 'Vesiliikenteen käyttöpalvelut' and t2.taso = 2
+                          AND t2.emo = (SELECT id FROM toimenpidekoodi t1 WHERE t1.nimi = 'Käyttö, meri' AND t1.taso = 1)));"))))
 
 
 (defn hae-kohde-soskua []
