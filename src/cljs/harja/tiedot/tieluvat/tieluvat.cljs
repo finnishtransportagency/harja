@@ -14,7 +14,7 @@
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tila (atom {:valinnat {:myonnetty (pvm/aikavali-nyt-miinus 365)}
+(def tila (atom {:valinnat {:myonnetty (pvm/aikavali-nyt-miinus 0)}
                  :valittu-tielupa nil
                  :tielupien-haku-kaynnissa? false
                  :nakymassa? false}))
