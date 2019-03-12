@@ -689,12 +689,14 @@
     {:otsikko "Otsikko"
      :tyyppi :string
      :nimi ::tielupa/otsikko}
-    {:otsikko "Liite URL"
+    {:otsikko "Liite (linkki Tielupa-järjestelmän liitetilauspalveluun)"
      :tyyppi :linkki
      :nimi ::tielupa/liite-url}
-    {:otsikko "Katselmus URL"
-     :tyyppi :linkki
-     :nimi ::tielupa/katselmus-url}
+    {:otsikko ""
+     :tyyppi :linkki}
+    ;{:otsikko "Katselmus (linkki Tielupa-järjestelmään)"
+    ; :tyyppi :linkki
+    ; :nimi ::tielupa/katselmus-url}
     {:otsikko "Urakka"
      :tyyppi :string
      :nimi ::tielupa/urakan-nimi}
@@ -713,12 +715,6 @@
     {:otsikko "Tien nimi"
      :tyyppi :string
      :nimi ::tielupa/tien-nimi}
-    {:otsikko "Liitteet"
-     :nimi :liitteet
-     :palstoja 3
-     :tyyppi :komponentti
-     :komponentti (fn [{tielupa :data}]
-                    [liitteet/liitteet-ikonilistana (::tielupa/liitteet tielupa)])}
     (when (nayta-sijaintigrid? valittu-tielupa)
       {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
        :tyyppi :komponentti
