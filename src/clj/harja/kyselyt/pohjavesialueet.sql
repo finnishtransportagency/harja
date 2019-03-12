@@ -54,4 +54,4 @@ INSERT INTO pohjavesialue
 SELECT paivita_pohjavesialueet();
 
 -- name: paivita-pohjavesialue-kooste!
-REFRESH MATERIALIZED VIEW pohjavesialue_kooste WITH DATA;
+SELECT paivita_pohjavesialue_kooste();
