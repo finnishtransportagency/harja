@@ -111,6 +111,19 @@ SELECT tie, osa
 FROM tr_osan_ajorata
 WHERE tie = :tie AND osa > :osa1 AND osa < :osa2;
 
+-- name: onko-osoitteen-etaisyydet-validit?
+-- single?: true
+SELECT ((SELECT (pituus >= :aet)
+         FROM tr_ajoratojen_pituudet
+         WHERE tie = :tie AND osa = :aosa
+         LIMIT 1) AND
+        (:losa IS NULL
+         OR
+         (SELECT (pituus >= :loppuet)
+          FROM tr_ajoratojen_pituudet
+          WHERE tie = :tie AND osa = :losa
+          LIMIT 1))) AS ok;
+
 -- name: tuhoa-laajennettu-tien-osien-tiedot!
 TRUNCATE tr_osoitteet;
 

@@ -89,12 +89,6 @@ BEGIN
       tulos = jsonb_set(tulos, ajorata_pointer, jsonb_build_object('ajorata', ajoradan_tiedot.ajorata,
                                                                    'osiot', jsonb_build_array()));
     END IF;
-    IF (tie_ = 1 AND osa_ = 4)
-    THEN
-      RAISE NOTICE 'TULOS: %', tulos;
-      RAISE NOTICE 'AJORATA POINTER: %', ajorata_pointer;
-      RAISE NOTICE 'AJORADAN TIEDOT: %', ajoradan_tiedot;
-    END IF;
 
     ajorataosion_index = jsonb_array_length(tulos #> (ajorata_pointer || '{"osiot"}' :: TEXT []));
 
