@@ -312,42 +312,62 @@
 
 (defn vie-laajennettu-tieverkko-kantaan [db csv]
   (if csv
-    (let [tr-tiedot (map (fn [tr-tieto]
-                           (select-keys tr-tieto
-                                        #{:tie :ajorata :kaista :osa :aet :let :tietyyppi}))
-                         (lue-csv csv) ;(shapefile/tuo shapefile)
-                         )
-          tr-tiedot (loop [edellinen nil
-                           tiedot []
-                           [m & ms] (sort-by (juxt :tie :osa :ajorata :kaista :aet)
-                                             tr-tiedot)]
-                      (if-not m
-                        tiedot
-                        ;; Data saattaa sisältää kohtia, joissa sama kaistan pätkä on pilkottu useampaan osaan.
-                        ;; Tämä johtuu historiallisista syistä, jolloinka tässä pilkkomiskohdassa on muuttunut
-                        ;; jokin joskus. Tämmöiset turhat pilkkoontumiset pitää korjata.
-                        ;;
-                        ;; esim. {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 3126} ja
-                        ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 3126 :let 4647} tulee yhdistää arvoksi
-                        ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 4647}
-                        ;; Myös tie 5 osa 120 sisältää aika paljon tämmöisiä pätkiä
-                        (let [yhdista? (and (= (dissoc edellinen :aet :let)
-                                               (dissoc m :aet :let))
-                                            (= (:let edellinen)
-                                               (:aet m)))]
-                          (recur m
-                                 (if yhdista?
-                                   (update tiedot (-> tiedot count dec) (fn [edellinen-m]
-                                                                          (assoc edellinen-m :let (:let m))))
-                                   (conj tiedot m))
-                                 ms))))]
-      (log/debug (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
-      (jdbc/with-db-transaction [db db]
+    (jdbc/with-db-transaction [db db]
+      (let [tr-tiedot (map (fn [tr-tieto]
+                             (select-keys tr-tieto
+                                          #{:tie :ajorata :kaista :osa :aet :let :tietyyppi}))
+                           (lue-csv csv)                    ;(shapefile/tuo shapefile)
+                           )
+            tr-tiedot-ryhmiteltyna (group-by (juxt :tie :osa :ajorata :kaista) tr-tiedot)
+            ;; Data saattaa sisältää kohtia, joissa sama kaistan pätkä on pilkottu useampaan osaan.
+            ;; Tämä johtuu historiallisista syistä, jolloinka tässä pilkkomiskohdassa on muuttunut
+            ;; jokin joskus. Tämmöiset turhat pilkkoontumiset pitää korjata.
+            ;;
+            ;; esim. {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 3126} ja
+            ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 3126 :let 4647} tulee yhdistää arvoksi
+            ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 4647}
+            ;; Lisäksi vähän oudompia:
+            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 724}
+            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 6910}
+            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 724, :loppuetaisyys 955}
+            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 955, :loppuetaisyys 6405}
+            kaistat-paallekkain? (fn [{aet-1 :aet let-1 :let}
+                                      {aet-2 :aet let-2 :let}]
+                                   (or (and (>= aet-2 aet-1)
+                                            (<= aet-2 let-1))
+                                       (and (>= let-2 aet-1)
+                                            (<= let-2 let-1))))
+            yhdista-trt (fn this [kaistakohtaiset-trt]
+                          (let [[kayttamattomat-trt kaytetyt-trt] (reduce (fn [trt tr]
+                                                                            (if (contains? (meta tr) :kaytetty?)
+                                                                              (update trt 1 conj tr)
+                                                                              (update trt 0 conj tr)))
+                                                                          [[] []] kaistakohtaiset-trt)
+                                trt-kasattu (reduce (fn [v {:keys [aet let tietyyppi] :as tr}]
+                                                      (if (and (first v)
+                                                               (kaistat-paallekkain? (first v) tr)
+                                                               (= (-> v first :tietyyppi) tietyyppi))
+                                                        (update v 0 (fn [vanha-tr]
+                                                                      (-> vanha-tr
+                                                                          (update :aet min aet)
+                                                                          (update :let max let))))
+                                                        (conj v tr)))
+                                                    [] kayttamattomat-trt)
+                                trt-kasattu (concat (rest trt-kasattu) (conj kaytetyt-trt
+                                                                             (with-meta (first trt-kasattu)
+                                                                                        {:kaytetty? true})))]
+                            (if (every? #(contains? (meta %) :kaytetty?)
+                                        trt-kasattu)
+                              trt-kasattu
+                              (this trt-kasattu))))
+            tr-tiedot (mapcat #(-> % second yhdista-trt)
+                              tr-tiedot-ryhmiteltyna)]
+        (log/debug (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
         (k/tuhoa-laajennettu-tien-osien-tiedot! db)
         (doseq [tr-tieto tr-tiedot]
           (k/vie-laajennettu-tien-osa-kantaan<! db tr-tieto))
-        (k/paivita-tr-pituudet db))
-      (log/debug "Laajennetun tieosoiteverkon tuonti kantaan valmis."))
+        (k/paivita-tr-tiedot db)
+        (log/debug "Laajennetun tieosoiteverkon tuonti kantaan valmis.")))
     (log/debug "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
