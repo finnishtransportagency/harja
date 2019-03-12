@@ -144,7 +144,8 @@
 
 (def tee-laajennetun-tieverkon-paivitystehtava
   (fn [this asetukset]
-    (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset)))
+    (clojure.core.async/thread
+      (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset))))
   #_(maarittele-paivitystehtava
     "laajennettu-tieverkko"
     :laajennetun-tieosoiteverkon-osoite
@@ -390,7 +391,7 @@
     (doseq [tehtava [:tieverkon-hakutehtava
                      :tieverkon-paivitystehtava
                      :laajennetun-tieverkon-hakutehtava
-                     :laajennetun-tieverkon-paivitystehtava
+                     #_:laajennetun-tieverkon-paivitystehtava
                      :pohjavesialueiden-hakutehtava
                      :pohjavesialueiden-paivitystehtava
                      :talvihoidon-hoitoluokkien-hakutehtava

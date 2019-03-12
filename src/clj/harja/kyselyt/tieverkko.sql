@@ -118,5 +118,12 @@ TRUNCATE tr_osoitteet;
 INSERT INTO tr_osoitteet (tie, ajorata, kaista, osa, alkuetaisyys, loppuetaisyys, tietyyppi)
     VALUES (:tie, :ajorata, :kaista, :osa, :aet, :let, :tietyyppi);
 
+-- name: tuhoa-laajennettu-tien-osien-tiedot!
+TRUNCATE tr_osoitteet;
+
+-- name: vie-laajennettu-tien-osa-kantaan<!
+INSERT INTO tr_osoitteet (tie, ajorata, kaista, osa, alkuetaisyys, loppuetaisyys, tietyyppi)
+    VALUES (:tie, :ajorata, :kaista, :osa, :aet, :let, :tietyyppi);
+
 -- name: paivita-tr-tiedot
 SELECT paivita_tr_tiedot();

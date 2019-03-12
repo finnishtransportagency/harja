@@ -29,7 +29,6 @@
     "L- ja p-alueiden puhdistus"
     "Koneellinen niitto"
     "Koneellinen vesakonraivaus"
-    "Päällysteiden paikkaus"
     "Sorateiden muokkaushöyläys"
     "Sorateiden pölynsidonta"
     "Harjaus"
@@ -59,7 +58,7 @@
 
     (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
-      (is (= hoitourakan-kokonaishintaiset
+      (is (some #{"Auraus ja sohjonpoisto"}
              (set (distinct (map (comp :selite :tehtava) kokonaishintaiset)))))
       (is (= 43 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))

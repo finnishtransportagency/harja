@@ -10,7 +10,7 @@
     (let [nimi (:pvnimi pohjavesialue)
           tunnus (:pvnro pohjavesialue)
           geometria (.toString (:the_geom pohjavesialue))
-          suolarajoitus (= 1.0 (:pvsuola pohjavesialue))
+          suolarajoitus true ;; Riippumatta geometria-aineiston pvsuola-arvosta, suolarajoitus voidaan aina antaa
           tr_numero (:tie pohjavesialue)
           tr_alkuosa (:osa pohjavesialue)
           tr_alkuetaisyys (:etaisyys pohjavesialue)
