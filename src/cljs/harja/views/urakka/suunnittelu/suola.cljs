@@ -199,7 +199,7 @@
                                                   :voi-poistaa? (constantly false)
                                                   :voi-lisata? false
                                                   :jos-tyhja "Urakan alueella ei pohjavesialueita"}
-                              [{:otsikko "Pohjavesialue" :nimi :pohjavesialue :muokattava? (constantly false) :leveys "40%"
+                              [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
                                 :hae #(hae-pohjavesialueen-nimi %)}
                                {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
                                {:otsikko "Käyttöraja"
