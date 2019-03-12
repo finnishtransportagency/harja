@@ -1,0 +1,9 @@
+CREATE OR REPLACE FUNCTION paivita_pohjavesialue_kooste()
+  RETURNS VOID
+SECURITY DEFINER
+AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW pohjavesialue_kooste WITH DATA;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;

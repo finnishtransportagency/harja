@@ -69,6 +69,10 @@
 
 (def karttataso-suolatoteumat (atom false))
 
+(defn hae-toteuman-sijainti [toteuma]
+  
+  (:sijainti toteuma))
+
 (def suolatoteumat-kartalla
   (reaction
     (when @karttataso-suolatoteumat
@@ -80,7 +84,7 @@
                                             {:tid tid})
                                           kaikki-toteumat))]
           (map #(assoc % :tyyppi-kartalla :suolatoteuma
-                         :sijainti (hae-toteuman-sijainti %))
+                       :sijainti (hae-toteuman-sijainti %))
                yksittaiset-toteumat))
         #(constantly false)))))
 
