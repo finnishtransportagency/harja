@@ -4,7 +4,8 @@
             [clojure.string :as clj-str]
             [harja.kyselyt.tieverkko :as k]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [clojure.set :as clj-set])
   (:import (com.vividsolutions.jts.geom Coordinate LineString MultiLineString GeometryFactory)
            (com.vividsolutions.jts.geom.impl CoordinateArraySequence)
            (com.vividsolutions.jts.operation.linemerge LineSequencer)
@@ -314,11 +315,15 @@
   (if csv
     (jdbc/with-db-transaction [db db]
       (let [tr-tiedot (map (fn [tr-tieto]
-                             (select-keys tr-tieto
-                                          #{:tie :ajorata :kaista :osa :aet :let :tietyyppi}))
+                             (-> tr-tieto
+                                 (select-keys #{:tie :ajorata :kaista :osa :aet :let :tietyyppi})
+                                 (clj-set/rename-keys {:tie :tr-numero
+                                                       :osa :tr-osa
+                                                       :aet :tr-alkuetaisyys
+                                                       :let :tr-loppuetaisyys})))
                            (lue-csv csv)                    ;(shapefile/tuo shapefile)
                            )
-            tr-tiedot-ryhmiteltyna (group-by (juxt :tie :osa :ajorata :kaista) tr-tiedot)
+            tr-tiedot-ryhmiteltyna (group-by (juxt :tr-numero :tr-osa :ajorata :kaista) tr-tiedot)
             ;; Data saattaa sisältää kohtia, joissa sama kaistan pätkä on pilkottu useampaan osaan.
             ;; Tämä johtuu historiallisista syistä, jolloinka tässä pilkkomiskohdassa on muuttunut
             ;; jokin joskus. Tämmöiset turhat pilkkoontumiset pitää korjata.
@@ -331,8 +336,8 @@
             ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 6910}
             ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 724, :loppuetaisyys 955}
             ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 955, :loppuetaisyys 6405}
-            kaistat-paallekkain? (fn [{aet-1 :aet let-1 :let}
-                                      {aet-2 :aet let-2 :let}]
+            kaistat-paallekkain? (fn [{aet-1 :tr-alkuetaisyys let-1 :tr-loppuetaisyys}
+                                      {aet-2 :tr-alkuetaisyys let-2 :tr-loppuetaisyys}]
                                    (or (and (>= aet-2 aet-1)
                                             (<= aet-2 let-1))
                                        (and (>= let-2 aet-1)
@@ -343,14 +348,14 @@
                                                                               (update trt 1 conj tr)
                                                                               (update trt 0 conj tr)))
                                                                           [[] []] kaistakohtaiset-trt)
-                                trt-kasattu (reduce (fn [v {:keys [aet let tietyyppi] :as tr}]
+                                trt-kasattu (reduce (fn [v {:keys [tr-alkuetaisyys tr-loppuetaisyys tietyyppi] :as tr}]
                                                       (if (and (first v)
                                                                (kaistat-paallekkain? (first v) tr)
                                                                (= (-> v first :tietyyppi) tietyyppi))
                                                         (update v 0 (fn [vanha-tr]
                                                                       (-> vanha-tr
-                                                                          (update :aet min aet)
-                                                                          (update :let max let))))
+                                                                          (update :tr-alkuetaisyys min tr-alkuetaisyys)
+                                                                          (update :tr-loppuetaisyys max tr-loppuetaisyys))))
                                                         (conj v tr)))
                                                     [] kayttamattomat-trt)
                                 trt-kasattu (concat (rest trt-kasattu) (conj kaytetyt-trt
