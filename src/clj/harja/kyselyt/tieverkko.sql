@@ -128,8 +128,17 @@ SELECT ((SELECT (pituus >= :aet)
 TRUNCATE tr_osoitteet;
 
 -- name: vie-laajennettu-tien-osa-kantaan<!
-INSERT INTO tr_osoitteet (tie, ajorata, kaista, osa, alkuetaisyys, loppuetaisyys, tietyyppi)
-    VALUES (:tie, :ajorata, :kaista, :osa, :aet, :let, :tietyyppi);
+INSERT INTO tr_osoitteet ("tr-numero", ajorata, kaista, "tr-osa", "tr-alkuetaisyys", "tr-loppuetaisyys", tietyyppi)
+    VALUES (:tr-numero, :ajorata, :kaista, :tr-osa, :tr-alkuetaisyys, :tr-loppuetaisyys, :tietyyppi);
 
 -- name: paivita-tr-tiedot
 SELECT paivita_tr_tiedot();
+
+-- name: hae-trvalipaatepisteiden-tiedot
+SELECT "tr-numero",
+       "tr-osa",
+       pituudet
+FROM tr_tiedot
+WHERE "tr-numero" = :tr-numero AND
+      ("tr-osa" = :tr-alkuosa OR
+       "tr-osa" = :tr-loppuosa)
