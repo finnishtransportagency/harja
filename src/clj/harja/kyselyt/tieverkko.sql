@@ -127,3 +127,12 @@ INSERT INTO tr_osoitteet (tie, ajorata, kaista, osa, alkuetaisyys, loppuetaisyys
 
 -- name: paivita-tr-tiedot
 SELECT paivita_tr_tiedot();
+
+-- name: hae-trvalipaatepisteiden-tiedot
+SELECT tie,
+       osa,
+       pituudet
+FROM tr_tiedot
+WHERE tie = :tr-numero AND
+      (osa = :tr-alkuosa OR
+       osa = :tr-loppuosa)
