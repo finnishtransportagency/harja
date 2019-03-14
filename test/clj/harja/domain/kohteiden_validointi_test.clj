@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
+            [clojure.set :as clj-set]
             [harja.testi :refer :all]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
@@ -359,41 +360,59 @@
                                 loppuosa-1 :tr-loppuosa
                                 loppuetaisyys-1 :tr-loppuetaisyys :as paaluvali-1}
                                kokonaan?]]
-                           (println "PAALUVALI: " paaluvali-1)
-                           (let [alkuosa-2 (if kokonaan?
-                                             (rand-nth (range alkuosa-1 (inc loppuosa-1)))
-                                             (rand-nth (range (inc loppuosa-1))))
-                                 loppuosa-2 (if kokonaan?
-                                              (rand-nth (range alkuosa-2 (inc loppuosa-1)))
-                                              (rand-nth (range alkuosa-2 (+ loppuosa-1 100))))
-                                 alkuetaisyys-2 (cond
-                                                  (= alkuosa-1 loppuosa-1 alkuosa-2) (if kokonaan?
-                                                                                       ;; Tarkoittaa, että myös loppuosa-2 on sama
-                                                                                       (rand-nth (range alkuetaisyys-1 (inc loppuetaisyys-1)))
-                                                                                       (rand-nth (range (inc loppuetaisyys-1))))
-                                                  (= alkuosa-1 alkuosa-2) (if kokonaan?
-                                                                            (rand-nth (range alkuetaisyys-1 (+ alkuetaisyys-1 1000)))
-                                                                            (rand-nth (range (+ alkuetaisyys-1 1000))))
-                                                  (= loppuosa-1 alkuosa-2) (rand-nth (range (inc loppuetaisyys-1)))
-                                                  :else (rand-int 10000))
-                                 loppuetaisyys-2 (cond
-                                                   (= alkuosa-1 loppuosa-1 alkuosa-2) (if kokonaan?
-                                                                                        ;; Tarkoittaa, että myös loppuosa-2 on sama
-                                                                                        (rand-nth (range alkuetaisyys-2 (inc loppuetaisyys-1)))
-                                                                                        (rand-nth (range alkuetaisyys-2 (+ loppuetaisyys-1 1000))))
-                                                   (= loppuosa-1 loppuosa-2) (if kokonaan?
-                                                                               (rand-nth (range alkuetaisyys-2 (inc loppuetaisyys-1)))
-                                                                               (rand-nth (range alkuetaisyys-2 (+ loppuetaisyys-1 1000))))
-                                                   ;; jos kokonaan, niin tänne ei tulla, koska myös alkuosa-2 on tosi
-                                                   (= alkuosa-1 loppuosa-2) (rand-nth (range alkuetaisyys-2 (+ alkuetaisyys-1 1000)))
-                                                   :else (rand-int 10000))]
-                             [paaluvali-1
-                              {:tr-numero (:tr-numero paaluvali-1)
-                               :tr-alkuosa alkuosa-2
-                               :tr-alkuetaisyys alkuetaisyys-2
-                               :tr-loppuosa loppuosa-2
-                               :tr-loppuetaisyys loppuetaisyys-2}
-                              kokonaan?]))
+                           (try
+                             (let [;; range funktio palauttaa tyhjän listan, jos molemmat argumentit on sama.
+                                   ;; Halutaan kummiskin tämä sama arvo listassa.
+                                   range-not-empty (fn this
+                                                     ([x] (this 0 x))
+                                                     ([x1 x2]
+                                                      (if (= x1 x2)
+                                                        (list x1)
+                                                        (range x1 x2))))
+                                   alkuosa-2 (if kokonaan?
+                                               (rand-nth (range-not-empty alkuosa-1 (inc loppuosa-1)))
+                                               (rand-nth (range-not-empty (inc loppuosa-1))))
+                                   ;; Jos alla oleva ehto täyttyy, niin paaluvalia-2 ei saa mitenkään
+                                   ;; päälekkäin ykkösen kanssa. Siksipä nostetaan osan yksi loppuetaisyyttä vähän.
+                                   loppuetaisyys-1 (if (and (= loppuosa-1 alkuosa-2)
+                                                            (= loppuetaisyys-1 0))
+                                                     (inc loppuetaisyys-1)
+                                                     loppuetaisyys-1)
+                                   loppuosa-2 (if kokonaan?
+                                                (rand-nth (range-not-empty alkuosa-1 (inc loppuosa-1)))
+                                                (rand-nth (range-not-empty alkuosa-1 (+ loppuosa-1 100))))
+                                   alkuetaisyys-2 (cond
+                                                    (= alkuosa-1 loppuosa-1 alkuosa-2) (if kokonaan?
+                                                                                         ;; Tarkoittaa, että myös loppuosa-2 on sama
+                                                                                         (rand-nth (range-not-empty alkuetaisyys-1 loppuetaisyys-1))
+                                                                                         (rand-nth (range-not-empty loppuetaisyys-1)))
+                                                    (= alkuosa-1 alkuosa-2) (if kokonaan?
+                                                                              (rand-nth (range-not-empty alkuetaisyys-1 (+ alkuetaisyys-1 1000)))
+                                                                              (rand-nth (range-not-empty (+ alkuetaisyys-1 1000))))
+                                                    (= loppuosa-1 alkuosa-2) (rand-nth (range-not-empty loppuetaisyys-1))
+                                                    :else (rand-int 10000))
+                                   loppuetaisyys-2 (cond
+                                                     (= alkuosa-1 loppuosa-1 alkuosa-2) (if kokonaan?
+                                                                                          ;; Tarkoittaa, että myös loppuosa-2 on sama
+                                                                                          (rand-nth (range-not-empty alkuetaisyys-2 (inc loppuetaisyys-1)))
+                                                                                          (rand-nth (range-not-empty (max alkuetaisyys-2 alkuetaisyys-1) (+ loppuetaisyys-1 1000))))
+                                                     (and (= loppuosa-1 loppuosa-2)
+                                                          (not= alkuosa-1 loppuosa-1)) (if kokonaan?
+                                                                                         (rand-nth (range-not-empty (inc loppuetaisyys-1)))
+                                                                                         (rand-nth (range-not-empty (+ loppuetaisyys-1 1000))))
+                                                     ;; jos kokonaan? on true, niin tänne ei tulla, koska myös alkuosa-2 on tosi
+                                                     (= alkuosa-1 loppuosa-2) (rand-nth (range-not-empty alkuetaisyys-1 (+ alkuetaisyys-1 1000)))
+                                                     :else (rand-int 10000))]
+                               [(assoc paaluvali-1 :tr-loppuetaisyys loppuetaisyys-1)
+                                {:tr-numero (:tr-numero paaluvali-1)
+                                 :tr-alkuosa alkuosa-2
+                                 :tr-alkuetaisyys alkuetaisyys-2
+                                 :tr-loppuosa loppuosa-2
+                                 :tr-loppuetaisyys loppuetaisyys-2}
+                                kokonaan?])
+                             (catch Throwable t
+                               (println "Errori nakattu argumenteilla: " paaluvali-1 " ja " kokonaan?)
+                               (throw t))))
                          (gen/tuple (s/gen ::yllapitokohteet/tr-paaluvali)
                                     (gen/boolean)))))
 
@@ -402,7 +421,48 @@
         oikea-tr-vali {:tr-numero 22 :ajorata 0 :kaista 1 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100}
 
         vaara-tr-paaluvali {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1}
-        vaara-tr-vali {:tr-numero 22 :ajorata 0 :kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100}]
+        vaara-tr-vali {:tr-numero 22 :ajorata 0 :kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100}
+
+        tr-tieto [{:tr-numero 22
+                   :tr-osa 5
+                   :pituudet {:pituus 10000
+                              :ajoradat [{:osiot [{:pituus 10000
+                                                   :kaistat [{:kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                   :tr-alkuetaisyys 0}]
+                                          :ajorata 0}]
+                              :tr-alkuetaisyys 0}}
+                  {:tr-numero 22
+                   :tr-osa 1
+                   :pituudet {:pituus 10000
+                              :ajoradat [{:osiot [{:pituus 100
+                                                   :kaistat [{:kaista 1 :pituus 100 :tr-alkuetaisyys 0}]
+                                                   :tr-alkuetaisyys 0}
+                                                  {:pituus 1000
+                                                   :kaistat [{:kaista 1 :pituus 1000 :tr-alkuetaisyys 4000}]
+                                                   :tr-alkuetaisyys 4000}
+                                                  {:pituus 4400
+                                                   :kaistat [{:kaista 1 :pituus 4400 :tr-alkuetaisyys 5600}]
+                                                   :tr-alkuetaisyys 5600}]
+                                          :ajorata 0}
+                                         {:osiot [{:pituus 3900
+                                                   :kaistat [{:kaista 12 :pituus 3900 :tr-alkuetaisyys 100}
+                                                             {:kaista 11 :pituus 3900 :tr-alkuetaisyys 100}]
+                                                   :tr-alkuetaisyys 100}
+                                                  {:pituus 600
+                                                   :kaistat [{:kaista 11 :pituus 600 :tr-alkuetaisyys 5000}
+                                                             {:kaista 12 :pituus 600 :tr-alkuetaisyys 5000}]
+                                                   :tr-alkuetaisyys 5000}]
+                                          :ajorata 1}
+                                         {:osiot [{:pituus 3900
+                                                   :kaistat [{:kaista 22 :pituus 3900 :tr-alkuetaisyys 100}
+                                                             {:kaista 21 :pituus 3900 :tr-alkuetaisyys 100}]
+                                                   :tr-alkuetaisyys 100}
+                                                  {:pituus 600
+                                                   :kaistat [{:kaista 21 :pituus 600 :tr-alkuetaisyys 5000}
+                                                             {:kaista 22 :pituus 600 :tr-alkuetaisyys 5000}]
+                                                   :tr-alkuetaisyys 5000}]
+                                          :ajorata 2}]
+                              :tr-alkuetaisyys 0}}]]
     (testing "tr oikeanmuotoisuus testaus funktiot"
       (let [testaa-fns (fn [tr-paaluavli sama?]
                          (if sama?
@@ -460,4 +520,12 @@
                                                                      :tr-loppuosa 1 :tr-loppuetaisyys 200}
                                                                     true)))
       (doseq [[tr-paaluvali-1 tr-paaluvali-2 kokonaan?] (gen/sample (s/gen ::paaluvali-paaluvalin-sisalla))]
-        (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? tr-paaluvali-1 tr-paaluvali-2 kokonaan?))))))
+        (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? tr-paaluvali-1 tr-paaluvali-2 kokonaan?))))
+
+    (testing "tr paalupiste tr tiedon mukainen"
+      (is (yllapitokohteet/tr-paalupiste-tr-tiedon-mukainen? (dissoc oikea-tr-paaluvali :tr-loppuosa :tr-loppuetaisyys) (second tr-tieto)))
+      (is (yllapitokohteet/tr-paalupiste-tr-tiedon-mukainen? (-> oikea-tr-paaluvali
+                                                                 (dissoc :tr-alkuosa :tr-alkuetaisyys)
+                                                                 (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
+                                                                                       :tr-loppuetaisyys :tr-alkuetaisyys}))
+                                                             (first tr-tieto))))))
