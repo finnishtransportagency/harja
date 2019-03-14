@@ -342,15 +342,18 @@ yllapitoluokkanimi->numero
         {tr-numero-kohteen-tieto :tr-numero
          tr-osa-kohteen-tieto :tr-osa
          pituudet-kohteen-tieto :pituudet} kohteen-tieto
-        valin-sisalla? #(and (> tr-alkuetaisyys-alikohde (:tr-alkuetaisyys %))
-                             (< tr-alkuetaisyys-alikohde (+ (:tr-alkuetaisyys %)
+        valin-sisalla? #(and (>= tr-alkuetaisyys-alikohde (:tr-alkuetaisyys %))
+                             (<= tr-alkuetaisyys-alikohde (+ (:tr-alkuetaisyys %)
                                                             (:pituus %))))
         ajorata-kohteen-tiedot (->> pituudet-kohteen-tieto :ajoradat (filter #(= (:ajorata %) tr-ajorata-alikohde)) first)
         kaista-kohteen-tiedot (->> ajorata-kohteen-tiedot
+                                   :osiot
                                    (filter valin-sisalla?)
                                    first
                                    :kaistat
-                                   (filter valin-sisalla?))
+                                   (filter #(and (valin-sisalla? %)
+                                                 (= (:kaista %) tr-kaista-alikohde)))
+                                   first)
         {tr-kaista-kohteen-tieto :kaista
          tr-alkuetaisyys-kohteen-tieto :tr-alkuetaisyys
          tr-pituus-kohteen-tieto :pituus} kaista-kohteen-tiedot
@@ -486,7 +489,13 @@ yllapitoluokkanimi->numero
   "Tetaa onko annetut tr-osoitteet päällekkäin. Jos kolmas argumentti on true, testaa onko tr-2 kokonaan tr-1 sisällä"
   ([tr-1 tr-2] (tr-valit-paallekkain? tr-1 tr-2 false))
   ([tr-1 tr-2 kokonaan-sisalla?]
-   (let [tr-osoitteet [tr-1 tr-2]]
+   (let [tr-osoitteet [tr-1 tr-2]
+         tr-spekista #(mapv (fn [spectulos]
+                              (loop [[savain stulos] spectulos]
+                                (if (or (nil? savain) (map? stulos))
+                                  stulos
+                                  (recur stulos))))
+                            %)]
      (s/valid?
        (s/and
          ;; Ovathan molemmat valideja tr-osotteita
@@ -494,7 +503,7 @@ yllapitoluokkanimi->numero
            (s/tuple ::tr-vali ::tr)
            (s/tuple ::tr ::tr))
          ;; Sama tienumero, ajorata ja kaista?
-         #(let [[tr-1 tr-2] %]
+         #(let [[tr-1 tr-2] (tr-spekista %)]
             (and (= (:tr-numero tr-1) (:tr-numero tr-2))
                  (= (:tr-ajorata tr-1) (:tr-ajorata tr-2))
                  (= (:tr-kaista tr-1) (:tr-kaista tr-2))))
@@ -504,7 +513,7 @@ yllapitoluokkanimi->numero
                                                       {:tyyppi (if (s/valid? ::tr-vali tr)
                                                                  :tr-vali
                                                                  :tr-piste)}))
-                                         %)]
+                                         (tr-spekista %))]
             (case (count (filter (fn [tr]
                                    (-> tr meta :tyyppi (= :tr-piste)))
                                  trt))
