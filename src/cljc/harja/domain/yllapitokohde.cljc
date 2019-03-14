@@ -7,6 +7,7 @@
     [harja.domain.tierekisteri :as tr-domain]
     [harja.domain.nil :as nil-ns]
     [clojure.spec.alpha :as s]
+    [clojure.spec.gen.alpha :as gen]
     [harja.pvm :as pvm]
     #?@(:clj
         [
@@ -298,7 +299,8 @@ yllapitoluokkanimi->numero
             (> jana-loppu piste))))))
 
 (defn tr-paaluvali-tr-paaluvalin-sisalla?
-  "Tarkastaa onko tr-vali-2 tr-vali-1:sen sisalla."
+  "Tarkastaa onko tr-vali-2 tr-vali-1:sen sisalla. Palauttaa true myös jos tr-vali-1 on kokonaan tr-vali2:sen sisällä
+   sekä argumentti kokonaan-sisalla? on false"
   ([tr-vali-1 tr-vali-2] (tr-paaluvali-tr-paaluvalin-sisalla? tr-vali-1 tr-vali-2 true))
   ([tr-vali-1 tr-vali-2 kokonaan-sisalla?]
    (let [tr-valin-alkupiste (select-keys tr-vali-2 #{:tr-alkuosa :tr-alkuetaisyys})
@@ -310,7 +312,8 @@ yllapitoluokkanimi->numero
          loppupiste-sisalla? (tr-paalupiste-tr-paaluvalin-sisalla? tr-valin-loppupiste tr-vali-1 kokonaan-sisalla?)]
      (if kokonaan-sisalla?
        (and alkupiste-sisalla? loppupiste-sisalla?)
-       (or alkupiste-sisalla? loppupiste-sisalla?)))))
+       (or alkupiste-sisalla? loppupiste-sisalla?
+           (tr-paaluvali-tr-paaluvalin-sisalla? tr-vali-2 tr-vali-1 true))))))
 
 (defn tr-paalupiste-tr-tiedon-mukainen?
   [paalupiste kohteen-tieto]
@@ -329,8 +332,43 @@ yllapitoluokkanimi->numero
          (= tr-alkuosa-kohde tr-osa-kohteen-tieto)
          (tr-paalupiste-tr-paaluvalin-sisalla? paalupiste kohteen-tieto-vali))))
 
-(s/def ::positive-int? (s/and integer?
-                              #(>= % 0)))
+(defn tr-piste-tr-tiedon-mukainen?
+  [piste kohteen-tieto]
+  (let [{tr-numero-alikohde :tr-numero
+         tr-ajorata-alikohde :ajorata
+         tr-kaista-alikohde :kaista
+         tr-alkuosa-alikohde :tr-alkuosa
+         tr-alkuetaisyys-alikohde :tr-alkuetaisyys} piste
+        {tr-numero-kohteen-tieto :tr-numero
+         tr-osa-kohteen-tieto :tr-osa
+         pituudet-kohteen-tieto :pituudet} kohteen-tieto
+        valin-sisalla? #(and (> tr-alkuetaisyys-alikohde (:tr-alkuetaisyys %))
+                             (< tr-alkuetaisyys-alikohde (+ (:tr-alkuetaisyys %)
+                                                            (:pituus %))))
+        ajorata-kohteen-tiedot (->> pituudet-kohteen-tieto :ajoradat (filter #(= (:ajorata %) tr-ajorata-alikohde)) first)
+        kaista-kohteen-tiedot (->> ajorata-kohteen-tiedot
+                                   (filter valin-sisalla?)
+                                   first
+                                   :kaistat
+                                   (filter valin-sisalla?))
+        {tr-kaista-kohteen-tieto :kaista
+         tr-alkuetaisyys-kohteen-tieto :tr-alkuetaisyys
+         tr-pituus-kohteen-tieto :pituus} kaista-kohteen-tiedot
+
+        tr-loppuetaisyys-kohteen-tieto (+ tr-pituus-kohteen-tieto tr-alkuetaisyys-kohteen-tieto)
+        tr-ajorata-kohteen-tieto (:ajorata ajorata-kohteen-tiedot)
+
+        kohteen-tieto-vali {:tr-alkuosa tr-osa-kohteen-tieto
+                            :tr-loppuosa tr-osa-kohteen-tieto
+                            :tr-alkuetaisyys tr-alkuetaisyys-kohteen-tieto
+                            :tr-loppuetaisyys tr-loppuetaisyys-kohteen-tieto}]
+    (and (= tr-numero-alikohde tr-numero-kohteen-tieto)
+         (= tr-ajorata-alikohde tr-ajorata-kohteen-tieto)
+         (= tr-kaista-alikohde tr-kaista-kohteen-tieto)
+         (= tr-alkuosa-alikohde tr-osa-kohteen-tieto)
+         (tr-paalupiste-tr-paaluvalin-sisalla? piste kohteen-tieto-vali))))
+
+(s/def ::positive-int? (s/and integer? #(>= % 0)))
 
 (s/def ::tr-numero ::positive-int?)
 (s/def ::ajorata #{0 1 2})
@@ -356,18 +394,39 @@ yllapitoluokkanimi->numero
                                       (s/keys :req-un [::ajorata
                                                        ::kaista]))))
 
-(s/def ::tr-paaluvali (s/and map?
-                             (s/keys :req-un [::tr-numero
-                                              ::tr-alkuosa
-                                              ::tr-alkuetaisyys
-                                              ::tr-loppuosa
-                                              ::tr-loppuetaisyys])
-                             #(or (losa>aosa? %)
-                                  (losa=aosa? %))
-                             #(if (losa=aosa? %)
-                                (or (let>aet? %)
-                                    (let=aet? %))
-                                true)))
+(s/def ::tr-paaluvali (s/with-gen (s/and map?
+                                         (s/keys :req-un [::tr-numero
+                                                          ::tr-alkuosa
+                                                          ::tr-alkuetaisyys
+                                                          ::tr-loppuosa
+                                                          ::tr-loppuetaisyys])
+                                         #(or (losa>aosa? %)
+                                              (losa=aosa? %))
+                                         #(if (losa=aosa? %)
+                                            (or (let>aet? %)
+                                                (let=aet? %))
+                                            true))
+                                  #(gen/fmap (fn [[tr-numero tr-alkuosa tr-alkuetaisyys]]
+                                               (let [semi-random-int (fn [n]
+                                                                       ;; Eli ideana tässä on se, että 50% todennäköisyydellä
+                                                                       ;; saadaan 0 (tämä siksi, että saadaan samalla osalla olevia
+                                                                       ;; tr-osotteita todennäköisesti)
+                                                                       (if (= 0 (rand-int 2))
+                                                                         0
+                                                                         (rand-int n)))
+                                                     tr-loppuosa (+ tr-alkuosa (semi-random-int 50))
+                                                     tr-loppuetaisyys (+ tr-alkuetaisyys (semi-random-int 1000))]
+                                                 {:tr-numero tr-numero :tr-alkuosa tr-alkuosa :tr-alkuetaisyys tr-alkuetaisyys
+                                                  :tr-loppuosa tr-loppuosa :tr-loppuetaisyys tr-loppuetaisyys}))
+                                             (gen/tuple (s/gen (s/and ::tr-numero
+                                                                      (fn [n]
+                                                                        (> 10000 n))))
+                                                        (s/gen (s/and ::tr-alkuosa
+                                                                      (fn [n]
+                                                                        (> 100 n))))
+                                                        (s/gen (s/and ::tr-alkuetaisyys
+                                                                      (fn [n]
+                                                                        (> 10000 n))))))))
 
 (s/def ::pelkka-tr-paaluvali (s/and ::tr-paaluvali
                                     (s/keys :opt-un [::nil-ns/ajorata
@@ -375,8 +434,8 @@ yllapitoluokkanimi->numero
 
 (s/def ::tr-vali (s/or :paaluvali ::pelkka-tr-paaluvali
                        :vali (s/and ::tr-paaluvali
-                                       (s/keys :req-un [::ajorata
-                                                        ::kaista]))))
+                                    (s/keys :req-un [::ajorata
+                                                     ::kaista]))))
 
 (s/def ::tr (s/or :vali ::tr-vali
                   :piste ::tr-piste))
@@ -385,11 +444,20 @@ yllapitoluokkanimi->numero
 
 (s/def ::kohteen-tiedot (s/coll-of ::kohteen-tieto :min-count 1 :max-count 2))
 
+(s/def ::alikohde-osion-sisalla
+  (s/and (s/cat :alikohde (s/and ::tr-paaluvali
+                                 (s/keys :req-un [::ajorata
+                                                  ::kaista]))
+                :kohteen-tiedot ::kohteen-tieto)
+         #(let [{:keys [alikohde kohteen-tiedot]} %
+                piste (dissoc alikohde :tr-loppuosa :tr-loppuetaisyys)]
+            (tr-piste-tr-tiedon-mukainen? piste kohteen-tiedot))))
+
 (s/def ::paakohde-osan-sisalla
   (s/and (s/cat :kohde ::pelkka-tr-paaluvali :kohteen-tiedot ::kohteen-tieto)
          #(let [{:keys [kohde kohteen-tiedot]} %
-               paalupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)]
-           (tr-paalupiste-tr-tiedon-mukainen? paalupiste kohteen-tiedot))
+                paalupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)]
+            (tr-paalupiste-tr-tiedon-mukainen? paalupiste kohteen-tiedot))
          #(let [{:keys [kohde kohteen-tiedot]} %
                 paalupiste (-> kohde
                                (dissoc :tr-alkuosa :tr-alkuetaisyys)

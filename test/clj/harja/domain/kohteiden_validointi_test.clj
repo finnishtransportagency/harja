@@ -1,5 +1,7 @@
 (ns harja.domain.kohteiden-validointi-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.spec.alpha :as s]
             [harja.testi :refer :all]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
@@ -325,3 +327,137 @@
       (is (= 2 (hae-tunniste 1)))
       (is (= 3 (hae-tunniste 2)))
       (is (= 4 (hae-tunniste 3))))))
+
+(s/def ::paalupiste-paaluvalin-sisalla
+  (s/with-gen (s/cat :paalupiste ::yllapitokohteet/tr-paalupiste
+                     :paaluvali ::yllapitokohteet/tr-paaluvali)
+              #(gen/fmap (fn [{tr-paaluvali-alkuosa :tr-alkuosa
+                               tr-paaluvali-alkuetaisyys :tr-alkuetaisyys
+                               tr-paaluvali-loppuosa :tr-loppuosa
+                               tr-paaluvali-loppuetaisyys :tr-loppuetaisyys :as tr-paaluvali}]
+                           (let [tr-piste-osa (rand-nth (range tr-paaluvali-alkuosa
+                                                               (inc tr-paaluvali-loppuosa)))
+                                 tr-piste-etaisyys (cond
+                                                     (= tr-piste-osa tr-paaluvali-alkuosa tr-paaluvali-loppuosa) (rand-nth (range tr-paaluvali-alkuetaisyys
+                                                                                                                                  (inc tr-paaluvali-loppuetaisyys)))
+                                                     (= tr-piste-osa tr-paaluvali-alkuosa) (rand-nth (range tr-paaluvali-alkuetaisyys
+                                                                                                            (+ tr-paaluvali-alkuetaisyys 1000)))
+                                                     (= tr-piste-osa tr-paaluvali-loppuosa) (rand-nth (range (inc tr-paaluvali-loppuetaisyys)))
+                                                     :else (rand-int 10000))]
+                             [{:tr-numero (:tr-numero tr-paaluvali)
+                               :tr-alkuosa tr-piste-osa
+                               :tr-alkuetaisyys tr-piste-etaisyys}
+                              tr-paaluvali]))
+                         (s/gen ::yllapitokohteet/tr-paaluvali))))
+
+(s/def ::paaluvali-paaluvalin-sisalla
+  (s/with-gen (s/cat :paaluvali-1 ::yllapitokohteet/tr-paaluvali
+                     :paaluvali-2 ::yllapitokohteet/tr-paaluvali
+                     :kokonaan? boolean?)
+              #(gen/fmap (fn [[{alkuosa-1 :tr-alkuosa
+                                alkuetaisyys-1 :tr-alkuetaisyys
+                                loppuosa-1 :tr-loppuosa
+                                loppuetaisyys-1 :tr-loppuetaisyys :as paaluvali-1}
+                               kokonaan?]]
+                           (println "PAALUVALI: " paaluvali-1)
+                           (let [alkuosa-2 (if kokonaan?
+                                             (rand-nth (range alkuosa-1 (inc loppuosa-1)))
+                                             (rand-nth (range (inc loppuosa-1))))
+                                 loppuosa-2 (if kokonaan?
+                                              (rand-nth (range alkuosa-2 (inc loppuosa-1)))
+                                              (rand-nth (range alkuosa-2 (+ loppuosa-1 100))))
+                                 alkuetaisyys-2 (cond
+                                                  (= alkuosa-1 loppuosa-1 alkuosa-2) (if kokonaan?
+                                                                                       ;; Tarkoittaa, että myös loppuosa-2 on sama
+                                                                                       (rand-nth (range alkuetaisyys-1 (inc loppuetaisyys-1)))
+                                                                                       (rand-nth (range (inc loppuetaisyys-1))))
+                                                  (= alkuosa-1 alkuosa-2) (if kokonaan?
+                                                                            (rand-nth (range alkuetaisyys-1 (+ alkuetaisyys-1 1000)))
+                                                                            (rand-nth (range (+ alkuetaisyys-1 1000))))
+                                                  (= loppuosa-1 alkuosa-2) (rand-nth (range (inc loppuetaisyys-1)))
+                                                  :else (rand-int 10000))
+                                 loppuetaisyys-2 (cond
+                                                   (= alkuosa-1 loppuosa-1 alkuosa-2) (if kokonaan?
+                                                                                        ;; Tarkoittaa, että myös loppuosa-2 on sama
+                                                                                        (rand-nth (range alkuetaisyys-2 (inc loppuetaisyys-1)))
+                                                                                        (rand-nth (range alkuetaisyys-2 (+ loppuetaisyys-1 1000))))
+                                                   (= loppuosa-1 loppuosa-2) (if kokonaan?
+                                                                               (rand-nth (range alkuetaisyys-2 (inc loppuetaisyys-1)))
+                                                                               (rand-nth (range alkuetaisyys-2 (+ loppuetaisyys-1 1000))))
+                                                   ;; jos kokonaan, niin tänne ei tulla, koska myös alkuosa-2 on tosi
+                                                   (= alkuosa-1 loppuosa-2) (rand-nth (range alkuetaisyys-2 (+ alkuetaisyys-1 1000)))
+                                                   :else (rand-int 10000))]
+                             [paaluvali-1
+                              {:tr-numero (:tr-numero paaluvali-1)
+                               :tr-alkuosa alkuosa-2
+                               :tr-alkuetaisyys alkuetaisyys-2
+                               :tr-loppuosa loppuosa-2
+                               :tr-loppuetaisyys loppuetaisyys-2}
+                              kokonaan?]))
+                         (gen/tuple (s/gen ::yllapitokohteet/tr-paaluvali)
+                                    (gen/boolean)))))
+
+(deftest validoi-tr-vali
+  (let [oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1}
+        oikea-tr-vali {:tr-numero 22 :ajorata 0 :kaista 1 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100}
+
+        vaara-tr-paaluvali {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1}
+        vaara-tr-vali {:tr-numero 22 :ajorata 0 :kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100}]
+    (testing "tr oikeanmuotoisuus testaus funktiot"
+      (let [testaa-fns (fn [tr-paaluavli sama?]
+                         (if sama?
+                           (do
+                             (is (yllapitokohteet/losa=aosa? oikea-tr-vali))
+                             (is (yllapitokohteet/let=aet? oikea-tr-paaluvali)))
+                           (do
+                             (is (yllapitokohteet/losa>aosa? oikea-tr-paaluvali))
+                             (is (yllapitokohteet/let>aet? oikea-tr-vali)))))]
+
+        (is (not (yllapitokohteet/losa=aosa? oikea-tr-paaluvali)))
+        (is (not (yllapitokohteet/let=aet? oikea-tr-vali)))
+        (is (not (yllapitokohteet/losa>aosa? oikea-tr-vali)))
+        (is (not (yllapitokohteet/let>aet? oikea-tr-paaluvali)))
+        (testaa-fns oikea-tr-paaluvali false)
+        (testaa-fns oikea-tr-paaluvali true)
+        (doseq [tr (gen/sample (s/gen ::yllapitokohteet/tr-paaluvali))]
+          (if (= (:tr-alkuosa tr) (:tr-loppuosa tr))
+            (testaa-fns tr true)
+            (testaa-fns tr false)))))
+
+    (testing "tr paalupiste tr paaluvalin sisalla?"
+      (is (yllapitokohteet/tr-paalupiste-tr-paaluvalin-sisalla? {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1}
+                                                                oikea-tr-paaluvali))
+      (is (yllapitokohteet/tr-paalupiste-tr-paaluvalin-sisalla? {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1}
+                                                                oikea-tr-paaluvali))
+      (is (yllapitokohteet/tr-paalupiste-tr-paaluvalin-sisalla? {:tr-numero 22 :tr-alkuosa 4 :tr-alkuetaisyys 100}
+                                                                oikea-tr-paaluvali))
+      (is (not (yllapitokohteet/tr-paalupiste-tr-paaluvalin-sisalla? {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 2}
+                                                                     oikea-tr-paaluvali)))
+      (doseq [[tr-paalupiste tr-paaluvali] (gen/sample (s/gen ::paalupiste-paaluvalin-sisalla))]
+        (is (yllapitokohteet/tr-paalupiste-tr-paaluvalin-sisalla? tr-paalupiste tr-paaluvali))))
+
+    (testing "tr paaluvali tr paaluvalin sisalla?"
+      (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? oikea-tr-paaluvali
+                                                               {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                                :tr-loppuosa 1 :tr-loppuetaisyys 200}))
+      (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? oikea-tr-paaluvali
+                                                               {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                                :tr-loppuosa 3 :tr-loppuetaisyys 200}))
+      (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? oikea-tr-paaluvali
+                                                               {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                                :tr-loppuosa 5 :tr-loppuetaisyys 200}
+                                                               false))
+      (is (not (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? oikea-tr-paaluvali
+                                                                    {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 100
+                                                                     :tr-loppuosa 5 :tr-loppuetaisyys 200}
+                                                                    true)))
+      (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? oikea-tr-paaluvali
+                                                               {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0
+                                                                :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                                                               false))
+      (is (not (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? oikea-tr-paaluvali
+                                                                    {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0
+                                                                     :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                                                                    true)))
+      (doseq [[tr-paaluvali-1 tr-paaluvali-2 kokonaan?] (gen/sample (s/gen ::paaluvali-paaluvalin-sisalla))]
+        (is (yllapitokohteet/tr-paaluvali-tr-paaluvalin-sisalla? tr-paaluvali-1 tr-paaluvali-2 kokonaan?))))))
