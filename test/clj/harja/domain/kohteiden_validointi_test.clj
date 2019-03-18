@@ -595,7 +595,7 @@
                         {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 10}
                         {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 6 :tr-loppuetaisyys 10}]]
     (is (nil? (yllapitokohteet/validoi-kohde oikea-tr-paaluvali toiset-kohteet tr-tieto)))
-    (-> (yllapitokohteet/validoi-kohde nil toiset-kohteet tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?))
+    (is (-> (yllapitokohteet/validoi-kohde nil toiset-kohteet tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
     (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
               (yllapitokohteet/validoi-kohde toiset-kohteet tr-tieto)
               :validoitu-paikka
