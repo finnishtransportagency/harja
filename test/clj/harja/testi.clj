@@ -1206,3 +1206,23 @@
             opts))]
     (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
     (= 0 (:ko yhteenveto))))
+
+(defmacro is->
+  [testattava & fn-listat]
+  `(do
+     ~(loop [[fn-lista & loput] fn-listat
+             iss []]
+        (if (nil? fn-lista)
+          iss
+          (let [msg? (string? (first loput))
+                [f & args] (if (seq? fn-lista)
+                             fn-lista
+                             [fn-lista])
+                is-lause (if msg?
+                           `(is (~f ~testattava ~@args) ~(first loput))
+                           `(is (~f ~testattava ~@args)))
+                loput (if msg?
+                        (rest loput)
+                        loput)]
+            (recur loput
+                   (conj iss is-lause)))))))

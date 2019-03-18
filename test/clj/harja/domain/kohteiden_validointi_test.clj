@@ -431,6 +431,32 @@
                                        :ajorata 0}]
                            :tr-alkuetaisyys 0}}
                {:tr-numero 22
+                :tr-osa 4
+                :pituudet {:pituus 14000
+                           :ajoradat [{:osiot [{:pituus 14000
+                                                :kaistat [{:kaista 11 :pituus 14000 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}
+                                               {:pituus 500
+                                                :kaistat [{:kaista 12 :pituus 500 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}]
+                                       :ajorata 1}
+                                      {:osiot [{:pituus 14000
+                                                :kaistat [{:kaista 21 :pituus 14000 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}
+                                               {:pituus 500
+                                                :kaistat [{:kaista 22 :pituus 500 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}]
+                                       :ajorata 2}]
+                           :tr-alkuetaisyys 0}}
+               {:tr-numero 22
+                :tr-osa 3
+                :pituudet {:pituus 13000
+                           :ajoradat [{:osiot [{:pituus 13000
+                                                :kaistat [{:kaista 1 :pituus 13000 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}]
+                                       :ajorata 0}]
+                           :tr-alkuetaisyys 0}}
+               {:tr-numero 22
                 :tr-osa 1
                 :pituudet {:pituus 10000
                            :ajoradat [{:osiot [{:pituus 100
@@ -525,21 +551,23 @@
 
 (deftest validoi-tr-valin-oikeellisuus
   (testing "tr paalupiste tr tiedon mukainen"
-    (is (yllapitokohteet/tr-paalupiste-tr-tiedon-mukainen? (dissoc oikea-tr-paaluvali :tr-loppuosa :tr-loppuetaisyys) (second tr-tieto)))
+    (is (yllapitokohteet/tr-paalupiste-tr-tiedon-mukainen? (dissoc oikea-tr-paaluvali :tr-loppuosa :tr-loppuetaisyys) (last tr-tieto)))
     (is (yllapitokohteet/tr-paalupiste-tr-tiedon-mukainen? (-> oikea-tr-paaluvali
                                                                (dissoc :tr-alkuosa :tr-alkuetaisyys)
                                                                (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
                                                                                      :tr-loppuetaisyys :tr-alkuetaisyys}))
                                                            (first tr-tieto))))
   (testing "tr piste tr tiedon mukainen"
-    (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (dissoc oikea-tr-vali :tr-loppuosa :tr-loppuetaisyys) (second tr-tieto)))
+    (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (dissoc oikea-tr-vali :tr-loppuosa :tr-loppuetaisyys) (last tr-tieto)))
     (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (-> oikea-tr-vali
                                                           (dissoc :tr-alkuosa :tr-alkuetaisyys)
                                                           (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
                                                                                 :tr-loppuetaisyys :tr-alkuetaisyys}))
-                                                      (second tr-tieto)))))
+                                                      (last tr-tieto))))
+  (testing "validoi paikka"
+    (is (nil? (yllapitokohteet/validoi-paikka oikea-tr-paaluvali tr-tieto)))))
 
-(deftest validoi-paatrt-paallekkain
+(deftest validoi-paakohteet-paallekkain
   (testing "tr vaalit paallekkain"
     (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1}))
     (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 5 :tr-loppuetaisyys 1}))
@@ -549,3 +577,51 @@
     (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 1}))
     (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 1})))
     (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})))))
+
+(deftest validoi-alikohteet-paallekkain
+  (testing "tr valit paallekkain"
+    (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali oikea-tr-vali true))
+    (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1} true))
+    (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 5 :tr-loppuetaisyys 1} true))
+    (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 6 :tr-loppuetaisyys 1} true)))
+    (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 6 :tr-loppuetaisyys 1} true)))
+    (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 3 :tr-loppuetaisyys 1} true)))
+    (is (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 1} true))
+    (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 1} true)))
+    (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100} true)))))
+
+(deftest validoi-paakohde
+  (let [toiset-kohteet [{:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 1}
+                        {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 10}
+                        {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 6 :tr-loppuetaisyys 10}]]
+    (is (nil? (yllapitokohteet/validoi-kohde oikea-tr-paaluvali toiset-kohteet tr-tieto)))
+    (-> (yllapitokohteet/validoi-kohde nil toiset-kohteet tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?))
+    (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
+              (yllapitokohteet/validoi-kohde toiset-kohteet tr-tieto)
+              :validoitu-paikka
+              ::s/problems)
+          (-> first :pred second str (= "alkupaalupiste-sisalla?"))
+          (-> count (= 1)))
+    (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
+                                        :tr-loppuosa nil :tr-loppuetaisyys nil)
+              (yllapitokohteet/validoi-kohde  toiset-kohteet tr-tieto)
+              :muoto
+              ::s/problems)
+          (-> count (= 5)) "Ei ole viittä ongelmaa"
+          (->> (filter #(= (:path %) [:tr-numero])) first) "tr-numero validointi puuttuu"
+          (->> (filter #(= (:path %) [:tr-alkuosa])) first) "tr-alkuosa validointi puuttuu"
+          (->> (filter #(= (:path %) [:tr-alkuetaisyys])) first) "tr-alkuetaisyys validointi puuttuu"
+          (->> (filter #(= (:path %) [:tr-loppuosa])) first) "tr-loppuosa validointi puuttuu"
+          (->> (filter #(= (:path %) [:tr-loppuetaisyys])) first) "tr-loppuetaisyys validointi puuttuu")
+    (is-> (:paallekkyys (yllapitokohteet/validoi-kohde oikea-tr-paaluvali
+                                                       (conj toiset-kohteet
+                                                             {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 100}
+                                                             {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 100}
+                                                             {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
+                                                       tr-tieto))
+          (-> count (= 3)))))
+
+(deftest validoi-alikohde
+  (let [toiset-alikohteet [{:tr-numero 22 :ajorata 1 :kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
+                           {:tr-numero 22 :ajorata 0 :kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
+    (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
