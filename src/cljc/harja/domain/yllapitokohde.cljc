@@ -488,7 +488,8 @@ yllapitoluokkanimi->numero
           (s/valid? ::kohteen-tiedot kohteen-tiedot)]
     :post [(s/valid? (s/nilable (s/keys :req-un [::kohde ::kohteen-tiedot]))
                      %)]}
-   (let [tr-alkupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)
+   (let [kohteen-tiedot (sort-by (juxt :tr-numero :tr-osa) kohteen-tiedot)
+         tr-alkupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)
          tr-loppupiste (-> kohde
                            (dissoc :tr-alkuosa :tr-alkuetaisyys)
                            (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
@@ -610,8 +611,8 @@ yllapitoluokkanimi->numero
 (defn validoi-alikohde
   "Tarkistaa, että annettu alikohde on validi. toiset-alikohteet parametri sisältää kohteen muut alikohteet.
    Näiden kohteiden lisäksi se voi sisältää myös 'muukohde' tyylisiä kohteita."
-  ([paakohde alikohde toiset-alikohteet alikohteen-tiedot] (validoi-alikohde paakohde alikohde toiset-alikohteet alikohteen-tiedot (pvm/vuosi (pvm/nyt))))
-  ([paakohde alikohde toiset-alikohteet alikohteen-tiedot vuosi]
+  ([paakohde alikohde toiset-alikohteet osien-tiedot] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot (pvm/vuosi (pvm/nyt))))
+  ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi]
    (let [tr-vali-spec (cond
                         (>= vuosi 2019) (s/and ::tr-paaluvali
                                                (s/keys :req-un [::ajorata
@@ -623,7 +624,7 @@ yllapitoluokkanimi->numero
                                                    toiset-alikohteet)
          ;; Alikohteen tulee olla pääkohteen sisällä
          validoitu-paakohteenpaallekkyys (tr-valit-paallekkain? paakohde alikohde true)
-         validoitu-paikka (validoi-paikka alikohde alikohteen-tiedot false)]
+         validoitu-paikka (validoi-paikka alikohde osien-tiedot false)]
      (cond-> nil
              (not (empty? validoitu-alikohteidenpaallekkyys)) (assoc :alikohde-paallekkyys validoitu-alikohteidenpaallekkyys)
              (not validoitu-paakohteenpaallekkyys) (assoc :alikohde-paakohteen-ulkopuolella? true)
@@ -632,28 +633,44 @@ yllapitoluokkanimi->numero
 
 (defn validoi-muukohde
   "Tarkistaa, että annettu muukohde on validi. toiset-kohteet sisältää kaikki mahdolliset ali- ja muukohteet joita Harjassa on."
-  ([paakohde muukohde toiset-kohteet kohteen-tiedot] (validoi-muukohde paakohde muukohde toiset-kohteet kohteen-tiedot (pvm/vuosi (pvm/nyt))))
-  ([paakohde muukohde toiset-kohteet kohteen-tiedot vuosi]
-   (let [tr-vali-spec (cond
-                        (>= vuosi 2019) (s/and ::tr-paaluvali
-                                               ::ajorata
-                                               ::kaista)
-                        (= vuosi 2018) ::tr-vali
-                        (<= vuosi 2017) ::tr-paaluvali)
-         validoitu-muoto (oikean-muotoinen-tr muukohde tr-vali-spec)
-         validoitu-kohteiden-paallekkyys (filter #(tr-valit-paallekkain? muukohde %)
-                                                 toiset-kohteet)
-         ;; Muukohde ei saa olla pääkohteen sisällä tai sen kanssa päällekkäin
+  ([paakohde muukohde toiset-kohteet osien-tiedot] (validoi-muukohde paakohde muukohde toiset-kohteet osien-tiedot (pvm/vuosi (pvm/nyt))))
+  ([paakohde muukohde toiset-kohteet osien-tiedot vuosi]
+   (let [;; Muukohde ei saa olla pääkohteen sisällä tai sen kanssa päällekkäin
          validoitu-paakohteenpaallekkyys (tr-valit-paallekkain? paakohde muukohde)
-         validoitu-paikka (validoi-paikka muukohde kohteen-tiedot)])))
+         validoitu-alikohteena (-> paakohde
+                                   (validoi-alikohde muukohde toiset-kohteet osien-tiedot vuosi)
+                                   (dissoc :alikohde-paakohteen-ulkopuolella?)
+                                   (clj-set/rename-keys {:alikohde-paallekkyys :muukohde-paallekkyys}))
+         validoitu-alikohteena (when-not (empty? validoitu-alikohteena)
+                                 validoitu-alikohteena)]
+     (if validoitu-paakohteenpaallekkyys
+       (assoc validoitu-alikohteena :muukohde-paakohteen-ulkopuolella? false)
+       validoitu-alikohteena))))
 
 (defn validoi-alustatoimenpide
-  "Tarkistaa, että annettu kohde on oikean muotoinen."
-  [alustatoimenpide kohde])
-
-(defn validoi-alustatoimenpide-muukohde
-  "Tarkistaa, että annettu kohde on oikean muotoinen."
-  [alustatoimenpide kohde toiset-kohteet])
+  "Olettaa, että annetut alikohteet ovat oikein. Alikohde voi olla myös muukohde."
+  ([alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot] (validoi-alustatoimenpide alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot (pvm/vuosi (pvm/nyt))))
+  ([alikohteet alustatoimenpide toiset-alustatoimenpiteet osien-tiedot vuosi]
+   (let [tr-vali-spec (cond
+                        (>= vuosi 2019) (s/and ::tr-paaluvali
+                                               (s/keys :req-un [::ajorata
+                                                                ::kaista]))
+                        (= vuosi 2018) ::tr-vali
+                        (<= vuosi 2017) ::tr-paaluvali)
+         validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
+         validoitu-alustatoimenpiteiden-paallekkyys (filter #(tr-valit-paallekkain? alustatoimenpide %)
+                                                   toiset-alustatoimenpiteet)
+         ;; Alustatoimenpiteen pitäisi olla jonku alikohteen sisällä
+         validoitu-alikohdepaallekkyys (keep (fn [alikohde]
+                                               (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
+                                                 alikohde))
+                                             alikohteet)
+         validoitu-paikka (validoi-paikka alustatoimenpide osien-tiedot false)]
+     (cond-> nil
+             (not (empty? validoitu-alustatoimenpiteiden-paallekkyys)) (assoc :alustatoimenpide-paallekkyys validoitu-alustatoimenpiteiden-paallekkyys)
+             (not (= 1 (count validoitu-alikohdepaallekkyys))) (assoc :paallekkaiset-alikohteet validoitu-alikohdepaallekkyys)
+             (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
+             (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
