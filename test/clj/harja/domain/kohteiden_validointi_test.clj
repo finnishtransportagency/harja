@@ -417,76 +417,76 @@
                                     (gen/boolean)))))
 
 (def oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1})
-(def oikea-tr-vali {:tr-numero 22 :ajorata 1 :kaista 12 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200})
+(def oikea-tr-vali {:tr-numero 22 :tr-ajorata 1 :tr-kaista 12 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200})
 
 (def vaara-tr-paaluvali {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 1})
-(def vaara-tr-vali {:tr-numero 22 :ajorata 0 :kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
+(def vaara-tr-vali {:tr-numero 22 :tr-ajorata 0 :tr-kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
 
 (def tr-tieto [{:tr-numero 22
                 :tr-osa 5
                 :pituudet {:pituus 10000
                            :ajoradat [{:osiot [{:pituus 10000
-                                                :kaistat [{:kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}]
-                                       :ajorata 0}]
+                                       :tr-ajorata 0}]
                            :tr-alkuetaisyys 0}}
                {:tr-numero 22
                 :tr-osa 4
                 :pituudet {:pituus 14000
                            :ajoradat [{:osiot [{:pituus 14000
-                                                :kaistat [{:kaista 11 :pituus 14000 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 11 :pituus 14000 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}
                                                {:pituus 500
-                                                :kaistat [{:kaista 12 :pituus 500 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 12 :pituus 500 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}]
-                                       :ajorata 1}
+                                       :tr-ajorata 1}
                                       {:osiot [{:pituus 14000
-                                                :kaistat [{:kaista 21 :pituus 14000 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 21 :pituus 14000 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}
                                                {:pituus 500
-                                                :kaistat [{:kaista 22 :pituus 500 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 22 :pituus 500 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}]
-                                       :ajorata 2}]
+                                       :tr-ajorata 2}]
                            :tr-alkuetaisyys 0}}
                {:tr-numero 22
                 :tr-osa 3
                 :pituudet {:pituus 13000
                            :ajoradat [{:osiot [{:pituus 13000
-                                                :kaistat [{:kaista 1 :pituus 13000 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 1 :pituus 13000 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}]
-                                       :ajorata 0}]
+                                       :tr-ajorata 0}]
                            :tr-alkuetaisyys 0}}
                {:tr-numero 22
                 :tr-osa 1
                 :pituudet {:pituus 10000
                            :ajoradat [{:osiot [{:pituus 100
-                                                :kaistat [{:kaista 1 :pituus 100 :tr-alkuetaisyys 0}]
+                                                :kaistat [{:tr-kaista 1 :pituus 100 :tr-alkuetaisyys 0}]
                                                 :tr-alkuetaisyys 0}
                                                {:pituus 1000
-                                                :kaistat [{:kaista 1 :pituus 1000 :tr-alkuetaisyys 4000}]
+                                                :kaistat [{:tr-kaista 1 :pituus 1000 :tr-alkuetaisyys 4000}]
                                                 :tr-alkuetaisyys 4000}
                                                {:pituus 4400
-                                                :kaistat [{:kaista 1 :pituus 4400 :tr-alkuetaisyys 5600}]
+                                                :kaistat [{:tr-kaista 1 :pituus 4400 :tr-alkuetaisyys 5600}]
                                                 :tr-alkuetaisyys 5600}]
-                                       :ajorata 0}
+                                       :tr-ajorata 0}
                                       {:osiot [{:pituus 3900
-                                                :kaistat [{:kaista 12 :pituus 3900 :tr-alkuetaisyys 100}
-                                                          {:kaista 11 :pituus 3900 :tr-alkuetaisyys 100}]
+                                                :kaistat [{:tr-kaista 12 :pituus 3900 :tr-alkuetaisyys 100}
+                                                          {:tr-kaista 11 :pituus 3900 :tr-alkuetaisyys 100}]
                                                 :tr-alkuetaisyys 100}
                                                {:pituus 600
-                                                :kaistat [{:kaista 11 :pituus 600 :tr-alkuetaisyys 5000}
-                                                          {:kaista 12 :pituus 600 :tr-alkuetaisyys 5000}]
+                                                :kaistat [{:tr-kaista 11 :pituus 600 :tr-alkuetaisyys 5000}
+                                                          {:tr-kaista 12 :pituus 600 :tr-alkuetaisyys 5000}]
                                                 :tr-alkuetaisyys 5000}]
-                                       :ajorata 1}
+                                       :tr-ajorata 1}
                                       {:osiot [{:pituus 3900
-                                                :kaistat [{:kaista 22 :pituus 3900 :tr-alkuetaisyys 100}
-                                                          {:kaista 21 :pituus 3900 :tr-alkuetaisyys 100}]
+                                                :kaistat [{:tr-kaista 22 :pituus 3900 :tr-alkuetaisyys 100}
+                                                          {:tr-kaista 21 :pituus 3900 :tr-alkuetaisyys 100}]
                                                 :tr-alkuetaisyys 100}
                                                {:pituus 600
-                                                :kaistat [{:kaista 21 :pituus 600 :tr-alkuetaisyys 5000}
-                                                          {:kaista 22 :pituus 600 :tr-alkuetaisyys 5000}]
+                                                :kaistat [{:tr-kaista 21 :pituus 600 :tr-alkuetaisyys 5000}
+                                                          {:tr-kaista 22 :pituus 600 :tr-alkuetaisyys 5000}]
                                                 :tr-alkuetaisyys 5000}]
-                                       :ajorata 2}]
+                                       :tr-ajorata 2}]
                            :tr-alkuetaisyys 0}}])
 
 (deftest validoi-tr-valin-muoto
@@ -620,6 +620,6 @@
           (-> count (= 3)))))
 
 (deftest validoi-alikohde
-  (let [toiset-alikohteet [{:tr-numero 22 :ajorata 1 :kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
-                           {:tr-numero 22 :ajorata 0 :kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
+  (let [toiset-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
+                           {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))

@@ -1,8 +1,8 @@
 CREATE TABLE tr_osoitteet (
   id            SERIAL PRIMARY KEY,
   "tr-numero"           INTEGER,
-  ajorata       INTEGER,
-  kaista        INTEGER,
+  "tr-ajorata"       INTEGER,
+  "tr-kaista"        INTEGER,
   "tr-osa"           INTEGER,
   "tr-alkuetaisyys"  INTEGER,
   "tr-loppuetaisyys" INTEGER,
@@ -42,8 +42,8 @@ BEGIN
                  FROM tr_osoitteet
                  WHERE "tr-numero" = tie_ AND "tr-osa" = osa_
                        -- Tiputetaan 2 ajorata pois, jottei samalta pätkältä lasketa pituutta tuplana
-                       AND ajorata IN (0, 1)
-                       AND kaista IN (1, 11)
+                       AND "tr-ajorata" IN (0, 1)
+                       AND "tr-kaista" IN (1, 11)
                  GROUP BY "tr-numero", "tr-osa");
   osan_alkuetaisyys = (SELECT min("tr-alkuetaisyys")
                        FROM tr_osoitteet
@@ -52,13 +52,13 @@ BEGIN
   -- Asetetaan osan pituus sekä alkuetaisyys. Alkuetäisyys ei ole aina 0.
   tulos = jsonb_build_object('pituus', osan_pituus, 'tr-alkuetaisyys', osan_alkuetaisyys, 'ajoradat', jsonb_build_array());
   FOR ajoradan_tiedot IN (SELECT
-                            ajorata,
-                            kaista,
+                            "tr-ajorata",
+                            "tr-kaista",
                             "tr-alkuetaisyys",
                             "tr-loppuetaisyys" - "tr-alkuetaisyys" AS pituus
                           FROM tr_osoitteet
                           WHERE "tr-numero" = tie_ AND "tr-osa" = osa_
-                          ORDER BY ajorata ASC, "tr-alkuetaisyys" ASC)
+                          ORDER BY "tr-ajorata" ASC, "tr-alkuetaisyys" ASC)
   LOOP
     -- Elikkä ajorataobjektin sijainti "ajoradat" vektorissa ei välttämättä vastaa ajoradan numeroa. Eli ajorata 2
     -- ei välttämättä ole indeksipaikalla 2.
@@ -67,7 +67,7 @@ BEGIN
     counter = 0;
     FOR ajorata_objekti IN (SELECT *
                             FROM jsonb_array_elements(tulos #> '{"ajoradat"}' :: TEXT [])) LOOP
-      IF (ajorata_objekti #>> '{"ajorata"}' :: TEXT []) = ajoradan_tiedot.ajorata :: TEXT
+      IF (ajorata_objekti #>> '{"tr-ajorata"}' :: TEXT []) = ajoradan_tiedot."tr-ajorata" :: TEXT
       THEN
         ajorata_pointer = ('{"ajoradat", ' || counter || '}') :: TEXT [];
       END IF;
@@ -86,7 +86,7 @@ BEGIN
       --                       {:tie 1 :osa 1 :ajorata 2 :aosa 1 :aet 100 :losa 1 :let 200}
       --                       {:tie 1 :osa 1 :ajorata 0 :aosa 1 :aet 200 :losa 1 :let 300}]
       -- pätkä sisältää kaksi osaa ajoradalle 0.
-      tulos = jsonb_set(tulos, ajorata_pointer, jsonb_build_object('ajorata', ajoradan_tiedot.ajorata,
+      tulos = jsonb_set(tulos, ajorata_pointer, jsonb_build_object('tr-ajorata', ajoradan_tiedot."tr-ajorata",
                                                                    'osiot', jsonb_build_array()));
     END IF;
 
@@ -99,7 +99,7 @@ BEGIN
     THEN
       CASE
       -- Jos sama ajorata kuin edellinen ja jatkuu heti edellisen jälkeen, liitetän tämä edelliseen tietoon
-        WHEN (edelliset_ajoradan_tiedot.ajorata = ajoradan_tiedot.ajorata AND
+        WHEN (edelliset_ajoradan_tiedot."tr-ajorata" = ajoradan_tiedot."tr-ajorata" AND
               (edelliset_ajoradan_tiedot."tr-alkuetaisyys" + edelliset_ajoradan_tiedot.pituus) =
               ajoradan_tiedot."tr-alkuetaisyys")
         THEN
@@ -112,7 +112,7 @@ BEGIN
                                            'kaistat', tulos #> (ajorataosio_pointer || '{"kaistat"}' :: TEXT []));
           -- Jos sama ajorata kuin edellinen ja alkuetaisyys on pienempi kuin edellisen loppuetäisyys, on kaista vaihtunut.
           -- Tällöin ei tehdä vielä mitään, sillä kaista lisätään myöhemmin.
-        WHEN (edelliset_ajoradan_tiedot.ajorata = ajoradan_tiedot.ajorata AND
+        WHEN (edelliset_ajoradan_tiedot."tr-ajorata" = ajoradan_tiedot."tr-ajorata" AND
               (edelliset_ajoradan_tiedot."tr-alkuetaisyys" + edelliset_ajoradan_tiedot.pituus) >
               ajoradan_tiedot."tr-alkuetaisyys")
         THEN
@@ -149,7 +149,7 @@ BEGIN
     kaistan_index = jsonb_array_length(tulos #> kaista_pointer);
     tulos = jsonb_set(tulos,
                       kaista_pointer || ('{' || kaistan_index || '}') :: TEXT [],
-                      jsonb_build_object('kaista', ajoradan_tiedot.kaista,
+                      jsonb_build_object('tr-kaista', ajoradan_tiedot."tr-kaista",
                                          'pituus', ajoradan_tiedot.pituus,
                                          'tr-alkuetaisyys', ajoradan_tiedot."tr-alkuetaisyys"));
     edelliset_ajoradan_tiedot = ajoradan_tiedot;

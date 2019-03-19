@@ -249,15 +249,18 @@
                                   (::rivi-validointi %))
                                skeema)
          rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
-                                          [sarakkeet (saanto rivi taulukko)])
+                                          (let [tulos (saanto rivi taulukko)]
+                                            (reduce-kv (fn [m k v]
+                                                         (assoc m k (v tulos)))
+                                                       {} sarakkeet)))
                                         rivi-validointi)
          skeema (if rivi-validointi
                   (remove ::rivi-validointi skeema)
                   skeema)
          rivi-virheet (when rivi-validointi
-                        {::rivi-virheet (keep (fn [[sarakkeet virhe]]
-                                                (when (sarakkeet ::rivi)
-                                                  virhe))
+                        {::rivi-virheet (keep (fn [virheet]
+                                                (when-let [rivi-virhe (::rivi virheet)]
+                                                  rivi-virhe))
                                               rivi-virheet-sarakkeille)})
          sarake-virheet (loop [v {}
                                [s & skeema] skeema]
@@ -266,10 +269,11 @@
                             (let [{:keys [nimi hae]} s
                                   validoi (tyyppi s)
                                   rivivirheet-sarakkeelle (when rivi-validointi
-                                                            (keep (fn [[sarakkeet virhe]]
-                                                                    (when (and (sarakkeet nimi) virhe)
-                                                                      virhe))
-                                                                  rivi-virheet-sarakkeille))]
+                                                            (flatten
+                                                              (keep (fn [virheet]
+                                                                      (when-let [virhe (get virheet nimi)]
+                                                                        virhe))
+                                                                    rivi-virheet-sarakkeille)))]
                               (if (empty? validoi)
                                 (recur (if (empty? rivivirheet-sarakkeelle) v (assoc v nimi rivivirheet-sarakkeelle)) skeema)
                                 (let [virheet (validoi-saannot nimi (if hae

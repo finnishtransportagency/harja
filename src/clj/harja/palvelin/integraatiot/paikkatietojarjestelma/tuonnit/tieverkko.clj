@@ -320,22 +320,24 @@
                                  (clj-set/rename-keys {:tie :tr-numero
                                                        :osa :tr-osa
                                                        :aet :tr-alkuetaisyys
-                                                       :let :tr-loppuetaisyys})))
+                                                       :let :tr-loppuetaisyys
+                                                       :ajorata :tr-ajorata
+                                                       :kaista :tr-kaista})))
                            (lue-csv csv)                    ;(shapefile/tuo shapefile)
                            )
-            tr-tiedot-ryhmiteltyna (group-by (juxt :tr-numero :tr-osa :ajorata :kaista) tr-tiedot)
+            tr-tiedot-ryhmiteltyna (group-by (juxt :tr-numero :tr-osa :tr-ajorata :tr-kaista) tr-tiedot)
             ;; Data saattaa sisältää kohtia, joissa sama kaistan pätkä on pilkottu useampaan osaan.
             ;; Tämä johtuu historiallisista syistä, jolloinka tässä pilkkomiskohdassa on muuttunut
             ;; jokin joskus. Tämmöiset turhat pilkkoontumiset pitää korjata.
             ;;
-            ;; esim. {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 3126} ja
-            ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 3126 :let 4647} tulee yhdistää arvoksi
-            ;;       {:tie 1792 :ajorata 0 :kaista 1 :osa 6 :aet 0 :let 4647}
+            ;; esim. {:tie 1792 :tr-ajorata 0 :tr-kaista 1 :osa 6 :aet 0 :let 3126} ja
+            ;;       {:tie 1792 :tr-ajorata 0 :tr-kaista 1 :osa 6 :aet 3126 :let 4647} tulee yhdistää arvoksi
+            ;;       {:tie 1792 :tr-ajorata 0 :tr-kaista 1 :osa 6 :aet 0 :let 4647}
             ;; Lisäksi vähän oudompia:
-            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 724}
-            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 6910}
-            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 724, :loppuetaisyys 955}
-            ;;       {:tie 3022, :ajorata 0, :kaista 1, :osa 4, :alkuetaisyys 955, :loppuetaisyys 6405}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 724}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 6910}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 724, :loppuetaisyys 955}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 955, :loppuetaisyys 6405}
             kaistat-paallekkain? (fn [{aet-1 :tr-alkuetaisyys let-1 :tr-loppuetaisyys}
                                       {aet-2 :tr-alkuetaisyys let-2 :tr-loppuetaisyys}]
                                    (or (and (>= aet-2 aet-1)
