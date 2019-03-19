@@ -371,6 +371,31 @@ yllapitoluokkanimi->numero
          (= tr-alkuosa-alikohde tr-osa-kohteen-tieto)
          (tr-paalupiste-tr-paaluvalin-sisalla? piste kohteen-tieto-vali))))
 
+(defn get-in-kohteen-tieto
+  [kohteen-tieto haku]
+  {:pre [(s/valid? (s/coll-of integer? :min-count 4 :max-count 4)
+                   haku)]}
+  (let [[ajorata kaista tr-alkuetaisyys tr-loppuetaisyys] haku]
+    (->> kohteen-tieto
+         :pituudet
+         :ajoradat
+         (some (fn [ajoradan-tiedot]
+                 (when (= (:ajorata ajoradan-tiedot) ajorata)
+                   ajoradan-tiedot)))
+         :osiot
+         (some (fn [osion-tiedot]
+                 (when (and (>= tr-alkuetaisyys (:tr-alkuetaisyys osion-tiedot))
+                            (<= tr-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
+                                                    (:pituus osion-tiedot))))
+                   osion-tiedot)))
+         :kaistat
+         (some (fn [kaistan-tiedot]
+                 (when (and (= kaista (:kaista kaistan-tiedot))
+                            (>= tr-alkuetaisyys (:tr-alkuetaisyys kaistan-tiedot))
+                            (<= tr-loppuetaisyys (+ (:tr-alkuetaisyys kaistan-tiedot)
+                                                    (:pituus kaistan-tiedot))))
+                   kaistan-tiedot))))))
+
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 
 (s/def ::tr-numero ::positive-int?)
@@ -449,37 +474,58 @@ yllapitoluokkanimi->numero
 
 (s/def ::kohteen-tiedot (s/coll-of ::kohteen-tieto :min-count 1))
 
-(s/def ::alikohde-osien-sisalla
-  (s/and (s/cat :alikohde (s/and ::tr-paaluvali
-                                 (s/keys :req-un [::ajorata
-                                                  ::kaista]))
-                :kohteen-tiedot ::kohteen-tieto)
-         (fn alikohde-kohteen-sisalla? [kohteet]
-           (let [{:keys [alikohde kohteen-tiedot]} kohteet
-                 piste (dissoc alikohde :tr-loppuosa :tr-loppuetaisyys)]
-             (tr-piste-tr-tiedon-mukainen? piste kohteen-tiedot)))))
+(s/def ::kohde ::tr)
 
-(s/def ::paakohde-osien-sisalla
-  (s/and (s/cat :kohde ::pelkka-tr-paaluvali :kohteen-tiedot ::kohteen-tiedot)
-         (fn alkupaalupiste-sisalla? [tr-tietoineen]
-           (let [{:keys [kohde kohteen-tiedot]} tr-tietoineen
-                 paalupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)
-                 kohteen-tiedot-alku (first (filter (fn [kohteen-tieto]
-                                                      (and (= (:tr-numero kohde) (:tr-numero kohteen-tieto))
-                                                           (= (:tr-alkuosa kohde) (:tr-osa kohteen-tieto))))
-                                                    kohteen-tiedot))]
-             (tr-paalupiste-tr-tiedon-mukainen? paalupiste kohteen-tiedot-alku)))
-         (fn loppupaalupiste-sisalla? [tr-tietoineen]
-           (let [{:keys [kohde kohteen-tiedot]} tr-tietoineen
-                 paalupiste (-> kohde
-                                (dissoc :tr-alkuosa :tr-alkuetaisyys)
-                                (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
-                                                      :tr-loppuetaisyys :tr-alkuetaisyys}))
-                 kohteen-tiedot-loppu (first (filter (fn [kohteen-tieto]
-                                                       (and (= (:tr-numero paalupiste) (:tr-numero kohteen-tieto))
-                                                            (= (:tr-alkuosa paalupiste) (:tr-osa kohteen-tieto))))
-                                                     kohteen-tiedot))]
-             (tr-paalupiste-tr-tiedon-mukainen? paalupiste kohteen-tiedot-loppu)))))
+(defn kohde-tiedon-mukainen
+  ([kohde kohteen-tiedot] (kohde-tiedon-mukainen kohde kohteen-tiedot true))
+  ([kohde kohteen-tiedot paakohde?]
+   {:pre [(if paakohde?
+            (s/valid? ::pelkka-tr-paaluvali kohde)
+            (s/valid? (s/and ::tr-paaluvali
+                             (s/keys :req-un [::ajorata
+                                              ::kaista]))
+                      kohde))
+          (s/valid? ::kohteen-tiedot kohteen-tiedot)]
+    :post [(s/valid? (s/nilable (s/keys :req-un [::kohde ::kohteen-tiedot]))
+                     %)]}
+   (let [tr-alkupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)
+         tr-loppupiste (-> kohde
+                           (dissoc :tr-alkuosa :tr-alkuetaisyys)
+                           (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
+                                                 :tr-loppuetaisyys :tr-alkuetaisyys}))
+         kohteen-tieto (fn [tr-piste]
+                         (first (filter (fn [kohteen-tieto]
+                                          (and (= (:tr-numero tr-piste) (:tr-numero kohteen-tieto))
+                                               (= (:tr-alkuosa tr-piste) (:tr-osa kohteen-tieto))))
+                                        kohteen-tiedot)))
+         kohteen-tieto-alku (kohteen-tieto tr-alkupiste)
+         kohteen-tieto-loppu (kohteen-tieto tr-loppupiste)
+         kohteen-tiedot-vali (when-not paakohde?
+                               (filter (fn [kohteen-tieto]
+                                         (and (= (:tr-numero kohde) (:tr-numero kohteen-tieto))
+                                              (> (:tr-osa kohteen-tieto) (:tr-alkuosa kohde))
+                                              (< (:tr-osa kohteen-tieto) (:tr-loppuosa kohde))))
+                                       kohteen-tiedot))
+         testaus-fn (if paakohde?
+                      tr-paalupiste-tr-tiedon-mukainen?
+                      tr-piste-tr-tiedon-mukainen?)
+         validoidut-paatepisteet (keep identity
+                                       (map (fn [piste tieto]
+                                              (when-not (testaus-fn piste tieto)
+                                                tieto))
+                                            [tr-alkupiste tr-loppupiste]
+                                            [kohteen-tieto-alku kohteen-tieto-loppu]))
+         validoitu-vali (when-not paakohde?
+                          (keep (fn [kohteen-tieto]
+                                    ;; onko välillä olevat kohteet koko pituudeltaan sitä ajorataa ja kaistaa
+                                    ;; mitkä on annettu
+                                  (when-not (= (get-in kohteen-tieto [:pituudet :pituus])
+                                                  (:pituus (get-in-kohteen-tieto kohteen-tieto [(:ajorata kohde) (:kaista kohde) (:tr-alkuetaisyys kohde) (:tr-loppuetaisyys kohde)])))
+                                    kohteen-tieto))
+                                kohteen-tiedot-vali))
+         ongelmalliset-kohteen-tiedot (concat validoidut-paatepisteet validoitu-vali)]
+     (when (not (empty? ongelmalliset-kohteen-tiedot))
+       {:kohde kohde :kohteen-tiedot ongelmalliset-kohteen-tiedot}))))
 
 (defn oikean-muotoinen-tr
   ([tr] (oikean-muotoinen-tr tr ::tr))
@@ -532,22 +578,11 @@ yllapitoluokkanimi->numero
 (defn validoi-paikka
   ([kohde kohteen-tiedot] (validoi-paikka kohde kohteen-tiedot true))
   ([kohde kohteen-tiedot paakohde?]
-   (let [validoitu-paikka (if paakohde?
-                            (s/explain-data ::paakohde-osien-sisalla [kohde kohteen-tiedot])
-                            (s/explain-data ::alikohde-osien-sisalla [kohde kohteen-tiedot]))
-         _ (assert (not (some :kohteen-tiedot
-                              (map #(get-in % [:path 0])
-                                   (::s/problems validoitu-paikka))))
-                   (str "Kohteen tiedot väärin: " kohteen-tiedot))
-         validoitu-paikka (update validoitu-paikka ::s/problems
-                                  (fn [ongelmat]
-                                    (filterv (fn [virhe-map]
-                                               (when-not (symbol? (:pred virhe-map))
-                                                 (#{"alkupaalupiste-sisalla?" "loppupaalupiste-sisalla?"} (-> virhe-map :pred second str))))
-                                             ongelmat)))]
-     (if (not (empty? (::s/problems validoitu-paikka)))
-       validoitu-paikka
-       '()))))
+   (when (and (not (nil? kohde))
+              (not (empty? kohteen-tiedot)))
+     (if paakohde?
+       (kohde-tiedon-mukainen kohde kohteen-tiedot)
+       (kohde-tiedon-mukainen kohde kohteen-tiedot false)))))
 
 (defn validoi-kohde
   "Tarkistaa, että annettu pääkohde on validi. toiset-kohteet parametri voi sisältää myös 'muukohde' tyylisiä kohteita"
@@ -560,16 +595,17 @@ yllapitoluokkanimi->numero
                                                #(not (contains? % :kaista)))
                         (= vuosi 2018) ::tr-vali
                         (<= vuosi 2017) (s/and ::tr-paaluvali
-                                               ::ajorata
-                                               ::kaista))
+                                               (s/keys :req-un [::ajorata
+                                                                ::kaista])))
          validoitu-muoto (oikean-muotoinen-tr kohde tr-vali-spec)
          validoitu-paallekkyys (filter #(tr-valit-paallekkain? kohde %)
                                        toiset-kohteet)
-         validoitu-paikka (validoi-paikka kohde kohteen-tiedot)]
+         validoitu-paikka (when (empty? validoitu-muoto)
+                            (validoi-paikka kohde kohteen-tiedot))]
      (cond-> nil
              (not (empty? validoitu-paallekkyys)) (assoc :paallekkyys validoitu-paallekkyys)
              (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
-             (not (empty? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
+             (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
 
 (defn validoi-alikohde
   "Tarkistaa, että annettu alikohde on validi. toiset-alikohteet parametri sisältää kohteen muut alikohteet.
@@ -578,8 +614,8 @@ yllapitoluokkanimi->numero
   ([paakohde alikohde toiset-alikohteet alikohteen-tiedot vuosi]
    (let [tr-vali-spec (cond
                         (>= vuosi 2019) (s/and ::tr-paaluvali
-                                               ::ajorata
-                                               ::kaista)
+                                               (s/keys :req-un [::ajorata
+                                                                ::kaista]))
                         (= vuosi 2018) ::tr-vali
                         (<= vuosi 2017) ::tr-paaluvali)
          validoitu-muoto (oikean-muotoinen-tr alikohde tr-vali-spec)
@@ -587,12 +623,12 @@ yllapitoluokkanimi->numero
                                                    toiset-alikohteet)
          ;; Alikohteen tulee olla pääkohteen sisällä
          validoitu-paakohteenpaallekkyys (tr-valit-paallekkain? paakohde alikohde true)
-         validoitu-paikka (validoi-paikka alikohde alikohteen-tiedot)]
+         validoitu-paikka (validoi-paikka alikohde alikohteen-tiedot false)]
      (cond-> nil
              (not (empty? validoitu-alikohteidenpaallekkyys)) (assoc :alikohde-paallekkyys validoitu-alikohteidenpaallekkyys)
-             validoitu-paakohteenpaallekkyys (assoc :paakohde-paallekkyys true)
+             (not validoitu-paakohteenpaallekkyys) (assoc :alikohde-paakohteen-ulkopuolella? true)
              (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
-             (not (empty? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
+             (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
 
 (defn validoi-muukohde
   "Tarkistaa, että annettu muukohde on validi. toiset-kohteet sisältää kaikki mahdolliset ali- ja muukohteet joita Harjassa on."

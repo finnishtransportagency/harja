@@ -598,10 +598,8 @@
     (is (-> (yllapitokohteet/validoi-kohde nil toiset-kohteet tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
     (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
               (yllapitokohteet/validoi-kohde toiset-kohteet tr-tieto)
-              :validoitu-paikka
-              ::s/problems)
-          (-> first :pred second str (= "alkupaalupiste-sisalla?"))
-          (-> count (= 1)))
+              :validoitu-paikka)
+          (-> :kohteen-tiedot count (= 1)))
     (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
                                         :tr-loppuosa nil :tr-loppuetaisyys nil)
               (yllapitokohteet/validoi-kohde  toiset-kohteet tr-tieto)
