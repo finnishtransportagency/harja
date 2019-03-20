@@ -477,14 +477,20 @@ yllapitoluokkanimi->numero
 
 (s/def ::kohde ::tr)
 
+(def paaluvali-avaimet #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+(def vali-avaimet (clj-set/union paaluvali-avaimet #{:tr-ajorata :tr-kaista}))
+
 (defn kohde-tiedon-mukainen
   ([kohde kohteen-tiedot] (kohde-tiedon-mukainen kohde kohteen-tiedot true))
   ([kohde kohteen-tiedot paakohde?]
    {:pre [(if paakohde?
-            (s/valid? ::pelkka-tr-paaluvali kohde)
-            (s/valid? (s/and ::tr-paaluvali
-                             (s/keys :req-un [::tr-ajorata
-                                              ::tr-kaista]))
+            (s/valid? #(= paaluvali-avaimet
+                          (into #{}
+                                (keys (select-keys % paaluvali-avaimet))))
+                      kohde)
+            (s/valid? #(= vali-avaimet
+                          (into #{}
+                                (keys (select-keys % vali-avaimet))))
                       kohde))
           (s/valid? ::kohteen-tiedot kohteen-tiedot)]
     :post [(s/valid? (s/nilable (s/keys :req-un [::kohde ::kohteen-tiedot]))
@@ -629,7 +635,7 @@ yllapitoluokkanimi->numero
          validoitu-paikka (validoi-paikka alikohde osien-tiedot false)]
      (cond-> nil
              (not (empty? validoitu-alikohteidenpaallekkyys)) (assoc :alikohde-paallekkyys validoitu-alikohteidenpaallekkyys)
-             (not validoitu-paakohteenpaallekkyys) (assoc :alikohde-paakohteen-ulkopuolella? true)
+             (false? validoitu-paakohteenpaallekkyys) (assoc :alikohde-paakohteen-ulkopuolella? true)
              (not (empty? validoitu-muoto)) (assoc :muoto validoitu-muoto)
              (not (nil? validoitu-paikka)) (assoc :validoitu-paikka validoitu-paikka)))))
 
@@ -661,7 +667,7 @@ yllapitoluokkanimi->numero
                         (<= vuosi 2017) ::tr-paaluvali)
          validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
          validoitu-alustatoimenpiteiden-paallekkyys (filter #(tr-valit-paallekkain? alustatoimenpide %)
-                                                   toiset-alustatoimenpiteet)
+                                                            toiset-alustatoimenpiteet)
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen sisällä
          validoitu-alikohdepaallekkyys (keep (fn [alikohde]
                                                (when (tr-valit-paallekkain? alikohde alustatoimenpide true)
