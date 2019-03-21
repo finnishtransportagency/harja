@@ -65,12 +65,12 @@ SELECT id FROM suolasakko WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :ho
 -- name: paivita-pohjavesialue-talvisuola!
 UPDATE pohjavesialue_talvisuola
    SET talvisuolaraja = :talvisuolaraja
- WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND pohjavesialue = :pohjavesialue;
+ WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND pohjavesialue = :pohjavesialue AND tie = :tie;
 
 -- name: tallenna-pohjavesialue-talvisuola<!
 INSERT INTO pohjavesialue_talvisuola
-       (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue)
-VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
+       (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue, tie)
+VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue, :tie);
 
 -- name: hae-teiden-hoitourakoiden-lampotilat
 SELECT

@@ -17,6 +17,17 @@ SELECT
 FROM pohjavesialueet_urakoittain p
 WHERE p.urakka = :urakka-id AND suolarajoitus IS TRUE;
 
+-- name: hae-urakan-pohjavesialueet-teittain
+-- Hakee hoidon alueurakan alueella olevat pohjavesialueet teittain
+SELECT
+  p.nimi,
+  p.tunnus,
+  pa.tr_numero AS tie,
+  p.alue
+FROM pohjavesialueet_urakoittain p
+  LEFT JOIN pohjavesialue pa ON pa.tunnus = p.tunnus
+WHERE p.urakka = :urakka-id AND p.suolarajoitus IS TRUE;
+
 -- name: poista-pohjavesialueet!
 -- Poistaa kaikki pohjavesialueet
 DELETE FROM pohjavesialue;
