@@ -46,7 +46,7 @@ VALUES
     (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
     'vesivayla-hoito',
     true, '2017-10-01'::DATE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-    '555', 'vv-HAR-124');
+    '1', 'vv-HAR-124');
 
 
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja, sampoid)
@@ -155,3 +155,6 @@ VALUES (3, 132, 'Rannikon kauppamerenkulku');
 INSERT INTO toimenpidekoodi (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon muut');
 
+-- URAKKA-ALUEET
+INSERT INTO vv_urakka_turvalaiteryhma(id, urakka, turvalaiteryhmat)
+VALUES (1, (select id from urakka where nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), '{3333}')

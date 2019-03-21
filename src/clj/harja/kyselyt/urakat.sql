@@ -490,6 +490,18 @@ ON CONFLICT (urakka)
     muokattu         = now(),
     muokkaaja        = :kayttaja;
 
+-- name: hae-vv-urakka-alueiden-nykyiset-urakat
+SELECT id, nimi FROM urakka where
+  array_append(ARRAY[]::int[], id)  &&
+  (SELECT array_agg(urakka) from vv_urakka_turvalaiteryhma
+            WHERE turvalaiteryhmat && string_to_array(:turvalaiteryhmat, ',') AND
+                  urakka != :urakkaid) AND
+                  (alkupvm, loppupvm) OVERLAPS (:alkupvm::DATE, :loppupvm::DATE);
+
+-- name: hae-reimari-turvalaiteryhmat
+SELECT tunnus FROM reimari_turvalaiteryhma
+WHERE array_append(ARRAY[]::text[], tunnus::text) && string_to_array(:turvalaiteryhmat, ',');
+
 -- name: tallenna-vv-urakkanro<!
 -- Vesiväyläurakoissa urakkanro viittaa vv_urakka_turvalaiteryhma-tauluun,
 -- jossa turvalaiteryhmät viittaavat reimari_turvalaiteryhma-tauluun, jonka

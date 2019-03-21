@@ -260,12 +260,34 @@
                               :urakkanro urakka-alue
                               :kayttaja (:id user)}))
 
+(defn- onko-turvalaiteryhma-olemassa?
+  [db turvalaiteryhmat]
+  (let [ryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
+        ryhmat-kannassa (q/hae-reimari-turvalaiteryhmat db {:turvalaiteryhmat turvalaiteryhmat})]
+    (map (fn [m]
+           (if-not
+             (fn [] (some #(= (:tunnus m)) ryhmat))
+             (throw (Exception. (str "Turvalaiteryhmää" (:tunnus m) "ei löydy Harjasta.")))))
+         ryhmat-kannassa))
+      true)
+
+(defn- voiko-turvalaiteryhman-kiinnittaa?
+  "Turvalaiteryhmä saa kuulua vain yhteen voimassaolevaan vesiväyläurakkaan."
+  [db urakka-id turvalaiteryhmat alkupvm loppupvm]
+  (let [urakat (q/hae-vv-urakka-alueiden-nykyiset-urakat db {:urakkaid urakka-id
+                                                             :turvalaiteryhmat turvalaiteryhmat
+                                                             :alkupvm alkupvm
+                                                             :loppupvm loppupvm})]
+    (if (> 0 (count urakat))
+      (throw (Exception. (prn-str "Turvalaiteryhmä on jo kiinnitetty urakkaan" (map #(str (:nimi %)) urakat) ". Korjaa kiinnitys tai urakan voimassaoloaika.")))
+      true
+      )))
+
 (defn- luo-tai-paivita-vesivaylaurakka-alue! [db user urakka-id turvalaiteryhmat]
-  (when (not (empty? turvalaiteryhmat))
-      (q/luo-tai-paivita-vesivaylaurakan-alue<! db
-                                                {:urakka urakka-id
-                                                 :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
-                                                 :kayttaja (:id user)}))
+  (q/luo-tai-paivita-vesivaylaurakan-alue<! db
+                                            {:urakka urakka-id
+                                             :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
+                                             :kayttaja (:id user)})
   (q/hae-vesivaylaurakan-alue db
                               {:urakka urakka-id}))
 
@@ -273,7 +295,10 @@
   (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
   (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
-    (let [urakka-alue (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka))))
+    (let [urakka-alue (when (and (not (nil? (::u/turvalaiteryhmat urakka)))
+                                 (onko-turvalaiteryhma-olemassa? db (::u/turvalaiteryhmat urakka))
+                                 (voiko-turvalaiteryhman-kiinnittaa? db (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))
+                        (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka)))))
           paivitetty (q/paivita-harjassa-luotu-urakka<!
                        db
                        {:id (::u/id urakka)
@@ -328,7 +353,10 @@
                        :hanke (::h/id hanke)
                        :kayttaja (:id user)})
         urakka (assoc urakka ::u/id (:id tallennettu))
-        urakka-alue (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka))))]
+        urakka-alue (when (and (not (nil? (::u/turvalaiteryhmat urakka)))
+                               (onko-turvalaiteryhma-olemassa? db (::u/turvalaiteryhmat urakka))
+                               (voiko-turvalaiteryhman-kiinnittaa? db (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))
+          (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka)))))]
     (tallenna-vv-urakkanro! db user (:id urakka) urakka-alue)
     (luo-vv-urakan-toimenpideinstanssit db urakka)
     urakka))

@@ -160,7 +160,29 @@
         ;; Urakka-aluetiedot päivittyivät, urakkanro pysyi samana
         (is (= "3332" (:turvalaiteryhmat paivitetyt-urakan-turvalaiteryhmat)) "Vesiväyläurakan turvalaiteryhmat on päivitetty oikein.")
         (is (= "3332" (::u/turvalaiteryhmat paivitetty-urakka-kannassa)) "Vesiväyläurakan päivittyneet turvalaiteryhmat palautuvat urakan tiedoissa.")
-        (is (= paivitetyn-urakan-urakkanro urakan-urakkanro) "Vesiväyläurakan urakkanro ei päivity päivittäessä turvalaiteryhmätietoja.")))))
+        (is (= paivitetyn-urakan-urakkanro urakan-urakkanro) "Vesiväyläurakan urakkanro ei päivity päivittäessä turvalaiteryhmätietoja.")
+
+        ;; Päivitetään urakka varatulla turvalaiteryhmällä
+        (let [uudelleen-paivitetty-urakka (assoc paivitetty-urakka
+                                            ::u/id (::u/id urakka-kannassa)
+                                            ::u/turvalaiteryhmat "3332,3333")
+              vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-vesivaylaurakka +kayttaja-jvh+
+                                      paivitetty-urakka)]
+
+          (is (= 400 (:status vastaus)) "Päivitys käytössä olevalla turvalaiteryhmällä palauttaa virheen.")
+          (is (.contains (:body vastaus) "Turvalaiteryhmä on jo kiinnitetty urakkaan") "Vastaus sisältää oikean virheilmoituksen."))
+
+        ;; Päivitetään urakka puuttuvalla turvalaiteryhmällä
+        (let [uudelleen-paivitetty-urakka (assoc paivitetty-urakka
+                                            ::u/id (::u/id urakka-kannassa)
+                                            ::u/turvalaiteryhmat "3332,9999")
+              vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-vesivaylaurakka +kayttaja-jvh+
+                                      paivitetty-urakka)]
+
+          (is (= 400 (:status vastaus)) "Päivitys puuttuvalla turvalaiteryhmällä palauttaa virheen.")
+          (is (.contains (:body vastaus) "ei löydy Harjasta.") "Vastaus sisältää oikean virheilmoituksen."))))))
 
 (deftest urakan-tallennus-ei-toimi-virheellisilla-sopimuksilla
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
@@ -203,23 +225,3 @@
     (assert sopimus-id "Sopimus pitää olla")
 
     (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
-
-;
-;(deftest vesivaylaurakan-alueen-tallentaminen-toimii
-;  (let [vv_urakka (hae-pyhaselan-vesivaylaurakan-id)
-;        turvalaiteryhmat "1 2 3 4"
-;        kayttaja +kayttaja-jvh+
-;        db (:db jarjestelma)]
-;    (is (thrown? Exception (luo-tai-paivita-vesivaylaurakka-alue! db kayttaja vv_urakka "vesivayla" turvalaiteryhmat)) "Väärä urakkatyyppi.")
-;    (is (> 0 (luo-tai-paivita-vesivaylaurakka-alue! db kayttaja vv_urakka "vesivayla" turvalaiteryhmat)) "Tallennus onnistuu ja aluenumero palautu.")
-;
-;    )
-;  )
-;
-;(def not-nil? (complement nil?))
-;
-;(deftest vv-urakan-urakkaalueen-tallentaminen-ja-paivittaminen-toimii
-;  (let  [vv_urakka (kutsu-palvelua (:http-palvelin jarjestelma)
-;                                    :hae-urakka +kayttaja-jvh+ (hae-helsingin-vesivaylaurakan-id))]
-;
-;  (is (not-nil? (:id vv_urakka)) "Haettu urakka löytyy.")))
