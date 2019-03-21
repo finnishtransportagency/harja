@@ -247,21 +247,38 @@
     (throw (SecurityException. "Vain tilaaja voi poistaa indeksin käytöstä")))
 
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
                             (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
                                                                                                       {:urakka urakka-id})
                             :ok))
 
+(defn- tallenna-vv-urakkanro! [db user urakka-id urakka-alue]
+  (q/tallenna-vv-urakkanro<! db
+                             {:urakka urakka-id
+                              :urakkanro urakka-alue
+                              :kayttaja (:id user)}))
+
+(defn- luo-tai-paivita-vesivaylaurakka-alue! [db user urakka-id turvalaiteryhmat]
+  (when (not (empty? turvalaiteryhmat))
+      (q/luo-tai-paivita-vesivaylaurakan-alue<! db
+                                                {:urakka urakka-id
+                                                 :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
+                                                 :kayttaja (:id user)}))
+  (q/hae-vesivaylaurakan-alue db
+                              {:urakka urakka-id}))
+
 (defn- paivita-urakka! [db user urakka]
   (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
   (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
-    (let [paivitetty (q/paivita-harjassa-luotu-urakka<!
+    (let [urakka-alue (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka))))
+          paivitetty (q/paivita-harjassa-luotu-urakka<!
                        db
                        {:id (::u/id urakka)
                         :nimi (::u/nimi urakka)
-                        :urakkanro (::u/urakkanro urakka)
+                        :urakkanro (.toString urakka-alue)
                         :alkupvm (::u/alkupvm urakka)
                         :loppupvm (::u/loppupvm urakka)
                         :alue (::u/alue urakka)
@@ -310,7 +327,9 @@
                        :urakoitsija (::o/id urakoitsija)
                        :hanke (::h/id hanke)
                        :kayttaja (:id user)})
-        urakka (assoc urakka ::u/id (:id tallennettu))]
+        urakka (assoc urakka ::u/id (:id tallennettu))
+        urakka-alue (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka))))]
+    (tallenna-vv-urakkanro! db user (:id urakka) urakka-alue)
     (luo-vv-urakan-toimenpideinstanssit db urakka)
     urakka))
 
@@ -351,10 +370,10 @@
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
 
+
 (defn tallenna-vesivaylaurakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-
     (jdbc/with-db-transaction [db db]
                               (let [sopimukset (::u/sopimukset urakka)
                                     urakka (if (id-olemassa? (::u/id urakka))
@@ -365,7 +384,7 @@
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    ;(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (let [urakat (konv/sarakkeet-vektoriin
                    (into []
                          (comp
@@ -373,7 +392,8 @@
                            (map konv/alaviiva->rakenne)
                            (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
                            (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
-                           (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
+                           (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %))))
+                           (map #(assoc % :turvalaiteryhmat (:turvalaiteryhmat %))))
                          (q/hae-harjassa-luodut-urakat db))
                    {:sopimus :sopimukset
                     :sahkelahetys :sahkelahetykset})]

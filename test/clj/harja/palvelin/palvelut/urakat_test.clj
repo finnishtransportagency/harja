@@ -9,6 +9,7 @@
             [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.testi :refer :all]
+            [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
@@ -81,7 +82,8 @@
                                 {::sop/id kolmas-sopimus-id
                                  ::sop/paasopimus-id eka-sopimus-id}]
                 ::u/hallintayksikko {::o/id hallintayksikko-id}
-                ::u/urakoitsija {::o/id urakoitsija-id}}
+                ::u/urakoitsija {::o/id urakoitsija-id}
+                ::u/turvalaiteryhmat "3331, 3332"}
         urakat-lkm-ennen-testia (ffirst (q "SELECT COUNT(id) FROM urakka"))]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
@@ -91,7 +93,7 @@
 
     (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
 
-    ;; Luo uusi urakka
+    ;; Luo uusi vesiväyläurakka
     (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :tallenna-vesivaylaurakka +kayttaja-jvh+
                                           urakka)
@@ -99,7 +101,9 @@
           eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) urakan-sopimukset-kannassa))
           toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) urakan-sopimukset-kannassa))
           kolmas-sopimus-kannassa (first (filter #(= (:id %) kolmas-sopimus-id) urakan-sopimukset-kannassa))
-          urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
+          urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))
+          urakan-turvalaiteryhmat (first (q-map "SELECT id::text, array_to_string (turvalaiteryhmat, ',') as turvalaiteryhmat FROM vv_urakka_turvalaiteryhma WHERE urakka = " (::u/id urakka-kannassa) ";"))
+          urakan-urakkanro (ffirst (q "SELECT urakkanro FROM urakka WHERE  id = " (::u/id urakka-kannassa) ";"))]
 
       (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen)
           "Urakoiden määrä kasvoi yhdellä")
@@ -116,6 +120,11 @@
       (is (= (:paasopimus toka-sopimus-kannassa) eka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
       (is (= (:paasopimus kolmas-sopimus-kannassa) eka-sopimus-id) "Kolmas sopimus viittaa pääsopimukseen")
 
+      ;; Urakka-alue on tallennettu ja urakka-alueen numero on tallennettu
+      (is (= "3331,3332" (:turvalaiteryhmat urakan-turvalaiteryhmat)) "Vesiväyläurakan turvalaiteryhmat on tallennettu oikein.")
+      (is (= "3331, 3332" (::u/turvalaiteryhmat urakka-kannassa)) "Vesiväyläurakan turvalaiteryhmat palautuvat urakan tiedoissa.")
+      (is (= urakan-urakkanro (.toString (:id urakan-turvalaiteryhmat))) "Vesiväyläurakan urakka-alue on tallennettu urakan urakkanro-kenttään.")
+
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka
                                 ::u/id (::u/id urakka-kannassa)
@@ -128,13 +137,16 @@
                                                  ::sop/paasopimus-id nil}
                                                 {::sop/id kolmas-sopimus-id
                                                  ::sop/paasopimus-id toka-sopimus-id
-                                                 :poistettu true}])
+                                                 :poistettu true}]
+                                ::u/turvalaiteryhmat "3332")
             paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                        :tallenna-vesivaylaurakka +kayttaja-jvh+
                                                        paivitetty-urakka)
             paivitetyt-urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
             paivitetty-eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
-            paivitetty-toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))]
+            paivitetty-toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
+            paivitetyt-urakan-turvalaiteryhmat (first (q-map "SELECT id::text, array_to_string (turvalaiteryhmat, ',') as turvalaiteryhmat FROM vv_urakka_turvalaiteryhma WHERE urakka = " (::u/id urakka-kannassa) ";"))
+            paivitetyn-urakan-urakkanro (ffirst (q "SELECT urakkanro FROM urakka WHERE  id = " (::u/id urakka-kannassa) ";"))]
 
         ;; Urakka päivittyi
         (is (= (::u/nimi paivitetty-urakka-kannassa)
@@ -143,7 +155,12 @@
         ;; Sopparitkin päivittyi oikein
         (is (= (count paivitetyt-urakan-sopimukset-kannassa) 2))
         (is (= (:paasopimus paivitetty-eka-sopimus-kannassa) toka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
-        (is (nil? (:paasopimus paivitetty-toka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")))))
+        (is (nil? (:paasopimus paivitetty-toka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")
+
+        ;; Urakka-aluetiedot päivittyivät, urakkanro pysyi samana
+        (is (= "3332" (:turvalaiteryhmat paivitetyt-urakan-turvalaiteryhmat)) "Vesiväyläurakan turvalaiteryhmat on päivitetty oikein.")
+        (is (= "3332" (::u/turvalaiteryhmat paivitetty-urakka-kannassa)) "Vesiväyläurakan päivittyneet turvalaiteryhmat palautuvat urakan tiedoissa.")
+        (is (= paivitetyn-urakan-urakkanro urakan-urakkanro) "Vesiväyläurakan urakkanro ei päivity päivittäessä turvalaiteryhmätietoja.")))))
 
 (deftest urakan-tallennus-ei-toimi-virheellisilla-sopimuksilla
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
@@ -186,3 +203,23 @@
     (assert sopimus-id "Sopimus pitää olla")
 
     (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
+
+;
+;(deftest vesivaylaurakan-alueen-tallentaminen-toimii
+;  (let [vv_urakka (hae-pyhaselan-vesivaylaurakan-id)
+;        turvalaiteryhmat "1 2 3 4"
+;        kayttaja +kayttaja-jvh+
+;        db (:db jarjestelma)]
+;    (is (thrown? Exception (luo-tai-paivita-vesivaylaurakka-alue! db kayttaja vv_urakka "vesivayla" turvalaiteryhmat)) "Väärä urakkatyyppi.")
+;    (is (> 0 (luo-tai-paivita-vesivaylaurakka-alue! db kayttaja vv_urakka "vesivayla" turvalaiteryhmat)) "Tallennus onnistuu ja aluenumero palautu.")
+;
+;    )
+;  )
+;
+;(def not-nil? (complement nil?))
+;
+;(deftest vv-urakan-urakkaalueen-tallentaminen-ja-paivittaminen-toimii
+;  (let  [vv_urakka (kutsu-palvelua (:http-palvelin jarjestelma)
+;                                    :hae-urakka +kayttaja-jvh+ (hae-helsingin-vesivaylaurakan-id))]
+;
+;  (is (not-nil? (:id vv_urakka)) "Haettu urakka löytyy.")))
