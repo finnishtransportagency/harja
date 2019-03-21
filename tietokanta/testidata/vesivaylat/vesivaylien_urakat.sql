@@ -157,4 +157,4 @@ VALUES (3, 132, 'Rannikon muut');
 
 -- URAKKA-ALUEET
 INSERT INTO vv_urakka_turvalaiteryhma(id, urakka, turvalaiteryhmat)
-VALUES (1, (select id from urakka where nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), '{3333}')
+VALUES (1, (select id from urakka where nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), '{555,3333}')
