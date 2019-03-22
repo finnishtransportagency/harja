@@ -202,7 +202,7 @@
                               [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
                                 :hae #(hae-pohjavesialueen-nimi %)}
                                {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
-                               {:otsikko "Tie" :nimi :tie :muokattava? (constantly false)}
+                               {:otsikko "Tie" :nimi :tie :muokattava? (constantly false) :leveys "10%"}
                                {:otsikko "Käyttöraja"
                                 :nimi :talvisuolaraja
                                 :tyyppi :positiivinen-numero
