@@ -29,7 +29,6 @@
                 </OBSAssoc>
             </OBSAssocs>
             <CustomInformation>
-                <ColumnValue name="owner_id_t">A009717</ColumnValue>
                 <ColumnValue name="vv_tilaus">00LZM-0033600</ColumnValue>
                 <ColumnValue name="vv_inst_no">205081</ColumnValue>
                 <ColumnValue name="vv_code">LA205081</ColumnValue>
