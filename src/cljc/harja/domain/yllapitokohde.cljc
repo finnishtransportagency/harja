@@ -317,20 +317,22 @@ yllapitoluokkanimi->numero
 
 (defn tr-paalupiste-tr-tiedon-mukainen?
   [paalupiste kohteen-tieto]
-  (let [{tr-numero-kohde :tr-numero
-         tr-alkuosa-kohde :tr-alkuosa} paalupiste
-        {tr-numero-kohteen-tieto :tr-numero
-         tr-osa-kohteen-tieto :tr-osa
-         {tr-alkuetaisyys-kohteen-tieto :tr-alkuetaisyys
-          tr-osa-pituus :pituus} :pituudet} kohteen-tieto
-        tr-loppuetaisyys-kohteen-tieto (+ tr-alkuetaisyys-kohteen-tieto tr-osa-pituus)
-        kohteen-tieto-vali {:tr-alkuosa tr-osa-kohteen-tieto
-                            :tr-loppuosa tr-osa-kohteen-tieto
-                            :tr-alkuetaisyys tr-alkuetaisyys-kohteen-tieto
-                            :tr-loppuetaisyys tr-loppuetaisyys-kohteen-tieto}]
-    (and (= tr-numero-kohde tr-numero-kohteen-tieto)
-         (= tr-alkuosa-kohde tr-osa-kohteen-tieto)
-         (tr-paalupiste-tr-paaluvalin-sisalla? paalupiste kohteen-tieto-vali))))
+  (if kohteen-tieto
+    (let [{tr-numero-kohde :tr-numero
+           tr-alkuosa-kohde :tr-alkuosa} paalupiste
+          {tr-numero-kohteen-tieto :tr-numero
+           tr-osa-kohteen-tieto :tr-osa
+           {tr-alkuetaisyys-kohteen-tieto :tr-alkuetaisyys
+            tr-osa-pituus :pituus} :pituudet} kohteen-tieto
+          tr-loppuetaisyys-kohteen-tieto (+ tr-alkuetaisyys-kohteen-tieto tr-osa-pituus)
+          kohteen-tieto-vali {:tr-alkuosa tr-osa-kohteen-tieto
+                              :tr-loppuosa tr-osa-kohteen-tieto
+                              :tr-alkuetaisyys tr-alkuetaisyys-kohteen-tieto
+                              :tr-loppuetaisyys tr-loppuetaisyys-kohteen-tieto}]
+      (and (= tr-numero-kohde tr-numero-kohteen-tieto)
+           (= tr-alkuosa-kohde tr-osa-kohteen-tieto)
+           (tr-paalupiste-tr-paaluvalin-sisalla? paalupiste kohteen-tieto-vali)))
+    false))
 
 (defn tr-piste-tr-tiedon-mukainen?
   [piste kohteen-tieto]
@@ -354,7 +356,7 @@ yllapitoluokkanimi->numero
                                    (filter #(and (valin-sisalla? %)
                                                  (= (:tr-kaista %) tr-kaista-alikohde)))
                                    first)]
-    (when kaista-kohteen-tiedot
+    (if kaista-kohteen-tiedot
       (let [{tr-kaista-kohteen-tieto :tr-kaista
              tr-alkuetaisyys-kohteen-tieto :tr-alkuetaisyys
              tr-pituus-kohteen-tieto :pituus} kaista-kohteen-tiedot
@@ -370,7 +372,8 @@ yllapitoluokkanimi->numero
              (= tr-ajorata-alikohde tr-ajorata-kohteen-tieto)
              (= tr-kaista-alikohde tr-kaista-kohteen-tieto)
              (= tr-alkuosa-alikohde tr-osa-kohteen-tieto)
-             (tr-paalupiste-tr-paaluvalin-sisalla? piste kohteen-tieto-vali))))))
+             (tr-paalupiste-tr-paaluvalin-sisalla? piste kohteen-tieto-vali)))
+      false)))
 
 (defn get-in-kohteen-tieto
   [kohteen-tieto haku]
@@ -483,7 +486,7 @@ yllapitoluokkanimi->numero
 (defn kohde-tiedon-mukainen
   ([kohde kohteen-tiedot] (kohde-tiedon-mukainen kohde kohteen-tiedot true))
   ([kohde kohteen-tiedot paakohde?]
-   {:pre [(if paakohde?
+   #_{:pre [(if paakohde?
             (s/valid? #(= paaluvali-avaimet
                           (into #{}
                                 (keys (select-keys % paaluvali-avaimet))))
@@ -508,6 +511,8 @@ yllapitoluokkanimi->numero
                                         kohteen-tiedot)))
          kohteen-tieto-alku (kohteen-tieto tr-alkupiste)
          kohteen-tieto-loppu (kohteen-tieto tr-loppupiste)
+         _ (println "KOHTEEN TIETO ALKU: " kohteen-tieto-alku)
+         _ (println "KOHTEEN TIETO LOPPU: " kohteen-tieto-loppu)
          kohteen-tiedot-vali (when-not paakohde?
                                (filter (fn [kohteen-tieto]
                                          (and (= (:tr-numero kohde) (:tr-numero kohteen-tieto))
@@ -517,12 +522,20 @@ yllapitoluokkanimi->numero
          testaus-fn (if paakohde?
                       tr-paalupiste-tr-tiedon-mukainen?
                       tr-piste-tr-tiedon-mukainen?)
+         _ (println [tr-alkupiste tr-loppupiste])
          validoidut-paatepisteet (keep identity
                                        (map (fn [piste tieto]
-                                              (when-not (testaus-fn piste tieto)
-                                                tieto))
+                                              (if (and (nil? tieto)
+                                                       (:tr-numero piste)
+                                                       (:tr-alkuosa piste))
+                                                (with-meta {:tr-numero (:tr-numero piste)
+                                                            :tr-osa (:tr-alkuosa piste)}
+                                                           {:ei-osaa true})
+                                                (when-not (testaus-fn piste tieto)
+                                                  tieto)))
                                             [tr-alkupiste tr-loppupiste]
                                             [kohteen-tieto-alku kohteen-tieto-loppu]))
+         _ (println "VALIDOITUT PAATEPITEET: " validoidut-paatepisteet)
          validoitu-vali (when-not paakohde?
                           (keep (fn [kohteen-tieto]
                                   ;; onko välillä olevat kohteet koko pituudeltaan sitä ajorataa ja kaistaa
@@ -632,7 +645,10 @@ yllapitoluokkanimi->numero
          ;; Alikohteen tulee olla pääkohteen sisällä
          validoitu-paakohteenpaallekkyys (when (empty? validoitu-muoto)
                                            (tr-valit-paallekkain? paakohde alikohde true))
+         _ (println "Alikohde: " alikohde)
+         _ (println "OSIEN TIEDOT: " osien-tiedot)
          validoitu-paikka (validoi-paikka alikohde osien-tiedot false)]
+     (println "VALIDOITU PAIKKA: " validoitu-paikka)
      (cond-> nil
              (not (empty? validoitu-alikohteidenpaallekkyys)) (assoc :alikohde-paallekkyys validoitu-alikohteidenpaallekkyys)
              (false? validoitu-paakohteenpaallekkyys) (assoc :alikohde-paakohteen-ulkopuolella? true)

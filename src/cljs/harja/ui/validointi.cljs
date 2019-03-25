@@ -294,7 +294,10 @@
         (doall
           (map (fn [[rivi-indeksi rivi]]
                  (let [taulukko-virheet (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
-                                                [sarakkeet (saanto rivi-indeksi rivi taulukko)])
+                                                (let [tulos (saanto rivi-indeksi rivi taulukko)]
+                                                  (reduce-kv (fn [m k v]
+                                                               (assoc m k (v tulos)))
+                                                             {} sarakkeet)))
                                               taulukko-validointi)]
                    [rivi-indeksi
                     (loop [v {}
@@ -303,10 +306,11 @@
                         v
                         (let [{:keys [nimi]} s
                               taulukkovirheet-sarakkeelle (vec
-                                                            (keep (fn [[sarakkeet virhe]]
-                                                                    (when (and (sarakkeet nimi) virhe)
-                                                                      virhe))
-                                                                  taulukko-virheet))]
+                                                            (flatten
+                                                              (keep (fn [virheet]
+                                                                      (when-let [virhe (get virheet nimi)]
+                                                                        virhe))
+                                                                    taulukko-virheet)))]
                           (if (empty? taulukkovirheet-sarakkeelle)
                             (recur v skeema)
                             (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema)))))]))
