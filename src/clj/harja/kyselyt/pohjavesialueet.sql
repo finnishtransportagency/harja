@@ -26,7 +26,7 @@ SELECT
   p.alue
 FROM pohjavesialueet_urakoittain p
   LEFT JOIN pohjavesialue pa ON pa.tunnus = p.tunnus
-WHERE p.urakka = :urakka-id AND p.suolarajoitus IS TRUE;
+WHERE p.urakka = :urakka-id AND p.suolarajoitus IS TRUE ORDER BY p.nimi;
 
 -- name: poista-pohjavesialueet!
 -- Poistaa kaikki pohjavesialueet

@@ -83,18 +83,20 @@
                 (map (fn [pohjavesialue]
                        [(:tunnus pohjavesialue)
                         (assoc pohjavesialue
-                          :talvisuolaraja (:talvisuolaraja (get pv-rajat (:tunnus pohjavesialue))))]))
+                               :tie (:tie pohjavesialue)
+                               :talvisuolaraja (:talvisuolaraja (get pv-rajat (:tunnus pohjavesialue))))]))
                 pohjavesialueet)
           #(swap! syotettavat-tiedot update-in [:pohjavesialue-talvisuola]
                   (fn [pohjavesialue-talvisuola]
+                    (log (str pohjavesialue-talvisuola))
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
-                              (log "PV " tunnus)
+                              ;(log "PV " tunnus)
                               (let [paivitettava (first (keep-indexed (fn [i pv-raja]
                                                                         (and (= tunnus (:pohjavesialue pv-raja))
                                                                              i))
                                                                       pohjavesialue-talvisuola))]
 
-                                (log "PV paivitettava " paivitettava)
+                                ;(log "PV paivitettava " paivitettava)
                                 (if paivitettava
                                   ;; olemassaoleva raja, päivitä sen arvo
                                   (update-in pohjavesialue-talvisuola [paivitettava]
@@ -105,6 +107,7 @@
                                   (conj pohjavesialue-talvisuola
                                         {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
                                          :pohjavesialue tunnus
+                                         :tie (:tie pohjavesialue-talvisuola)
                                          :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
                             (vec pohjavesialue-talvisuola)
                             (keys %)))))))
