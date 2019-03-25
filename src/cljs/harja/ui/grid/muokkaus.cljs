@@ -21,7 +21,8 @@
               vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
-            [harja.ui.grid.yleiset :as grid-yleiset])
+            [harja.ui.grid.yleiset :as grid-yleiset]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
@@ -208,7 +209,7 @@
      (doall
        (map-indexed
          (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
-           (let [haku-fn  (or hae nimi)
+           (let [haku-fn  (or hae #(get % nimi))
                  kentan-virheet (-> @virheet (get id) haku-fn)
                  elementin-asetukset (select-keys rivi-asetukset #{:ohjaus :vetolaatikot :id :rivi :rivi-index
                                                                    :nayta-virheet? :i :voi-muokata?
