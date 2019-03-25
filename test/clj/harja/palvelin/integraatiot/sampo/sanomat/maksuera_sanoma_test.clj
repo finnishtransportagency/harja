@@ -49,7 +49,6 @@
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task (z/attr :name))))
     (is (= "polku/talousosasto" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "LiiviKP") (z/attr :unitPath))))
     (is (= "polku/tuote" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "tuote2013") (z/attr :unitPath))))
-    (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "owner_id_t") z/text)))
     (is (= "00LZM-0033600" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_tilaus") z/text)))
     (is (= "2" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_me_type") z/text)))
     (is (= "123456789" (z/xml1-> maksuera-xml :Products :Product :CustomInformation :ColumnValue (z/attr= :name "vv_inst_no") z/text)))
