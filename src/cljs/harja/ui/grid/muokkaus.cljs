@@ -21,8 +21,7 @@
               vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
-            [harja.ui.grid.yleiset :as grid-yleiset]
-            [taoensso.timbre :as log])
+            [harja.ui.grid.yleiset :as grid-yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
