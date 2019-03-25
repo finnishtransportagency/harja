@@ -88,7 +88,6 @@
                 pohjavesialueet)
           #(swap! syotettavat-tiedot update-in [:pohjavesialue-talvisuola]
                   (fn [pohjavesialue-talvisuola]
-                    (log (str pohjavesialue-talvisuola))
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
                               ;(log "PV " tunnus)
                               (let [paivitettava (first (keep-indexed (fn [i pv-raja]
@@ -107,7 +106,7 @@
                                   (conj pohjavesialue-talvisuola
                                         {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
                                          :pohjavesialue tunnus
-                                         :tie (:tie pohjavesialue-talvisuola)
+                                         :tie (:tie (get % tunnus))
                                          :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
                             (vec pohjavesialue-talvisuola)
                             (keys %)))))))
