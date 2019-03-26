@@ -15,7 +15,7 @@
        :clj
     [clojure.core.async :refer [<! go]])
     #?(:clj
-    [clojure.future :refer :all])
+    )
     #?(:clj
     [harja.tyokalut.spec :refer [defn+]])
     [clojure.string :as str])
