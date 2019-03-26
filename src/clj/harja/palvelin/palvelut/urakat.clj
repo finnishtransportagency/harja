@@ -283,11 +283,13 @@
       true
       )))
 
-(defn- luo-tai-paivita-vesivaylaurakka-alue! [db user urakka-id turvalaiteryhmat]
+(defn- luo-tai-paivita-vesivaylaurakka-alue! [db user urakka-id turvalaiteryhmat alkupvm loppupvm]
   (q/luo-tai-paivita-vesivaylaurakan-alue<! db
                                             {:urakka urakka-id
                                              :turvalaiteryhmat (konv/seq->array (map #(str/trim %) (str/split turvalaiteryhmat #",")))
-                                             :kayttaja (:id user)})
+                                             :kayttaja (:id user)
+                                             :alkupvm alkupvm
+                                             :loppupvm loppupvm})
   (q/hae-vesivaylaurakan-alue db
                               {:urakka urakka-id}))
 
@@ -298,7 +300,7 @@
     (let [urakka-alue (when (and (not (nil? (::u/turvalaiteryhmat urakka)))
                                  (onko-turvalaiteryhma-olemassa? db (::u/turvalaiteryhmat urakka))
                                  (voiko-turvalaiteryhman-kiinnittaa? db (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))
-                        (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka)))))
+                        (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))))
           paivitetty (q/paivita-harjassa-luotu-urakka<!
                        db
                        {:id (::u/id urakka)

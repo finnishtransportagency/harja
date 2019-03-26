@@ -476,11 +476,15 @@ WHERE id = :id
 INSERT INTO vv_urakka_turvalaiteryhma (
   urakka,
   turvalaiteryhmat,
+  alkupvm,
+  loppupvm,
   luotu,
   luoja)
 VALUES (
   :urakka,
   :turvalaiteryhmat :: TEXT [],
+  :alkupvm,
+  :loppupvm,
   now(),
   :kayttaja)
 ON CONFLICT (urakka)
