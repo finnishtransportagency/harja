@@ -208,7 +208,7 @@
      (doall
        (map-indexed
          (fn [j {:keys [nimi hae tayta-alas?] :as sarake}]
-           (let [haku-fn  (or hae nimi)
+           (let [haku-fn  (or hae #(get % nimi))
                  kentan-virheet (-> @virheet (get id) haku-fn)
                  elementin-asetukset (select-keys rivi-asetukset #{:ohjaus :vetolaatikot :id :rivi :rivi-index
                                                                    :nayta-virheet? :i :voi-muokata?
