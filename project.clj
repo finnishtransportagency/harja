@@ -34,7 +34,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
-                 [http-kit "2.3.0"]
+                 [http-kit "2.4.0-alpha3"]
                  [compojure "1.6.1"]
                  ;; Ring saattaa tarvita testeihin
                  [javax.servlet/servlet-api "2.5"]
