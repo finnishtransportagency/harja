@@ -4,9 +4,9 @@
             [harja.kyselyt.tieverkko :as k]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
             [harja.geo :as geo])
-  (:import (com.vividsolutions.jts.geom Coordinate LineString MultiLineString GeometryFactory)
-           (com.vividsolutions.jts.geom.impl CoordinateArraySequence)
-           (com.vividsolutions.jts.operation.linemerge LineSequencer)))
+  (:import (org.locationtech.jts.geom Coordinate LineString MultiLineString GeometryFactory)
+           (org.locationtech.jts.geom.impl CoordinateArraySequence)
+           (org.locationtech.jts.operation.linemerge LineSequencer)))
 
 (defn- line-string-seq
   ([multilinestring]
