@@ -19,7 +19,7 @@ WHERE p.urakka = :urakka-id AND suolarajoitus IS TRUE;
 
 -- name: hae-urakan-pohjavesialueet-teittain
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet teittain
-SELECT
+SELECT DISTINCT
   p.nimi,
   p.tunnus,
   pa.tr_numero AS tie,
