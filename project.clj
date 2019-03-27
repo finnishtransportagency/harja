@@ -23,8 +23,6 @@
                  [com.stuartsierra/component "0.4.0"]
 
                  ;; Lokitus
-                 ;;[org.clojure/tools.logging "0.3.1"]
-                 ;;[ch.qos.logback/logback-classic "1.1.3"]
                  [com.taoensso/timbre "4.10.0"]
 
                  ;; Metriikkadata
@@ -36,7 +34,7 @@
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.4.0-alpha3"]
                  [compojure "1.6.1"]
-                 ;; Ring saattaa tarvita testeihin
+                 ;; Ring tarvitsee
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
@@ -45,11 +43,7 @@
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.2.5"]
-                 ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
-                 ;; [webjure/postgis-jdbc "2.1.7"]
                  [net.postgis/postgis-jdbc "2.3.0"]
-                 ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
-                                        ;[com.vividsolutions/jts "1.13"]
                  [org.locationtech.jts/jts-core "1.16.1"]
                  [com.mchange/c3p0 "0.9.5.4"]
                  [webjure/jeesql "0.4.7"]
@@ -62,7 +56,7 @@
                  [org.geotools/gt-swing "21.0"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.3"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varustetestit failasi
+                 [org.clojure/data.zip "0.1.3"]
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha5"]
@@ -99,7 +93,8 @@
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.17"] ; TODO Voisi päivittää, mutta 3.17 aiheutti ongelman: Unable to find static field: RETURN_NULL_AND_BLAN
+                 [org.apache.poi/poi "3.17"] ; TODO Voisi päivittää, mutta dk.ative/docjure käyttää 3.17, ja tulee ikäviä erroreita jos tän päivittää
+                                             ; docjuressa on kyllä pullero, joka tuon hoitaisi, niin jospa se joskus mergettäisiin
                  [org.apache.poi/poi-scratchpad "3.17"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "3.17"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
@@ -129,7 +124,8 @@
                  [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.14.0-SNAPSHOT"] ; TODO Voisi päivittää, mutta 1.12.0 aiheutti ongelman: Unable to find static field: ALIGN_RIGHT in interface org.apache.poi.ss.usermodel.CellStyle, compiling:(harja/palvelin/raportointi/excel.clj:156:44)
+                 [dk.ative/docjure "1.14.0-SNAPSHOT"] ; TODO Päivitä tämä heti, kun https://github.com/mjul/docjure/pull/81 mergetty tai joku vastaava tehty
+                                                      ; Päivitä samalla apache poi
 
                  [figwheel-sidecar "0.5.14"]
 
