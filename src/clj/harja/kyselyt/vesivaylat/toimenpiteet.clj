@@ -72,7 +72,7 @@
           (not (->> toimenpiteet-kannassa
                    (map ::vv-toimenpide/urakka-id)
                    (every? (partial = urakka-id)))))
-    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
+    (throw (SecurityException. (str "Kaikki toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (vaadi-toimenpiteet-kuuluvat-urakkaan*
