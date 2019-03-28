@@ -294,7 +294,7 @@
                               {:urakka urakka-id}))
 
 (defn- paivita-urakka! [db user urakka]
-  (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
+  (log/debug "Päivitetään urakkaa ja urakka-aluetta " (::u/nimi urakka))
   (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
     (let [urakka-alue (when (and (not (nil? (::u/turvalaiteryhmat urakka)))
@@ -337,7 +337,7 @@
                         :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
 
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
-  (log/debug "Luodaan uusi urakka " (::u/nimi urakka))
+  (log/debug "Luodaan uusi urakka. Luodaan urakka-alue, jos urakassa on turvalaiteryhm(i)ä." (::u/nimi urakka))
   (let [hanke (hankkeet-palvelu/tallenna-hanke db user {::h/nimi (str (::u/nimi urakka) " H")
                                                         ::h/alkupvm (::u/alkupvm urakka)
                                                         ::h/loppupvm (::u/loppupvm urakka)})
@@ -358,7 +358,7 @@
         urakka-alue (when (and (not (nil? (::u/turvalaiteryhmat urakka)))
                                (onko-turvalaiteryhma-olemassa? db (::u/turvalaiteryhmat urakka))
                                (voiko-turvalaiteryhman-kiinnittaa? db (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka) (::u/loppupvm urakka)))
-          (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka)))))]
+          (:id (first (luo-tai-paivita-vesivaylaurakka-alue! db user (::u/id urakka) (::u/turvalaiteryhmat urakka) (::u/alkupvm urakka)  (::u/loppupvm urakka)))))]
     (tallenna-vv-urakkanro! db user (:id urakka) urakka-alue)
     (luo-vv-urakan-toimenpideinstanssit db urakka)
     urakka))
