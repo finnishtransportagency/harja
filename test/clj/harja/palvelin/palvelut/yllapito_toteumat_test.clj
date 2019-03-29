@@ -12,7 +12,7 @@
             [taoensso.timbre :as log]
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.string :as clj-str]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -130,11 +130,18 @@
         testien-maara 50
         maara-ennen-testia (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)]
-
+    
     (loop [index 0]
       (let [selite (str "yksikkötesti" index)
             linkitettava-yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))
-            kirjattava-toteuma (as-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)) toteuma
+            gen-tyo (fn [] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
+            tiemerkinnan-yksikkohintainen-tyo (if linkitettava-yllapitokohde-id
+                                                (gen-tyo)
+                                                (loop [tyo (gen-tyo)]
+                                                  (if (contains? tyo :tr-numero)
+                                                    tyo
+                                                    (recur (gen-tyo)))))
+            kirjattava-toteuma (as-> tiemerkinnan-yksikkohintainen-tyo toteuma
                                      ;; Tee tästä uusi toteuma
                                      (assoc toteuma
                                        :id nil
@@ -143,9 +150,10 @@
                                        :poistettu false)
                                      ;; Liitä ylläpitokohde jos satuttiin arpomaan se
                                      (if linkitettava-yllapitokohde-id
-                                       (assoc toteuma :yllapitokohde-id linkitettava-yllapitokohde-id)
+                                       (assoc toteuma :yllapitokohde-id linkitettava-yllapitokohde-id
+                                              :hinta-kohteelle (or (:hinta-kohteelle toteuma)
+                                                                   "1234"))
                                        (dissoc toteuma :yllapitokohde-id)))
-            _ (println "kirjattava toteuma " kirjattava-toteuma)
             pyynto {:urakka-id urakka-id
                     :vuosi (pvm/vuosi (:paivamaara kirjattava-toteuma))
                     :toteumat [kirjattava-toteuma]}
@@ -169,8 +177,8 @@
         (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
                                                nil
                                                (:tr-numero kirjattava-toteuma))))
-        (is (= (str/replace (format "%.2f" (bigdec (:hinta kirjattu-toteuma))) "-0," "0,")
-               (str/replace (format "%.2f" (bigdec (:hinta kirjattava-toteuma))) "-0," "0,")))
+        (is (= (clj-str/replace (format "%.2f" (bigdec (:hinta kirjattu-toteuma))) "-0," "0,")
+               (clj-str/replace (format "%.2f" (bigdec (:hinta kirjattava-toteuma))) "-0," "0,")))
         (if linkitettava-yllapitokohde-id
           (is (= (:hinta-kohteelle kirjattava-toteuma) (:hinta-kohteelle kirjattu-toteuma)))
           (is (nil? (:hinta-kohteelle kirjattu-toteuma))))
