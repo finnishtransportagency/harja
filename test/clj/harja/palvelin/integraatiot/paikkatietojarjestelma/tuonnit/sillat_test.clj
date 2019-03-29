@@ -9,8 +9,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as sillat])
-  (:import (com.vividsolutions.jts.geom Point Coordinate GeometryFactory)
-           (com.vividsolutions.jtsexample.geom ExtendedCoordinateSequence)
+  (:import (org.locationtech.jts.geom Point Coordinate GeometryFactory)
+           (org.locationtech.jtsexample.geom ExtendedCoordinateSequence)
            (java.util Date)))
 
 (use-fixtures :once tietokanta-fixture)
