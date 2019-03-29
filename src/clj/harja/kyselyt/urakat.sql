@@ -491,6 +491,8 @@ ON CONFLICT (urakka)
   DO
   UPDATE SET
     turvalaiteryhmat = :turvalaiteryhmat :: TEXT [],
+    alkupvm = :alkupvm::DATE,
+    loppupvm = :loppupvm::DATE,
     muokattu         = now(),
     muokkaaja        = :kayttaja;
 
@@ -504,8 +506,7 @@ SELECT id, nimi FROM urakka where
 
 -- name: hae-loytyvat-reimari-turvalaiteryhmat
 SELECT tunnus FROM reimari_turvalaiteryhma
-WHERE tunnus::text = ANY (string_to_array(replace(:turvalaiteryhmat, ' ', '' ), ','));
-
+WHERE tunnus::text IN (:turvalaiteryhma);
 
 -- name: tallenna-vv-urakkanro<!
 -- Vesiväyläurakoissa urakkanro viittaa vv_urakka_turvalaiteryhma-tauluun,
@@ -515,12 +516,8 @@ WHERE tunnus::text = ANY (string_to_array(replace(:turvalaiteryhmat, ' ', '' ), 
 UPDATE urakka
 SET urakkanro = :urakkanro,
   muokattu    = NOW(),
-  muokkaaja   = :kayttaja;
-
--- name: hae-vesivaylaurakan-alue
-SELECT id
-FROM vv_urakka_turvalaiteryhma
-WHERE urakka = :urakka;
+  muokkaaja   = :kayttaja
+  WHERE id = :urakka;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille

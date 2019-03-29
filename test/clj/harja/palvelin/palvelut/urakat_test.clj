@@ -145,8 +145,7 @@
             paivitetyt-urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
             paivitetty-eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
             paivitetty-toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
-            paivitetyt-urakan-turvalaiteryhmat (first (q-map "SELECT id::text, array_to_string (turvalaiteryhmat, ',') as turvalaiteryhmat FROM vv_urakka_turvalaiteryhma WHERE urakka = " (::u/id urakka-kannassa) ";"))
-            paivitetyn-urakan-urakkanro (ffirst (q "SELECT urakkanro FROM urakka WHERE  id = " (::u/id urakka-kannassa) ";"))]
+            paivitetyt-urakan-turvalaiteryhmat (first (q-map "SELECT id::text, array_to_string (turvalaiteryhmat, ',') as turvalaiteryhmat FROM vv_urakka_turvalaiteryhma WHERE urakka = " (::u/id paivitetty-urakka-kannassa) ";"))]
 
         ;; Urakka päivittyi
         (is (= (::u/nimi paivitetty-urakka-kannassa)
@@ -160,7 +159,7 @@
         ;; Urakka-aluetiedot päivittyivät, urakkanro pysyi samana
         (is (= "3336" (:turvalaiteryhmat paivitetyt-urakan-turvalaiteryhmat)) "Vesiväyläurakan turvalaiteryhmat on päivitetty oikein.")
         (is (= "3336" (::u/turvalaiteryhmat paivitetty-urakka-kannassa)) "Vesiväyläurakan päivittyneet turvalaiteryhmat palautuvat urakan tiedoissa.")
-        (is (= paivitetyn-urakan-urakkanro urakan-urakkanro) "Vesiväyläurakan urakkanro ei päivity päivittäessä turvalaiteryhmätietoja.")
+        (is (= urakan-urakkanro (.toString (:id paivitetyt-urakan-turvalaiteryhmat)))  "Vesiväyläurakan urakkanro ei päivity päivittäessä turvalaiteryhmätietoja.")
 
         ;; Päivitetään urakka varatulla turvalaiteryhmällä
         (let [uudelleen-paivitetty-urakka (assoc paivitetty-urakka
