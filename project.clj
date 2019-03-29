@@ -56,7 +56,7 @@
                  [org.geotools/gt-swing "21.0"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.3"]
+                 [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha5"]
@@ -165,12 +165,18 @@
              :test {:dependencies [[clj-webdriver "0.7.2"]
                                    [org.seleniumhq.selenium/selenium-java "3.8.1"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}}
-
+  
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
   :repositories [["osgeo" "https://download.osgeo.org/webdav/geotools/"]
+                 ;; Tämä on kaiketi org.geotools/* dependencyjä varten. Nykyinen  versio
+                 ;; on kyllä mavenissakin, mutta jos tarvii joskus SNPASHOTIN, niin tuolta
+                 ;; löytyy
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
-                 ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
+                 ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]
+                 ;; Tämä on tässä [org.clojure/data.zip "0.1.4-SNAPSHOT"] dependencyn takia
+                 ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
+                 ]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
