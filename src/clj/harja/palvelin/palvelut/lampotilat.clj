@@ -96,7 +96,7 @@
      :pohjavesialueet (into []
                             (geo/muunna-pg-tulokset :alue)
                             (pohjavesialueet-q/hae-urakan-pohjavesialueet-teittain db urakka-id))
-     :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat db urakka-id)}))
+     :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat-teittain db urakka-id)}))
 
 (defn tallenna-suolasakko
   [db user urakka hoitokauden-alkuvuosi tiedot]

@@ -47,6 +47,10 @@ SELECT *
   FROM pohjavesialue_talvisuola pt
  WHERE pt.urakka = :urakka;
 
+-- name: hae-urakan-pohjavesialue-talvisuolarajat-teittain
+SELECT *
+  FROM pohjavesialue_talvisuola pt
+ WHERE pt.urakka = :urakka;
 
 -- name: luo-suolasakko<!
 INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja, kaytossa)
