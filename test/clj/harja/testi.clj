@@ -1205,7 +1205,8 @@
                                        (println "Ran" simulation "without report"))}})
             opts))]
     (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
-    (= 0 (:ko yhteenveto))))
+    (or (= 0 (:ko yhteenveto))
+        (nil? (:ko yhteenveto)))))
 
 (defmacro is->
   [testattava & fn-listat]

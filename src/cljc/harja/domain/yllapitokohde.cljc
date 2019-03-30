@@ -12,7 +12,7 @@
     #?@(:clj
         [
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-    [clojure.future :refer :all]
+    
     [harja.pvm :as pvm]
     [clj-time.core :as t]
     [taoensso.timbre :as log]

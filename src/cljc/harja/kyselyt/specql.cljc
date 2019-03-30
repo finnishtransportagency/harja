@@ -7,7 +7,7 @@
             [harja.geo :as geo]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]]))
+            ]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj

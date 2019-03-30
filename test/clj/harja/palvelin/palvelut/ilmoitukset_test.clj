@@ -329,5 +329,5 @@
   (is (gatling-onnistuu-ajassa?
         "Hae ilmoitukset"
         {:concurrency 100
-         :timeout-in-ms 1500}
+         :timeout-in-ms 3000}
         #(hae hae-ilmoitukset-parametrit))))

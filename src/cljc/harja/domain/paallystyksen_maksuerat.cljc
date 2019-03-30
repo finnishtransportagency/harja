@@ -9,7 +9,7 @@
     [harja.domain.yllapitokohde :as yllapitokohde]
     [harja.tyokalut.spec-apurit :as spec-apurit]
     #?@(:clj [
-    [clojure.future :refer :all]])))
+    ])))
 
 ;; Maksuerä
 
