@@ -1205,4 +1205,4 @@
                                        (println "Ran" simulation "without report"))}})
             opts))]
     (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
-    (= 0 (:ko yhteenveto))))
+    (= (count kutsut) (:ok yhteenveto))))
