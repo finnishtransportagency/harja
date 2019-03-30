@@ -107,17 +107,28 @@
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)
         toteumien-maara 10
+        gen-tyo (fn [] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
         pyynto {:urakka-id urakka-id
                 :vuosi 2017
-                :toteumat (->> (mapv (fn [_] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
+                :toteumat (->> (mapv (fn [_]
+                                       (loop [tyo (gen-tyo)]
+                                         (if (contains? tyo :tr-numero)
+                                           tyo
+                                           (recur (gen-tyo)))))
                                      (range 1 (inc toteumien-maara)))
                                ;; Tee kohteista uusia
                                (mapv #(assoc % :id nil
-                                               :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))))
+                                             :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))))
+                               (mapv #(if (nil? (:yllapitokohde-id %))
+                                        %
+                                        (assoc % :hinta-kohteelle (or (:hinta-kohteelle %)
+                                                                      "1234"))))
                                ;; Liitä osa toteumista ylläpitokohteeseen
                                (mapv #(if (int (rand 2))
-                                        (assoc % :yllapitokohde-id yllapitokohde-id)
-                                        (dissoc % :yllapitokohde-id))))}
+                                        (assoc % :yllapitokohde-id yllapitokohde-id
+                                               :hinta-kohteelle (or (:hinta-kohteelle %)
+                                                                    "1234"))
+                                        (dissoc % :yllapitokohde-id :hinta-kohteelle))))}
         maara-ennen-lisaysta (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
