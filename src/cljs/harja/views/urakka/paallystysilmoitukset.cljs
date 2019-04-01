@@ -1013,39 +1013,56 @@
                                                                                              :else (when (= 1 (count (:osiot ajorata-tiedot)))
                                                                                                      (first (:osiot ajorata-tiedot))))]
                                                                         (let [kaistojen-tiedot (filter #(= kohteen-kaista (:tr-kaista %))
-                                                                                                       (:kaistat osan-tiedot))]
-                                                                          (cond
-                                                                            (and alkupaa? loppupaa?) (str "Tie: " (:tr-numero kohteen-tieto)
-                                                                                                          " osa: " (:tr-osa kohteen-tieto)
-                                                                                                          " ajorata: " kohteen-ajorata
-                                                                                                          " kaisata: " kohteen-kaista
-                                                                                                          (if (> (count kaistojen-tiedot) 1)
-                                                                                                            " tr-paaluvalit ovat: "
-                                                                                                            " tr-paaluvali on: ")
-                                                                                                          (apply str
-                                                                                                                 (interpose " "
-                                                                                                                            (map (fn [kaista-tiedot]
-                                                                                                                                   (str "(" kohteen-alkuosa ", " (:tr-alkuetaisyys kaista-tiedot) ", "
-                                                                                                                                        kohteen-loppuosa ", " (+ (:tr-alkuetaisyys kaista-tiedot) (:pituus kaista-tiedot))
-                                                                                                                                        ")"))
-                                                                                                                                 kaistojen-tiedot))))
-                                                                            alkupaa? (str "Ajorata " kohteen-ajorata
-                                                                                          " ja kaista " kohteen-kaista
-                                                                                          " ei päätä osaa " (:tr-osa kohteen-tieto))
-                                                                            loppupaa? (str "Ajorata " kohteen-ajorata
-                                                                                           " ja kaista " kohteen-kaista
-                                                                                           " ei aloita osaa " (:tr-osa kohteen-tieto))
-                                                                            :else (str "Kaista " kohteen-kaista
-                                                                                       " ajoradalla " kohteen-ajorata
-                                                                                       " ei kata koko osaa " (:tr-osa kohteen-tieto))))
+                                                                                                       (:kaistat osan-tiedot))
+                                                                              osan-kaistat (map :tr-kaista (:kaistat osan-tiedot))]
+                                                                          (if (empty? kaistojen-tiedot)
+                                                                            (str "Tien " (:tr-numero kohteen-tieto) " osalla " (:tr-osa kohteen-tieto)
+                                                                                   (if (= 1 (count osan-kaistat))
+                                                                                     (str " on ainoastaan kaista " (first osan-kaistat))
+                                                                                     (apply str " on kaistat: " (interpose ", " osan-kaistat))))
+                                                                            (cond
+                                                                              (and alkupaa? loppupaa?) (str "Tie: " (:tr-numero kohteen-tieto)
+                                                                                                            " osa: " (:tr-osa kohteen-tieto)
+                                                                                                            " ajorata: " kohteen-ajorata
+                                                                                                            " kaisata: " kohteen-kaista
+                                                                                                            (if (> (count kaistojen-tiedot) 1)
+                                                                                                              " tr-paaluvalit ovat: "
+                                                                                                              " tr-paaluvali on: ")
+                                                                                                            (apply str
+                                                                                                                   (interpose " "
+                                                                                                                              (map (fn [kaista-tiedot]
+                                                                                                                                     (str "(" kohteen-alkuosa ", " (:tr-alkuetaisyys kaista-tiedot) ", "
+                                                                                                                                          kohteen-loppuosa ", " (+ (:tr-alkuetaisyys kaista-tiedot) (:pituus kaista-tiedot))
+                                                                                                                                          ")"))
+                                                                                                                                   kaistojen-tiedot))))
+                                                                              alkupaa? (str "Ajorata " kohteen-ajorata
+                                                                                            " ja kaista " kohteen-kaista
+                                                                                            " ei päätä osaa " (:tr-osa kohteen-tieto))
+                                                                              loppupaa? (str "Ajorata " kohteen-ajorata
+                                                                                             " ja kaista " kohteen-kaista
+                                                                                             " ei aloita osaa " (:tr-osa kohteen-tieto))
+                                                                              :else (str "Kaista " kohteen-kaista
+                                                                                         " ajoradalla " kohteen-ajorata
+                                                                                         " ei kata koko osaa " (:tr-osa kohteen-tieto)))))
 
                                                                         (cond
-                                                                          (and alkupaa? loppupaa?) (str "Ajorataa ei löydy annetulta väliltä")
+                                                                          (and alkupaa? loppupaa?) (let [ajoradan-paaluvalit (map (fn [osio]
+                                                                                                                                    (str "(" (:tr-osa kohteen-tieto) ", "
+                                                                                                                                         (:tr-alkuetaisyys osio) ", "
+                                                                                                                                         (:tr-osa kohteen-tieto) ", "
+                                                                                                                                         (+ (:tr-alkuetaisyys osio) (:pituus osio)) ")"))
+                                                                                                                                  (:osiot ajorata-tiedot))]
+                                                                                                     (apply str "Ajoradan " (:tr-ajorata ajorata-tiedot) (if (= 1 (count ajoradan-paaluvalit))
+                                                                                                                                                           " paaluvali on: "
+                                                                                                                                                           " paaluvalit ovat: ")
+                                                                                                            (interpose " "
+                                                                                                                       ajoradan-paaluvalit)))
                                                                           alkupaa? (str "Ajorata " kohteen-ajorata
                                                                                         " ei päätä osaa " (:tr-osa kohteen-tieto))
                                                                           loppupaa? (str "Ajorata " kohteen-ajorata
                                                                                          " ei aloita osaa " (:tr-osa kohteen-tieto))
-                                                                          :else (str "Ajorata " kohteen-ajorata
+                                                                          :else (str "Kaista " kohteen-kaista
+                                                                                     " ajoradalla " kohteen-ajorata
                                                                                      " ei kata koko osaa " (:tr-osa kohteen-tieto))))
                                                                       (str "Tien " (:tr-numero kohteen-tieto)
                                                                            " osalla " (:tr-osa kohteen-tieto)
@@ -1187,39 +1204,56 @@
                                                                                                :else (when (= 1 (count (:osiot ajorata-tiedot)))
                                                                                                        (first (:osiot ajorata-tiedot))))]
                                                                           (let [kaistojen-tiedot (filter #(= kohteen-kaista (:tr-kaista %))
-                                                                                                         (:kaistat osan-tiedot))]
-                                                                            (cond
-                                                                              (and alkupaa? loppupaa?) (str "Tie: " (:tr-numero kohteen-tieto)
-                                                                                                            " osa: " (:tr-osa kohteen-tieto)
-                                                                                                            " ajorata: " kohteen-ajorata
-                                                                                                            " kaisata: " kohteen-kaista
-                                                                                                            (if (> (count kaistojen-tiedot) 1)
-                                                                                                              " tr-paaluvalit ovat: "
-                                                                                                              " tr-paaluvali on: ")
-                                                                                                            (apply str
-                                                                                                                   (interpose " "
-                                                                                                                              (map (fn [kaista-tiedot]
-                                                                                                                                     (str "(" kohteen-alkuosa ", " (:tr-alkuetaisyys kaista-tiedot) ", "
-                                                                                                                                          kohteen-loppuosa ", " (+ (:tr-alkuetaisyys kaista-tiedot) (:pituus kaista-tiedot))
-                                                                                                                                          ")"))
-                                                                                                                                   kaistojen-tiedot))))
-                                                                              alkupaa? (str "Ajorata " kohteen-ajorata
-                                                                                            " ja kaista " kohteen-kaista
-                                                                                            " ei päätä osaa " (:tr-osa kohteen-tieto))
-                                                                              loppupaa? (str "Ajorata " kohteen-ajorata
-                                                                                             " ja kaista " kohteen-kaista
-                                                                                             " ei aloita osaa " (:tr-osa kohteen-tieto))
-                                                                              :else (str "Kaista " kohteen-kaista
-                                                                                         " ajoradalla " kohteen-ajorata
-                                                                                         " ei kata koko osaa " (:tr-osa kohteen-tieto))))
+                                                                                                         (:kaistat osan-tiedot))
+                                                                                osan-kaistat (map :tr-kaista (:kaistat osan-tiedot))]
+                                                                            (if (empty? kaistojen-tiedot)
+                                                                              (str "Tien " (:tr-numero kohteen-tieto) " osalla " (:tr-osa kohteen-tieto)
+                                                                                   (if (= 1 (count osan-kaistat))
+                                                                                     (str " on ainoastaan kaista " (first osan-kaistat))
+                                                                                     (apply str " on kaistat: " (interpose ", " osan-kaistat))))
+                                                                              (cond
+                                                                                (and alkupaa? loppupaa?) (str "Tie: " (:tr-numero kohteen-tieto)
+                                                                                                              " osa: " (:tr-osa kohteen-tieto)
+                                                                                                              " ajorata: " kohteen-ajorata
+                                                                                                              " kaisata: " kohteen-kaista
+                                                                                                              (if (> (count kaistojen-tiedot) 1)
+                                                                                                                " tr-paaluvalit ovat: "
+                                                                                                                " tr-paaluvali on: ")
+                                                                                                              (apply str
+                                                                                                                     (interpose " "
+                                                                                                                                (map (fn [kaista-tiedot]
+                                                                                                                                       (str "(" kohteen-alkuosa ", " (:tr-alkuetaisyys kaista-tiedot) ", "
+                                                                                                                                            kohteen-loppuosa ", " (+ (:tr-alkuetaisyys kaista-tiedot) (:pituus kaista-tiedot))
+                                                                                                                                            ")"))
+                                                                                                                                     kaistojen-tiedot))))
+                                                                                alkupaa? (str "Ajorata " kohteen-ajorata
+                                                                                              " ja kaista " kohteen-kaista
+                                                                                              " ei päätä osaa " (:tr-osa kohteen-tieto))
+                                                                                loppupaa? (str "Ajorata " kohteen-ajorata
+                                                                                               " ja kaista " kohteen-kaista
+                                                                                               " ei aloita osaa " (:tr-osa kohteen-tieto))
+                                                                                :else (str "Kaista " kohteen-kaista
+                                                                                           " ajoradalla " kohteen-ajorata
+                                                                                           " ei kata koko osaa " (:tr-osa kohteen-tieto)))))
 
                                                                           (cond
-                                                                            (and alkupaa? loppupaa?) (str "Ajorataa ei löydy annetulta väliltä")
+                                                                            (and alkupaa? loppupaa?) (let [ajoradan-paaluvalit (map (fn [osio]
+                                                                                                                                      (str "(" (:tr-osa kohteen-tieto) ", "
+                                                                                                                                           (:tr-alkuetaisyys osio) ", "
+                                                                                                                                           (:tr-osa kohteen-tieto) ", "
+                                                                                                                                           (+ (:tr-alkuetaisyys osio) (:pituus osio)) ")"))
+                                                                                                                                    (:osiot ajorata-tiedot))]
+                                                                                                       (apply str "Ajoradan " (:tr-ajorata ajorata-tiedot) (if (= 1 (count ajoradan-paaluvalit))
+                                                                                                                                                             " paaluvali on: "
+                                                                                                                                                             " paaluvalit ovat: ")
+                                                                                                              (interpose " "
+                                                                                                                         ajoradan-paaluvalit)))
                                                                             alkupaa? (str "Ajorata " kohteen-ajorata
                                                                                           " ei päätä osaa " (:tr-osa kohteen-tieto))
                                                                             loppupaa? (str "Ajorata " kohteen-ajorata
                                                                                            " ei aloita osaa " (:tr-osa kohteen-tieto))
-                                                                            :else (str "Ajorata " kohteen-ajorata
+                                                                            :else (str "Kaista " kohteen-kaista
+                                                                                       "ajoradalla " kohteen-ajorata
                                                                                        " ei kata koko osaa " (:tr-osa kohteen-tieto))))
                                                                         (str "Tien " (:tr-numero kohteen-tieto)
                                                                              " osalla " (:tr-osa kohteen-tieto)
@@ -1267,7 +1301,10 @@
                                            :kasittelymenetelma [(when (tyhja-fn :kasittelymenetelma)
                                                                   "Tieto puuttuu")]
                                            :paksuus [(when (tyhja-fn :paksuus)
-                                                       "Tieto puuttuu")]})))]
+                                                       "Tieto puuttuu")]})))
+        arvo-valilta (fn [min-arvo max-arvo data _ _]
+                       (when-not (<= min-arvo data max-arvo)
+                         (str "Anna arvo välillä " min-arvo " - " max-arvo "")))]
     (komp/luo
       ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
       (komp/lukko lukon-id)
@@ -1335,8 +1372,8 @@
                                                                                  :tr-alkuetaisyys :tr-alkuetaisyys
                                                                                  :tr-loppuosa :tr-loppuosa
                                                                                  :tr-loppuetaisyys :tr-loppuetaisyys}}]}
-                                          :paallystystoimenpiteen-tiedot {:rc [[:rajattu-numero 0 100]]
-                                                                          :toimenpide-raekoko [[:rajattu-numero 0 99]]}
+                                          :paallystystoimenpiteen-tiedot {:rc [{:fn (r/partial arvo-valilta 0 100)}]
+                                                                          :toimenpide-raekoko [{:fn (r/partial arvo-valilta 0 99)}]}
                                           :alustatoimenpiteet {:rivi [{:fn alustatoimen-validointi
                                                                        :sarakkeet {:tr-numero :tr-numero
                                                                                    :tr-ajorata :tr-ajorata

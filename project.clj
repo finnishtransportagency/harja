@@ -127,7 +127,7 @@
                  [dk.ative/docjure "1.14.0-SNAPSHOT"] ; TODO Päivitä tämä heti, kun https://github.com/mjul/docjure/pull/81 mergetty tai joku vastaava tehty
                                                       ; Päivitä samalla apache poi
 
-                 [figwheel-sidecar "0.5.14"]
+                 [figwheel-sidecar "0.5.19-SNAPSHOT"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.1.0"]
@@ -181,7 +181,7 @@
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.14"]
+            [lein-figwheel "0.5.19-SNAPSHOT"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.4"]
             [lein-auto "0.1.2"]
