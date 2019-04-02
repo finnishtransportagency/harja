@@ -905,7 +905,7 @@
                                       vuosi (first vuodet)
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
-                                      validoitu (yllapitokohde-domain/validoi-kohde paakohde [] (get tr-osien-tiedot (:tr-numero rivi)) {:vuos vuosi})]
+                                      validoitu (yllapitokohde-domain/validoi-kohde paakohde [] (get tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
                                   (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu))))))
 
         alikohteen-validointi (fn [rivi taulukko]

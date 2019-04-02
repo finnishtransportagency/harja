@@ -2,6 +2,8 @@
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
+            [clojure.set :as clj-set]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -85,7 +87,28 @@
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
-      (komp/lippu paallystys-tiedot/paallystysilmoitukset-tai-kohteet-nakymassa?)
+     (komp/lippu paallystys-tiedot/paallystysilmoitukset-tai-kohteet-nakymassa?)
+     (komp/sisaan-ulos #(add-watch paallystys-tiedot/yhan-paallystyskohteet :haetaanko-tr-osia-watch
+                                   (fn [_ _ vanha-tila uusi-tila]
+                                     (let [vanhat-tiet (into #{}
+                                                             (map (juxt :tr-numero :tr-alkuosa :tr-loppuosa) vanha-tila))
+                                           uudet-tiet (into #{}
+                                                            (map (juxt :tr-numero :tr-alkuosa :tr-loppuosa) uusi-tila))
+                                           mahdollisesti-haettavat-tiet (clj-set/difference (clj-set/union vanhat-tiet uudet-tiet)
+                                                                                            (clj-set/intersection vanhat-tiet uudet-tiet))]
+                                       (when-not (empty? mahdollisesti-haettavat-tiet)
+                                         (go (doseq [tr-osoite mahdollisesti-haettavat-tiet]
+                                               (let [[tr-numero tr-alkuosa tr-loppuosa] tr-osoite
+                                                     jo-haetut-tien-tiedot (get @paallystys-tiedot/tr-osien-tiedot tr-numero)
+                                                     [min-osa max-osa] (apply (juxt min max) (map :tr-osa jo-haetut-tien-tiedot))
+                                                     pienin-tarvittava-osa (min min-osa tr-alkuosa)
+                                                     suurin-tarvittava-osa (max max-osa tr-loppuosa)]
+                                                 (when (not= [min-osa max-osa] [pienin-tarvittava-osa suurin-tarvittava-osa])
+                                                   (swap! paallystys-tiedot/tr-osien-tiedot
+                                                          assoc tr-numero (<! (k/post! :hae-tr-tiedot {:tr-numero tr-numero
+                                                                                                       :tr-alkuosa pienin-tarvittava-osa
+                                                                                                       :tr-loppuosa suurin-tarvittava-osa})))))))))))
+                       #(remove-watch paallystys-tiedot/yhan-paallystyskohteet :haetaanko-tr-osia-watch))
       (fn [ur]
         [:div.paallystyskohteet
          [kartta/kartan-paikka]

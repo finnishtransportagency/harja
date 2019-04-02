@@ -82,6 +82,8 @@
                                      {:yha-kohde? true :yllapitokohdetyotyyppi :paallystys}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
+(def tr-osien-tiedot (atom nil))
+
 (def harjan-paikkauskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
