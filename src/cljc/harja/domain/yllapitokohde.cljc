@@ -760,14 +760,14 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   {:alikohde {:paakohteen-ulkopuolella "Alikohde ei voi olla pääkohteen ulkopuolella"
               :alikohteet-paallekkain (fn [nimi]
                                         (str "Kohteenosa on päällekkäin "
-                                             (if (nil? nimi) "toisen osan" (str "osan " nimi))
+                                             (if (empty? nimi) "toisen osan" (str "osan " nimi))
                                              " kanssa"))}
    :muukohde {:paakohteen-sisapuolella "Muukohde ei voi olla pääkohteen sisällä"}
    :alustatoimenpide {:ei-alikohteen-sisalla "Alustatoimenpide ei ole minkään alikohteen sisällä"
                       :usean-alikohteen-sisalla "Alustatoimenpide on päällekkäin usean alikohteen kanssa"
                       :alustatoimenpiteet-paallekkain (fn [nimi]
                                                         (str "Alustatoimenpide on päällekkäin "
-                                                             (if (nil? nimi) "toisen osan" (str "osan " nimi))
+                                                             (if (empty? nimi) "toisen osan" (str "osan " nimi))
                                                              " kanssa"))}})
 
 (defn validoidun-paikan-teksti [validoitu-paikka]
