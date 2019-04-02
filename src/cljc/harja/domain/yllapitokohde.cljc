@@ -608,8 +608,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
     {:keys [vuosi] :or {vuosi (pvm/vuosi (pvm/nyt))}}]
    (let [tr-vali-spec (cond
                         (>= vuosi 2019) (s/and ::tr-paaluvali
-                                               #(not (contains? % :tr-ajorata))
-                                               #(not (contains? % :tr-kaista)))
+                                               (s/keys :opt-un [::nil-ns/tr-ajorata
+                                                                ::nil-ns/tr-kaista]))
                         (= vuosi 2018) ::tr-vali
                         (<= vuosi 2017) (s/and ::tr-paaluvali
                                                (s/keys :req-un [::tr-ajorata
@@ -762,6 +762,10 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                         (str "Kohteenosa on päällekkäin "
                                              (if (empty? nimi) "toisen osan" (str "osan " nimi))
                                              " kanssa"))}
+   :paakohde {:paakohteet-paallekkain (fn [nimi]
+                                        (str "Kohde on päällekkäin "
+                                             (if (empty? nimi) "toisen kohteen" (str "kohteen " nimi))
+                                             " kanssa"))}
    :muukohde {:paakohteen-sisapuolella "Muukohde ei voi olla pääkohteen sisällä"}
    :alustatoimenpide {:ei-alikohteen-sisalla "Alustatoimenpide ei ole minkään alikohteen sisällä"
                       :usean-alikohteen-sisalla "Alustatoimenpide on päällekkäin usean alikohteen kanssa"
@@ -899,7 +903,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 
 (defn validoitu-kohde-tekstit [validoitu-kohde]
   (let [{:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
-                muukohde-paakohteen-ulkopuolella? validoitu-paikka]} validoitu-kohde
+                muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys]} validoitu-kohde
         paikka-vaarin (when validoitu-paikka
                         (validoidun-paikan-teksti validoitu-paikka))
         tr-numero-vaarin (when muoto
@@ -923,6 +927,9 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
         alikohteet-paallekkain (when alikohde-paallekkyys
                                  (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))
                                        alikohde-paallekkyys))
+        paakohde-paallekkain (when paallekkyys
+                               (mapv #((get-in paallekkaisyys-virhetekstit [:paakohde :paakohteet-paallekkain]) (:nimi %))
+                                       paallekkyys))
         muutkohteet-paallekkain (when muukohde-paallekkyys
                                   ;; Otetaan alikohteesta, koska sama teksti
                                   (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))
@@ -936,35 +943,41 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
            :tr-ajorata (concat tr-ajorata-vaarin
                                paikka-vaarin
                                alikohteet-paallekkain
-                               muutkohteet-paallekkain)
+                               muutkohteet-paallekkain
+                               paakohde-paallekkain)
            :tr-kaista (concat tr-kaista-vaarin
                               paikka-vaarin
                               alikohteet-paallekkain
-                              muutkohteet-paallekkain)
+                              muutkohteet-paallekkain
+                              paakohde-paallekkain)
            :tr-alkuosa (concat tr-alkuosa-vaarin
                                alikohde-ulkopuolella
                                muukohde-sisapuolella
                                paikka-vaarin
                                alikohteet-paallekkain
-                               muutkohteet-paallekkain)
+                               muutkohteet-paallekkain
+                               paakohde-paallekkain)
            :tr-alkuetaisyys (concat tr-alkuetaisyys-vaarin
                                     alikohde-ulkopuolella
                                     muukohde-sisapuolella
                                     paikka-vaarin
                                     alikohteet-paallekkain
-                                    muutkohteet-paallekkain)
+                                    muutkohteet-paallekkain
+                                    paakohde-paallekkain)
            :tr-loppuosa (concat tr-loppuosa-vaarin
                                 alikohde-ulkopuolella
                                 muukohde-sisapuolella
                                 paikka-vaarin
                                 alikohteet-paallekkain
-                                muutkohteet-paallekkain)
+                                muutkohteet-paallekkain
+                                paakohde-paallekkain)
            :tr-loppuetaisyys (concat tr-loppuetaisyys-vaarin
                                      alikohde-ulkopuolella
                                      muukohde-sisapuolella
                                      paikka-vaarin
                                      alikohteet-paallekkain
-                                     muutkohteet-paallekkain)})))
+                                     muutkohteet-paallekkain
+                                     paakohde-paallekkain)})))
 
 (defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
   (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide)

@@ -687,7 +687,7 @@
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota?
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?
-           raporttivienti raporttiparametrit virhe-viesti aloitussivu] :as opts} skeema tiedot]
+           raporttivienti raporttiparametrit virhe-viesti aloitussivu rivi-validointi taulukko-validointi] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -708,7 +708,9 @@
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
-        skeema (keep identity skeema)
+        skeema (keep identity (if rivi-validointi
+                                (conj skeema {::validointi/rivi-validointi rivi-validointi})
+                                skeema))
         nollaa-muokkaustiedot-tallennuksen-jalkeen? (if (some? nollaa-muokkaustiedot-tallennuksen-jalkeen?)
                                                       nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                                       (constantly true))
@@ -719,6 +721,29 @@
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
+        meta-atom (atom nil)
+        hoida-taulukkotason-virheet (fn [uudet-tiedot virheet]
+                                      (let [taulukon-virheet (validointi/validoi-taulukko uudet-tiedot skeema taulukko-validointi :poistettu)
+                                            edelliset-taulukkotason-virheiden-rivit (:taulukkovirheiden-rivit @meta-atom)
+                                            virheet (reduce-kv (fn [m rivi-indeksi vanhat-rivin-taulukkotason-virheet]
+                                                                 (update m rivi-indeksi (fn [rivin-virheet]
+                                                                                          (reduce-kv (fn [m2 sarakkeen-nimi virheet-vektori]
+                                                                                                       (let [virheet (remove (fn [virheviesti]
+                                                                                                                               (some #(= virheviesti %)
+                                                                                                                                     (sarakkeen-nimi vanhat-rivin-taulukkotason-virheet)))
+                                                                                                                             virheet-vektori)]
+                                                                                                         (if-not (empty? virheet)
+                                                                                                           (assoc m2 sarakkeen-nimi virheet)
+                                                                                                           m2)))
+                                                                                                     {} rivin-virheet))))
+                                                               virheet edelliset-taulukkotason-virheiden-rivit)]
+                                        (swap! meta-atom assoc :taulukkovirheiden-rivit taulukon-virheet)
+                                        (reduce-kv (fn [m rivi-indeksi uudet-rivin-taulukkotason-virheet]
+                                                     (update m rivi-indeksi (fn [rivin-virheet]
+                                                                              (reduce-kv (fn [m2 sarakkeen-nimi virhe-vektori]
+                                                                                           (update m2 sarakkeen-nimi concat virhe-vektori))
+                                                                                         rivin-virheet uudet-rivin-taulukkotason-virheet))))
+                                                   virheet taulukon-virheet)))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
                                   (into {}
                                         (keep (fn [rivi]
@@ -832,10 +857,13 @@
                        (swap! virheet (fn [virheet]
                                         (let [uusi-rivi (get uudet-tiedot id)
                                               rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :validoi))]
-                                          (if (empty? rivin-virheet)
-                                            (dissoc virheet id)
-                                            (assoc virheet id rivin-virheet)))))
+                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :validoi))
+                                              virheet (if (empty? rivin-virheet)
+                                                        (dissoc virheet id)
+                                                        (assoc virheet id rivin-virheet))]
+                                          (if taulukko-validointi
+                                              (hoida-taulukkotason-virheet uudet-tiedot virheet)
+                                              virheet))))
                        (swap! varoitukset (fn [varoitukset]
                                             (let [uusi-rivi (get uudet-tiedot id)
                                                   rivin-varoitukset (when-not (:poistettu uusi-rivi)
@@ -887,6 +915,7 @@
         nollaa-muokkaustiedot! (fn []
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
+                                 (reset! meta-atom nil)
                                  (reset! varoitukset {})
                                  (reset! huomautukset {})
                                  (reset! muokatut nil)

@@ -78,7 +78,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.8.0"]
-                 [figwheel "0.5.14"]
+                 [figwheel "0.5.19-SNAPSHOT"]
 
                  [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.6.1-0"] ; TODO Voisi päivittää, mutta tämä ja react-dom aiheuttaa ongelman: Undefined nameToPath for react
