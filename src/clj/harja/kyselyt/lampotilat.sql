@@ -48,9 +48,10 @@ SELECT *
  WHERE pt.urakka = :urakka;
 
 -- name: hae-urakan-pohjavesialue-talvisuolarajat-teittain
-SELECT *
-  FROM pohjavesialue_talvisuola pt
- WHERE pt.urakka = :urakka;
+SELECT pa.nimi AS nimi, pa.tunnus AS pohjavesialue, pt.urakka, pt.hoitokauden_alkuvuosi, pt.talvisuolaraja, pa.tr_numero AS tie
+  FROM (SELECT DISTINCT nimi, tunnus, tr_numero FROM pohjavesialue) AS pa 
+  LEFT JOIN pohjavesialue_talvisuola pt ON pt.pohjavesialue = pa.tunnus
+  WHERE pt.urakka = :urakka ORDER by pa.nimi ASC;
 
 -- name: luo-suolasakko<!
 INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja, kaytossa)
