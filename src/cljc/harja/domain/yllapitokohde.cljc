@@ -631,9 +631,13 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   ([paakohde alikohde toiset-alikohteet osien-tiedot] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot (pvm/vuosi (pvm/nyt))))
   ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi]
    (let [tr-vali-spec (cond
-                        (>= vuosi 2019) (s/and ::tr-paaluvali
-                                               (s/keys :req-un [::tr-ajorata
-                                                                ::tr-kaista]))
+                        (>= vuosi 2019) (s/keys :req-un [::tr-numero
+                                                         ::tr-ajorata
+                                                         ::tr-kaista
+                                                         ::tr-alkuosa
+                                                         ::tr-alkuetaisyys
+                                                         ::tr-loppuosa
+                                                         ::tr-loppuetaisyys])
                         (= vuosi 2018) ::tr-vali
                         (<= vuosi 2017) ::tr-paaluvali)
          validoitu-muoto (oikean-muotoinen-tr alikohde tr-vali-spec)
@@ -766,7 +770,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                         (str "Kohde on päällekkäin "
                                              (if (empty? nimi) "toisen kohteen" (str "kohteen " nimi))
                                              " kanssa"))}
-   :muukohde {:paakohteen-sisapuolella "Muukohde ei voi olla pääkohteen sisällä"}
+   :muukohde {:paakohteen-sisapuolella "Muukohde ei voi olla pääkohteen kanssa samalla tiellä"}
    :alustatoimenpide {:ei-alikohteen-sisalla "Alustatoimenpide ei ole minkään alikohteen sisällä"
                       :usean-alikohteen-sisalla "Alustatoimenpide on päällekkäin usean alikohteen kanssa"
                       :alustatoimenpiteet-paallekkain (fn [nimi]
@@ -827,7 +831,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                ")"))
                                         kaistojen-tiedot)
                         osa-virhetekstit (-> paikka-virhetekstit :tr-numero :tr-osa :tr-ajorata :osa)
-                        osan-kaistat (map :tr-kaista (:kaistat osan-tiedot))]
+                        osan-kaistat (distinct (map :tr-kaista (:kaistat osan-tiedot)))]
                     (if (empty? kaistojen-tiedot)
                       ;; Jos kaistaa ei löydy
                       (if (= 1 (count osan-kaistat))
@@ -922,7 +926,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                   (validoidun-muodon-teksti muoto :tr-loppuetaisyys))
         alikohde-ulkopuolella (when alikohde-paakohteen-ulkopuolella?
                                 [(get-in paallekkaisyys-virhetekstit [:alikohde :paakohteen-ulkopuolella])])
-        muukohde-sisapuolella (when muukohde-paakohteen-ulkopuolella?
+        muukohde-sisapuolella (when (false? muukohde-paakohteen-ulkopuolella?)
                                 [(get-in paallekkaisyys-virhetekstit [:muukohde :paakohteen-sisapuolella])])
         alikohteet-paallekkain (when alikohde-paallekkyys
                                  (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))

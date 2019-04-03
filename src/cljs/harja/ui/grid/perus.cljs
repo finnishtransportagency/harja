@@ -352,7 +352,7 @@
             [y/tooltip {} :% validointivirhe]
             [:button.nappi-myonteinen.grid-tallenna
              {:disabled (or validointivirhe
-                            (not (empty? @virheet))
+                            (not (empty? (apply concat (vals @virheet))))
                             @tallennus-kaynnissa
                             (not muokattu?))
               :on-click #(when-not @tallennus-kaynnissa
@@ -722,6 +722,8 @@
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
         meta-atom (atom nil)
+        ;; TODO hoida taulukkotason virheet joka paikassa. Esim. rivin lisäyksessä ei vielä ole.
+        ;; Lisäksi tämä funktio on lähes sama kuin muokkausgridissä, niin etsi parempi paikka tälle.
         hoida-taulukkotason-virheet (fn [uudet-tiedot virheet]
                                       (let [taulukon-virheet (validointi/validoi-taulukko uudet-tiedot skeema taulukko-validointi :poistettu)
                                             edelliset-taulukkotason-virheiden-rivit (:taulukkovirheiden-rivit @meta-atom)

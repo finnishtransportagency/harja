@@ -286,7 +286,8 @@
                                                 virheet)]
                                   (recur (if (empty? virheet) v (assoc v nimi virheet))
                           skeema))))))]
-     (merge sarake-virheet rivi-virheet))))
+     (merge sarake-virheet (when-not (empty? (::rivi-virheet rivi-virheet))
+                             rivi-virheet)))))
 
 (defn validoi-taulukko
   ([taulukko skeema taulukko-validointi] (validoi-taulukko taulukko skeema taulukko-validointi nil))
