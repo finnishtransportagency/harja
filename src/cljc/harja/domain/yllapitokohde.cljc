@@ -221,45 +221,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
         (tarkista-alikohteiden-ajorata-ja-kaista alikohteet)
         (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
-(defn kohteeet-paallekkain? [kohde verrattava-kohde]
-  (boolean
-   (and (not= (:id kohde) (:id verrattava-kohde))
-        (and (= (:tr-numero kohde) (:tr-numero verrattava-kohde))
-             (= (:tr-ajorata kohde) (:tr-ajorata verrattava-kohde))
-             (= (:tr-kaista kohde) (:tr-kaista verrattava-kohde)))
-        (tr-domain/tr-vali-leikkaa-tr-valin? kohde verrattava-kohde))))
-
-(defn validoi-tr-osan-pituus
-  "Olettaa, että tr-osoite on oikeamuotoinen"
-  [osan-pituudet-teille {:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys
-                                tr-loppuosa tr-loppuetaisyys] :as kohde}]
-  (when osan-pituudet-teille
-    (let [osan-pituudet (osan-pituudet-teille tr-numero)]
-      (cond-> {}
-        (nil? osan-pituudet) (assoc :tr-numero :ei-olemassa)
-        (not (contains? osan-pituudet tr-alkuosa)) (update :tr-alkuosa assoc :ei-olemassa tr-alkuosa)
-        (not (contains? osan-pituudet tr-loppuosa)) (update :tr-loppuosa assoc :ei-olemassa tr-loppuosa)
-
-        (and (contains? osan-pituudet tr-alkuosa)
-             tr-ajorata
-             (if (= tr-alkuosa tr-loppuosa)
-               (> (- tr-loppuetaisyys tr-alkuetaisyys)
-                  (get-in osan-pituudet [tr-alkuosa tr-ajorata]))
-               (> (- (get-in osan-pituudet [tr-alkuosa :pituus]) tr-alkuetaisyys)
-                  (get-in osan-pituudet [tr-alkuosa tr-ajorata])))) (update :tr-alkuetaisyys assoc :liian-iso-ajorata [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa tr-ajorata])])
-        (and (contains? osan-pituudet tr-loppuosa)
-             tr-ajorata
-             (if (= tr-alkuosa tr-loppuosa)
-               (> (- tr-loppuetaisyys tr-alkuetaisyys)
-                  (get-in osan-pituudet [tr-loppuosa tr-ajorata]))
-               (> tr-loppuetaisyys
-                  (get-in osan-pituudet [tr-loppuosa tr-ajorata])))) (update :tr-loppuetaisyys assoc :liian-iso-ajorata [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa tr-ajorata])])
-
-        (and (contains? osan-pituudet tr-alkuosa)
-             (> tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus]))) (update :tr-alkuetaisyys assoc :liian-iso-osa [tr-alkuetaisyys (get-in osan-pituudet [tr-alkuosa :pituus])])
-        (and (contains? osan-pituudet tr-loppuosa)
-             (> tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa :pituus]))) (update :tr-loppuetaisyys assoc :liian-iso-osa [tr-loppuetaisyys (get-in osan-pituudet [tr-loppuosa :pituus])])))))
-
 (defn losa>aosa? [{:keys [tr-alkuosa tr-loppuosa]}]
   (and tr-alkuosa tr-loppuosa (> tr-loppuosa tr-alkuosa)))
 
@@ -293,10 +254,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
          jana-loppu (+ (* kerroin losa-vali) let-vali)
          piste (+ (* kerroin aosa-piste) aet-piste)]
      (if sisaltaen-rajat?
-       (and (<= jana-alku piste)
-            (>= jana-loppu piste))
-       (and (< jana-alku piste)
-            (> jana-loppu piste))))))
+       (<= jana-alku piste jana-loppu)
+       (< jana-alku piste jana-loppu)))))
 
 (defn tr-paaluvali-tr-paaluvalin-sisalla?
   "Tarkastaa onko tr-vali-2 tr-vali-1:sen sisalla. Palauttaa true myös jos tr-vali-1 on kokonaan tr-vali2:sen sisällä
@@ -550,7 +509,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
    (s/explain-data tr-spec tr)))
 
 (defn tr-valit-paallekkain?
-  "Tetaa onko annetut tr-osoitteet päällekkäin. Jos kolmas argumentti on true, testaa onko tr-2 kokonaan tr-1 sisällä"
+  "Tetaa onko tr-2 tr-1:n kanssa päällekkäin. Jos kolmas argumentti on true, testaa onko tr-2 kokonaan tr-1 sisällä"
   ([tr-1 tr-2] (tr-valit-paallekkain? tr-1 tr-2 false))
   ([tr-1 tr-2 kokonaan-sisalla?]
    (let [tr-osoitteet [tr-1 tr-2]
@@ -569,6 +528,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
        ;; Sama tienumero, ajorata ja kaista?
        #(let [[tr-1 tr-2] (tr-spekista %)]
           (and (= (:tr-numero tr-1) (:tr-numero tr-2))
+               ;; Ideana tässä se, että tr-1 voi olla pääkohde, jolloinka sillä ei ole ajorataa ja
+               ;; tr-2 voi olla alikohde, jolloinka sillä on ajorata. Nämä voi kumminkin olla päällekkäin.
                (or (nil? (:tr-ajorata tr-1))
                    (= (:tr-ajorata tr-1) (:tr-ajorata tr-2)))
                (or (nil? (:tr-kaista tr-1))
@@ -744,21 +705,21 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
    :tr-ajorata {:ei-arvoa "Anna ajorata"}
    :tr-kaista {:ei-arvoa "Anna kaista"}
    :tr-alkuosa {:ei-arvoa #?(:clj "Anna alkuosa"
-                                   :cljs "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
+                             :cljs "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
                 :vaarin-pain #?(:clj "Alkuosa ei voi olla loppuosan jälkeen"
-                                      :cljs "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen")}
+                                :cljs "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen")}
    :tr-alkuetaisyys {:ei-arvoa #?(:clj "Anna alkuetaisyys"
-                                              :cljs "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys")
+                                  :cljs "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys")
                      :vaarin-pain #?(:clj "Alkuetaisyys ei voi olla loppuetäisyyden jälkeen"
-                                                 :cljs "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")}
+                                     :cljs "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")}
    :tr-loppuosa {:ei-arvoa #?(:clj "Anna loppuosa"
-                                     :cljs "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
+                              :cljs "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
                  :vaarin-pain #?(:clj "Loppuosa ei voi olla alkuosaa ennen"
-                                    :cljs "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")}
+                                 :cljs "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")}
    :tr-loppuetaisyys {:ei-arvoa #?(:clj "Anna loppuetaisyys"
-                                                :cljs "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")
+                                   :cljs "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")
                       :vaarin-pain #?(:clj "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"
-                                               :cljs "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")}})
+                                      :cljs "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")}})
 
 (def paallekkaisyys-virhetekstit
   {:alikohde {:paakohteen-ulkopuolella "Alikohde ei voi olla pääkohteen ulkopuolella"
@@ -887,6 +848,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
        map?))
 
 (defn validoidun-muodon-teksti [validoitu-muoto tr-avain]
+  ;; s/explain-data ei valitettavasti palauta epäonnistuneen funktion nimeä vaan se nimi pitää kaivaa
+  ;; oudolla tavalla tuon :pred avaimen alta, niinkuin muoto-vaarin funktiossa tehdään.
   (let [tyhja-fn (fn [avain]
                    (ongelma? validoitu-muoto (fn [virhe-map]
                                                (= (first (:path virhe-map)) avain))))
@@ -1049,62 +1012,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                        alustatoimet))]
             (when (not (empty? virheet))
               (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
-
-#?(:cljs
-   (defn validoi-osan-maksimipituus [osan-pituus key pituus rivi]
-     (when (integer? pituus)
-       (let [osa (get rivi key)]
-         (when-let [pit (get osan-pituus osa)]
-           (when (> pituus pit)
-             (str "Osan " osa " maksimietäisyys on " pit)))))))
-
-#?(:cljs
-   (defn validoi-yllapitokohteen-osoite
-     [osan-pituudet-teille kentta {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
-                                          tr-loppuosa tr-loppuetaisyys] :as kohde}]
-     (when osan-pituudet-teille
-       (let [osan-pituudet (osan-pituudet-teille tr-numero)]
-         (or
-          (cond
-            (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
-            (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
-
-            (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
-            (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
-
-          (when (= kentta :tr-alkuetaisyys)
-            (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
-
-          (when (= kentta :tr-loppuetaisyys)
-            (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde)))))))
-
-#?(:cljs
-   (defn alkuosa-ei-lopun-jalkeen [aosa {losa :tr-loppuosa}]
-     (when (and aosa losa (> aosa losa))
-       "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen")))
-
-#?(:cljs
-   (defn alkuetaisyys-ei-lopun-jalkeen [alkuet {aosa :tr-alkuosa
-                                                losa :tr-loppuosa
-                                                loppuet :tr-loppuetaisyys}]
-     (when (and aosa losa alkuet loppuet
-                (= aosa losa)
-                (> alkuet loppuet))
-       "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")))
-
-#?(:cljs
-   (defn loppuosa-ei-alkua-ennen [losa {aosa :tr-alkuosa}]
-     (when (and aosa losa (< losa aosa))
-       "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")))
-
-#?(:cljs
-   (defn loppuetaisyys-ei-alkua-ennen [loppuet {aosa :tr-alkuosa
-                                                losa :tr-loppuosa
-                                                alkuet :tr-alkuetaisyys}]
-     (when (and aosa losa alkuet loppuet
-                (= aosa losa)
-                (< loppuet alkuet))
-       "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")))
 
 #?(:clj
    (defn yllapitokohteen-tarkka-tila [yllapitokohde]

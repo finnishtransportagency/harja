@@ -7,9 +7,7 @@
     [harja.domain.sopimus :as sopimus]
     [harja.domain.tierekisteri :as tierekisteri]
     [harja.domain.yllapitokohde :as yllapitokohde]
-    [harja.tyokalut.spec-apurit :as spec-apurit]
-    #?@(:clj [
-    ])))
+    [harja.tyokalut.spec-apurit :as spec-apurit]))
 
 ;; Maksuerä
 
