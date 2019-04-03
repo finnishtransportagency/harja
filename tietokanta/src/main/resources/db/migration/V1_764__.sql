@@ -1,17 +1,30 @@
+DROP MATERIALIZED VIEW pohjavesialue_kooste;
+CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (SELECT nimi, tunnus, alue, pituus, tie, alkuosa, alkuet, loppuosa, loppuet FROM (SELECT array_agg(id) AS id, 
+       (array_agg(nimi))[1] AS nimi, 
+       (array_agg(tunnus))[1] AS tunnus, 
+       st_linemerge(st_collectionextract(st_collect(alue),2)) AS alue,
+       st_length(st_collect(alue)) AS pituus,
+       min(tr_numero) AS tie,
+       min(tr_alkuosa) AS alkuosa,
+       min(tr_alkuetaisyys) AS alkuet,
+       max(tr_loppuosa) AS loppuosa,
+       max(tr_loppuetaisyys) AS loppuet
+ FROM pohjavesialue
+ GROUP BY tr_numero, tr_alkuosa) AS q);
+
 CREATE TYPE pisteen_pohjavesialue_tie AS (tunnus VARCHAR(32), tie INTEGER);
 
 ALTER TABLE suolatoteuma_reittipiste ADD tie INTEGER;
 
 CREATE OR REPLACE FUNCTION pisteen_pohjavesialue_ja_tie(piste POINT, threshold INTEGER) RETURNS pisteen_pohjavesialue_tie AS $$
 DECLARE
-  result pisteen_pohjavesialue_tie;
+  tulos pohjavesialue_kooste%ROWTYPE;
 BEGIN
-  SELECT tunnus, tie FROM pohjavesialue_kooste
+  SELECT INTO tulos * FROM pohjavesialue_kooste
    WHERE ST_DWithin(alue, piste::geometry, threshold)
    ORDER BY ST_Distance(alue, piste::geometry)
-   LIMIT 1
-   INTO result;
-  RETURN result;
+   LIMIT 1;
+   RETURN ROW(tulos.tunnus, tulos.tie)::pisteen_pohjavesialue_tie;
 END;
 $$ LANGUAGE plpgsql;
 
