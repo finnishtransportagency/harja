@@ -87,7 +87,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn virheen-ohje
   "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu), :varoitus, tai :huomautus."
   ([virheet] (virheen-ohje virheet :virhe))
-  ([virheet tyyppi]
+  ([virheet tyyppi] (virheen-ohje virheet tyyppi false))
+  ([virheet tyyppi virheet-ulos?]
    [:div {:class (case tyyppi
                    :varoitus "varoitukset"
                    :virhe "virheet"
@@ -98,11 +99,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     :huomautus "huomautus")}
      (doall (for* [v (distinct virheet)]
 
-       [:span
-        (case tyyppi
-          :huomautus (ikonit/livicon-info-circle)
-          (ikonit/livicon-warning-sign))
-        [:span (str " " v)]]))]]))
+                  [:span (when virheet-ulos?
+                           {:style {:display "block"}})
+                   (case tyyppi
+                     :huomautus (ikonit/livicon-info-circle)
+                     (ikonit/livicon-warning-sign))
+                   [:span (str " " v)]]))]]))
 
 
 (defn linkki [otsikko toiminto]

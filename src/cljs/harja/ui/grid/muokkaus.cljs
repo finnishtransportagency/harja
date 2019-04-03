@@ -144,7 +144,7 @@
                          (case nayta-virheet?
                            :fokus @fokus?
                            :aina true))
-                (virheen-ohje kentan-virheet))
+                (virheen-ohje kentan-virheet :virhe true))
 
               (cond
                 ;; Mikäli rivi on disabloitu, piirretään erikseen määritelty sisältö, jos se on annettu...

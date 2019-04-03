@@ -74,9 +74,9 @@
                                     leveys
                                     1)}
                    (cond
-                     (not (empty? kentan-virheet)) (virheen-ohje kentan-virheet)
-                     (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)
-                     (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus))
+                     (not (empty? kentan-virheet)) (virheen-ohje kentan-virheet :virhe true)
+                     (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus true)
+                     (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus true))
 
                    (cond
                      (= tyyppi :komponentti) (apply komponentti rivi {:index index

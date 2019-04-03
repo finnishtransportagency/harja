@@ -591,14 +591,16 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
    Näiden kohteiden lisäksi se voi sisältää myös 'muukohde' tyylisiä kohteita."
   ([paakohde alikohde toiset-alikohteet osien-tiedot] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot (pvm/vuosi (pvm/nyt))))
   ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi]
-   (let [tr-vali-spec (cond
-                        (>= vuosi 2019) (s/keys :req-un [::tr-numero
-                                                         ::tr-ajorata
-                                                         ::tr-kaista
-                                                         ::tr-alkuosa
-                                                         ::tr-alkuetaisyys
-                                                         ::tr-loppuosa
-                                                         ::tr-loppuetaisyys])
+   (let [tr-vali-spec (cond ;; s/and short circuittaa, jonka johdosta tässä täytyy luetella kaikki tr-valin avaimet pelkän ::tr-ajorata ja ::tr-kaista sijasta ja ::tr-paaluvali tulee tulla toisena.
+                            ;; Eli jos tätä ei tekisi näin, niin ::tr-ajorata ja ::tr-kaista jäisi ilman virheviestiä, kun tarkastetaan tr-osoitteen muoto vaikka ne olisikin virheellisiä.
+                        (>= vuosi 2019) (s/and (s/keys :req-un [::tr-numero
+                                                                ::tr-ajorata
+                                                                ::tr-kaista
+                                                                ::tr-alkuosa
+                                                                ::tr-alkuetaisyys
+                                                                ::tr-loppuosa
+                                                                ::tr-loppuetaisyys])
+                                               ::tr-paaluvali)
                         (= vuosi 2018) ::tr-vali
                         (<= vuosi 2017) ::tr-paaluvali)
          validoitu-muoto (oikean-muotoinen-tr alikohde tr-vali-spec)
