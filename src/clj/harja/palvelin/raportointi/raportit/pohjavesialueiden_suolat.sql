@@ -12,7 +12,7 @@ SELECT pv.tunnus,
        ts.talvisuolaraja AS kayttoraja
 FROM suolatoteuma_reittipiste rp
   INNER JOIN toteuma tot ON tot.id = rp.toteuma
-  INNER JOIN pohjavesialue_kooste pv ON pv.tunnus = rp.pohjavesialue
-  LEFT JOIN pohjavesialue_talvisuola ts ON ts.pohjavesialue = rp.pohjavesialue AND ts.tie = pv.tie
+  LEFT JOIN pohjavesialue_kooste pv ON pv.tunnus = rp.pohjavesialue
+  LEFT JOIN pohjavesialue_talvisuola ts ON ts.pohjavesialue = rp.pohjavesialue
 WHERE tot.urakka=:urakkaid AND rp.aika BETWEEN :alkupvm AND :loppupvm
 GROUP BY pv.tunnus, pv.tie, pv.nimi, pv.alkuosa, pv.alkuet,pv.loppuosa,pv.pituus,pv.loppuet,ts.talvisuolaraja;
