@@ -13,6 +13,7 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [clojure.string :as str]
+            [clojure.set :as clj-set]
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
@@ -624,7 +625,8 @@
          kohdeosat]))))
 
 (defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}]
-  (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
+  (let [g (grid/grid-ohjaus)
+        rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
         osan-pituudet-teille (atom nil)
@@ -637,7 +639,9 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
-        hae-fn (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
+        hae-fn (fn [rivi]
+                 ;; TODO vaihda tämä käyttämään paallystys-tiedot/tr-osien-tiedot dataa
+                 (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
@@ -672,12 +676,12 @@
                                                  {:ikoni (ikonit/livicon-arrow-down)
                                                   :luokka "btn-xs"}]])])
           :taulukko-validointi taulukko-validointi
+          :ohjaus g
           :rivi-validointi rivi-validointi
           :rivinumerot? rivinumerot?
           :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
           :virhe-viesti virhe-viesti
           :muutos (fn [grid]
-                    (validoi-kohdeosien-paallekkyys (grid/hae-muokkaustila grid) virheet)
                     (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
           :otsikko otsikko
           :id "yllapitokohdeosat"
@@ -731,7 +735,9 @@
                 :komponentti (fn [rivi {:keys [index]}]
                                [:div.tasaa-oikealle
                                 [napit/yleinen-ensisijainen "Lisää osa"
-                                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
+                                 #(do
+                                    (muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
+                                    (grid/validoi-grid g))
                                  {:ikoni (ikonit/livicon-arrow-down)
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
@@ -739,7 +745,9 @@
                                   :data-attributes {:data-cy (str "lisaa-osa-" otsikko)}
                                   :luokka "btn-xs"}]
                                 [napit/kielteinen "Poista"
-                                 #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
+                                 #(do
+                                    (muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
+                                    (grid/validoi-grid g))
                                  {:ikoni (ikonit/livicon-trash)
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
@@ -937,6 +945,7 @@
   [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
+        g (grid/grid-ohjaus)
         tallenna (reaction
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? yha-sidottu?)
                      :ei-mahdollinen
@@ -957,18 +966,18 @@
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
                                       validoitu (yllapitokohteet-domain/validoi-kohde paakohde toiset-kohteet (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
-                                  (yllapitokohteet-domain/validoitu-kohde-tekstit validoitu)))
+                                  (yllapitokohteet-domain/validoitu-kohde-tekstit validoitu true)))
         alikohteen-validointi (fn [paakohde rivi taulukko]
                                 (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
                                       vuosi @u/valittu-urakan-vuosi
                                       validoitu (yllapitokohteet-domain/validoi-alikohde paakohde rivi [] (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) vuosi)]
-                                  (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys))))
+                                  (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys) false)))
         muukohteen-validointi (fn [paakohde rivi taulukko]
                                 (let [vuosi @u/valittu-urakan-vuosi
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
                                       validoitu (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) vuosi)]
-                                  (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :muukohde-paallekkyys))))
+                                  (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :muukohde-paallekkyys) false)))
         kohde-toisten-kanssa-paallekkain-validointi (fn [alikohde? _ rivi taulukko]
                                                       (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
                                                             paallekkyydet (filter #(yllapitokohteet-domain/tr-valit-paallekkain? rivi %)
@@ -976,13 +985,48 @@
                                                         (yllapitokohteet-domain/validoitu-kohde-tekstit {(if alikohde?
                                                                                                            :alikohde-paallekkyys
                                                                                                            :paallekkyys)
-                                                                                                         paallekkyydet})))
+                                                                                                         paallekkyydet}
+                                                                                                        (not alikohde?))))
         muukohde-toisten-kanssa-paallekkain-validointi (fn [_ rivi taulukko]
                                                          (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
                                                                paallekkyydet (filter #(yllapitokohteet-domain/tr-valit-paallekkain? rivi %)
                                                                                      toiset-kohteet)]
                                                            (yllapitokohteet-domain/validoitu-kohde-tekstit {:muukohde-paallekkyys
-                                                                                                            paallekkyydet})))]
+                                                                                                            paallekkyydet}
+                                                                                                           false)))
+        hae-osien-tiedot (fn [grid-tila]
+                           (let [rivit (vals grid-tila)
+                                 jo-haetut-tiedot (into #{}
+                                                        (map (juxt :tr-numero :tr-osa) (apply concat (vals @paallystys-tiedot/tr-osien-tiedot))))
+                                 tarvittavat-tiedot (clj-set/union
+                                                     (into #{}
+                                                           (map (juxt :tr-numero :tr-alkuosa) rivit))
+                                                     (into #{}
+                                                          (map (juxt :tr-numero :tr-loppuosa) rivit)))
+                                 puuttuvat-tiedot (clj-set/difference tarvittavat-tiedot jo-haetut-tiedot)
+                                 mahdollisesti-haettavat-tiedot (reduce (fn [haettavat-tiedot [tr-numero tr-osa]]
+                                                                        (if (some #(= tr-numero (:tr-numero %)) haettavat-tiedot)
+                                                                          (map #(if (= tr-numero (:tr-numero %))
+                                                                                  (-> %
+                                                                                      (update :tr-alkuosa (fn [vanha-tr-alkuosa]
+                                                                                                            (min vanha-tr-alkuosa tr-osa)))
+                                                                                      (update :tr-loppuosa (fn [vanha-tr-loppuosa]
+                                                                                                             (max vanha-tr-loppuosa tr-osa))))
+                                                                                  %)
+                                                                               haettavat-tiedot)
+                                                                          (conj haettavat-tiedot {:tr-numero tr-numero
+                                                                                                  :tr-alkuosa tr-osa
+                                                                                                  :tr-loppuosa tr-osa})))
+                                                                        [] (filter (fn [[tr-numero _]]
+                                                                                     (some #(= tr-numero (first %))
+                                                                                            puuttuvat-tiedot))
+                                                                                   (concat jo-haetut-tiedot tarvittavat-tiedot)))]
+                             (when-not (empty? mahdollisesti-haettavat-tiedot)
+                               (go (doseq [haettava-tieto mahdollisesti-haettavat-tiedot]
+                                     (let [tr-tieto (<! (k/post! :hae-tr-tiedot haettava-tieto))]
+                                       (swap! paallystys-tiedot/tr-osien-tiedot
+                                              assoc (:tr-numero haettava-tieto) tr-tieto)))
+                                   (grid/validoi-grid g)))))]
     (komp/luo
       (fn [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
         (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
@@ -1010,6 +1054,7 @@
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
                        [vasta-muokatut-lihavoitu]]
+             :ohjaus g
              :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
              :vetolaatikot (into {}
                                  (map (juxt
@@ -1063,8 +1108,7 @@
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (= (:status vastaus) :ok))
              :muutos (fn [grid]
-                       (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille)
-                       (validoi-tr-osoite grid tr-sijainnit tr-virheet))
+                       (hae-osien-tiedot (grid/hae-muokkaustila grid)))
              :voi-lisata? (not yha-sidottu?)
              :voi-muokata-rivia? paallystysilmoitus-lukittu?
              :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))

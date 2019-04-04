@@ -336,8 +336,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 
 (defn get-in-kohteen-tieto
   [kohteen-tieto haku]
-  {:pre [(s/valid? (s/coll-of (s/nilable integer?) :min-count 4 :max-count 4)
-                   haku)]}
   (let [[tr-ajorata tr-kaista tr-alkuetaisyys tr-loppuetaisyys] haku]
     (->> kohteen-tieto
          :pituudet
@@ -698,7 +696,9 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                 :tr-valiosa (fn [tr-kaista-annettu tr-ajorata-annettu tr-osa-tieto]
                               (str "Kaista " tr-kaista-annettu " ajoradalla " tr-ajorata-annettu " ei kata koko osaa " tr-osa-tieto))}}
      :ei-tr-ajorataa (fn [tr-numero-tieto tr-osa-tieto ajorata-annettu]
-                       (str "Tien " tr-numero-tieto " osalla " tr-osa-tieto " ei ole ajorataa " ajorata-annettu))}
+                       (str "Tien " tr-numero-tieto " osalla " tr-osa-tieto " ei ole ajorataa " ajorata-annettu))
+     :tr-osan-paaluvali (fn [tr-numero-tieto tr-osa-tieto paaluvali]
+                          (str "Tien " tr-numero-tieto " osan " tr-osa-tieto " paaluvali on " paaluvali))}
     :ei-tr-osaa (fn [tr-numero-tieto tr-osa-annettu]
                   (str "Tiellä " tr-numero-tieto " ei ole osaa " tr-osa-annettu))}})
 
@@ -741,7 +741,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                              (if (empty? nimi) "toisen osan" (str "osan " nimi))
                                                              " kanssa"))}})
 
-(defn validoidun-paikan-teksti [validoitu-paikka]
+(defn validoidun-paikan-teksti [validoitu-paikka paakohde?]
   (mapv (fn [kohteen-tieto]
           ;; (:kohde validoitu-paikka) on käyttäjän syöttämä
           (let [{kohteen-ajorata :tr-ajorata
@@ -756,89 +756,97 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
               ;; Jos ei ole koko tr-osaa?
               ((-> paikka-virhetekstit :tr-numero :ei-tr-osaa)
                (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto))
-              (if-let [ajorata-tiedot (first (filter #(= kohteen-ajorata
-                                                         (:tr-ajorata %))
-                                                     (:ajoradat (:pituudet kohteen-tieto))))]
-                ;; Jos ajorata löytyy
-                (if-let [osan-tiedot (cond
-                                       ;; onko sama osa?
-                                       (and alkupaa? loppupaa?) (first (filter (fn [osion-tiedot]
-                                                                                 (and (>= kohteen-alkuetaisyys (:tr-alkuetaisyys osion-tiedot))
-                                                                                      (<= kohteen-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
-                                                                                                                   (:pituus osion-tiedot)))))
-                                                                               (:osiot ajorata-tiedot)))
-                                       ;; onko alkupää?
-                                       alkupaa? (first (filter (fn [osion-tiedot]
-                                                                 (and (>= kohteen-alkuetaisyys (:tr-alkuetaisyys osion-tiedot))
-                                                                      ;; Onko osa koko tr-osan pituinen?
-                                                                      (= (+ (:tr-alkuetaisyys osion-tiedot)
-                                                                            (:pituus osion-tiedot))
-                                                                         (+ (get-in kohteen-tieto [:pituudet :tr-alkuetaisyys])
-                                                                            (get-in kohteen-tieto [:pituudet :pituus])))))
-                                                               (:osiot ajorata-tiedot)))
-                                       ;; onko loppupää?
-                                       loppupaa? (first (filter (fn [osion-tiedot]
-                                                                  (and (<= kohteen-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
-                                                                                                    (:pituus osion-tiedot)))
-                                                                       (= (:tr-alkuetaisyys osion-tiedot) (get-in kohteen-tieto [:pituudet :tr-alkuetaisyys]))))
-                                                                (:osiot ajorata-tiedot)))
-                                       ;; Muuten väliltä. Jos näin, niin pitää olla yksi yhteinäinen osio
-                                       :else (when (= 1 (count (:osiot ajorata-tiedot)))
-                                               (first (:osiot ajorata-tiedot))))]
-                  ;; Jos osa löytyy (eri kuin tr-osa)
-                  (let [kaistojen-tiedot (filter #(= kohteen-kaista (:tr-kaista %))
-                                                 (:kaistat osan-tiedot))
-                        paaluvalit (map (fn [kaista-tiedot]
-                                          (str "(" kohteen-alkuosa ", " (:tr-alkuetaisyys kaista-tiedot) ", "
-                                               kohteen-loppuosa ", " (+ (:tr-alkuetaisyys kaista-tiedot) (:pituus kaista-tiedot))
-                                               ")"))
-                                        kaistojen-tiedot)
-                        osa-virhetekstit (-> paikka-virhetekstit :tr-numero :tr-osa :tr-ajorata :osa)
-                        osan-kaistat (distinct (map :tr-kaista (:kaistat osan-tiedot)))]
-                    (if (empty? kaistojen-tiedot)
-                      ;; Jos kaistaa ei löydy
-                      (if (= 1 (count osan-kaistat))
-                        ;; Jos tiellä on vain yksi kaista tällä ajoradalla
-                        ((-> osa-virhetekstit :ei-tr-kaistaa :yksi-kaista)
-                         (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) (first osan-kaistat))
-                        ((-> osa-virhetekstit :ei-tr-kaistaa :useampi-kaista)
-                         (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) osan-kaistat))
-                      ;; Jos kaista löytyy
+              (if paakohde?
+                ((-> paikka-virhetekstit :tr-numero :tr-osa :tr-osan-paaluvali)
+                 (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) (str "(" (:tr-osa kohteen-tieto) ", "
+                                                                         (-> kohteen-tieto :pituudet :tr-alkuetaisyys) ", "
+                                                                         (:tr-osa kohteen-tieto) ", "
+                                                                         (+ (-> kohteen-tieto :pituudet :tr-alkuetaisyys)
+                                                                            (-> kohteen-tieto :pituudet :pituus))
+                                                                         ")"))
+                (if-let [ajorata-tiedot (first (filter #(= kohteen-ajorata
+                                                           (:tr-ajorata %))
+                                                       (:ajoradat (:pituudet kohteen-tieto))))]
+                  ;; Jos ajorata löytyy
+                  (if-let [osan-tiedot (cond
+                                         ;; onko sama osa?
+                                         (and alkupaa? loppupaa?) (first (filter (fn [osion-tiedot]
+                                                                                   (and (>= kohteen-alkuetaisyys (:tr-alkuetaisyys osion-tiedot))
+                                                                                        (<= kohteen-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
+                                                                                                                     (:pituus osion-tiedot)))))
+                                                                                 (:osiot ajorata-tiedot)))
+                                         ;; onko alkupää?
+                                         alkupaa? (first (filter (fn [osion-tiedot]
+                                                                   (and (>= kohteen-alkuetaisyys (:tr-alkuetaisyys osion-tiedot))
+                                                                        ;; Onko osa koko tr-osan pituinen?
+                                                                        (= (+ (:tr-alkuetaisyys osion-tiedot)
+                                                                              (:pituus osion-tiedot))
+                                                                           (+ (get-in kohteen-tieto [:pituudet :tr-alkuetaisyys])
+                                                                              (get-in kohteen-tieto [:pituudet :pituus])))))
+                                                                 (:osiot ajorata-tiedot)))
+                                         ;; onko loppupää?
+                                         loppupaa? (first (filter (fn [osion-tiedot]
+                                                                    (and (<= kohteen-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
+                                                                                                      (:pituus osion-tiedot)))
+                                                                         (= (:tr-alkuetaisyys osion-tiedot) (get-in kohteen-tieto [:pituudet :tr-alkuetaisyys]))))
+                                                                  (:osiot ajorata-tiedot)))
+                                         ;; Muuten väliltä. Jos näin, niin pitää olla yksi yhteinäinen osio
+                                         :else (when (= 1 (count (:osiot ajorata-tiedot)))
+                                                 (first (:osiot ajorata-tiedot))))]
+                    ;; Jos osa löytyy (eri kuin tr-osa)
+                    (let [kaistojen-tiedot (filter #(= kohteen-kaista (:tr-kaista %))
+                                                   (:kaistat osan-tiedot))
+                          paaluvalit (map (fn [kaista-tiedot]
+                                            (str "(" kohteen-alkuosa ", " (:tr-alkuetaisyys kaista-tiedot) ", "
+                                                 kohteen-loppuosa ", " (+ (:tr-alkuetaisyys kaista-tiedot) (:pituus kaista-tiedot))
+                                                 ")"))
+                                          kaistojen-tiedot)
+                          osa-virhetekstit (-> paikka-virhetekstit :tr-numero :tr-osa :tr-ajorata :osa)
+                          osan-kaistat (distinct (map :tr-kaista (:kaistat osan-tiedot)))]
+                      (if (empty? kaistojen-tiedot)
+                        ;; Jos kaistaa ei löydy
+                        (if (= 1 (count osan-kaistat))
+                          ;; Jos tiellä on vain yksi kaista tällä ajoradalla
+                          ((-> osa-virhetekstit :ei-tr-kaistaa :yksi-kaista)
+                           (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) (first osan-kaistat))
+                          ((-> osa-virhetekstit :ei-tr-kaistaa :useampi-kaista)
+                           (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) osan-kaistat))
+                        ;; Jos kaista löytyy
+                        (cond
+                          (and alkupaa? loppupaa?) (if (= (count kaistojen-tiedot) 1)
+                                                     ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :sama-tr-alku-ja-loppuosa :yksi-paaluvali)
+                                                      (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata kohteen-kaista (first paaluvalit))
+                                                     ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :sama-tr-alku-ja-loppuosa :useampi-paaluvali)
+                                                      (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata kohteen-kaista paaluvalit)) 
+                          alkupaa? ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :tr-alkuosa)
+                                    kohteen-ajorata kohteen-kaista (:tr-osa kohteen-tieto))
+                          loppupaa? ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :tr-loppuosa)
+                                     kohteen-ajorata kohteen-kaista (:tr-osa kohteen-tieto)) 
+                          :else ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :tr-valiosa)
+                                 kohteen-ajorata kohteen-kaista (:tr-osa kohteen-tieto)))))
+                    ;; Jos osaa ei löydy
+                    (let [ei-osaa-virheteksti (-> paikka-virhetekstit :tr-numero :tr-osa :tr-ajorata :ei-osaa)
+                          ajoradan-paaluvalit (map (fn [osio]
+                                                     (str "(" (:tr-osa kohteen-tieto) ", "
+                                                          (:tr-alkuetaisyys osio) ", "
+                                                          (:tr-osa kohteen-tieto) ", "
+                                                          (+ (:tr-alkuetaisyys osio) (:pituus osio)) ")"))
+                                                   (:osiot ajorata-tiedot))]
                       (cond
-                        (and alkupaa? loppupaa?) (if (= (count kaistojen-tiedot) 1)
-                                                   ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :sama-tr-alku-ja-loppuosa :yksi-paaluvali)
-                                                    (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata kohteen-kaista (first paaluvalit))
-                                                   ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :sama-tr-alku-ja-loppuosa :useampi-paaluvali)
-                                                    (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata kohteen-kaista paaluvalit)) 
-                        alkupaa? ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :tr-alkuosa)
-                                  kohteen-ajorata kohteen-kaista (:tr-osa kohteen-tieto))
-                        loppupaa? ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :tr-loppuosa)
-                                   kohteen-ajorata kohteen-kaista (:tr-osa kohteen-tieto)) 
-                        :else ((-> osa-virhetekstit :tr-kaista :ei-paaluvalia :tr-valiosa)
-                               kohteen-ajorata kohteen-kaista (:tr-osa kohteen-tieto)))))
-                  ;; Jos osaa ei löydy
-                  (let [ei-osaa-virheteksti (-> paikka-virhetekstit :tr-numero :tr-osa :tr-ajorata :ei-osaa)
-                        ajoradan-paaluvalit (map (fn [osio]
-                                                   (str "(" (:tr-osa kohteen-tieto) ", "
-                                                        (:tr-alkuetaisyys osio) ", "
-                                                        (:tr-osa kohteen-tieto) ", "
-                                                        (+ (:tr-alkuetaisyys osio) (:pituus osio)) ")"))
-                                                 (:osiot ajorata-tiedot))]
-                    (cond
-                      (and alkupaa? loppupaa?) (if (= 1 (count ajoradan-paaluvalit))
-                                                 ((-> ei-osaa-virheteksti :sama-tr-alku-ja-loppuosa :yksi-paaluvali)
-                                                  (:tr-ajorata ajorata-tiedot) (first ajoradan-paaluvalit))
-                                                 ((-> ei-osaa-virheteksti :sama-tr-alku-ja-loppuosa :useampi-paaluvali)
-                                                  (:tr-ajorata ajorata-tiedot) ajoradan-paaluvalit))
-                      alkupaa? ((-> ei-osaa-virheteksti :tr-alkuosa)
-                                kohteen-ajorata (:tr-osa kohteen-tieto))
-                      loppupaa? ((-> ei-osaa-virheteksti :tr-loppuosa)
-                                 kohteen-ajorata (:tr-osa kohteen-tieto))
-                      :else ((-> ei-osaa-virheteksti :tr-valiosa)
-                             kohteen-kaista kohteen-ajorata (:tr-osa kohteen-tieto)))))
-                ;; Jos ajorataa ei löydy
-                ((-> paikka-virhetekstit :tr-numero :tr-osa :ei-tr-ajorataa)
-                 (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata)))))
+                        (and alkupaa? loppupaa?) (if (= 1 (count ajoradan-paaluvalit))
+                                                   ((-> ei-osaa-virheteksti :sama-tr-alku-ja-loppuosa :yksi-paaluvali)
+                                                    (:tr-ajorata ajorata-tiedot) (first ajoradan-paaluvalit))
+                                                   ((-> ei-osaa-virheteksti :sama-tr-alku-ja-loppuosa :useampi-paaluvali)
+                                                    (:tr-ajorata ajorata-tiedot) ajoradan-paaluvalit))
+                        alkupaa? ((-> ei-osaa-virheteksti :tr-alkuosa)
+                                  kohteen-ajorata (:tr-osa kohteen-tieto))
+                        loppupaa? ((-> ei-osaa-virheteksti :tr-loppuosa)
+                                   kohteen-ajorata (:tr-osa kohteen-tieto))
+                        :else ((-> ei-osaa-virheteksti :tr-valiosa)
+                               kohteen-kaista kohteen-ajorata (:tr-osa kohteen-tieto)))))
+                  ;; Jos ajorataa ei löydy
+                  ((-> paikka-virhetekstit :tr-numero :tr-osa :ei-tr-ajorataa)
+                   (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata))))))
         (:kohteen-tiedot validoitu-paikka)))
 
 (defn ongelma? [virheet f]
@@ -870,11 +878,11 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
       tyhja? (conj (-> muoto-virhetekstit tr-avain :ei-arvoa))
       muoto-vaarin? (conj (-> muoto-virhetekstit tr-avain :vaarin-pain)))))
 
-(defn validoitu-kohde-tekstit [validoitu-kohde]
+(defn validoitu-kohde-tekstit [validoitu-kohde paakohde?]
   (let [{:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
                 muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys]} validoitu-kohde
         paikka-vaarin (when validoitu-paikka
-                        (validoidun-paikan-teksti validoitu-paikka))
+                        (validoidun-paikan-teksti validoitu-paikka paakohde?))
         tr-numero-vaarin (when muoto
                            (validoidun-muodon-teksti muoto :tr-numero))
         tr-ajorata-vaarin (when muoto
@@ -949,7 +957,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                      paakohde-paallekkain)})))
 
 (defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
-  (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide)
+  (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false)
         {:keys [paallekkaiset-alikohteet alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
         paallekkaisyysteksti-alikohde (when-not (nil? paallekkaiset-alikohteet)
                                         (if (empty? paallekkaiset-alikohteet)

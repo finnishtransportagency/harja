@@ -906,7 +906,7 @@
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
                                       validoitu (yllapitokohde-domain/validoi-kohde paakohde [] (get tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
-                                  (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu))))))
+                                  (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu true))))))
 
         alikohteen-validointi (fn [rivi taulukko]
                                 (let [{:keys [perustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
@@ -917,7 +917,7 @@
                                       validoitu (if (= (:tr-numero paakohde) (:tr-numero rivi))
                                                   (yllapitokohde-domain/validoi-alikohde paakohde rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi)
                                                   (yllapitokohde-domain/validoi-muukohde paakohde rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi))]
-                                  (yllapitokohde-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys :muukohde-paallekkyys))))
+                                  (yllapitokohde-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys :muukohde-paallekkyys) false)))
         kohde-toisten-kanssa-paallekkain-validointi (fn [alikohde? _ rivi taulukko]
                                                       (let [toiset-alikohteet (keep (fn [[indeksi kohdeosa]]
                                                                                       (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
@@ -931,7 +931,8 @@
                                                           (yllapitokohde-domain/validoitu-kohde-tekstit {(if (= (:tr-numero rivi) (-> @paallystys/tila :paallystysilmoitus-lomakedata :perustiedot :tr-numero))
                                                                                                            :alikohde-paallekkyys
                                                                                                            :muukohde-paallekkyys)
-                                                                                                         paallekkyydet})
+                                                                                                         paallekkyydet}
+                                                                                                        (not alikohde?))
                                                           (yllapitokohde-domain/validoi-alustatoimenpide-teksti {:alustatoimenpide-paallekkyys paallekkyydet}))))
         alustatoimen-validointi (fn [rivi taulukko]
                                   (let [{:keys [ilmoitustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
