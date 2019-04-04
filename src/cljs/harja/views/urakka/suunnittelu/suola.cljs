@@ -77,38 +77,42 @@
 (defn pohjavesialueet-muokkausdata []
   (let [pohjavesialueet @pohjavesialueet
         pv-rajat (into {}
-                       (map (juxt :pohjavesialue identity))
+                       (map (juxt #(str (:pohjavesialue %) " " (:tie %)) identity))
                        (:pohjavesialue-talvisuola @syotettavat-tiedot))]
     (wrap (into (sorted-map)
                 (map (fn [pohjavesialue]
                        [(str  (:tunnus pohjavesialue) " " (:tie pohjavesialue))
                         (assoc pohjavesialue
-                               :talvisuolaraja (:talvisuolaraja (get pv-rajat (:tunnus pohjavesialue))))]))
+                               :talvisuolaraja (:talvisuolaraja (get pv-rajat (str (:tunnus pohjavesialue) " " (:tie pohjavesialue)))))]))
                 pohjavesialueet)
           #(swap! syotettavat-tiedot update-in [:pohjavesialue-talvisuola]
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
-                              ;(log "PV " tunnus)
+                                        ;(log "PV " tunnus)
                               (let [tunnus-pohjavesialue (first (clojure.string/split tunnus " "))
                                     paivitettava (first (keep-indexed (fn [i pv-raja]
                                                                         (and (= tunnus (str (:pohjavesialue pv-raja)))
                                                                              i))
                                                                       pohjavesialue-talvisuola))]
 
-                                ;(log "PV paivitettava " paivitettava)
+                                        ;(log "PV paivitettava " paivitettava)
                                 (if paivitettava
-                                  ;; olemassaoleva raja, päivitä sen arvo
-                                  (update-in pohjavesialue-talvisuola [paivitettava]
-                                             (fn [pv-raja]
-                                               (assoc pv-raja
-                                                      :tie (:tie (get % tunnus))
-                                                      :talvisuolaraja (:talvisuolaraja (get % tunnus)))))
+                                  (do
+                                    (js/console.log "päivitettävä löytyi: " (pr-str tunnus-pohjavesialue) (pr-str paivitettava))
+                                    ;; olemassaoleva raja, päivitä sen arvo
+                                    (update-in pohjavesialue-talvisuola [paivitettava]
+                                               (fn [pv-raja]
+                                                 (assoc pv-raja
+                                                        :tie (:tie (get % tunnus))
+                                                        :talvisuolaraja (:talvisuolaraja (get % tunnus))))))
                                   ;; tälle alueelle ei olemassaolevaa rajaa, lisätään uusi rivi
-                                  (conj pohjavesialue-talvisuola
-                                        {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
-                                         :pohjavesialue tunnus-pohjavesialue
-                                         :tie (:tie (get % tunnus))
-                                         :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
+                                  (do
+                                    (js/console.log "uusi tunnukselle" (pr-str tunnus-pohjavesialue))
+                                    (conj pohjavesialue-talvisuola
+                                          {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
+                                           :pohjavesialue tunnus-pohjavesialue
+                                           :tie (:tie (get % tunnus))
+                                           :talvisuolaraja (:talvisuolaraja (get % tunnus))})))))
                             (vec pohjavesialue-talvisuola)
                             (keys %)))))))
 
