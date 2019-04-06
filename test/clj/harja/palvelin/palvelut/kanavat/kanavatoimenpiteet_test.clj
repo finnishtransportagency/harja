@@ -35,8 +35,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+                      jarjestelma-fixture))
 
 (deftest toimenpiteiden-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
@@ -121,7 +120,7 @@
                                            parametrit)))))
 
 (deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
-  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
         toimenpiteiden-kentta (fn [toimenpiteet kentta]
                                 ())
         kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
@@ -145,8 +144,8 @@
                                               WHERE tk4.nimi='Ei yksilöity' AND
                                                     tk3.koodi='27105';")))
         tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
-                                               (when (= %1 (last toimenpide))
-                                                 (first toimenpide)))
+                                               (when (= %1 (:tyyppi toimenpide))
+                                                 (:id toimenpide)))
                                              %2))
         kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
         muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
@@ -158,11 +157,11 @@
                           :siirra-kanavatoimenpiteet
                           +kayttaja-jvh+
                           parametrit)
-        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
         ei-kokonaishintaisia-toimenpiteita? (empty? (transduce
                                                       (comp (map #(nil? ((set/union muutoshintaisten-toimenpiteiden-tehtavat
                                                                                     ei-yksiloity-tehtava)
-                                                                          (second %))))
+                                                                          (:toimenpidekoodi %))))
                                                             (filter true?))
                                                       conj paivitetyt-toimenpiteet))]
     (is (= (tyypin-toimenpiteet "muutos-lisatyo" paivitetyt-toimenpiteet)
@@ -176,9 +175,9 @@
                             :siirra-kanavatoimenpiteet
                             +kayttaja-jvh+
                             uudet-parametrit)
-          paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+          paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
           ei-muutoshintaisia-toimenpiteita? (empty? (transduce
-                                                      (comp (map #(nil? (kokonaishintaisten-toimenpiteiden-tehtavat (second %))))
+                                                      (comp (map #(nil? (kokonaishintaisten-toimenpiteiden-tehtavat (:toimenpidekoodi %))))
                                                             (filter true?))
                                                       conj paivitetyt-toimenpiteet))]
       (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet)))
