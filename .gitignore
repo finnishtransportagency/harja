@@ -58,3 +58,4 @@ resources/public/laadunseuranta/css/
 .deploy3_known_hosts
 testi.pdf
 checkouts/
+package-lock.json
