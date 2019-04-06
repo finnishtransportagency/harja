@@ -97,7 +97,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             .contains('Lisää osa').click({force: true}).click({force: true}).click({force: true})
         // Katsotaan, että niissä on oikeanlaisia virheitä
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] tbody .virheet')
-            .should('have.length', 16)
+            .should('have.length', 12)
             .each(($virheet, index, $virheetLista) => {
                 switch (index) {
                     case 0:
@@ -168,15 +168,11 @@ describe('Aloita päällystysilmoitus vanha', function () {
                         return this.textContent.replace(/[\u00AD]+/g, '').trim()
                     }).get()
                 };
-                expect(virheValinta(0, 'Aosa')).to.have.lengthOf(3)
-                    .and.to.contain('Alkuosa ei voi olla loppuosan jälkeen')
-                    .and.to.contain('Tiellä 22 ei ole osaa 2')
-                    .and.to.contain('Ajorata 1 ei aloita osaa 1');
-                expect(virheValinta(0, 'Aet')).to.have.lengthOf(2);
-                expect(virheValinta(0, 'Losa')).to.have.lengthOf(3)
+                expect(virheValinta(0, 'Aosa')).to.have.lengthOf(1)
+                    .and.to.contain('Alkuosa ei voi olla loppuosan jälkeen');
+                expect(virheValinta(0, 'Losa')).to.have.lengthOf(1)
                     .and.to.contain('Loppuosa ei voi olla alkuosaa ennen');
 
-                expect(virheValinta(0, 'Let')).to.have.lengthOf(2);
                 ['Aosa', 'Aet', 'Losa', 'Let'].forEach((otsikko) => {
                     expect(virheValinta(1, otsikko)).to.have.lengthOf(1)
                         .and.to.contain('Kohteenosa on päällekkäin osan Foo kanssa')
@@ -393,7 +389,7 @@ describe('Korjaa virhedata', function () {
                 '                                  tr_ajorata, tr_kaista, sijainti)' +
                 '      VALUES ((SELECT id' +
                 '                FROM yllapitokohde' +
-                '                WHERE nimi = \'E2E-Testi\'), 22, 1, 400+i*2, 1, 400+(i+1)*2, 1, 1,' +
+                '                WHERE nimi = \'E2E-Testi\'), 22, 1, 400+i*2, 1, 400+(i+1)*2, 1, 11,' +
                 '                (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
                 '                 FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 400+i*2, 1, 400+(i+1)*2, 1)));' +
                 '  END LOOP;' +
@@ -438,7 +434,7 @@ describe('Korjaa virhedata', function () {
             .parentsUntil('tbody')
             .contains('button', 'Päällystysilmoitus').click()
     })
-    it('Tetaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
+    it('Testaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
         cy.server()
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
