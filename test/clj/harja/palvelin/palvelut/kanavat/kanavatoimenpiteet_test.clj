@@ -25,7 +25,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :db ds
                         :http-palvelin (testi-http-palvelin)
                         :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-toimenpiteet (component/using
