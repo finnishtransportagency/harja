@@ -101,7 +101,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       > .varoitukset,
       > .virheet,
       > .huomautukset {
-        display: block;
+          display: block;
+	  
+	  > .varoitus,
+	  > .virhe,
+	  > .huomautus {
+	      text-align: left;
+	      width: max-content;
+	  }
       }
     }
 

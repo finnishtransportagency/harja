@@ -87,22 +87,26 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn virheen-ohje
   "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu), :varoitus, tai :huomautus."
   ([virheet] (virheen-ohje virheet :virhe))
-  ([virheet tyyppi]
+  ([virheet tyyppi] (virheen-ohje virheet tyyppi {}))
+  ([virheet tyyppi {:keys [virheet-ulos? max-width]}]
    [:div {:class (case tyyppi
                    :varoitus "varoitukset"
                    :virhe "virheet"
                    :huomautus "huomautukset")}
-    [:div {:class (case tyyppi
-                    :varoitus "varoitus"
-                    :virhe "virhe"
-                    :huomautus "huomautus")}
+    [:div (merge {:class (case tyyppi
+                           :varoitus "varoitus"
+                           :virhe "virhe"
+                           :huomautus "huomautus")}
+                 (when max-width
+                   {:style {:max-width max-width}}))
      (doall (for* [v (distinct virheet)]
 
-       [:span
-        (case tyyppi
-          :huomautus (ikonit/livicon-info-circle)
-          (ikonit/livicon-warning-sign))
-        [:span (str " " v)]]))]]))
+                  [:span (when virheet-ulos?
+                           {:style {:display "block"}})
+                   (case tyyppi
+                     :huomautus (ikonit/livicon-info-circle)
+                     (ikonit/livicon-warning-sign))
+                   [:span (str " " v)]]))]]))
 
 
 (defn linkki [otsikko toiminto]

@@ -3,7 +3,7 @@
             [specql.core :refer [fetch]]
             [specql.op :as op]
             [specql.rel :as rel]
-            [clojure.future :refer :all]
+            
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]

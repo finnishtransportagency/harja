@@ -3,7 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [clojure.future :refer :all]
+            
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [harja.domain.toimenpidekoodi :as tpk]

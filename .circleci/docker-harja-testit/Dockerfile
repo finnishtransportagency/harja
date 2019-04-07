@@ -1,4 +1,4 @@
-FROM circleci/clojure:lein-2.7.1
+FROM circleci/clojure:openjdk-11-lein
 
 USER root
 
