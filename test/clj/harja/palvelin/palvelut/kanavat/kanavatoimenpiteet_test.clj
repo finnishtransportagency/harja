@@ -37,7 +37,7 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
 
-(deftest toimenpiteiden-haku
+#_(deftest toimenpiteiden-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         hakuargumentit {::kanavan-toimenpide/urakka-id urakka-id
                         ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
@@ -119,7 +119,7 @@
                                            +kayttaja-ulle+
                                            parametrit)))))
 
-(deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
+#_(deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
   (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
         kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
                                                          (apply concat

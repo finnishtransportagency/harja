@@ -39,7 +39,7 @@
                      urakkatieto-fixture
                      jarjestelma-fixture))
 
-(deftest raportin-suoritus-urakka
+#_(deftest raportin-suoritus-urakka
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
@@ -70,7 +70,7 @@
         nurkkasumma (last (last (last vastaus)))]
     (is (vector? vastaus))))
 
-(deftest raportin-suoritus-urakka-tehtava
+#_(deftest raportin-suoritus-urakka-tehtava
   (let [vaylanhoito-ei-yksiloity-tpk-id (hae-vaylanhoito-ei-yksiloity-tpk-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
