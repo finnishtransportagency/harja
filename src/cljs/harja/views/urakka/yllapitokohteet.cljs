@@ -13,6 +13,7 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [clojure.string :as str]
+            [clojure.set :as clj-set]
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
@@ -73,7 +74,7 @@
   "Perusleveys on leveys, jota kentille käytetään, ellei määritetä kenttäkohtaista leveyttä.
    Nimi-kenttä on kaksi kertaa perusleveys, ellei määritetä kenttäkohtaista leveyttä."
   ([perusleveys skeemaosat] (tierekisteriosoite-sarakkeet perusleveys skeemaosat false))
-  ([perusleveys skeemaosat vain-nama-validoinnit?] (tierekisteriosoite-sarakkeet perusleveys skeemaosat false
+  ([perusleveys skeemaosat vain-nama-validoinnit?] (tierekisteriosoite-sarakkeet perusleveys skeemaosat vain-nama-validoinnit?
                                                                                  [(constantly true) (constantly false) #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
                                                                                   #(pot/arvo-koodilla pot/+kaistat+ %) (fn [arvo muokattava?]
                                                                                                                          (if arvo (:nimi arvo) (if muokattava?
@@ -133,7 +134,9 @@
              :validoi (if vain-nama-validoinnit?
                         (:validoi aosa)
                         (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
-                               yllapitokohteet-domain/alkuosa-ei-lopun-jalkeen]
+                               (fn [tr-alkuosa rivi]
+                                 (when-not (yllapitokohteet-domain/losa>aosa? (assoc rivi :tr-alkuosa tr-alkuosa))
+                                   (-> yllapitokohteet-domain/muoto-virhetekstit :tr-alkuosa :vaarin-pain)))]
                               (:validoi aosa)))
              :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aosa)
              :muokattava? (or (:muokattava? aosa) true-fn)}
@@ -142,7 +145,11 @@
              :validoi (if vain-nama-validoinnit?
                         (:validoi aet)
                         (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
-                               yllapitokohteet-domain/alkuetaisyys-ei-lopun-jalkeen]
+                               (fn [tr-alkuetaisyys rivi]
+                                 (when-not (and (or (yllapitokohteet-domain/let>aet? (assoc rivi :tr-alkuetaisyys tr-alkuetaisyys))
+                                                    (yllapitokohteet-domain/let=aet? (assoc rivi :tr-alkuetaisyys tr-alkuetaisyys)))
+                                                (yllapitokohteet-domain/losa=aosa? rivi))
+                                   (-> yllapitokohteet-domain/muoto-virhetekstit :tr-alkuetaisyys :vaarin-pain)))]
                               (:validoi aet)))
              :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aet)
              :muokattava? (or (:muokattava? aet) true-fn)}
@@ -151,7 +158,9 @@
              :validoi (if vain-nama-validoinnit?
                         (:validoi losa)
                         (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
-                               yllapitokohteet-domain/loppuosa-ei-alkua-ennen]
+                               (fn [tr-loppuosa rivi]
+                                 (when-not (yllapitokohteet-domain/losa>aosa? (assoc rivi :tr-loppuosa tr-loppuosa))
+                                   (-> yllapitokohteet-domain/muoto-virhetekstit :tr-loppuosa :vaarin-pain)))]
                               (:validoi losa)))
              :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? losa)
              :muokattava? (or (:muokattava? losa) true-fn)}
@@ -160,7 +169,11 @@
              :validoi (if vain-nama-validoinnit?
                         (:validoi let)
                         (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
-                               yllapitokohteet-domain/loppuetaisyys-ei-alkua-ennen]
+                               (fn [tr-loppuetaisyys rivi]
+                                 (when-not (and (or (yllapitokohteet-domain/let>aet? (assoc rivi :tr-loppuetaisyys tr-loppuetaisyys))
+                                                    (yllapitokohteet-domain/let=aet? (assoc rivi :tr-loppuetaisyys tr-loppuetaisyys)))
+                                                (yllapitokohteet-domain/losa=aosa? rivi))
+                                   (-> yllapitokohteet-domain/muoto-virhetekstit :tr-loppuetaisyys :vaarin-pain)))]
                               (:validoi let)))
              :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? let)
              :muokattava? (or (:muokattava? let) true-fn)}
@@ -612,12 +625,11 @@
          kohdeosat]))))
 
 (defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}]
-  (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
+  (let [g (grid/grid-ohjaus)
+        rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
         virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
         osan-pituudet-teille (atom nil)
-        validoi-kohteen-osoite (fn [kentta arvo rivi]
-                                 (yllapitokohteet-domain/validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta rivi))
         tien-osat-riville (fn [rivi]
                             (get @osan-pituudet-teille (:tr-numero rivi)))
         kirjoitusoikeus?
@@ -627,27 +639,17 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
-        hae-fn (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
+        hae-fn (fn [rivi]
+                 ;; TODO vaihda tämä käyttämään paallystys-tiedot/tr-osien-tiedot dataa
+                 (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
                  muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
-                 jarjesta-kun-kasketaan esta-ainoan-osan-poisto?]}]
+                 jarjesta-kun-kasketaan esta-ainoan-osan-poisto? rivi-validointi taulukko-validointi]}]
       (let [skeema (yllapitokohdeosat-sarakkeet {:muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                                  :muokattava-tie? muokattava-tie?
-                                                 :validoi {:tr-numero (vec (:tr-numero validoinnit))
-                                                           :tr-ajorata (vec (concat [[:ei-tyhja "Anna ajorata"]]
-                                                                                    (:tr-ajorata validoinnit)))
-                                                           :tr-kaista (vec (concat [[:ei-tyhja "Anna kaista"]]
-                                                                                   (:tr-kaista validoinnit)))
-                                                           :tr-alkuosa (vec (concat [(partial validoi-kohteen-osoite :tr-alkuosa)]
-                                                                                    (:tr-alkuosa validoinnit)))
-                                                           :tr-alkuetaisyys (vec (concat [(partial validoi-kohteen-osoite :tr-alkuetaisyys)]
-                                                                                         (:tr-alkuetaisyys validoinnit)))
-                                                           :tr-loppuosa (vec (concat [(partial validoi-kohteen-osoite :tr-loppuosa)]
-                                                                                     (:tr-loppuosa validoinnit)))
-                                                           :tr-loppuetaisyys (vec (concat [(partial validoi-kohteen-osoite :tr-loppuetaisyys)]
-                                                                                          (:tr-loppuetaisyys validoinnit)))}
+                                                 :vain-nama-validoinnit? true
                                                  :hae-fn hae-fn})
             muokkaa-kohdeosat! (fn [uudet-osat]
                                  (let [uudet-kohdeosat (if jarjesta-kun-kasketaan
@@ -673,11 +675,13 @@
                                                  #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1 yllapitokohde))
                                                  {:ikoni (ikonit/livicon-arrow-down)
                                                   :luokka "btn-xs"}]])])
+          :taulukko-validointi taulukko-validointi
+          :ohjaus g
+          :rivi-validointi rivi-validointi
           :rivinumerot? rivinumerot?
           :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
           :virhe-viesti virhe-viesti
           :muutos (fn [grid]
-                    (validoi-kohdeosien-paallekkyys (grid/hae-muokkaustila grid) virheet)
                     (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
           :otsikko otsikko
           :id "yllapitokohdeosat"
@@ -731,7 +735,9 @@
                 :komponentti (fn [rivi {:keys [index]}]
                                [:div.tasaa-oikealle
                                 [napit/yleinen-ensisijainen "Lisää osa"
-                                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
+                                 #(do
+                                    (muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom (inc index) {}))
+                                    (grid/validoi-grid g))
                                  {:ikoni (ikonit/livicon-arrow-down)
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
@@ -739,7 +745,9 @@
                                   :data-attributes {:data-cy (str "lisaa-osa-" otsikko)}
                                   :luokka "btn-xs"}]
                                 [napit/kielteinen "Poista"
-                                 #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
+                                 #(do
+                                    (muokkaa-kohdeosat! (tiedot/poista-kohdeosa @kohdeosat-atom (inc index)))
+                                    (grid/validoi-grid g))
                                  {:ikoni (ikonit/livicon-trash)
                                   :disabled (or (not kirjoitusoikeus?)
                                                 (not voi-muokata?)
@@ -822,7 +830,9 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
-(defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi]}]
+(defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi
+                                    kohteen-rivi-validointi kohteen-taulukko-validointi
+                                    muut-kohteen-rivi-validointi muut-kohteen-taulukko-validointi]}]
   (let [tallenna-fn (fn [osatyyppi]
                       (fn [rivit]
                         (tiedot/tallenna-yllapitokohdeosat!
@@ -871,6 +881,8 @@
           [:div
            [yllapitokohdeosat
             {:otsikko "Kohteen tierekisteriosoitteet"
+             :rivi-validointi kohteen-rivi-validointi
+             :taulukko-validointi kohteen-taulukko-validointi
              :urakka urakka
              :muokattava-tie? (constantly false)
              :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
@@ -893,6 +905,8 @@
              :kohdetyyppi kohdetyyppi}]
            [yllapitokohdeosat
             {:otsikko "Muut tierekisteriosoitteet"
+             :rivi-validointi muut-kohteen-rivi-validointi
+             :taulukko-validointi muut-kohteen-taulukko-validointi
              :urakka urakka
              :muokattava-tie? (constantly true)
              :muokattava-ajorata-ja-kaista? (constantly true)
@@ -931,13 +945,88 @@
   [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
+        g (grid/grid-ohjaus)
         tallenna (reaction
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? yha-sidottu?)
                      :ei-mahdollinen
                      (:tallenna optiot)))
         osan-pituudet-teille (atom nil)
-        validoi-kohteen-osoite (fn [kentta arvo rivi]
-                                 (yllapitokohteet-domain/validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta rivi))]
+        toiset-kohteet-fn (fn [rivi taulukko]
+                            (keep (fn [[indeksi kohdeosa]]
+                                    (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
+                                               (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa)
+                                               (not= kohdeosa rivi)
+                                               (= (:tr-numero rivi) (:tr-numero kohdeosa)))
+                                      kohdeosa))
+                                  taulukko))
+        paakohteen-validointi (fn [rivi taulukko]
+                                (let [vuosi @u/valittu-urakan-vuosi
+                                      paakohde (select-keys rivi #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+                                      toiset-kohteet (toiset-kohteet-fn rivi taulukko)
+                                      ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
+                                      ;; myös toisilla riveillä olevat validoinnit.
+                                      validoitu (yllapitokohteet-domain/validoi-kohde paakohde toiset-kohteet (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
+                                  (yllapitokohteet-domain/validoitu-kohde-tekstit validoitu true)))
+        alikohteen-validointi (fn [paakohde rivi taulukko]
+                                (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
+                                      vuosi @u/valittu-urakan-vuosi
+                                      validoitu (yllapitokohteet-domain/validoi-alikohde paakohde rivi [] (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) vuosi)]
+                                  (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys) false)))
+        muukohteen-validointi (fn [paakohde rivi taulukko]
+                                (let [vuosi @u/valittu-urakan-vuosi
+                                      ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
+                                      ;; myös toisilla riveillä olevat validoinnit.
+                                      validoitu (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) vuosi)]
+                                  (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :muukohde-paallekkyys) false)))
+        kohde-toisten-kanssa-paallekkain-validointi (fn [alikohde? _ rivi taulukko]
+                                                      (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
+                                                            paallekkyydet (filter #(yllapitokohteet-domain/tr-valit-paallekkain? rivi %)
+                                                                                  toiset-kohteet)]
+                                                        (yllapitokohteet-domain/validoitu-kohde-tekstit {(if alikohde?
+                                                                                                           :alikohde-paallekkyys
+                                                                                                           :paallekkyys)
+                                                                                                         paallekkyydet}
+                                                                                                        (not alikohde?))))
+        muukohde-toisten-kanssa-paallekkain-validointi (fn [_ rivi taulukko]
+                                                         (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
+                                                               paallekkyydet (filter #(yllapitokohteet-domain/tr-valit-paallekkain? rivi %)
+                                                                                     toiset-kohteet)]
+                                                           (yllapitokohteet-domain/validoitu-kohde-tekstit {:muukohde-paallekkyys
+                                                                                                            paallekkyydet}
+                                                                                                           false)))
+        hae-osien-tiedot (fn [grid-tila]
+                           (let [rivit (vals grid-tila)
+                                 jo-haetut-tiedot (into #{}
+                                                        (map (juxt :tr-numero :tr-osa) (apply concat (vals @paallystys-tiedot/tr-osien-tiedot))))
+                                 tarvittavat-tiedot (clj-set/union
+                                                     (into #{}
+                                                           (map (juxt :tr-numero :tr-alkuosa) rivit))
+                                                     (into #{}
+                                                          (map (juxt :tr-numero :tr-loppuosa) rivit)))
+                                 puuttuvat-tiedot (clj-set/difference tarvittavat-tiedot jo-haetut-tiedot)
+                                 mahdollisesti-haettavat-tiedot (reduce (fn [haettavat-tiedot [tr-numero tr-osa]]
+                                                                        (if (some #(= tr-numero (:tr-numero %)) haettavat-tiedot)
+                                                                          (map #(if (= tr-numero (:tr-numero %))
+                                                                                  (-> %
+                                                                                      (update :tr-alkuosa (fn [vanha-tr-alkuosa]
+                                                                                                            (min vanha-tr-alkuosa tr-osa)))
+                                                                                      (update :tr-loppuosa (fn [vanha-tr-loppuosa]
+                                                                                                             (max vanha-tr-loppuosa tr-osa))))
+                                                                                  %)
+                                                                               haettavat-tiedot)
+                                                                          (conj haettavat-tiedot {:tr-numero tr-numero
+                                                                                                  :tr-alkuosa tr-osa
+                                                                                                  :tr-loppuosa tr-osa})))
+                                                                        [] (filter (fn [[tr-numero _]]
+                                                                                     (some #(= tr-numero (first %))
+                                                                                            puuttuvat-tiedot))
+                                                                                   (concat jo-haetut-tiedot tarvittavat-tiedot)))]
+                             (when-not (empty? mahdollisesti-haettavat-tiedot)
+                               (go (doseq [haettava-tieto mahdollisesti-haettavat-tiedot]
+                                     (let [tr-tieto (<! (k/post! :hae-tr-tiedot haettava-tieto))]
+                                       (swap! paallystys-tiedot/tr-osien-tiedot
+                                              assoc (:tr-numero haettava-tieto) tr-tieto)))
+                                   (grid/validoi-grid g)))))]
     (komp/luo
       (fn [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
         (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
@@ -946,28 +1035,80 @@
                                            ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
                                            (and yha-sidottu?
                                                 (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))
-              paallystysilmoitus-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))]
+              paallystysilmoitus-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))
+              validointi {:paakohde {:tr-osoite [{:fn paakohteen-validointi
+                                                  :sarakkeet {:tr-numero :tr-numero
+                                                              :tr-ajorata :tr-ajorata
+                                                              :tr-kaista :tr-kaista
+                                                              :tr-alkuosa :tr-alkuosa
+                                                              :tr-alkuetaisyys :tr-alkuetaisyys
+                                                              :tr-loppuosa :tr-loppuosa
+                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                     :taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
+                                                 :sarakkeet {:tr-numero :tr-numero
+                                                             :tr-alkuosa :tr-alkuosa
+                                                             :tr-alkuetaisyys :tr-alkuetaisyys
+                                                             :tr-loppuosa :tr-loppuosa
+                                                             :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
                        [vasta-muokatut-lihavoitu]]
+             :ohjaus g
              :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
              :vetolaatikot (into {}
                                  (map (juxt
                                         :id
                                         (fn [rivi]
-                                          [kohteen-vetolaatikko {:urakka urakka
-                                                                 :sopimus-id (first @u/valittu-sopimusnumero)
-                                                                 :kohteet-atom kohteet-atom
-                                                                 :rivi rivi
-                                                                 :kohdetyyppi (:kohdetyyppi optiot)}])))
+                                          (let [validointi {:tr-osoitteet {:rivi-alikohde [{:fn (r/partial alikohteen-validointi (select-keys rivi #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}))
+                                                                                            :sarakkeet {:tr-numero :tr-numero
+                                                                                                        :tr-ajorata :tr-ajorata
+                                                                                                        :tr-kaista :tr-kaista
+                                                                                                        :tr-alkuosa :tr-alkuosa
+                                                                                                        :tr-alkuetaisyys :tr-alkuetaisyys
+                                                                                                        :tr-loppuosa :tr-loppuosa
+                                                                                                        :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                                                           :rivi-muukohde [{:fn (r/partial muukohteen-validointi (select-keys rivi #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}))
+                                                                                            :sarakkeet {:tr-numero :tr-numero
+                                                                                                        :tr-ajorata :tr-ajorata
+                                                                                                        :tr-kaista :tr-kaista
+                                                                                                        :tr-alkuosa :tr-alkuosa
+                                                                                                        :tr-alkuetaisyys :tr-alkuetaisyys
+                                                                                                        :tr-loppuosa :tr-loppuosa
+                                                                                                        :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                                                           :taulukko-alikohde [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi true)
+                                                                                                :sarakkeet {:tr-numero :tr-numero
+                                                                                                            :tr-ajorata :tr-ajorata
+                                                                                                            :tr-kaista :tr-kaista
+                                                                                                            :tr-alkuosa :tr-alkuosa
+                                                                                                            :tr-alkuetaisyys :tr-alkuetaisyys
+                                                                                                            :tr-loppuosa :tr-loppuosa
+                                                                                                            :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                                                           :taulukko-muukohde [{:fn (r/partial muukohde-toisten-kanssa-paallekkain-validointi)
+                                                                                                :sarakkeet {:tr-numero :tr-numero
+                                                                                                            :tr-ajorata :tr-ajorata
+                                                                                                            :tr-kaista :tr-kaista
+                                                                                                            :tr-alkuosa :tr-alkuosa
+                                                                                                            :tr-alkuetaisyys :tr-alkuetaisyys
+                                                                                                            :tr-loppuosa :tr-loppuosa
+                                                                                                            :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
+                                            [kohteen-vetolaatikko {:urakka urakka
+                                                                   :sopimus-id (first @u/valittu-sopimusnumero)
+                                                                   :kohteet-atom kohteet-atom
+                                                                   :rivi rivi
+                                                                   :kohdetyyppi (:kohdetyyppi optiot)
+                                                                   :kohteen-rivi-validointi (-> validointi  :tr-osoitteet :rivi-alikohde)
+                                                                   :kohteen-taulukko-validointi (-> validointi  :tr-osoitteet :taulukko-alikohde)
+                                                                   :muut-kohteen-rivi-validointi (-> validointi  :tr-osoitteet :rivi-muukohde)
+                                                                   :muut-kohteen-taulukko-validointi (-> validointi  :tr-osoitteet :taulukko-muukohde)}]))))
                                  @kohteet-atom)
+             :rivi-validointi (-> validointi :paakohde :tr-osoite)
+             :taulukko-validointi (-> validointi :paakohde :taulukko)
              :tallenna @tallenna
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (= (:status vastaus) :ok))
              :muutos (fn [grid]
-                       (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille)
-                       (validoi-tr-osoite grid tr-sijainnit tr-virheet))
+                       (hae-osien-tiedot (grid/hae-muokkaustila grid)))
              :voi-lisata? (not yha-sidottu?)
              :voi-muokata-rivia? paallystysilmoitus-lukittu?
              :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))
@@ -992,10 +1133,11 @@
                          {:nimi :tr-ajorata :muokattava? (constantly (not yha-sidottu?))})
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-kaista :muokattava? (constantly (not yha-sidottu?))})
-                       {:nimi :tr-alkuosa :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)]}
-                       {:nimi :tr-alkuetaisyys :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)]}
-                       {:nimi :tr-loppuosa :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)]}
-                       {:nimi :tr-loppuetaisyys :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)]}])
+                       {:nimi :tr-alkuosa}
+                       {:nimi :tr-alkuetaisyys}
+                       {:nimi :tr-loppuosa}
+                       {:nimi :tr-loppuetaisyys}]
+                      true)
                     [{:otsikko "KVL"
                       :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
                       :muokattava? (constantly (not yha-sidottu?))}

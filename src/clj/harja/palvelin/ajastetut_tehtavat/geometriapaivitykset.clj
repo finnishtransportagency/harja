@@ -142,6 +142,25 @@
     :tieosoiteverkon-shapefile
     tieverkon-tuonti/vie-tieverkko-kantaan))
 
+(def tee-laajennetun-tieverkon-paivitystehtava
+  (fn [this asetukset]
+    (clojure.core.async/thread
+      (tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan (:db this) (:laajennetun-tieosoiteverkon-tiedot asetukset))))
+  #_(maarittele-paivitystehtava
+    "laajennettu-tieverkko"
+    :laajennetun-tieosoiteverkon-osoite
+    :laajennetun-tieosoiteverkon-tuontikohde
+    :laajennetun-tieosoiteverkon-shapefile
+    tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan))
+
+(def tee-laajennetun-tieverkon-paikallinen-paivitystehtava
+  #_(maarittele-paikallinen-paivitystehtava
+    "laajennettu-tieverkko"
+    :laajennetun-tieosoiteverkon-osoite
+    :laajennetun-tieosoiteverkon-tuontikohde
+    :laajennetun-tieosoiteverkon-shapefile
+    tieverkon-tuonti/vie-laajennettu-tieverkko-kantaan))
+
 (def tee-pohjavesialueiden-paivitystehtava
   (maarittele-paivitystehtava
     "pohjavesialueet"
@@ -341,6 +360,8 @@
     (assoc this
       :tieverkon-hakutehtava (tee-tieverkon-paivitystehtava this asetukset)
       :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset)
+      :laajennetun-tieverkon-hakutehtava (tee-laajennetun-tieverkon-paivitystehtava this asetukset)
+      ;:laajennetun-tieverkon-paivitystehtava (tee-laajennetun-tieverkon-paikallinen-paivitystehtava this asetukset)
       :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-paivitystehtava this asetukset)
       :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset)
       :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-paivitystehtava this asetukset)
@@ -369,6 +390,8 @@
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
                      :tieverkon-paivitystehtava
+                     :laajennetun-tieverkon-hakutehtava
+                     #_:laajennetun-tieverkon-paivitystehtava
                      :pohjavesialueiden-hakutehtava
                      :pohjavesialueiden-paivitystehtava
                      :talvihoidon-hoitoluokkien-hakutehtava

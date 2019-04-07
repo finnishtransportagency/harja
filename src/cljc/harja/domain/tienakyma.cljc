@@ -3,7 +3,6 @@
   (:require [clojure.spec.alpha :as s]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.infopaneeli :as infopaneeli]
-            #?@(:clj [[clojure.future :refer :all]])
             [harja.geo :as geo]))
 
 (s/def ::alku inst?)

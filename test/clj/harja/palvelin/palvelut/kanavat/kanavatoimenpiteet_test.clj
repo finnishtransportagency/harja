@@ -34,8 +34,8 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :each (compose-fixtures
-                      jarjestelma-fixture))
+(use-fixtures :each (compose-fixtures tietokanta-fixture
+                                      jarjestelma-fixture))
 
 (deftest toimenpiteiden-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
@@ -121,8 +121,6 @@
 
 (deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
   (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
-        toimenpiteiden-kentta (fn [toimenpiteet kentta]
-                                ())
         kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
                                                          (apply concat
                                                                 (q "SELECT tk4.id
