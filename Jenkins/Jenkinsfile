@@ -168,17 +168,17 @@ node {
             }
         }
 
-        dir('E2E') {
-            omatFunktiot.checkoutE2E()
-            /*
-             * E2E TESTIT
-             */
-            stage(omatVarit.e2eTestit) {
-                if (omatVarit.e2eTestitAjetaan) {
-                    omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-                }
-            }
-        }
+        // dir('E2E') {
+        //     omatFunktiot.checkoutE2E()
+        //     /*
+        //      * E2E TESTIT
+        //      */
+        //     stage(omatVarit.e2eTestit) {
+        //         if (omatVarit.e2eTestitAjetaan) {
+        //             omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+        //         }
+        //     }
+        // }
 
         // dir('Harja') {
         //     /*
