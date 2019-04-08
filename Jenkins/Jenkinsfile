@@ -180,28 +180,28 @@ node {
         //     }
         // }
 
-        // dir('Harja') {
-        //     /*
-        //      * STAGESERVERIKANNAN LUOMINEN
-        //      */
+        dir('Harja') {
+            /*
+             * STAGESERVERIKANNAN LUOMINEN
+             */
 
-        //     stage(omatVarit.stagingserverinKannanLuonti) {
-        //         if (omatVarit.stagingserverinKannanLuontiAjetaan) {
-        //             omatFunktiot.ajaStagingserverinKanta(omatVarit.stagingserverinKannanLuonti)
-        //         }
-        //     }
-        // }
+            stage(omatVarit.stagingserverinKannanLuonti) {
+                if (omatVarit.stagingserverinKannanLuontiAjetaan) {
+                    omatFunktiot.ajaStagingserverinKanta(omatVarit.stagingserverinKannanLuonti)
+                }
+            }
+        }
 
-        // dir('CI') {
-        //     /*
-        //      * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
-        //      */
+        dir('CI') {
+            /*
+             * STAGING SERVERIAPPIKSEN DEPLOYAAMINEN
+             */
 
-        //     stage(omatVarit.stagingserverinAppLuonti) {
-        //         if (omatVarit.stagingserverinAppLuontiAjetaan) {
-        //             omatFunktiot.ajaStagingserverinApp(omatVarit.stagingserverinAppLuonti, jenkinsinBuildNumber)
-        //         }
-        //     }
-        // }
+            stage(omatVarit.stagingserverinAppLuonti) {
+                if (omatVarit.stagingserverinAppLuontiAjetaan) {
+                    omatFunktiot.ajaStagingserverinApp(omatVarit.stagingserverinAppLuonti, jenkinsinBuildNumber)
+                }
+            }
+        }
     }
 }
