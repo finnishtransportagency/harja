@@ -49,7 +49,7 @@ BEGIN
   FOR r IN cur LOOP
     FOREACH m IN ARRAY r.materiaalit LOOP
       IF suolamateriaalikoodit @> ARRAY[m.materiaalikoodi] THEN
-        SELECT pisteen_pohjavesialue_ja_tie(r.sijainti, threshold) INTO pohjavesialue_tie;
+        pohjavesialue_tie := pisteen_pohjavesialue_ja_tie(r.sijainti, threshold);
         INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, tie) 
              VALUES (r.toteuma,
 	     	    r.aika,
@@ -81,7 +81,7 @@ BEGIN
   FOREACH rp IN ARRAY NEW.reittipisteet LOOP
     FOREACH m IN ARRAY rp.materiaalit LOOP
       IF suolamateriaalikoodit @> ARRAY[m.materiaalikoodi] THEN
-        SELECT pisteen_pohjavesialue_ja_tie(rp.sijainti, 50) INTO pohjavesialue_tie;
+        pohjavesialue_tie := pisteen_pohjavesialue_ja_tie(rp.sijainti, 50);
         INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, tie)
             VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi, m.maara, pohjavesialue_tie.tunnus, pohjavesialue_tie.tie);
       END IF;
