@@ -72,7 +72,28 @@
              :urakka (:id @nav/valittu-urakka)
              :hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi)))))
 
+(comment
+ (first
+  (keep-indexed (fn [i pv-raja]
+                  (and (= "11889008" (str (:pohjavesialue pv-raja)))
+                       i))
+                (:pohjavesialue-talvisuola @syotettavat-tiedot))))
 
+;; pohjavesialueet (:nimi :tunnus :tie :alue)
+
+;; pv-rajat "tunnus tie" ->
+;;      (:nimi
+;;      :pohjavesialue (tunnus)
+;;      :urakka
+;;      :hoitokauden_alkuvuosi
+;;      :talvisuolaraja
+;;      :tie)
+
+;; wrapped value
+;;   "tunnus tie" -> (:nimi :tunnus :tie :alue :talvisuolaraja)
+
+;; syotettavat-tiedot:pohjavesialue-talvisuola
+;;   (:nimi :pohjavesialue :urakka :hoitokauden_alkuvuosi :talvisuolaraja :tie)
 
 (defn pohjavesialueet-muokkausdata []
   (let [pohjavesialueet @pohjavesialueet
@@ -81,24 +102,25 @@
                        (:pohjavesialue-talvisuola @syotettavat-tiedot))]
     (wrap (into (sorted-map)
                 (map (fn [pohjavesialue]
-                       [(str  (:tunnus pohjavesialue) " " (:tie pohjavesialue))
-                        (assoc pohjavesialue
-                               :talvisuolaraja (:talvisuolaraja (get pv-rajat (str (:tunnus pohjavesialue) " " (:tie pohjavesialue)))))]))
+                       (let [avain (str (:tunnus pohjavesialue) " " (:tie pohjavesialue))]
+                         [avain
+                          (assoc pohjavesialue :talvisuolaraja (:talvisuolaraja (get pv-rajat avain)))])))
                 pohjavesialueet)
           #(swap! syotettavat-tiedot update-in [:pohjavesialue-talvisuola]
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
                                         ;(log "PV " tunnus)
-                              (let [tunnus-pohjavesialue (first (clojure.string/split tunnus " "))
-                                    paivitettava (first (keep-indexed (fn [i pv-raja]
-                                                                        (and (= tunnus (str (:pohjavesialue pv-raja)))
-                                                                             i))
-                                                                      pohjavesialue-talvisuola))]
-
+                              (let [[tunnus-pohjavesialue tie] (clojure.string/split tunnus " ")
+                                    paivitettava (first (filter integer? (keep-indexed (fn [i pv-raja]
+                                                                                         (and (= tunnus-pohjavesialue (:pohjavesialue pv-raja))
+                                                                                              (= tie (:tie pv-raja))
+                                                                                              i))
+                                                                                       pohjavesialue-talvisuola)))]
+                                
                                         ;(log "PV paivitettava " paivitettava)
                                 (if paivitettava
                                   (do
-                                    (js/console.log "päivitettävä löytyi: " (pr-str tunnus-pohjavesialue) (pr-str paivitettava))
+                                    (js/console.log "päivitettävä löytyi: " (pr-str tunnus-pohjavesialue tie))
                                     ;; olemassaoleva raja, päivitä sen arvo
                                     (update-in pohjavesialue-talvisuola [paivitettava]
                                                (fn [pv-raja]
@@ -107,7 +129,7 @@
                                                         :talvisuolaraja (:talvisuolaraja (get % tunnus))))))
                                   ;; tälle alueelle ei olemassaolevaa rajaa, lisätään uusi rivi
                                   (do
-                                    (js/console.log "uusi tunnukselle" (pr-str tunnus-pohjavesialue))
+                                    (js/console.log "uusi tunnukselle" (pr-str tunnus-pohjavesialue tie))
                                     (conj pohjavesialue-talvisuola
                                           {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
                                            :pohjavesialue tunnus-pohjavesialue
