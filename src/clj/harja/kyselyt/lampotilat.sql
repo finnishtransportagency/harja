@@ -50,7 +50,7 @@ SELECT *
 -- name: hae-urakan-pohjavesialue-talvisuolarajat-teittain
 SELECT pa.nimi AS nimi, pa.tunnus AS pohjavesialue, pt.urakka, pt.hoitokauden_alkuvuosi, pt.talvisuolaraja, pa.tr_numero AS tie
   FROM (SELECT DISTINCT nimi, tunnus, tr_numero FROM pohjavesialue) AS pa 
-  LEFT JOIN pohjavesialue_talvisuola pt ON pt.pohjavesialue = pa.tunnus
+  LEFT JOIN pohjavesialue_talvisuola pt ON pt.pohjavesialue = pa.tunnus AND pa.tr_numero = pt.tie
   WHERE pt.urakka = :urakka ORDER by pa.nimi ASC;
 
 -- name: luo-suolasakko<!
