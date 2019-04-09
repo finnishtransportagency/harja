@@ -63,22 +63,12 @@
              (mapv (fn [summa]
                      (assoc summa
                             :maara_t_per_km (/ (* (:yhteensa summa) (:pituus summa)) 1000)
-                            :alkuosa 0
-                            :alkuet 0
-                            :loppuosa 0
-                            :loppuet 0
                             :tunnus (:tunnus pv-alue)
                             :nimi (:nimi pv-alue)))
                    (pohjavesialueen-tiekohtaiset-summat db {:pohjavesialue (:tunnus pv-alue)
                                                             :alkupvm alkupvm
                                                             :loppupvm loppupvm})))
            urakan-alueet))))
-
-;(laske (:db harja.palvelin.main/harja-jarjestelma) 270 (pvm/luo-pvm 2019 1 1) (pvm/luo-pvm 2019 4 1))
-
-(comment (hae-urakan-pohjavesialueiden-suolatoteumat db {:urakkaid urakka-id
-                                                         :alkupvm alkupvm
-                                                         :loppupvm loppupvm}))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)

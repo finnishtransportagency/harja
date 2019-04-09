@@ -15,8 +15,17 @@ CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (SELECT nimi, tunnus, alue, pit
 ALTER MATERIALIZED VIEW pohjavesialue_kooste OWNER TO harja;
 
 CREATE TYPE pisteen_pohjavesialue_tie AS (tunnus VARCHAR(32), tie INTEGER);
+ALTER TYPE pisteen_pohjavesialue_tie ADD ATTRIBUTE alkuosa INTEGER;
+ALTER TYPE pisteen_pohjavesialue_tie ADD ATTRIBUTE alkuet INTEGER;
+ALTER TYPE pisteen_pohjavesialue_tie ADD ATTRIBUTE loppuosa INTEGER;
+ALTER TYPE pisteen_pohjavesialue_tie ADD ATTRIBUTE loppuet INTEGER;
 
 ALTER TABLE suolatoteuma_reittipiste ADD tie INTEGER;
+
+ALTER TABLE suolatoteuma_reittipiste ADD alkuosa INTEGER;
+ALTER TABLE suolatoteuma_reittipiste ADD alkuet INTEGER;
+ALTER TABLE suolatoteuma_reittipiste ADD loppuosa INTEGER;
+ALTER TABLE suolatoteuma_reittipiste ADD loppuet INTEGER;
 
 CREATE OR REPLACE FUNCTION pisteen_pohjavesialue_ja_tie(piste POINT, threshold INTEGER) RETURNS pisteen_pohjavesialue_tie AS $$
 DECLARE
@@ -26,7 +35,7 @@ BEGIN
    WHERE ST_DWithin(alue, piste::geometry, threshold)
    ORDER BY ST_Distance(alue, piste::geometry)
    LIMIT 1;
-   RETURN ROW(tulos.tunnus, tulos.tie)::pisteen_pohjavesialue_tie;
+   RETURN ROW(tulos.tunnus, tulos.tie, tulos.alkuosa, tulos.alkuet, tulos.loppuosa, tulos.loppuet)::pisteen_pohjavesialue_tie;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -50,14 +59,18 @@ BEGIN
     FOREACH m IN ARRAY r.materiaalit LOOP
       IF suolamateriaalikoodit @> ARRAY[m.materiaalikoodi] THEN
         pohjavesialue_tie := pisteen_pohjavesialue_ja_tie(r.sijainti, threshold);
-        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, tie) 
+        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, tie, alkuosa, alkuet, loppuosa, loppuet) 
              VALUES (r.toteuma,
 	     	    r.aika,
 		    r.sijainti,
 		    m.materiaalikoodi,
 		    m.maara,
 		    pohjavesialue_tie.tunnus,
-		    pohjavesialue_tie.tie);
+		    pohjavesialue_tie.tie,
+		    pohjavesialue_tie.alkuosa,
+		    pohjavesialue_tie.alkuet,
+		    pohjavesialue_tie.loppuosa,
+		    pohjavesialue_tie.loppuet);
       END IF;
     END LOOP;
   END LOOP;
@@ -82,8 +95,12 @@ BEGIN
     FOREACH m IN ARRAY rp.materiaalit LOOP
       IF suolamateriaalikoodit @> ARRAY[m.materiaalikoodi] THEN
         pohjavesialue_tie := pisteen_pohjavesialue_ja_tie(rp.sijainti, 50);
-        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, tie)
-            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi, m.maara, pohjavesialue_tie.tunnus, pohjavesialue_tie.tie);
+        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue, tie, alkuosa, alkuet, loppuosa, loppuet)
+            VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi, m.maara, pohjavesialue_tie.tunnus, pohjavesialue_tie.tie,
+		    pohjavesialue_tie.alkuosa,
+		    pohjavesialue_tie.alkuet,
+		    pohjavesialue_tie.loppuosa,
+		    pohjavesialue_tie.loppuet);
       END IF;
     END LOOP;
   END LOOP;
