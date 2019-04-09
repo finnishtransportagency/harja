@@ -19,13 +19,13 @@ describe('Aloita päällystysilmoitus vanha', function () {
             {
                 yllapitoluokka: 8,
                 ajorata: 1,
-                kaista: 1,
+                kaista: 11,
                 vuosi: 2017,
                 kvl: 500
             },
             {
                 ajorata: 1,
-                kaista: 1
+                kaista: 11
             })
     })
     it('Avaa vanha POT-lomake', function () {
@@ -82,7 +82,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             expect($trTd.eq(0).find('input')).to.have.value('22');
             // Vanhoissa urakoissa on ajorata ja kaista näkyvillä
             expect($trTd.eq(1).find('input')).to.have.value('1');
-            expect($trTd.eq(2).find('input')).to.have.value('1');
+            expect($trTd.eq(2).find('input')).to.have.value('11');
             expect($trTd.eq(3).find('input')).to.have.value('1');
             expect($trTd.eq(4).find('input')).to.have.value('65');
             expect($trTd.eq(5).find('input')).to.have.value('3');
@@ -156,6 +156,8 @@ describe('Aloita päällystysilmoitus vanha', function () {
             cy.wrap(valitseInput(2, 'Losa')).type(3)
             cy.wrap(valitseInput(2, 'Let')).type(125)
             cy.wrap(valitseInput(2, 'Nimi')).type('Foo')
+            cy.wrap(valitseInput(3, 'Aosa')).type(3)
+            cy.wrap(valitseInput(3, 'Aet')).type(50)
             // varmistelua
             cy.contains('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] .virhe', 'Kohteenosa on päällekkäin osan Foo kanssa')
             cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
@@ -166,16 +168,11 @@ describe('Aloita päällystysilmoitus vanha', function () {
                         return this.textContent.replace(/[\u00AD]+/g, '').trim()
                     }).get()
                 };
-                expect(virheValinta(0, 'Aosa')).to.have.lengthOf(2)
-                    .and.to.contain('Alkuosa ei voi olla loppuosan jälkeen')
-                    .and.to.contain('Tiellä 22 ei ole osaa 2');
-                expect(virheValinta(0, 'Aet')).to.be.empty;
+                expect(virheValinta(0, 'Aosa')).to.have.lengthOf(1)
+                    .and.to.contain('Alkuosa ei voi olla loppuosan jälkeen');
                 expect(virheValinta(0, 'Losa')).to.have.lengthOf(1)
                     .and.to.contain('Loppuosa ei voi olla alkuosaa ennen');
 
-                expect(virheValinta(0, 'Let')).to.have.lengthOf(2)
-                    .and.to.contain('Osan 1 maksimietäisyys on 8054')
-                    .and.to.contain('Osan 1 ajoradan 1 maksimipituus on 7989');
                 ['Aosa', 'Aet', 'Losa', 'Let'].forEach((otsikko) => {
                     expect(virheValinta(1, otsikko)).to.have.lengthOf(1)
                         .and.to.contain('Kohteenosa on päällekkäin osan Foo kanssa')
@@ -392,7 +389,7 @@ describe('Korjaa virhedata', function () {
                 '                                  tr_ajorata, tr_kaista, sijainti)' +
                 '      VALUES ((SELECT id' +
                 '                FROM yllapitokohde' +
-                '                WHERE nimi = \'E2E-Testi\'), 22, 1, 400+i*2, 1, 400+(i+1)*2, 1, 1,' +
+                '                WHERE nimi = \'E2E-Testi\'), 22, 1, 400+i*2, 1, 400+(i+1)*2, 1, 11,' +
                 '                (SELECT tierekisteriosoitteelle_viiva_ajr AS geom' +
                 '                 FROM tierekisteriosoitteelle_viiva_ajr(22, 1, 400+i*2, 1, 400+(i+1)*2, 1)));' +
                 '  END LOOP;' +
@@ -437,7 +434,7 @@ describe('Korjaa virhedata', function () {
             .parentsUntil('tbody')
             .contains('button', 'Päällystysilmoitus').click()
     })
-    it('Tetaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
+    it('Testaa isoa rivimäärää ja tallennussanoman oikeamuotoisuutta', function () {
         cy.server()
         cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
@@ -503,7 +500,7 @@ describe('Aloita päällystysilmoitus uusi', function () {
             },
             {
                 ajorata: 1,
-                kaista: 1
+                kaista: 11
             })
     })
     it('Avaa uusi POT-lomake', function () {

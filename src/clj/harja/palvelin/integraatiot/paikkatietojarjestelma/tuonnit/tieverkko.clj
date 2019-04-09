@@ -1,12 +1,15 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as clj-str]
             [harja.kyselyt.tieverkko :as k]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [harja.geo :as geo])
-  (:import (com.vividsolutions.jts.geom Coordinate LineString MultiLineString GeometryFactory)
-           (com.vividsolutions.jts.geom.impl CoordinateArraySequence)
-           (com.vividsolutions.jts.operation.linemerge LineSequencer)))
+            [harja.geo :as geo]
+            [clojure.set :as clj-set])
+  (:import (org.locationtech.jts.geom Coordinate LineString MultiLineString GeometryFactory)
+           (org.locationtech.jts.geom.impl CoordinateArraySequence)
+           (org.locationtech.jts.operation.linemerge LineSequencer)
+           (java.lang Character)))
 
 (defn- line-string-seq
   ([multilinestring]
@@ -269,6 +272,110 @@
         (k/paivita-paloiteltu-tieverkko db))
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+
+(defn- lue-csv
+  "Tämän funktion voi poistaa sitten, kun oikea integraatio on saatu"
+  [tiedosto-polku]
+  (let [raakasisalto (slurp tiedosto-polku)
+        rivit (clj-str/split raakasisalto #"\r")
+        muuta-rivi (fn [rivi f]
+                     (map (fn [kentta]
+                            (->> kentta
+                                 clj-str/trim
+                                 (remove #(Character/isIdentifierIgnorable %))
+                                 (apply str)
+                                 f))
+                          (clj-str/split rivi #";")))
+        otsikot (muuta-rivi (first rivit) keyword)
+        datarivit (map (fn [rivi]
+                         (muuta-rivi rivi identity))
+                       (rest rivit))
+        int-parse (fn [n]
+                    (when n
+                      (Integer. n)))]
+    (sequence
+      (comp
+        (map (fn [datarivi]
+               (zipmap otsikot datarivi)))
+        (map (fn [m]
+               (reduce-kv (fn [m k f]
+                            (update m k f))
+                          m {:tie int-parse
+                             :ajorata int-parse
+                             :kaista int-parse
+                             :osa int-parse
+                             :aet int-parse
+                             :let int-parse
+                             :tietyyppi int-parse}))))
+      datarivit)))
+
+;; TODO: Kato nämä tr-taulukot kuntoon. Käytetään väärää terminologiaa ja muutenkin dublikaatti dataa.
+
+(defn vie-laajennettu-tieverkko-kantaan [db csv]
+  (if csv
+    (jdbc/with-db-transaction [db db]
+      (let [tr-tiedot (map (fn [tr-tieto]
+                             (-> tr-tieto
+                                 (select-keys #{:tie :ajorata :kaista :osa :aet :let :tietyyppi})
+                                 (clj-set/rename-keys {:tie :tr-numero
+                                                       :osa :tr-osa
+                                                       :aet :tr-alkuetaisyys
+                                                       :let :tr-loppuetaisyys
+                                                       :ajorata :tr-ajorata
+                                                       :kaista :tr-kaista})))
+                           (lue-csv csv)                    ;(shapefile/tuo shapefile)
+                           )
+            tr-tiedot-ryhmiteltyna (group-by (juxt :tr-numero :tr-osa :tr-ajorata :tr-kaista) tr-tiedot)
+            ;; Data saattaa sisältää kohtia, joissa sama kaistan pätkä on pilkottu useampaan osaan.
+            ;; Tämä johtuu historiallisista syistä, jolloinka tässä pilkkomiskohdassa on muuttunut
+            ;; jokin joskus. Tämmöiset turhat pilkkoontumiset pitää korjata.
+            ;;
+            ;; esim. {:tie 1792 :tr-ajorata 0 :tr-kaista 1 :osa 6 :aet 0 :let 3126} ja
+            ;;       {:tie 1792 :tr-ajorata 0 :tr-kaista 1 :osa 6 :aet 3126 :let 4647} tulee yhdistää arvoksi
+            ;;       {:tie 1792 :tr-ajorata 0 :tr-kaista 1 :osa 6 :aet 0 :let 4647}
+            ;; Lisäksi vähän oudompia:
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 724}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 0, :loppuetaisyys 6910}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 724, :loppuetaisyys 955}
+            ;;       {:tie 3022, :tr-ajorata 0, :tr-kaista 1, :osa 4, :alkuetaisyys 955, :loppuetaisyys 6405}
+            kaistat-paallekkain? (fn [{aet-1 :tr-alkuetaisyys let-1 :tr-loppuetaisyys}
+                                      {aet-2 :tr-alkuetaisyys let-2 :tr-loppuetaisyys}]
+                                   (or (and (>= aet-2 aet-1)
+                                            (<= aet-2 let-1))
+                                       (and (>= let-2 aet-1)
+                                            (<= let-2 let-1))))
+            yhdista-trt (fn this [kaistakohtaiset-trt]
+                          (let [[kayttamattomat-trt kaytetyt-trt] (reduce (fn [trt tr]
+                                                                            (if (contains? (meta tr) :kaytetty?)
+                                                                              (update trt 1 conj tr)
+                                                                              (update trt 0 conj tr)))
+                                                                          [[] []] kaistakohtaiset-trt)
+                                trt-kasattu (reduce (fn [v {:keys [tr-alkuetaisyys tr-loppuetaisyys tietyyppi] :as tr}]
+                                                      (if (and (first v)
+                                                               (kaistat-paallekkain? (first v) tr)
+                                                               (= (-> v first :tietyyppi) tietyyppi))
+                                                        (update v 0 (fn [vanha-tr]
+                                                                      (-> vanha-tr
+                                                                          (update :tr-alkuetaisyys min tr-alkuetaisyys)
+                                                                          (update :tr-loppuetaisyys max tr-loppuetaisyys))))
+                                                        (conj v tr)))
+                                                    [] kayttamattomat-trt)
+                                trt-kasattu (concat (rest trt-kasattu) (conj kaytetyt-trt
+                                                                             (with-meta (first trt-kasattu)
+                                                                                        {:kaytetty? true})))]
+                            (if (every? #(contains? (meta %) :kaytetty?)
+                                        trt-kasattu)
+                              trt-kasattu
+                              (this trt-kasattu))))
+            tr-tiedot (mapcat #(-> % second yhdista-trt)
+                              tr-tiedot-ryhmiteltyna)]
+        (log/debug (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
+        (k/tuhoa-laajennettu-tien-osien-tiedot! db)
+        (doseq [tr-tieto tr-tiedot]
+          (k/vie-laajennettu-tien-osa-kantaan<! db tr-tieto))
+        (k/paivita-tr-tiedot db)
+        (log/debug "Laajennetun tieosoiteverkon tuonti kantaan valmis.")))
+    (log/debug "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
 ;;(def db (:db harja.palvelin.main/harja-jarjestelma))

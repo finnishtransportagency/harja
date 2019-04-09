@@ -6,8 +6,7 @@
     [harja.domain.urakka :as urakka]
     [harja.domain.yllapitokohde :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
-    [harja.tyokalut.spec-apurit :as apurit]
-    #?@(:clj [[clojure.future :refer :all]])))
+    [harja.tyokalut.spec-apurit :as apurit]))
 
 ;; Toteuma
 

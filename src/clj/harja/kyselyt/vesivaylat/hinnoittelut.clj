@@ -1,7 +1,7 @@
 (ns harja.kyselyt.vesivaylat.hinnoittelut
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
-            [clojure.future :refer :all]
+            
             [clojure.set :as set]
             [clj-time.core :as t]
             [jeesql.core :refer [defqueries]]

@@ -4,7 +4,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
     #?@(:clj [
-            [clojure.future :refer :all]])
+            ])
             [harja.math :as math]
             [harja.geo :as geo]))
 

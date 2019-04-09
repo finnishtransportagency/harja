@@ -43,7 +43,7 @@
    u/valittu-hoitokauden-kuukausi
    u/valitse-hoitokauden-kuukausi!])
 
-(defn- urakan-vuosi
+(defn urakan-vuosi
   "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
   ([ur]
    (urakan-vuosi ur {}))

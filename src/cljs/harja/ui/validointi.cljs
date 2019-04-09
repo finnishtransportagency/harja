@@ -249,15 +249,18 @@
                                   (::rivi-validointi %))
                                skeema)
          rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
-                                          [sarakkeet (saanto rivi taulukko)])
+                                          (let [tulos (saanto rivi taulukko)]
+                                            (reduce-kv (fn [m k v]
+                                                         (assoc m k (v tulos)))
+                                                       {} sarakkeet)))
                                         rivi-validointi)
          skeema (if rivi-validointi
                   (remove ::rivi-validointi skeema)
                   skeema)
          rivi-virheet (when rivi-validointi
-                        {::rivi-virheet (keep (fn [[sarakkeet virhe]]
-                                                (when (sarakkeet ::rivi)
-                                                  virhe))
+                        {::rivi-virheet (keep (fn [virheet]
+                                                (when-let [rivi-virhe (::rivi virheet)]
+                                                  rivi-virhe))
                                               rivi-virheet-sarakkeille)})
          sarake-virheet (loop [v {}
                                [s & skeema] skeema]
@@ -266,10 +269,11 @@
                             (let [{:keys [nimi hae]} s
                                   validoi (tyyppi s)
                                   rivivirheet-sarakkeelle (when rivi-validointi
-                                                            (keep (fn [[sarakkeet virhe]]
-                                                                    (when (and (sarakkeet nimi) virhe)
-                                                                      virhe))
-                                                                  rivi-virheet-sarakkeille))]
+                                                            (flatten
+                                                              (keep (fn [virheet]
+                                                                      (when-let [virhe (get virheet nimi)]
+                                                                        virhe))
+                                                                    rivi-virheet-sarakkeille)))]
                               (if (empty? validoi)
                                 (recur (if (empty? rivivirheet-sarakkeelle) v (assoc v nimi rivivirheet-sarakkeelle)) skeema)
                                 (let [virheet (validoi-saannot nimi (if hae
@@ -282,31 +286,44 @@
                                                 virheet)]
                                   (recur (if (empty? virheet) v (assoc v nimi virheet))
                           skeema))))))]
-     (merge sarake-virheet rivi-virheet))))
+     (merge sarake-virheet (when-not (empty? (::rivi-virheet rivi-virheet))
+                             rivi-virheet)))))
 
 (defn validoi-taulukko
-  [taulukko skeema taulukko-validointi]
-  (into {}
-        (doall
-          (map (fn [[rivi-indeksi rivi]]
-                 (let [taulukko-virheet (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
-                                                [sarakkeet (saanto rivi-indeksi rivi taulukko)])
-                                              taulukko-validointi)]
-                   [rivi-indeksi
-                    (loop [v {}
-                           [s & skeema] skeema]
-                      (if-not s
-                        v
-                        (let [{:keys [nimi]} s
-                              taulukkovirheet-sarakkeelle (vec
-                                                            (keep (fn [[sarakkeet virhe]]
-                                                                    (when (and (sarakkeet nimi) virhe)
-                                                                      virhe))
-                                                                  taulukko-virheet))]
-                          (if (empty? taulukkovirheet-sarakkeelle)
-                            (recur v skeema)
-                            (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema)))))]))
-               taulukko))))
+  ([taulukko skeema taulukko-validointi] (validoi-taulukko taulukko skeema taulukko-validointi nil))
+  ([taulukko skeema taulukko-validointi poistettu-avain]
+   (let [taulukko (if (nil? poistettu-avain)
+                    taulukko
+                    (into {}
+                          (keep (fn [[_ rivi :as rivitiedot]]
+                                  (when-not (get rivi poistettu-avain)
+                                    rivitiedot))
+                                taulukko)))]
+     (into {}
+           (doall
+            (map (fn [[rivi-indeksi rivi]]
+                   (let [taulukko-virheet (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
+                                                  (let [tulos (saanto rivi-indeksi rivi taulukko)]
+                                                    (reduce-kv (fn [m k v]
+                                                                 (assoc m k (v tulos)))
+                                                               {} sarakkeet)))
+                                                taulukko-validointi)]
+                     [rivi-indeksi
+                      (loop [v {}
+                             [s & skeema] skeema]
+                        (if-not s
+                          v
+                          (let [{:keys [nimi]} s
+                                taulukkovirheet-sarakkeelle (vec
+                                                             (flatten
+                                                              (keep (fn [virheet]
+                                                                      (when-let [virhe (get virheet nimi)]
+                                                                        virhe))
+                                                                    taulukko-virheet)))]
+                            (if (empty? taulukkovirheet-sarakkeelle)
+                              (recur v skeema)
+                              (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema)))))]))
+                 taulukko))))))
 
 (defn tyhja-tr-osoite? [arvo]
   (not (tr/validi-osoite? arvo)))

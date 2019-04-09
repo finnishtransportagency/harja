@@ -82,6 +82,8 @@
                                      {:yha-kohde? true :yllapitokohdetyotyyppi :paallystys}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
+(def tr-osien-tiedot (atom nil))
+
 (def harjan-paikkauskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
@@ -187,6 +189,9 @@
 (defrecord HaeTrOsienPituudet [tr-numero tr-alkuosa tr-loppuosa])
 (defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
+(defrecord HaeTrOsienTiedot [tr-numero tr-alkuosa tr-loppuosa])
+(defrecord HaeTrOsienTiedotOnnistui [vastaus tr-numero])
+(defrecord HaeTrOsienTiedotEpaonnistui [vastaus])
 (defrecord HoidaCtrl+Z [])
 (defrecord JarjestaYllapitokohteet [jarjestys])
 (defrecord KumoaHistoria [])
@@ -340,6 +345,24 @@
                                                                                      (merge vanhat-osuudet pituudet)))))))
   HaeTrOsienPituudetEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    app)
+  HaeTrOsienTiedot
+  (process-event [{:keys [tr-numero tr-alkuosa tr-loppuosa]} app]
+    (let [parametrit {:tr-numero tr-numero :tr-alkuosa tr-alkuosa :tr-loppuosa tr-loppuosa}]
+      (tuck-apurit/post! app :hae-tr-tiedot
+                         parametrit
+                         {:onnistui ->HaeTrOsienTiedotOnnistui
+                          :onnistui-parametrit [(:tr-numero parametrit)]
+                          :epaonnistui ->HaeTrOsienTiedotEpaonnistui})))
+  HaeTrOsienTiedotOnnistui
+  (process-event [{:keys [vastaus tr-numero]} app]
+    (update app :paallystysilmoitus-lomakedata (fn [vanhat]
+                                                 (-> vanhat
+                                                     (assoc-in [:tr-osien-tiedot tr-numero] vastaus)
+                                                     (assoc :validoi-lomake? true)))))
+  HaeTrOsienTiedotEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    ;;TODO tähän joku järkevä handlaus
     app)
   HoidaCtrl+Z
   (process-event [_ {{historia :historia} :paallystysilmoitus-lomakedata :as app}]

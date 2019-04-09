@@ -1,3 +1,6 @@
+ALTER TABLE pohjavesialue_talvisuola ADD tie INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE pohjavesialue_talvisuola ADD PRIMARY KEY(pohjavesialue, tie);
+
 DROP MATERIALIZED VIEW pohjavesialue_kooste;
 CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (SELECT nimi, tunnus, alue, pituus, tie, alkuosa, alkuet, loppuosa, loppuet FROM (SELECT array_agg(id) AS id, 
        (array_agg(nimi))[1] AS nimi, 

@@ -2,7 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [clojure.future :refer :all]
+            
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
