@@ -5,40 +5,45 @@
    Päällystysurakka on ylläpidon urakka ja siihen liittyy keskeisenä osana ylläpitokohteet.
    Ylläpitokohteiden hallintaan on olemassa oma palvelu."
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.set :as clj-set]
-            [taoensso.timbre :as log]
-            [harja.domain.skeema :refer [Toteuma validoi]]
-            [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.kommentit :as kommentit]
-            [harja.domain.paallystysilmoitus :as pot-domain]
-            [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
-            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
-            [harja.kyselyt.urakat :as urakat-q]
+            [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [harja.tyokalut.html :refer [sanitoi]]
-            [harja.domain.urakka :as urakka-domain]
-            [harja.domain.sopimus :as sopimus-domain]
-            [harja.domain.skeema :as skeema]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.domain.tierekisteri :as tr-domain]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.palvelin.palvelut.viestinta :as viestinta]))
+
+            [clojure.set :as clj-set]
+            [clojure.java.jdbc :as jdbc]
+
+            [harja.kyselyt
+             [kommentit :as kommentit-q]
+             [paallystys :as q]
+             [urakat :as urakat-q]
+             [konversio :as konversio]
+             [yllapitokohteet :as yllapitokohteet-q]
+             [tieverkko :as tieverkko-q]]
+            [harja.domain
+             [paallystysilmoitus :as pot-domain]
+             [skeema :refer [Toteuma validoi] :as skeema]
+             [urakka :as urakka-domain]
+             [sopimus :as sopimus-domain]
+             [oikeudet :as oikeudet]
+             [paallystyksen-maksuerat :as paallystyksen-maksuerat]
+             [yllapitokohde :as yllapitokohteet-domain]
+             [tierekisteri :as tr-domain]]
+            [harja.palvelin.palvelut
+             [yha-apurit :as yha-apurit]
+             [yllapitokohteet :as yllapitokohteet]
+             [viestinta :as viestinta]]
+            [harja.palvelin.palvelut.yllapitokohteet
+             [maaramuutokset :as maaramuutokset]
+             [yleiset :as yy]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.tyokalut.html :refer [sanitoi]]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi])))
+                        (map #(konversio/string-polusta->keyword % [:yllapitokohdetyotyyppi])))
                       (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi))]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
@@ -57,7 +62,7 @@
                                 (map konversio/alaviiva->rakenne))
                               (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
         yllapitokohteet (as-> yllapitokohteet ypk
-                              (konv/sarakkeet-vektoriin
+                              (konversio/sarakkeet-vektoriin
                                 ypk
                                 {:maksuera :maksuerat}
                                 :id)
@@ -219,20 +224,20 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [paallystysilmoitus (into []
-                                 (comp (map konv/alaviiva->rakenne)
-                                       (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                       (map #(konv/string-poluista->keyword
+                                 (comp (map konversio/alaviiva->rakenne)
+                                       (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
+                                       (map #(konversio/string-poluista->keyword
                                                %
                                                [[:tekninen-osa :paatos]
                                                 [:tila]])))
                                  (q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
-        paallystysilmoitus (first (konv/sarakkeet-vektoriin
+        paallystysilmoitus (first (konversio/sarakkeet-vektoriin
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
-        paallystysilmoitus (update paallystysilmoitus :vuodet konv/pgarray->vector)
+        paallystysilmoitus (update paallystysilmoitus :vuodet konversio/pgarray->vector)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (cond
@@ -251,7 +256,7 @@
                                  (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
         kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
         kommentit (into []
-                        (comp (map konv/alaviiva->rakenne)
+                        (comp (map konversio/alaviiva->rakenne)
                               (map (fn [{:keys [liite] :as kommentti}]
                                      (if (:id
                                            liite)
@@ -289,7 +294,7 @@
            {:paallystyskohde paallystyskohde-id
             :tila tila
             :ilmoitustiedot encoodattu-ilmoitustiedot
-            :takuupvm (konv/sql-date takuupvm)
+            :takuupvm (konversio/sql-date takuupvm)
             :kayttaja (:id user)}))))
 
 (defn- tarkista-paallystysilmoituksen-lukinta [paallystysilmoitus-kannassa]
@@ -305,7 +310,7 @@
                                 paallystysilmoitus-kannassa]
   (let [tallennettava-data {:tekninen-osa_paatos (some-> tekninen-osa :paatos name)
                             :tekninen-osa_perustelu (:perustelu tekninen-osa)
-                            :tekninen-osa_kasittelyaika (konv/sql-date (:kasittelyaika tekninen-osa))}]
+                            :tekninen-osa_kasittelyaika (konversio/sql-date (:kasittelyaika tekninen-osa))}]
     (if (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                  urakka-id user)
       (do
@@ -334,7 +339,7 @@
       (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus: " asiatarkastus)
           (q/paivita-paallystysilmoituksen-asiatarkastus<!
             db
-            {:asiatarkastus_pvm (konv/sql-date tarkastusaika)
+            {:asiatarkastus_pvm (konversio/sql-date tarkastusaika)
              :asiatarkastus_tarkastaja tarkastaja
              :asiatarkastus_hyvaksytty hyvaksytty
              :asiatarkastus_lisatiedot lisatiedot
@@ -367,7 +372,7 @@
             db
             {:tila tila
              :ilmoitustiedot encoodattu-ilmoitustiedot
-             :takuupvm (konv/sql-date takuupvm)
+             :takuupvm (konversio/sql-date takuupvm)
              :muokkaaja (:id user)
              :id paallystyskohde-id
              :urakka urakka-id})))
@@ -390,7 +395,7 @@
 (defn tallenna-paallystysilmoituksen-kommentti [db user uusi-paallystysilmoitus paallystysilmoitus-id]
   (when-let [uusi-kommentti (get-in uusi-paallystysilmoitus [:perustiedot :uusi-kommentti])]
     (log/info "Tallennetaan uusi kommentti: " uusi-kommentti)
-    (let [kommentti (kommentit/luo-kommentti<! db
+    (let [kommentti (kommentit-q/luo-kommentti<! db
                                                nil
                                                (:kommentti uusi-kommentti)
                                                nil
@@ -487,8 +492,8 @@
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
                                    (first (into []
-                                                (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                                      (map #(konv/string-poluista->keyword %
+                                                (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
+                                                      (map #(konversio/string-poluista->keyword %
                                                                                            [[:tila]])))
                                                 (q/hae-paallystysilmoitus-paallystyskohteella
                                                   db
@@ -496,6 +501,9 @@
           tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
                                   (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
                                   (clj-set/rename-keys {:kohdenimi :nimi}))
+          tr-valipaatepisteiden-tiedot (map (fn [tr]
+                                              (update tr :pituudet konversio/jsonb->clojuremap))
+                                            (tieverkko-q/hae-trvalipaatepisteiden-tiedot db tallennettava-kohde))
           paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           verrattavat-kohteet (map
                                 (fn [verrattava-kohde]
@@ -531,9 +539,7 @@
       (cond
         (not (empty? paallekkaiset-kohteet)) {:virhe paallekkaiset-kohteet}
         ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
-        (:validointivirheet paivitetyt-kohdeosat) (-> paivitetyt-kohdeosat
-                                                      (assoc :virhe (:validointivirheet paivitetyt-kohdeosat))
-                                                      (dissoc :validointivirheet))
+        (:validointivirheet paivitetyt-kohdeosat) (clj-set/rename-keys paivitetyt-kohdeosat {:validointivirheet :virhe})
         :else (let [paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
                     vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
                     paallystysilmoitus-id (if vanha-paallystysilmoitus
@@ -582,7 +588,7 @@
       ; Tallennetaan takuupvm vain sellaiselle kohteelle, jolla jo on POT (eli id)
       (when (::pot-domain/id takuupvm)
         (q/paivita-paallystysilmoituksen-takuupvm! db {:id (::pot-domain/id takuupvm)
-                                                       :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))})))
+                                                       :takuupvm (konversio/sql-date (::pot-domain/takuupvm takuupvm))})))
     []))
 
 (defn- aseta-paallystysilmoituksen-tila

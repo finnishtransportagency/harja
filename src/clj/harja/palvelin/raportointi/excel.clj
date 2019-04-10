@@ -26,7 +26,7 @@
             [clojure.string :as str]
             [harja.domain.raportointi :as raportti-domain])
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
-           (org.apache.poi.ss.usermodel CellStyle)))
+           (org.apache.poi.ss.usermodel HorizontalAlignment)))
 
 (defmulti muodosta-excel
   "Muodostaa Excel data annetulle raporttielementille.
@@ -158,11 +158,11 @@
                   (let [solu (.createCell rivi-ennen-rivi sarake-nro)]
                     (excel/set-cell! solu teksti)
                     (excel/set-cell-style! solu sarake-tyyli)
-                    (CellUtil/setAlignment solu workbook
+                    (CellUtil/setAlignment solu
                                            (case tasaa
-                                             :keskita CellStyle/ALIGN_CENTER
-                                             :oikea CellStyle/ALIGN_RIGHT
-                                             CellStyle/ALIGN_LEFT))
+                                             :keskita HorizontalAlignment/CENTER
+                                             :oikea HorizontalAlignment/RIGHT
+                                             HorizontalAlignment/LEFT))
                     (when (> sarakkeita 1)
                       (.addMergedRegion sheet (CellRangeAddress. rivi-ennen-nro rivi-ennen-nro
                                                                  sarake-nro

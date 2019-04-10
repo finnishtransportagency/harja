@@ -56,11 +56,23 @@
      (sarakkeet)
      (into [] (map rivi-xf (loppusumma rivit)))]))
 
+(defn laske [db urakka-id alkupvm loppupvm]
+  (let [urakan-alueet (urakan-pohjavesialueet db {:urakka urakka-id})]
+    (flatten
+     (mapv (fn [pv-alue]
+             (mapv (fn [summa]
+                     (assoc summa
+                            :maara_t_per_km (/ (:yhteensa summa) (/ (:pituus summa) 1000))
+                            :tunnus (:tunnus pv-alue)
+                            :nimi (:nimi pv-alue)))
+                   (pohjavesialueen-tiekohtaiset-summat db {:pohjavesialue (:tunnus pv-alue)
+                                                            :alkupvm alkupvm
+                                                            :loppupvm loppupvm})))
+           urakan-alueet))))
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
-  (let [tulos (hae-urakan-pohjavesialueiden-suolatoteumat db {:urakkaid urakka-id
-                                                              :alkupvm alkupvm
-                                                              :loppupvm loppupvm})]
+  (let [tulos (laske db urakka-id alkupvm loppupvm)]
     (log/debug "löytyi " (count tulos) " toteumaa")
     (vec
      (concat

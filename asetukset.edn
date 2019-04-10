@@ -22,13 +22,13 @@
               :portti 5432
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana ""}
+              :salasana "harja"}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
                       :portti 5432
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana ""}
+                      :salasana "harja"}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -102,6 +102,8 @@
                         :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
                         :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+
+                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20190226.csv"
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
                         :pohjavesialueen-osoite "https://ava.vayla.fi/harja/PTV_tl141.shz"

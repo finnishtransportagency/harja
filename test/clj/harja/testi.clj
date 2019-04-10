@@ -465,10 +465,13 @@
                    FROM   urakka
                    WHERE  urakoitsija = " urakoitsija-id ";"))))
 
-(defn hae-saimaan-kanavaurakan-toimenpiteet []
-  (q (str "SELECT id, toimenpidekoodi, tyyppi
+(defn hae-saimaan-kanavaurakan-toimenpiteet
+  ([] (hae-saimaan-kanavaurakan-toimenpiteet false))
+  ([q-map?]
+   (let [haku-fn (if q-map? q-map q)]
+     (haku-fn (str "SELECT id, toimenpidekoodi, tyyppi
            FROM kan_toimenpide
-           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))
+           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))))
 
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
@@ -1205,4 +1208,25 @@
                                        (println "Ran" simulation "without report"))}})
             opts))]
     (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
-    (= 0 (:ko yhteenveto))))
+    (or (= 0 (:ko yhteenveto))
+        (nil? (:ko yhteenveto)))))
+
+(defmacro is->
+  [testattava & fn-listat]
+  `(do
+     ~(loop [[fn-lista & loput] fn-listat
+             iss []]
+        (if (nil? fn-lista)
+          iss
+          (let [msg? (string? (first loput))
+                [f & args] (if (seq? fn-lista)
+                             fn-lista
+                             [fn-lista])
+                is-lause (if msg?
+                           `(is (~f ~testattava ~@args) ~(first loput))
+                           `(is (~f ~testattava ~@args)))
+                loput (if msg?
+                        (rest loput)
+                        loput)]
+            (recur loput
+                   (conj iss is-lause)))))))

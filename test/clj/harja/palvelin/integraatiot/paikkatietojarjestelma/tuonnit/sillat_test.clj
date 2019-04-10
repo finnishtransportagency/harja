@@ -9,8 +9,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as sillat])
-  (:import (com.vividsolutions.jts.geom Point Coordinate GeometryFactory)
-           (com.vividsolutions.jtsexample.geom ExtendedCoordinateSequence)
+  (:import (org.locationtech.jts.geom Point Coordinate GeometryFactory)
+           (org.locationtech.jts.geom.impl CoordinateArraySequence)
            (java.util Date)))
 
 (use-fixtures :once tietokanta-fixture)
@@ -25,7 +25,7 @@
    :trex_oid "123456789"
    :loppupvm ""
    :rakennety "Jämäkkä silta"
-   :the_geom (Point. (ExtendedCoordinateSequence. (into-array Coordinate [(Coordinate. 428022.4972067006 7210433.780978538)])) (GeometryFactory.))
+   :the_geom (Point. (CoordinateArraySequence. (into-array Coordinate [(Coordinate. 428022.4972067006 7210433.780978538)])) (GeometryFactory.))
    :muutospvm ""
    :loc_error "NO ERROR"
    :status 1
