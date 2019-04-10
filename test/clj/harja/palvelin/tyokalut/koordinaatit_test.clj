@@ -24,7 +24,7 @@
 (deftest pisteen-hakeminen-kartalle-wgs84-koordinaateilla
   (let [x 25.472488
         y 65.011322
-        oikea-vastaus {:type :point :coordinates [428003.6082731433 7210586.345209061]}
+        oikea-vastaus {:type :point :coordinates [428003.60827314324 7210586.34520906]}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-piste-kartalle
                                 +kayttaja-jvh+
