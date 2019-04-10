@@ -62,7 +62,7 @@
      (mapv (fn [pv-alue]
              (mapv (fn [summa]
                      (assoc summa
-                            :maara_t_per_km (/ (* (:yhteensa summa) (:pituus summa)) 1000)
+                            :maara_t_per_km (/ (:yhteensa summa) (/ (:pituus summa) 1000))
                             :tunnus (:tunnus pv-alue)
                             :nimi (:nimi pv-alue)))
                    (pohjavesialueen-tiekohtaiset-summat db {:pohjavesialue (:tunnus pv-alue)
