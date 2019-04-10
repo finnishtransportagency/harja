@@ -14,8 +14,6 @@ CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (SELECT nimi, tunnus, alue, pit
  FROM pohjavesialue
  GROUP BY tr_numero, tr_alkuosa) AS q);
 
-ALTER MATERIALIZED VIEW pohjavesialue_kooste OWNER TO harja;
-
 CREATE TYPE pisteen_pohjavesialue_tie AS (tunnus VARCHAR(32), tie INTEGER);
 ALTER TYPE pisteen_pohjavesialue_tie ADD ATTRIBUTE alkuosa INTEGER;
 ALTER TYPE pisteen_pohjavesialue_tie ADD ATTRIBUTE alkuet INTEGER;
