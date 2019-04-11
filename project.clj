@@ -156,7 +156,7 @@
                                   [org.apache.pdfbox/pdfbox "2.0.8"]
                                   [cider/piggieback "0.4.0"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.3.3"]
+                             [test2junit "1.4.2"]
                              [lein-eftest "0.5.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:

@@ -95,8 +95,8 @@
                        (q/hae-urakan-lampotilat db urakka-id))
      :pohjavesialueet (into []
                             (geo/muunna-pg-tulokset :alue)
-                            (pohjavesialueet-q/hae-urakan-pohjavesialueet db urakka-id))
-     :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat db urakka-id)}))
+                            (pohjavesialueet-q/hae-urakan-pohjavesialueet-teittain db urakka-id))
+     :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat-teittain db urakka-id)}))
 
 (defn tallenna-suolasakko
   [db user urakka hoitokauden-alkuvuosi tiedot]
@@ -121,9 +121,9 @@
 
 (defn tallenna-pohjavesialue-talvisuola
   "Päivittää pohjavesialueen talvisuolarajan, tai luo uuden jos rajaa ei ole"
-  [db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja]
-  (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue))
-    (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue)))
+  [db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja tie]
+  (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue tie))
+    (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue tie)))
 
 (defn tallenna-suolasakko-ja-pohjavesialueet
   [db user {:keys [hoitokauden-alkuvuosi urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
@@ -133,9 +133,9 @@
     [db db]
     (let [suolasakon-id (tallenna-suolasakko db user urakka
                                              hoitokauden-alkuvuosi suolasakko)]
-      (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
+      (doseq [{:keys [pohjavesialue tie talvisuolaraja]} pohjavesialue-talvisuola]
         (tallenna-pohjavesialue-talvisuola db user urakka
-                                           hoitokauden-alkuvuosi pohjavesialue talvisuolaraja)))
+                                           hoitokauden-alkuvuosi pohjavesialue talvisuolaraja tie)))
 
     (hae-urakan-suolasakot-ja-lampotilat db user urakka)))
 

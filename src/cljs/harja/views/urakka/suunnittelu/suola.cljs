@@ -72,40 +72,69 @@
              :urakka (:id @nav/valittu-urakka)
              :hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi)))))
 
+(comment
+ (first
+  (keep-indexed (fn [i pv-raja]
+                  (and (= "11889008" (str (:pohjavesialue pv-raja)))
+                       i))
+                (:pohjavesialue-talvisuola @syotettavat-tiedot))))
 
+;; pohjavesialueet (:nimi :tunnus :tie :alue)
+
+;; pv-rajat "tunnus tie" ->
+;;      (:nimi
+;;      :pohjavesialue (tunnus)
+;;      :urakka
+;;      :hoitokauden_alkuvuosi
+;;      :talvisuolaraja
+;;      :tie)
+
+;; wrapped value
+;;   "tunnus tie" -> (:nimi :tunnus :tie :alue :talvisuolaraja)
+
+;; syotettavat-tiedot:pohjavesialue-talvisuola
+;;   (:nimi :pohjavesialue :urakka :hoitokauden_alkuvuosi :talvisuolaraja :tie)
 
 (defn pohjavesialueet-muokkausdata []
   (let [pohjavesialueet @pohjavesialueet
         pv-rajat (into {}
-                       (map (juxt :pohjavesialue identity))
+                       (map (juxt #(str (:pohjavesialue %) " " (:tie %)) identity))
                        (:pohjavesialue-talvisuola @syotettavat-tiedot))]
-    (wrap (into {}
+    (wrap (into (sorted-map)
                 (map (fn [pohjavesialue]
-                       [(:tunnus pohjavesialue)
-                        (assoc pohjavesialue
-                          :talvisuolaraja (:talvisuolaraja (get pv-rajat (:tunnus pohjavesialue))))]))
+                       (let [avain (str (:tunnus pohjavesialue) " " (:tie pohjavesialue))]
+                         [avain
+                          (assoc pohjavesialue :talvisuolaraja (:talvisuolaraja (get pv-rajat avain)))])))
                 pohjavesialueet)
           #(swap! syotettavat-tiedot update-in [:pohjavesialue-talvisuola]
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
-                              (log "PV " tunnus)
-                              (let [paivitettava (first (keep-indexed (fn [i pv-raja]
-                                                                        (and (= tunnus (:pohjavesialue pv-raja))
-                                                                             i))
-                                                                      pohjavesialue-talvisuola))]
-
-                                (log "PV paivitettava " paivitettava)
+                                        ;(log "PV " tunnus)
+                              (let [[tunnus-pohjavesialue tie] (clojure.string/split tunnus " ")
+                                    paivitettava (first (filter integer? (keep-indexed (fn [i pv-raja]
+                                                                                         (and (= tunnus-pohjavesialue (:pohjavesialue pv-raja))
+                                                                                              (= tie (:tie pv-raja))
+                                                                                              i))
+                                                                                       pohjavesialue-talvisuola)))]
+                                
+                                        ;(log "PV paivitettava " paivitettava)
                                 (if paivitettava
-                                  ;; olemassaoleva raja, päivitä sen arvo
-                                  (update-in pohjavesialue-talvisuola [paivitettava]
-                                             (fn [pv-raja]
-                                               (assoc pv-raja
-                                                 :talvisuolaraja (:talvisuolaraja (get % tunnus)))))
+                                  (do
+                                    (js/console.log "päivitettävä löytyi: " (pr-str tunnus-pohjavesialue tie))
+                                    ;; olemassaoleva raja, päivitä sen arvo
+                                    (update-in pohjavesialue-talvisuola [paivitettava]
+                                               (fn [pv-raja]
+                                                 (assoc pv-raja
+                                                        :tie (:tie (get % tunnus))
+                                                        :talvisuolaraja (:talvisuolaraja (get % tunnus))))))
                                   ;; tälle alueelle ei olemassaolevaa rajaa, lisätään uusi rivi
-                                  (conj pohjavesialue-talvisuola
-                                        {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
-                                         :pohjavesialue tunnus
-                                         :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
+                                  (do
+                                    (js/console.log "uusi tunnukselle" (pr-str tunnus-pohjavesialue tie))
+                                    (conj pohjavesialue-talvisuola
+                                          {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
+                                           :pohjavesialue tunnus-pohjavesialue
+                                           :tie (:tie (get % tunnus))
+                                           :talvisuolaraja (:talvisuolaraja (get % tunnus))})))))
                             (vec pohjavesialue-talvisuola)
                             (keys %)))))))
 
@@ -202,6 +231,7 @@
                               [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
                                 :hae #(hae-pohjavesialueen-nimi %)}
                                {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
+                               {:otsikko "Tie" :nimi :tie :muokattava? (constantly false) :leveys "10%"}
                                {:otsikko "Käyttöraja"
                                 :nimi :talvisuolaraja
                                 :tyyppi :positiivinen-numero
