@@ -35,10 +35,15 @@ SELECT s.id,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
        s.tr_numero,
-       (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
+       (SELECT array_agg(
+                   concat(k.kohde, '=',
+                          CASE
+                            WHEN (k.tulos = '{}') THEN ' '
+                            ELSE array_to_string(k.tulos, '')
+                            END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
-        WHERE k.siltatarkastus = s1.id
-          AND k.tulos != 'A') AS kohteet
+        WHERE k.siltatarkastus = s.id
+          AND k.tulos != '{A}') AS kohteet
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
   AND s1.poistettu = FALSE)
@@ -63,11 +68,15 @@ SELECT s.id,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
        s.tr_numero,
-       (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
+       (SELECT array_agg(
+                   concat(k.kohde, '=',
+                          CASE
+                            WHEN (k.tulos = '{}') THEN ' '
+                            ELSE array_to_string(k.tulos, '')
+                            END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
-        WHERE k.siltatarkastus = s1.id
-          AND (k.tulos = 'C' OR k.tulos = 'B'))
-         AS kohteet
+        WHERE k.siltatarkastus = s.id
+          AND (k.tulos && '{C}' OR k.tulos && '{B}')) AS kohteet
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
   AND s1.poistettu = FALSE)
@@ -91,10 +100,15 @@ SELECT s.id,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
        s.tr_numero,
-       (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
+       (SELECT array_agg(
+                   concat(k.kohde, '=',
+                          CASE
+                            WHEN (k.tulos = '{}') THEN ' '
+                            ELSE array_to_string(k.tulos, '')
+                            END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
-        WHERE k.siltatarkastus = s1.id
-          AND k.tulos = 'D') AS kohteet
+        WHERE k.siltatarkastus = s.id
+          AND k.tulos && '{D}') AS kohteet
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
   AND s1.poistettu = FALSE)
@@ -111,16 +125,20 @@ WHERE ARRAY [:urakka] ::INT[] <@ s.urakat
 SELECT (SELECT COUNT(k1.kohde)
         FROM siltatarkastuskohde k1
         WHERE k1.siltatarkastus = st1.id
-          AND (tulos = 'B' OR tulos = 'C')) AS "rikki-ennen",
-       (SELECT array_agg(concat(k1.kohde, '=', k1.tulos, ':'))
+          AND (tulos && '{B}' OR tulos && '{C}')) AS "rikki-ennen",
+       (SELECT array_agg(
+                   concat(k1.kohde, '=',
+                          CASE
+                            WHEN (k1.tulos = '{}') THEN ' '
+                            ELSE array_to_string(k1.tulos, '')
+                            END, ':'))
         FROM siltatarkastuskohde k1
         WHERE k1.siltatarkastus = st1.id
-          AND (tulos = 'B' OR tulos = 'C'))
-                                            AS kohteet,
+          AND (tulos && '{B}' OR tulos && '{C}')) AS kohteet,
        (SELECT COUNT(k2.kohde)
         FROM siltatarkastuskohde k2
         WHERE k2.siltatarkastus = st2.id
-          AND (tulos = 'B' OR tulos = 'C')) AS "rikki-nyt",
+          AND (tulos && '{B}' OR tulos && '{C}')) AS "rikki-nyt",
        s.id,
        s.siltanimi,
        s.siltatunnus,
@@ -193,12 +211,12 @@ SELECT st.id,
                             END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
         WHERE k.siltatarkastus = st.id) AS kohteet,
-       skl.kohde               as liite_kohde,
-       liite.id                as liite_id,
-       liite.nimi              as liite_nimi,
-       liite.tyyppi            as liite_tyyppi,
-       liite.koko              as liite_koko,
-       liite.liite_oid         as liite_oid
+       skl.kohde                        as liite_kohde,
+       liite.id                         as liite_id,
+       liite.nimi                       as liite_nimi,
+       liite.tyyppi                     as liite_tyyppi,
+       liite.koko                       as liite_koko,
+       liite.liite_oid                  as liite_oid
 FROM siltatarkastus st
        LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
        LEFT JOIN liite ON skl.liite = liite.id
@@ -261,12 +279,11 @@ WHERE ulkoinen_id = :id
   AND luoja = :luoja
   AND poistettu = FALSE;
 
-
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
 SELECT siltatarkastus,
        kohde,
-       tulos,
+       tulos::char[],
        lisatieto
 FROM siltatarkastuskohde
 WHERE siltatarkastus = ANY (:siltatarkastus_idt);
