@@ -94,10 +94,10 @@
 
 (defn uusi-tarkastus []
   {:uudet-liitteet nil, :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-   :kohteet {7 ["A" ""], 20 ["B" ""], 1 ["A" ""], 24 ["C" ""], 4 ["A" ""], 15 ["B" ""],
-             21 ["B" ""], 13 ["A" ""], 22 ["C" ""], 6 ["B" ""], 17 ["B" ""], 3 ["A" ""],
-             12 ["A" ""], 2 ["A" ""], 23 ["C" ""], 19 ["C" ""], 11 ["A" ""], 9 ["B" ""],
-             5 ["B" ""], 14 ["A" ""], 16 ["A" ""], 10 ["B" ""], 18 ["B" ""], 8 ["B" ""]},
+   :kohteet {7 [#{\A} ""], 20 [#{\B} ""], 1 [#{\A} ""], 24 [#{\C} ""], 4 [#{\A} ""], 15 [#{\B} ""],
+             21 [#{\B \C} ""], 13 [#{\A} ""], 22 [#{\C} ""], 6 [#{\B \C \D} ""], 17 [#{\B} ""], 3 [#{\A} ""],
+             12 [#{\A} ""], 2 [#{\A} ""], 23 [#{\C} ""], 19 [#{\C} ""], 11 [#{\A} ""], 9 [#{\B} ""],
+             5 [#{\B} ""], 14 [#{\A} ""], 16 [#{\A} ""], 10 [#{\B} ""], 18 [#{\B} ""], 8 [#{\B} ""]},
    :silta-id (hae-oulujoen-sillan-id),
    :liitteet [],
    :tarkastusaika #inst "2017-07-28T11:34:49.000-00:00",
@@ -107,10 +107,10 @@
 (defn paivittava-tarkastus [id]
   {:id id
    :uudet-liitteet nil, :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-   :kohteet {7 ["D" ""], 20 ["B" ""], 1 ["D" ""], 24 ["C" ""], 4 ["D" ""], 15 ["B" ""],
-             21 ["B" ""], 13 ["D" ""], 22 ["C" ""], 6 ["B" ""], 17 ["B" ""], 3 ["D" ""],
-             12 ["D" ""], 2 ["D" ""], 23 ["C" ""], 19 ["C" ""], 11 ["D" ""], 9 ["B" ""],
-             5 ["B" ""], 14 ["D" ""], 16 ["D" ""], 10 ["B" ""], 18 ["B" ""], 8 ["B" ""]},
+   :kohteet {7 [#{\D} ""], 20 [#{\B} ""], 1 [#{\D} ""], 24 [#{\C} ""], 4 [#{\D} ""], 15 [#{\B} ""],
+             21 [#{\B} ""], 13 [#{\B \D} ""], 22 [#{\C} ""], 6 [#{\B} ""], 17 [#{\B} ""], 3 [#{\D} ""],
+             12 [#{\D} ""], 2 [#{\D} ""], 23 [#{\B \C} ""], 19 [#{\C} ""], 11 [#{\D} ""], 9 [#{\B} ""],
+             5 [#{\B} ""], 14 [#{\D} ""], 16 [#{\D} ""], 10 [#{\B} ""], 18 [#{\B} ""], 8 [#{\B} ""]},
    :silta-id (hae-oulujoen-sillan-id),
    :liitteet [],
    :tarkastusaika #inst "2017-07-30T21:34:49.000-00:00",
@@ -119,7 +119,7 @@
 
 (defn uusi-tarkastus-josta-puuttuu-kohteita []
   {:uudet-liitteet nil, :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-   :kohteet {1 ["A" ""]},
+   :kohteet {1 [#{\A} ""]},
    :silta-id (hae-oulujoen-sillan-id),
    :liitteet [],
    :tarkastusaika #inst "2017-07-28T11:34:49.000-00:00",
@@ -151,6 +151,9 @@
                                               (:tarkastusaika tarkastus))))
                                        tarkastukset-paivityksen-jalkeen))]
     (is (not= paivitettava-tarkastus-eka-kutsun-jalkeen paivitetty-tarkastus) "päivitetty siltatarkastus ei sama kuin alkuperäinen")
+
+
+    (println "%%%%%" (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)))
     (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
     (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
 
