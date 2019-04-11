@@ -100,7 +100,12 @@
   "Päivittää siltatarkastuksen kohteet"
   [db urakka-id {:keys [id kohteet] :as siltatarkastus}]
   (doseq [[kohde [tulos lisatieto]] kohteet]
-    (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde urakka-id))
+    (q/paivita-siltatarkastuksen-kohteet! db
+                                          (konv/seq->array (sort tulos))
+                                          lisatieto
+                                          id
+                                          kohde
+                                          urakka-id))
   siltatarkastus)
 
 (defn paivita-siltatarkastus!
