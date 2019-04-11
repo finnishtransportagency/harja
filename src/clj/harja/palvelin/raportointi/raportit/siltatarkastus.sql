@@ -261,4 +261,4 @@ SELECT
                 WHERE st.silta = s.id AND
                       EXTRACT(YEAR FROM tarkastusaika) = :vuosi AND
                       st.poistettu = FALSE
-                LIMIT 1)) AS "tarkastukset-lkm"
+                LIMIT 1)) AS "tarkastukset-lkm";

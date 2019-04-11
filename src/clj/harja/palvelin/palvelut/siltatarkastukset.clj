@@ -18,7 +18,7 @@
                    :kohteet
                    (into {}
                          (map (fn [kohde]
-                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|-| ):(.*)$"
+                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-| ):(.*)$"
                                                                           kohde)]
                                   [(Integer/parseInt nro) [tulos lisatieto]]))
                               kohteet)))
@@ -114,7 +114,11 @@
                                                 tarkastaja (:id user) nil "harja-ui")
         id (:id luotu-tarkastus)]
     (doseq [[kohde [tulos lisatieto]] kohteet]
-      (q/luo-siltatarkastuksen-kohde<! db tulos lisatieto id kohde))
+      (q/luo-siltatarkastuksen-kohde<! db
+                                       (konv/seq->array (sort tulos))
+                                       lisatieto
+                                       id
+                                       kohde))
     (assoc luotu-tarkastus
       :kohteet kohteet)))
 
