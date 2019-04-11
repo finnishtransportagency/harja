@@ -42,7 +42,7 @@ SELECT s.id,
                             ELSE array_to_string(k.tulos, '')
                             END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
-        WHERE k.siltatarkastus = s.id
+        WHERE k.siltatarkastus = s1.id
           AND k.tulos != '{A}') AS kohteet
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
@@ -301,8 +301,8 @@ WHERE id = :id
 -- name: paivita-siltatarkastuksen-kohteet!
 -- Päivittää olemassaolevan siltatarkastuksen kohteet
 INSERT INTO siltatarkastuskohde (tulos, lisatieto, siltatarkastus, kohde)
-VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde)
-ON CONFLICT ON CONSTRAINT uniikki_tarkastuskohde DO UPDATE SET tulos = :tulos, lisatieto = :lisatieto;
+VALUES (:tulos::char[], :lisatieto, :siltatarkastus, :kohde)
+ON CONFLICT ON CONSTRAINT uniikki_tarkastuskohde DO UPDATE SET tulos = :tulos::char[], lisatieto = :lisatieto;
 
 -- name: luo-siltatarkastuksen-kohde<!
 -- Luo siltatarkastukselle uuden kohteet
