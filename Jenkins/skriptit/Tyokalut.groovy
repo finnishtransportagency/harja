@@ -174,7 +174,7 @@ def ajaTestiserverinKanta(stagenNimi) {
 def ajaTestiserverinApp(stagenNimi, buildNumber) {
     try {
         ansiblePlaybook([installation: 'ansible 2.7',
-                         inventory   : 'inventory/testing',
+                         inventory   : 'environments/testing/inventory',
 			 playbook    : 'playbooks/nightly.yml',
 			 vaultCredentialsId: 'Vault',
                          extraVars   : [
@@ -227,7 +227,7 @@ def ajaStagingserverinKanta(stagenNimi) {
 def ajaStagingserverinApp(stagenNimi, buildNumber) {
     try {
         ansiblePlaybook([installation: 'ansible 2.7',
-                         inventory   : 'inventory/staging',
+                         inventory   : 'environments/staging/inventory',
                          playbook    : 'playbooks/staging.yml',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
@@ -262,7 +262,7 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
         slackSend([color  : 'good',
                    message: 'Aloitetaan tuotanto deployment'])
         ansiblePlaybook([installation: 'ansible 2.7',
-                         inventory   : 'inventory/production',
+                         inventory   : 'environments/production/inventory',
                          playbook    : 'playbooks/production.yml',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
