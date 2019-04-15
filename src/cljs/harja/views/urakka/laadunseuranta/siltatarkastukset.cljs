@@ -28,7 +28,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -185,6 +186,7 @@
           kohderivit))
 
 (defn kohdetuloksen-teksti [kirjain]
+  (log/debug (str "*** KIRJAIN " kirjain))
   (case kirjain
     "A" "A - ei toimenpiteitä"
     "B" "B - puhdistettava"
@@ -370,7 +372,16 @@
         muut-tarkastukset @st/valitun-sillan-tarkastukset
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
-                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
+                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
+        ]
+
+    (println "ALUSTUS "  (dissoc
+                           (into {}
+                                 (map (juxt :kohdenro identity))
+                                 (siltatarkastusten-rivit @muokattava-tarkastus muut-tarkastukset))
+                           nil))
+
+
     (komp/luo
       (komp/piirretty
         #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
@@ -416,6 +427,7 @@
               :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
             tarkastus]
 
+
            [grid/muokkaus-grid
             {:otsikko            otsikko
              :tunniste           :kohdenro
@@ -424,8 +436,8 @@
              :voi-poistaa?       (constantly false)
              :jarjesta           :kohdenro
              :valiotsikot        siltatarkastuksen-valiotsikot
-             :muutos             (fn [_]
-                                   (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt)))}
+             :muutos             (r/partial (fn [_]
+                                   (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt))))}
 
             ;; sarakkeet
             (into [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false)
@@ -440,11 +452,11 @@
                        :tasaa   :keskita
                        :nimi    (str "tulos-" vaihtoehto) :leveys 2
                        :tyyppi  :checkbox
-                       :hae     #(-> % :tulos #{vaihtoehto})
-                       :fmt     fmt/totuus
-                       :aseta   #(update %1 :tulos (fn [valitut]
+                       :hae     #(r/partial (-> % :tulos (get vaihtoehto)))
+                       ;;:fmt       fmt/totuus
+                       :aseta   #(r/partial (update %1 :tulos (fn [valitut]
                                                      (let [paivita-valitut (if %2 conj disj)]
-                                                       (paivita-valitut (into [] valitut) vaihtoehto))))})
+                                                       (paivita-valitut (into #{} valitut) vaihtoehto)))))})
 
                     [{:otsikko    "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
                       :pituus-max 255}
@@ -486,6 +498,9 @@
                  (let [tallennettava-tarkastus (-> tarkastus
                                                    (assoc :uudet-liitteet @uudet-liitteet)
                                                    (assoc :urakka-id (:id @nav/valittu-urakka)))]
+                   (println "TARKASTUS " tarkastus)
+                   (println "Tallennettava tARKASTUS " tallennettava-tarkastus)
+                   (println "Tallennuksen jälkeen " (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?))
                    (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?)))
             {:disabled (not voi-tallentaa?)}]
 

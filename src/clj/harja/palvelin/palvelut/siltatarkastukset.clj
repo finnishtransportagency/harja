@@ -18,9 +18,15 @@
                    :kohteet
                    (into {}
                          (map (fn [kohde]
-                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-| ):(.*)$"
+                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-|-B|-BC|-C| ):(.*)$"
                                                                           kohde)]
-                                  [(Integer/parseInt nro) [tulos lisatieto]]))
+                                  (println "Kohde " kohde)
+                                  (println "Tulos " tulos "ja nro" nro)
+                                  (println "TULOS ABC OSASTOLLA " (into #{} (if (= " " tulos) nil tulos)))
+                                  [(Integer/parseInt nro) [(into #{}
+                                                                 (if (= " " tulos)
+                                                                   nil
+                                                                   tulos)) lisatieto]]))
                               kohteet)))
                  rivi)))))
 
@@ -89,7 +95,7 @@
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
   [db user {:keys [urakka-id silta-id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+ ; (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
           kohteet-xf
@@ -99,13 +105,20 @@
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
   [db urakka-id {:keys [id kohteet] :as siltatarkastus}]
+
   (doseq [[kohde [tulos lisatieto]] kohteet]
+    (println "TULOS " tulos)
+    (println "TULOS " (type (first tulos)))
+    (println "TULOS järjestettynä " (sort tulos))
+    (println "lisatieto " lisatieto)
+    (println "kohde " kohde)
     (q/paivita-siltatarkastuksen-kohteet! db
-                                          (konv/seq->array (sort tulos))
+                                          (konv/seq->array  (sort tulos))
                                           lisatieto
                                           id
                                           kohde
-                                          urakka-id))
+                                          urakka-id)
+    )
   siltatarkastus)
 
 (defn paivita-siltatarkastus!

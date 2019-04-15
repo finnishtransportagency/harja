@@ -40,6 +40,16 @@
                                 11 "A" 12 "A" 13 "A" 14 "A" 15 "A" 16 "A" 17 "A" 18 "A" 19 "D"
                                 ; Siltapaikan rakenteet
                                 20 "A" 21 "A" 22 "A" 23 "A" 24 "A"))
+        odotettu-kohdetulos (fn [kohde]
+                              (case kohde
+                                ; Alusrakenne
+                                1 #{\-} 2 #{\A} 3 #{\A}
+                                ; Päällysrakenne
+                                4 #{\B} 5 #{\A} 6 #{\A} 7 #{\A} 8 #{\A} 9 "C" 10 #{\A}
+                                ; Varusteet ja laitteet
+                                11 #{\A} 12 #{\A} 13 #{\A} 14 #{\A} 15 #{\A} 16 #{\A} 17 #{\A} 18 #{\A} 19 #{\D}
+                                ; Siltapaikan rakenteet
+                                20 #{\A} 21 #{\A} 22 #{\A} 23 #{\A} 24 #{\A}))
         odotettu-kohteen-lisatieto (fn [kohde]
                                      (case kohde
                                        4 "Kansi likainen" 9 "Saumat lohkeilleet" 19 "Korjattava" nil))
@@ -58,8 +68,10 @@
     (is (not (nil? siltatarkastus-kannassa)))
     (is (= (nth siltatarkastus-kannassa 1) (str ulkoinen-id)))
     (is (= (nth siltatarkastus-kannassa 2) (str tarkastaja-etunimi " " tarkastaja-sukunimi)))
+    (log/debug (str "TARKASTUS KANNASSA " siltatarkastus-kannassa-id))
 
-    (let [kohteet-kannassa (q (str "SELECT kohde, tulos, lisatieto FROM siltatarkastuskohde WHERE siltatarkastus = " siltatarkastus-kannassa-id ";"))]
+    (let [kohteet-kannassa (q (str "SELECT kohde, tulos::char[], lisatieto FROM siltatarkastuskohde WHERE siltatarkastus = " siltatarkastus-kannassa-id ";"))]
+      (log/debug (str "KOHTEET KANNASSA " kohteet-kannassa))
     (is (= (count kohteet-kannassa) 24))
     (doseq [kohde kohteet-kannassa]
       (is (= (second kohde) (odotettu-kohdetulos (first kohde)))))

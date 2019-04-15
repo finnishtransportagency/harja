@@ -17,11 +17,11 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def api-tulos->kirjain
-  {"eiToimenpiteita" "A"
-   "puhdistettava" "B"
-   "urakanKunnostettava" "C"
-   "korjausOhjelmoitava" "D"
-   "eiPade" "-"
+  {"eiToimenpiteita" #{\A}
+   "puhdistettava" #{\B}
+   "urakanKunnostettava" #{\C}
+   "korjausOhjelmoitava" #{\D}
+   "eiPade" #{\-}
    ;; Tyhjä string tulkitaan arvoksi eiPade (eli -)
    "" "-"})
 
