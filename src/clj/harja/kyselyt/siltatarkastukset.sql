@@ -323,10 +323,10 @@ WHERE id = :id
 UPDATE siltatarkastus
 SET poistettu = TRUE,
     muokattu  = NOW(),
-    muokkaaja = :kayttaja - id
-WHERE ulkoinen_id::integer IN (:ulkoiset - idt)
-  AND luoja = :kayttaja - id
-  AND urakka = :urakka - id;
+    muokkaaja = :kayttaja_id
+WHERE ulkoinen_id::integer IN (:ulkoiset_idt)
+  AND luoja = :kayttaja_id
+  AND urakka = :urakka_id;
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
