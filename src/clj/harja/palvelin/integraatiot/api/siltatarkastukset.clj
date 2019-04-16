@@ -19,7 +19,10 @@
 (def api-tulos->kirjain
   {"eiToimenpiteita" #{\A}
    "puhdistettava" #{\B}
+   "puhdistettava, urakanKunnostettava" #{\B \C}
+   "puhdistettava, urakanKunnostettava, korjausOhjelmoitava" #{\B \C \D}
    "urakanKunnostettava" #{\C}
+   "urakanKunnostettava, korjausOhjelmoitava" #{\C \D}
    "korjausOhjelmoitava" #{\D}
    "eiPade" #{\-}
    ;; Tyhjä string tulkitaan arvoksi eiPade (eli -)
