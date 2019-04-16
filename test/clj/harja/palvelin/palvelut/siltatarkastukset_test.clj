@@ -155,13 +155,16 @@
 
     (println "%%%%%" (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)))
     (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) #{\D}) "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 13)) "A") "siltatarkastuksen kohde 13 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 13)) #{\B \C}) "siltatarkastuksen kohde 13 tulos päivityksen jälkeen")
 
     (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) "B") "siltatarkastuksen kohde 20 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) "B") "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) #{\B}) "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")
 
     (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) "A") "siltatarkastuksen kohde 7 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) "D") "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")))
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) #{\C}) "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")))
 
 (deftest tarkastuksen-paivitys-oulujoen-sillalle
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -187,14 +190,14 @@
                                               (:tarkastusaika tarkastus))))
                                        tarkastukset-paivityksen-jalkeen))]
     (is (not= paivitettava-tarkastus-eka-kutsun-jalkeen paivitetty-tarkastus) "päivitetty siltatarkastus ei sama kuin alkuperäinen")
-    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) #{\A}) "siltatarkastuksen kohde 1 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) #{\D}) "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
 
-    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) "A") "siltatarkastuksen kohde 7 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) "D") "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) #{\A}) "siltatarkastuksen kohde 7 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) #{\D}) "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")
 
-    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) "B") "siltatarkastuksen kohde 20 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) "B") "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")))
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) #{\B}) "siltatarkastuksen kohde 20 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) #{\B}) "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")))
 
 (deftest tarkastuksen-paivitys-kun-ensimmaisesta-tarkastuksesta-puuttuu-kohteita
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -220,14 +223,14 @@
                                               (:tarkastusaika tarkastus))))
                                        tarkastukset-paivityksen-jalkeen))]
     (is (not= paivitettava-tarkastus-eka-kutsun-jalkeen paivitetty-tarkastus) "päivitetty siltatarkastus ei sama kuin alkuperäinen")
-    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) "A") "siltatarkastuksen kohde 1 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) "D") "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
+    (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 1)) #{\A}) "siltatarkastuksen kohde 1 tulos päivitystä ennen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 1)) #{\D}) "siltatarkastuksen kohde 1 tulos päivityksen jälkeen")
 
     (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 7)) nil) "siltatarkastuksen kohde 7 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) "D") "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 7)) #{\D}) "siltatarkastuksen kohde 7 tulos päivityksen jälkeen")
 
     (is (= (first (get (:kohteet paivitettava-tarkastus-eka-kutsun-jalkeen) 20)) nil) "siltatarkastuksen kohde 20 tulos päivitystä ennen")
-    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) "B") "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")))
+    (is (= (first (get (:kohteet paivitetty-tarkastus) 20)) #{\B}) "siltatarkastuksen kohde 20 tulos päivityksen jälkeen")))
 
 
 (deftest tarkastuksen-tallennus-oulujoen-sillalle
