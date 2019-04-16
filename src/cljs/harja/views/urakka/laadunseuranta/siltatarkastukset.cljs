@@ -216,7 +216,7 @@
            :tyyppi      :komponentti
            :komponentti (fn [rivi]
                           (let [sarake-arvo (get rivi (pvm/pvm-aika-sek (:tarkastusaika tarkastus)))
-                                tulos (:tulos sarake-arvo)
+                                tulos (reduce str (:tulos sarake-arvo))
                                 liitteet (:liitteet sarake-arvo)]
                             [tarkastustulos-ja-liitteet tulos liitteet]))})
         (reverse (sort-by :tarkastusaika muut-tarkastukset))))
