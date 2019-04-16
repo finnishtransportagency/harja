@@ -186,17 +186,17 @@
           kohderivit))
 
 (defn kohdetuloksen-teksti [kirjain]
-  (log/debug (str "*** KIRJAIN " kirjain))
-  (case kirjain
-    "A" "A - ei toimenpiteitä"
-    "B" "B - puhdistettava"
-    "B,C" "B,C - puhdistettava, urakan kunnostettava"
-    "B,C,D" "B,C,D - puhdistettava, urakan kunnostettava, korjaus ohjelmoitava"
-    "C" "C - urakan kunnostettava"
-    "C,D" "C - urakan kunnostettava, korjaus ohjelmoitava"
-    "D" "D - korjaus ohjelmoitava"
-    "-" "Ei päde tähän siltaan"
-    +ei-kirjattu+))
+  (cond
+    (= kirjain #{\A})            [:span "A - ei toimenpiteitä"]
+    (= kirjain #{\B})            [:span "B - puhdistettava"]
+    (= kirjain #{\B \C})         [:span "B - puhdistettava" [:br] "C - urakan kunnostettava"]
+    (= kirjain #{\B \D})         [:span "B - puhdistettava" [:br] "D - korjaus ohjelmoitava"]
+    (= kirjain #{\B \C \D})      [:span "B - puhdistettava" [:br] "C - urakan kunnostettava" [:br] "D - korjaus ohjelmoitava"]
+    (= kirjain #{\C})            [:span "C - urakan kunnostettava"]
+    (= kirjain #{\C \D})         [:span "C - urakan kunnostettava" [:br] "D - korjaus ohjelmoitava"]
+    (= kirjain #{\D})            [:span "D - korjaus ohjelmoitava"]
+    (= kirjain #{\-})            [:span "Ei päde tähän siltaan"]
+    :default +ei-kirjattu+))
 
 (defn tarkastustulos-ja-liitteet
   "Komponentti vanhan tarkastuksen tuloksen ja liitteiden näyttämiselle. Liite on ikoni, jota klikkaamalla
@@ -378,11 +378,11 @@
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
         ]
 
-    (println "ALUSTUS "  (dissoc
-                           (into {}
-                                 (map (juxt :kohdenro identity))
-                                 (siltatarkastusten-rivit @muokattava-tarkastus muut-tarkastukset))
-                           nil))
+    (println "ALUSTUS " (dissoc
+                          (into {}
+                                (map (juxt :kohdenro identity))
+                                (siltatarkastusten-rivit @muokattava-tarkastus muut-tarkastukset))
+                          nil))
 
 
     (komp/luo
@@ -440,7 +440,7 @@
              :jarjesta           :kohdenro
              :valiotsikot        siltatarkastuksen-valiotsikot
              :muutos             (r/partial (fn [_]
-                                   (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt))))}
+                                              (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt))))}
 
             ;; sarakkeet
             (into [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false)
@@ -449,24 +449,26 @@
                     :leveys  15}]
                   (concat
                     (for [vaihtoehto ["A" "B" "C" "D" "-"]]
-                      {:otsikko (if (= vaihtoehto "-")
-                                  (ikonit/ban-circle)
-                                  vaihtoehto)
-                       :tasaa   :keskita
-                       :nimi    (str "tulos-" vaihtoehto) :leveys 2
-                       :tyyppi  :checkbox
-                       :hae     #(-> % :tulos (get vaihtoehto))
-                       :fmt       fmt/totuus
-                       :aseta   #(update %1 :tulos (fn [valitut]
-                                                     (let [rajoita (or (= "A" vaihtoehto) ;; Jos A tai - on valittu, ei voi valita muita arvoja, nollataan tilanne.
-                                                                       (= "-" vaihtoehto))
-                                                           paivita-valitut (if %2 conj disj)]
-                                                       (paivita-valitut (into #{}
-                                                                              (if rajoita nil
-                                                                                          (-> valitut
+                      {:otsikko     (if (= vaihtoehto "-")
+                                      (ikonit/ban-circle)
+                                      vaihtoehto)
+                       :tasaa       :keskita
+                       :voi-kumota? false
+                       :nimi        (str "tulos-" vaihtoehto) :leveys 2
+                       :tyyppi      :checkbox
+                       :hae         #(-> % :tulos (get vaihtoehto))
+                       :fmt         fmt/totuus
+                       :aseta       #(update %1 :tulos (fn [valitut]
+                                                         (let [rajoita (or (= "A" vaihtoehto)
+                                                                           (= "-" vaihtoehto))
+                                                               paivita-valitut (if %2 conj disj)]
+                                                           ;; Jos A tai - on valittu, ei voi valita muita arvoja. Poistetaan valitusta ylimääräiset ennen päivitystä. 
+                                                           (paivita-valitut (into #{}
+                                                                                  (if rajoita nil
+                                                                                              (-> valitut
                                                                                                   (disj valitut \A)
-                                                                                                  (disj valitut \-)))) ;; Jos valitaan muu kuin A tai -, poistetaan A tai -
-                                                                              vaihtoehto))))})
+                                                                                                  (disj valitut \-))))
+                                                                            vaihtoehto))))})
 
                     [{:otsikko    "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
                       :pituus-max 255}
