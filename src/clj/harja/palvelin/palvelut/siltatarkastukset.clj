@@ -18,11 +18,8 @@
                    :kohteet
                    (into {}
                          (map (fn [kohde]
-                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-|-B|-BC|-C| ):(.*)$"
+                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|BC|BD|CD|BCD|-| ):(.*)$"
                                                                           kohde)]
-                                  (println "Kohde " kohde)
-                                  (println "Tulos " tulos "ja nro" nro)
-                                  (println "TULOS ABC OSASTOLLA " (into #{} (if (= " " tulos) nil tulos)))
                                   [(Integer/parseInt nro) [(into #{}
                                                                  (if (= " " tulos)
                                                                    nil
@@ -107,11 +104,6 @@
   [db urakka-id {:keys [id kohteet] :as siltatarkastus}]
 
   (doseq [[kohde [tulos lisatieto]] kohteet]
-    (println "TULOS " tulos)
-    (println "TULOS " (type (first tulos)))
-    (println "TULOS järjestettynä " (sort tulos))
-    (println "lisatieto " lisatieto)
-    (println "kohde " kohde)
     (q/paivita-siltatarkastuksen-kohteet! db
                                           (konv/seq->array  (sort tulos))
                                           lisatieto

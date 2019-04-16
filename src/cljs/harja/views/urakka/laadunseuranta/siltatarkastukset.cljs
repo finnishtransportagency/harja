@@ -190,7 +190,10 @@
   (case kirjain
     "A" "A - ei toimenpiteitä"
     "B" "B - puhdistettava"
+    "B,C" "B,C - puhdistettava, urakan kunnostettava"
+    "B,C,D" "B,C,D - puhdistettava, urakan kunnostettava, korjaus ohjelmoitava"
     "C" "C - urakan kunnostettava"
+    "C,D" "C - urakan kunnostettava, korjaus ohjelmoitava"
     "D" "D - korjaus ohjelmoitava"
     "-" "Ei päde tähän siltaan"
     +ei-kirjattu+))
@@ -452,11 +455,18 @@
                        :tasaa   :keskita
                        :nimi    (str "tulos-" vaihtoehto) :leveys 2
                        :tyyppi  :checkbox
-                       :hae     #(r/partial (-> % :tulos (get vaihtoehto)))
-                       ;;:fmt       fmt/totuus
-                       :aseta   #(r/partial (update %1 :tulos (fn [valitut]
-                                                     (let [paivita-valitut (if %2 conj disj)]
-                                                       (paivita-valitut (into #{} valitut) vaihtoehto)))))})
+                       :hae     #(-> % :tulos (get vaihtoehto))
+                       :fmt       fmt/totuus
+                       :aseta   #(update %1 :tulos (fn [valitut]
+                                                     (let [rajoita (or (= "A" vaihtoehto) ;; Jos A tai - on valittu, ei voi valita muita arvoja, nollataan tilanne.
+                                                                       (= "-" vaihtoehto))
+                                                           paivita-valitut (if %2 conj disj)]
+                                                       (paivita-valitut (into #{}
+                                                                              (if rajoita nil
+                                                                                          (-> valitut
+                                                                                                  (disj valitut \A)
+                                                                                                  (disj valitut \-)))) ;; Jos valitaan muu kuin A tai -, poistetaan A tai -
+                                                                              vaihtoehto))))})
 
                     [{:otsikko    "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
                       :pituus-max 255}
