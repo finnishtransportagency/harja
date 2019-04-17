@@ -3,6 +3,7 @@ resources/public/css
 resources/public/js
 resources/~$roolit.xlsx
 target
+dev.cljs.edn
 .lein-repl-history
 .nrepl-port
 .repl/
@@ -59,3 +60,4 @@ resources/public/laadunseuranta/css/
 testi.pdf
 checkouts/
 package-lock.json
+src/cljs-dev/harja/repl.cljs

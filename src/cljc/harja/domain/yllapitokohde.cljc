@@ -979,6 +979,30 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
           (lisaa-paallekkaisyysteksti :tr-loppuetaisyys))
       kohdetekstit)))
 
+(defn validoi-kaikki
+  [tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet]
+  (let [kohde-validoitu (validoi-kohde
+                         tr-osoite
+                         verrattavat-kohteet kohteen-tiedot)
+        alikohteet-validoitu (keep identity
+                                   (for [alikohde alikohteet
+                                         :let [toiset-alikohteet (remove #(= alikohde %) alikohteet)]]
+                                     (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi)))
+        muutkohteet-validoitu (keep identity
+                                    (for [muukohde muutkohteet
+                                          :let [toiset-muutkohteet (remove #(= muukohde %) muutkohteet)]]
+                                      (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi)))
+        alustatoimet-validoitu (keep identity
+                                     (for [alustatoimi alustatoimet
+                                           :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]
+                                       (validoi-alustatoimenpide alikohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot vuosi)))
+]
+    (cond-> {}
+                       (not (nil? kohde-validoitu)) (assoc :paakohde (validoitu-kohde-tekstit kohde-validoitu true))
+                       (not (empty? alikohteet-validoitu)) (assoc :alikohde (map #(validoitu-kohde-tekstit % false) alikohteet-validoitu))
+                       (not (empty? muutkohteet-validoitu)) (assoc :muukohde (map #(validoitu-kohde-tekstit % false) muutkohteet-validoitu))
+                       (not (empty? alustatoimet-validoitu)) (assoc :alustatoimenpide (map #(validoi-alustatoimenpide-teksti %) alustatoimet-validoitu)))))
+
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
      "Tarkistaa, että annettu kohde on validi ja alikohteet ovat sen sen sisällä oikein."
@@ -991,37 +1015,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
        (when (not (empty? virheet))
          (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 
-#?(:clj
-   (defn validoi-alustatoimenpide [kohde-id kohteen-sijainti sijainti]
-     (let [sijainti-virheet
-           (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
-             [(tee-virhe +viallinen-alustatoimenpiteen-sijainti+
-                         (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))])
-           puutteelliset-tiedot
-           (when-not (and (tarkista-ajorata sijainti) (tarkista-kaista sijainti))
-             [(tee-virhe +viallinen-alustatoimenpiteen-sijainti+
-                         (str "Alustatoimenpiteeltä (" sijainti ") puuttuu "
-                              (apply str
-                                     (interpose ", " (keep (fn [{:keys [f nimi]}]
-                                                             (when (nil? (f sijainti))
-                                                               nimi))
-                                                           [{:f tarkista-ajorata :nimi "ajorata"} {:f tarkista-kaista :nimi "kaista"}])))))])]
-       (concat sijainti-virheet puutteelliset-tiedot))))
-
-#?(:clj (defn tarkista-alustatoimenpiteiden-sijainnit
-          "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
-          [kohde-id kohteen-sijainti alustatoimet]
-          (let [virheet
-                (flatten
-                 (keep (fn [{:keys [sijainti]}]
-                         (let [kohteenvirheet
-                               (concat
-                                (validoi-sijainti sijainti)
-                                (validoi-alustatoimenpide kohde-id kohteen-sijainti sijainti))]
-                           kohteenvirheet))
-                       alustatoimet))]
-            (when (not (empty? virheet))
-              (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 
 #?(:clj
    (defn yllapitokohteen-tarkka-tila [yllapitokohde]

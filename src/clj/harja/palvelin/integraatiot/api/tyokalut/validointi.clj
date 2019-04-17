@@ -133,28 +133,6 @@
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
   (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))
 
-(defn tarkista-alustatoimenpiteet [db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet]
-  (try+
-    (kohteet/tarkista-alustatoimenpiteiden-sijainnit kohde-id kohteen-sijainti alustatoimenpiteet)
-    (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
-      (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
-  (when (not (empty? alustatoimenpiteet))
-    (let [sijainnit (mapv :sijainti alustatoimenpiteet)]
-      (when
-        (sijainneissa-virheita? db kohteen-tienumero sijainnit)
-        (virheet/heita-poikkeus
-          virheet/+viallinen-kutsu+
-          [{:koodi :viallisia-tieosia
-            :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}])))))
-
-(defn tarkista-paallystysilmoitus [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet]
-  (let [paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
-        paakohteen-alikohteet (filter paakohteen-sisalla? alikohteet)
-        muut-alikohteet (filter (comp not paakohteen-sisalla?) alikohteet)]
-    (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
-    (tarkista-muut-alikohteet db muut-alikohteet)
-    (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet)))
-
 (defn tarkista-tietyomaa [db id jarjestelma]
   (when (not (q-tietyomaat/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
     (do
