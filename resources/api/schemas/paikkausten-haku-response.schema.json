@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "id": "urn:harja",
+    "type": "array",
+    "items": {
+	"id": "urn:harja/paikkaus"
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+	    "organisaatio": {
+		"id": "urn:harja/organisaatio",
+		"type": "object",
+		"additionalProperties": false,
+		"$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
+		"required": true
+	    },
+	    "paikkaus": {
+		"type": "object",
+		"additionalProperaties": false,
+		"required": true,
+		"$ref": "file:resources/api/schemas/entities/paikkaus.schema.json"
+	    }
+	}
+    }
+}
