@@ -3,7 +3,14 @@
   (:require [figwheel.client :as fw]
             [harja.ui.viesti :as viesti]))
 
+
+(goog-define FIGWHEEL-WS? true)
+
+
+
 (def raportoi-selainvirheet? false)
+
+(.log js/console (str "FIGWHEEL-WS?: " FIGWHEEL-WS?))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, figwheel reload."
@@ -12,12 +19,13 @@
   (when (.-harja_testmode js/window)
     (.log js/console "E2E test mode"))
 
-  (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
-             ;;:debug true
-             ;:reload-dependents false
-             :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
-                          (when-let [on-reload (:on-reload options)]
-                            (on-reload)))})
+  (when FIGWHEEL-WS?
+    (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
+               ;;:debug true
+                                        ;:reload-dependents false
+               :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
+                            (when-let [on-reload (:on-reload options)]
+                              (on-reload)))}))
 
   (.log js/console "Alustetaan less.js uudelleenlataus")
   (let [less (aget js/window "less")
