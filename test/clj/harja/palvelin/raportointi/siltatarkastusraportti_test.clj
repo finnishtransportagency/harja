@@ -44,6 +44,7 @@
                                  :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:vuosi 2007
                                               :silta-id 1}})]
+    (println "**** TAULUKKOVASTAUS " vastaus)
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Siltatarkastusraportti")
     (let [otsikko "Siltatarkastusraportti, Oulun alueurakka 2005-2012, Oulujoen silta (O-00001), 2007"
@@ -65,7 +66,6 @@
                                                    (and (= (count rivi) 5)
                                                         (number? numero)
                                                         (string? kohde)
-                                                        (string? tulos)
                                                         (if lisatieto (string? lisatieto)
                                                                       true)
                                                         (vector? liitteet))
