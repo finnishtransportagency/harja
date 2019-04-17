@@ -156,7 +156,7 @@
                                   [org.apache.pdfbox/pdfbox "2.0.8"]
                                   [cider/piggieback "0.4.0"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.3.3"]
+                             [test2junit "1.4.2"]
                              [lein-eftest "0.5.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
@@ -182,8 +182,8 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.19-SNAPSHOT"]
-            [codox "0.8.11"]
-            [jonase/eastwood "0.2.4"]
+            [lein-codox "0.10.6"]
+            [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.8"]]
@@ -323,7 +323,7 @@
                         ;; Harja mobiili laadunseuranta fronttibuildi
                         "cljsbuild" "once" "laadunseuranta-min,"
 
-                        "uberjar," "doc"]
+                        "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
