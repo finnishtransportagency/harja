@@ -92,7 +92,7 @@
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
   [db user {:keys [urakka-id silta-id] :as tiedot}]
- ; (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
           kohteet-xf
@@ -105,7 +105,7 @@
 
   (doseq [[kohde [tulos lisatieto]] kohteet]
     (q/paivita-siltatarkastuksen-kohteet! db
-                                          (konv/seq->array  (sort tulos))
+                                          (konv/seq->array (sort tulos))
                                           lisatieto
                                           id
                                           kohde
@@ -159,27 +159,27 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
-    (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
-    (let [tarkastus (if id
-                      ;; Olemassaoleva tarkastus, päivitetään kohteet
-                      (paivita-siltatarkastus! db user urakka-id siltatarkastus)
+                            (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
+                            (let [tarkastus (if id
+                                              ;; Olemassaoleva tarkastus, päivitetään kohteet
+                                              (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
-                      ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
-                      ;; ja sen kohteet.
-                      (luo-siltatarkastus db user siltatarkastus))]
-      (log/debug "Kohteet tallennettu!")
-      (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
-      (hae-siltatarkastus db (:id tarkastus)))))
+                                              ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
+                                              ;; ja sen kohteet.
+                                              (luo-siltatarkastus db user siltatarkastus))]
+                              (log/debug "Kohteet tallennettu!")
+                              (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
+                              (hae-siltatarkastus db (:id tarkastus)))))
 
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
-    (do
-      (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id)))
-    (hae-sillan-tarkastukset c user {:urakka-id urakka-id
-                                     :silta-id silta-id})))
+                            (do
+                              (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id)))
+                            (hae-sillan-tarkastukset c user {:urakka-id urakka-id
+                                                             :silta-id  silta-id})))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
