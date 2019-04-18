@@ -113,7 +113,7 @@
      [:li.puutekohde {:style {:list-style-type "circle"}}
       (str (siltadomain/siltatarkastuskohteen-nimi kohde)
            ": "
-           tulos (when vika-korjattu " \u2192 A"))])])
+          (reduce str tulos)(when vika-korjattu " \u2192 A"))])])
 
 (defn jarjesta-sillat [sillat]
   (sort-by
