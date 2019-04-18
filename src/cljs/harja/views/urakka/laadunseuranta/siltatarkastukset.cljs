@@ -375,16 +375,7 @@
         muut-tarkastukset @st/valitun-sillan-tarkastukset
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
-                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
-        ]
-
-    (println "ALUSTUS " (dissoc
-                          (into {}
-                                (map (juxt :kohdenro identity))
-                                (siltatarkastusten-rivit @muokattava-tarkastus muut-tarkastukset))
-                          nil))
-
-
+                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
     (komp/luo
       (komp/piirretty
         #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
@@ -510,9 +501,6 @@
                  (let [tallennettava-tarkastus (-> tarkastus
                                                    (assoc :uudet-liitteet @uudet-liitteet)
                                                    (assoc :urakka-id (:id @nav/valittu-urakka)))]
-                   (println "TARKASTUS " tarkastus)
-                   (println "Tallennettava tARKASTUS " tallennettava-tarkastus)
-                   (println "Tallennuksen jälkeen " (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?))
                    (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?)))
             {:disabled (not voi-tallentaa?)}]
 
