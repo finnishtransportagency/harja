@@ -161,17 +161,26 @@
         paallystysilmoitukset))))
 
 (defn virhe-modal [vastaus]
-  (let [virhe (:virhe vastaus)]
+  (let [virhe (:virhe vastaus)
+        yksi-virhe? (map? virhe)
+        virheviestit-komponentti (fn [virhe]
+                                   (for [[virhe-otsikko virheet] virhe]
+                                     ;; TODO refaktoroi tämä
+                                     [:div
+                                      [:p (str (clojure.string/capitalize (name virhe-otsikko)) ": ")]
+                                      (into [:ul] (map (fn [virheviesti]
+                                                         [:li virheviesti])
+                                                       (distinct (flatten (vals (if (map? virheet)
+                                                                                  virheet
+                                                                                  (first virheet)))))))]))]
     (modal/nayta!
       {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
        :otsikko-tyyli :virhe}
       (when virhe
-        (for [[virhe-otsikko virheet] virhe]
-          [:div
-           [:p (str (clojure.string/capitalize (name virhe-otsikko)) ": ")]
-           (into [:ul] (map (fn [virheviesti]
-                                 [:li virheviesti])
-                            (distinct (flatten (vals virheet)))))])))))
+        (if yksi-virhe?
+          (virheviestit-komponentti virhe)
+          (concat (interpose '([:p "------------"])
+                             (map virheviestit-komponentti virhe))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan

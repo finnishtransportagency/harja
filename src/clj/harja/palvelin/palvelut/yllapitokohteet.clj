@@ -10,7 +10,8 @@
              [tierekisteri :as tr]]
             [harja.kyselyt
              [konversio :as konv]
-             [yllapitokohteet :as q]]
+             [yllapitokohteet :as q]
+             [tieverkko :as tieverkko-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
@@ -572,50 +573,41 @@
                                                :yllapitokohde-id id
                                                :osat korjatut+muut})))))
 
-(defn- validoi-tallennettavat-yllapitokohteet
-  "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
-  [db tallennettavat-kohteet vuosi]
-  (let [yha-kohteet (filter :yhaid tallennettavat-kohteet)
-        verrattavat-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
-        ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
-        ;; vertailuun uusin tieto kohteista
-        verrattavat-kohteet (map
-                              (fn [verrattava-kohde]
-                                (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
-                                                                          tallennettavat-kohteet))]
-                                  kohde-payloadissa
-                                  verrattava-kohde))
-                              verrattavat-kohteet)]
-    (reduce
-      (fn [virheet tallennettava-kohde]
-        (let [kohteen-virheet
-              (remove nil? (map (fn [verrattava-kohde]
-                                  (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
-                                             (and (= (:tr-numero tallennettava-kohde) (:tr-numero verrattava-kohde))
-                                                  (= (:tr-ajorata tallennettava-kohde) (:tr-ajorata verrattava-kohde))
-                                                  (= (:tr-kaista tallennettava-kohde) (:tr-kaista verrattava-kohde)))
-                                             (tr/tr-vali-leikkaa-tr-valin? tallennettava-kohde verrattava-kohde))
-                                    {:validointivirhe :kohteet-paallekain
-                                     :kohteet [(select-keys tallennettava-kohde [:kohdenumero :nimi :urakka
-                                                                                 :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                                                                 :tr-loppuosa :tr-loppuetaisyys])
-                                               (select-keys verrattava-kohde [:kohdenumero :nimi :urakka
-                                                                              :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                                                              :tr-loppuosa :tr-loppuetaisyys])]}))
-                                verrattavat-kohteet))]
-          (if (empty? kohteen-virheet)
-            virheet
-            (concat virheet kohteen-virheet))))
-      []
-      yha-kohteet)))
+(defn validoi-kohde [db kohde yhden-vuoden-kohteet urakka-id vuosi]
+  (let [verrattavat-kohteet (sequence
+                             (comp (remove
+                                    (fn [verrattava-kohde]
+                                      (and (= (:id verrattava-kohde)
+                                              (:id kohde))
+                                           (not (nil? (:id kohde))))))
+                                   (map #(update % :urakka (fn [nimi]
+                                                             (when (= (:urakka-id %) urakka-id)
+                                                               nimi)))))
+                             yhden-vuoden-kohteet)
+        tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+        kohteen-tiedot (map #(update % :pituudet konv/jsonb->clojuremap)
+                            (tieverkko-q/hae-trpisteiden-valinen-tieto db
+                                                                       (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
+        ali-ja-muut-kohteet (:kohdeosat kohde)
+        alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
+                           ali-ja-muut-kohteet)
+        muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
+                            ali-ja-muut-kohteet)
+        alustatoimet nil]
+    (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [validointivirheet (validoi-tallennettavat-yllapitokohteet db kohteet vuosi)]
-      (if (empty? validointivirheet)
+    (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))
+          yhden-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
+          kohteiden-virheviestit (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
+                                          (when-not (empty? virheviestit)
+                                            virheviestit))
+                                       kohteet)]
+      (if (empty? kohteiden-virheviestit)
         (do (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
             (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
             (doseq [kohde kohteet]
@@ -632,7 +624,7 @@
               {:status :ok
                :yllapitokohteet yllapitokohteet}))
         {:status :validointiongelma
-         :validointivirheet validointivirheet}))))
+         :validointivirheet kohteiden-virheviestit}))))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id urakkatyyppi]}]
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)

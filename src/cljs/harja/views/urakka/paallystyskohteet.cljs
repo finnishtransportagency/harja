@@ -23,7 +23,8 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.modal :as modal]
             [harja.domain.tierekisteri :as tr]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
@@ -130,7 +131,8 @@
              #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
              :paallystys
              #(reset! paallystys-tiedot/yllapitokohteet %)
-             #(reset! paallystys-tiedot/validointivirheet-modal (assoc % :nakyvissa? true)))
+             (fn [virheviesti]
+               (paallystys-tiedot/virhe-modal {:virhe (:validointivirheet virheviesti)})))
            :kun-onnistuu (fn [_]
                            (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
