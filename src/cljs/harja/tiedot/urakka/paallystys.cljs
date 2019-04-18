@@ -165,14 +165,13 @@
     (modal/nayta!
       {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
        :otsikko-tyyli :virhe}
-      (when (:virhe vastaus)
-        [:div
-         [:p "Virheet:"]
-         (into [:ul] (mapv (fn [virhe]
-                             [:li virhe])
-                           (if (sequential? virhe)
-                             virhe
-                             [virhe])))]))))
+      (when virhe
+        (for [[virhe-otsikko virheet] virhe]
+          [:div
+           [:p (str (clojure.string/capitalize (name virhe-otsikko)) ": ")]
+           (into [:ul] (map (fn [virheviesti]
+                                 [:li virheviesti])
+                            (distinct (flatten (vals virheet)))))])))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan

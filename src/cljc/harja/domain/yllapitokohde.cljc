@@ -998,7 +998,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                        (validoi-alustatoimenpide alikohteet alustatoimi toiset-alustatoimenpiteet kohteen-tiedot vuosi)))
 ]
     (cond-> {}
-                       (not (nil? kohde-validoitu)) (assoc :paakohde (validoitu-kohde-tekstit kohde-validoitu true))
+                       (not (empty? kohde-validoitu)) (assoc :paakohde (validoitu-kohde-tekstit kohde-validoitu true))
                        (not (empty? alikohteet-validoitu)) (assoc :alikohde (map #(validoitu-kohde-tekstit % false) alikohteet-validoitu))
                        (not (empty? muutkohteet-validoitu)) (assoc :muukohde (map #(validoitu-kohde-tekstit % false) muutkohteet-validoitu))
                        (not (empty? alustatoimet-validoitu)) (assoc :alustatoimenpide (map #(validoi-alustatoimenpide-teksti %) alustatoimet-validoitu)))))

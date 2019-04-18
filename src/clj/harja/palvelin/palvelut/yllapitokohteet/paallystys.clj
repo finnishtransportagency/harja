@@ -490,11 +490,15 @@
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    (let [verrattavat-kohteet (remove
-                               (fn [verrattava-kohde]
-                                 (and (= (:id verrattava-kohde)
-                                         (:paallystyskohde-id paallystysilmoitus))
-                                      (not (nil? (:paallystyskohde-id paallystysilmoitus)))))
+    (let [verrattavat-kohteet (sequence
+                               (comp (remove
+                                      (fn [verrattava-kohde]
+                                        (and (= (:id verrattava-kohde)
+                                                (:paallystyskohde-id paallystysilmoitus))
+                                             (not (nil? (:paallystyskohde-id paallystysilmoitus))))))
+                                     (map #(update % :urakka (fn [nimi]
+                                                               (when (= (:urakka-id %) urakka-id)
+                                                                 nimi)))))
                                (yllapitokohteet-q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))
           tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
           kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
@@ -530,16 +534,15 @@
                                        tallennettava-kohde
                                        verrattava-kohde))
                                    (yllapitokohteet-q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))
-              paivitetyt-kohdeosat (when (empty? paallekkaiset-kohteet)
-                                     (yllapitokohteet/tallenna-yllapitokohdeosat
-                                      db user {:urakka-id urakka-id :sopimus-id sopimus-id
-                                               :vuosi vuosi
-                                               :yllapitokohde-id paallystyskohde-id
-                                               :osat (map #(assoc % :id (:kohdeosa-id %))
-                                                          (->> paallystysilmoitus
-                                                               :ilmoitustiedot
-                                                               :osoitteet
-                                                               (filter (comp not :poistettu))))}))]
+              paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
+                                    db user {:urakka-id urakka-id :sopimus-id sopimus-id
+                                             :vuosi vuosi
+                                             :yllapitokohde-id paallystyskohde-id
+                                             :osat (map #(assoc % :id (:kohdeosa-id %))
+                                                        (->> paallystysilmoitus
+                                                             :ilmoitustiedot
+                                                             :osoitteet
+                                                             (filter (comp not :poistettu))))})]
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
             (:validointivirheet paivitetyt-kohdeosat) (clj-set/rename-keys paivitetyt-kohdeosat {:validointivirheet :virhe})
