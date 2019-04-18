@@ -162,7 +162,7 @@
                          muodostettu-viesti ""]
                     (if (nil? otsikko)
                       muodostettu-viesti
-                      (let [otsikko (str "-----------\n\r" (clj-str/capitalize otsikko) "\n\r")
+                      (let [otsikko (str "-----------\n\r" (clj-str/capitalize (name otsikko)) "\n\r")
                             virheteksti (apply str (interpose "\n\r"
                                                               (distinct
                                                                (mapcat (fn [virheteksti-map]
