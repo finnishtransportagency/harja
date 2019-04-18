@@ -13,15 +13,19 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def api-tulos->kirjain
-  {"eiToimenpiteita" "A"
-   "puhdistettava" "B"
-   "urakanKunnostettava" "C"
-   "korjausOhjelmoitava" "D"
-   "eiPade" "-"
+  {"eiToimenpiteita" #{\A}
+   "puhdistettava" #{\B}
+   "puhdistettava, urakanKunnostettava" #{\B \C}
+   "puhdistettava, urakanKunnostettava, korjausOhjelmoitava" #{\B \C \D}
+   "urakanKunnostettava" #{\C}
+   "urakanKunnostettava, korjausOhjelmoitava" #{\C \D}
+   "korjausOhjelmoitava" #{\D}
+   "eiPade" #{\-}
    ;; Tyhjä string tulkitaan arvoksi eiPade (eli -)
    "" "-"})
 
@@ -92,7 +96,7 @@
           (doseq [kohde (keys kohderyhma)]
             (let [liitteet (get-in kohderyhma [kohde :liitteet])
                   kohde (silta-q/luo-siltatarkastuksen-kohde<! db
-                                                               (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide]))
+                                                               (konv/seq->array (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide])))
                                                                (get-in kohderyhma [kohde :lisatietoja])
                                                                siltatarkastus-id
                                                                (api-kohde->numero (name kohde)))]
