@@ -65,7 +65,6 @@
                                                    (and (= (count rivi) 5)
                                                         (number? numero)
                                                         (string? kohde)
-                                                        (string? tulos)
                                                         (if lisatieto (string? lisatieto)
                                                                       true)
                                                         (vector? liitteet))
