@@ -2,7 +2,6 @@
     "$schema": "http://json-schema.org/draft-03/schema#",
     "id": "urn:harja",
     "type": "object",
-    "additionalProperties": false,
     "allOf": [
 	{
 	    "oneOf": [
