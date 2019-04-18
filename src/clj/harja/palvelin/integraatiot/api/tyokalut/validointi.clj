@@ -9,6 +9,7 @@
     [harja.kyselyt.tieverkko :as q-tieverkko]
     [harja.kyselyt.kayttajat :as kayttajat-q]
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
+    [harja.kyselyt.konversio :as konversio]
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.yllapitokohde :as kohteet]
@@ -17,7 +18,7 @@
     [harja.geo :as geo]
     [cheshire.core :as cheshire]
     [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-    [clojure.string :as str])
+    [clojure.string :as clj-str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (declare tarkista-muut-alikohteet)
@@ -133,6 +134,45 @@
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
   (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))
 
+(defn tarkista-paallystyskohde
+  [db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet]
+  (let [yhden-vuoden-kohteet (q-yllapitokohteet/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
+        verrattavat-kohteet (sequence
+                             (comp (remove
+                                    (fn [verrattava-kohde]
+                                      (= (:id verrattava-kohde)
+                                         kohde-id)))
+                                   (map #(update % :urakka (fn [nimi]
+                                                             (when (= (:urakka-id %) urakka-id)
+                                                               nimi)))))
+                             yhden-vuoden-kohteet)
+        kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
+                            (q-tieverkko/hae-trpisteiden-valinen-tieto db
+                                                                       (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
+        alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
+                           ali-ja-muut-kohteet)
+        muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
+                            ali-ja-muut-kohteet)
+        virheviestit (kohteet/validoi-kaikki tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)]
+    (when-not (empty? virheviestit)
+      (virheet/heita-poikkeus
+        virheet/+viallinen-kutsu+
+        [{:koodi :viallisia-tieosia
+          :viesti (loop [[[otsikko virheet] & loput-virheet] (sequence virheviestit)
+                         muodostettu-viesti ""]
+                    (if (nil? otsikko)
+                      muodostettu-viesti
+                      (let [otsikko (str "-----------\n\r" (clj-str/capitalize otsikko) "\n\r")
+                            virheteksti (apply str (interpose "\n\r"
+                                                              (distinct
+                                                               (mapcat (fn [virheteksti-map]
+                                                                         (-> virheteksti-map vals flatten))
+                                                                       virheet))))]
+                        (recur loput-virheet
+                               (if-not (empty? virheteksti)
+                                 (str muodostettu-viesti otsikko (str virheteksti "\n\r"))
+                                 muodostettu-viesti)))))}]))))
+
 (defn tarkista-tietyomaa [db id jarjestelma]
   (when (not (q-tietyomaat/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
     (do
@@ -242,7 +282,7 @@
         (virheet/heita-poikkeus
           virheet/+viallinen-kutsu+
           {:koodi virheet/+viallinen-kutsu+
-           :viesti (str/join ", " paallekkaiset-osat)})))))
+           :viesti (clj-str/join ", " paallekkaiset-osat)})))))
 
 (defn tarkista-urakkatyyppi [urakkatyyppi]
   (when urakkatyyppi
