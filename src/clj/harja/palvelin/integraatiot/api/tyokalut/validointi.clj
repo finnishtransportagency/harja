@@ -104,36 +104,6 @@
                                         (:kayttajanimi kayttaja)
                                         urakka-id)}]})))
 
-
-
-(defn sijainneissa-virheita? [db tienumero sijainnit]
-  (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
-                 db
-                 tienumero
-                 (:aosa %)
-                 (:aet %)
-                 (:losa %)
-                 (:let %))
-              sijainnit))
-
-(defn validoi-kohteiden-sijainnit-tieverkolla [db tienumero kohteen-sijainti alikohteet]
-  (let [sijainnit (conj (mapv :sijainti alikohteet) kohteen-sijainti)]
-    (when
-      (sijainneissa-virheita? db tienumero sijainnit)
-      (virheet/heita-poikkeus
-        virheet/+viallinen-kutsu+
-        [{:koodi :viallisia-tieosia
-          :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]))))
-
-(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet
-  "Tarkistaa, että kohteen ja alikohteiden arvot on annettu oikein ja osoitteet löytyvät Harjan tieverkolta"
-  [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
-  (try+
-    (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
-    (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
-      (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
-  (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))
-
 (defn tarkista-paallystyskohde
   [db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet]
   (let [yhden-vuoden-kohteet (q-yllapitokohteet/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
@@ -222,67 +192,6 @@
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti "Käyttäjällä ei resurssiin."}]})))
-
-(defn tarkista-leikkaavatko-alikohteet-toisiaan
-  [alikohteet]
-  (let [paallekkain? (fn [ensimmainen toinen]
-                       (let [ensimmainen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti ensimmainen))
-                             toinen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti toinen))]
-                         (when (tierekisteri/kohdeosat-paalekkain? ensimmainen-sijainti toinen-sijainti)
-                           {:koodi virheet/+virheellinen-sijainti+
-                            :viesti (format "Alikohteiden: %s (tunniste: %s) ja: %s (tunniste: %s) osoitteet leikkaavat toisiaan."
-                                            (:nimi ensimmainen)
-                                            (get-in ensimmainen [:tunniste :id])
-                                            (:nimi toinen)
-                                            (get-in toinen [:tunniste :id]))})))]
-    (apply concat (for [[x i] (zipmap alikohteet (range (count alikohteet)))]
-                    (keep (partial paallekkain? x)
-                          (concat (take i alikohteet) (drop (+ 1 i) alikohteet)))))))
-
-(defn tarkista-ovatko-tierekisterosoitteet-validit [db alikohteet]
-  (let [validi? (fn [{:keys [sijainti nimi tunniste tunnus]}]
-                  (let [numero (:numero sijainti)
-                        aosa (:aosa sijainti)
-                        aet (:aet sijainti)
-                        losa (:losa sijainti)
-                        loppuet (:let sijainti)
-                        tunniste (or tunnus (:id tunniste))]
-                    (if (q-tieverkko/onko-tierekisteriosoite-validi? db numero aosa aet losa loppuet)
-                      (when (not (q-tieverkko/ovatko-tierekisteriosoitteen-etaisyydet-validit? db numero aosa aet losa loppuet))
-                        {:koodi virheet/+virheellinen-sijainti+
-                         :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Etäisyydet ovat liian pitkiä."
-                                         nimi
-                                         tunniste)})
-                      {:koodi virheet/+virheellinen-sijainti+
-                       :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Tietä tai osaa ei löydy."
-                                       nimi
-                                       tunniste)})))]
-    (filter (comp not nil?) (map validi? alikohteet))))
-
-(defn tarkista-muut-alikohteet [db muut-alikohteet]
-  (let [virheet (concat
-                  (tarkista-leikkaavatko-alikohteet-toisiaan muut-alikohteet)
-                  (tarkista-ovatko-tierekisterosoitteet-validit db muut-alikohteet))]
-    (when (not (empty? virheet))
-      (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet))))
-
-(defn tarkista-alikohteiden-paallekkaisyys [db kohde-id kohteen-vuodet alikohteet]
-  (doseq [vuosi kohteen-vuodet]
-    (let [paallekkaiset-osat (yy/paallekkaiset-kohdeosat-saman-vuoden-osien-kanssa
-                               db kohde-id vuosi (map #(-> {:nimi (:nimi %)
-                                                            :tr-numero (get-in % [:sijainti :numero])
-                                                            :tr-ajorata (get-in % [:sijainti :ajr])
-                                                            :tr-kaista (get-in % [:sijainti :kaista])
-                                                            :tr-alkuosa (get-in % [:sijainti :aosa])
-                                                            :tr-alkuetaisyys (get-in % [:sijainti :aet])
-                                                            :tr-loppuosa (get-in % [:sijainti :losa])
-                                                            :tr-loppuetaisyys (get-in % [:sijainti :let])})
-                                                      alikohteet))]
-      (when (not (empty? paallekkaiset-osat))
-        (virheet/heita-poikkeus
-          virheet/+viallinen-kutsu+
-          {:koodi virheet/+viallinen-kutsu+
-           :viesti (clj-str/join ", " paallekkaiset-osat)})))))
 
 (defn tarkista-urakkatyyppi [urakkatyyppi]
   (when urakkatyyppi
