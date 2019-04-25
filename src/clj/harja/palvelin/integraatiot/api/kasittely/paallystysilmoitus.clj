@@ -113,5 +113,6 @@
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
         purettu-paallystysilmoitus (pura-paallystysilmoitus vkm db kohteen-tienumero data)
         valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
+        _ (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
         id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde purettu-paallystysilmoitus valmis-kasiteltavaksi)]
     id))
