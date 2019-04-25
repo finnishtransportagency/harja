@@ -20,7 +20,7 @@ SELECT
    LIMIT 1),
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'A'
+   WHERE tulos && '{A}'
          AND siltatarkastus = (SELECT id
                                FROM siltatarkastus st
                                WHERE st.silta = s.id
@@ -30,7 +30,7 @@ SELECT
                                LIMIT 1)) AS "a",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'B'
+   WHERE tulos && '{B}'
          AND siltatarkastus = (SELECT id
                                FROM siltatarkastus st
                                WHERE st.silta = s.id
@@ -40,7 +40,7 @@ SELECT
                                LIMIT 1)) AS "b",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'C'
+   WHERE tulos && '{C}'
          AND siltatarkastus = (SELECT id
                                FROM siltatarkastus st
                                WHERE st.silta = s.id
@@ -50,7 +50,7 @@ SELECT
                                LIMIT 1)) AS "c",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'D'
+   WHERE tulos && '{D}'
          AND siltatarkastus = (SELECT id
                                FROM siltatarkastus st
                                WHERE st.silta = s.id
@@ -151,7 +151,7 @@ SELECT
   u.nimi,
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'A'
+   WHERE tulos && '{A}'
          AND siltatarkastus IN (SELECT id
                                FROM siltatarkastus st
                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -159,7 +159,7 @@ SELECT
                                      AND st.poistettu = FALSE)) AS "a",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'B'
+   WHERE tulos && '{B}'
          AND siltatarkastus IN (SELECT id
                                 FROM siltatarkastus st
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -167,7 +167,7 @@ SELECT
                                       AND st.poistettu = FALSE)) AS "b",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'C'
+   WHERE tulos && '{C}'
          AND siltatarkastus IN (SELECT id
                                 FROM siltatarkastus st
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -175,7 +175,7 @@ SELECT
                                       AND st.poistettu = FALSE)) AS "c",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'D'
+   WHERE tulos && '{D}'
          AND siltatarkastus IN (SELECT id
                                 FROM siltatarkastus st
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -192,7 +192,7 @@ SELECT
   concat(lpad(cast(elynumero as varchar), 2, '0'), ' ', h.nimi) as nimi,
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'A'
+   WHERE tulos && '{A}'
          AND siltatarkastus IN (SELECT id
                                FROM siltatarkastus st
                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -205,7 +205,7 @@ SELECT
                                      AND st.poistettu = FALSE))     AS "a",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'B'
+   WHERE tulos && '{B}'
          AND siltatarkastus IN (SELECT id
                                 FROM siltatarkastus st
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -218,7 +218,7 @@ SELECT
                                       AND st.poistettu = FALSE)) AS "b",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'C'
+   WHERE tulos && '{C}'
          AND siltatarkastus IN (SELECT id
                                 FROM siltatarkastus st
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -231,7 +231,7 @@ SELECT
                                       AND st.poistettu = FALSE)) AS "c",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
-   WHERE tulos = 'D'
+   WHERE tulos && '{D}'
          AND siltatarkastus IN (SELECT id
                                 FROM siltatarkastus st
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
@@ -261,4 +261,4 @@ SELECT
                 WHERE st.silta = s.id AND
                       EXTRACT(YEAR FROM tarkastusaika) = :vuosi AND
                       st.poistettu = FALSE
-                LIMIT 1)) AS "tarkastukset-lkm"
+                LIMIT 1)) AS "tarkastukset-lkm";

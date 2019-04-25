@@ -9,7 +9,10 @@
       "enum": [
         "eiToimenpiteita",
         "puhdistettava",
+        "puhdistettava, urakanKunnostettava",
+        "puhdistettava, urakanKunnostettava, korjausOhjelmoitava",
         "urakanKunnostettava",
+        "urakanKunnostettava, korjausOhjelmoitava",
         "korjausOhjelmoitava",
         "eiPade",
         ""
