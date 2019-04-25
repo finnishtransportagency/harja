@@ -183,7 +183,7 @@
             [lein-ancient "0.6.15"]
             [lein-figwheel "0.5.19-SNAPSHOT"]
             [codox "0.8.11"]
-            [jonase/eastwood "0.2.4"]
+            [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.8"]]
