@@ -20,13 +20,6 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(deftest raportoi-selainvirhe-testi
-  (testing "generoitu-stack->lahde-stack"
-    (is (= (generoitu-stack->lahde-stack {:rivi 1 :sarake 1 :tiedostopolku "foo/harja.js"} true)
-           nil))
-    (is (= (lue-tiedosto "foo.bar")
-           "Lähdetiedostoa foo.bar ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))
-
 (deftest raportoi-yhteyskatkos-testi
   (let [kayttaja +kayttaja-jvh+
         ping-1 {:aika (pvm/luo-pvm 2000 1 1) :palvelu :ping}
