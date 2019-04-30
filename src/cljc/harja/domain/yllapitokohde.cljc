@@ -863,7 +863,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
       kohdetekstit)))
 
 (defn validoi-kaikki
-  [tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet]
+  [tr-osoite kohteen-tiedot muut-kohteet-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet]
   (let [kohde-validoitu (validoi-kohde
                          tr-osoite
                          verrattavat-kohteet kohteen-tiedot)
@@ -873,7 +873,10 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                      (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi)))
         muutkohteet-validoitu (keep identity
                                     (for [muukohde muutkohteet
-                                          :let [toiset-muutkohteet (remove #(= muukohde %) muutkohteet)]]
+                                          :let [toiset-muutkohteet (remove #(= muukohde %) muutkohteet)
+                                                kohteen-tiedot (some #(when (= (:tr-numero %) (:tr-numero muukohde))
+                                                                        %)
+                                                                     muut-kohteet-tiedot)]]
                                       (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi)))
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet

@@ -972,6 +972,29 @@ FROM yllapitokohde ypk
 WHERE vuodet @> ARRAY [:vuosi] :: INT []
       AND yhaid IS NOT NULL;
 
+-- name: hae-yhden-vuoden-muut-kohdeosat
+SELECT
+  ypko.id,
+  u.nimi           AS "urakka",
+  u.id             AS "urakka-id",
+  ypk.nimi         AS "kohteen-nimi",
+  ypko.nimi        AS "kohdeosan-nimi",
+  ypk.kohdenumero,
+  ypko.tr_numero        AS "tr-numero",
+  ypko.tr_alkuosa       AS "tr-alkuosa",
+  ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypko.tr_loppuosa      AS "tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypko.tr_ajorata       AS "tr-ajorata",
+  ypko.tr_kaista        AS "tr-kaista"
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
+      ypko.poistettu IS FALSE AND
+      ypko.tr_numero = :tr-numero AND
+      ypko.yhaid IS NOT NULL;
+
 -- name: hae-yhden-vuoden-kohdeosat-teille
 SELECT
   u.nimi                AS "urakan-nimi",

@@ -107,15 +107,17 @@
 (defn tarkista-paallystyskohde
   [db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet]
   (let [yhden-vuoden-kohteet (q-yllapitokohteet/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
-        verrattavat-kohteet (sequence
-                             (comp (remove
-                                    (fn [verrattava-kohde]
-                                      (= (:id verrattava-kohde)
-                                         kohde-id)))
-                                   (map #(update % :urakka (fn [nimi]
-                                                             (when (= (:urakka-id %) urakka-id)
-                                                               nimi)))))
-                             yhden-vuoden-kohteet)
+        verrattavat-kohteet (fn [yhden-vuoden-kohteet kohde-id urakka-id]
+                              (sequence
+                               (comp (remove
+                                      (fn [verrattava-kohde]
+                                        (= (:id verrattava-kohde)
+                                           kohde-id)))
+                                     (map #(update % :urakka (fn [nimi]
+                                                               (when (= (:urakka-id %) urakka-id)
+                                                                 nimi)))))
+                               yhden-vuoden-kohteet))
+        kohteen-verrattavat-kohteet (verrattavat-kohteet yhden-vuoden-kohteet kohde-id urakka-id)
         kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
                             (q-tieverkko/hae-trpisteiden-valinen-tieto db
                                                                        (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
@@ -123,7 +125,16 @@
                            ali-ja-muut-kohteet)
         muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
                             ali-ja-muut-kohteet)
-        virheviestit (kohteet/validoi-kaikki tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)]
+        yhden-vuoden-muut-kohteet (map  #(q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)})
+                                        muutkohteet)
+        muut-kohteet-tiedot (for [muukohde muutkohteet]
+                              (map #(update % :pituudet konversio/jsonb->clojuremap)
+                                   (q-tieverkko/hae-trpisteiden-valinen-tieto db
+                                                                              (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
+        muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
+                                                    (verrattavat-kohteet toiset-kohteet (:id muukohde) urakka-id))
+                                                  muutkohteet yhden-vuoden-muut-kohteet)
+        virheviestit (kohteet/validoi-kaikki tr-osoite kohteen-tiedot muut-kohteet-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)]
     (when-not (empty? virheviestit)
       (virheet/heita-poikkeus
         virheet/+viallinen-kutsu+

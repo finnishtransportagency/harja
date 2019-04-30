@@ -509,8 +509,12 @@
                              ali-ja-muut-kohteet)
           muutkohteet (filter #(not= (:tr-numero %) (-> paallystysilmoitus :perustiedot :tr-osoite :tr-numero))
                               ali-ja-muut-kohteet)
+          muut-kohteet-tiedot (for [muukohde muutkohteet]
+                              (map #(update % :pituudet konversio/jsonb->clojuremap)
+                                   (tieverkko-q/hae-trpisteiden-valinen-tieto db
+                                                                              (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
           alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
-          virheviestit (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)]
+          virheviestit (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot muut-kohteet-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)]
       (if (empty? virheviestit)
         (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
                                        (first (into []

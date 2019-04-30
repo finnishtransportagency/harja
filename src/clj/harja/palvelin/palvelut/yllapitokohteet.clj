@@ -593,8 +593,12 @@
                            ali-ja-muut-kohteet)
         muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
                             ali-ja-muut-kohteet)
+        muut-kohteet-tiedot (for [muukohde muutkohteet]
+                              (map #(update % :pituudet konv/jsonb->clojuremap)
+                                   (tieverkko-q/hae-trpisteiden-valinen-tieto db
+                                                                              (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
         alustatoimet nil]
-    (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)))
+    (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot muut-kohteet-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)

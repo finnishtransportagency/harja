@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
+            [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
             [harja.jms-test :refer [feikki-sonja]]
@@ -727,7 +728,9 @@
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-paallekkain-request.json")
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                         kayttaja-paallystys portti
-                                        payload)]
+                                        payload
+                                        {:timeout 10000000
+                                         :keepalive 1000000})]
     (is (not= 200 (:status vastaus)))
     (is (str/includes? (:body vastaus) "Kohde: 'Päällekkäinen testialikohde' menee päällekkäin urakan: 'Utajärven päällystysurakka' kohteen: 'Ouluntie' kohdeosan: 'Ouluntien kohdeosa' kanssa"))))
 
