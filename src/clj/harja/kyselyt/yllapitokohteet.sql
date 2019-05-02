@@ -970,15 +970,17 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT []
+      AND ypk.poistettu IS FALSE
       AND yhaid IS NOT NULL;
 
 -- name: hae-yhden-vuoden-muut-kohdeosat
 SELECT
   ypko.id,
+  ypk.id           AS "kohde-id",
   u.nimi           AS "urakka",
   u.id             AS "urakka-id",
   ypk.nimi         AS "kohteen-nimi",
-  ypko.nimi        AS "kohdeosan-nimi",
+  ypko.nimi,
   ypk.kohdenumero,
   ypko.tr_numero        AS "tr-numero",
   ypko.tr_alkuosa       AS "tr-alkuosa",

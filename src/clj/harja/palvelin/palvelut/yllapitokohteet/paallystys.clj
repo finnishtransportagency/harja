@@ -490,33 +490,7 @@
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    (let [verrattavat-kohteet (sequence
-                               (comp (remove
-                                      (fn [verrattava-kohde]
-                                        (and (= (:id verrattava-kohde)
-                                                (:paallystyskohde-id paallystysilmoitus))
-                                             (not (nil? (:paallystyskohde-id paallystysilmoitus))))))
-                                     (map #(update % :urakka (fn [nimi]
-                                                               (when (= (:urakka-id %) urakka-id)
-                                                                 nimi)))))
-                               (yllapitokohteet-q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))
-          tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
-          kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
-                              (tieverkko-q/hae-trpisteiden-valinen-tieto db
-                                                                         (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
-          ali-ja-muut-kohteet (-> paallystysilmoitus :ilmoitustiedot :osoitteet)
-          alikohteet (filter #(= (:tr-numero %) (-> paallystysilmoitus :perustiedot :tr-osoite :tr-numero))
-                             ali-ja-muut-kohteet)
-          muutkohteet (filter #(not= (:tr-numero %) (-> paallystysilmoitus :perustiedot :tr-osoite :tr-numero))
-                              ali-ja-muut-kohteet)
-          muut-kohteet-tiedot (for [muukohde muutkohteet]
-                              (map #(update % :pituudet konversio/jsonb->clojuremap)
-                                   (tieverkko-q/hae-trpisteiden-valinen-tieto db
-                                                                              (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
-          alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
-          virheviestit (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot muut-kohteet-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)]
-      (if (empty? virheviestit)
-        (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
+    (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
                                        (first (into []
                                                     (comp (map #(konversio/jsonb->clojuremap % :ilmoitustiedot))
                                                           (map #(konversio/string-poluista->keyword %
@@ -524,20 +498,14 @@
                                                     (q/hae-paallystysilmoitus-paallystyskohteella
                                                      db
                                                      {:paallystyskohde paallystyskohde-id}))))
-              tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
-                                      (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
-                                      (clj-set/rename-keys {:kohdenimi :nimi}))
-              tr-valipaatepisteiden-tiedot (map (fn [tr]
-                                                  (update tr :pituudet konversio/jsonb->clojuremap))
-                                                (tieverkko-q/hae-trvalipaatepisteiden-tiedot db tallennettava-kohde))
-              paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
-              verrattavat-kohteet (map
-                                   (fn [verrattava-kohde]
-                                     (if (= (:id verrattava-kohde)
-                                            paallystyskohde-id)
-                                       tallennettava-kohde
-                                       verrattava-kohde))
-                                   (yllapitokohteet-q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))
+
+          tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
+          ali-ja-muut-kohteet (-> paallystysilmoitus :ilmoitustiedot :osoitteet)
+          alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
+          kohde-id (:paallystyskohde-id paallystysilmoitus)
+          virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
+      (if (empty? virheviestit)
+        (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
               paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                     db user {:urakka-id urakka-id :sopimus-id sopimus-id
                                              :vuosi vuosi
@@ -550,7 +518,10 @@
           (cond
             ;; Vaihetaan avainta, niin frontti ymmärtää tämän epäonnistuneeksi palvelukutsuksi eikä onnistuneeksi.
             (:validointivirheet paivitetyt-kohdeosat) (clj-set/rename-keys paivitetyt-kohdeosat {:validointivirheet :virhe})
-            :else (let [paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
+            :else (let [tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
+                                      (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
+                                      (clj-set/rename-keys {:kohdenimi :nimi}))
+                        paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
                         vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
                         paallystysilmoitus-id (if vanha-paallystysilmoitus
                                                 (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus

@@ -444,7 +444,7 @@
                                       yllapitokohde-id
                                       vuosi
                                       muut-kohteet)]
-        (if (not (empty? paallekkaiset-kohdeosat))
+        (if-not (empty? paallekkaiset-kohdeosat)
           {:validointivirheet paallekkaiset-kohdeosat}
           (do
             (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
@@ -574,31 +574,11 @@
                                                :osat korjatut+muut})))))
 
 (defn validoi-kohde [db kohde yhden-vuoden-kohteet urakka-id vuosi]
-  (let [verrattavat-kohteet (sequence
-                             (comp (remove
-                                    (fn [verrattava-kohde]
-                                      (and (= (:id verrattava-kohde)
-                                              (:id kohde))
-                                           (not (nil? (:id kohde))))))
-                                   (map #(update % :urakka (fn [nimi]
-                                                             (when (= (:urakka-id %) urakka-id)
-                                                               nimi)))))
-                             yhden-vuoden-kohteet)
-        tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-        kohteen-tiedot (map #(update % :pituudet konv/jsonb->clojuremap)
-                            (tieverkko-q/hae-trpisteiden-valinen-tieto db
-                                                                       (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
+  (let [tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
         ali-ja-muut-kohteet (:kohdeosat kohde)
-        alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
-                           ali-ja-muut-kohteet)
-        muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
-                            ali-ja-muut-kohteet)
-        muut-kohteet-tiedot (for [muukohde muutkohteet]
-                              (map #(update % :pituudet konv/jsonb->clojuremap)
-                                   (tieverkko-q/hae-trpisteiden-valinen-tieto db
-                                                                              (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
-        alustatoimet nil]
-    (yllapitokohteet-domain/validoi-kaikki tr-osoite kohteen-tiedot muut-kohteet-tiedot vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet)))
+        alustatoimet nil
+        kohde-id (:id kohde)]
+    (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)

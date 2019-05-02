@@ -732,7 +732,7 @@
                                         {:timeout 10000000
                                          :keepalive 1000000})]
     (is (not= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "Kohde: 'Päällekkäinen testialikohde' menee päällekkäin urakan: 'Utajärven päällystysurakka' kohteen: 'Ouluntie' kohdeosan: 'Ouluntien kohdeosa' kanssa"))))
+    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Ouluntien kohdeosa\\\" kanssa\\n\"}}]}"))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimii
   (let [urakka (hae-utajarven-paallystysurakan-id)
