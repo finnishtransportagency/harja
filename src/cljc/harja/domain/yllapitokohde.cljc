@@ -749,7 +749,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   ;; oudolla tavalla tuon :pred avaimen alta, niinkuin muoto-vaarin funktiossa tehdään.
   (let [tyhja-fn (fn [avain]
                    (ongelma? validoitu-muoto (fn [virhe-map]
-                                               (= (first (:path virhe-map)) avain))))
+                                               (or (= (first (:path virhe-map)) avain)
+                                                   (= (-> virhe-map :pred last last) avain)))))
         spec-fn-nimi (cond
                        (#{:tr-alkuosa :tr-loppuosa} tr-avain) "tr-osat-vaarin?"
                        (#{:tr-alkuetaisyys :tr-loppuetaisyys} tr-avain) "tr-etaisyydet-vaarin?"

@@ -224,7 +224,7 @@
                                              :tr-kaista (:kaista tr)
                                              :tr-alkuosa (:aosa tr)
                                              :tr-alkuetaisyys (:aet tr)
-                                             :tr-loppuposa (:losa tr)
+                                             :tr-loppuosa (:losa tr)
                                              :tr-loppuetaisyys (:let tr)))
                                    alikohteet)
           alustatoimet nil]
