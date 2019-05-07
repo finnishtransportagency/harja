@@ -452,7 +452,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   ([kohde toiset-kohteet kohteen-tiedot] (validoi-kohde kohde toiset-kohteet kohteen-tiedot {}))
   ([kohde toiset-kohteet kohteen-tiedot
     {:keys [vuosi] :or {vuosi (pvm/vuosi (pvm/nyt))}}]
-   (println "VUOSI ON: " vuosi)
    (let [tr-vali-spec (cond
                         (>= vuosi 2019) (s/and ::tr-paaluvali
                                                (s/keys :opt-un [::nil-ns/tr-ajorata
@@ -462,8 +461,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                (s/keys :req-un [::tr-ajorata
                                                                 ::tr-kaista])))
          validoitu-muoto (oikean-muotoinen-tr kohde tr-vali-spec)
-         _ (println "KOHDE: " kohde)
-         _ (println "VALIDOITU MUOTO: " validoitu-muoto)
          validoitu-paallekkyys (when (empty? validoitu-muoto)
                                  (filter #(tr-valit-paallekkain? kohde %)
                                          toiset-kohteet))
@@ -877,7 +874,6 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 
 (defn validoi-kaikki
   [tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet vuosi verrattavat-kohteet alikohteet muutkohteet alustatoimet]
-  (println "____DF_SDLFJ--: " tr-osoite)
   (let [kohde-validoitu (validoi-kohde
                          tr-osoite
                          verrattavat-kohteet kohteen-tiedot {:vuosi vuosi})

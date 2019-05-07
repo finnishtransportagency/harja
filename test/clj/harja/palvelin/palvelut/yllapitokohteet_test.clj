@@ -61,12 +61,14 @@
                               :yllapitokohdetyotyyppi :paallystys
                               :sopimuksen_mukaiset_tyot 400
                               :tr-numero 20
+                              :tr-ajorata 1
+                              :tr-kaista 11
                               :tr-alkuosa 1
                               :tr-alkuetaisyys 1
                               :tr-loppuosa 2
                               :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
-                              :kaasuindeksi 123})
+                              :kaasuindeks 123})
 
 (def yllapitokohdeosa-testidata {:nimi "Testiosa123456"
                                  :tr-numero 20
@@ -284,8 +286,8 @@
         "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
     (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
         "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")
-    (is (= (> (:pituus oulun-ramppi) 3000)))
-    (is (= (> (:pituus leppajarven-ramppi) 3000)))))
+    (is (> (:pituus oulun-ramppi) 3000))
+    (is (> (:pituus leppajarven-ramppi) 3000))))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -322,7 +324,7 @@
         "Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")
-    (is (= (> (:pituus ei-yha-kohde) 3000)))))
+    (is (> (:pituus ei-yha-kohde) 3000))))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2016
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -343,6 +345,7 @@
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
                                                               :sopimus-id sopimus-id
+                                                              :vuosi 2018
                                                               :kohteet [yllapitokohde-testidata]})
     (let [maara-lisayksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
@@ -393,6 +396,7 @@
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :vuosi 2018
                                                               :sopimus-id sopimus-id
                                                               :kohteet [(assoc yllapitokohde-testidata
                                                                           :tr-numero 20
@@ -518,7 +522,6 @@
                                                 :tr-ajorata 1
                                                 :tr-kaista 1}]})]
 
-        (println "VASTAUS: " vastaus)
         (is (not= (:status vastaus) :validointiongelma)
             "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampin päälle.
              Samalla tallennetaan kuitenkin myös uusi Leppäjärven ramppi, jossa tieosoite siirtyy. Ei tule Herjaa.")))
