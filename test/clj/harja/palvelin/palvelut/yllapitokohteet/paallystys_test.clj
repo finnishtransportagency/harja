@@ -64,20 +64,25 @@
                  :valmispvm-kohde (pvm/luo-pvm 2019 9 2)
                  :valmispvm-paallystys (pvm/luo-pvm 2019 9 2)
                  :takuupvm (pvm/luo-pvm 2019 9 3)
-                 :tr-numero 666
-                 :tr-alkuosa 2
+                 :tr-osoite {:tr-numero 22
+                             :tr-alkuosa 3
+                             :tr-alkuetaisyys 1
+                             :tr-loppuosa 4
+                             :tr-loppuetaisyys 5}
+                 :tr-numero 22
+                 :tr-alkuosa 3
                  :tr-alkuetaisyys 1
                  :tr-loppuosa 4
                  :tr-loppuetaisyys 5}
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
-                                 :nimi "Tie 666"
-                                 :tr-numero 666
-                                 :tr-alkuosa 2
+                                 :nimi "Tie 22"
+                                 :tr-numero 22
+                                 :tr-alkuosa 3
                                  :tr-alkuetaisyys 3
-                                 :tr-loppuosa 4
+                                 :tr-loppuosa 3
                                  :tr-loppuetaisyys 5
                                  :tr-ajorata 1
-                                 :tr-kaista 1
+                                 :tr-kaista 11
                                  :paallystetyyppi 1
                                  :raekoko 1
                                  :tyomenetelma 12
@@ -101,14 +106,14 @@
                                  :lisaaineet "asd"}
                                 {;; Alikohteen tiedot
                                  :poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
-                                 :nimi "Tie 555"
-                                 :tr-numero 555
-                                 :tr-alkuosa 2
+                                 :nimi "Tie 20"
+                                 :tr-numero 20
+                                 :tr-alkuosa 3
                                  :tr-alkuetaisyys 3
-                                 :tr-loppuosa 4
+                                 :tr-loppuosa 3
                                  :tr-loppuetaisyys 5
                                  :tr-ajorata 1
-                                 :tr-kaista 1
+                                 :tr-kaista 11
                                  :paallystetyyppi 1
                                  :raekoko 1
                                  :tyomenetelma 12
@@ -131,12 +136,12 @@
                                  :pitoisuus 54
                                  :lisaaineet "asd"}]
 
-                    :alustatoimet [{:tr-numero 666
-                                    :tr-kaista 1
+                    :alustatoimet [{:tr-numero 22
+                                    :tr-kaista 11
                                     :tr-ajorata 1
-                                    :tr-alkuosa 2
+                                    :tr-alkuosa 3
                                     :tr-alkuetaisyys 3
-                                    :tr-loppuosa 4
+                                    :tr-loppuosa 3
                                     :tr-loppuetaisyys 5
                                     :kasittelymenetelma 1
                                     :paksuus 1234
@@ -387,25 +392,25 @@
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
-                                :tr-numero 666
-                                :tr-kaista 1
+                                :tr-numero 22
+                                :tr-kaista 11
                                 :tr-ajorata 1
                                 :tr-alkuetaisyys 3
-                                :tr-alkuosa 2
+                                :tr-alkuosa 3
                                 :tr-loppuetaisyys 5
-                                :tr-loppuosa 4
+                                :tr-loppuosa 3
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
-                             :nimi "Tie 666"
-                             :tr-numero 666
-                             :tr-alkuosa 2
+                             :nimi "Tie 22"
+                             :tr-numero 22
+                             :tr-alkuosa 3
                              :tr-alkuetaisyys 3
-                             :tr-loppuosa 4
+                             :tr-loppuosa 3
                              :tr-loppuetaisyys 5
                              :tr-ajorata 1
-                             :tr-kaista 1
+                             :tr-kaista 11
                              :paallystetyyppi 1
                              :raekoko 1
                              :tyomenetelma 12
@@ -471,35 +476,35 @@
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :perustelu])
                (get-in paallystysilmoitus [:perustiedot :tekninen-osa :perustelu])))
 
-        ;; Tie 666 tiedot tallentuivat kantaan, mutta tie 555 ei koska oli poistettu
-        (is (some #(= (:nimi %) "Tie 666")
+        ;; Tie 22 tiedot tallentuivat kantaan, mutta tie 20 ei koska oli poistettu
+        (is (some #(= (:nimi %) "Tie 22")
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
-        (is (not (some #(= (:nimi %) "Tie 555")
+        (is (not (some #(= (:nimi %) "Tie 20")
                        (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
         (is (= (update-in (:ilmoitustiedot paallystysilmoitus-kannassa) [:osoitteet 0] (fn [osoite]
                                                                                          (dissoc osoite :kohdeosa-id)))
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
                                 :tekninen-toimenpide 1
-                                :tr-numero 666
-                                :tr-kaista 1
+                                :tr-numero 22
+                                :tr-kaista 11
                                 :tr-ajorata 1
                                 :tr-alkuetaisyys 3
-                                :tr-alkuosa 2
+                                :tr-alkuosa 3
                                 :tr-loppuetaisyys 5
-                                :tr-loppuosa 4
+                                :tr-loppuosa 3
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
-                             :nimi "Tie 666"
-                             :tr-numero 666
-                             :tr-alkuosa 2
+                             :nimi "Tie 22"
+                             :tr-numero 22
+                             :tr-alkuosa 3
                              :tr-alkuetaisyys 3
-                             :tr-loppuosa 4
+                             :tr-loppuosa 3
                              :tr-loppuetaisyys 5
                              :tr-ajorata 1
-                             :tr-kaista 1
+                             :tr-kaista 11
                              :paallystetyyppi 1
                              :raekoko 1
                              :tyomenetelma 12
