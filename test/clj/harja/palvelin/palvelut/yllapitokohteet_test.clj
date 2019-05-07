@@ -476,8 +476,8 @@
                                   :tr-kaista 1}]
 
     (testing "Päällekkäin menevät kohteet samana vuonna"
-      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+      (let [urakka-id (hae-utajarven-paallystysurakan-id)
+            sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteet +kayttaja-jvh+
                                     {:urakka-id urakka-id
@@ -490,8 +490,11 @@
         (is (= (count (:validointivirheet vastaus)) 1))
         (is (= (-> (:validointivirheet vastaus)
                    first
-                   :validointivirhe)
-               :kohteet-paallekain))))
+                   :paakohde
+                   first
+                   :tr-ajorata
+                   first)
+               "Kohde on päällekkäin kohteen \"Leppäjärven ramppi\" kanssa"))))
 
     (testing "Kohde ei mene päällekäin Leppäjärven kanssa, koska se päivitetään samalla eri tielle"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -515,6 +518,7 @@
                                                 :tr-ajorata 1
                                                 :tr-kaista 1}]})]
 
+        (println "VASTAUS: " vastaus)
         (is (not= (:status vastaus) :validointiongelma)
             "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampin päälle.
              Samalla tallennetaan kuitenkin myös uusi Leppäjärven ramppi, jossa tieosoite siirtyy. Ei tule Herjaa.")))
@@ -557,7 +561,7 @@
                                      :vuosi 2017
                                      :kohteet [(assoc
                                                  kohde-leppajarven-paalle
-                                                 :tr-kaista 2)]})]
+                                                 :tr-kaista 11)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
             "Osoitteet menevät päällekkäin, mutta eri kaistalla --> ei herjaa")))

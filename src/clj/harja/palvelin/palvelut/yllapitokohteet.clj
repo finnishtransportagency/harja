@@ -578,7 +578,7 @@
         ali-ja-muut-kohteet (:kohdeosat kohde)
         alustatoimet nil
         kohde-id (:id kohde)]
-    (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)))
+    (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet yhden-vuoden-kohteet)))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
@@ -587,6 +587,15 @@
   (jdbc/with-db-transaction [db db]
     (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))
           yhden-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
+          ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
+          ;; vertailuun uusin tieto kohteista
+           yhden-vuoden-kohteet (map
+                                 (fn [verrattava-kohde]
+                                   (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
+                                                                             kohteet))]
+                                     kohde-payloadissa
+                                     verrattava-kohde))
+                                 yhden-vuoden-kohteet)
           kohteiden-virheviestit (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
                                           (when-not (empty? virheviestit)
                                             virheviestit))
