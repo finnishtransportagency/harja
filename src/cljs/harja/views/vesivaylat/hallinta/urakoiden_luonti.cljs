@@ -94,7 +94,7 @@
                           :tallennus-kaynnissa? tallennus-kaynnissa?}])}
           [(lomake/rivi
              {:otsikko "Nimi" :nimi ::u/nimi :tyyppi :string :pakollinen? true}
-             {:otsikko "Urakka-aluenumero" :nimi ::u/urakkanro :tyyppi :string :pakollinen? true}
+             {:otsikko "Urakka-aluenumero(t)" :nimi ::u/turvalaiteryhmat :tyyppi :string :pakollinen? true :placeholder "509, 510"}
              {:otsikko "Sampo-ID" :nimi ::u/sampoid :tyyppi :string :pakollinen? false :muokattava? (constantly false)})
            (lomake/rivi
              {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true
