@@ -750,7 +750,12 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   (let [tyhja-fn (fn [avain]
                    (ongelma? validoitu-muoto (fn [virhe-map]
                                                (or (= (first (:path virhe-map)) avain)
-                                                   (= (-> virhe-map :pred last last) avain)))))
+                                                   (= (try (-> virhe-map :pred last last)
+                                                           ;; last funktion kutsuminen symbolille aiheuttaa virheen
+                                                           (catch #?(:clj Exception
+                                                                     :cljs :default) e
+                                                             nil))
+                                                      avain)))))
         spec-fn-nimi (cond
                        (#{:tr-alkuosa :tr-loppuosa} tr-avain) "tr-osat-vaarin?"
                        (#{:tr-alkuetaisyys :tr-loppuetaisyys} tr-avain) "tr-etaisyydet-vaarin?"
