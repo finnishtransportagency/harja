@@ -170,7 +170,9 @@
                                                            :aosa :tr-alkuosa
                                                            :aet :tr-alkuetaisyys
                                                            :let :tr-loppuetaisyys
-                                                           :losa :tr-loppuosa})
+                                                           :losa :tr-loppuosa
+                                                           :ajr :tr-ajorata
+                                                           :kaista :tr-kaista})
           ali-ja-muut-kohteet (map #(let [tr (:sijainti %)]
                                       (assoc % :tr-numero (:numero tr)
                                              :tr-ajorata (:ajr tr)

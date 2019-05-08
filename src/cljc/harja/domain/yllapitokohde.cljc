@@ -591,8 +591,10 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 
 (def muoto-virhetekstit
   {:tr-numero {:ei-arvoa "Anna tienumero"}
-   :tr-ajorata {:ei-arvoa "Anna ajorata"}
-   :tr-kaista {:ei-arvoa "Anna kaista"}
+   :tr-ajorata {:ei-arvoa "Anna ajorata"
+                :ei-saa-olla-arvoa "Ei saa olla ajorataa"}
+   :tr-kaista {:ei-arvoa "Anna kaista"
+               :ei-saa-olla-arvoa "Ei saa olla kaistaa"}
    :tr-alkuosa {:ei-arvoa #?(:clj "Anna alkuosa"
                              :cljs "An\u00ADna al\u00ADku\u00ADo\u00ADsa")
                 :vaarin-pain #?(:clj "Alkuosa ei voi olla loppuosan jälkeen"
@@ -603,10 +605,12 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                      :cljs "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen")}
    :tr-loppuosa {:ei-arvoa #?(:clj "Anna loppuosa"
                               :cljs "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa")
+                 :ei-saa-olla-arvoa "Ei saa olla loppuosaa"
                  :vaarin-pain #?(:clj "Loppuosa ei voi olla alkuosaa ennen"
                                  :cljs "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen")}
    :tr-loppuetaisyys {:ei-arvoa #?(:clj "Anna loppuetaisyys"
                                    :cljs "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys")
+                      :ei-saa-olla-arvoa "Ei saa olla loppuetaisyytta"
                       :vaarin-pain #?(:clj "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"
                                       :cljs "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä")}})
 
@@ -749,13 +753,17 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   ;; oudolla tavalla tuon :pred avaimen alta, niinkuin muoto-vaarin funktiossa tehdään.
   (let [tyhja-fn (fn [avain]
                    (ongelma? validoitu-muoto (fn [virhe-map]
-                                               (or (= (first (:path virhe-map)) avain)
-                                                   (= (try (-> virhe-map :pred last last)
-                                                           ;; last funktion kutsuminen symbolille aiheuttaa virheen
-                                                           (catch #?(:clj Exception
-                                                                     :cljs :default) e
-                                                             nil))
-                                                      avain)))))
+                                               (= (try (-> virhe-map :pred last last)
+                                                       ;; last funktion kutsuminen symbolille aiheuttaa virheen
+                                                       (catch #?(:clj Exception
+                                                                 :cljs :default) e
+                                                         nil))
+                                                  avain))))
+        pitaisi-olla-tyhja-fn (fn [avain]
+                                (ongelma? validoitu-muoto (fn [virhe-map]
+                                                            (and (= (first (:path virhe-map)) avain)
+                                                                 (symbol? (:pred virhe-map))
+                                                                 (= (:pred virhe-map) `nil?)))))
         spec-fn-nimi (cond
                        (#{:tr-alkuosa :tr-loppuosa} tr-avain) "tr-osat-vaarin?"
                        (#{:tr-alkuetaisyys :tr-loppuetaisyys} tr-avain) "tr-etaisyydet-vaarin?"
@@ -766,9 +774,11 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                      (and (sequential? pred)
                                                           (= spec-fn-nimi (str (second pred))))))))
         tyhja? (tyhja-fn tr-avain)
+        pitaisi-olla-tyhja? (pitaisi-olla-tyhja-fn tr-avain)
         muoto-vaarin? (when spec-fn-nimi (muoto-vaarin spec-fn-nimi))]
     (cond-> []
       tyhja? (conj (-> muoto-virhetekstit tr-avain :ei-arvoa))
+      pitaisi-olla-tyhja? (conj (-> muoto-virhetekstit tr-avain :ei-saa-olla-arvoa))
       muoto-vaarin? (conj (-> muoto-virhetekstit tr-avain :vaarin-pain)))))
 
 (defn validoitu-kohde-tekstit [validoitu-kohde paakohde?]
@@ -779,7 +789,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
         tr-numero-vaarin (when muoto
                            (validoidun-muodon-teksti muoto :tr-numero))
         tr-ajorata-vaarin (when muoto
-                           (validoidun-muodon-teksti muoto :tr-ajorata))
+                            (validoidun-muodon-teksti muoto :tr-ajorata))
         tr-kaista-vaarin (when muoto
                            (validoidun-muodon-teksti muoto :tr-kaista))
         tr-alkuosa-vaarin (when muoto
