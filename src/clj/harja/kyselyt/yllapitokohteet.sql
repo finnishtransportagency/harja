@@ -970,7 +970,7 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT []
-      AND ypk.poistettu IS FALSE
+      AND ypk.poistettu IS NOT TRUE
       AND yhaid IS NOT NULL;
 
 -- name: hae-yhden-vuoden-muut-kohdeosat
@@ -993,7 +993,7 @@ FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
-      ypko.poistettu IS FALSE AND
+      ypko.poistettu IS NOT TRUE AND
       ypko.tr_numero = :tr-numero AND
       ypko.yhaid IS NOT NULL;
 
