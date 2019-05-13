@@ -3,10 +3,12 @@
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.integraatiot.yha.sanomat.urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
-            [harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
-            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
+            [harja.palvelin.integraatiot.yha.sanomat
+             [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
+             [urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
+             [kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
+             [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
+             [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
@@ -21,6 +23,7 @@
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
 (def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
 (def +virhe-kohteen-lahetyksessa+ ::yha-virhe-kohteen-lahetyksessa)
+(def +virhe-kohteen-poistamisessa+ ::yha-virhe-kohteen-poistamisessa)
 
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
@@ -53,6 +56,14 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}}))
       kohteet)))
+
+(defn kasittele-kohteen-poistamisen-vastaus
+  [db body yha-kohde-id]
+  (let [{:keys [onnistunut? virheet]} (kohteen-poistovastaussanoma/lue-sanoma body)]
+    (when-not onnistunut?
+      (log/error (str "Kohteen (" yha-kohde-id ") poistaminen YHA:sta epäonnistui: " virheet))
+      (throw+ {:type +virhe-kohteen-poistamisessa+
+               :virheet virheet}))))
 
 (defn muodosta-kohteiden-lahetysvirheet [virheet virheellisen-kohteen-tiedot]
   (mapv (fn [{:keys [kohde-yha-id selite]}]
@@ -251,7 +262,17 @@
       false)))
 
 (defn poista-kohde-yhasta
-  [integraatioloki db asetukset kohde-id])
+  [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-kohde-id]
+  (integraatiotapahtuma/suorita-integraatio
+    db integraatioloki "yha" "poista-kohde" nil
+    (fn [konteksti]
+      (let [url (str url "toteumakohde/" yha-kohde-id)
+            http-asetukset {:metodi         :DELETE
+                            :url            url
+                            :kayttajatunnus kayttajatunnus
+                            :salasana       salasana}
+            {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+        (kasittele-kohteen-poistamisen-vastaus db body yha-kohde-id)))))
 
 (defrecord Yha [asetukset]
   component/Lifecycle
@@ -266,5 +287,5 @@
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
   (laheta-kohteet [this urakka-id kohde-idt]
     (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
-  (poista-kohde [this kohde-id]
-    (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset kohde-id)))
+  (poista-kohde [this yha-kohde-id]
+    (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset yha-kohde-id)))

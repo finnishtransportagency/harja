@@ -108,10 +108,25 @@ SELECT EXISTS(SELECT *
 FROM yllapitokohde
 WHERE id = :id;
 
+-- name: kohteen-yhaid
+SELECT yhaid
+FROM yllapitokohde
+WHERE id=:kohde-id AND urakka=:urakka-id
+
 -- name: paallystyskohteen-saa-poistaa
+WITH tama_kohde AS (
+   SELECT *
+   FROM yllapitokohde
+   WHERE id = :id
+)
 SELECT EXISTS(SELECT *
-              FROM yllapitokohde
-              WHERE id = :id AND lahetys_onnistunut IS NOT TRUE) AS yllapitokohde,
+              FROM tama_kohde) AS "yllapitokohde-ei-olemassa",
+       EXISTS(SELECT *
+              FROM tama_kohde
+              WHERE lahetys_onnistunut IS NOT TRUE) AS "yllapitokohde-lahetetty",
+       EXISTS(SELECT *
+              FROM tama_kohde
+              WHERE yhaid IS NOT NULL) AS "yllapitokohde-ei-yhassa",
        NOT (EXISTS(SELECT *
                    FROM tiemerkinnan_yksikkohintainen_toteuma tyt
                    WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE)) AS "tiemerkinnant-yh-toteuma",
