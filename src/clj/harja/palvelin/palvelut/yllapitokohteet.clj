@@ -4,6 +4,7 @@
             [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.domain
              [oikeudet :as oikeudet]
              [skeema :refer [Toteuma validoi]]
@@ -514,6 +515,32 @@
                                                   :toteutunut_hinta toteutunut-hinta})
       (:id kohde))))
 
+(defmulti poista-yllapitokohde
+          (fn [db yha kohde urakka-id]
+            (:yllapitokohdetyotyyppi kohde)))
+
+(defmethod poista-yllapitokohde :paallystys
+  [db yha {:keys [id] :as kohde} urakka-id]
+  (let [poistaminen-ok (into {}
+                             (keep (fn [[tarkistettu-asia ok?]]
+                                     (when-not ok?
+                                       [tarkistettu-asia ok?])))
+                             (first (q/paallystyskohteen-saa-poistaa db id)))]
+    (if (empty? poistaminen-ok)
+      ;; Lähetetään YHA:an poistoviesti
+      (yha/poista-kohde yha id)
+      ;; Merkataan kohde ja sen alikohteet poistetuiksi
+      (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
+      (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})
+      (throw+ {:type :kohdetta-ei-voi-poistaa
+               :virheet [poistaminen-ok]}))))
+
+(defmethod poista-yllapitokohde :default
+  [db _ {:keys [id] :as kohde} urakka-id]
+  (when (yy/yllapitokohteen-voi-poistaa? db id)
+    (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
+    (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})))
+
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
                               {:keys [id kohdenumero nimi tunnus
                                       tr-numero tr-alkuosa tr-alkuetaisyys
@@ -521,57 +548,51 @@
                                       yllapitoluokka sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       toteutunut-hinta
-                                      keskimaarainen-vuorokausiliikenne poistettu]
+                                      keskimaarainen-vuorokausiliikenne]
                                :as kohde}]
-  (if poistettu
-    (when (yy/yllapitokohteen-voi-poistaa? db id)
-      (log/debug "Poistetaan ylläpitokohde")
-      (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
-      (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})
-      nil)
-    (do (log/debug "Päivitetään ylläpitokohde")
-        (q/paivita-yllapitokohde<! db
-                                   {:kohdenumero kohdenumero
-                                    :nimi nimi
-                                    :tunnus tunnus
-                                    :tr_numero tr-numero
-                                    :tr_alkuosa tr-alkuosa
-                                    :tr_alkuetaisyys tr-alkuetaisyys
-                                    :tr_loppuosa tr-loppuosa
-                                    :tr_loppuetaisyys tr-loppuetaisyys
-                                    :tr_ajorata tr-ajorata
-                                    :tr_kaista tr-kaista
-                                    :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                                    :yllapitoluokka (if (map? yllapitoluokka)
-                                                      (:numero yllapitoluokka)
-                                                      yllapitoluokka)
+  (do (log/debug "Päivitetään ylläpitokohde")
+      (q/paivita-yllapitokohde<! db
+                                 {:kohdenumero                       kohdenumero
+                                  :nimi                              nimi
+                                  :tunnus                            tunnus
+                                  :tr_numero                         tr-numero
+                                  :tr_alkuosa                        tr-alkuosa
+                                  :tr_alkuetaisyys                   tr-alkuetaisyys
+                                  :tr_loppuosa                       tr-loppuosa
+                                  :tr_loppuetaisyys                  tr-loppuetaisyys
+                                  :tr_ajorata                        tr-ajorata
+                                  :tr_kaista                         tr-kaista
+                                  :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
+                                  :yllapitoluokka                    (if (map? yllapitoluokka)
+                                                                       (:numero yllapitoluokka)
+                                                                       yllapitoluokka)
 
-                                    :id id
-                                    :urakka urakka-id})
-        (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde id
-                                                      :urakka urakka-id
-                                                      :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                                                      :arvonvahennykset arvonvahennykset
-                                                      :bitumi_indeksi bitumi-indeksi
-                                                      :kaasuindeksi kaasuindeksi
-                                                      :toteutunut_hinta toteutunut-hinta
-                                                      :muokkaaja (:id user)})
+                                  :id                                id
+                                  :urakka                            urakka-id})
+      (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde            id
+                                                    :urakka                   urakka-id
+                                                    :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                                    :arvonvahennykset         arvonvahennykset
+                                                    :bitumi_indeksi           bitumi-indeksi
+                                                    :kaasuindeksi             kaasuindeksi
+                                                    :toteutunut_hinta         toteutunut-hinta
+                                                    :muokkaaja                (:id user)})
 
-        ;; Mikäli pääkohde kutistuu lyhyemmäksi kuin alikohteet, korjataan tilanne:
-        (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
-                                                                        :sopimus-id sopimus-id
-                                                                        :yllapitokohde-id id})
-              paakohteen-tien-kohdeosat (filter #(= (:tr-numero %) (:tr-numero kohde)) kohdeosat)
-              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde paakohteen-tien-kohdeosat)
-              korjatut+muut (map (fn [kohdeosa]
-                                   (if-let [korjattu (first (filter #(= (:id %) (:id kohdeosa)) korjatut-kohdeosat))]
-                                     korjattu
-                                     kohdeosa))
-                                 kohdeosat)]
-          (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id
-                                               :yllapitokohde-id id
-                                               :osat korjatut+muut})))))
+      ;; Mikäli pääkohde kutistuu lyhyemmäksi kuin alikohteet, korjataan tilanne:
+      (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id        urakka-id
+                                                                      :sopimus-id       sopimus-id
+                                                                      :yllapitokohde-id id})
+            paakohteen-tien-kohdeosat (filter #(= (:tr-numero %) (:tr-numero kohde)) kohdeosat)
+            korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde paakohteen-tien-kohdeosat)
+            korjatut+muut (map (fn [kohdeosa]
+                                 (if-let [korjattu (first (filter #(= (:id %) (:id kohdeosa)) korjatut-kohdeosat))]
+                                   korjattu
+                                   kohdeosa))
+                               kohdeosat)]
+        (tallenna-yllapitokohdeosat db user {:urakka-id        urakka-id
+                                             :sopimus-id       sopimus-id
+                                             :yllapitokohde-id id
+                                             :osat             korjatut+muut}))))
 
 (defn validoi-kohde [db kohde yhden-vuoden-kohteet urakka-id vuosi]
   (let [tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
@@ -580,7 +601,7 @@
         kohde-id (:id kohde)]
     (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet yhden-vuoden-kohteet)))
 
-(defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
+(defn tallenna-yllapitokohteet [db yha user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
@@ -589,24 +610,30 @@
           yhden-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
           ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
           ;; vertailuun uusin tieto kohteista
-           yhden-vuoden-kohteet (map
+           yhden-vuoden-kohteet (keep
                                  (fn [verrattava-kohde]
                                    (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
                                                                              kohteet))]
-                                     kohde-payloadissa
+                                     ;; Jos kohde ollaan poistamassa, ei oteta sitä vertailuun
+                                     (when-not (:poistettu kohde-payloadissa)
+                                       kohde-payloadissa)
                                      verrattava-kohde))
                                  yhden-vuoden-kohteet)
-          kohteiden-virheviestit (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
-                                          (when-not (empty? virheviestit)
-                                            virheviestit))
-                                       kohteet)]
+          kohteiden-virheviestit (sequence
+                                   (comp (remove :poistettu)
+                                         (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
+                                                  (when-not (empty? virheviestit)
+                                                    virheviestit))))
+                                   kohteet)]
       (if (empty? kohteiden-virheviestit)
         (do (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
             (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
             (doseq [kohde kohteet]
               (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
               (if (id-olemassa? (:id kohde))
-                (paivita-yllapitokohde db user urakka-id sopimus-id kohde)
+                (if (:poistettu kohde)
+                  (poista-yllapitokohde db yha kohde urakka-id)
+                  (paivita-yllapitokohde db user urakka-id sopimus-id kohde))
                 (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
 
             (yy/paivita-yllapitourakan-geometria db urakka-id)
@@ -659,7 +686,8 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)]
+          email (:sonja-sahkoposti this)
+          yha (:yha-integraatio this)]
       (julkaise-palvelu http :urakan-yllapitokohteet
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohteet db user tiedot)))
@@ -674,7 +702,7 @@
                           (hae-yllapitokohteen-yllapitokohdeosat db user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohteet
                         (fn [user tiedot]
-                          (tallenna-yllapitokohteet db user tiedot)))
+                          (tallenna-yllapitokohteet db yha user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohdeosat
                         (fn [user tiedot]
                           (tallenna-yllapitokohdeosat db user tiedot)))

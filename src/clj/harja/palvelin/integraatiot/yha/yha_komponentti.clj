@@ -25,7 +25,8 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohteet [this urakka-id kohde-idt]))
+  (laheta-kohteet [this urakka-id kohde-idt])
+  (poista-kohde [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug (format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
@@ -249,6 +250,9 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
+(defn poista-kohde-yhasta
+  [integraatioloki db asetukset kohde-id])
+
 (defrecord Yha [asetukset]
   component/Lifecycle
   (start [this] this)
@@ -261,4 +265,6 @@
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
   (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
+    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
+  (poista-kohde [this kohde-id]
+    (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset kohde-id)))

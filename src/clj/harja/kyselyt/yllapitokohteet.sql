@@ -108,6 +108,34 @@ SELECT EXISTS(SELECT *
 FROM yllapitokohde
 WHERE id = :id;
 
+-- name: paallystyskohteen-saa-poistaa
+SELECT EXISTS(SELECT *
+              FROM yllapitokohde
+              WHERE id = :id AND lahetys_onnistunut IS NOT TRUE) AS yllapitokohde,
+       NOT (EXISTS(SELECT *
+                   FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+                   WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE)) AS "tiemerkinnant-yh-toteuma",
+       NOT (EXISTS(SELECT *
+                   FROM sanktio s
+                   WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+                                                   (SELECT id
+                                                    FROM laatupoikkeama lp
+                                                    WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE))) AS "sanktio",
+       NOT (EXISTS(SELECT *
+                   FROM paallystysilmoitus pi
+                   WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE)) AS "paallystysilmoitus",
+       NOT (EXISTS(SELECT *
+                   FROM tietyomaa ttm
+                   WHERE yllapitokohde = :id) AS tietyomaa,
+       NOT (EXISTS(SELECT *
+                   FROM laatupoikkeama lp
+                   WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) AS laatupoikkeama,
+       NOT (EXISTS(SELECT *
+                   FROM tarkastus t
+                   WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE))) AS "tarkastus"
+FROM yllapitokohde
+WHERE id = :id;
+
 -- name: yllapitokohteet-joille-linkityksia
 -- Palauttaa ne ylläpitokohteiden idt annetusta id joukosta, joille on tehty jotain linkityksiä,
 -- kuten laatupoikkeamia tai ilmoituksia.
