@@ -460,11 +460,11 @@
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (virhe-modal (reduce-kv (fn [m k v]
-                              (assoc m k (distinct (flatten (vals (if (map? v)
-                                                                    v
-                                                                    (first v)))))))
-                            {} (:virhe vastaus)))
+    (virhe-modal {:virhe [(reduce-kv (fn [m k v]
+                                       (assoc m k (distinct (flatten (vals (if (map? v)
+                                                                             v
+                                                                             (first v)))))))
+                                     {} (:virhe vastaus))]})
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
