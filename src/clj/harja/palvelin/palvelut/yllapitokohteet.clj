@@ -529,11 +529,12 @@
         yha-id (:yhaid (first (q/kohteen-yhaid db {:kohde-id id :urakka-id urakka-id})))]
     (if (and (empty? poistaminen-ok)
              yha-id)
-      ;; Lähetetään YHA:an poistoviesti. YHA:an lähetettyä viestiä ei käsitellä asyncisti.
-      (yha/poista-kohde yha yha-id)
-      ;; Merkataan kohde ja sen alikohteet poistetuiksi
-      (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
-      (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})
+      (do
+        ;; Lähetetään YHA:an poistoviesti. YHA:an lähetettyä viestiä ei käsitellä asyncisti.
+        (yha/poista-kohde yha yha-id)
+        ;; Merkataan kohde ja sen alikohteet poistetuiksi
+        (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
+        (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id}))
       (throw+ {:type    :kohdetta-ei-voi-poistaa
                :virheet [poistaminen-ok
                          (when-not yha-id

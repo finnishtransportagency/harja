@@ -141,15 +141,13 @@ SELECT EXISTS(SELECT *
                    WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE)) AS "paallystysilmoitus",
        NOT (EXISTS(SELECT *
                    FROM tietyomaa ttm
-                   WHERE yllapitokohde = :id) AS tietyomaa,
+                   WHERE yllapitokohde = :id)) AS tietyomaa,
        NOT (EXISTS(SELECT *
                    FROM laatupoikkeama lp
                    WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) AS laatupoikkeama,
        NOT (EXISTS(SELECT *
                    FROM tarkastus t
-                   WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE))) AS "tarkastus"
-FROM yllapitokohde
-WHERE id = :id;
+                   WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE)) AS "tarkastus";
 
 -- name: yllapitokohteet-joille-linkityksia
 -- Palauttaa ne ylläpitokohteiden idt annetusta id joukosta, joille on tehty jotain linkityksiä,
