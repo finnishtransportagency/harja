@@ -115,8 +115,20 @@
                                                  kohteet
                                                  :paallystys
                                                  #(reset! paallystys-tiedot/yllapitokohteet %)
-                                                 (fn [virheviesti]
-                                                   (paallystys-tiedot/virhe-modal {:virhe (:validointivirheet virheviesti)}))))]
+                                                 (fn [virhe]
+                                                   (let [virheviestit (case (:status virhe)
+                                                                        :validointiongelma (mapv (fn [virhe]
+                                                                                                   (reduce-kv (fn [m k v]
+                                                                                                                (assoc m k (distinct (flatten (vals (if (map? v)
+                                                                                                                                                      v
+                                                                                                                                                      (first v)))))))
+                                                                                                              {} virhe))
+                                                                                                 (:virheviesti virhe))
+                                                                        :yha-virhe (mapv (fn [{:keys [selite kohteen-nimi]}]
+                                                                                           {(keyword kohteen-nimi) [selite]})
+                                                                                        (:virheviesti virhe)))]
+                                                     (paallystys-tiedot/virhe-modal {:virhe virheviestit})))
+                                                 true false))]
                              ;; Ollaanko poistamassa kohdetta?
                              (if-not (empty? poistetut-kohteet)
                                (modal/nayta! {:otsikko (str "Olet poistamassa " (if (= 1 (count poistetut-kohteet))

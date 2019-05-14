@@ -24,6 +24,7 @@
 (def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
 (def +virhe-kohteen-lahetyksessa+ ::yha-virhe-kohteen-lahetyksessa)
 (def +virhe-kohteen-poistamisessa+ ::yha-virhe-kohteen-poistamisessa)
+(def +virhe-yha-viestin-lukemisessa+ ::yha-virhe-viestin-lukemisessa)
 
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
@@ -58,12 +59,19 @@
       kohteet)))
 
 (defn kasittele-kohteen-poistamisen-vastaus
-  [db body yha-kohde-id]
-  (let [{:keys [onnistunut? virheet]} (kohteen-poistovastaussanoma/lue-sanoma body)]
+  [body yha-kohde-id]
+  (let [{:keys [onnistunut? virheet sanoman-lukuvirhe?]} (try (kohteen-poistovastaussanoma/lue-sanoma body)
+                                                              (catch RuntimeException e
+                                                                {:virheet            [{:selite       "YHA:sta saatua viestiä ei voitu lukea"
+                                                                                       :kohde-yha-id yha-kohde-id}]
+                                                                 :sanoman-lukuvirhe? true}))]
     (when-not onnistunut?
       (log/error (str "Kohteen (" yha-kohde-id ") poistaminen YHA:sta epäonnistui: " virheet))
-      (throw+ {:type +virhe-kohteen-poistamisessa+
-               :virheet virheet}))))
+      (if sanoman-lukuvirhe?
+        (throw+ {:type    +virhe-yha-viestin-lukemisessa+
+                 :virheet virheet})
+        (throw+ {:type    +virhe-kohteen-poistamisessa+
+                 :virheet virheet})))))
 
 (defn muodosta-kohteiden-lahetysvirheet [virheet virheellisen-kohteen-tiedot]
   (mapv (fn [{:keys [kohde-yha-id selite]}]
@@ -272,7 +280,7 @@
                             :kayttajatunnus kayttajatunnus
                             :salasana       salasana}
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-        (kasittele-kohteen-poistamisen-vastaus db body yha-kohde-id)))))
+        (kasittele-kohteen-poistamisen-vastaus body yha-kohde-id)))))
 
 (defrecord Yha [asetukset]
   component/Lifecycle

@@ -8,6 +8,7 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<! put!]]
+    [clojure.string :as clj-str]
     [cljs-time.core :as t]
     [harja.atom :refer [paivita!]]
     [harja.asiakas.kommunikaatio :as k]
@@ -160,27 +161,30 @@
                               3)))
         paallystysilmoitukset))))
 
+(defn virheviestit-komponentti [virheet]
+  (for [[virhe-otsikko virheviestit] virheet]
+    ^{:key virhe-otsikko}
+    [:div
+     [:p (str (when virhe-otsikko
+                (clj-str/capitalize (clj-str/replace (name virhe-otsikko)
+                                                     "-" " "))) ": ")]
+     (into [:ul] (map-indexed (fn [i virheviesti]
+                                ^{:key i}
+                                [:li virheviesti])
+                              virheviestit))]))
+
 (defn virhe-modal [vastaus]
-  (let [virhe (:virhe vastaus)
-        yksi-virhe? (map? virhe)
-        virheviestit-komponentti (fn [virhe]
-                                   (for [[virhe-otsikko virheet] virhe]
-                                     ;; TODO refaktoroi tämä
-                                     [:div
-                                      [:p (str (clojure.string/capitalize (name virhe-otsikko)) ": ")]
-                                      (into [:ul] (map (fn [virheviesti]
-                                                         [:li virheviesti])
-                                                       (distinct (flatten (vals (if (map? virheet)
-                                                                                  virheet
-                                                                                  (first virheet)))))))]))]
+  (let [virhe (:virhe vastaus)]
     (modal/nayta!
       {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
        :otsikko-tyyli :virhe}
       (when virhe
-        (if yksi-virhe?
-          (virheviestit-komponentti virhe)
-          (concat (interpose '([:p "------------"])
-                             (map virheviestit-komponentti virhe))))))))
+        (map-indexed (fn [i komp]
+                       (with-meta komp
+                                  {:key i}))
+                     (concat
+                       (interpose '([:p "------------"])
+                                  (map virheviestit-komponentti virhe))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
@@ -458,7 +462,11 @@
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (virhe-modal vastaus)
+    (virhe-modal (reduce-kv (fn [m k v]
+                              (assoc m k (distinct (flatten (vals (if (map? v)
+                                                                    v
+                                                                    (first v)))))))
+                            {} (:virhe vastaus)))
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
@@ -505,5 +513,5 @@
     (assoc app :paallystysilmoitukset paallystysilmoitukset))
   YHAVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (virhe-modal vastaus)
+    (virhe-modal [{:virhe-kohteen-lahetyksessa [vastaus]}])
     (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))

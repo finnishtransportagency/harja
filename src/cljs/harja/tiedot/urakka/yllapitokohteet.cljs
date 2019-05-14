@@ -119,27 +119,31 @@
                       kohdeosat-uusilla-avaimilla)]
     tulos))
 
-(defn kasittele-tallennettavat-kohteet! [kohteet kohdetyyppi onnistui-fn epaonnistui-fn]
-  (go (let [urakka-id (:id @nav/valittu-urakka)
-            vuosi @u/valittu-urakan-vuosi
-            [sopimus-id _] @u/valittu-sopimusnumero
-            _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
-            vastaus (<! (tallenna-yllapitokohteet!
-                          urakka-id sopimus-id vuosi
-                          (mapv #(assoc % :yllapitokohdetyotyyppi kohdetyyppi)
-                                kohteet)))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
-          (do (log "[YLLÄPITOKOHTEET] Kohteet tallennettu: " (pr-str vastaus))
-              (if (= (:status vastaus) :ok)
-                (do
-                  (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
-                                 :success viesti/viestin-nayttoaika-keskipitka)
-                  (onnistui-fn (:yllapitokohteet vastaus)))
-                (do
-                  (viesti/nayta! "Tallennus epäonnistui!"
-                                 :danger viesti/viestin-nayttoaika-keskipitka)
-                  (epaonnistui-fn vastaus))))))))
+(defn kasittele-tallennettavat-kohteet!
+  ([kohteet kohdetyyppi onnistui-fn epaonnistui-fn] (kasittele-tallennettavat-kohteet! kohteet kohdetyyppi onnistui-fn epaonnistui-fn true true))
+  ([kohteet kohdetyyppi onnistui-fn epaonnistui-fn nayta-onnistui? nayta-epaonnistui?]
+   (go (let [urakka-id (:id @nav/valittu-urakka)
+             vuosi @u/valittu-urakan-vuosi
+             [sopimus-id _] @u/valittu-sopimusnumero
+             _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
+             vastaus (<! (tallenna-yllapitokohteet!
+                           urakka-id sopimus-id vuosi
+                           (mapv #(assoc % :yllapitokohdetyotyyppi kohdetyyppi)
+                                 kohteet)))]
+         (if (k/virhe? vastaus)
+           (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
+           (do (log "[YLLÄPITOKOHTEET] Kohteet tallennettu: " (pr-str vastaus))
+               (if (= (:status vastaus) :ok)
+                 (do
+                   (when nayta-onnistui?
+                     (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
+                                    :success viesti/viestin-nayttoaika-keskipitka))
+                   (onnistui-fn (:yllapitokohteet vastaus)))
+                 (do
+                   (when nayta-epaonnistui?
+                     (viesti/nayta! "Tallennus epäonnistui!"
+                                    :danger viesti/viestin-nayttoaika-keskipitka))
+                   (epaonnistui-fn vastaus)))))))))
 (defn yllapitokohteet-kartalle
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.
    Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
