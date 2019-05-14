@@ -530,11 +530,11 @@
     (if (and (empty? poistaminen-ok)
              yha-id)
       (do
-        ;; Lähetetään YHA:an poistoviesti. YHA:an lähetettyä viestiä ei käsitellä asyncisti.
-        (yha/poista-kohde yha yha-id)
         ;; Merkataan kohde ja sen alikohteet poistetuiksi
         (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
-        (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id}))
+        (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})
+        ;; Lähetetään YHA:an poistoviesti. YHA:an lähetettyä viestiä ei käsitellä asyncisti.
+        (yha/poista-kohde yha yha-id))
       (throw+ {:type    :kohdetta-ei-voi-poistaa
                :virheet [poistaminen-ok
                          (when-not yha-id
@@ -606,65 +606,92 @@
         kohde-id (:id kohde)]
     (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet yhden-vuoden-kohteet)))
 
-(defn tallenna-yllapitokohteet [db yha user {:keys [urakka-id sopimus-id vuosi kohteet]}]
+(defn tarkasta-kohteet [db kohteet urakka-id vuosi]
+  (jdbc/with-db-transaction [db db]
+                            (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))
+                                  yhden-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
+                                  ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
+                                  ;; vertailuun uusin tieto kohteista
+                                  yhden-vuoden-kohteet (keep
+                                                         (fn [verrattava-kohde]
+                                                           (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
+                                                                                                     kohteet))]
+                                                             ;; Jos kohde ollaan poistamassa, ei oteta sitä vertailuun
+                                                             (when-not (:poistettu kohde-payloadissa)
+                                                               kohde-payloadissa)
+                                                             verrattava-kohde))
+                                                         yhden-vuoden-kohteet)]
+                              (sequence
+                                (comp (remove :poistettu)
+                                      (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
+                                               (when-not (empty? virheviestit)
+                                                 virheviestit))))
+                                kohteet))))
+
+(defn tallenna-yllapitokohteet
+  "Tallentaa yllapitokohteet. Jos jokin ylläpitokohde on poistettu, lähettää tästä viestin YHA:an."
+  [db yha user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
-  (try+
-    (jdbc/with-db-transaction [db db]
-                              (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))
-                                    yhden-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
-                                    ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
-                                    ;; vertailuun uusin tieto kohteista
-                                    yhden-vuoden-kohteet (keep
-                                                           (fn [verrattava-kohde]
-                                                             (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
-                                                                                                       kohteet))]
-                                                               ;; Jos kohde ollaan poistamassa, ei oteta sitä vertailuun
-                                                               (when-not (:poistettu kohde-payloadissa)
-                                                                 kohde-payloadissa)
-                                                               verrattava-kohde))
-                                                           yhden-vuoden-kohteet)
-                                    kohteiden-virheviestit (sequence
-                                                             (comp (remove :poistettu)
-                                                                   (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
-                                                                            (when-not (empty? virheviestit)
-                                                                              virheviestit))))
-                                                             kohteet)]
-                                (if (empty? kohteiden-virheviestit)
-                                  (do (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-                                      (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
-                                      (doseq [kohde kohteet]
-                                        (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
-                                        (if (id-olemassa? (:id kohde))
-                                          (if (:poistettu kohde)
-                                            (poista-yllapitokohde db yha kohde urakka-id)
-                                            (paivita-yllapitokohde db user urakka-id sopimus-id kohde))
-                                          (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
-
-                                      (yy/paivita-yllapitourakan-geometria db urakka-id)
-                                      (let [yllapitokohteet (hae-urakan-yllapitokohteet db user {:urakka-id  urakka-id
-                                                                                                 :sopimus-id sopimus-id
-                                                                                                 :vuosi      vuosi})]
-                                        (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str yllapitokohteet))
-                                        {:status          :ok
-                                         :yllapitokohteet yllapitokohteet}))
-                                  {:status            :validointiongelma
-                                   :virheviesti kohteiden-virheviestit})))
-    (catch [:type yha/+virhe-kohteen-poistamisessa+] {:keys [virheet]}
-      {:virheviesti (mapv (fn [{:keys [kohde-yha-id] :as virhe}]
-                            (assoc virhe :kohteen-nimi (some #(when (= (:yhaid %) kohde-yha-id)
-                                                               (:nimi %))
-                                                             kohteet)))
-                          virheet)
-       :status      :yha-virhe})
-    (catch [:type yha/+virhe-yha-viestin-lukemisessa+] {:keys [virheet]}
-      {:virheviesti (mapv (fn [{:keys [kohde-yha-id] :as virhe}]
-                            (assoc virhe :kohteen-nimi (some #(when (= (:yhaid %) kohde-yha-id)
-                                                               (:nimi %))
-                                                             kohteet)))
-                          virheet)
-       :status :yha-virhe})))
+  (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))
+        kohteiden-virheviestit (tarkasta-kohteet db kohteet urakka-id vuosi)]
+    (if (empty? kohteiden-virheviestit)
+      (let [poistettava-kohde? (fn [kohde]
+                                 (and (id-olemassa? (:id kohde))
+                                      (:poistettu kohde)))
+            ;; Pyritään poistamaan kaikki poistettavat kohteet. Nämä tehdään omissa transaktioissaan, koska ei haluta
+            ;; tilannetta jossa jokin kohde on poistettu YHA:sta mutta koko transaktion epäonnistuttua jonkin toisen kohteen
+            ;; kohdalla, YHA:sta poistettu kohde löytyykin vielä Harjasta.
+            yha-poistot (for [kohde (filter poistettava-kohde? kohteet)]
+                          (try+ (jdbc/with-db-transaction [db db]
+                                                          (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
+                                                          (poista-yllapitokohde db yha kohde urakka-id))
+                                (catch [:type yha/+virhe-kohteen-poistamisessa+] {:keys [virheet]}
+                                  {:virheviesti (mapv (fn [{:keys [kohde-yha-id] :as virhe}]
+                                                        (assoc virhe :kohteen-nimi (some #(when (= (:yhaid %) kohde-yha-id)
+                                                                                            (:nimi %))
+                                                                                         kohteet)))
+                                                      virheet)
+                                   :status      :yha-virhe})
+                                (catch [:type yha/+virhe-yha-viestin-lukemisessa+] {:keys [virheet]}
+                                  {:virheviesti (mapv (fn [{:keys [kohde-yha-id] :as virhe}]
+                                                        (assoc virhe :kohteen-nimi (some #(when (= (:yhaid %) kohde-yha-id)
+                                                                                            (:nimi %))
+                                                                                         kohteet)))
+                                                      virheet)
+                                   :status      :yha-virhe})))
+            yha-poistovirheet (keep identity yha-poistot)
+            joku-poisto-epaonnistui? (not (empty? yha-poistovirheet))
+            kaikki-poistot-epaonnistui? (= (count yha-poistovirheet)
+                                           (count (map poistettava-kohde? kohteet)))]
+        (when (and joku-poisto-epaonnistui?
+                   (not kaikki-poistot-epaonnistui?))
+          (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id))
+        (try (jdbc/with-db-transaction [db db]
+                                       (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
+                                       (doseq [kohde (remove poistettava-kohde? kohteet)]
+                                         (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
+                                         (if (id-olemassa? (:id kohde))
+                                           (paivita-yllapitokohde db user urakka-id sopimus-id kohde)
+                                           (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde))))
+             (finally
+               ;; Halutaan aina päivittää geometriat siltä varalta, että jokin kohde on poistettu
+               (yy/paivita-yllapitourakan-geometria db urakka-id)))
+        (let [yllapitokohteet (hae-urakan-yllapitokohteet db user {:urakka-id  urakka-id
+                                                                   :sopimus-id sopimus-id
+                                                                   :vuosi      vuosi})]
+          (if joku-poisto-epaonnistui?
+            (reduce (fn [lopullinen-virhe virhe]
+                      (update lopullinen-virhe :virheviesti concat (:virheviesti virhe)))
+                    {:status :yha-virhe
+                     :yllapitokohteet yllapitokohteet} yha-poistovirheet)
+            (do
+              (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str yllapitokohteet))
+              {:status          :ok
+               :yllapitokohteet yllapitokohteet}))))
+      {:status            :validointiongelma
+       :virheviesti kohteiden-virheviestit})))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id urakkatyyppi]}]
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)

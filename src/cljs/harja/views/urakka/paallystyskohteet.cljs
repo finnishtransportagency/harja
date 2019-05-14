@@ -127,6 +127,8 @@
                                                                         :yha-virhe (mapv (fn [{:keys [selite kohteen-nimi]}]
                                                                                            {(keyword kohteen-nimi) [selite]})
                                                                                         (:virheviesti virhe)))]
+                                                     (when (= :yha-virhe (:status virhe))
+                                                       (reset! paallystys-tiedot/yllapitokohteet (:yllapitokohteet virhe)))
                                                      (paallystys-tiedot/virhe-modal {:virhe virheviestit})))
                                                  true false))]
                              ;; Ollaanko poistamassa kohdetta?
