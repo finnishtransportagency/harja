@@ -179,12 +179,10 @@
       {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
        :otsikko-tyyli :virhe}
       (when virhe
-        (map-indexed (fn [i komp]
-                       (with-meta komp
-                                  {:key i}))
-                     (concat
-                       (interpose '([:p "------------"])
-                                  (map virheviestit-komponentti virhe))))))))
+        (concat
+          ;; gensym on tässä vain poistamassa virheilmoituksen. Se ei estä remounttailua.
+          (interpose '(^{:key (str (gensym))} [:p "------------"])
+                     (map virheviestit-komponentti virhe)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
