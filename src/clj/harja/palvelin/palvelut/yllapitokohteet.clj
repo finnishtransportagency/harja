@@ -527,18 +527,16 @@
                                        [tarkistettu-asia ok?])))
                              (first (q/paallystyskohteen-saa-poistaa db {:id id})))
         yha-id (:yhaid (first (q/kohteen-yhaid db {:kohde-id id :urakka-id urakka-id})))]
-    (if (and (empty? poistaminen-ok)
-             yha-id)
+    (if (empty? poistaminen-ok)
       (do
         ;; Merkataan kohde ja sen alikohteet poistetuiksi
         (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
         (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})
         ;; Lähetetään YHA:an poistoviesti. YHA:an lähetettyä viestiä ei käsitellä asyncisti.
-        (yha/poista-kohde yha yha-id))
+        (when yha-id
+          (yha/poista-kohde yha yha-id)))
       (throw+ {:type    :kohdetta-ei-voi-poistaa
-               :virheet [poistaminen-ok
-                         (when-not yha-id
-                           {:yha-id yha-id})]}))))
+               :virheet [poistaminen-ok]}))))
 
 (defmethod poista-yllapitokohde :default
   [db _ {:keys [id] :as kohde} urakka-id]
@@ -621,12 +619,15 @@
                                                                kohde-payloadissa)
                                                              verrattava-kohde))
                                                          yhden-vuoden-kohteet)]
-                              (sequence
-                                (comp (remove :poistettu)
-                                      (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
-                                               (when-not (empty? virheviestit)
-                                                 virheviestit))))
-                                kohteet))))
+                              ;; Sequence ei pakota lazy sequja ja palauttaa lazy seqn. Tämä on ongelma db-yhteyden takia,
+                              ;; joten pakotetaan tämä realisoitumaan heti.
+                              (doall
+                                (sequence
+                                  (comp (remove :poistettu)
+                                        (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
+                                                 (when-not (empty? virheviestit)
+                                                   virheviestit))))
+                                  kohteet)))))
 
 (defn tallenna-yllapitokohteet
   "Tallentaa yllapitokohteet. Jos jokin ylläpitokohde on poistettu, lähettää tästä viestin YHA:an."
@@ -640,7 +641,7 @@
       (let [poistettava-kohde? (fn [kohde]
                                  (and (id-olemassa? (:id kohde))
                                       (:poistettu kohde)))
-            ;; Pyritään poistamaan kaikki poistettavat kohteet. Nämä tehdään omissa transaktioissaan, koska ei haluta
+            ;; Pyritään poistamaan kaikki YHA:ssa olevat poistettavat kohteet. Nämä tehdään omissa transaktioissaan, koska ei haluta
             ;; tilannetta jossa jokin kohde on poistettu YHA:sta mutta koko transaktion epäonnistuttua jonkin toisen kohteen
             ;; kohdalla, YHA:sta poistettu kohde löytyykin vielä Harjasta.
             yha-poistot (for [kohde (filter poistettava-kohde? kohteet)]

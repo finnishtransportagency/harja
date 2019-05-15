@@ -491,8 +491,8 @@
 
         (is (= (:status vastaus) :validointiongelma)
             "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle --> tulee herja")
-        (is (= (count (:validointivirheet vastaus)) 1))
-        (is (= (-> (:validointivirheet vastaus)
+        (is (= (count (:virheviesti vastaus)) 1))
+        (is (= (-> (:virheviesti vastaus)
                    first
                    :paakohde
                    first

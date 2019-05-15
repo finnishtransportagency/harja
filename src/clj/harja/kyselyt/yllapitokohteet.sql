@@ -124,9 +124,6 @@ SELECT EXISTS(SELECT *
        EXISTS(SELECT *
               FROM tama_kohde
               WHERE lahetys_onnistunut IS NOT TRUE) AS "yllapitokohde-lahetetty",
-       EXISTS(SELECT *
-              FROM tama_kohde
-              WHERE yhaid IS NOT NULL) AS "yllapitokohde-ei-yhassa",
        NOT (EXISTS(SELECT *
                    FROM tiemerkinnan_yksikkohintainen_toteuma tyt
                    WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE)) AS "tiemerkinnant-yh-toteuma",
