@@ -669,16 +669,16 @@
         (when (and joku-poisto-epaonnistui?
                    (not kaikki-poistot-epaonnistui?))
           (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id))
-        (try (jdbc/with-db-transaction [db db]
-                                       (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
-                                       (doseq [kohde (remove poistettava-kohde? kohteet)]
-                                         (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
-                                         (if (id-olemassa? (:id kohde))
-                                           (paivita-yllapitokohde db user urakka-id sopimus-id kohde)
-                                           (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde))))
-             (finally
-               ;; Halutaan aina päivittää geometriat siltä varalta, että jokin kohde on poistettu
-               (yy/paivita-yllapitourakan-geometria db urakka-id)))
+        (when-not joku-poisto-epaonnistui?
+          (jdbc/with-db-transaction [db db]
+                                    (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
+                                    (doseq [kohde (remove poistettava-kohde? kohteet)]
+                                      (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
+                                      (if (id-olemassa? (:id kohde))
+                                        (paivita-yllapitokohde db user urakka-id sopimus-id kohde)
+                                        (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))))
+        ;; Halutaan aina päivittää geometriat siltä varalta, että jokin kohde on poistettu
+        (yy/paivita-yllapitourakan-geometria db urakka-id)
         (let [yllapitokohteet (hae-urakan-yllapitokohteet db user {:urakka-id  urakka-id
                                                                    :sopimus-id sopimus-id
                                                                    :vuosi      vuosi})]

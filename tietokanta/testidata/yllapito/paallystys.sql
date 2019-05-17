@@ -866,6 +866,17 @@ VALUES
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
+   (SELECT id
+    FROM sopimus
+    WHERE urakka = (SELECT id
+                    FROM urakka
+                    WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
+   115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
+   'paallystys' ::yllapitokohdetyotyyppi, 13375,
+   837, 2, 0, 2, 1000, NULL, NULL, NULL, '{2019}', FALSE),
+  ((SELECT id
+    FROM urakka
+    WHERE nimi = 'Utajärven päällystysurakka'),
     (SELECT id
      FROM sopimus
      WHERE urakka = (SELECT id
@@ -902,6 +913,15 @@ VALUES
     WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
+    WHERE nimi = 'Puolangantie'), '2019-06-19',
+   '2019-06-19', '2019-06-21', '2019-06-22',
+   '2019-06-23',
+   '2019-06-24', (SELECT id
+                  FROM kayttaja
+                  WHERE kayttajanimi = 'jvh'), NOW(),
+   '2019-06-21', '2019-07-04'),
+  ((SELECT id
+    FROM yllapitokohde
     WHERE nimi = 'Ouluntie 2'), '2019-05-19',
                               '2019-05-19', '2019-05-21', '2019-05-22',
                               '2019-05-23',
@@ -919,6 +939,10 @@ VALUES ((SELECT id
              FROM yllapitokohde
              WHERE nimi = 'Kirkkotie'), 'Kirkkotien kohdeosa', 18642, 1, 13, 1, 493, 0, 1, ST_GeomFromText(
              'MULTILINESTRING((471625.9775238041 7183117.168444241,471664.159 7183132.629999999,471694.99700000044 7183139.478,471713.3289999999 7183140.567000002,471733.5800000001 7183141.305,471752.41700000037 7183140.903000001,471767.02300000004 7183138.855,471783.01099999994 7183135.147999998,471803.7999999998 7183128.613000002,471831.01499999966 7183116.688000001,471862.45799999963 7183101.9690000005,471888.83100000024 7183085.998,471899.0650000004 7183077.710000001,471912.5049999999 7183063.421999998,471945.79200000037 7183022.590999998,471972.80399999954 7182989.798999999,471996.6179999998 7182959.302000001,472015.95461845584 7182930.261998949))'), 8, 2, FALSE, 1231232),
+      ((SELECT id
+             FROM yllapitokohde
+             WHERE nimi = 'Puolangantie'), 'Puolangantien kohdeosa', 837, 2, 0, 2, 1000, 0, 1, ST_GeomFromText(
+             'MULTILINESTRING((473846.98 7182870.803,473960.292 7182931.312,474183.474 7183050.716,474330.801 7183128.039,474404.246 7183166.586,474452.892 7183194.074,474453.6 7183194.541,474489.012 7183219.83,474518.267 7183248.087,474546.19 7183280.333,474567.13 7183306.317,474574.948 7183316.489,474650.223 7183414.291,474660.147240582 7183426.73039112))'), 8, 2, FALSE, 1231234),
       ((SELECT id
               FROM yllapitokohde
               WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), 'Puolangalle menevän kohdeosa', 837, 1, 136, 1, 546, 1, 1, ST_GeomFromText(
@@ -943,6 +967,7 @@ $$ LANGUAGE plpgsql;
 
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, 100, 4543.95, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 400, 100, 4543.95, 0),
        ((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'), 200, 10, 4543.95, 0);
 
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
