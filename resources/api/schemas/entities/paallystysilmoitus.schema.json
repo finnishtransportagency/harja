@@ -20,7 +20,7 @@
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+          "$ref": "file:resources/api/schemas/entities/paaluvali.schema.json"
         },
         "alikohteet": {
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet",

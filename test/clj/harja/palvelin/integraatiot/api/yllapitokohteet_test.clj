@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
+            [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
             [harja.jms-test :refer [feikki-sonja]]
@@ -136,11 +137,11 @@
                                            :tekninen-toimenpide 1
                                            :tr-numero 22
                                            :tr-alkuetaisyys 1
-                                           :tr-alkuosa 1
-                                           :tr-loppuetaisyys 5
+                                           :tr-alkuosa 3
+                                           :tr-loppuetaisyys 10
                                            :tr-loppuosa 3
                                            :tr-ajorata 1
-                                           :tr-kaista 1
+                                           :tr-kaista 11
                                            :verkkotyyppi 1
                                            :verkon-sijainti 1
                                            :verkon-tarkoitus 5}]
@@ -185,10 +186,10 @@
          :toimenpide nil
          :tr_ajorata 1
          :tr_alkuetaisyys 1
-         :tr_alkuosa 1
-         :tr_kaista 1
-         :tr_loppuetaisyys 0
-         :tr_loppuosa 2
+         :tr_alkuosa 3
+         :tr_kaista 11
+         :tr_loppuetaisyys 10
+         :tr_loppuosa 3
          :tr_numero 22
          :tyomenetelma nil
          :yllapitokohde kohde-id}
@@ -199,12 +200,12 @@
          :paallystetyyppi nil
          :raekoko nil
          :toimenpide nil
-         :tr_ajorata 1
-         :tr_alkuetaisyys 0
-         :tr_alkuosa 2
-         :tr_kaista 1
+         :tr_ajorata 2
+         :tr_alkuetaisyys 3030
+         :tr_alkuosa 3
+         :tr_kaista 21
          :tr_loppuetaisyys 5
-         :tr_loppuosa 3
+         :tr_loppuosa 4
          :tr_numero 22
          :tyomenetelma nil
          :yllapitokohde kohde-id}
@@ -282,83 +283,88 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot-kannassa
-             {:alustatoimet [{:kasittelymenetelma 1
-                              :paksuus 1
-                              :tekninen-toimenpide 1
-                              :tr-numero 22
-                              :tr-alkuetaisyys 1
-                              :tr-alkuosa 1
-                              :tr-loppuetaisyys 5
-                              :tr-loppuosa 3
-                              :tr-ajorata 1
-                              :tr-kaista 1
-                              :verkkotyyppi 1
-                              :verkon-sijainti 1
-                              :verkon-tarkoitus 5}]
-              :osoitteet [{:esiintyma "testi"
-                           :km-arvo "testi"
-                           :kohdeosa-id (:id kohdeosa-1-kannassa)
-                           :kokonaismassamaara 12.3
-                           :kuulamylly 4
-                           :leveys 1.2
-                           :lisaaineet "lisäaineet"
-                           :massamenekki 22
-                           :muotoarvo "testi"
-                           :paallystetyyppi 11
-                           :pinta-ala 2.2
-                           :pitoisuus 1.2
-                           :raekoko 12
-                           :rc% 54
-                           :sideainetyyppi 1
-                           :tyomenetelma 72}
-                          {:esiintyma "testi2"
-                           :km-arvo "testi2"
-                           :kohdeosa-id (:id kohdeosa-2-kannassa)
-                           :kokonaismassamaara 12.3
-                           :kuulamylly 4
-                           :leveys 1.2
-                           :lisaaineet "lisäaineet"
-                           :massamenekki 22
-                           :muotoarvo "testi2"
-                           :paallystetyyppi 11
-                           :pinta-ala 2.2
-                           :pitoisuus 1.2
-                           :raekoko 12
-                           :rc% 54
-                           :sideainetyyppi 1
-                           :tyomenetelma 72}]}))
+      (is (= (reduce-kv (fn [m k v]
+                          (assoc m k (if (= k :osoitteet)
+                                       (mapv (fn [tiedot]
+                                               (dissoc tiedot :kohdeosa-id))
+                                             v)
+                                       v)))
+                        {} ilmoitustiedot-kannassa)
+             {:osoitteet [{
+	                   :lisaaineet "lisäaineet"
+	                   :leveys 1.2
+	                   :kokonaismassamaara 12.3
+	                   :sideainetyyppi 1
+	                   :muotoarvo "testi"
+	                   :esiintyma "testi"
+	                   :pitoisuus 1.2
+	                   :pinta-ala 2.2
+	                   :massamenekki 22
+	                   :kuulamylly 4
+	                   :raekoko 12
+	                   :tyomenetelma 72
+	                   :rc% 54
+	                   :paallystetyyppi 11
+	                   :km-arvo "testi"}
+	                  {:lisaaineet "lisäaineet"
+	                   :leveys 1.2
+	                   :kokonaismassamaara 12.3
+	                   :sideainetyyppi 1
+	                   :muotoarvo "testi2"
+	                   :esiintyma "testi2"
+	                   :pitoisuus 1.2
+	                   :pinta-ala 2.2
+	                   :massamenekki 22
+	                   :kuulamylly 4
+	                   :raekoko 12
+	                   :tyomenetelma 72
+	                   :rc% 54
+	                   :paallystetyyppi 11
+	                   :km-arvo "testi2"}]
+	      :alustatoimet [{:tr-kaista 11
+	                      :verkkotyyppi 1
+	                      :tr-ajorata 1
+	                      :verkon-tarkoitus 5
+	                      :kasittelymenetelma 1
+	                      :tr-loppuosa 3
+	                      :tr-alkuosa 3
+	                      :tekninen-toimenpide 1
+	                      :tr-loppuetaisyys 10
+	                      :tr-alkuetaisyys 1
+	                      :tr-numero 22
+	                      :paksuus 1
+	                      :verkon-sijainti 1}]}))
 
       (is (= (dissoc kohdeosa-1-kannassa :id)
-             {:massamaara nil
-              :nimi "1. testialikohde"
-              :paallystetyyppi nil
-              :raekoko nil
-              :toimenpide nil
-              :tr_alkuetaisyys 1
-              :tr_alkuosa 1
-              :tr_loppuetaisyys 0
-              :tr_loppuosa 2
-              :tr_numero 22
-              :tr_ajorata 1
-              :tr_kaista 1
-              :tyomenetelma nil
-              :yllapitokohde 22}))
+             {:yllapitokohde 22
+	      :tr_kaista 11
+	      :massamaara nil
+	      :nimi "1. testialikohde"
+	      :tr_loppuosa 3
+	      :raekoko nil
+	      :tyomenetelma nil
+	      :tr_numero 22
+	      :paallystetyyppi nil
+	      :tr_loppuetaisyys 10
+	      :tr_alkuetaisyys 1
+	      :tr_ajorata 1
+	      :tr_alkuosa 3
+	      :toimenpide nil}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
-             {:massamaara nil
-              :nimi "2. testialikohde"
-              :paallystetyyppi nil
-              :raekoko nil
-              :toimenpide nil
-              :tr_alkuetaisyys 0
-              :tr_alkuosa 2
-              :tr_loppuetaisyys 5
-              :tr_loppuosa 3
-              :tr_numero 22
-              :tr_ajorata 1
-              :tr_kaista 1
-              :tyomenetelma nil
-              :yllapitokohde 22}))
+             {:yllapitokohde 22
+	      :tr_kaista 21
+	      :massamaara nil
+	      :nimi "2. testialikohde"
+	      :tr_loppuosa 4
+	      :raekoko nil
+	      :tyomenetelma nil
+	      :tr_numero 22
+	      :paallystetyyppi nil
+	      :tr_loppuetaisyys 5
+	      :tr_alkuetaisyys 3030
+	      :tr_ajorata 2
+	      :tr_alkuosa 3
+	      :toimenpide nil}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
@@ -729,7 +735,7 @@
                                         kayttaja-paallystys portti
                                         payload)]
     (is (not= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "Kohde: 'Päällekkäinen testialikohde' menee päällekkäin urakan: 'Utajärven päällystysurakka' kohteen: 'Ouluntie' kohdeosan: 'Ouluntien kohdeosa' kanssa"))))
+    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Ouluntien kohdeosa\\\" kanssa\\n\"}}]}"))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimii
   (let [urakka (hae-utajarven-paallystysurakan-id)

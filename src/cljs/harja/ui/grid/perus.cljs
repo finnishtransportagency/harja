@@ -735,9 +735,9 @@
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
-        skeema (keep identity (if rivi-validointi
-                                (conj skeema {::validointi/rivi-validointi rivi-validointi})
-                                skeema))
+        rivin-validointi-skeema (if rivi-validointi
+                                 (conj skeema {::validointi/rivi-validointi rivi-validointi})
+                                 skeema)
         nollaa-muokkaustiedot-tallennuksen-jalkeen? (if (some? nollaa-muokkaustiedot-tallennuksen-jalkeen?)
                                                       nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                                       (constantly true))
@@ -778,7 +778,9 @@
                                         (keep (fn [rivi]
                                                 (if (:harja.ui.grid/poistettu rivi)
                                                   nil
-                                                  (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi)]
+                                                  (let [virheet (if (= tyyppi :validoi)
+                                                                  (validointi/validoi-rivi uudet-tiedot rivi rivin-validointi-skeema tyyppi)
+                                                                  (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi))]
                                                     (if (empty? virheet)
                                                       nil
                                                       [(tunniste rivi) virheet]))))
@@ -869,8 +871,8 @@
                                          (into {}
                                             (keep (fn [[id rivin-tiedot]]
                                                     (let [rivin-virheet (when-not (:poistettu rivin-tiedot)
-                                                                          (validointi/validoi-rivi gridin-tiedot rivin-tiedot (if rivi-validointi
-                                                                                                                                (conj skeema {::validointi/rivi-validointi rivi-validointi})
+                                                                          (validointi/validoi-rivi gridin-tiedot rivin-tiedot (if (= :validoi validointi-tyyppi)
+                                                                                                                                rivin-validointi-skeema
                                                                                                                                 skeema)
                                                                                                    validointi-tyyppi))]
                                                       (when-not (empty? rivin-virheet)
@@ -908,7 +910,7 @@
                        (swap! virheet (fn [virheet]
                                         (let [uusi-rivi (get uudet-tiedot id)
                                               rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi skeema :validoi))
+                                                              (validointi/validoi-rivi uudet-tiedot uusi-rivi rivin-validointi-skeema :validoi))
                                               virheet (if (empty? rivin-virheet)
                                                         (dissoc virheet id)
                                                         (assoc virheet id rivin-virheet))]

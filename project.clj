@@ -1,5 +1,5 @@
 (def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                    (.getHostName (java.net.InetAddress/getLocalHost))))
+                     (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
@@ -35,7 +35,8 @@
                  [http-kit "2.4.0-alpha3"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
-                 [javax.servlet/servlet-api "2.5"]
+                 ;[javax.servlet/servlet-api "2.5"]
+                 [javax.servlet/javax.servlet-api "3.1.0"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
@@ -73,9 +74,9 @@
                  [fileyard "0.2"]
 
                  ;; Asiakas
-                 ; Tämä dev riippuvuuksiin
-                 ; [spyscope "0.1.6"]
-                 ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
+                                        ; Tämä dev riippuvuuksiin
+                                        ; [spyscope "0.1.6"]
+                                        ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.8.0"]
                  [figwheel "0.5.19-SNAPSHOT"]
@@ -94,7 +95,7 @@
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.17"] ; TODO Voisi päivittää, mutta dk.ative/docjure käyttää 3.17, ja tulee ikäviä erroreita jos tän päivittää
-                                             ; docjuressa on kyllä pullero, joka tuon hoitaisi, niin jospa se joskus mergettäisiin
+                                        ; docjuressa on kyllä pullero, joka tuon hoitaisi, niin jospa se joskus mergettäisiin
                  [org.apache.poi/poi-scratchpad "3.17"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "3.17"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
@@ -125,9 +126,7 @@
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.14.0-SNAPSHOT"] ; TODO Päivitä tämä heti, kun https://github.com/mjul/docjure/pull/81 mergetty tai joku vastaava tehty
-                                                      ; Päivitä samalla apache poi
-
-                 [figwheel-sidecar "0.5.19-SNAPSHOT"]
+                                        ; Päivitä samalla apache poi
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.1.0"]
@@ -154,6 +153,7 @@
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]
+                                  [figwheel-sidecar "0.5.19-SNAPSHOT"]
                                   [cider/piggieback "0.4.0"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.4.2"]
@@ -180,7 +180,7 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
-            [lein-ancient "0.6.10"]
+            [lein-ancient "0.6.15"]
             [lein-figwheel "0.5.19-SNAPSHOT"]
             [lein-codox "0.10.6"]
             [jonase/eastwood "0.3.5"]
@@ -193,10 +193,11 @@
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
+                ;; Clientin reload ja REPL
                 :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
-                           ;:parallel-build false Failaa randomisti
+                                        ;:parallel-build false Failaa randomisti
                            ;;:preamble ["reagent/react.js"]
                            :output-to "dev-resources/js/harja.js"
                            :output-dir "dev-resources/js/out"
@@ -212,7 +213,7 @@
                            :optimizations :none
                            :pretty-print true
                            :source-map true
-                           ;:parallel-build false Failaa randomisti
+                                        ;:parallel-build false Failaa randomisti
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
@@ -231,7 +232,7 @@
                            :source-map "resources/public/js/harja.js.map"
                            :output-dir "resources/public/js/"
 
-                           ;:parallel-build false Failaa randomisti
+                                        ;:parallel-build false Failaa randomisti
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"}}
 
@@ -281,7 +282,7 @@
                            :language-in :ecmascript5
                            :language-out :ecmascript5
                            :externs ["laadunseuranta/externs.js"]
-                           ;:parallel-build false Failaa randomisti
+                                        ;:parallel-build false Failaa randomisti
                            :pretty-print false}}]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
@@ -292,7 +293,9 @@
   :less {:source-paths ["dev-resources/less/application"
                         "dev-resources/less/laadunseuranta/application"]
          :target-path "resources/public/css/"}
-
+  
+  :figwheel {:server-port 3449
+             :reload-clj-files false}
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
@@ -310,9 +313,7 @@
                  :timeout 120000
                  :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
 
-  ;; Clientin reload ja REPL
-  :figwheel {:server-port 3449
-             :reload-clj-files false}
+  
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
@@ -342,7 +343,7 @@
                                "cljsbuild" "once" "laadunseuranta-min,"
                                "less" "once," "uberjar"]}
   :test-selectors { ;; lein test :perf
-                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
+                   ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
                    :perf :perf
                    }

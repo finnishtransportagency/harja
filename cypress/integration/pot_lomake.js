@@ -159,7 +159,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
             cy.wrap(valitseInput(3, 'Aosa')).type(3)
             cy.wrap(valitseInput(3, 'Aet')).type(50)
             // varmistelua
-            cy.contains('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] .virhe', 'Kohteenosa on päällekkäin osan Foo kanssa')
+            cy.contains('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet] .virhe', 'Kohteenosa on päällekkäin osan "Foo" kanssa')
             cy.get('[data-cy=yllapitokohdeosat-Tierekisteriosoitteet]').gridOtsikot().then(($gridOtsikotJalkeen) => {
                 let $rivitJalkeen = $gridOtsikotJalkeen.grid.find('tbody tr');
                 let $otsikotJalkeen = $gridOtsikotJalkeen.otsikot;
@@ -175,7 +175,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
 
                 ['Aosa', 'Aet', 'Losa', 'Let'].forEach((otsikko) => {
                     expect(virheValinta(1, otsikko)).to.have.lengthOf(1)
-                        .and.to.contain('Kohteenosa on päällekkäin osan Foo kanssa')
+                        .and.to.contain('Kohteenosa on päällekkäin osan "Foo" kanssa')
                     expect(virheValinta(2, otsikko)).to.have.lengthOf(2)
                         .and.to.contain('Kohteenosa on päällekkäin toisen osan kanssa')
                         .and.to.contain('Alikohde ei voi olla pääkohteen ulkopuolella')
