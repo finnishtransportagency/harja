@@ -168,7 +168,7 @@ SELECT
     THEN ST_Simplify(sps.alue, 50)
   WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
     THEN ST_Simplify(tlu.alue, 50)
-  WHEN (u.tyyppi = 'hoito' :: urakkatyyppi AND au.alue IS NOT NULL)
+  WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
     THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
       hoidon_alueurakan_geometria(u.urakkanro)
   ELSE ST_Simplify(au.alue, 50)
@@ -621,7 +621,7 @@ SELECT
 FROM urakka u
 WHERE u.id IN (SELECT id
                FROM urakka
-               WHERE (tyyppi = 'hoito' AND
+               WHERE (tyyppi IN ('hoito', 'teiden-hoito') AND
                       u.hanke IS NOT NULL AND
                       (SELECT EXTRACT(YEAR FROM u.alkupvm)) <= :vuosi AND
                       :vuosi <= (SELECT EXTRACT(YEAR FROM u.loppupvm))));
@@ -663,7 +663,7 @@ FROM urakka u
 WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
-      AND ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+      AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
            OR
            (:urakkatyyppi = 'valaistus' AND
             exists(SELECT id
@@ -736,7 +736,7 @@ SELECT
   hoidon_paaurakan_geometria(u.id) AS urakka_alue,
   u.id                             AS urakka_id,
   CASE
-  WHEN (u.tyyppi = 'hoito' :: urakkatyyppi AND alueurakka.alue IS NOT NULL)
+  WHEN (u.tyyppi IN ('hoito','teiden-hoito') :: urakkatyyppi AND alueurakka.alue IS NOT NULL)
     THEN hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
   ELSE hoidon_paaurakan_geometria(u.id)
   END                              AS alueurakka_alue

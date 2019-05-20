@@ -89,6 +89,6 @@ SELECT
   lt.pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
 FROM urakka u
   LEFT JOIN lampotilat lt ON (lt.urakka = u.id AND lt.alkupvm = :alkupvm AND lt.loppupvm = :loppupvm)
-WHERE (u.tyyppi = 'hoito'::urakkatyyppi AND
+WHERE (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
        u.alkupvm <= :alkupvm AND
        :loppupvm <= u.loppupvm);
