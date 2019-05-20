@@ -1,5 +1,3 @@
-ALTER TYPE urakkatyyppi ADD VALUE 'teiden-hoito';
-
 -- Proseduurit muutettu myos R_indeksilaskenta-migraatiossa.
 
 -- Indeksilaskennan perusluvut. Käsitellään teiden-hoito-urakat samalla tavalla kuin hoitourakat.
