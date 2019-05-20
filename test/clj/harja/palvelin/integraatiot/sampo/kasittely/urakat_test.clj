@@ -12,7 +12,7 @@
 
 (deftest maanteiden-hoidon-urakan-tallentuminen
   (tuo-maanteiden-hoidon-urakka)
-  (is (= 1 (count (hae-urakat))) "Luonnin jälkeen urakka löytyy Sampo id:llä.")
+  (is (= 1 (count (hae-urakat))) "Luonnin jälkeen maanteiden hoidon urakka löytyy Sampo id:llä.")
   (poista-urakka))
 
 (deftest urakan-paivittaminen
