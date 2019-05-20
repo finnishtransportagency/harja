@@ -173,10 +173,10 @@
                                 [:li virheviesti])
                               virheviestit))]))
 
-(defn virhe-modal [vastaus]
+(defn virhe-modal [vastaus otsikko]
   (let [virhe (:virhe vastaus)]
     (modal/nayta!
-      {:otsikko "Päällystysilmoituksen tallennus epäonnistui!"
+      {:otsikko otsikko
        :otsikko-tyyli :virhe}
       (when virhe
         (concat
@@ -464,7 +464,8 @@
                                        (assoc m k (distinct (flatten (vals (if (map? v)
                                                                              v
                                                                              (first v)))))))
-                                     {} (:virhe vastaus))]})
+                                     {} (:virhe vastaus))]}
+                 "Päällystysilmoituksen tallennus epäonnistui!")
     app)
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
@@ -511,5 +512,6 @@
     (assoc app :paallystysilmoitukset paallystysilmoitukset))
   YHAVientiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (virhe-modal [{:virhe-kohteen-lahetyksessa [vastaus]}])
+    (virhe-modal [{:virhe-kohteen-lahetyksessa [vastaus]}]
+                 "Vienti YHA:an epäonnistui!")
     (assoc app :paallystysilmoitukset (:paallystysilmoitukset vastaus))))

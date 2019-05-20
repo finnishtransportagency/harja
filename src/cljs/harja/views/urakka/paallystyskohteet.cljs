@@ -138,7 +138,7 @@
                                                                                         (:virheviesti virhe)))]
                                                      (when (= :yha-virhe (:status virhe))
                                                        (reset! paallystys-tiedot/yllapitokohteet (:yllapitokohteet virhe)))
-                                                     (paallystys-tiedot/virhe-modal {:virhe virheviestit})
+                                                     (paallystys-tiedot/virhe-modal {:virhe virheviestit} "Kohteen tallennus epäonnistui!")
                                                      (reset! tallennus-gif? false)
                                                      (go (>! vastaus-status virhe))))
                                                  true false))]
