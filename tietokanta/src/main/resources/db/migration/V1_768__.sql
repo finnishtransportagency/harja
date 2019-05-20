@@ -1,5 +1,4 @@
 ALTER TYPE urakkatyyppi ADD VALUE 'teiden-hoito';
-INSERT INTO urakkatyypin_indeksi (urakkatyyppi, indeksinimi, raakaaine, koodi) VALUES ('teiden-hoito', 'MAKU 2015', null, 'MAKU2015'); -- teiden hoidon uusi indeksi
 
 -- Proseduurit muutettu myos R_indeksilaskenta-migraatiossa.
 
