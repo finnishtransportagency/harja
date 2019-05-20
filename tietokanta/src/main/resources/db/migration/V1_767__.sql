@@ -1,1 +1,1 @@
-UPDATE kayttaja SET kuvaus = 'Ajastetut integraatiot, migraatiot ja järjestelmä' where kayttajanimi = 'Integraatio'
+UPDATE kayttaja SET kuvaus = 'Ajastetut integraatiot, migraatiot ja järjestelmä' where kayttajanimi = 'Integraatio';
