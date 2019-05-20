@@ -283,8 +283,14 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot-kannassa
-             {:osoitteet [{:kohdeosa-id 50
+      (is (= (reduce-kv (fn [m k v]
+                          (assoc m k (if (= k :osoitteet)
+                                       (mapv (fn [tiedot]
+                                               (dissoc tiedot :kohdeosa-id))
+                                             v)
+                                       v)))
+                        {} ilmoitustiedot-kannassa)
+             {:osoitteet [{
 	                   :lisaaineet "lisäaineet"
 	                   :leveys 1.2
 	                   :kokonaismassamaara 12.3
@@ -300,8 +306,7 @@
 	                   :rc% 54
 	                   :paallystetyyppi 11
 	                   :km-arvo "testi"}
-	                  {:kohdeosa-id 51
-	                   :lisaaineet "lisäaineet"
+	                  {:lisaaineet "lisäaineet"
 	                   :leveys 1.2
 	                   :kokonaismassamaara 12.3
 	                   :sideainetyyppi 1
