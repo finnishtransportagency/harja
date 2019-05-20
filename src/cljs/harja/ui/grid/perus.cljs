@@ -871,7 +871,9 @@
                                          (into {}
                                             (keep (fn [[id rivin-tiedot]]
                                                     (let [rivin-virheet (when-not (:poistettu rivin-tiedot)
-                                                                          (validointi/validoi-rivi gridin-tiedot rivin-tiedot rivin-validointi-skeema
+                                                                          (validointi/validoi-rivi gridin-tiedot rivin-tiedot (if (= :validoi validointi-tyyppi)
+                                                                                                                                rivin-validointi-skeema
+                                                                                                                                skeema)
                                                                                                    validointi-tyyppi))]
                                                       (when-not (empty? rivin-virheet)
                                                         [id rivin-virheet])))
