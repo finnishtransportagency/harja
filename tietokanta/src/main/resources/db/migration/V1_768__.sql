@@ -1,0 +1,1 @@
+ALTER TYPE urakkatyyppi ADD VALUE 'teiden-hoito';
