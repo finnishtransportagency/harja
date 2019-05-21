@@ -326,6 +326,41 @@
                               (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema)))))]))
                  taulukko))))))
 
+(defn liita-taulukkotason-virheet
+  [taulukon-virheet virheet]
+  (if taulukon-virheet
+    (reduce-kv (fn [m rivi-id uudet-rivin-taulukkotason-virheet]
+                 (update m rivi-id (fn [rivin-virheet]
+                                     (reduce-kv (fn [m2 sarakkeen-nimi virhe-vektori]
+                                                  (update m2 sarakkeen-nimi concat virhe-vektori))
+                                                rivin-virheet uudet-rivin-taulukkotason-virheet))))
+               virheet taulukon-virheet)
+    virheet))
+
+(defn liita-rivitason-virheet
+  [rivin-virheet virheet]
+  (if rivin-virheet
+    (reduce-kv (fn [m sarakkeen-nimi virhe-vektori]
+                 (update m sarakkeen-nimi concat virhe-vektori))
+               virheet rivin-virheet)
+    virheet))
+
+(defn validoi-ja-anna-virheet
+  ([gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi] (validoi-ja-anna-virheet gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi nil))
+  ([gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi poistettu-avain]
+   (let [virheet (into {}
+                       (keep (fn [[index rivi]]
+                               (let [kenttien-virheet (validoi-rivin-kentat gridin-tiedot rivi skeema tyyppi)
+                                     rivin-virheet (when validoi-rivi
+                                                     (validoi-rivi gridin-tiedot rivi skeema rivivalidointi))
+                                     virheet (liita-rivitason-virheet rivin-virheet kenttien-virheet)]
+                                 (when-not (empty? virheet)
+                                   [index virheet])))
+                             gridin-tiedot))
+         taulukkovirheet (when validoi-taulukko
+                           (validoi-taulukko gridin-tiedot skeema taulukkovalidointi poistettu-avain))]
+     (liita-taulukkotason-virheet taulukkovirheet virheet))))
+
 (defn tyhja-tr-osoite? [arvo]
   (not (tr/validi-osoite? arvo)))
 

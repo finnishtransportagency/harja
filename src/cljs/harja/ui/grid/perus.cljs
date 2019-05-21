@@ -746,44 +746,12 @@
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
-        meta-atom (atom nil)
-        liita-taulukkotason-virheet (fn [taulukon-virheet virheet]
-                                      (reduce-kv (fn [m rivi-id uudet-rivin-taulukkotason-virheet]
-                                                   (update m rivi-id (fn [rivin-virheet]
-                                                                       (reduce-kv (fn [m2 sarakkeen-nimi virhe-vektori]
-                                                                                    (update m2 sarakkeen-nimi concat virhe-vektori))
-                                                                                  rivin-virheet uudet-rivin-taulukkotason-virheet))))
-                                                 virheet taulukon-virheet))
-        liita-rivitason-virheet (fn [rivin-virheet virheet]
-                                  (reduce-kv (fn [m sarakkeen-nimi virhe-vektori]
-                                               (update m sarakkeen-nimi concat virhe-vektori))
-                                             virheet rivin-virheet))
         validoi-ja-anna-virheet (fn [uudet-tiedot tyyppi]
-                                  (let [virheet (into {}
-                                                      (keep (fn [rivi]
-                                                              (if (:harja.ui.grid/poistettu rivi)
-                                                                nil
-                                                                (let [kenttien-virheet (validointi/validoi-rivin-kentat uudet-tiedot rivi skeema tyyppi)
-                                                                      rivin-virheet (case tyyppi
-                                                                                      :validoi (when rivi-validointi
-                                                                                                 (validointi/validoi-rivi uudet-tiedot rivi skeema rivi-validointi))
-                                                                                      :varoita (when rivi-varoitus
-                                                                                                 (validointi/validoi-rivi uudet-tiedot rivi skeema rivi-varoitus))
-                                                                                      :huomauta (when rivi-huomautus
-                                                                                                  (validointi/validoi-rivi uudet-tiedot rivi skeema rivi-huomautus)))
-                                                                      virheet (liita-rivitason-virheet rivin-virheet kenttien-virheet)]
-                                                                  (if (empty? virheet)
-                                                                    nil
-                                                                    [(tunniste rivi) virheet]))))
-                                                            (vals uudet-tiedot)))
-                                        taulukkovirheet (case tyyppi
-                                                          :validoi (when rivi-validointi
-                                                                     (validointi/validoi-taulukko uudet-tiedot skeema taulukko-validointi))
-                                                          :varoita (when rivi-varoitus
-                                                                     (validointi/validoi-taulukko uudet-tiedot skeema taulukko-varoitus))
-                                                          :huomauta (when rivi-huomautus
-                                                                      (validointi/validoi-taulukko uudet-tiedot skeema taulukko-huomautus)))]
-                                    (liita-taulukkotason-virheet taulukkovirheet virheet)))
+                                  (let [[rivi-validointi taulukko-validointi] (case tyyppi
+                                                                                :validoi [rivi-validointi taulukko-validointi]
+                                                                                :varoita [rivi-varoitus taulukko-varoitus]
+                                                                                :huomauta [rivi-huomautus taulukko-huomautus])]
+                                    (validointi/validoi-ja-anna-virheet uudet-tiedot skeema rivi-validointi taulukko-validointi tyyppi :harja.ui.grid/poistettu)))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
                    (let [id (or (tunniste rivin-tiedot) (swap! uusi-id dec))
@@ -935,7 +903,6 @@
         nollaa-muokkaustiedot! (fn []
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
-                                 (reset! meta-atom nil)
                                  (reset! varoitukset {})
                                  (reset! huomautukset {})
                                  (reset! muokatut nil)
