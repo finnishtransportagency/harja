@@ -1,5 +1,6 @@
--- Indeksilaskennan perusluvut
+-- Proseduurit muutettu myos R_indeksilaskenta-migraatiossa.
 
+-- Indeksilaskennan perusluvut. Käsitellään teiden-hoito-urakat samalla tavalla kuin hoitourakat.
 CREATE OR REPLACE FUNCTION indeksilaskennan_perusluku(urakka_id INTEGER)
   RETURNS NUMERIC AS $$
 DECLARE
@@ -85,72 +86,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Laske kuukauden indeksikorotus
--- indeksikorotus lasketaan yleensä (aina?) (vertailuluku/perusluku) * summa
--- esim. indeksin arvo 105.0, perusluku 103.2, summa 1000e:
--- summa indeksillä korotettuna 1 000 € * (105/103.2) = 1 017,44 €
-CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
-  v          INTEGER,
-  kk          INTEGER,
-  indeksinimi VARCHAR,
-  summa      NUMERIC,
-  perusluku  NUMERIC)
 
-  RETURNS kuukauden_indeksikorotus_rivi AS $$
-DECLARE
-  kerroin      NUMERIC;
-  vertailuluku NUMERIC;
-
-BEGIN
-  -- Jos maksu on päätetty olla sitomatta indeksiin (tai urakassa ei ole indeksit käytössä),
-  -- palautetaan (summa, summa, 0)
-  IF indeksinimi IS NULL
-  THEN
-    RAISE NOTICE 'Indeksiä ei käytetty tässä maksussa.';
-    RETURN (summa, summa, 0 :: NUMERIC);
-  END IF;
-
-  -- Perusluku puuttuu
-  IF perusluku IS NULL THEN
-    RAISE NOTICE 'Kuukauden indeksikorotusta ei voitu laskea koska peruslukua ei ole';
-    RETURN (summa, NULL :: NUMERIC, NULL :: NUMERIC);
-  END IF;
-
-
-  SELECT
-    INTO vertailuluku arvo
-  FROM indeksi
-  WHERE nimi = indeksinimi
-        AND vuosi = v AND kuukausi = kk;
-  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
-  -- tämä lasku palauttaa NULL.
-  kerroin := (vertailuluku / perusluku);
-  RETURN (summa, summa * kerroin, summa * kerroin - summa);
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION kuukauden_indeksikorotus(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER)
-  RETURNS NUMERIC(10,2) AS $$
-DECLARE
-  vertailuluku NUMERIC;
-  perusluku NUMERIC;
-BEGIN
-  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
-  perusluku := indeksilaskennan_perusluku(urakka_id);
-  SELECT arvo
-  FROM indeksi
-  WHERE nimi = indeksinimi
-        AND vuosi = (SELECT EXTRACT(YEAR FROM pvm)) AND kuukausi = (SELECT EXTRACT(MONTH FROM pvm))
-  INTO vertailuluku;
-  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
-  -- tämä lasku palauttaa NULL.
-  RETURN (vertailuluku / perusluku) * summa;
-END;
-$$ LANGUAGE plpgsql;
-
-
-
--- Urakan oletusindeksin asettaminen
+-- Urakan oletusindeksin asettaminen. Käsitellään teiden-hoito-urakat samalla tavalla kuin hoitourakat.
 CREATE OR REPLACE FUNCTION aseta_urakan_oletusindeksi()
 RETURNS trigger AS $$
 BEGIN
@@ -182,3 +119,93 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Urakan hoitokaudet. Maanteiden hoidon urakoissa samalla tavalla kuin vanhoissa hoitourakoissa.
+CREATE OR REPLACE FUNCTION urakan_hoitokaudet(urakka_id INTEGER)
+  RETURNS SETOF paivamaaravali AS $$
+DECLARE
+  urakan_alkupvm                DATE;
+  urakan_loppupvm               DATE;
+  urakan_tyyppi                 TEXT;
+  nyt                           DATE;
+  nykyinen_hoitokauden_alkupvm  DATE;
+  nykyinen_hoitokauden_loppupvm DATE;
+  hoitokauden_alkupvm           DATE;
+  hoitokauden_loppupvm          DATE;
+BEGIN
+  SELECT
+    alkupvm,
+    loppupvm,
+    tyyppi
+  INTO urakan_alkupvm, urakan_loppupvm, urakan_tyyppi
+  FROM urakka
+  WHERE id = urakka_id;
+
+  IF urakan_alkupvm IS NOT NULL AND urakan_loppupvm IS NOT NULL
+  THEN
+
+    nyt := urakan_alkupvm;
+
+    -- Hoidon urakat
+    IF urakan_tyyppi IN ('hoito', 'teiden-hoito')
+    THEN
+      LOOP
+        IF nyt > urakan_loppupvm
+        THEN
+          EXIT;
+        ELSE
+          RETURN NEXT (nyt, ((EXTRACT(YEAR FROM nyt) + 1) || '-09-30') :: DATE);
+          -- Inkrementoi vuodella
+          nyt := nyt + INTERVAL '1 year';
+        END IF;
+      END LOOP;
+
+    -- Muut urakat
+    ELSE
+      -- Urakka loppuu samana vuonna
+      IF EXTRACT(YEAR FROM urakan_alkupvm) = EXTRACT(YEAR FROM urakan_loppupvm)
+      THEN
+        RETURN NEXT (urakan_alkupvm, urakan_loppupvm);
+
+      -- Urakka on monivuotinen
+      ELSE
+        nykyinen_hoitokauden_alkupvm := urakan_alkupvm;
+
+        LOOP
+          IF nyt > urakan_loppupvm
+          THEN
+            EXIT;
+          ELSE
+
+            IF EXTRACT(YEAR FROM nykyinen_hoitokauden_alkupvm) != EXTRACT(YEAR FROM nyt)
+            THEN
+              hoitokauden_alkupvm := nykyinen_hoitokauden_alkupvm;
+              hoitokauden_loppupvm := nyt - INTERVAL '1 day';
+
+              nykyinen_hoitokauden_alkupvm = nyt;
+
+              RETURN NEXT (hoitokauden_alkupvm, hoitokauden_loppupvm);
+
+            ELSEIF urakan_loppupvm = nyt
+              THEN
+                hoitokauden_alkupvm := nykyinen_hoitokauden_alkupvm;
+                hoitokauden_loppupvm := nyt;
+
+                nykyinen_hoitokauden_alkupvm = nyt;
+
+                RETURN NEXT (hoitokauden_alkupvm, hoitokauden_loppupvm);
+
+            END IF;
+
+            -- Inkrementoi päivällä
+            nyt := nyt + INTERVAL '1 day';
+          END IF;
+        END LOOP;
+      END IF;
+    END IF;
+  END IF;
+END
+$$ LANGUAGE plpgsql;
+
+

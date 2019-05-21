@@ -89,6 +89,7 @@ WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
                      FROM maksuera
                      WHERE toimenpideinstanssi IS NOT NULL)
       AND urakka.tyyppi in ('hoito',
+                            'teiden-hoito',
                             'vesivayla-kanavien-hoito',
                             'vesivayla-kanavien-korjaus');
 

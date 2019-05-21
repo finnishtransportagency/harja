@@ -33,7 +33,7 @@ DELETE FROM laskutusyhteenveto_cache WHERE urakka = :urakka
 -- annetulle aikavälille.
 SELECT u.id, u.nimi
   FROM urakka u
- WHERE u.tyyppi = 'hoito'::urakkatyyppi AND
+ WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
        u.alkupvm < NOW() AND
        u.loppupvm > (date_trunc('month',NOW()) - '2 months'::interval) AND
        NOT EXISTS (SELECT rivit
