@@ -1,2 +1,3 @@
+-- Maanteiden hoidon urakka. Uusi urakkatyyppi. Kaikki lokakuusta 2019 lähtien alkavat hoitourakat.
 ALTER TYPE urakkatyyppi ADD VALUE 'teiden-hoito';
-INSERT INTO urakkatyypin_indeksi (urakkatyyppi, indeksinimi, raakaaine, koodi) VALUES ('teiden-hoito', 'MAKU 2015', null, 'MAKU2015'); -- teiden hoidon uusi indeksi
+

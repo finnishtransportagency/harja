@@ -123,7 +123,7 @@ $$ LANGUAGE plpgsql;
 
 -- Urakan hoitokaudet. Maanteiden hoidon urakoissa samalla tavalla kuin vanhoissa hoitourakoissa.
 CREATE OR REPLACE FUNCTION urakan_hoitokaudet(urakka_id INTEGER)
-  RETURNS SETOF paivamaaravali LANGUAGE plpgsql AS $$
+  RETURNS SETOF paivamaaravali AS $$
 DECLARE
   urakan_alkupvm                DATE;
   urakan_loppupvm               DATE;
