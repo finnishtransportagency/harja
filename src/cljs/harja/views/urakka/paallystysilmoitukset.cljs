@@ -901,7 +901,7 @@
                                                                                     (apply f vanha-arvo args)))))
         paakohteen-validointi (fn [_ rivi taulukko]
                                 (let [{:keys [perustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
-                                      paakohde (select-keys perustiedot #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+                                      paakohde (select-keys perustiedot #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
                                       vuosi (first vuodet)
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.

@@ -382,7 +382,7 @@
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :vkm])
+                         [:http-palvelin :db :yha-integraatio :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])

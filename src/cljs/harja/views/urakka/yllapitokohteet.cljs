@@ -1097,16 +1097,16 @@
                                                                    :kohteet-atom kohteet-atom
                                                                    :rivi rivi
                                                                    :kohdetyyppi (:kohdetyyppi optiot)
-                                                                   :kohteen-rivi-validointi (-> validointi  :tr-osoitteet :rivi-alikohde)
-                                                                   :kohteen-taulukko-validointi (-> validointi  :tr-osoitteet :taulukko-alikohde)
-                                                                   :muut-kohteen-rivi-validointi (-> validointi  :tr-osoitteet :rivi-muukohde)
-                                                                   :muut-kohteen-taulukko-validointi (-> validointi  :tr-osoitteet :taulukko-muukohde)}]))))
+                                                                   :kohteen-rivi-validointi (-> validointi :tr-osoitteet :rivi-alikohde)
+                                                                   :kohteen-taulukko-validointi (-> validointi :tr-osoitteet :taulukko-alikohde)
+                                                                   :muut-kohteen-rivi-validointi (-> validointi :tr-osoitteet :rivi-muukohde)
+                                                                   :muut-kohteen-taulukko-validointi (-> validointi :tr-osoitteet :taulukko-muukohde)}]))))
                                  @kohteet-atom)
              :rivi-validointi (-> validointi :paakohde :tr-osoite)
              :taulukko-validointi (-> validointi :paakohde :taulukko)
              :tallenna @tallenna
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
-                                                            (= (:status vastaus) :ok))
+                                                            (#{:ok :yha-virhe} (:status vastaus)))
              :muutos (fn [grid]
                        (hae-osien-tiedot (grid/hae-muokkaustila grid)))
              :voi-lisata? (not yha-sidottu?)

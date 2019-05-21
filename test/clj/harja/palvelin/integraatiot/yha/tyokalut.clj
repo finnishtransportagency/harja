@@ -298,3 +298,19 @@
   <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet/>
   </urakan-kohdehakuvastaus>")
+
+(defn +epaonnistunut-kohteen-poisto-vastaus+ [yha-kohde-id]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+        <urakan-kohteen-poiston-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
+        <palaute>palaute</palaute>
+        <virhe>
+            <kohde-yha-id>" yha-kohde-id "</kohde-yha-id>
+            <selite>virhe</selite>
+        </virhe>
+        </urakan-kohteen-poiston-kirjausvastaus>"))
+
+(def +onnistunut-kohteen-poisto-vastaus+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+   <urakan-kohteen-poiston-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
+   <palaute>palaute</palaute>
+   </urakan-kohteen-poiston-kirjausvastaus>")

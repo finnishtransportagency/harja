@@ -47,6 +47,12 @@ VALUES ('4242523-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                             WHERE lyhenne = 'POP'), 'Utajärven päällystysurakka',
         '2019-10-01', '2023-09-30', 'paallystys', 'uta1', (SELECT id
                                                            FROM organisaatio
+                                                           WHERE ytunnus = '0651792-4')),
+       ('1337133-TES3', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
+                                                            FROM organisaatio
+                                                            WHERE lyhenne = 'UUD'), 'Porvoon päällystysurakka',
+        '2019-01-01', '2023-12-31', 'paallystys', 'por1', (SELECT id
+                                                           FROM organisaatio
                                                            WHERE ytunnus = '0651792-4'));
 INSERT INTO yhatiedot (urakka, yhaid, yhatunnus)
   VALUES ((SELECT id
