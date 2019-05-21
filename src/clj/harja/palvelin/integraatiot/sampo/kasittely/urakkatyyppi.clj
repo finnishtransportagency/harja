@@ -21,12 +21,14 @@
         (oletus-fn)))
     (oletus-fn)))
 
+;; teiden-hoito on syksyllä 2019 alkava uusi urakkatyyppi
 (defn- tievaylaurakan-alityyppi [tyypit oletus-fn]
   (let [vaihtoehdot {:V "valaistus"
                      :P "paallystys"
                      :T "tiemerkinta"
                      :S "siltakorjaus"
-                     :L "tekniset-laitteet"}]
+                     :L "tekniset-laitteet"
+                     :J "teiden-hoito"}]
     (urakan-alityyppi tyypit vaihtoehdot oletus-fn)))
 
 (defn- tievaylaurakan-tyyppi [tyypit urakkatyyppi]
@@ -73,6 +75,7 @@
                      "siltakorjaus" "TYS"
                      "tekniset-laitteet" "TYL"
                      "hoito" "TH"
+                     "teiden-hoito" "THJ"
                      "vesivayla-hoito" "VH"
                      "vesivayla-ruoppaus" "VYR"
                      "vesivayla-turvalaitteiden-korjaus" "VYT"
