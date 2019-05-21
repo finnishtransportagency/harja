@@ -736,7 +736,7 @@ SELECT
   hoidon_paaurakan_geometria(u.id) AS urakka_alue,
   u.id                             AS urakka_id,
   CASE
-  WHEN (u.tyyppi IN ('hoito','teiden-hoito') :: urakkatyyppi AND alueurakka.alue IS NOT NULL)
+  WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
     THEN hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
   ELSE hoidon_paaurakan_geometria(u.id)
   END                              AS alueurakka_alue
