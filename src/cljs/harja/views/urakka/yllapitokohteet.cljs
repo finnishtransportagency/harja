@@ -657,7 +657,7 @@
                                                          uudet-osat)
                                        uudet-virheet (into {}
                                                            (keep (fn [[id rivi]]
-                                                                   (let [rivin-virheet (validointi/validoi-rivi
+                                                                   (let [rivin-virheet (validointi/validoi-rivin-kentat
                                                                                          uudet-kohdeosat rivi skeema)]
                                                                      (when-not (empty? rivin-virheet)
                                                                        [id rivin-virheet])))

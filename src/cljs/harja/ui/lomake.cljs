@@ -315,9 +315,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
-        kaikki-virheet (validointi/validoi-rivi nil tiedot kaikki-skeemat :validoi)
-        kaikki-varoitukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :varoita)
-        kaikki-huomautukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :huomauta)
+        kaikki-virheet (validointi/validoi-rivin-kentat nil tiedot kaikki-skeemat :validoi)
+        kaikki-varoitukset (validointi/validoi-rivin-kentat nil tiedot kaikki-skeemat :varoita)
+        kaikki-huomautukset (validointi/validoi-rivin-kentat nil tiedot kaikki-skeemat :huomauta)
         puuttuvat-pakolliset-kentat (into #{}
                                           (map :nimi)
                                           (validointi/puuttuvat-pakolliset-kentat tiedot

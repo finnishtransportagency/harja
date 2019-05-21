@@ -439,7 +439,7 @@
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
                           (when-not ulkoinen-validointi?
                             (swap! virheet (fn [virheet]
-                                             (let [rivin-virheet (validointi/validoi-rivi uudet-tiedot (get uudet-tiedot id) (if rivi-validointi
+                                             (let [rivin-virheet (validointi/validoi-rivin-kentat uudet-tiedot (get uudet-tiedot id) (if rivi-validointi
                                                                                                                                (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                                                                skeema))
                                                    virheet (if (empty? rivin-virheet)
@@ -496,7 +496,7 @@
                               rivi-virheet (into {}
                                                  (keep (fn [[id rivin-tiedot]]
                                                          (let [rivin-virheet (when-not (:poistettu rivin-tiedot)
-                                                                               (validointi/validoi-rivi gridin-tiedot rivin-tiedot (if rivi-validointi
+                                                                               (validointi/validoi-rivin-kentat gridin-tiedot rivin-tiedot (if rivi-validointi
                                                                                                                                      (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                                                                      skeema)))]
                                                            (when-not (empty? rivin-virheet)
@@ -521,7 +521,7 @@
                                                    (if virheet-dataan?
                                                      ;; TODO taulukko-validointi tällekkin
                                                      (assoc uusi-rivi
-                                                            :harja.ui.grid/virheet (validointi/validoi-rivi
+                                                            :harja.ui.grid/virheet (validointi/validoi-rivin-kentat
                                                                                      (assoc muokatut id uusi-rivi)
                                                                                      uusi-rivi
                                                                                      (if rivi-validointi
@@ -534,7 +534,7 @@
                          (swap! virheet (fn [virheet]
                                           (let [uusi-rivi (get uudet-tiedot id)
                                                 rivin-virheet (when-not (:poistettu uusi-rivi)
-                                                                (validointi/validoi-rivi uudet-tiedot uusi-rivi (if rivi-validointi
+                                                                (validointi/validoi-rivin-kentat uudet-tiedot uusi-rivi (if rivi-validointi
                                                                                                                   (conj skeema {::validointi/rivi-validointi rivi-validointi})
                                                                                                                   skeema)))
                                                 virheet (if (empty? rivin-virheet)
