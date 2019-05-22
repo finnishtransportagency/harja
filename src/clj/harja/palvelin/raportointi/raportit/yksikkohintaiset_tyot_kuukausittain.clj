@@ -70,24 +70,24 @@
     (if urakoittain?
       ;; Käydään jokainen urakka läpi, etsitään sille kuuluvat tehtävätyypit
       ;; ja muodostetaan jokaisesta tehtävätyypistä yksi rivi
-      (flatten (mapv (fn [urakka-nimi]
-                       (mapv
-                         (fn [tehtava-nimi]
-                           (yhdista-tehtavat (filter
-                                               #(and (= (:nimi %) tehtava-nimi)
-                                                     (= (:urakka_nimi %) urakka-nimi))
-                                               kuukausittaiset-summat)))
-                         (into #{} (map :nimi (filter
-                                                #(= (:urakka_nimi %) urakka-nimi)
-                                                kuukausittaiset-summat)))))
-                     (into #{} (map :urakka_nimi kuukausittaiset-summat))))
+      (sort-by :nimi (flatten (mapv (fn [urakka-nimi]
+                                      (mapv
+                                        (fn [tehtava-nimi]
+                                          (yhdista-tehtavat (filter
+                                                              #(and (= (:nimi %) tehtava-nimi)
+                                                                    (= (:urakka_nimi %) urakka-nimi))
+                                                              kuukausittaiset-summat)))
+                                        (into #{} (map :nimi (filter
+                                                               #(= (:urakka_nimi %) urakka-nimi)
+                                                               kuukausittaiset-summat)))))
+                                    (into #{} (map :urakka_nimi kuukausittaiset-summat)))))
       ;; Muodostetaan jokaisesta tehtävätyypistä yksi rivi
-      (mapv
-        (fn [tehtava-nimi]
-          (yhdista-tehtavat (filter
-                              #(= (:nimi %) tehtava-nimi)
-                              kuukausittaiset-summat)))
-        (into #{} (map :nimi kuukausittaiset-summat))))))
+      (sort-by :nimi (mapv
+                       (fn [tehtava-nimi]
+                         (yhdista-tehtavat (filter
+                                             #(= (:nimi %) tehtava-nimi)
+                                             kuukausittaiset-summat)))
+                       (into #{} (map :nimi kuukausittaiset-summat)))))))
 
 (defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id suunnittelutiedot alkupvm loppupvm toimenpide-id
                                              urakoittain? urakkatyyppi]}]
@@ -177,31 +177,31 @@
                                  [{:leveys 5 :otsikko "Tot-%" :fmt :prosentti}
                                   {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"
                                    :fmt :numero}])]))
-      (mapv (fn [rivi]
-              (keep identity (concat [(when urakoittain?
-                                        (or (:urakka_nimi rivi) "-"))
-                                      (or (:nimi rivi) "-")
-                                      (or (:yksikko rivi) "-")]
-                                     (mapv (fn [pvm]
-                                             (or
-                                               (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
-                                               0))
-                                           listattavat-pvmt)
-                                     [(or (:toteutunut_maara rivi) 0)]
-                                     (when (and (= konteksti :urakka)
-                                                aikavali-kasittaa-hoitokauden?)
-                                       [(let [formatoitu (:toteumaprosentti rivi)]
-                                          (if (not (or (nil? formatoitu)
-                                                       (and (or (string? formatoitu) (coll? formatoitu))
-                                                            (empty? formatoitu))))
-                                            formatoitu
-                                            (info-solu "-")))
-                                        (let [formatoitu (:suunniteltu_maara rivi)]
-                                          (if (not (or (nil? formatoitu)
-                                                       (and (or (string? formatoitu) (coll? formatoitu))
-                                                            (empty? formatoitu))))
-                                            formatoitu
-                                            (info-solu "Ei suunnitelmaa")))]))))
-            naytettavat-rivit)]
+      (sort-by :nimi (mapv (fn [rivi]
+                             (keep identity (concat [(when urakoittain?
+                                                       (or (:urakka_nimi rivi) "-"))
+                                                     (or (:nimi rivi) "-")
+                                                     (or (:yksikko rivi) "-")]
+                                                    (mapv (fn [pvm]
+                                                            (or
+                                                              (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
+                                                              0))
+                                                          listattavat-pvmt)
+                                                    [(or (:toteutunut_maara rivi) 0)]
+                                                    (when (and (= konteksti :urakka)
+                                                               aikavali-kasittaa-hoitokauden?)
+                                                      [(let [formatoitu (:toteumaprosentti rivi)]
+                                                         (if (not (or (nil? formatoitu)
+                                                                      (and (or (string? formatoitu) (coll? formatoitu))
+                                                                           (empty? formatoitu))))
+                                                           formatoitu
+                                                           (info-solu "-")))
+                                                       (let [formatoitu (:suunniteltu_maara rivi)]
+                                                         (if (not (or (nil? formatoitu)
+                                                                      (and (or (string? formatoitu) (coll? formatoitu))
+                                                                           (empty? formatoitu))))
+                                                           formatoitu
+                                                           (info-solu "Ei suunnitelmaa")))]))))
+                           naytettavat-rivit))]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 

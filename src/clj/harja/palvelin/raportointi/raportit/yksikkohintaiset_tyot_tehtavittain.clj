@@ -12,8 +12,8 @@
 
 (defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id suunnittelutiedot]}]
   (let [toteumat (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
-                                                                     urakka-id alkupvm loppupvm
-                                                                     (not (nil? toimenpide-id)) toimenpide-id)
+                                                                               urakka-id alkupvm loppupvm
+                                                                               (not (nil? toimenpide-id)) toimenpide-id)
         toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat-suunnittelutiedoilla))
 
@@ -85,8 +85,8 @@
                  :oikealle-tasattavat-kentat (if (= konteksti :urakka)
                                                #{2 5 6}
                                                (if urakoittain?
-                                               #{4}
-                                               #{}))
+                                                 #{4}
+                                                 #{}))
                  :sheet-nimi raportin-nimi}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 25 :otsikko "Urakka"})
@@ -114,7 +114,7 @@
                                             (or (:suunnitellut_kustannukset rivi) (info-solu "")))
                                           (when (= konteksti :urakka)
                                             (or (:toteutuneet_kustannukset rivi) (info-solu "")))]))
-                        naytettavat-rivit)
+                        (sort-by (juxt :urakka_nimi :nimi) naytettavat-rivit))
                   (when (not (empty? naytettavat-rivit))
                     (if (= konteksti :urakka)
                       ["Yhteensä" nil nil nil nil
