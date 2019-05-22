@@ -351,13 +351,13 @@
    (let [virheet (into {}
                        (keep (fn [[index rivi]]
                                (let [kenttien-virheet (validoi-rivin-kentat gridin-tiedot rivi skeema tyyppi)
-                                     rivin-virheet (when validoi-rivi
+                                     rivin-virheet (when rivivalidointi
                                                      (validoi-rivi gridin-tiedot rivi skeema rivivalidointi))
                                      virheet (liita-rivitason-virheet rivin-virheet kenttien-virheet)]
                                  (when-not (empty? virheet)
                                    [index virheet])))
                              gridin-tiedot))
-         taulukkovirheet (when validoi-taulukko
+         taulukkovirheet (when taulukkovalidointi
                            (validoi-taulukko gridin-tiedot skeema taulukkovalidointi poistettu-avain))]
      (liita-taulukkotason-virheet taulukkovirheet virheet))))
 
