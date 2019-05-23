@@ -27,7 +27,7 @@
        :nimi :organisaatio
        :fmt :nimi
        :tyyppi :valinta
-       :valinnat (tiedot/organisaatiovalinnat)
+       :valinnat (sort-by :nimi (tiedot/organisaatiovalinnat))
        :valinta-nayta :nimi
        :leveys 5}
       {:otsikko "Käynnissä olevat urakat"
