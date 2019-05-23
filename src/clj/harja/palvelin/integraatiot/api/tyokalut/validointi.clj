@@ -105,8 +105,8 @@
                                         urakka-id)}]})))
 
 (defn tarkista-paallystyskohde
-  [db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet]
-  (let [virheviestit (kohteet/validoi-kaikki-backilla db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
+  [db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet]
+  (let [virheviestit (kohteet/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
     (when-not (empty? virheviestit)
       (virheet/heita-poikkeus
         virheet/+viallinen-kutsu+

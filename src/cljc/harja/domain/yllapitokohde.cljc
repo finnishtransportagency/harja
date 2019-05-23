@@ -472,7 +472,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
    Näiden kohteiden lisäksi se voi sisältää myös 'muukohde' tyylisiä kohteita."
   ([paakohde alikohde toiset-alikohteet osien-tiedot] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot (pvm/vuosi (pvm/nyt))))
   ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot vuosi nil))
-  ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat]
+  ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat] (validoi-alikohde paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat nil))
+  ([paakohde alikohde toiset-alikohteet osien-tiedot vuosi urakan-toiset-kohdeosat eri-urakoiden-alikohteet]
    (let [tr-vali-spec (cond ;; s/and short circuittaa, jonka johdosta tässä täytyy luetella kaikki tr-valin avaimet pelkän ::tr-ajorata ja ::tr-kaista sijasta ja ::tr-paaluvali tulee tulla toisena.
                             ;; Eli jos tätä ei tekisi näin, niin ::tr-ajorata ja ::tr-kaista jäisi ilman virheviestiä, kun tarkastetaan tr-osoitteen muoto vaikka ne olisikin virheellisiä.
                         (>= vuosi 2019) (s/and (s/keys :req-un [::tr-numero
@@ -488,7 +489,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
          validoitu-muoto (oikean-muotoinen-tr alikohde tr-vali-spec)
          validoitu-alikohteidenpaallekkyys (when (empty? validoitu-muoto)
                                              (filter #(tr-valit-paallekkain? alikohde %)
-                                                     (concat toiset-alikohteet urakan-toiset-kohdeosat)))
+                                                     (concat toiset-alikohteet urakan-toiset-kohdeosat eri-urakoiden-alikohteet)))
          ;; Alikohteen tulee olla pääkohteen sisällä
          validoitu-paakohteenpaallekkyys (when (empty? validoitu-muoto)
                                            (tr-valit-paallekkain? paakohde alikohde true))
@@ -618,18 +619,25 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                         (str "Kohteenosa on päällekkäin "
                                              (if (empty? nimi) "toisen osan" (str "osan \"" nimi "\""))
                                              " kanssa"))
-              :toisen-kohteen-alikohteen-kanssa-paallekkain (fn [validoitu-alikohde paallekkaisen-kohteen-nimi paallekkaisen-alikohteen-nimi]
-                                                              (str "Kohteenosa (" (apply str (interpose ", "
-                                                                                                        ((juxt :tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)
-                                                                                                          validoitu-alikohde)))
-                                                                   ") on päällekkäin "
-                                                                   (if (empty? paallekkaisen-kohteen-nimi)
-                                                                     "toisen kohteen "
-                                                                     (str "kohteen \"" paallekkaisen-kohteen-nimi "\" "))
-                                                                   "kohdeosan "
-                                                                   (if (empty? paallekkaisen-alikohteen-nimi)
-                                                                     "kanssa"
-                                                                     (str "\"" paallekkaisen-alikohteen-nimi "\" kanssa"))))}
+              :toisen-kohteen-alikohteen-kanssa-paallekkain (fn [validoitu-alikohde paallekkainen-kohde]
+                                                              (let [paallekkaisen-kohteen-nimi (:paakohteen-nimi paallekkainen-kohde)
+                                                                    paallekkaisen-alikohteen-nimi (:yllapitokohteen-nimi paallekkainen-kohde)]
+                                                                (str "Kohteenosa (" (apply str (interpose ", "
+                                                                                                          ((juxt :tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)
+                                                                                                            validoitu-alikohde)))
+                                                                     ") on päällekkäin "
+                                                                     (if (empty? paallekkaisen-kohteen-nimi)
+                                                                       "toisen kohteen "
+                                                                       (str "kohteen \"" paallekkaisen-kohteen-nimi "\" "))
+                                                                     "kohdeosan "
+                                                                     (if (empty? paallekkaisen-alikohteen-nimi)
+                                                                       "kanssa"
+                                                                       (str "\"" paallekkaisen-alikohteen-nimi "\" kanssa")))))
+              :toisen-urakan-alikohteen-kanssa-paallekkain (fn [validoitu-alikohde paallekkainen-kohde]
+                                                             (str "Kohteenosa (" (apply str (interpose ", "
+                                                                                                       ((juxt :tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)
+                                                                                                         validoitu-alikohde)))
+                                                                  ") on päällekkäin toisen urakan kohdeosan kanssa"))}
    :paakohde {:paakohteet-paallekkain (fn [nimi]
                                         (str "Kohde on päällekkäin "
                                              (if (empty? nimi) "toisen kohteen" (str "kohteen \"" nimi "\""))
@@ -816,12 +824,14 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
         muukohde-sisapuolella (when (false? muukohde-paakohteen-ulkopuolella?)
                                 [(get-in paallekkaisyys-virhetekstit [:muukohde :paakohteen-sisapuolella])])
         alikohteet-paallekkain (when alikohde-paallekkyys
-                                 (mapv #(if (:paakohteen-nimi %)
-                                          ((get-in paallekkaisyys-virhetekstit [:alikohde :toisen-kohteen-alikohteen-kanssa-paallekkain])
-                                            (:alikohde (meta validoitu-kohde))
-                                            (:paakohteen-nimi %)
-                                            (:yllapitokohteen-nimi %))
-                                          ((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %)))
+                                 (mapv #(cond
+                                          (:urakka %) ((get-in paallekkaisyys-virhetekstit [:alikohde :toisen-urakan-alikohteen-kanssa-paallekkain])
+                                                        (:alikohde (meta validoitu-kohde))
+                                                        %)
+                                          (:paakohteen-nimi %) ((get-in paallekkaisyys-virhetekstit [:alikohde :toisen-kohteen-alikohteen-kanssa-paallekkain])
+                                                                 (:alikohde (meta validoitu-kohde))
+                                                                 %)
+                                          :else ((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %)))
                                        alikohde-paallekkyys))
         paakohde-paallekkain (when paallekkyys
                                (mapv #((get-in paallekkaisyys-virhetekstit [:paakohde :paakohteet-paallekkain]) (:nimi %))
@@ -899,13 +909,14 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
       kohdetekstit)))
 
 (defn validoi-kaikki
-  [tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet vuosi alikohteet muutkohteet alustatoimet urakan-toiset-kohdeosat]
+  [tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+   vuosi alikohteet muutkohteet alustatoimet urakan-toiset-kohdeosat eri-urakoiden-alikohteet]
   (let [kohde-validoitu (validoi-kohde
                          tr-osoite kohteen-tiedot {:vuosi vuosi})
         alikohteet-validoitu (keep identity
                                    (for [alikohde alikohteet
                                          :let [toiset-alikohteet (remove #(= alikohde %) alikohteet)]]
-                                     (with-meta (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)
+                                     (with-meta (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat eri-urakoiden-alikohteet)
                                                 {:alikohde (select-keys alikohde vali-avaimet)})))
         muutkohteet-validoitu (keep identity
                                     (for [muukohde muutkohteet
@@ -928,9 +939,11 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 
 #?(:clj
    (defn validoi-kaikki-backilla
-     ([db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet] (validoi-kaikki-backilla db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet nil))
-     ([db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet urakan-toiset-kohdeosat]
-      (let [urakan-toiset-kohdeosat (or urakan-toiset-kohdeosat
+     ([db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet] (validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet nil))
+     ([db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet urakan-toiset-kohdeosat]
+      (let [;; Otetaan tarkastukseen ne kohdeosat, jotka ovat jonkun sellaisen kohteen
+            ;; alikohteita, mikä kuuluu tähän urakkaan
+            urakan-toiset-kohdeosat (or urakan-toiset-kohdeosat
                                         (remove (fn [kohdeosa]
                                                   (some #(= (:id kohdeosa)
                                                             (:id %))
@@ -948,6 +961,21 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                                     (when (= (:urakka-id %) urakka-id)
                                                                       nimi)))))
                                     yhden-vuoden-kohteet))
+            ;; Otetaan mukaan tarkastukseen ne kohdeosat, jotka ovat jonkun sellaisen kohteen
+            ;; alikohteita, mikä on tämän kohteen kanssa päällekkäin
+            eri-urakoiden-alikohteet (let [kohteet (keep (fn [kohde]
+                                                             (when (and (not= (:id kohde) kohde-id)
+                                                                        (tr-valit-paallekkain? kohde tr-osoite))
+                                                               kohde))
+                                                           (q-tieverkko/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))]
+                                       (when-not (empty? kohteet)
+                                         (map (fn [yllapitokohdeosa]
+                                                (merge yllapitokohdeosa
+                                                       (some #(when (= (:yllapitokohde-id yllapitokohdeosa)
+                                                                       (:id %))
+                                                                (select-keys % #{:urakka :urakka-id}))
+                                                             kohteet)))
+                                              (q-tieverkko/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt (map :id kohteet)}))))
             kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
                                 (q-tieverkko/hae-trpisteiden-valinen-tieto db
                                                                            (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
@@ -964,7 +992,10 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
             muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
                                                         (verrattavat-kohteet toiset-kohteet (:id muukohde) urakka-id))
                                                       muutkohteet yhden-vuoden-muut-kohteet)]
-        (validoi-kaikki tr-osoite kohteen-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet vuosi alikohteet muutkohteet alustatoimet urakan-toiset-kohdeosat)))))
+        (validoi-kaikki tr-osoite kohteen-tiedot
+                        muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                        vuosi alikohteet muutkohteet alustatoimet
+                        urakan-toiset-kohdeosat eri-urakoiden-alikohteet)))))
 
 
 #?(:clj

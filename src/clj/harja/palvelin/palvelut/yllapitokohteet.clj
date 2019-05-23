@@ -600,8 +600,9 @@
 (defn validoi-kohde [db kohde urakka-id vuosi]
   (let [tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
         ali-ja-muut-kohteet (:kohdeosat kohde)
-        alustatoimet nil]
-    (yllapitokohteet-domain/validoi-kaikki-backilla db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)))
+        alustatoimet nil
+        kohde-id (:id kohde)]
+    (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)))
 
 (defn tarkasta-kohteet [db kohteet urakka-id vuosi]
   (jdbc/with-db-transaction [db db]

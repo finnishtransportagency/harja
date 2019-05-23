@@ -183,7 +183,7 @@
                                    alikohteet)
           alustatoimet nil]
 
-      (validointi/tarkista-paallystyskohde db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
+      (validointi/tarkista-paallystyskohde db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)
@@ -232,7 +232,7 @@
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
 
-      (validointi/tarkista-paallystyskohde db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
+      (validointi/tarkista-paallystyskohde db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
 
       (let [id (ilmoitus/kirjaa-paallystysilmoitus vkm db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
