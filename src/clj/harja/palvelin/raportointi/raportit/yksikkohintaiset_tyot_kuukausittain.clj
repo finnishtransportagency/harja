@@ -8,7 +8,6 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
@@ -116,7 +115,6 @@
                                :urakkatyyppi  urakkatyyppi})))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
-  (log/debug "Parametrit on " (pr-str parametrit))
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -153,19 +151,19 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         oikealle-tasattavat (set (range 2 (+ 5 (count listattavat-pvmt))))]
-    [:raportti {:orientaatio :landscape
-                :nimi        raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
-                 :oikealle-tasattavat-kentat oikealle-tasattavat
-                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
-                 :sheet-nimi                 raportin-nimi}
+    [:raportti {:nimi        raportin-nimi
+                :orientaatio :landscape}
+     [:taulukko {:oikealle-tasattavat-kentat oikealle-tasattavat
+                 :otsikko                    otsikko
+                 :sheet-nimi                 raportin-nimi
+                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
-                                 {:leveys 15 :otsikko "Urakka"})
-                               {:leveys 10 :otsikko "Tehtävä"}
-                               {:leveys 5 :otsikko "Yk\u00ADsik\u00ADkö"}
+                                  {:otsikko "Urakka" :leveys 15 })
+                                  {:otsikko "Tehtävä" :leveys 10}
+                                  {:otsikko "Yk\u00ADsik\u00ADkö" :leveys 5 }
                                (mapv (fn [rivi]
-                                       {:otsikko         (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi))
-                                        :leveys             5
+                                       {:leveys             5
+                                        :otsikko         (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi))
                                         :otsikkorivi-luokka "grid-kk-sarake"
                                         :fmt                :numero})
                                      listattavat-pvmt)
