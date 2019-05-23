@@ -363,7 +363,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
   :data                 validoitu data
   "
-  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! voi-muokata?]} skeema data]
+  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata?]} skeema data]
   (let [fokus (atom nil)
         validoi-avaimet (fn [skeema]
                           (reduce (fn [skeema skeeman-osa]
@@ -385,6 +385,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
       (let [{virheet ::virheet
              varoitukset ::varoitukset
              huomautukset ::huomautukset :as validoitu-data} (validoi data skeema)]
+        (when (and kutsu-muokkaa-renderissa?
+                   (or (not= virheet (::virheet data))
+                       (not= varoitukset (::varoitukset data))
+                       (not= huomautukset (::huomautukset data))))
+          (muokkaa! validoitu-data))
         (kasittele-virhe
           (let [voi-muokata? (if (some? voi-muokata?)
                                voi-muokata?

@@ -317,6 +317,7 @@
           [:h3 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
                           :muokkaa! muokkaa-fn
+                          :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}
            [{:otsikko "Kohde" :nimi :kohde
