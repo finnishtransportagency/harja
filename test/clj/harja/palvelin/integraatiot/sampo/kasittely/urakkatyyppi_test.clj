@@ -21,7 +21,8 @@
   (is (= "siltakorjaus" (urakkatyyppi/urakkatyyppi "THS")) "Siltakorjaus urakkatyyppi päätellään oikein.")
   (is (= "tiemerkinta" (urakkatyyppi/urakkatyyppi "THT")) "Tiemerkintä urakkatyyppi päätellään oikein.")
   (is (= "tekniset-laitteet" (urakkatyyppi/urakkatyyppi "THL")) "Tekniset laittet urakkatyyppi päätellään oikein.")
-  (is (= "tekniset-laitteet" (urakkatyyppi/urakkatyyppi "TYL")) "Tekniset laittet urakkatyyppi päätellään oikein."))
+  (is (= "tekniset-laitteet" (urakkatyyppi/urakkatyyppi "TYL")) "Tekniset laittet urakkatyyppi päätellään oikein.")
+  (is (= "teiden-hoito" (urakkatyyppi/urakkatyyppi "THJ")) "Maanteiden hoidon urakkatyyppi päätellään oikein."))
 
 
 (deftest urakkatyypin-paattely-vesivaylaurakoille
