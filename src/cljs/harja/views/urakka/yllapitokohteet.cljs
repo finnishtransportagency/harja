@@ -964,7 +964,7 @@
                                       paakohde (select-keys rivi #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
-                                      validoitu (yllapitokohteet-domain/validoi-kohde paakohde [] (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
+                                      validoitu (yllapitokohteet-domain/validoi-kohde paakohde (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
                                   (yllapitokohteet-domain/validoitu-kohde-tekstit validoitu true)))
         alikohteen-validointi (fn [paakohde rivi taulukko]
                                 (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
@@ -1027,6 +1027,7 @@
                                               assoc (:tr-numero haettava-tieto) tr-tieto)))
                                    (grid/validoi-grid g)))))]
     (komp/luo
+      (komp/piirretty (fn [] (grid/validoi-grid g)))
       (fn [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
         (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
                                            ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että

@@ -502,8 +502,7 @@
           tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
           ali-ja-muut-kohteet (remove :poistettu (-> paallystysilmoitus :ilmoitustiedot :osoitteet))
           alustatoimet (-> paallystysilmoitus :ilmoitustiedot :alustatoimet)
-          kohde-id (:paallystyskohde-id paallystysilmoitus)
-          virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
+          virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla db urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
       (if (empty? virheviestit)
         (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
               paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
