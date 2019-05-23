@@ -114,7 +114,7 @@
                                             (or (:suunnitellut_kustannukset rivi) (info-solu "")))
                                           (when (= konteksti :urakka)
                                             (or (:toteutuneet_kustannukset rivi) (info-solu "")))]))
-                        (sort-by (juxt :urakka_nimi :nimi) naytettavat-rivit))
+                        (sort-by (juxt :urakka_nimi :nimi :yksikko) naytettavat-rivit))
                   (when (not (empty? naytettavat-rivit))
                     (if (= konteksti :urakka)
                       ["Yhteensä" nil nil nil nil
