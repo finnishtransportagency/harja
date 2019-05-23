@@ -618,15 +618,18 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                         (str "Kohteenosa on päällekkäin "
                                              (if (empty? nimi) "toisen osan" (str "osan \"" nimi "\""))
                                              " kanssa"))
-              :toisen-kohteen-alikohteen-kanssa-paallekkain (fn [kohde nimi]
-                                                              (str "Kohteenosa on päällekkäin "
-                                                                   (if (empty? kohde)
+              :toisen-kohteen-alikohteen-kanssa-paallekkain (fn [validoitu-alikohde paallekkaisen-kohteen-nimi paallekkaisen-alikohteen-nimi]
+                                                              (str "Kohteenosa (" (apply str (interpose ", "
+                                                                                                        ((juxt :tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)
+                                                                                                          validoitu-alikohde)))
+                                                                   ") on päällekkäin "
+                                                                   (if (empty? paallekkaisen-kohteen-nimi)
                                                                      "toisen kohteen "
-                                                                     (str "kohteen \"" kohde "\" "))
+                                                                     (str "kohteen \"" paallekkaisen-kohteen-nimi "\" "))
                                                                    "kohdeosan "
-                                                                   (if (empty? nimi)
+                                                                   (if (empty? paallekkaisen-alikohteen-nimi)
                                                                      "kanssa"
-                                                                     (str "\"" nimi "\" kanssa"))))}
+                                                                     (str "\"" paallekkaisen-alikohteen-nimi "\" kanssa"))))}
    :paakohde {:paakohteet-paallekkain (fn [nimi]
                                         (str "Kohde on päällekkäin "
                                              (if (empty? nimi) "toisen kohteen" (str "kohteen \"" nimi "\""))
@@ -815,6 +818,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
         alikohteet-paallekkain (when alikohde-paallekkyys
                                  (mapv #(if (:paakohteen-nimi %)
                                           ((get-in paallekkaisyys-virhetekstit [:alikohde :toisen-kohteen-alikohteen-kanssa-paallekkain])
+                                            (:alikohde (meta validoitu-kohde))
                                             (:paakohteen-nimi %)
                                             (:yllapitokohteen-nimi %))
                                           ((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %)))
@@ -901,7 +905,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
         alikohteet-validoitu (keep identity
                                    (for [alikohde alikohteet
                                          :let [toiset-alikohteet (remove #(= alikohde %) alikohteet)]]
-                                     (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)))
+                                     (with-meta (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)
+                                                {:alikohde (select-keys alikohde vali-avaimet)})))
         muutkohteet-validoitu (keep identity
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
