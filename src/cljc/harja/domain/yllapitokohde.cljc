@@ -967,7 +967,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                              (when (and (not= (:id kohde) kohde-id)
                                                                         (tr-valit-paallekkain? kohde tr-osoite))
                                                                kohde))
-                                                           (q-tieverkko/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))]
+                                                           (q-yllapitokohteet/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))]
                                        (when-not (empty? kohteet)
                                          (map (fn [yllapitokohdeosa]
                                                 (merge yllapitokohdeosa
@@ -975,7 +975,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                                        (:id %))
                                                                 (select-keys % #{:urakka :urakka-id}))
                                                              kohteet)))
-                                              (q-tieverkko/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt (map :id kohteet)}))))
+                                              (q-yllapitokohteet/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt (map :id kohteet)}))))
             kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
                                 (q-tieverkko/hae-trpisteiden-valinen-tieto db
                                                                            (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))

@@ -158,6 +158,14 @@
 (def vaara-tr-vali {:tr-numero 22 :tr-ajorata 0 :tr-kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
 
 (def tr-tieto [{:tr-numero 22
+                :tr-osa 6
+                :pituudet {:pituus 10000
+                           :ajoradat [{:osiot [{:pituus 10000
+                                                :kaistat [{:tr-kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}]
+                                       :tr-ajorata 0}]
+                           :tr-alkuetaisyys 0}}
+               {:tr-numero 22
                 :tr-osa 5
                 :pituudet {:pituus 10000
                            :ajoradat [{:osiot [{:pituus 10000
@@ -326,35 +334,58 @@
     (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100} true)))))
 
 (deftest validoi-paakohde
-  (let [toiset-kohteet [{:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 1}
-                        {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 10}
-                        {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 6 :tr-loppuetaisyys 10}]]
-    (is (nil? (yllapitokohteet/validoi-kohde oikea-tr-paaluvali toiset-kohteet tr-tieto)))
-    (is (-> (yllapitokohteet/validoi-kohde nil toiset-kohteet tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
-    (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
-              (yllapitokohteet/validoi-kohde toiset-kohteet tr-tieto)
-              :validoitu-paikka)
-          (-> :kohteen-tiedot count (= 1)))
-    (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
-                                        :tr-loppuosa nil :tr-loppuetaisyys nil)
-              (yllapitokohteet/validoi-kohde  toiset-kohteet tr-tieto)
-              :muoto
-              ::s/problems)
-          (-> count (= 5)) "Ei ole viittä ongelmaa"
-          (->> (filter #(= (:path %) [:tr-numero])) first) "tr-numero validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-alkuosa])) first) "tr-alkuosa validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-alkuetaisyys])) first) "tr-alkuetaisyys validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-loppuosa])) first) "tr-loppuosa validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-loppuetaisyys])) first) "tr-loppuetaisyys validointi puuttuu")
-    (is-> (:paallekkyys (yllapitokohteet/validoi-kohde oikea-tr-paaluvali
-                                                       (conj toiset-kohteet
-                                                             {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 100}
-                                                             {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 100}
-                                                             {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
-                                                       tr-tieto))
-          (-> count (= 3)))))
+  ;; oikea kohde validoituu oikein
+  (is (nil? (yllapitokohteet/validoi-kohde oikea-tr-paaluvali tr-tieto)))
+  ;; nil kohde aiheuttaa ongelmia
+  (is (-> (yllapitokohteet/validoi-kohde nil tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
+  ;; Kun alkuetäisyys on osan ulkopuolella, tulee ongelmia
+  (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
+            (yllapitokohteet/validoi-kohde tr-tieto)
+            :validoitu-paikka)
+        (-> :kohteen-tiedot count (= 1)))
+  ;; Testataan, että jokaisella kohteen paaluvälikentällä tulee olla arvo
+  (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
+                                      :tr-loppuosa nil :tr-loppuetaisyys nil)
+            (yllapitokohteet/validoi-kohde tr-tieto)
+            :muoto
+            ::s/problems)
+        (-> count (= 5)) "Ei ole viittä ongelmaa"
+        (->> (filter #(= (:path %) [:tr-numero])) first) "tr-numero validointi puuttuu"
+        (->> (filter #(= (:path %) [:tr-alkuosa])) first) "tr-alkuosa validointi puuttuu"
+        (->> (filter #(= (:path %) [:tr-alkuetaisyys])) first) "tr-alkuetaisyys validointi puuttuu"
+        (->> (filter #(= (:path %) [:tr-loppuosa])) first) "tr-loppuosa validointi puuttuu"
+        (->> (filter #(= (:path %) [:tr-loppuetaisyys])) first) "tr-loppuetaisyys validointi puuttuu"))
 
 (deftest validoi-alikohde
   (let [toiset-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
                            {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
+
+(deftest kohde-tiedon-mukainen
+  (testing "Pääkohde"
+    ;; Testataan, että osan vaihtaminen onnistuu
+    (is (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 5000
+                                                      :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                     tr-tieto
+                                                     true)))
+    ;; Tiedoista puuttuvan osan käyttäminen ei onnistu
+    (let [virhetiedot (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-alkuosa 2 :tr-alkuetaisyys 5000
+                                                              :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                             tr-tieto
+                                                             true)]
+      (is (= 1 (count (:kohteen-tiedot virhetiedot))))
+      (is (-> virhetiedot :kohteen-tiedot first meta :ei-osaa))))
+  (testing "Alikohde"
+    ;; Testataan, että osan vaihtaminen onnistuu, kun ajorata ja kaista pysyy samana
+    (is (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1
+                                                      :tr-alkuosa 5 :tr-alkuetaisyys 5000
+                                                      :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                     tr-tieto
+                                                     false)))
+    ;; Osan vaihtaminen ei onnistu, kun ajorata ja kaista tiedot vaihtuvat
+    (is (not (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1
+                                                           :tr-alkuosa 4 :tr-alkuetaisyys 5000
+                                                           :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                          tr-tieto
+                                                          false))))))
+
