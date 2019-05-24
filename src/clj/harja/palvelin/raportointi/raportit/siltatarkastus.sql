@@ -182,7 +182,7 @@ SELECT
                                       AND urakka = u.id
                                       AND st.poistettu = FALSE)) AS "d"
 FROM urakka u
-  WHERE u.hallintayksikko = :hallintayksikko AND u.tyyppi = 'hoito'
+  WHERE u.hallintayksikko = :hallintayksikko AND u.tyyppi IN ('hoito', 'teiden-hoito')
   AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR FROM loppupvm)
 ORDER BY u.nimi;
 
@@ -199,7 +199,7 @@ SELECT
                                      AND urakka IN (SELECT id
                                                     FROM urakka
                                                     WHERE hallintayksikko = h.id
-                                                          AND tyyppi = 'hoito'
+                                                          AND tyyppi IN ('hoito', 'teiden-hoito')
                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                           AND EXTRACT(YEAR FROM loppupvm))
                                      AND st.poistettu = FALSE))     AS "a",
@@ -212,7 +212,7 @@ SELECT
                                       AND urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko = h.id
-                                                           AND tyyppi = 'hoito'
+                                                           AND tyyppi IN ('hoito', 'teiden-hoito')
                                                            AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                            AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "b",
@@ -225,7 +225,7 @@ SELECT
                                       AND urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko = h.id
-                                                           AND tyyppi = 'hoito'
+                                                           AND tyyppi IN ('hoito', 'teiden-hoito')
                                                            AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                            AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "c",
@@ -238,7 +238,7 @@ SELECT
                                       AND urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko = h.id
-                                                           AND tyyppi = 'hoito'
+                                                           AND tyyppi IN ('hoito', 'teiden-hoito')
                                                            AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                            AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "d"

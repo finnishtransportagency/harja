@@ -47,6 +47,7 @@
     (is (= 200 (:status vastaus)))
     (is (every? #(= urakkatyyppi (get-in % [:urakka :tiedot :tyyppi])) urakat))))
 
+;; teiden-hoito urakkatyyppi palautetaan API:ssa hoito-urakkatyyppinä
 (deftest varmista-urakkatyyppien-yhteensopivuus
   (let [json "{
               \"urakat\": [
@@ -70,5 +71,7 @@
               }"
         urakkatyypit (konversio/pgarray->vector (ffirst (q "SELECT enum_range(NULL :: URAKKATYYPPI);")))]
     (doseq [urakkatyyppi urakkatyypit]
-      (is (nil? (json-skeemat/urakoiden-haku-vastaus (.replace json "[URAKKATYYPPI]" urakkatyyppi)))
+      (is (nil? (json-skeemat/urakoiden-haku-vastaus (.replace json "[URAKKATYYPPI]" (if (= "teiden-hoito" urakkatyyppi)
+                                                                                       "hoito"
+                                                                                       urakkatyyppi))))
           (format "JSON-skeema ei salli urakkatyyppiä: %s" urakkatyyppi)))))

@@ -15,7 +15,8 @@ SELECT
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
   LEFT JOIN toimenpidekoodi tk ON yt.tehtava = tk.id
-WHERE urakka = :urakka;
+WHERE urakka = :urakka
+ORDER BY tk.nimi;
 
 -- name: hae-urakan-sopimuksen-yksikkohintaiset-tehtavat
 -- Urakan sopimuksen yksikköhintaiset tehtävät
@@ -30,7 +31,8 @@ WHERE
     SELECT DISTINCT (tehtava)
     FROM yksikkohintainen_tyo
     WHERE urakka = :urakkaid AND sopimus = :sopimusid) AND
-  hinnoittelu @> '{yksikkohintainen}';
+  hinnoittelu @> '{yksikkohintainen}'
+ORDER BY tpk.nimi;
 
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot
@@ -77,7 +79,8 @@ WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, t4.yksikko, vuosi, kuukausi, t4.id;
+GROUP BY t4.nimi, t4.yksikko, vuosi, kuukausi, t4.id
+ORDER BY t4.nimi, t4.yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle
 -- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain
@@ -99,7 +102,8 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi;
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi
+ORDER BY t4.nimi, yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain
 -- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain, eriteltynä urakoittain
@@ -124,7 +128,8 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id;
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
+ORDER BY t4.nimi, yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle
 -- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain
@@ -145,7 +150,8 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi;
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi
+ORDER BY t4.nimi, yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain
 -- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain, eriteltynä urakoittain
@@ -169,7 +175,8 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id;
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
+ORDER BY t4.nimi, yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille, summattuna tehtävittäin
@@ -186,7 +193,8 @@ WHERE tot.urakka = :urakka
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, t4.id;
+GROUP BY t4.nimi, t4.id
+ORDER BY t4.nimi;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle
 -- Hakee yksikköhintaiset työt annetulle hallintayksikölle aikavälille, summattuna tehtävittäin
@@ -232,7 +240,7 @@ WHERE tot.urakka IN (SELECT id
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko, u.id
-ORDER BY urakka_nimi;
+ORDER BY urakka_nimi, t4.nimi, t4.yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle
 -- Hakee yksikköhintaiset työt koko maasta aikavälille, summattuna tehtävittäin
@@ -252,7 +260,8 @@ WHERE tot.urakka IN (SELECT id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, t4.yksikko;
+GROUP BY t4.nimi, t4.yksikko
+ORDER BY t4.nimi, t4.yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain
 -- Hakee yksikköhintaiset työt koko maasta aikavälille, summattuna tehtävittäin ja eriteltynä urakoittain
@@ -276,7 +285,7 @@ WHERE tot.urakka IN (SELECT id
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko, u.id
-ORDER BY urakka_nimi;
+ORDER BY urakka_nimi, t4.nimi, t4.yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-per-paiva
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna päivittäin.
@@ -295,4 +304,4 @@ WHERE tot.urakka = :urakka
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY pvm, t4.nimi, tpi.nimi, tehtava_id
-ORDER BY pvm ASC;
+ORDER BY pvm ASC, t4.nimi;

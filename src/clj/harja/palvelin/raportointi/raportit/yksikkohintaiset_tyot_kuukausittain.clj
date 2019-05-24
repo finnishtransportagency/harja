@@ -8,7 +8,6 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
@@ -78,8 +77,8 @@
                                                      (= (:urakka_nimi %) urakka-nimi))
                                                kuukausittaiset-summat)))
                          (into #{} (map :nimi (filter
-                                                #(= (:urakka_nimi %) urakka-nimi)
-                                                kuukausittaiset-summat)))))
+                                                               #(= (:urakka_nimi %) urakka-nimi)
+                                                               kuukausittaiset-summat)))))
                      (into #{} (map :urakka_nimi kuukausittaiset-summat))))
       ;; Muodostetaan jokaisesta tehtävätyypistä yksi rivi
       (mapv
@@ -94,43 +93,42 @@
   (case konteksti
     :urakka
     (hae-tehtavat-urakalle db
-                           {:urakka-id urakka-id
+                           {:urakka-id         urakka-id
                             :suunnittelutiedot suunnittelutiedot
-                            :alkupvm alkupvm
-                            :loppupvm loppupvm
-                            :toimenpide-id toimenpide-id})
+                            :alkupvm           alkupvm
+                            :loppupvm          loppupvm
+                            :toimenpide-id     toimenpide-id})
     :hallintayksikko
     (hae-tehtavat-hallintayksikolle db
                                     {:hallintayksikko-id hallintayksikko-id
-                                     :alkupvm alkupvm
-                                     :loppupvm loppupvm
-                                     :toimenpide-id toimenpide-id
-                                     :urakoittain? urakoittain?
-                                     :urakkatyyppi urakkatyyppi})
+                                     :alkupvm            alkupvm
+                                     :loppupvm           loppupvm
+                                     :toimenpide-id      toimenpide-id
+                                     :urakoittain?       urakoittain?
+                                     :urakkatyyppi       urakkatyyppi})
     :koko-maa
     (hae-tehtavat-koko-maalle db
-                              {:alkupvm alkupvm
-                               :loppupvm loppupvm
+                              {:alkupvm       alkupvm
+                               :loppupvm      loppupvm
                                :toimenpide-id toimenpide-id
-                               :urakoittain? urakoittain?
-                               :urakkatyyppi urakkatyyppi})))
+                               :urakoittain?  urakoittain?
+                               :urakkatyyppi  urakkatyyppi})))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
-  (log/debug "Parametrit on " (pr-str parametrit))
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
                             (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
-        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti konteksti
-                                                               :urakka-id urakka-id
+        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti          konteksti
+                                                               :urakka-id          urakka-id
                                                                :hallintayksikko-id hallintayksikko-id
-                                                               :suunnittelutiedot suunnittelutiedot
-                                                               :alkupvm alkupvm
-                                                               :loppupvm loppupvm
-                                                               :toimenpide-id toimenpide-id
-                                                               :urakoittain? urakoittain?
-                                                               :urakkatyyppi urakkatyyppi})
+                                                               :suunnittelutiedot  suunnittelutiedot
+                                                               :alkupvm            alkupvm
+                                                               :loppupvm           loppupvm
+                                                               :toimenpide-id      toimenpide-id
+                                                               :urakoittain?       urakoittain?
+                                                               :urakkatyyppi       urakkatyyppi})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
         aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-hoitokaudella? alkupvm loppupvm suunnittelutiedot)
         listattavat-pvmt (take-while (fn [pvm]
@@ -153,30 +151,30 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         oikealle-tasattavat (set (range 2 (+ 5 (count listattavat-pvmt))))]
-    [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
-                 :oikealle-tasattavat-kentat oikealle-tasattavat
-                 :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
-                 :sheet-nimi raportin-nimi}
+    [:raportti {:nimi        raportin-nimi
+                :orientaatio :landscape}
+     [:taulukko {:oikealle-tasattavat-kentat oikealle-tasattavat
+                 :otsikko                    otsikko
+                 :sheet-nimi                 raportin-nimi
+                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
-                                 {:leveys 15 :otsikko "Urakka"})
-                               {:leveys 10 :otsikko "Tehtävä"}
-                               {:leveys 5 :otsikko "Yk\u00ADsik\u00ADkö"}
+                                  {:otsikko "Urakka" :leveys 15 })
+                                  {:otsikko "Tehtävä" :leveys 10}
+                                  {:otsikko "Yk\u00ADsik\u00ADkö" :leveys 5 }
                                (mapv (fn [rivi]
-                                       {:otsikko (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi))
-                                        :leveys 5
+                                       {:leveys             5
+                                        :otsikko         (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi))
                                         :otsikkorivi-luokka "grid-kk-sarake"
-                                        :fmt :numero})
+                                        :fmt                :numero})
                                      listattavat-pvmt)
-                               {:leveys 7
+                               {:leveys  7
                                 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"
-                                :fmt :numero}
+                                :fmt     :numero}
                                (when (and (= konteksti :urakka)
                                           aikavali-kasittaa-hoitokauden?)
                                  [{:leveys 5 :otsikko "Tot-%" :fmt :prosentti}
                                   {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"
-                                   :fmt :numero}])]))
+                                   :fmt    :numero}])]))
       (mapv (fn [rivi]
               (keep identity (concat [(when urakoittain?
                                         (or (:urakka_nimi rivi) "-"))
@@ -202,6 +200,6 @@
                                                             (empty? formatoitu))))
                                             formatoitu
                                             (info-solu "Ei suunnitelmaa")))]))))
-            naytettavat-rivit)]
+            (sort-by (juxt :urakka_nimi :nimi :yksikko) naytettavat-rivit))]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 
