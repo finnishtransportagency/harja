@@ -342,19 +342,19 @@
   (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
             (yllapitokohteet/validoi-kohde tr-tieto)
             :validoitu-paikka)
-        (-> :kohteen-tiedot count (= 1)))
+        #(-> % :kohteen-tiedot count (= 1)))
   ;; Testataan, että jokaisella kohteen paaluvälikentällä tulee olla arvo
   (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
                                       :tr-loppuosa nil :tr-loppuetaisyys nil)
             (yllapitokohteet/validoi-kohde tr-tieto)
             :muoto
             ::s/problems)
-        (-> count (= 5)) "Ei ole viittä ongelmaa"
-        (->> (filter #(= (:path %) [:tr-numero])) first) "tr-numero validointi puuttuu"
-        (->> (filter #(= (:path %) [:tr-alkuosa])) first) "tr-alkuosa validointi puuttuu"
-        (->> (filter #(= (:path %) [:tr-alkuetaisyys])) first) "tr-alkuetaisyys validointi puuttuu"
-        (->> (filter #(= (:path %) [:tr-loppuosa])) first) "tr-loppuosa validointi puuttuu"
-        (->> (filter #(= (:path %) [:tr-loppuetaisyys])) first) "tr-loppuetaisyys validointi puuttuu"))
+        #(-> % count (= 5)) "Ei ole viittä ongelmaa"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-numero])) first)) "tr-numero validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-alkuosa])) first)) "tr-alkuosa validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-alkuetaisyys])) first)) "tr-alkuetaisyys validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-loppuosa])) first)) "tr-loppuosa validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-loppuetaisyys])) first)) "tr-loppuetaisyys validointi puuttuu"))
 
 (deftest validoi-alikohde
   (let [toiset-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
@@ -389,3 +389,62 @@
                                                           tr-tieto
                                                           false))))))
 
+(deftest validoi-kaikki
+  (let [tr-osoite {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 0 :tr-loppuosa 6 :tr-loppuetaisyys 10000}
+        muiden-kohteiden-tiedot [{:tr-numero 1337
+                                  :tr-osa 1
+                                  :pituudet {:pituus 300
+                                             :ajoradat [{:osiot [{:pituus 300
+                                                                  :kaistat [{:tr-kaista 1 :pituus 300 :tr-alkuetaisyys 0}]
+                                                                  :tr-alkuetaisyys 0}]
+                                                         :tr-ajorata 0}]
+                                             :tr-alkuetaisyys 0}}
+                                 {:tr-numero 7331
+                                  :tr-osa 2
+                                  :pituudet {:pituus 400
+                                             :ajoradat [{:osiot [{:pituus 400
+                                                                  :kaistat [{:tr-kaista 1 :pituus 400 :tr-alkuetaisyys 100}]
+                                                                  :tr-alkuetaisyys 100}]
+                                                         :tr-ajorata 0}]
+                                             :tr-alkuetaisyys 100}}]
+        kohteiden-tiedot (concat tr-tieto
+                                 [{:tr-numero 20
+                                   :tr-osa 2
+                                   :pituudet {:pituus 10000
+                                              :ajoradat [{:osiot [{:pituus 10000
+                                                                   :kaistat [{:tr-kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                                   :tr-alkuetaisyys 0}]
+                                                          :tr-ajorata 0}]
+                                              :tr-alkuetaisyys 0}}])
+        muiden-kohteiden-verrattavat-kohteet [{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1
+                                               :tr-alkuosa 1 :tr-alkuetaisyys 200
+                                               :tr-loppuosa 1 :tr-loppuetaisyys 300}
+                                              {:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1
+                                               :tr-alkuosa 2 :tr-alkuetaisyys 200
+                                               :tr-loppuosa 2 :tr-loppuetaisyys 300}]
+        muutkohteet [{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-alkuetaisyys 200 :tr-loppuosa 1 :tr-loppuetaisyys 300}
+                     {:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 200 :tr-loppuosa 2 :tr-loppuetaisyys 300}]
+        vuosi 2019
+        kohteen-alikohteet [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000)
+                            (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1000 :tr-loppuetaisyys 2000)
+                            (assoc tr-osoite :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 4 :tr-alkuetaisyys 1000 :tr-loppuosa 4 :tr-loppuetaisyys 2000)]
+        urakan-muiden-kohteiden-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 1 :tr-loppuetaisyys 500}
+                                            ;; Eri kohdteella tehdään samalle paaluvälille, mutta eri kohtaan
+                                            (assoc tr-osoite :tr-ajorata 1 :tr-kaista 12 :tr-alkuosa 4 :tr-alkuetaisyys 100 :tr-loppuosa 4 :tr-loppuetaisyys 500)]
+        muiden-urakoiden-alikohteet [{:tr-numero 20 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 100 :tr-loppuosa 2 :tr-loppuetaisyys 500}
+                                     ; Eri urakka voi myös tehdä samalle paaluvälille päällystystä. Eri kohtaan tosin.
+                                     (assoc tr-osoite :tr-ajorata 2 :tr-kaista 21 :tr-alkuosa 4 :tr-alkuetaisyys 100 :tr-loppuosa 4 :tr-loppuetaisyys 500)]
+        alustatoimet [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000)]]
+    (testing "validoi-kaikki toimii"
+      (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                  vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
+    (testing "Epätäydelliset kohteen tiedot"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite (remove #(and (= (:tr-numero %) 22)
+                                                                    (= (:tr-osa %) 3)) kohteiden-tiedot) muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:paakohde :alikohde :alustatoimenpide})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tiellä 22 ei ole osaa 3"]))))
+    (testing "validoi-kaikki huomauttaa kohdeosien päällekkkyydestä"
+      )))
