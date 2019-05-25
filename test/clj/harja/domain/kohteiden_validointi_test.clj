@@ -476,4 +476,33 @@
               (= (into #{} (keys virheviestit))
                  #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
             #(->> % vals flatten (mapcat vals) flatten distinct (= ["Ajorata 0 ei päätä osaa 1"
-                                                                    "Tien 22 osalla 4 ei ole ajorataa 0"]))))))
+                                                                    "Tien 22 osalla 4 ei ole ajorataa 0"]))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet (conj urakan-muiden-kohteiden-alikohteet
+                                                                                                    (assoc (second kohteen-alikohteet)
+                                                                                                      :paakohteen-nimi "Foo-kohde")) muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin kohteen \"Foo-kohde\" kohdeosan kanssa"]))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja toisen urakan kohteen kohdeosien päällekkyydestä"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet (conj muiden-urakoiden-alikohteet
+                                                                                                                                       (assoc (second kohteen-alikohteet)
+                                                                                                                                         :urakka "Foo-urakka")))
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]))))
+    (testing "validoi-kaikki huomauttaa virheellisistä alikohteista"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                           vuosi kohteen-alikohteet muutkohteet (conj alustatoimet
+                                                                                      (update (first alustatoimet)
+                                                                                              :tr-alkuetaisyys dec)
+                                                                                      (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1000 :tr-loppuetaisyys 3000)) urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alustatoimenpide})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Alustatoimenpide ei ole minkään alikohteen sisällä"
+                                                                    "Alustatoimenpide on päällekkäin toisen osan kanssa"]))))))
