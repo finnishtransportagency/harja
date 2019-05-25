@@ -161,6 +161,29 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
        (or alkupiste-sisalla? loppupiste-sisalla?
            (tr-paaluvali-tr-paaluvalin-sisalla? tr-vali-2 tr-vali-1 true))))))
 
+(defn get-in-kohteen-tieto
+  [kohteen-tieto haku]
+  (let [[tr-ajorata tr-kaista tr-alkuetaisyys tr-loppuetaisyys] haku]
+    (->> kohteen-tieto
+         :pituudet
+         :ajoradat
+         (some (fn [ajoradan-tiedot]
+                 (when (= (:tr-ajorata ajoradan-tiedot) tr-ajorata)
+                   ajoradan-tiedot)))
+         :osiot
+         (filter (fn [osion-tiedot]
+                   (when (and (or (nil? tr-alkuetaisyys) (>= tr-alkuetaisyys (:tr-alkuetaisyys osion-tiedot)))
+                              (or (nil? tr-loppuetaisyys) (<= tr-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
+                                                                                  (:pituus osion-tiedot)))))
+                     osion-tiedot)))
+         (mapcat :kaistat)
+         (keep (fn [kaistan-tiedot]
+                (when (and (= tr-kaista (:tr-kaista kaistan-tiedot))
+                           (or (nil? tr-alkuetaisyys) (>= tr-alkuetaisyys (:tr-alkuetaisyys kaistan-tiedot)))
+                           (or (nil? tr-loppuetaisyys) (<= tr-loppuetaisyys (+ (:tr-alkuetaisyys kaistan-tiedot)
+                                                                               (:pituus kaistan-tiedot)))))
+                  kaistan-tiedot))))))
+
 (defn tr-paalupiste-tr-tiedon-mukainen?
   [paalupiste kohteen-tieto]
   (if kohteen-tieto
@@ -187,62 +210,53 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
          tr-kaista-alikohde :tr-kaista
          tr-alkuosa-alikohde :tr-alkuosa
          tr-alkuetaisyys-alikohde :tr-alkuetaisyys} piste
-        {tr-numero-kohteen-tieto :tr-numero
-         tr-osa-kohteen-tieto :tr-osa
-         pituudet-kohteen-tieto :pituudet} kohteen-tieto
-        valin-sisalla? #(and (>= tr-alkuetaisyys-alikohde (:tr-alkuetaisyys %))
-                             (<= tr-alkuetaisyys-alikohde (+ (:tr-alkuetaisyys %)
-                                                             (:pituus %))))
-        ajorata-kohteen-tiedot (->> pituudet-kohteen-tieto :ajoradat (filter #(= (:tr-ajorata %) tr-ajorata-alikohde)) first)
-        kaista-kohteen-tiedot (->> ajorata-kohteen-tiedot
-                                   :osiot
-                                   (filter valin-sisalla?)
-                                   first
-                                   :kaistat
-                                   (filter #(and (valin-sisalla? %)
-                                                 (= (:tr-kaista %) tr-kaista-alikohde)))
-                                   first)]
-    (if kaista-kohteen-tiedot
-      (let [{tr-kaista-kohteen-tieto :tr-kaista
-             tr-alkuetaisyys-kohteen-tieto :tr-alkuetaisyys
-             tr-pituus-kohteen-tieto :pituus} kaista-kohteen-tiedot
+        kaista-kohteen-tiedot (and (= tr-numero-alikohde (:tr-numero kohteen-tieto))
+                                   (= tr-alkuosa-alikohde (:tr-osa kohteen-tieto))
+                                   (get-in-kohteen-tieto kohteen-tieto [tr-ajorata-alikohde tr-kaista-alikohde tr-alkuetaisyys-alikohde tr-alkuetaisyys-alikohde]))]
+    (boolean kaista-kohteen-tiedot)))
 
-            tr-loppuetaisyys-kohteen-tieto (+ tr-pituus-kohteen-tieto tr-alkuetaisyys-kohteen-tieto)
-            tr-ajorata-kohteen-tieto (:tr-ajorata ajorata-kohteen-tiedot)
+(defn tr-pisteesta-paatyyn-yhtenainen?
+  [piste kohteen-tieto alku?]
+  (let [{tr-numero-alikohde :tr-numero
+         tr-ajorata-alikohde :tr-ajorata
+         tr-kaista-alikohde :tr-kaista
+         tr-alkuosa-alikohde :tr-alkuosa
+         tr-alkuetaisyys-alikohde :tr-alkuetaisyys} piste
+        kaista-kohteen-tieto (first (get-in-kohteen-tieto kohteen-tieto [tr-ajorata-alikohde tr-kaista-alikohde tr-alkuetaisyys-alikohde tr-alkuetaisyys-alikohde]))
+        osan-paatypituus (if alku?
+                           (+ (-> kohteen-tieto :pituudet :tr-alkuetaisyys)
+                              (-> kohteen-tieto :pituudet :pituus))
+                           (-> kohteen-tieto :pituudet :tr-alkuetaisyys))]
+    (and (not (nil? kaista-kohteen-tieto))
+         (= tr-numero-alikohde (:tr-numero kohteen-tieto))
+         (= tr-alkuosa-alikohde (:tr-osa kohteen-tieto))
+         (if alku?
+           (= osan-paatypituus
+              (+ (:tr-alkuetaisyys kaista-kohteen-tieto)
+                 (:pituus kaista-kohteen-tieto)))
+           (= osan-paatypituus
+              (:tr-alkuetaisyys kaista-kohteen-tieto))))))
 
-            kohteen-tieto-vali {:tr-alkuosa tr-osa-kohteen-tieto
-                                :tr-loppuosa tr-osa-kohteen-tieto
-                                :tr-alkuetaisyys tr-alkuetaisyys-kohteen-tieto
-                                :tr-loppuetaisyys tr-loppuetaisyys-kohteen-tieto}]
-        (and (= tr-numero-alikohde tr-numero-kohteen-tieto)
-             (= tr-ajorata-alikohde tr-ajorata-kohteen-tieto)
-             (= tr-kaista-alikohde tr-kaista-kohteen-tieto)
-             (= tr-alkuosa-alikohde tr-osa-kohteen-tieto)
-             (tr-paalupiste-tr-paaluvalin-sisalla? piste kohteen-tieto-vali)))
-      false)))
-
-(defn get-in-kohteen-tieto
-  [kohteen-tieto haku]
-  (let [[tr-ajorata tr-kaista tr-alkuetaisyys tr-loppuetaisyys] haku]
-    (->> kohteen-tieto
-         :pituudet
-         :ajoradat
-         (some (fn [ajoradan-tiedot]
-                 (when (= (:tr-ajorata ajoradan-tiedot) tr-ajorata)
-                   ajoradan-tiedot)))
-         :osiot
-         (filter (fn [osion-tiedot]
-                   (when (and (or (nil? tr-alkuetaisyys) (>= tr-alkuetaisyys (:tr-alkuetaisyys osion-tiedot)))
-                              (or (nil? tr-loppuetaisyys) (<= tr-loppuetaisyys (+ (:tr-alkuetaisyys osion-tiedot)
-                                                                                  (:pituus osion-tiedot)))))
-                     osion-tiedot)))
-         (mapcat :kaistat)
-         (map (fn [kaistan-tiedot]
-                (when (and (= tr-kaista (:tr-kaista kaistan-tiedot))
-                           (or (nil? tr-alkuetaisyys) (>= tr-alkuetaisyys (:tr-alkuetaisyys kaistan-tiedot)))
-                           (or (nil? tr-loppuetaisyys) (<= tr-loppuetaisyys (+ (:tr-alkuetaisyys kaistan-tiedot)
-                                                                               (:pituus kaistan-tiedot)))))
-                  kaistan-tiedot))))))
+(defn tr-pisteesta-pisteeseen-yhtenainen?
+  [{tr-numero-alkupiste :tr-numero
+    tr-ajorata-alkupiste :tr-ajorata
+    tr-kaista-alkupiste :tr-kaista
+    tr-alkuosa-alkupiste :tr-alkuosa
+    tr-alkuetaisyys-alkupiste :tr-alkuetaisyys}
+   {tr-numero-loppupiste :tr-numero
+    tr-ajorata-loppupiste :tr-ajorata
+    tr-kaista-loppupiste :tr-kaista
+    tr-alkuosa-loppupiste :tr-alkuosa
+    tr-alkuetaisyys-loppupiste :tr-alkuetaisyys}
+   kohteen-tieto-alku kohteen-tieto-loppu]
+  (let [kaista-alkukohteen-tieto (first (get-in-kohteen-tieto kohteen-tieto-alku [tr-ajorata-alkupiste tr-kaista-alkupiste tr-alkuetaisyys-alkupiste tr-alkuetaisyys-alkupiste]))
+        kaista-loppukohteen-tieto (first (get-in-kohteen-tieto kohteen-tieto-loppu [tr-ajorata-loppupiste tr-kaista-loppupiste tr-alkuetaisyys-loppupiste tr-alkuetaisyys-loppupiste]))]
+    (and (not (nil? kaista-alkukohteen-tieto))
+         (= tr-numero-alkupiste (:tr-numero kohteen-tieto-alku))
+         (= tr-alkuosa-alkupiste (:tr-osa kohteen-tieto-alku))
+         (= tr-numero-loppupiste (:tr-numero kohteen-tieto-loppu))
+         (= tr-alkuosa-loppupiste (:tr-osa kohteen-tieto-loppu))
+         (= kaista-alkukohteen-tieto kaista-loppukohteen-tieto))))
 
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 
@@ -361,30 +375,50 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                               (> (:tr-osa kohteen-tieto) (:tr-alkuosa kohde))
                                               (< (:tr-osa kohteen-tieto) (:tr-loppuosa kohde))))
                                        kohteen-tiedot))
-         testaus-fn (if paakohde?
-                      tr-paalupiste-tr-tiedon-mukainen?
-                      tr-piste-tr-tiedon-mukainen?)
+         pisteen-testaus-fn (if paakohde?
+                              tr-paalupiste-tr-tiedon-mukainen?
+                              tr-piste-tr-tiedon-mukainen?)
+         pisteesta-paatyyn-testaus-fn (if paakohde?
+                                        (constantly true)
+                                        tr-pisteesta-paatyyn-yhtenainen?)
+         pisteesta-pisteeseen-testaus-fn (if paakohde?
+                                           (constantly true)
+                                           tr-pisteesta-pisteeseen-yhtenainen?)
          validoidut-paatepisteet (keep identity
                                        (map (fn [piste tieto]
-                                              (if (and (nil? tieto)
-                                                       (:tr-numero piste)
-                                                       (:tr-alkuosa piste))
-                                                (with-meta {:tr-numero (:tr-numero piste)
-                                                            :tr-osa (:tr-alkuosa piste)}
-                                                  {:ei-osaa true})
-                                                (when-not (testaus-fn piste tieto)
-                                                  tieto)))
+                                              (cond
+                                                ;; Tietoa ei ole osalle
+                                                (and (nil? tieto)
+                                                     (:tr-numero piste)
+                                                     (:tr-alkuosa piste)) (with-meta {:tr-numero (:tr-numero piste)
+                                                                                      :tr-osa (:tr-alkuosa piste)}
+                                                                                     {:ei-osaa true})
+                                                ;; Piste ei ole tiedon mukainen
+                                                (not (pisteen-testaus-fn piste tieto)) tieto
+                                                :else nil))
                                             [tr-alkupiste tr-loppupiste]
                                             [kohteen-tieto-alku kohteen-tieto-loppu]))
+         validoitu-paatepistevali (if (= (:tr-alkuosa tr-alkupiste) (:tr-alkuosa tr-loppupiste))
+                                    (when (not (pisteesta-pisteeseen-testaus-fn tr-alkupiste tr-loppupiste kohteen-tieto-alku kohteen-tieto-loppu))
+                                      [tr-alkupiste tr-loppupiste])
+                                    (keep identity
+                                          (map (fn [piste tieto alku?]
+                                                 ;; TR pisteestä päätyyn saakka ei samanlainen
+                                                 (when (not (pisteesta-paatyyn-testaus-fn piste tieto alku?))
+                                                   tieto))
+                                               [tr-alkupiste tr-loppupiste]
+                                               [kohteen-tieto-alku kohteen-tieto-loppu]
+                                               [true false])))
          validoitu-vali (when-not paakohde?
                           (keep (fn [kohteen-tieto]
                                   ;; onko välillä olevat kohteet koko pituudeltaan sitä ajorataa ja kaistaa
                                   ;; mitkä on annettu
                                   (when-not (= (get-in kohteen-tieto [:pituudet :pituus])
-                                               (apply max (map :pituus (get-in-kohteen-tieto kohteen-tieto [(:tr-ajorata kohde) (:tr-kaista kohde) nil nil]))))
+                                               (apply max (conj (map :pituus (get-in-kohteen-tieto kohteen-tieto [(:tr-ajorata kohde) (:tr-kaista kohde) nil nil]))
+                                                                -1)))
                                     kohteen-tieto))
                                 kohteen-tiedot-vali))
-         ongelmalliset-kohteen-tiedot (concat validoidut-paatepisteet validoitu-vali)]
+         ongelmalliset-kohteen-tiedot (concat validoidut-paatepisteet validoitu-vali validoitu-paatepistevali)]
      (when (not (empty? ongelmalliset-kohteen-tiedot))
        {:kohde kohde :kohteen-tiedot ongelmalliset-kohteen-tiedot}))))
 
@@ -915,9 +949,11 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                          tr-osoite kohteen-tiedot {:vuosi vuosi})
         alikohteet-validoitu (keep identity
                                    (for [alikohde alikohteet
-                                         :let [toiset-alikohteet (remove #(= alikohde %) alikohteet)]]
-                                     (with-meta (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat eri-urakoiden-alikohteet)
-                                                {:alikohde (select-keys alikohde vali-avaimet)})))
+                                         :let [toiset-alikohteet (remove #(= alikohde %) alikohteet)
+                                               validoitu-alikohde (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat eri-urakoiden-alikohteet)]]
+                                     (when validoitu-alikohde
+                                       (with-meta validoitu-alikohde
+                                                  {:alikohde (select-keys alikohde vali-avaimet)}))))
         muutkohteet-validoitu (keep identity
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
@@ -970,6 +1006,7 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                            (q-yllapitokohteet/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi}))]
                                        (when-not (empty? kohteet)
                                          (map (fn [yllapitokohdeosa]
+                                                ;; Tämä mergeäminen tehdään virheviestin muodostamista varten
                                                 (merge yllapitokohdeosa
                                                        (some #(when (= (:yllapitokohde-id yllapitokohdeosa)
                                                                        (:id %))

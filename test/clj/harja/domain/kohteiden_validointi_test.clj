@@ -299,7 +299,8 @@
                                                                (dissoc :tr-alkuosa :tr-alkuetaisyys)
                                                                (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
                                                                                      :tr-loppuetaisyys :tr-alkuetaisyys}))
-                                                           (first tr-tieto))))
+                                                           (first (filter #(= (:tr-osa %) (:tr-loppuosa oikea-tr-paaluvali))
+                                                                          tr-tieto)))))
   (testing "tr piste tr tiedon mukainen"
     (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (dissoc oikea-tr-vali :tr-loppuosa :tr-loppuetaisyys) (last tr-tieto)))
     (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (-> oikea-tr-vali
@@ -416,14 +417,14 @@
                                                                    :tr-alkuetaisyys 0}]
                                                           :tr-ajorata 0}]
                                               :tr-alkuetaisyys 0}}])
-        muiden-kohteiden-verrattavat-kohteet [{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1
-                                               :tr-alkuosa 1 :tr-alkuetaisyys 200
-                                               :tr-loppuosa 1 :tr-loppuetaisyys 300}
-                                              {:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1
-                                               :tr-alkuosa 2 :tr-alkuetaisyys 200
-                                               :tr-loppuosa 2 :tr-loppuetaisyys 300}]
-        muutkohteet [{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-alkuetaisyys 200 :tr-loppuosa 1 :tr-loppuetaisyys 300}
-                     {:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 200 :tr-loppuosa 2 :tr-loppuetaisyys 300}]
+        muiden-kohteiden-verrattavat-kohteet [[{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1
+                                                :tr-alkuosa 1 :tr-alkuetaisyys 200
+                                                :tr-loppuosa 1 :tr-loppuetaisyys 300}]
+                                              [{:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1
+                                                :tr-alkuosa 2 :tr-alkuetaisyys 200
+                                                :tr-loppuosa 2 :tr-loppuetaisyys 300}]]
+        muutkohteet [{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                     {:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 100 :tr-loppuosa 2 :tr-loppuetaisyys 200}]
         vuosi 2019
         kohteen-alikohteet [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000)
                             (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1000 :tr-loppuetaisyys 2000)
@@ -434,7 +435,7 @@
         muiden-urakoiden-alikohteet [{:tr-numero 20 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 100 :tr-loppuosa 2 :tr-loppuetaisyys 500}
                                      ; Eri urakka voi myös tehdä samalle paaluvälille päällystystä. Eri kohtaan tosin.
                                      (assoc tr-osoite :tr-ajorata 2 :tr-kaista 21 :tr-alkuosa 4 :tr-alkuetaisyys 100 :tr-loppuosa 4 :tr-loppuetaisyys 500)]
-        alustatoimet [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000)]]
+        alustatoimet [(assoc tr-osoite :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 4 :tr-alkuetaisyys 1000 :tr-loppuosa 4 :tr-loppuetaisyys 2000)]]
     (testing "validoi-kaikki toimii"
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
@@ -446,5 +447,33 @@
               (= (into #{} (keys virheviestit))
                  #{:paakohde :alikohde :alustatoimenpide})) "Virheviesti ei näy kaikilla osa-alueilla"
             #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tiellä 22 ei ole osaa 3"]))))
+    (testing "Muut verrattavat kohteet päällekkäin"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:muukohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Kohteenosa on päällekkäin toisen osan kanssa"]))))
     (testing "validoi-kaikki huomauttaa kohdeosien päällekkkyydestä"
-      )))
+      ;; Kohteen omissa alikohteissa vikaa
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi (-> kohteen-alikohteet
+                                                      (assoc-in [0 :tr-ajorata] 1)
+                                                      (assoc-in [1 :nimi] "Foo-kohde")
+                                                      (conj (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1500 :tr-loppuetaisyys 2000)))
+                                            muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tien 22 osalla 3 ei ole ajorataa 1"
+                                                                    "Kohteenosa on päällekkäin toisen osan kanssa"
+                                                                    "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"])))
+      ;; Kohteen oma alikohde merkattu usealle osalle, eikä kaikilla osilla ole tarvittavaa ajorataa ja kaistaa
+      (is-> (yllapitokohteet/validoi-kaikki (assoc tr-osoite :tr-alkuosa 1) kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-loppuosa 5 :tr-loppuetaisyys 1000)]
+                                            muutkohteet [] urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Ajorata 0 ei päätä osaa 1"
+                                                                    "Tien 22 osalla 4 ei ole ajorataa 0"]))))))
