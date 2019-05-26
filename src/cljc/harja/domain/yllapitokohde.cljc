@@ -985,7 +985,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                                                             (:id %))
                                                         ali-ja-muut-kohteet))
                                                 (q-yllapitokohteet/hae-yhden-vuoden-kohdeosat-urakalle db {:vuosi vuosi
-                                                                                                           :id urakka-id})))
+                                                                                                           :kohde-id kohde-id
+                                                                                                           :urakka-id urakka-id})))
             verrattavat-kohteet (fn [yhden-vuoden-kohteet kohde-id urakka-id]
                                   (sequence
                                     (comp (remove

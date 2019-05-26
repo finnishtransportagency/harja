@@ -1077,7 +1077,8 @@ FROM yllapitokohdeosa ypko
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
       ypko.poistettu IS NOT TRUE AND
-      u.id IN (:id);
+      ypk.id != :kohde-id AND
+      u.id IN (:urakka-id);
 
 -- name: hae-yllapitokohteen-vuodet
 -- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.
