@@ -16,7 +16,7 @@
     "sijainti": {
       "numero": 20,
       "aosa": 10,
-      "aet": 1,
+      "aet": 10,
       "losa": 12,
       "let": 1,
       "ajr": 0,
@@ -32,7 +32,7 @@
           "sijainti": {
             "numero": 20,
             "aosa": 10,
-            "aet": 1,
+            "aet": 10,
             "losa": 10,
             "let": 666,
             "ajr": 0,

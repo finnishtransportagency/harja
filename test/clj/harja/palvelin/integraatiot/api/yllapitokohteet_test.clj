@@ -693,7 +693,7 @@
     (is (= 200 (:status vastaus)))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-          oletettu-tr-osoite {:aet 1
+          oletettu-tr-osoite {:aet 10
                               :ajorata 0
                               :aosa 10
                               :kaista 1
@@ -701,7 +701,7 @@
                               :losa 12
                               :numero 20}
           alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))
-          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 10
                                                      :ajorata 0
                                                      :aosa 10
                                                      :kaista 1
