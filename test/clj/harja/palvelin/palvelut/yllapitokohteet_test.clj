@@ -490,11 +490,11 @@
                                   :tr-loppuosa 3
                                   :tr-loppuetaisyys 0
                                   :tr-ajorata 1
-                                  :tr-kaista 1}]
+                                  :tr-kaista 11}]
 
     (testing "Päällekkäin menevät kohteet samana vuonna"
-      (let [urakka-id (hae-utajarven-paallystysurakan-id)
-            sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteet +kayttaja-jvh+
                                     {:urakka-id urakka-id
@@ -502,16 +502,8 @@
                                      :vuosi 2017
                                      :kohteet [kohde-leppajarven-paalle]})]
 
-        (is (= (:status vastaus) :validointiongelma)
-            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle --> tulee herja")
-        (is (= (count (:virheviesti vastaus)) 1))
-        (is (= (-> (:virheviesti vastaus)
-                   first
-                   :paakohde
-                   first
-                   :tr-ajorata
-                   first)
-               "Kohde on päällekkäin kohteen \"Leppäjärven ramppi\" kanssa"))))
+        (is (= (:status vastaus) :ok)
+            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle. Kohteet saa mennä päällekkäin.")))
 
     (testing "Kohde ei mene päällekäin Leppäjärven kanssa, koska se päivitetään samalla eri tielle"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
