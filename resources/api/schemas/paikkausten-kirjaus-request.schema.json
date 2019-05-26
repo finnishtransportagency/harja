@@ -21,28 +21,11 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "paikkauskohde": {
-            "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde",
-            "required": true,
-            "additionalProperties": false,
-            "type": "object",
-            "nimi": {
-              "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde/nimi",
-              "type": "string"
-            },
-            "tunniste": {
-              "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde/tunniste",
-              "required": true,
-              "additionalProperties": false,
-              "type": "object",
-              "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
-            }
-          }
           "paikkaus": {
             "type": "object",
             "additionalProperaties": false,
             "required": true,
-            "$ref": "file:resources/api/schemas/entities/paikkauskohde.schema.json"
+            "$ref": "file:resources/api/schemas/entities/paikkaus.schema.json"
           }
         }
       }

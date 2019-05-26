@@ -12,6 +12,23 @@
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
+    "paikkauskohde": {
+      "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde",
+      "required": true,
+      "additionalProperties": false,
+      "type": "object",
+      "nimi": {
+        "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde/nimi",
+        "type": "string"
+      },
+      "tunniste": {
+        "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde/tunniste",
+        "required": true,
+        "additionalProperties": false,
+        "type": "object",
+        "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+      }
+    },
     "alkuaika": {
       "id": "urn:harja/paikkaukset/0/paikkaus/alkuaika",
       "type": [
