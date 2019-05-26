@@ -15,11 +15,11 @@
   "yllapitokohde": {
     "sijainti": {
       "numero": 20,
-      "aosa": 14,
+      "aosa": 10,
       "aet": 1,
-      "losa": 17,
+      "losa": 12,
       "let": 1,
-      "ajr": 1,
+      "ajr": 0,
       "kaista": 1
     },
     "alikohteet": [
@@ -31,11 +31,11 @@
           "nimi": "1. Testialikohde",
           "sijainti": {
             "numero": 20,
-            "aosa": 14,
+            "aosa": 10,
             "aet": 1,
-            "losa": 14,
+            "losa": 10,
             "let": 666,
-            "ajr": 1,
+            "ajr": 0,
             "kaista": 1
           },
           "toimenpide": "testitoimenpide"
@@ -49,11 +49,11 @@
           "nimi": "2. Testialikohde",
           "sijainti": {
             "numero": 20,
-            "aosa": 14,
-            "aet": 666,
-            "losa": 17,
+            "aosa": 10,
+            "aet": 700,
+            "losa": 12,
             "let": 1,
-            "ajr": 1,
+            "ajr": 0,
             "kaista": 1
           },
           "toimenpide": "testitoimenpide"

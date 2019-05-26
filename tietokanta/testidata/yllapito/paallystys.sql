@@ -20,7 +20,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       3, 'L03', 'Leppäjärven ramppi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 1233534,
-      20, 1, 0, 3, 0, 1, 1, (SELECT id
+      20, 1, 0, 3, 0, 1, 11, (SELECT id
                              FROM urakka
                              WHERE nimi =
                                    'Oulun tiemerkinnän palvelusopimus 2013-2018'),
@@ -35,7 +35,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       308, '308a', 'Oulun ohitusramppi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 54523243,
-      20, 4, 334, 10, 10, 1, 1, (SELECT id
+      20, 4, 334, 10, 10, 0, 1, (SELECT id
                                  FROM urakka
                                  WHERE nimi =
                                        'Oulun tiemerkinnän palvelusopimus 2013-2018'),
@@ -50,7 +50,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       308, '308b', 'Nakkilan ramppi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 265257,
-      20, 12, 1, 19, 2, 1, 1, (SELECT id
+      20, 12, 1, 19, 2, 0, 1, (SELECT id
                                FROM urakka
                                WHERE nimi =
                                      'Oulun tiemerkinnän palvelusopimus 2013-2018'),
@@ -65,7 +65,7 @@ VALUES
                         WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
        310, '310', 'Oulaisten ohitusramppi', 'paallyste' :: yllapitokohdetyyppi,
        'paallystys' ::yllapitokohdetyotyyppi, 456896958,
-       20, 19, 5, 21, 15, 1, 1, NULL, '{2017}', 900, FALSE),
+       20, 19, 5, 21, 15, 0, 1, NULL, '{2017}', 900, FALSE),
   (2, (SELECT id
        FROM urakka
        WHERE nimi = 'Muhoksen päällystysurakka'),
@@ -76,7 +76,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       666, '666', 'Kuusamontien testi', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 456896959,
-      20, 26, 1, 41, 15, 1, 1, NULL, '{2017}', 66, FALSE),
+      20, 26, 1, 41, 15, 0, 1, NULL, '{2017}', 66, FALSE),
   (2, (SELECT id
        FROM urakka
        WHERE nimi = 'Muhoksen päällystysurakka'),
@@ -87,7 +87,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       3456, '3456', 'Ei YHA-kohde', 'paallyste' :: yllapitokohdetyyppi, 'paallystys' ::yllapitokohdetyotyyppi,
       NULL,
-      20, 26, 1, 41, 15, 1, 1, NULL, '{2017}', 66, FALSE),
+      20, 26, 1, 41, 15, 0, 1, NULL, '{2017}', 66, FALSE),
   (2, (SELECT id
        FROM urakka
        WHERE nimi = 'Muhoksen päällystysurakka'),
@@ -98,7 +98,7 @@ VALUES
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       3457, '3457', 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN', 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, NULL,
-      20, 26, 1, 41, 15, 1, 1, NULL, '{2017}', 66, TRUE);
+      20, 26, 1, 41, 15, 0, 1, NULL, '{2017}', 66, TRUE);
 
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 400, 100, 4543.95, 0);
