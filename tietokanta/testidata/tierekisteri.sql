@@ -2048,6 +2048,7 @@ INSERT INTO tr_osoitteet ("tr-numero", "tr-ajorata", "tr-kaista", "tr-osa", "tr-
          (22, 1, 11 ,      1,    889,    3988,  1),
          (22, 1, 11 ,      1,   5206,    5631,  1),
          (22, 1, 11 ,      1,   7854,    8054,  1),
+         (22, 0,  1 ,     12,      0,   10007,  1),
 	 (18642, 0, 1, 1, 0, 2896, 1);
 
 SELECT paivita_tr_tiedot();

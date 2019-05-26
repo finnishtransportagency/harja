@@ -728,7 +728,7 @@
 
 (deftest avoimen-yllapitokohteen-paivittaminen-paallekain-ei-onnistu
   (let [urakka (hae-utajarven-paallystysurakan-id)
-        kohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        kohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi='Kirkkotie'"))
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-paallekkain-request.json")
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                         kayttaja-paallystys portti
