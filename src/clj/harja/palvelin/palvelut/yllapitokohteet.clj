@@ -597,34 +597,22 @@
                                              :yllapitokohde-id id
                                              :osat             korjatut+muut}))))
 
-(defn validoi-kohde [db kohde yhden-vuoden-kohteet urakka-id vuosi]
+(defn validoi-kohde [db kohde urakka-id vuosi]
   (let [tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
         ali-ja-muut-kohteet (:kohdeosat kohde)
         alustatoimet nil
         kohde-id (:id kohde)]
-    (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet yhden-vuoden-kohteet)))
+    (yllapitokohteet-domain/validoi-kaikki-backilla db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)))
 
 (defn tarkasta-kohteet [db kohteet urakka-id vuosi]
   (jdbc/with-db-transaction [db db]
-                            (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))
-                                  yhden-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
-                                  ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
-                                  ;; vertailuun uusin tieto kohteista
-                                  yhden-vuoden-kohteet (keep
-                                                         (fn [verrattava-kohde]
-                                                           (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
-                                                                                                     kohteet))]
-                                                             ;; Jos kohde ollaan poistamassa, ei oteta sitä vertailuun
-                                                             (when-not (:poistettu kohde-payloadissa)
-                                                               kohde-payloadissa)
-                                                             verrattava-kohde))
-                                                         yhden-vuoden-kohteet)]
+                            (let [vuosi (or vuosi (pvm/vuosi (pvm/nyt)))]
                               ;; Sequence ei pakota lazy sequja ja palauttaa lazy seqn. Tämä on ongelma db-yhteyden takia,
                               ;; joten pakotetaan tämä realisoitumaan heti.
                               (doall
                                 (sequence
                                   (comp (remove :poistettu)
-                                        (keep #(let [virheviestit (validoi-kohde db % yhden-vuoden-kohteet urakka-id vuosi)]
+                                        (keep #(let [virheviestit (validoi-kohde db % urakka-id vuosi)]
                                                  (when-not (empty? virheviestit)
                                                    virheviestit))))
                                   kohteet)))))

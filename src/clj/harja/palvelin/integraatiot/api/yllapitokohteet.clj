@@ -163,7 +163,6 @@
                       (when karttapvm (parametrit/pvm-aika karttapvm)))
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
           kohteen-sijainti (:sijainti kohde)
-          paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
           alikohteet (:alikohteet kohde)
 
           tr-osoite (clj-set/rename-keys kohteen-sijainti {:tie :tr-numero

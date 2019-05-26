@@ -657,7 +657,7 @@
                                                          uudet-osat)
                                        uudet-virheet (into {}
                                                            (keep (fn [[id rivi]]
-                                                                   (let [rivin-virheet (validointi/validoi-rivi
+                                                                   (let [rivin-virheet (validointi/validoi-rivin-kentat
                                                                                          uudet-kohdeosat rivi skeema)]
                                                                      (when-not (empty? rivin-virheet)
                                                                        [id rivin-virheet])))
@@ -962,10 +962,9 @@
         paakohteen-validointi (fn [rivi taulukko]
                                 (let [vuosi @u/valittu-urakan-vuosi
                                       paakohde (select-keys rivi #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-                                      toiset-kohteet (toiset-kohteet-fn rivi taulukko)
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
-                                      validoitu (yllapitokohteet-domain/validoi-kohde paakohde toiset-kohteet (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
+                                      validoitu (yllapitokohteet-domain/validoi-kohde paakohde (get @paallystys-tiedot/tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
                                   (yllapitokohteet-domain/validoitu-kohde-tekstit validoitu true)))
         alikohteen-validointi (fn [paakohde rivi taulukko]
                                 (let [toiset-kohteet (toiset-kohteet-fn rivi taulukko)
@@ -1028,6 +1027,7 @@
                                               assoc (:tr-numero haettava-tieto) tr-tieto)))
                                    (grid/validoi-grid g)))))]
     (komp/luo
+      (komp/piirretty (fn [] (grid/validoi-grid g)))
       (fn [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
         (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
                                            ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että
@@ -1043,13 +1043,13 @@
                                                               :tr-alkuosa :tr-alkuosa
                                                               :tr-alkuetaisyys :tr-alkuetaisyys
                                                               :tr-loppuosa :tr-loppuosa
-                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]
-                                     :taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
-                                                 :sarakkeet {:tr-numero :tr-numero
-                                                             :tr-alkuosa :tr-alkuosa
-                                                             :tr-alkuetaisyys :tr-alkuetaisyys
-                                                             :tr-loppuosa :tr-loppuosa
-                                                             :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
+                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
+              varoitukset {:paakohde {:taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
+                                                  :sarakkeet {:tr-numero :tr-numero
+                                                              :tr-alkuosa :tr-alkuosa
+                                                              :tr-alkuetaisyys :tr-alkuetaisyys
+                                                              :tr-loppuosa :tr-loppuosa
+                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
@@ -1103,7 +1103,7 @@
                                                                    :muut-kohteen-taulukko-validointi (-> validointi :tr-osoitteet :taulukko-muukohde)}]))))
                                  @kohteet-atom)
              :rivi-validointi (-> validointi :paakohde :tr-osoite)
-             :taulukko-validointi (-> validointi :paakohde :taulukko)
+             :taulukko-varoitus (-> varoitukset :paakohde :taulukko)
              :tallenna @tallenna
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (#{:ok :yha-virhe} (:status vastaus)))

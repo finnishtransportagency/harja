@@ -693,29 +693,28 @@
     (is (= 200 (:status vastaus)))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-          oletettu-tr-osoite {:aet 1
-                              :ajorata 1
-                              :aosa 14
+          oletettu-tr-osoite {:aet 10
+                              :ajorata 0
+                              :aosa 10
                               :kaista 1
                               :loppuet 1
-                              :losa 17
+                              :losa 12
                               :numero 20}
           alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))
-          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
-                                                     :ajorata 1
-                                                     :aosa 14
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 10
+                                                     :ajorata 0
+                                                     :aosa 10
                                                      :kaista 1
                                                      :loppuet 666
-                                                     :losa 14
+                                                     :losa 10
                                                      :numero 20}
-          oletettu-toisen-alikohteen-tr-osoite {:aet 666
-                                                :ajorata 1
-                                                :aosa 14
+          oletettu-toisen-alikohteen-tr-osoite {:aet 700
+                                                :ajorata 0
+                                                :aosa 10
                                                 :kaista 1
                                                 :loppuet 1
-                                                :losa 17
+                                                :losa 12
                                                 :numero 20}]
-
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
       (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
       (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
@@ -729,13 +728,13 @@
 
 (deftest avoimen-yllapitokohteen-paivittaminen-paallekain-ei-onnistu
   (let [urakka (hae-utajarven-paallystysurakan-id)
-        kohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        kohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi='Kirkkotie'"))
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-paallekkain-request.json")
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                         kayttaja-paallystys portti
                                         payload)]
     (is (not= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Ouluntien kohdeosa\\\" kanssa\\n\"}}]}"))))
+    (is (str/includes? (:body vastaus) "{\"virheet\":[{\"virhe\":{\"koodi\":\"viallisia-tieosia\",\"viesti\":\"-----------\\nMuukohde\\nKohteenosa on päällekkäin osan \\\"Ouluntien kohdeosa\\\" kanssa\\nKohteenosa on päällekkäin toisen osan kanssa\\n\"}}]}"))))
 
 (deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-ei-toimii
   (let [urakka (hae-utajarven-paallystysurakan-id)
@@ -936,11 +935,12 @@
                                                 :losa 4
                                                 :loppuet 100
                                                 :ajorata 1
-                                                :kaista 1}
-                            odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
-                            odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
+                                                :kaista 11}
+                            odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 11, :ajorata 1}
+                            odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 11, :ajorata 1}
                             alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
 
+                        (println "-----> " alikohteiden-tr-osoitteet)
                         (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
                         (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
                         (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
