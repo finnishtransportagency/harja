@@ -125,7 +125,7 @@
     <xs:element name="urakan-kohteiden-toteumatietojen-kirjausvastaus">
         <xs:annotation>
             <xs:documentation>
-                Mikäli kutsu onnistuu palautetaan tyhjä dokumentti. Virhetilanteessa virhet ilmoitetaan virhe-elementissä.
+                Mikäli kutsu onnistuu palautetaan tyhjä dokumentti. Virhetilanteessa virheet ilmoitetaan virhe-elementissä.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
@@ -148,76 +148,26 @@
         </xs:complexType>
     </xs:element>
 
-
-    <xs:element name="paikkausurakan-toteumatietojen-kirjaus">
+    <xs:element name="urakan-kohteen-poiston-kirjausvastaus">
         <xs:annotation>
             <xs:documentation>
-                Kirjaa paikkausurakan tekniset tiedot ja materiaalit YHA:an.
+                Mikäli kutsu onnistuu, annetaan palauteviesti. Virhetilanteessa virhe ilmoitetaan virhe-elementissä.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="urakat" nillable="false" minOccurs="1" maxOccurs="1">
+                <xs:element name="palaute" type="xs:string" minOccurs="0"/>
+                <xs:element name="virhe" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="urakka" minOccurs="1" maxOccurs="unbounded">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="sampo-id" type="xs:string" minOccurs="0" maxOccurs="1"/>
-                                        <xs:element name="urakoitsija" nillable="false" minOccurs="1" maxOccurs="1">
-                                            <xs:complexType>
-                                                <xs:sequence>
-                                                    <xs:element name="y-tunnus" type="xs:string" minOccurs="1" maxOccurs="1"/>
-                                                    <xs:element name="nimi" type="xs:string" minOccurs="0" maxOccurs="1"/>
-                                                </xs:sequence>
-                                            </xs:complexType>
-                                        </xs:element>
-                                        <xs:element name="urakkatyyppi" type="paikkausurakkatyyppiEnum" nillable="false" minOccurs="1" maxOccurs="1"></xs:element>
-                                        <xs:element name="paikkaustoteumat" nillable="false" minOccurs="1" maxOccurs="unbounded">
-                                            <xs:complexType>
-                                                <xs:sequence>
-                                                    <xs:element name="paikkaus" type="paikkaustoteumaType" minOccurs="1" maxOccurs="unbounded"/>
-                                                </xs:sequence>
-                                            </xs:complexType>
-                                        </xs:element>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
+                            <xs:element name="kohde-yha-id" type="xs:long" minOccurs="0"/>
+                            <xs:element name="selite" type="xs:string"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
-
-    <xs:element name="paikkausurakan-toteumatietojen-kirjausvastaus">
-        <xs:annotation>
-            <xs:documentation>
-                Mikäli kutsu onnistuu palautetaan tyhjä dokumentti. Virhetilanteessa virhet ilmoitetaan
-                virhe-elementissä. Kutsuss saatu harja-id palautetaan.
-            </xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element name="virheet" minOccurs="0" maxOccurs="1">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="virhe" minOccurs="0" maxOccurs="unbounded">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="paikkaustoteuman-harja-id" type="xs:int" minOccurs="0" maxOccurs="1"/>
-                                        <xs:element name="selite" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-
 
     <!--Entiteetit-->
 
@@ -242,7 +192,6 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
-
 
     <xs:complexType name="kohde">
         <xs:sequence>
@@ -444,127 +393,6 @@
         </xs:sequence>
     </xs:complexType>
 
-
-    <xs:complexType name="tienkohtaType">
-        <xs:sequence minOccurs="1" maxOccurs="unbounded">
-            <xs:element name="reuna" minOccurs="0" maxOccurs="unbounded">
-                <xs:simpleType>
-                    <xs:annotation>
-                        <xs:documentation>
-                            Reuna ilmaistaan järjestysnumerolla 1 tai 2.
-                            Tietä tarkastellaan tierekisteriosoitteen kasvusuunnassa.
-                            Yläreuna on 1, alareuna 2.
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="1"/>
-                        <xs:maxInclusive value="2"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-            <xs:element name="ajoura" minOccurs="0" maxOccurs="unbounded">
-                <xs:simpleType>
-                    <xs:annotation>
-                        <xs:documentation>
-                            Ajoura ilmaistaan järjestysnumerolla. Ajourat numeroidaan ylhäältä alaspäin.
-                            Tietä tarkastellaan tierekisteriosoitteen kasvusuunnassa.
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="1"/>
-                        <xs:maxInclusive value="100"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-            <xs:element name="ajouravali" minOccurs="0" maxOccurs="unbounded">
-                <xs:simpleType>
-                    <xs:annotation>
-                        <xs:documentation>
-                            Ajourien välinen väli ilmaistaan järjestysnumerolla. Välit numeroidaan ylhäältä alaspäin.
-                            Tietä tarkastellaan tierekisteriosoitteen kasvusuunnassa.
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="1"/>
-                        <xs:maxInclusive value="100"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-            <xs:element name="keskisauma" minOccurs="0" maxOccurs="unbounded">
-                <xs:simpleType>
-                    <xs:annotation>
-                        <xs:documentation>
-                            Kaistojen välinen keskisauma ilmaistaan järjestysnumerolla. Keskisaumat numeroidaan ylhäältä
-                            alaspäin.
-                            Tietä tarkastellaan tierekisteriosoitteen kasvusuunnassa.
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="1"/>
-                        <xs:maxInclusive value="20"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-
-    <xs:complexType name="paikkaustoteumaType">
-        <xs:sequence>
-            <xs:element name="paikkaustoteuman-harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="tyomenetelma" type="paikkaustyomenetelmaEnum" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="aloituspaivamaara" type="xs:date" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="lopetuspaivamaara" type="xs:date" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="sijainti" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" minOccurs="1" maxOccurs="unbounded"/>
-            <xs:element name="tienkohta" type="tienkohtaType" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="massatyyppi" type="paikkausmassaEnum" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="massamenekki" minOccurs="0" maxOccurs="1">
-                <xs:simpleType>
-                    <xs:annotation>
-                        <xs:documentation>
-                            Yksikkö: kg/m2
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="0"/>
-                        <xs:maxInclusive value="999"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-            <xs:element name="raekoko" minOccurs="0" maxOccurs="1">
-                <xs:simpleType>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="0"/>
-                        <xs:maxInclusive value="99"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-            <xs:element name="kuulamyllyluokka" type="kuulamylly" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="leveys" minOccurs="0" maxOccurs="1">
-                <xs:simpleType>
-                    <xs:annotation>
-                        <xs:documentation>
-                            Yksikkö: m
-                        </xs:documentation>
-                    </xs:annotation>
-                    <xs:restriction base="xs:int">
-                        <xs:minInclusive value="0"/>
-                        <xs:maxInclusive value="100"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-            <xs:element name="materiaalit" minOccurs="0" maxOccurs="1">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="materiaali" type="materiaali" minOccurs="0" maxOccurs="unbounded">
-                        </xs:element>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-
-
-
     <!--Tyypit-->
 
     <xs:simpleType name="kohdetyotyyppi">
@@ -749,32 +577,6 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="paikkausmassaEnum">
-        <xs:restriction base="xs:int">
-            <xs:enumeration value="12">
-                <xs:annotation>
-                    <xs:documentation>
-                        asfalttibetoni
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="14">
-                <xs:annotation>
-                    <xs:documentation>
-                        kivimastiks
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="21">
-                <xs:annotation>
-                    <xs:documentation>
-                        pehmeät ab / bitumi
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-        </xs:restriction>
-    </xs:simpleType>
-
     <xs:simpleType name="kuulamylly">
         <xs:restriction base="xs:int">
             <xs:enumeration value="1">
@@ -900,37 +702,6 @@
             <xs:enumeration value="99">
                 <xs:annotation>
                     <xs:documentation>ei tietoa</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-        </xs:restriction>
-    </xs:simpleType>
-
-
-    <xs:simpleType name="paikkausurakkatyyppiEnum">
-        <xs:restriction base="xs:string">
-            <xs:enumeration value="Hoidon alueurakka"/>
-            <xs:enumeration value="Päällystyksen palvelusopimusurakka"/>
-            <xs:enumeration value="Päällystysurakka"/>
-            <xs:enumeration value="Paikkausurakka"/>
-        </xs:restriction>
-    </xs:simpleType>
-
-
-    <xs:simpleType name="paikkaustyomenetelmaEnum">
-        <xs:restriction base="xs:int">
-            <xs:enumeration value="21">
-                <xs:annotation>
-                    <xs:documentation>Example. TODO: massapintaus</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="22">
-                <xs:annotation>
-                    <xs:documentation>Example. TODO: kuumennuspintaus</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="31">
-                <xs:annotation>
-                    <xs:documentation>Example. TODO: remix-pintaus</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>

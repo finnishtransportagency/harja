@@ -14,272 +14,7 @@
     (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
           virheet)))
 
-(deftest tarkista-kohteen-validius
-  (is (thrown+?
-        #(tasmaa-poikkeus
-           %
-           yllapitokohteet/+kohteissa-viallisia-sijainteja+
-           yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-           "Alkuosa on loppuosaa isompi. Sijainti: {:aosa 2, :aet 1, :losa 1, :let 1}")
-        (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 {:aosa 2 :aet 1 :losa 1 :let 1} nil))
-      "Loppuosaa suurempi alkuosa otettiin kiini"))
 
-(deftest tarkista-alikohteen-validius
-  (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
-        alikohteet [{:tunnus "A"
-                     :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                    {:tunnus "B"
-                     :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
-                    {:tunnus "C"
-                     :sijainti {:aosa 3, :aet 3, :losa 5, :let 5}}]]
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-             "Alikohde (tunniste: C) ei ole kohteen (tunniste: 1) sisällä.")
-          (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
-        "Kohteen ulkopuolinen alikohde otettiin kiinni")))
-
-(deftest tarkista-validi-kohde
-  (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
-        yksi-alikohde [{:tunnus "A"
-                        :sijainti {:aosa 1, :aet 1, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
-        kaksi-alikohdetta [{:tunnus "A"
-                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
-                           {:tunnus "B"
-                            :sijainti {:aosa 2, :aet 2, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
-        monta-alikohdetta [{:tunnus "A"
-                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
-                           {:tunnus "B"
-                            :sijainti {:aosa 2, :aet 2, :losa 3, :let 3 :ajorata 1 :kaista 1}}
-                           {:tunnus "C"
-                            :sijainti {:aosa 3, :aet 3, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
-        yksi-alustatoimenpide [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}]
-        kaksi-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
-                                   {:sijainti {:aosa 2, :aet 2, :losa 4, :let 4 :ajorata 1 :kaista 1}}]
-        monta-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
-                                   {:sijainti {:aosa 2, :aet 2, :losa 3, :let 3 :ajorata 1 :kaista 1}}
-                                   {:sijainti {:aosa 3, :aet 3, :losa 4, :let 4 :ajorata 1 :kaista 1}}]]
-
-    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
-    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde kaksi-alikohdetta)
-    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)
-
-    (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde yksi-alustatoimenpide)
-    (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde kaksi-alustatoimenpidetta)
-    (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde monta-alustatoimenpidetta)))
-
-(deftest tarkista-alustatoimenpiteiden-validius
-  (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
-        alustatoimenpiteet [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2 :ajorata 1 :kaista 1}}
-                            {:sijainti {:aosa 2, :aet 2, :losa 5, :let 3 :ajorata 1 :kaista 1}}]]
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-alustatoimenpiteen-sijainti+
-             "Alustatoimenpide ei ole kohteen (id: 1) sisällä")
-          (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde alustatoimenpiteet))
-        "Kohteen ulkopuolinen alustatoimenpide otettiin kiinni")))
-
-(deftest tarkista-negatiiviset-arvot
-  (let [kohde {:aosa -1 :aet 1 :losa 2 :let 1}
-        alustatoimenpiteet [{:sijainti {:aosa 1, :aet -1, :losa 2, :let 2}}]
-        alikohteet [{:tunnus "A" :sijainti {:aosa 1, :aet 1, :losa 2, :let -1}}]]
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-             "Alkuosa ei saa olla negatiivinen. Sijainti: {:aosa -1, :aet 1, :losa 2, :let 1}")
-          (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
-        "Kohteen negatiivinen alkuosa otettiin kiinni")
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-             "Loppuetäisyys ei saa olla negatiivinen. Sijainti: {:aosa 1, :aet 1, :losa 2, :let -1}")
-          (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
-        "Alikohteen negatiivinen loppuetäisyys otettiin kiinni")
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-             "Alkuetäisyys ei saa olla negatiivinen. Sijainti: {:aosa 1, :aet -1, :losa 2, :let 2}")
-          (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde alustatoimenpiteet))
-        "Alustatoimenpiteen negatiivinen alkuetäisyys otettiin kiinni")))
-
-(deftest tarkista-alikohteen-sisaltyminen-kohteeseen
-  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 2 :let 1} {:aosa 1 :aet 1 :losa 2 :let 1}))
-  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 2 :let 1}))
-  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 2 :let 1000}))
-  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 2 :aet 1000 :losa 3 :let 1}))
-
-  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 2 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 1})))
-  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 2 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 1})))
-  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 4 :let 1})))
-  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 2}))))
-
-
-(deftest tarkista-etteivat-alikohteet-mene-paallekkain
-  (is (= []
-         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 1}}
-                                                                         {:tunniste {:id 2}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 3
-                                                                                     :aet 1
-                                                                                     :losa 4
-                                                                                     :let 100}}]))
-      "Toisiaan jatkavat kohteet eivät palauta virheitä")
-  (is (= []
-         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 1}}
-                                                                         {:tunniste {:id 2}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 4
-                                                                                     :aet 10
-                                                                                     :losa 4
-                                                                                     :let 100}}]))
-      "Hypylliset kohteet eivät palauta virheitä")
-
-  (is (= [{:koodi "viallinen-alikohteen-sijainti"
-           :viesti "Alikohteet (tunnus: 1 ja tunnus: 2) menevät päällekkäin"}]
-         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 100}}
-                                                                         {:tunniste {:id 2}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 3
-                                                                                     :aet 10
-                                                                                     :losa 4
-                                                                                     :let 100}}]))
-      "Päällekkäin menevät kohteet huomataan")
-
-  (is (= []
-         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 4}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 2
-                                                                                     :ajr 2
-                                                                                     :kaista 1
-                                                                                     :aosa 3
-                                                                                     :aet 1
-                                                                                     :losa 4
-                                                                                     :let 100}}
-                                                                         {:tunniste {:id 1}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 1}}
-                                                                         {:tunniste {:id 3}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 2
-                                                                                     :ajr 2
-                                                                                     :kaista 11
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 1}}
-                                                                         {:tunniste {:id 2}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 2
-                                                                                     :ajr 2
-                                                                                     :kaista 11
-                                                                                     :aosa 3
-                                                                                     :aet 1
-                                                                                     :losa 4
-                                                                                     :let 100}}]))
-      "Eri ajoradoilla ja kaistoilla olevat validit kohteet eivät palauta virhettä")
-
-  (is (= [{:koodi "viallinen-alikohteen-sijainti"
-           :viesti "Alikohteet (tunnus: 3 ja tunnus: 4) menevät päällekkäin"}]
-         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 4}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 2
-                                                                                     :ajr 2
-                                                                                     :kaista 11
-                                                                                     :aosa 3
-                                                                                     :aet 1
-                                                                                     :losa 4
-                                                                                     :let 100}}
-                                                                         {:tunniste {:id 1}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 1}}
-                                                                         {:tunniste {:id 3}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 2
-                                                                                     :ajr 2
-                                                                                     :kaista 11
-                                                                                     :aosa 1
-                                                                                     :aet 1
-                                                                                     :losa 3
-                                                                                     :let 100}}
-                                                                         {:tunniste {:id 2}
-                                                                          :sijainti {:tie 20
-                                                                                     :numero 20
-                                                                                     :ajorata 1
-                                                                                     :ajr 1
-                                                                                     :kaista 1
-                                                                                     :aosa 3
-                                                                                     :aet 1
-                                                                                     :losa 4
-                                                                                     :let 100}}]))
-      "Eri ajoradoilla ja kaistoilla olevat päällekkäin olevat kohteet huomataan"))
 
 (deftest jarjesta-yllapitokohteet
   (let [yllapitokohteet [{:tunniste {:id 4}
@@ -423,6 +158,14 @@
 (def vaara-tr-vali {:tr-numero 22 :tr-ajorata 0 :tr-kaista 11 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
 
 (def tr-tieto [{:tr-numero 22
+                :tr-osa 6
+                :pituudet {:pituus 10000
+                           :ajoradat [{:osiot [{:pituus 10000
+                                                :kaistat [{:tr-kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                :tr-alkuetaisyys 0}]
+                                       :tr-ajorata 0}]
+                           :tr-alkuetaisyys 0}}
+               {:tr-numero 22
                 :tr-osa 5
                 :pituudet {:pituus 10000
                            :ajoradat [{:osiot [{:pituus 10000
@@ -556,7 +299,8 @@
                                                                (dissoc :tr-alkuosa :tr-alkuetaisyys)
                                                                (clj-set/rename-keys {:tr-loppuosa :tr-alkuosa
                                                                                      :tr-loppuetaisyys :tr-alkuetaisyys}))
-                                                           (first tr-tieto))))
+                                                           (first (filter #(= (:tr-osa %) (:tr-loppuosa oikea-tr-paaluvali))
+                                                                          tr-tieto)))))
   (testing "tr piste tr tiedon mukainen"
     (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (dissoc oikea-tr-vali :tr-loppuosa :tr-loppuetaisyys) (last tr-tieto)))
     (is (yllapitokohteet/tr-piste-tr-tiedon-mukainen? (-> oikea-tr-vali
@@ -591,35 +335,174 @@
     (is (not (yllapitokohteet/tr-valit-paallekkain? oikea-tr-paaluvali {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100} true)))))
 
 (deftest validoi-paakohde
-  (let [toiset-kohteet [{:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 1}
-                        {:tr-numero 22 :tr-alkuosa 5 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 10}
-                        {:tr-numero 22 :tr-alkuosa 6 :tr-alkuetaisyys 1 :tr-loppuosa 6 :tr-loppuetaisyys 10}]]
-    (is (nil? (yllapitokohteet/validoi-kohde oikea-tr-paaluvali toiset-kohteet tr-tieto)))
-    (is (-> (yllapitokohteet/validoi-kohde nil toiset-kohteet tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
-    (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
-              (yllapitokohteet/validoi-kohde toiset-kohteet tr-tieto)
-              :validoitu-paikka)
-          (-> :kohteen-tiedot count (= 1)))
-    (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
-                                        :tr-loppuosa nil :tr-loppuetaisyys nil)
-              (yllapitokohteet/validoi-kohde  toiset-kohteet tr-tieto)
-              :muoto
-              ::s/problems)
-          (-> count (= 5)) "Ei ole viittä ongelmaa"
-          (->> (filter #(= (:path %) [:tr-numero])) first) "tr-numero validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-alkuosa])) first) "tr-alkuosa validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-alkuetaisyys])) first) "tr-alkuetaisyys validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-loppuosa])) first) "tr-loppuosa validointi puuttuu"
-          (->> (filter #(= (:path %) [:tr-loppuetaisyys])) first) "tr-loppuetaisyys validointi puuttuu")
-    (is-> (:paallekkyys (yllapitokohteet/validoi-kohde oikea-tr-paaluvali
-                                                       (conj toiset-kohteet
-                                                             {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 100}
-                                                             {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 10 :tr-loppuosa 1 :tr-loppuetaisyys 100}
-                                                             {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 5 :tr-loppuetaisyys 100})
-                                                       tr-tieto))
-          (-> count (= 3)))))
+  ;; oikea kohde validoituu oikein
+  (is (nil? (yllapitokohteet/validoi-kohde oikea-tr-paaluvali tr-tieto)))
+  ;; nil kohde aiheuttaa ongelmia
+  (is (-> (yllapitokohteet/validoi-kohde nil tr-tieto) :muoto ::s/problems first :pred (= 'clojure.core/map?)))
+  ;; Kun alkuetäisyys on osan ulkopuolella, tulee ongelmia
+  (is-> (-> (assoc oikea-tr-paaluvali :tr-alkuetaisyys 100000)
+            (yllapitokohteet/validoi-kohde tr-tieto)
+            :validoitu-paikka)
+        #(-> % :kohteen-tiedot count (= 1)))
+  ;; Testataan, että jokaisella kohteen paaluvälikentällä tulee olla arvo
+  (is-> (-> (assoc oikea-tr-paaluvali :tr-numero nil :tr-alkuosa nil :tr-alkuetaisyys nil
+                                      :tr-loppuosa nil :tr-loppuetaisyys nil)
+            (yllapitokohteet/validoi-kohde tr-tieto)
+            :muoto
+            ::s/problems)
+        #(-> % count (= 5)) "Ei ole viittä ongelmaa"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-numero])) first)) "tr-numero validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-alkuosa])) first)) "tr-alkuosa validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-alkuetaisyys])) first)) "tr-alkuetaisyys validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-loppuosa])) first)) "tr-loppuosa validointi puuttuu"
+        (fn [tulos] (->> tulos (filter #(= (:path %) [:tr-loppuetaisyys])) first)) "tr-loppuetaisyys validointi puuttuu"))
 
 (deftest validoi-alikohde
   (let [toiset-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 5000 :tr-loppuosa 1 :tr-loppuetaisyys 5200}
                            {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 1 :tr-loppuosa 3 :tr-loppuetaisyys 100}]]
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
+
+(deftest kohde-tiedon-mukainen
+  (testing "Pääkohde"
+    ;; Testataan, että osan vaihtaminen onnistuu
+    (is (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-alkuosa 1 :tr-alkuetaisyys 5000
+                                                      :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                     tr-tieto
+                                                     true)))
+    ;; Tiedoista puuttuvan osan käyttäminen ei onnistu
+    (let [virhetiedot (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-alkuosa 2 :tr-alkuetaisyys 5000
+                                                              :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                             tr-tieto
+                                                             true)]
+      (is (= 1 (count (:kohteen-tiedot virhetiedot))))
+      (is (-> virhetiedot :kohteen-tiedot first meta :ei-osaa))))
+  (testing "Alikohde"
+    ;; Testataan, että osan vaihtaminen onnistuu, kun ajorata ja kaista pysyy samana
+    (is (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1
+                                                      :tr-alkuosa 5 :tr-alkuetaisyys 5000
+                                                      :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                     tr-tieto
+                                                     false)))
+    ;; Osan vaihtaminen ei onnistu, kun ajorata ja kaista tiedot vaihtuvat
+    (is (not (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1
+                                                           :tr-alkuosa 4 :tr-alkuetaisyys 5000
+                                                           :tr-loppuosa 6 :tr-loppuetaisyys 5000}
+                                                          tr-tieto
+                                                          false))))))
+
+(deftest validoi-kaikki
+  (let [tr-osoite {:tr-numero 22 :tr-alkuosa 3 :tr-alkuetaisyys 0 :tr-loppuosa 6 :tr-loppuetaisyys 10000}
+        muiden-kohteiden-tiedot [{:tr-numero 1337
+                                  :tr-osa 1
+                                  :pituudet {:pituus 300
+                                             :ajoradat [{:osiot [{:pituus 300
+                                                                  :kaistat [{:tr-kaista 1 :pituus 300 :tr-alkuetaisyys 0}]
+                                                                  :tr-alkuetaisyys 0}]
+                                                         :tr-ajorata 0}]
+                                             :tr-alkuetaisyys 0}}
+                                 {:tr-numero 7331
+                                  :tr-osa 2
+                                  :pituudet {:pituus 400
+                                             :ajoradat [{:osiot [{:pituus 400
+                                                                  :kaistat [{:tr-kaista 1 :pituus 400 :tr-alkuetaisyys 100}]
+                                                                  :tr-alkuetaisyys 100}]
+                                                         :tr-ajorata 0}]
+                                             :tr-alkuetaisyys 100}}]
+        kohteiden-tiedot (concat tr-tieto
+                                 [{:tr-numero 20
+                                   :tr-osa 2
+                                   :pituudet {:pituus 10000
+                                              :ajoradat [{:osiot [{:pituus 10000
+                                                                   :kaistat [{:tr-kaista 1 :pituus 10000 :tr-alkuetaisyys 0}]
+                                                                   :tr-alkuetaisyys 0}]
+                                                          :tr-ajorata 0}]
+                                              :tr-alkuetaisyys 0}}])
+        muiden-kohteiden-verrattavat-kohteet [[{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1
+                                                :tr-alkuosa 1 :tr-alkuetaisyys 200
+                                                :tr-loppuosa 1 :tr-loppuetaisyys 300}]
+                                              [{:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1
+                                                :tr-alkuosa 2 :tr-alkuetaisyys 200
+                                                :tr-loppuosa 2 :tr-loppuetaisyys 300}]]
+        muutkohteet [{:tr-numero 1337 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                     {:tr-numero 7331 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 100 :tr-loppuosa 2 :tr-loppuetaisyys 200}]
+        vuosi 2019
+        kohteen-alikohteet [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 1000)
+                            (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1000 :tr-loppuetaisyys 2000)
+                            (assoc tr-osoite :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 4 :tr-alkuetaisyys 1000 :tr-loppuosa 4 :tr-loppuetaisyys 2000)]
+        urakan-muiden-kohteiden-alikohteet [{:tr-numero 22 :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 1 :tr-loppuetaisyys 500}
+                                            ;; Eri kohdteella tehdään samalle paaluvälille, mutta eri kohtaan
+                                            (assoc tr-osoite :tr-ajorata 1 :tr-kaista 12 :tr-alkuosa 4 :tr-alkuetaisyys 100 :tr-loppuosa 4 :tr-loppuetaisyys 500)]
+        muiden-urakoiden-alikohteet [{:tr-numero 20 :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 2 :tr-alkuetaisyys 100 :tr-loppuosa 2 :tr-loppuetaisyys 500}
+                                     ; Eri urakka voi myös tehdä samalle paaluvälille päällystystä. Eri kohtaan tosin.
+                                     (assoc tr-osoite :tr-ajorata 2 :tr-kaista 21 :tr-alkuosa 4 :tr-alkuetaisyys 100 :tr-loppuosa 4 :tr-loppuetaisyys 500)]
+        alustatoimet [(assoc tr-osoite :tr-ajorata 1 :tr-kaista 11 :tr-alkuosa 4 :tr-alkuetaisyys 1000 :tr-loppuosa 4 :tr-loppuetaisyys 2000)]]
+    (testing "validoi-kaikki toimii"
+      (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                  vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
+    (testing "Epätäydelliset kohteen tiedot"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite (remove #(and (= (:tr-numero %) 22)
+                                                                    (= (:tr-osa %) 3)) kohteiden-tiedot) muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:paakohde :alikohde :alustatoimenpide})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tiellä 22 ei ole osaa 3"]))))
+    (testing "Muut verrattavat kohteet päällekkäin"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:muukohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Kohteenosa on päällekkäin toisen osan kanssa"]))))
+    (testing "validoi-kaikki huomauttaa kohdeosien päällekkkyydestä"
+      ;; Kohteen omissa alikohteissa vikaa
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi (-> kohteen-alikohteet
+                                                      (assoc-in [0 :tr-ajorata] 1)
+                                                      (assoc-in [1 :nimi] "Foo-kohde")
+                                                      (conj (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1500 :tr-loppuetaisyys 2000)))
+                                            muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Tien 22 osalla 3 ei ole ajorataa 1"
+                                                                    "Kohteenosa on päällekkäin toisen osan kanssa"
+                                                                    "Kohteenosa on päällekkäin osan \"Foo-kohde\" kanssa"])))
+      ;; Kohteen oma alikohde merkattu usealle osalle, eikä kaikilla osilla ole tarvittavaa ajorataa ja kaistaa
+      (is-> (yllapitokohteet/validoi-kaikki (assoc tr-osoite :tr-alkuosa 1) kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 1 :tr-loppuosa 5 :tr-loppuetaisyys 1000)]
+                                            muutkohteet [] urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Ajorata 0 ei päätä osaa 1"
+                                                                    "Tien 22 osalla 4 ei ole ajorataa 0"]))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet (conj urakan-muiden-kohteiden-alikohteet
+                                                                                                    (assoc (second kohteen-alikohteet)
+                                                                                                      :paakohteen-nimi "Foo-kohde")) muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin kohteen \"Foo-kohde\" kohdeosan kanssa"]))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja toisen urakan kohteen kohdeosien päällekkyydestä"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                            vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet (conj muiden-urakoiden-alikohteet
+                                                                                                                                       (assoc (second kohteen-alikohteet)
+                                                                                                                                         :urakka "Foo-urakka")))
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alikohde})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]))))
+    (testing "validoi-kaikki huomauttaa virheellisistä alikohteista"
+      (is-> (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                           vuosi kohteen-alikohteet muutkohteet (conj alustatoimet
+                                                                                      (update (first alustatoimet)
+                                                                                              :tr-alkuetaisyys dec)
+                                                                                      (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-alkuetaisyys 1000 :tr-loppuetaisyys 3000)) urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)
+            (fn [virheviestit]
+              (= (into #{} (keys virheviestit))
+                 #{:alustatoimenpide})) "Virheviesti ei näy kaikilla osa-alueilla"
+            #(->> % vals flatten (mapcat vals) flatten distinct (= ["Alustatoimenpide ei ole minkään alikohteen sisällä"
+                                                                    "Alustatoimenpide on päällekkäin toisen osan kanssa"]))))))

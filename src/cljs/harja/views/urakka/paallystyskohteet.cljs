@@ -1,7 +1,7 @@
 (ns harja.views.urakka.paallystyskohteet
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! >! chan]]
             [clojure.set :as clj-set]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -10,7 +10,7 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.paallystys-muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [vihje-elementti]]
+            [harja.ui.yleiset :refer [vihje-elementti ajax-loader-pieni]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
@@ -23,7 +23,8 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.modal :as modal]
             [harja.domain.tierekisteri :as tr]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
@@ -80,10 +81,85 @@
       (when (not (empty? kohteet-paallekain-virheet))
         [validointivirhe-kohteet-pallekkain kohteet-paallekain-virheet])]]))
 
+(defn kohteen-poisto-modal
+  [poistetut-kohteet]
+  [:div
+   "Seuraavat kohteet tullaan poistamaan myös YHA:sta"
+   [:ul
+    (for [poistettu-kohde poistetut-kohteet
+          :let [{:keys [kohdenumero nimi tunnus]} poistettu-kohde]]
+      ^{:key (:yhaid poistettu-kohde)}
+      [:li (str (when kohdenumero
+                  (str kohdenumero " : "))
+                (when tunnus
+                  (str tunnus " : "))
+                nimi)])]])
+
+(defn kohteen-poisto-modal-footer [kohteet tallenna-fn vastaus-status]
+  [:div
+   [napit/tallenna "Tallenna" (comp modal/piilota!
+                                    (partial tallenna-fn kohteet))]
+   [napit/peruuta "Peruuta" #(do (modal/piilota!)
+                                 (go (>! vastaus-status {:status :ei-paiviteta})))]])
+
 (defn paallystyskohteet [ur]
-  (let [hae-tietoja (fn [urakan-tiedot]
+  (let [tallennus-gif? (atom false)
+        hae-tietoja (fn [urakan-tiedot]
                       (go (if-let [ch (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))]
-                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))))]
+                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))))
+        tallenna-kohde (fn [kohteet]
+                         (go
+                           (let [poistetut-kohteet (filter (fn [kohde]
+                                                             (and (:poistettu kohde)
+                                                                  (:yhaid kohde)))
+                                                           kohteet)
+                                 ;; Jos kohteita poistetaan, halutaan yha-virheen sattuessa nollata muokkaustiedot tallennuksen
+                                 ;; jälkeen. Se tieto annetaan tuohon kanavaan, jota perus grid käyttää.
+                                 vastaus-status (chan)
+                                 tallenna-fn (fn [kohteet]
+                                               (reset! tallennus-gif? true)
+                                               (yllapitokohteet/kasittele-tallennettavat-kohteet!
+                                                 kohteet
+                                                 :paallystys
+                                                 #(do (reset! paallystys-tiedot/yllapitokohteet %)
+                                                      (reset! tallennus-gif? false)
+                                                      (go (>! vastaus-status {:status :ok})))
+                                                 (fn [virhe]
+                                                   (let [virheviestit (case (:status virhe)
+                                                                        :validointiongelma (mapv (fn [virhe]
+                                                                                                   (reduce-kv (fn [m k v]
+                                                                                                                (assoc m k (distinct (flatten (vals (if (map? v)
+                                                                                                                                                      v
+                                                                                                                                                      (first v)))))))
+                                                                                                              {} virhe))
+                                                                                                 (:virheviesti virhe))
+                                                                        :yha-virhe (mapv (fn [{:keys [selite kohteen-nimi]}]
+                                                                                           {(keyword kohteen-nimi) [selite]})
+                                                                                        (:virheviesti virhe)))]
+                                                     (when (= :yha-virhe (:status virhe))
+                                                       (reset! paallystys-tiedot/yllapitokohteet (:yllapitokohteet virhe)))
+                                                     (paallystys-tiedot/virhe-modal {:virhe virheviestit} "Kohteen tallennus epäonnistui!")
+                                                     (reset! tallennus-gif? false)
+                                                     (go (>! vastaus-status virhe))))
+                                                 true false))]
+                             ;; Ollaanko poistamassa kohdetta?
+                             (if-not (empty? poistetut-kohteet)
+                               (do (modal/nayta! {:otsikko (str "Olet poistamassa " (if (= 1 (count poistetut-kohteet))
+                                                                                      "kohteen"
+                                                                                      "kohteita"))
+                                                  :footer [kohteen-poisto-modal-footer kohteet tallenna-fn vastaus-status]}
+                                                 [kohteen-poisto-modal poistetut-kohteet])
+                                   (<! vastaus-status))
+                               (tallenna-fn kohteet)))))
+        kohteen-tallennus-onnistui (fn [_]
+                                     (urakka/lukitse-urakan-yha-sidonta! (:id ur)))
+        tallenna-muukohde (fn [kohteet]
+                            (yllapitokohteet/kasittele-tallennettavat-kohteet!
+                              kohteet
+                              :paikkaus
+                              #(reset! paallystys-tiedot/yllapitokohteet %) ;; TODO TESTI TÄLLE TALLENNUKSELLE (backend)
+                              #(constantly nil)))
+        yha-kohteet-otsikko "YHA:sta tuodut päällystyskohteet"]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
@@ -122,30 +198,23 @@
          [yllapitokohteet-view/yllapitokohteet
           ur
           paallystys-tiedot/yhan-paallystyskohteet
-          {:otsikko "YHA:sta tuodut päällystyskohteet"
+          {:otsikko (if @tallennus-gif?
+                      [ajax-loader-pieni yha-kohteet-otsikko]
+                      yha-kohteet-otsikko)
            :kohdetyyppi :paallystys
            :yha-sidottu? true
-           :tallenna
-           (yllapitokohteet/kasittele-tallennettavat-kohteet!
-             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
-             :paallystys
-             #(reset! paallystys-tiedot/yllapitokohteet %)
-             #(reset! paallystys-tiedot/validointivirheet-modal (assoc % :nakyvissa? true)))
-           :kun-onnistuu (fn [_]
-                           (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
+           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
+                       tallenna-kohde)
+           :kun-onnistuu kohteen-tallennus-onnistui}]
 
          [yllapitokohteet-view/yllapitokohteet
           ur
           paallystys-tiedot/harjan-paikkauskohteet
-          {:otsikko "Harjan paikkauskohteet ja muut kohteet"
-           :kohdetyyppi :paikkaus
+          {:otsikko      "Harjan paikkauskohteet ja muut kohteet"
+           :kohdetyyppi  :paikkaus
            :yha-sidottu? false
-           :tallenna
-           (yllapitokohteet/kasittele-tallennettavat-kohteet!
-             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
-             :paikkaus
-             #(reset! paallystys-tiedot/yllapitokohteet %) ;; TODO TESTI TÄLLE TALLENNUKSELLE (backend)
-             #(constantly nil))}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
+           :tallenna     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
+                           tallenna-muukohde)}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
 
          [muut-kustannukset-view/muut-kustannukset ur]
 

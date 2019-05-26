@@ -10,7 +10,8 @@ SELECT k.id, k.kayttajanimi, k.kuvaus, k.luotu,
   FROM kayttaja k
        JOIN organisaatio o ON k.organisaatio = o.id
  WHERE jarjestelma = true AND
-       k.poistettu = false;
+       k.poistettu = false
+ORDER BY organisaatio_nimi, k.kayttajanimi;
 
 -- name: hae-jarjestelmatunnuksen-lisaoikeudet
 SELECT
@@ -20,7 +21,8 @@ SELECT
   kayttaja
 FROM kayttajan_lisaoikeudet_urakkaan klu
   JOIN urakka u ON klu.urakka = u.id
-WHERE kayttaja = :kayttaja;
+WHERE kayttaja = :kayttaja
+ORDER BY kayttaja;
 
 -- name: hae-urakat-lisaoikeusvalintaan
 SELECT

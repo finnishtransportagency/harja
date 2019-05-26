@@ -182,8 +182,8 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-figwheel "0.5.19-SNAPSHOT"]
-            [codox "0.8.11"]
-            [jonase/eastwood "0.2.4"]
+            [lein-codox "0.10.6"]
+            [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.8"]]
@@ -324,7 +324,7 @@
                         ;; Harja mobiili laadunseuranta fronttibuildi
                         "cljsbuild" "once" "laadunseuranta-min,"
 
-                        "uberjar," "doc"]
+                        "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"

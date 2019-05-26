@@ -1,28 +1,38 @@
 (ns harja.palvelin.palvelut.yllapitokohteet-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
-            [harja.palvelin.palvelut.yllapitokohteet :refer :all]
-            [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
-            [harja.jms-test :refer [feikki-sonja]]
-            [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
-            [clojure.java.io :as io]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [clojure.core.async :refer [<!! timeout]]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+            [clojure.java.io :as io]
+            [clojure.string :as clj-str]
+
+            [clj-time.coerce :as c]
+            [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
+            [harja.palvelin.komponentit
+             [tietokanta :as tietokanta]
+             [fim-test :refer [+testi-fim+]]
+             [sonja :as sonja]
+             [fim :as fim]]
+            [harja.palvelin.palvelut
+             [yllapitokohteet :refer :all]]
+            [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
+
+            [harja.testi :refer :all]
+
+            [harja.jms-test :refer [feikki-sonja]]
+            [harja.pvm :as pvm]
+
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.yha
+             [tyokalut :as yha-tyokalut]
+             [yha-komponentti :as yha]]
+
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
-            [clj-time.coerce :as c]
-            [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
-            [clojure.string :as str])
+
+            [harja.kyselyt.konversio :as konv])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -47,8 +57,11 @@
                                             [:sonja :db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
                         :yllapitokohteet (component/using
-                                           (yllapitokohteet/->Yllapitokohteet {})
-                                           [:http-palvelin :db :fim :sonja-sahkoposti])))))
+                                           (->Yllapitokohteet {})
+                                           [:http-palvelin :db :fim :sonja-sahkoposti :yha-integraatio])
+                        :yha-integraatio (component/using
+                                           (yha/->Yha {:url yha-tyokalut/+yha-url+})
+                                           [:db :http-palvelin :integraatioloki])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -61,12 +74,14 @@
                               :yllapitokohdetyotyyppi :paallystys
                               :sopimuksen_mukaiset_tyot 400
                               :tr-numero 20
+                              :tr-ajorata 1
+                              :tr-kaista 11
                               :tr-alkuosa 1
                               :tr-alkuetaisyys 1
                               :tr-loppuosa 2
                               :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
-                              :kaasuindeksi 123})
+                              :kaasuindeks 123})
 
 (def yllapitokohdeosa-testidata {:nimi "Testiosa123456"
                                  :tr-numero 20
@@ -284,8 +299,8 @@
         "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
     (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
         "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")
-    (is (= (> (:pituus oulun-ramppi) 3000)))
-    (is (= (> (:pituus leppajarven-ramppi) 3000)))))
+    (is (> (:pituus oulun-ramppi) 3000))
+    (is (> (:pituus leppajarven-ramppi) 3000))))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -322,7 +337,7 @@
         "Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")
-    (is (= (> (:pituus ei-yha-kohde) 3000)))))
+    (is (> (:pituus ei-yha-kohde) 3000))))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2016
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -343,6 +358,7 @@
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
                                                               :sopimus-id sopimus-id
+                                                              :vuosi 2018
                                                               :kohteet [yllapitokohde-testidata]})
     (let [maara-lisayksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
@@ -393,6 +409,7 @@
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :vuosi 2018
                                                               :sopimus-id sopimus-id
                                                               :kohteet [(assoc yllapitokohde-testidata
                                                                           :tr-numero 20
@@ -473,7 +490,7 @@
                                   :tr-loppuosa 3
                                   :tr-loppuetaisyys 0
                                   :tr-ajorata 1
-                                  :tr-kaista 1}]
+                                  :tr-kaista 11}]
 
     (testing "Päällekkäin menevät kohteet samana vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -485,13 +502,8 @@
                                      :vuosi 2017
                                      :kohteet [kohde-leppajarven-paalle]})]
 
-        (is (= (:status vastaus) :validointiongelma)
-            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle --> tulee herja")
-        (is (= (count (:validointivirheet vastaus)) 1))
-        (is (= (-> (:validointivirheet vastaus)
-                   first
-                   :validointivirhe)
-               :kohteet-paallekain))))
+        (is (= (:status vastaus) :ok)
+            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle. Kohteet saa mennä päällekkäin.")))
 
     (testing "Kohde ei mene päällekäin Leppäjärven kanssa, koska se päivitetään samalla eri tielle"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -557,7 +569,7 @@
                                      :vuosi 2017
                                      :kohteet [(assoc
                                                  kohde-leppajarven-paalle
-                                                 :tr-kaista 2)]})]
+                                                 :tr-kaista 11)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
             "Osoitteet menevät päällekkäin, mutta eri kaistalla --> ei herjaa")))
@@ -576,6 +588,144 @@
 
         (is (not= (:status vastaus) :validointiongelma)
             "Osoitteet menevät päällekkäin, mutta eri ajoradalla --> ei herjaa")))))
+
+(deftest poista-yha-paallystyskohde-onnistuneesti
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        testidata (map (fn [kohde]
+                         (update kohde :yllapitokohdetyotyyppi keyword))
+                       (q-map
+                         (str "SELECT yk.kohdenumero, yk.nimi, yk.tr_numero AS \"tr-numero\", yk.tr_alkuosa AS \"tr-alkuosa\",
+                                      yk.tr_alkuetaisyys AS \"tr-alkuetaisyys\", yk.tr_loppuosa AS \"tr-loppuosa\",
+                                      yk.tr_loppuetaisyys AS \"tr-loppuetaisyys\", yk.yllapitokohdetyotyyppi, yk.yhaid,
+                                      yk.id "
+                              "FROM yllapitokohde yk "
+                              "LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde=yk.id "
+                              "WHERE yk.urakka=" urakka-id " AND
+                                     yk.lahetys_onnistunut IS NOT TRUE AND
+                                     yk.yhaid IS NOT NULL AND
+                                     pi.paallystyskohde IS NULL;")))
+        kohteet [(-> testidata first (assoc :poistettu true))]
+        poista-kohde (with-fake-http [{:url (re-pattern (str "^" yha-tyokalut/+yha-url+ "toteumakohde/\\d+$"))
+                                       :method :delete} {:status 200
+                                                         :body yha-tyokalut/+onnistunut-kohteen-poisto-vastaus+}]
+                                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :tallenna-yllapitokohteet
+                                                     +kayttaja-jvh+
+                                                     {:urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :vuosi 2019
+                                                      :kohteet kohteet}))
+        kohde-poistettu? (ffirst (q (str "SELECT poistettu FROM yllapitokohde WHERE yhaid=" (:yhaid (first kohteet)))))]
+    (is (= (:status poista-kohde) :ok))
+    (is kohde-poistettu?)))
+
+(deftest poista-yha-paallystyskohde-epsonnistuneesti
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        kohteen-avaimet "yk.kohdenumero, yk.nimi, yk.tr_numero AS \"tr-numero\", yk.tr_alkuosa AS \"tr-alkuosa\",
+                         yk.tr_alkuetaisyys AS \"tr-alkuetaisyys\", yk.tr_loppuosa AS \"tr-loppuosa\",
+                         yk.tr_loppuetaisyys AS \"tr-loppuetaisyys\", yk.yllapitokohdetyotyyppi, yk.yhaid,
+                         yk.id, yk.poistettu"
+        haku-xf (map (fn [kohde]
+                       (update kohde :yllapitokohdetyotyyppi keyword)))
+        testidata (into []
+                        haku-xf
+                       (q-map
+                         (str "SELECT " kohteen-avaimet " "
+                              "FROM yllapitokohde yk "
+                              "LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde=yk.id "
+                              "WHERE yk.urakka=" urakka-id " AND
+                                     yk.lahetys_onnistunut IS NOT TRUE AND
+                                     yk.poistettu IS NOT TRUE AND
+                                     yk.yhaid IS NOT NULL AND
+                                     pi.paallystyskohde IS NULL;")))
+        kohteet (-> (into [] (take 2 testidata))
+                    (assoc-in [0 :poistettu] true)
+                    (update-in [1 :tr-loppuetaisyys] dec))
+        poista-kohde (with-fake-http [{:url (re-pattern (str "^" yha-tyokalut/+yha-url+ "toteumakohde/\\d+$"))
+                                       :method :delete} {:body (yha-tyokalut/+epaonnistunut-kohteen-poisto-vastaus+ (-> kohteet first :yhaid))}]
+                                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :tallenna-yllapitokohteet
+                                                     +kayttaja-jvh+
+                                                     {:urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :vuosi 2019
+                                                      :kohteet kohteet}))
+        kohde-poistettu? (ffirst (q (str "SELECT poistettu FROM yllapitokohde WHERE yhaid=" (:yhaid (first kohteet)))))
+        kohteet-paivityksen-jalkeen (sort-by :yhaid
+                                             (into []
+                                                   haku-xf
+                                                   (q-map (str "SELECT " kohteen-avaimet " "
+                                                               "FROM yllapitokohde yk "
+                                                               "WHERE yhaid IN(" (apply str (interpose ", "
+                                                                                                       (mapv :yhaid kohteet)))
+                                                               ");"))))]
+    (is (= (:status poista-kohde) :yha-virhe))
+    (is (not kohde-poistettu?))
+    (is (= (sort-by :yhaid (take 2 testidata)) kohteet-paivityksen-jalkeen))))
+
+(deftest poista-useampi-yha-paallystyskohde-epsonnistuneesti
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        kohteen-avaimet "yk.kohdenumero, yk.nimi, yk.tr_numero AS \"tr-numero\", yk.tr_alkuosa AS \"tr-alkuosa\",
+                         yk.tr_alkuetaisyys AS \"tr-alkuetaisyys\", yk.tr_loppuosa AS \"tr-loppuosa\",
+                         yk.tr_loppuetaisyys AS \"tr-loppuetaisyys\", yk.yllapitokohdetyotyyppi, yk.yhaid,
+                         yk.id, yk.poistettu"
+        haku-xf (map (fn [kohde]
+                       (update kohde :yllapitokohdetyotyyppi keyword)))
+        testidata (into []
+                        haku-xf
+                        (q-map
+                          (str "SELECT " kohteen-avaimet " "
+                               "FROM yllapitokohde yk "
+                               "LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde=yk.id "
+                               "WHERE yk.urakka=" urakka-id " AND
+                                     yk.lahetys_onnistunut IS NOT TRUE AND
+                                     yk.poistettu IS NOT TRUE AND
+                                     yk.yhaid IS NOT NULL AND
+                                     pi.paallystyskohde IS NULL;")))
+        kohteet (-> (into [] (take 3 (sort-by :yhaid testidata)))
+                    (assoc-in [0 :poistettu] true)
+                    (assoc-in [1 :poistettu] true)
+                    (update-in [2 :tr-loppuetaisyys] dec))
+        poista-kohde (with-fake-http [{:url (str yha-tyokalut/+yha-url+ "toteumakohde/" (get-in kohteet [0 :yhaid]))
+                                       :method :delete} {:body yha-tyokalut/+onnistunut-kohteen-poisto-vastaus+}
+                                      {:url (str yha-tyokalut/+yha-url+ "toteumakohde/" (get-in kohteet [1 :yhaid]))
+                                       :method :delete} {:body (yha-tyokalut/+epaonnistunut-kohteen-poisto-vastaus+ (-> kohteet second :yhaid))}]
+                                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :tallenna-yllapitokohteet
+                                                     +kayttaja-jvh+
+                                                     {:urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :vuosi 2019
+                                                      :kohteet kohteet}))
+        [ensimmainen-kohde-poistettu?
+         toinen-kohde-poistettu?] (into []
+                                        (map :poistettu)
+                                        (sort-by :yhaid
+                                                 (q-map (str "SELECT poistettu, yhaid "
+                                                             "FROM yllapitokohde "
+                                                             "WHERE yhaid IN(" (apply str (interpose ", "
+                                                                                                     (mapv :yhaid (take 2 kohteet))))
+                                                             ");"))))
+        kohteet-paivityksen-jalkeen (sort-by :yhaid
+                                             (into []
+                                                   haku-xf
+                                                   (q-map (str "SELECT " kohteen-avaimet " "
+                                                               "FROM yllapitokohde yk "
+                                                               "WHERE yhaid IN(" (apply str (interpose ", "
+                                                                                                       (mapv :yhaid kohteet)))
+                                                               ");"))))]
+    (is (= (:status poista-kohde) :yha-virhe))
+    ;; Ensimmäinen kohde lähetettiin onnistuneesti YHA:an, joten sen tuloksen
+    ;; halutaan olevan synkassa Harjaan
+    (is (true? ensimmainen-kohde-poistettu?))
+    ;; Toinen kohde epäonnistui, joten sen pitää olla myös Harjassa olemassa
+    (is (false? toinen-kohde-poistettu?))
+    ;; Muiden päivitysten tekeminen pitäisi epäonnistua myös
+    (is (= (drop 1 (sort-by :yhaid testidata)) (drop 1 kohteet-paivityksen-jalkeen)))))
+
 
 (deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -902,10 +1052,10 @@
 
         ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
         (odota-ehdon-tayttymista #(= (count @sahkopostien-sisallot) 4) "Sähköpostit lähetettiin" 5000)
-        (let [muhoksen-vastuuhenkilo (first (filter #(str/includes? (:vastaanottaja %) "vastuuhenkilo@example.com") @sahkopostien-sisallot))
-              muhoksen-urakanvalvoja (first (filter #(str/includes? (:vastaanottaja %) "ELY_Urakanvalvoja@example.com") @sahkopostien-sisallot))
-              tiemerkinnan-urakanvalvoja (first (filter #(str/includes? (:vastaanottaja %) "erkki.esimerkki@example.com") @sahkopostien-sisallot))
-              ilmoittaja (first (filter #(str/includes? (:vastaanottaja %) "jalmari@example.com") @sahkopostien-sisallot))]
+        (let [muhoksen-vastuuhenkilo (first (filter #(clj-str/includes? (:vastaanottaja %) "vastuuhenkilo@example.com") @sahkopostien-sisallot))
+              muhoksen-urakanvalvoja (first (filter #(clj-str/includes? (:vastaanottaja %) "ELY_Urakanvalvoja@example.com") @sahkopostien-sisallot))
+              tiemerkinnan-urakanvalvoja (first (filter #(clj-str/includes? (:vastaanottaja %) "erkki.esimerkki@example.com") @sahkopostien-sisallot))
+              ilmoittaja (first (filter #(clj-str/includes? (:vastaanottaja %) "jalmari@example.com") @sahkopostien-sisallot))]
           ;; Viesti lähti oikeille henkilöille
           (is muhoksen-vastuuhenkilo)
           (is muhoksen-urakanvalvoja)
@@ -917,9 +1067,9 @@
           (is (= (:otsikko tiemerkinnan-urakanvalvoja) "Harja: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2018' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
           (is (= (:otsikko ilmoittaja) "Harja-viesti lähetetty: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2018' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017")))
         ;; Sähköposteista löytyy oleelliset asiat
-        (is (every? #(str/includes? % saate) @sahkopostien-sisallot) "Saate löytyy")
-        (is (every? #(str/includes? % "25.05.2017") @sahkopostien-sisallot) "Valmistumispvm löytyy")
-        (is (every? #(str/includes? % "Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)") @sahkopostien-sisallot)
+        (is (every? #(clj-str/includes? % saate) @sahkopostien-sisallot) "Saate löytyy")
+        (is (every? #(clj-str/includes? % "25.05.2017") @sahkopostien-sisallot) "Valmistumispvm löytyy")
+        (is (every? #(clj-str/includes? % "Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)") @sahkopostien-sisallot)
             "Merkitsijä löytyy")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
