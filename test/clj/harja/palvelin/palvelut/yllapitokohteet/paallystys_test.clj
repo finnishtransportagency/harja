@@ -328,7 +328,7 @@
             :tr-ajorata 1
             :tr-alkuetaisyys 0
             :tr-alkuosa 1
-            :tr-kaista 1
+            :tr-kaista 11
             :tr-loppuetaisyys 0
             :tr-loppuosa 3
             :tr-numero 20
@@ -357,7 +357,8 @@
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
-  (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
+  (let [;; Ei saa olla POT ilmoitusta
+        paallystyskohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'"))]
     (is (not (nil? paallystyskohde-id)))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id (hae-utajarven-paallystysurakan-id)
