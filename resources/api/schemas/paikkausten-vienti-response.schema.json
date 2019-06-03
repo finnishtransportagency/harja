@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.vayla.fi/json/harja",
+  "title": "Paikkausten teknisten tietojen vastaus",
+  "description": "HARJA:lle palautuva vastaus paikkausten teknisten tietojen viennistä",
+  "$comment": "Virhetilanteissa halutaan tietää, mikä paikkauskohde aiheutti ongelmia.",
+  "definitions": {
+    "paikkausId": {
+      "type": "integer",
+      "maximum": 2147483647,
+      "description": "HARJA:n paikkaus id"
+    },
+    "virheviesti": {
+      "type": "string"
+    }
+  },
+  "type": "array",
+  "maxItems": 100,
+  "items": {
+    "type": "object",
+    "required": [
+      "paikkaus"
+    ],
+    "properties": {
+      "virheviesti": {
+        "$ref": "#/definitions/virheviesti"
+      },
+      "paikkaus": {
+        "$ref": "#/definitions/paikkausId"
+      }
+    }
+  }
+}

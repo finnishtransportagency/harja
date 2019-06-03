@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.vayla.fi/json/harja",
-  "title": "Paikkausten teknine tieto",
+  "title": "Paikkausten teknisten tietojen vienti",
   "description": "Urakoitsijat lähettävät Harjaan paikkauksista mm. tekniset tiedot ja tämä osa lähetetään Harjasta eteenpäin tarkastuksen jälkeen",
   "$comment": "Tämä skeema on lähestulkoon kopio Harjaan tulevasta teknisestä tiedosta urakoitsijoilta. Ainoana poikkeuksena sijainnin ajorata.",
   "definitions": {
@@ -144,7 +144,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "tunniste",
+        "id",
         "alkuaika",
         "loppuaika",
         "sijainti",
@@ -152,18 +152,10 @@
         "massatyyppi"
       ],
       "properties": {
-        "tunniste": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id"
-          ],
-          "properties": {
-            "id": {
-              "type": "integer",
-              "maximum": 2147483647
-            }
-          }
+        "id": {
+          "type": "integer",
+          "maximum": 2147483647,
+          "description": "HARJA:n paikkaus id",
         },
         "alkuaika": {
           "type": [
