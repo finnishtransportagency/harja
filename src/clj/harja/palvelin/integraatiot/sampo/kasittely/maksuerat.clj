@@ -16,6 +16,7 @@
   (:import (java.util UUID)))
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
+(def maksueratyypit-maanteidenhoidon-urakoissa ["kokonaishintainen" "akillinen-hoitotyo" "muu"]) ;; MHU = maanteiden hoidon urakka = teiden-hoito -urakkatyyppi = uudenlainen hoidon urakka = kaikki uudet hoitourakat lokakuusta 2019 lähtien
 
 (defn hae-maksuera [db numero summat]
   (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
@@ -70,7 +71,9 @@
     (if (empty? maksuerattomat-tpit)
       (log/debug "Kaikki maksuerät on jo perustettu urakoiden toimenpiteille"))
     (doseq [tpi maksuerattomat-tpit]
-      (doseq [maksueratyyppi maksueratyypit]
+      (doseq [maksueratyyppi (if (= (:urakkatyyppi tpi) "hoito")
+                               maksueratyypit
+                               maksueratyypit-maanteidenhoidon-urakoissa)]
         (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi)
               maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
