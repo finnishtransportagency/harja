@@ -2,10 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://www.vayla.fi/json/harja",
   "title": "Paikkausten teknisten tietojen vastaus",
-  "description": "HARJA:lle palautuva vastaus paikkausten teknisten tietojen viennistä",
+  "description": "HARJA:lle palautuva vastaus paikkausten teknisten tietojen viennistä. Tyhjä vektori tarkoittaa onnistunutta viestiä.",
   "$comment": "Virhetilanteissa halutaan tietää, mikä paikkauskohde aiheutti ongelmia.",
   "definitions": {
-    "paikkausId": {
+    "paikkaus-id": {
       "type": "integer",
       "maximum": 2147483647,
       "description": "HARJA:n paikkaus id"
@@ -19,14 +19,14 @@
   "items": {
     "type": "object",
     "required": [
-      "paikkaus"
+      "paikkaus-id"
     ],
     "properties": {
       "virheviesti": {
         "$ref": "#/definitions/virheviesti"
       },
-      "paikkaus": {
-        "$ref": "#/definitions/paikkausId"
+      "paikkaus-id": {
+        "$ref": "#/definitions/paikkaus-id"
       }
     }
   }
