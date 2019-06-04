@@ -3,6 +3,7 @@
   "id": "urn:harja",
   "enum": [
     "hoito",
+    "teiden-hoito",
     "paallystys",
     "paikkaus",
     "tiemerkinta",
