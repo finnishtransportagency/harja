@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: Harja API
-version: 1.0.37
-baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
+version: 1.0.44
+baseUri: https://testioag.vayla.fi/harja/api (testi) & https://oag.vayla.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
 
@@ -52,6 +52,7 @@ schemas:
  - tarkastuksen-poisto-request: !include schemas/tarkastuksen-poisto-request.schema.json
  - paikkausten-kirjaus-request: !include schemas/paikkausten-kirjaus-request.schema.json
  - paikkauskustannusten-kirjaus-request: !include schemas/paikkauskustannusten-kirjaus-request.schema.json
+ - paikkausten-poisto-request: !include schemas/paikkausten-poisto-request.schema.json
 
 securitySchemes:
  - basic:
@@ -79,6 +80,31 @@ documentation:
   /haku:
     is: [secured]
     description: Urakoiden massahaku.
+    get:
+      is: [secured]
+      description: Hakee kaikki urakat, joihin järjestelmätunnuksella on oikeudet. Väylän järjestelmille palauttaa kaikki urakat.
+      queryParameters:
+        urakkatyyppi:
+          description: Rajaa urakoiden haun annettuun tyyppiin. Sallitut tyypit hoito, paallystys, paikkaus, tiemerkinta, valaistus, siltakorjaus, tekniset-laitteet, vesivayla-hoito, vesivayla-ruoppaus, vesivayla-turvalaitteiden-korjaus, vesivayla-kanavien-hoito, vesivayla-kanavien-korjaus.
+          type: string
+          example: hoito
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/urakoiden-haku-response.json
+              schema: urakoiden-haku-response
+        400:
+           body:
+             application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        500:
+           body:
+             application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+
     /{ytunnus}:
       get:
         is: [secured]
@@ -261,7 +287,7 @@ documentation:
             body:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
-                schema: kirjaus-response yllapi
+                schema: kirjaus-response
         delete:
           is: [secured]
           description: Poista tiemerkintätoteuma tunnisteella.
@@ -663,6 +689,11 @@ documentation:
         get:
           is: [secured]
           description: Palauttaa listan urakan ylläpitokohteista. Tiedot tarvitaan, jotta voidana kirjata esim. päällystysilmoitus päällystyskohteelle
+          queryParameters:
+            geometriat:
+              description: Mikäli asetettu "true", palauttaa alikohteiden geometriat GeoJSON muodossa
+              type: boolean
+              example: true
           responses:
             200:
               body:
@@ -942,8 +973,7 @@ documentation:
                     example: !include examples/virhe-response.json
                     schema: kirjaus-response
     /paikkaus:
-      is: [secured]
-      description: Paikkaustoteumien sekä niiden hinnoittelujen kirjaus
+      description: Paikkauskohteiden ja niihin liittyvien paikkausten kirjaus ja päivitys.
       post:
         is: [secured]
         description: Uuden paikkauksen kirjaaminen tai vanhan päivittäminen.
@@ -967,6 +997,29 @@ documentation:
              application/json:
                example: !include examples/virhe-response.json
                schema: virhe-response
+      delete:
+        is: [secured]
+        description: Paikkauskohteiden ja niihin liittyvien paikkausten ja/tai paikkauskustannusten poisto. Kun poistat paikkauskohteen, siihen liittyvät paikkaukset ja paikkauskustannukset poistetaan. Paikkauksia ja paikkauskustannuksia voi poistosanoman avulla poistaa myös yksitellen. Tällöin paikkauskohdetta ei poisteta.
+        body:
+          application/json:
+            example: !include examples/paikkausten-poisto-request.json
+            schema: paikkausten-kirjaus-request
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
       /kustannus:
         post:
           is: [secured]
@@ -1194,21 +1247,21 @@ documentation:
           example: !include examples/varusteen-paivitys-request.json
           schema: varusteen-paivitys-request
       responses:
-             200:
-              body:
-                application/json:
-                  example: !include examples/onnistunut-kirjaus-response.json
-                  schema: kirjaus-response
-             500:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
-             400:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
+        200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
     delete:
       is: [secured]
       description: Varusteen poistaminen. Tarkoitettu poistamaan virheellisesti lisätty varuste. Fyysisesti käytöstä poistetun varusteen käsittelemiseen käytetään varusteen päivitystä. Poistaa tiedon tierekisteristä.
@@ -1217,21 +1270,21 @@ documentation:
           example: !include examples/varusteen-poisto-request.json
           schema: varusteen-poisto-request
       responses:
-             200:
-              body:
-                application/json:
-                  example: !include examples/onnistunut-kirjaus-response.json
-                  schema: kirjaus-response
-             500:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
-             400:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
+        200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
 /seuranta:
   is: [secured]
   description: Reaaliaikaisten tapahtumien kirjaus.
@@ -1259,6 +1312,30 @@ documentation:
             application/json:
               example: !include examples/virhe-response.json
               schema: virhe-response
+    /reitti:
+      post:
+        is: [secured]
+        description: Työkoneen seurantatiedon kirjaus viivageometrialla. Työkoneelle voidaan kirjata sijainti viivageometriana sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mukaan mieluusti 5-15 sekunnin intervalilla ja otoskoolla. Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite.
+        body:
+          application/json:
+            example: !include examples/tyokoneenseurannan-kirjaus-request.json
+            schema: tyokoneenseurannan-kirjaus-request
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
 /ilmoitukset:
   is: [secured]
   description: Ilmoitusten hallinta.

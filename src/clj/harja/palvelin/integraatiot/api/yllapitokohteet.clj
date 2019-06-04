@@ -42,6 +42,7 @@
 
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [clojure.set :as clj-set]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
@@ -56,7 +57,6 @@
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.yllapitokohde :as ypk-domain]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -72,13 +72,13 @@
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
-            [clojure.string :as str])
+            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
-(defn hae-yllapitokohteet [db parametit kayttaja]
-  (let [urakka-id (Integer/parseInt (:id parametit))]
+(defn hae-yllapitokohteet [db parametrit kayttaja]
+  (let [urakka-id (Integer/parseInt (:id parametrit))
+        geometriat? (= "true" (get parametrit "geometriat"))]
     (log/debug (format "Haetaan urakan (id: %s) ylläpitokohteet käyttäjälle: %s (id: %s)."
                        urakka-id
                        (:kayttajanimi kayttaja)
@@ -92,7 +92,7 @@
                             yllapitokohteet
                             {:kohdeosa :alikohteet}
                             :id)]
-      (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet karttapvm))))
+      (yllapitokohdesanomat/rakenna-kohteet geometriat? yllapitokohteet karttapvm))))
 
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]
   (when (and (some? (:paallystys-valmis aikataulu))
@@ -153,29 +153,43 @@
           kohteen-vuodet (map :vuodet (into []
                                             (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
                                             (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id})))
+          vuosi (ffirst kohteen-vuodet)
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
           muunnettavat-alikohteet (muunnettavat-alikohteet kohteen-tienumero (:alikohteet kohde))
           muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
-                          (when karttapvm (parametrit/pvm-aika karttapvm)))
+                      (when karttapvm (parametrit/pvm-aika karttapvm)))
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
           kohteen-sijainti (:sijainti kohde)
-          paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
           alikohteet (:alikohteet kohde)
-          paakohteen-alikohteet (filter paakohteen-sisalla? alikohteet)
-          muut-alikohteet (filter (comp not paakohteen-sisalla?) alikohteet)]
-      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet
-        db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
-      (validointi/tarkista-muut-alikohteet db muut-alikohteet)
-      (validointi/tarkista-alikohteiden-paallekkaisyys db kohde-id kohteen-vuodet alikohteet)
+
+          tr-osoite (clj-set/rename-keys kohteen-sijainti {:tie :tr-numero
+                                                           :aosa :tr-alkuosa
+                                                           :aet :tr-alkuetaisyys
+                                                           :let :tr-loppuetaisyys
+                                                           :losa :tr-loppuosa
+                                                           :ajr :tr-ajorata
+                                                           :kaista :tr-kaista})
+          ali-ja-muut-kohteet (map #(let [tr (:sijainti %)]
+                                      (assoc % :tr-numero (:numero tr)
+                                             :tr-ajorata (:ajr tr)
+                                             :tr-kaista (:kaista tr)
+                                             :tr-alkuosa (:aosa tr)
+                                             :tr-alkuetaisyys (:aet tr)
+                                             :tr-loppuosa (:losa tr)
+                                             :tr-loppuetaisyys (:let tr)))
+                                   alikohteet)
+          alustatoimet nil]
+
+      (validointi/tarkista-paallystyskohde db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)
         (yy/paivita-yllapitourakan-geometria db urakka-id))
       (tee-kirjausvastauksen-body
-        {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
+       {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
 
 (defn kirjaa-paallystysilmoitus [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -188,19 +202,37 @@
           kohteen-vuodet (map :vuodet (into []
                                             (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
                                             (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id})))
+          vuosi (ffirst kohteen-vuodet)
           paallystysilmoitus (:paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-          ;; TODO HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
           alikohteet (mapv #(assoc-in (:alikohde %)
                                       [:sijainti :numero]
                                       (get-in % [:alikohde :sijainti :numero]
                                               (get-in % [:alikohde :sijainti :tie]
                                                       kohteen-tienumero)))
-                           (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))]
+                           (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
+
+          tr-osoite (clj-set/rename-keys (get-in paallystysilmoitus [:yllapitokohde :sijainti])
+                                         {:numero :tr-numero
+                                          :aosa :tr-alkuosa
+                                          :aet :tr-alkuetaisyys
+                                          :let :tr-loppuetaisyys
+                                          :losa :tr-loppuosa})
+          ali-ja-muut-kohteet (map #(let [tr (:sijainti %)]
+                                      (assoc % :tr-numero (:numero tr)
+                                             :tr-ajorata (:ajr tr)
+                                             :tr-kaista (:kaista tr)
+                                             :tr-alkuosa (:aosa tr)
+                                             :tr-alkuetaisyys (:aet tr)
+                                             :tr-loppuosa (:losa tr)
+                                             :tr-loppuetaisyys (:let tr)))
+                                   alikohteet)
+          alustatoimet nil]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
-      (validointi/tarkista-alikohteiden-paallekkaisyys db kohde-id kohteen-vuodet alikohteet)
+
+      (validointi/tarkista-paallystyskohde db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
 
       (let [id (ilmoitus/kirjaa-paallystysilmoitus vkm db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body

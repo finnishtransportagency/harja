@@ -45,12 +45,13 @@
             (str tulos " \u20AC")))
 
         :clj
-        (.format (doto
-                   (if nayta-euromerkki
-                     (NumberFormat/getCurrencyInstance)
-                     (NumberFormat/getNumberInstance))
-                   (.setMaximumFractionDigits 2)
-                   (.setMinimumFractionDigits 2)) eur)))))
+        (s/replace (.format (doto
+                       (if nayta-euromerkki
+                         (NumberFormat/getCurrencyInstance)
+                         (NumberFormat/getNumberInstance))
+                     (.setMaximumFractionDigits 2)
+                     (.setMinimumFractionDigits 2)) eur)
+                   #" €" " €")))))
 
 
 

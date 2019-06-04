@@ -8,7 +8,7 @@
 
 (defn- vkm-base-url []
   (if (k/kehitysymparistossa?)
-    "https://testiextranet.liikennevirasto.fi/vkm/"
+    "https://testiextranet.vayla.fi/vkm/"
     "/vkm/"))
 
 (defn koordinaatti->trosoite-kahdella [[x1 y1] [x2 y2]]

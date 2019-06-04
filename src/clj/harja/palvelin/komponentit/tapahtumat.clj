@@ -95,7 +95,7 @@
                         ;; Käsittelijä ei sitten saa blockata
                         (kasittelija (.getParameter notification)))))
                   (catch PSQLException e
-                    (log/debug "Tapahtumat-kuuntelijassa poikkeus, errorcode" (.getErrorCode e))
+                    (log/debug "Tapahtumat-kuuntelijassa poikkeus, SQL state" (.getSQLState e))
                     (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
                     (uusi-tietokantayhteys! (:db this) ajossa connection kuuntelijat)))
 

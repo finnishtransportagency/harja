@@ -32,6 +32,8 @@ BEGIN
       -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
       -- 5) Vuonna 2017 ja eteenpäin alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Maarakennuskustannukset, kokonaisindeksi MAKU 2010 = 100
       -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
+    -- Kanavaurakoissa käytössä Palvelujen tuottajahintaindeksi PTHI
+      -- 6) TODO: tarkista sääntö
 
     SELECT INTO tulosrivi
       AVG(arvo) AS perusluku,
@@ -41,13 +43,13 @@ BEGIN
           AND (CASE
 
                -- 1)
-               WHEN urakkatyyppi = 'hoito' AND urakan_alkupvm < '2017-10-1'
+               WHEN urakkatyyppi IN ('hoito', 'teiden-hoito') AND urakan_alkupvm < '2017-10-1'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 12) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 2)
 
                -- 2)
-               WHEN urakkatyyppi = 'hoito' AND urakan_alkupvm > '2017-9-30'
+               WHEN urakkatyyppi IN ('hoito', 'teiden-hoito') AND urakan_alkupvm > '2017-9-30'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 11)
@@ -63,6 +65,11 @@ BEGIN
                  THEN (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 2) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 3)
+               -- 6)
+               WHEN urakkatyyppi = 'vesivayla-kanavien-hoito'
+                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 8) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10)
               END
           );
     RAISE NOTICE 'Laskettiin urakan id:llä % indeksilaskennan perusluvuksi:  %, käytetty indeksi: %, urakkatyyppi: %', urakka_id, tulosrivi.perusluku, indeksinimi, urakkatyyppi;
@@ -144,14 +151,17 @@ $$ LANGUAGE plpgsql;
 
 
 -- Urakan oletusindeksin asettaminen
-CREATE OR REPLACE FUNCTION aseta_urakan_oletusindeksi() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION aseta_urakan_oletusindeksi()
+RETURNS trigger AS $$
 BEGIN
 
-  IF NEW.tyyppi = 'hoito' THEN
+  IF NEW.tyyppi IN ('hoito', 'teiden-hoito') THEN
     IF EXTRACT(year FROM NEW.alkupvm) < 2017 THEN
       NEW.indeksi := 'MAKU 2005';
-    ELSE
+    ELSEIF EXTRACT(year FROM NEW.alkupvm) < 2018 THEN
       NEW.indeksi := 'MAKU 2010';
+    ELSE
+      NEW.indeksi := 'MAKU 2015';
     END IF;
 
   ELSEIF NEW.tyyppi = 'vesivayla-hoito' THEN
@@ -159,6 +169,13 @@ BEGIN
       NEW.indeksi := 'MAKU 2005 kunnossapidon osaindeksi';
     ELSE
       NEW.indeksi := 'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi';
+    END IF;
+
+  ELSEIF NEW.tyyppi = 'vesivayla-kanavien-hoito' THEN
+    IF EXTRACT(year FROM NEW.alkupvm) < 2017 THEN
+      NEW.indeksi := 'Palvelujen tuottajahintaindeksi 2010';
+    ELSE
+      NEW.indeksi := 'Palvelujen tuottajahintaindeksi 2015';
     END IF;
 
   END IF;

@@ -1,10 +1,13 @@
 (ns harja.palvelin.raportointi.ymparistoraportti-test
   (:require [clojure.test :refer :all]
+            [clojure.core.async :as async]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.domain.hoitoluokat :as hoitoluokat]
-            [harja.kyselyt.urakat :as urk-q]
+            [harja.kyselyt
+             [urakat :as urk-q]
+             [raportit :as raportit-q]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
@@ -32,13 +35,20 @@
                         :raportit (component/using
                                     (raportit/->Raportit)
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
-
+  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
+  (async/<!! (async/go-loop
+               [k 1]
+               (let [materiaali-cache-ajettu? (ffirst (q "SELECT exists(SELECT 1 FROM raportti_toteutuneet_materiaalit)"))]
+                 (when (and (not materiaali-cache-ajettu?)
+                            (< k 10))
+                   (async/<! (async/timeout 1000))
+                   (recur (inc k))))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+                      urakkatieto-fixture
+                      jarjestelma-fixture))
 
 (defn tarkistusfunktio [sisalto]
   (let [rivi (:rivi sisalto)
@@ -188,7 +198,6 @@
                                      :urakka-id urakka-id
                                      :parametrit param})
                     "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
-
         ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 1))
         ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 3))
         ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 11))

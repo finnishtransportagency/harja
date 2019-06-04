@@ -25,6 +25,7 @@
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+    [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
@@ -67,6 +68,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.yha :as yha]
+    [harja.palvelin.palvelut.velho :as velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -273,6 +275,10 @@
                          (yha-integraatio/->Yha (:yha asetukset))
                          [:db :integraatioloki])
 
+      :velho-integraatio (component/using
+                           (velho-integraatio/->Velho (:velho asetukset))
+                           [:db :integraatioloki])
+
       :raportointi (component/using
                      (raportointi/luo-raportointi)
                      {:db-replica :db-replica
@@ -380,7 +386,7 @@
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :vkm])
+                         [:http-palvelin :db :yha-integraatio :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -447,6 +453,11 @@
       :yha (component/using
              (yha/->Yha)
              [:http-palvelin :db :pois-kytketyt-ominaisuudet :yha-integraatio])
+
+
+      :velho (component/using
+               (velho/->Velho)
+               [:http-palvelin :db :pois-kytketyt-ominaisuudet :velho-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
@@ -626,12 +637,12 @@
                               [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :turi])
       :api-tieluvat (component/using
                       (api-tieluvat/->Tieluvat)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+                      [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
 
       :api-paikkaukset (component/using
-        (api-paikkaukset/->Paikkaukset)
-        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+                         (api-paikkaukset/->Paikkaukset)
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

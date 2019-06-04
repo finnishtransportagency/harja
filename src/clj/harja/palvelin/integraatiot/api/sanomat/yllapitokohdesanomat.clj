@@ -1,8 +1,5 @@
 (ns harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat
-  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.tiemerkinta :as tiemerkinta]
-            [clj-time.coerce :as c]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
+  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (defn rakenna-sijainti [kohde karttapvm]
   {:numero (:tr-numero kohde)
@@ -14,14 +11,16 @@
    :kaista (:tr-kaista kohde)
    :karttapvm karttapvm})
 
-(defn rakenna-alikohde [alikohde karttapvm]
-  {:alikohde {:tunniste {:id (:id alikohde)}
-              :tunnus (:tunnus alikohde)
-              :nimi (:nimi alikohde)
-              :sijainti (rakenna-sijainti alikohde karttapvm)
-              :toimenpide (:toimenpide alikohde)}})
+(defn rakenna-alikohde [geometriat? alikohde karttapvm]
+  (cond->
+    {:alikohde {:tunniste {:id (:id alikohde)}
+                :tunnus (:tunnus alikohde)
+                :nimi (:nimi alikohde)
+                :sijainti (rakenna-sijainti alikohde karttapvm)
+                :toimenpide (:toimenpide alikohde)}}
+    geometriat? (assoc-in [:alikohde :geometria] (:geometria alikohde))))
 
-(defn rakenna-kohde [{:keys [paallystysilmoitus] :as kohde} karttapvm]
+(defn rakenna-kohde [geometriat? {:keys [paallystysilmoitus] :as kohde} karttapvm]
   (let [k {:tunniste {:id (:id kohde)}
            :sopimus {:id (:sopimus kohde)}
            :kohdenumero (:kohdenumero kohde)
@@ -32,7 +31,7 @@
            :yllapitoluokka (:yllapitoluokka kohde)
            :keskimaarainen-vuorokausiliikenne (:keskimaarainen-vuorokausiliikenne kohde)
            :nykyinen-paallyste (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:nykyinen-paallyste kohde))
-           :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde karttapvm)) (:alikohteet kohde))
+           :alikohteet (mapv (fn [alikohde] (rakenna-alikohde geometriat? alikohde karttapvm)) (:alikohteet kohde))
            :aikataulu {:kohde-aloitettu (:kohde-alku kohde)
                        :paallystys-aloitettu (:paallystys-alku kohde)
                        :paallystys-valmis (:paallystys-loppu kohde)
@@ -46,7 +45,7 @@
       (assoc k :tyyppi (:yllapitokohdetyyppi kohde))
       k)))
 
-(defn rakenna-kohteet [yllapitokohteet karttapvm]
+(defn rakenna-kohteet [geometriat? yllapitokohteet karttapvm]
   {:yllapitokohteet
-   (mapv (fn [kohde] (hash-map :yllapitokohde (rakenna-kohde kohde karttapvm)))
+   (mapv (fn [kohde] (hash-map :yllapitokohde (rakenna-kohde geometriat? kohde karttapvm)))
          yllapitokohteet)})

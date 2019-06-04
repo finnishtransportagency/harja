@@ -281,7 +281,8 @@
                                                            :XL :M))}
           ikoni muuta-kokoa-teksti]
 
-         [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
+         [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)
+                                             :data-cy "piilota-kartta"}
           (ikonit/compress) " Piilota kartta"]])]]))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
@@ -795,7 +796,7 @@
                                :id :enc-merikartta
                                :nimi "ENC merikartta"
                                :icon  (ikonit/ankkuri-24 16 16)
-                               :url "https://julkinen.liikennevirasto.fi/s57/wms?request=GetCapabilities&service=WMS"
+                               :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
                                :layer "cells"
                                :style "style-id-202"
                                :default false}]}]))))

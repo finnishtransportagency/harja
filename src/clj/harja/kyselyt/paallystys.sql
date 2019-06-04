@@ -16,7 +16,6 @@ SELECT
   ypkk.kaasuindeksi,
   lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
-  lahetysvirhe,
   takuupvm,
   pi.muokattu
 FROM yllapitokohde ypk
@@ -49,6 +48,7 @@ SELECT
   ypk.nimi                      AS kohdenimi,
   ypk.tunnus,
   ypk.kohdenumero,
+  ypk.vuodet,
   ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
@@ -135,9 +135,9 @@ WHERE paallystyskohde = :id
 -- Päivittää päällystysilmoituksen käsittelytiedot
 UPDATE paallystysilmoitus
 SET
-  paatos_tekninen_osa        = :paatos_tekninen_osa :: PAALLYSTYSILMOITUKSEN_PAATOSTYYPPI,
-  perustelu_tekninen_osa     = :perustelu_tekninen_osa,
-  kasittelyaika_tekninen_osa = :kasittelyaika_tekninen_osa,
+  paatos_tekninen_osa        = :tekninen-osa_paatos :: PAALLYSTYSILMOITUKSEN_PAATOSTYYPPI,
+  perustelu_tekninen_osa     = :tekninen-osa_perustelu,
+  kasittelyaika_tekninen_osa = :tekninen-osa_kasittelyaika,
   muokattu                   = NOW(),
   muokkaaja                  = :muokkaaja
 WHERE paallystyskohde = :id
@@ -369,3 +369,21 @@ UPDATE paallystysilmoitus
 SET
   takuupvm = :takuupvm
 WHERE id = :id;
+
+-- name: paivita-yllapitokohde!
+-- Päivittää ylläpitokohteen
+UPDATE yllapitokohde
+SET
+  tr_alkuosa                        = :tr-alkuosa,
+  tr_alkuetaisyys                   = :tr-alkuetaisyys,
+  tr_loppuosa                       = :tr-loppuosa,
+  tr_loppuetaisyys                  = :tr-loppuetaisyys,
+  muokattu                          = now(),
+  muokkaaja                         = :muokkaaja
+WHERE id = :id
+      AND urakka = :urakka;
+
+-- name: virheen-tiedot
+SELECT nimi, tunnus, kohdenumero, yhaid
+FROM yllapitokohde
+WHERE yhaid IN (:ulkoiset-idt);

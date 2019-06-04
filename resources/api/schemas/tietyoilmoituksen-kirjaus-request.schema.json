@@ -141,8 +141,6 @@
           "properties": {
             "sijainti": {
               "id": "urn:harja/tietyoilmoitus/tyo/sijainti",
-              "type": "object",
-              "additionalProperties": false,
               "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
               "required": true
             },

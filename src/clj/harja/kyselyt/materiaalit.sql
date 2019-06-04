@@ -101,61 +101,52 @@ WHERE urakka = :urakka
 -- Palauttaa urakan materiaalit ja määrät omilla riveillä.
 -- Samat materiaalit summataan yhteen.
 SELECT
-  SUM(maara)              AS kokonaismaara,
-  u.nimi                  AS "urakka-nimi",
-  mk.nimi                 AS "materiaali-nimi",
-  mk.yksikko              AS "materiaali-yksikko",
+  SUM(rtm.kokonaismaara) AS kokonaismaara,
+  u.nimi                 AS "urakka-nimi",
+  mk.nimi                AS "materiaali-nimi",
+  mk.yksikko             AS "materiaali-yksikko",
   mk.materiaalityyppi
-FROM toteuma t
-  JOIN toteuma_materiaali tm ON t.id = tm.toteuma
-                                AND tm.poistettu IS NOT TRUE
-  LEFT JOIN materiaalikoodi mk ON mk.id = tm.materiaalikoodi
-  JOIN urakka u ON u.id = t.urakka
-  WHERE t.urakka = :urakka
-        AND alkanut BETWEEN :alku AND :loppu
-        AND t.poistettu IS NOT TRUE
+FROM raportti_toteutuneet_materiaalit rtm
+  LEFT JOIN materiaalikoodi mk ON mk.id = rtm."materiaali-id"
+  JOIN urakka u ON u.id = rtm."urakka-id"
+WHERE u.id = :urakka
+      AND rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
-  SUM(maara)              AS kokonaismaara,
-  urakka.nimi             AS "urakka-nimi",
-  materiaalikoodi.nimi    AS "materiaali-nimi",
-  materiaalikoodi.yksikko AS "materiaali-yksikko",
-  materiaalikoodi.materiaalityyppi
-FROM toteuma_materiaali
-  LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  INNER JOIN toteuma ON toteuma.id = toteuma
-                        AND alkanut BETWEEN :alku AND :loppu
-                        AND toteuma.poistettu IS NOT TRUE
-                        AND toteuma_materiaali.poistettu IS NOT TRUE
-  JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
-WHERE urakka.hallintayksikko = :hallintayksikko AND
-      (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
-GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id, materiaalikoodi.materiaalityyppi;
+  SUM(rtm.kokonaismaara)              AS kokonaismaara,
+  u.nimi             AS "urakka-nimi",
+  mk.nimi    AS "materiaali-nimi",
+  mk.yksikko AS "materiaali-yksikko",
+  mk.materiaalityyppi
+FROM raportti_toteutuneet_materiaalit rtm
+  LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
+  JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
+WHERE u.hallintayksikko = :hallintayksikko AND
+      (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
+      rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
+GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
 -- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
-  SUM(maara)              AS kokonaismaara,
-  o.nimi                  AS "hallintayksikko-nimi",
-  materiaalikoodi.nimi    AS "materiaali-nimi",
-  materiaalikoodi.yksikko AS "materiaali-yksikko",
-  materiaalikoodi.materiaalityyppi,
+  SUM(rtm.kokonaismaara) AS kokonaismaara,
+  o.nimi                 AS "hallintayksikko-nimi",
+  mk.nimi                AS "materiaali-nimi",
+  mk.yksikko             AS "materiaali-yksikko",
+  mk.materiaalityyppi,
   o.elynumero
-FROM toteuma_materiaali
-  LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  INNER JOIN toteuma ON toteuma.id = toteuma
-                        AND alkanut BETWEEN :alku AND :loppu
-                        AND toteuma.poistettu IS NOT TRUE
-                        AND toteuma_materiaali.poistettu IS NOT TRUE
-  JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
-  JOIN organisaatio o ON urakka.hallintayksikko = o.id
-WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
-GROUP BY "materiaali-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko, materiaalikoodi.materiaalityyppi;
+FROM raportti_toteutuneet_materiaalit rtm
+  LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
+  JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
+  JOIN organisaatio o ON u.hallintayksikko = o.id
+WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR u.tyyppi = :urakkatyyppi :: URAKKATYYPPI) AND
+      rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
+GROUP BY "materiaali-nimi", o.nimi, o.elynumero, mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali
@@ -343,3 +334,19 @@ FROM materiaalikoodi;
 SELECT id
   FROM toimenpidekoodi
  WHERE nimi = 'Suolaus' AND taso = 4;
+
+-- name: hae-suolatoteumat-tr-valille
+SELECT *
+FROM tr_valin_suolatoteumat(:urakka::integer, :tie::integer, :alkuosa::integer, :alkuet::integer, :loppuosa::integer, :loppuet::integer, :threshold::integer, 
+		    :alkupvm, :loppupvm);
+
+-- name: hae-pohjavesialueen-suolatoteuma
+SELECT sum(rp.maara) AS maara_t_per_km,
+       sum(rp.maara)*sum(st_length(pv.alue))/1000 AS yhteensa,
+       ts.talvisuolaraja AS kayttoraja
+FROM suolatoteuma_reittipiste rp
+  INNER JOIN pohjavesialue pv ON pv.tunnus = rp.pohjavesialue
+  LEFT JOIN pohjavesialue_talvisuola ts on ts.pohjavesialue = rp.pohjavesialue
+WHERE rp.pohjavesialue=:pohjavesialue
+  AND rp.aika BETWEEN :alkupvm AND :loppupvm
+GROUP BY pv.tunnus, ts.talvisuolaraja;

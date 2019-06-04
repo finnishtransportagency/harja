@@ -12,15 +12,12 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [cheshire.core :as cheshire]
-            [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm])
   (:import (org.postgis PGgeometry)))
 
@@ -54,6 +51,7 @@
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)]
+    (def ilmoitusasdf ilmoitus)
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
     (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49"))
     (is (= (:yhteydenottopyynto ilmoitus) false))
@@ -74,7 +72,7 @@
     (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
     (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."))
     (is (= #{"auraustarve"
-             "aurausvallitNakemaesteena"})))
+             "aurausvallitNakemaesteena"} (:selitteet ilmoitus))))
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
@@ -192,7 +190,7 @@
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
   (tuo-valaistusilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2018';"))
+  (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2050';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))

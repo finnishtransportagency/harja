@@ -22,6 +22,12 @@
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
     },
+    "geometria": {
+      "id": "urn:harja/yllapitokohde/geometria",
+      "type": "object",
+      "additionalProperties": false,
+      "type": "string"
+    },
     "toimenpide": {
       "id": "urn:harja/yllapitokohde/toimenpide",
       "required": false,

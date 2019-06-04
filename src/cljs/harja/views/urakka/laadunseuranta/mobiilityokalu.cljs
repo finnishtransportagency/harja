@@ -24,11 +24,11 @@
    [:h3 "Käyttö"]
    [:p "Sisäänkirjautuminen kannattaa tehdä mahdollisuuksien mukaan jo toimistolla ennen ajoa jotta tien päällä ei joudu enää näpyttämään salasanaa."]
    [:p "Ennen kuin aloitat tarkastusajon, odota autossa paikallaan kunnes tarkka GPS-sijainti löytyy ja on nähtävissä kartalta."]
-   [:a {:href "https://extranet.liikennevirasto.fi/harja/laadunseuranta/"}
+   [:a {:href "https://extranet.vayla.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry Mobiiliin laadunseurantatyökaluun")]
    [:p "Työkalulla kirjatut tarkastukset kirjataan suoraan Harjaan käyttäjän valitsemaan urakkaan."]
-   [:a {:href "https://testiextranet.liikennevirasto.fi/harja/laadunseuranta/"}
+   [:a {:href "https://testiextranet.vayla.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry testiympäristöön")]
    [:p "Jos haluat ensin testata työkalua, voit käyttää sitä Harjan testiympäristössä, jossa suoritetut ajot tallentuvat ainoastaan testiympäristöön."]

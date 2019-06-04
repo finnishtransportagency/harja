@@ -2,7 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [clojure.future :refer :all]
+            
             [clj-time.core :as t]
             [namespacefy.core :as namespacefy]
             [jeesql.core :refer [defqueries]]
@@ -72,7 +72,7 @@
           (not (->> toimenpiteet-kannassa
                    (map ::vv-toimenpide/urakka-id)
                    (every? (partial = urakka-id)))))
-    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
+    (throw (SecurityException. (str "Kaikki toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (vaadi-toimenpiteet-kuuluvat-urakkaan*

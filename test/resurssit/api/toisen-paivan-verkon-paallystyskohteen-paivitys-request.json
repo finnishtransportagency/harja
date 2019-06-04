@@ -20,7 +20,7 @@
       "losa": 3,
       "let": 100,
       "ajr": 1,
-      "kaista": 1,
+      "kaista": 11,
       "karttapvm": "2017-01-01T00:00:00+03"
     },
     "alikohteet": [
@@ -35,9 +35,9 @@
             "aosa": 1,
             "aet": 0,
             "losa": 1,
-            "let": 3000,
+            "let": 500,
             "ajr": 1,
-            "kaista": 1,
+            "kaista": 11,
             "karttapvm": "2017-01-01T00:00:00+03"
           },
           "toimenpide": "testitoimenpide"
@@ -52,11 +52,11 @@
           "sijainti": {
             "numero": 20,
             "aosa": 1,
-            "aet": 3000,
-            "losa": 3,
-            "let": 100,
+            "aet": 500,
+            "losa": 1,
+            "let": 1000,
             "ajr": 1,
-            "kaista": 1,
+            "kaista": 11,
             "karttapvm": "2017-01-01T00:00:00+03"
           },
           "toimenpide": "testitoimenpide"

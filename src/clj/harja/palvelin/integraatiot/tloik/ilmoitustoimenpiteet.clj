@@ -58,7 +58,6 @@
          db
          {:ilmoitus                         ilmoitus
           :ilmoitusid                       ilmoitusid
-          :kuitattu                         (pvm/nyt)
           :vakiofraasi                      nil
           :vapaateksti                      vapaateksti
           :tila                             (when (= "valitys" toimenpide) "lahetetty")

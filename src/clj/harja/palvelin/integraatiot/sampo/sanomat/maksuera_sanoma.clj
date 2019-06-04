@@ -56,7 +56,7 @@
                  :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja (pvm/vuoden-viim-pvm (pvm/vuosi loppupvm))) "00:00:00" "17:00:00")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
-                 :managerUserName       vastuuhenkilo
+                 :managerUserName       "L934498" ;; Aina sama käyttäjä. SAMPO:n määritys. HAR-8804. Vastuuhenkilötietoa ei lähetetä Sampoon takaisin.
                  :objectID              maksueranumero
                  :financialLocation     "Kpito"}
        [:InvestmentAssociations
@@ -79,7 +79,7 @@
                              :name     "Sijainti"}]
         [:OBSAssoc#tuote2013 {:unitPath tuotepolku
                               :name     "Tuoteryhma/Tuote"}]]
-       (custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
+       (custom-information {    "vv_tilaus"      (:sampoid (:sopimus maksuera))
                                 "vv_inst_no"     (:numero maksuera)
                                 "vv_code"        maksueranumero
                                 "vv_me_type"     (maksueratyyppi (:tyyppi (:maksuera maksuera)))

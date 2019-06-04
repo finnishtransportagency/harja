@@ -48,7 +48,7 @@ node {
 
             stage(omatVarit.testikannanLuonti) {
                 if (omatVarit.testikannanLuontiAjetaan) {
-                    omatFunktiot.ajaTestikannanLuonti(omatVarit.testikannanLuonti)
+                    omatFunktiot.ajaTestikannanLuontiTestStg(omatVarit.testikannanLuonti)
                 }
             }
 

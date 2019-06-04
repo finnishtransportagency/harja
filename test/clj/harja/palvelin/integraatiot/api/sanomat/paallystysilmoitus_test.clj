@@ -12,7 +12,7 @@
                              :alikohteet
                              [{:leveys 1.2,
                                :kokonaismassamaara 12.3,
-                               :sijainti {:aosa 1, :aet 1, :losa 5, :let 16},
+                               :sijainti {:aosa 1, :aet 1, :losa 5, :let 16, :ajr 1, :kaista 1},
                                :kivi-ja-sideaineet
                                [{:kivi-ja-sideaine
                                  {:esiintyma "testi",
@@ -32,7 +32,7 @@
                                :paallystetyyppi "avoin asfaltti",
                                :id 36}]},
                             :alustatoimenpiteet
-                            [{:sijainti {:numero 666 :aosa 1, :aet 1, :losa 5, :let 15},
+                            [{:sijainti {:numero 666 :aosa 1, :aet 1, :losa 5, :let 15, :ajr 1, :kaista 1},
                               :kasittelymenetelma "Massanvaihto",
                               :paksuus 1,
                               :verkkotyyppi "Teräsverkko",
@@ -42,7 +42,7 @@
                             :alikohteet
                             [{:leveys 1.2,
                               :kokonaismassamaara 12.3,
-                              :sijainti {:aosa 1, :aet 1, :losa 5, :let 16},
+                              :sijainti {:aosa 1, :aet 1, :losa 5, :let 16, :ajr 1, :kaista 1},
                               :kivi-ja-sideaineet
                               [{:kivi-ja-sideaine
                                 {:esiintyma "testi",
@@ -81,6 +81,8 @@
                                        :paksuus 1
                                        :tekninen-toimenpide 1
                                        :tr-numero 666
+                                       :tr-ajorata 1
+                                       :tr-kaista 1
                                        :tr-alkuetaisyys 1
                                        :tr-alkuosa 1
                                        :tr-loppuetaisyys 15

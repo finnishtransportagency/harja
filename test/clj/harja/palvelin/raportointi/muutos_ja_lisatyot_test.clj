@@ -73,9 +73,9 @@
                                                                :muutostyotyyppi nil}})
         nurkkasumman-teksti-kaikki-tyotyypit-liikenneymparisto (last (last vastaus-kaikki-tyotyypit-liikenneymparisto))]
     (is (vector? vastaus-kaikki-tyotyypit))
-    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti")
-    (is (= "Summat ja indeksit yhteensä 14 080,46 €" nurkkasumman-teksti-kaikki-tyotyypit-liikenneymparisto) "nurkkasumman teksti")
-    (is (= "Summat ja indeksit yhteensä 7 045,98 €" nurkkasumman-teksti-kaikki-muutostyot) "nurkkasumman teksti")
+    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti 1")
+    (is (= "Summat ja indeksit yhteensä 14 080,46 €" nurkkasumman-teksti-kaikki-tyotyypit-liikenneymparisto) "nurkkasumman teksti 2")
+    (is (= "Summat ja indeksit yhteensä 7 045,98 €" nurkkasumman-teksti-kaikki-muutostyot) "nurkkasumman teksti 3")
     (let [otsikko-kaikki-tyotyypit "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
           taulukko-kaikki-tyotyypit (apurit/taulukko-otsikolla vastaus-kaikki-tyotyypit otsikko-kaikki-tyotyypit)
           otsikko-kaikki-muutostyot "Oulun alueurakka 2014-2019, Muutostöiden raportti ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"

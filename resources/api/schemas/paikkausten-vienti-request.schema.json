@@ -1,0 +1,282 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.vayla.fi/json/harja",
+  "title": "Paikkausten teknisten tietojen vienti",
+  "description": "Urakoitsijat lähettävät Harjaan paikkauksista mm. tekniset tiedot ja tämä osa lähetetään Harjasta eteenpäin tarkastuksen jälkeen",
+  "$comment": "Tämä skeema on lähestulkoon kopio Harjaan tulevasta teknisestä tiedosta urakoitsijoilta. Ainoana poikkeuksena sijainnin ajorata.",
+  "definitions": {
+    "organisaatio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ytunnus"
+      ],
+      "properties": {
+        "nimi": {
+          "type": "string"
+        },
+        "ytunnus": {
+          "type": "string"
+        }
+      }
+    },
+    "tienkohdat": {
+      "type": "object",
+      "properties": {
+        "reunat": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "reuna": {
+                "enum": [
+                  1,
+                  2
+                ]
+              }
+            }
+          }
+        },
+        "ajourat": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ajoura"
+            ],
+            "properties": {
+              "ajoura": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          }
+        },
+        "ajouravalit": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ajouravali"
+            ],
+            "properties": {
+              "ajouravali": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          }
+        },
+        "keskisaumat": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "keskisauma"
+            ],
+            "properties": {
+              "keskisauma": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 20
+              }
+            }
+          }
+        }
+      }
+    },
+    "sijainti": {
+      "type": "object",
+      "required": [
+        "tie",
+        "aosa",
+        "aet",
+        "losa",
+        "let"
+      ],
+      "$comment": "Urakoitsija voi lähettää useamman ajoradan paikkaukselle, mutta tämän ei tulisi käytännössä tapahtua",
+      "properties": {
+        "tie": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aosa": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aet": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "let": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "losa": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ajorata": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "tienkohdat": {
+          "$ref": "#/definitions/tienkohdat"
+        },
+        "karttapvm": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "paikkaus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "alkuaika",
+        "loppuaika",
+        "sijainti",
+        "tyomenetelma",
+        "massatyyppi"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "maximum": 2147483647,
+          "description": "HARJA:n paikkaus id",
+        },
+        "alkuaika": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "loppuaika": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "sijainti": {
+          "$ref": "#/definitions/sijainti"
+        },
+        "tyomenetelma": {
+          "type": "string"
+        },
+        "massatyyppi": {
+          "enum": [
+            "asfalttibetoni",
+            "kivimastiks",
+            "pehmeät ab / bitumi"
+          ]
+        },
+        "leveys": {
+          "type": "number"
+        },
+        "massamenekki": {
+          "type": "integer"
+        },
+        "raekoko": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "kuulamylly": {
+          "enum": [
+            "AN5",
+            "AN7",
+            "AN10",
+            "AN14",
+            "AN19",
+            "AN30",
+            "AN22"
+          ]
+        },
+        "kivi-ja-sideaineet": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kivi-ja-sideaine": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "esiintyma": {
+                    "type": "string"
+                  },
+                  "km-arvo": {
+                    "type": "string"
+                  },
+                  "muotoarvo": {
+                    "type": "string"
+                  },
+                  "sideainetyyppi": {
+                    "enum": [
+                      "20/30",
+                      "35/50",
+                      "50/70",
+                      "70/100",
+                      "100/150",
+                      "160/220",
+                      "250/330",
+                      "330/430",
+                      "500/650",
+                      "650/900",
+                      "V1500",
+                      "V3000",
+                      "KB65",
+                      "KB75",
+                      "KB85",
+                      "BL5",
+                      "BL2K",
+                      "BL2 Bio",
+                      "BE-L",
+                      "BE-SIP",
+                      "BE-SOP",
+                      "BE-PAB"
+                    ]
+                  },
+                  "pitoisuus": {
+                    "type": "number"
+                  },
+                  "lisa-aineet": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "required": [
+    "organisaatio",
+    "paikkaus"
+  ],
+  "properties": {
+    "organisaatio": {
+      "$ref": "#/definitions/organisaatio"
+    },
+    "paikkaus": {
+      "$ref": "#/definitions/paikkaus"
+    }
+  }
+}

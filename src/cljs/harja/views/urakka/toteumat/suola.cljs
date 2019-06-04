@@ -19,6 +19,8 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
@@ -69,24 +71,50 @@
     (fn [rivi urakka]
       [suolankayton-paivan-erittely @vetolaatikon-rivit])))
 
+(defonce tallennetaan (atom false))
+
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
     [urakka-valinnat/aikavali-nykypvm-taakse urakka
      tiedot/valittu-aikavali
-     {:aikavalin-rajoitus [tiedot-urakka/+toteumien-haun-aikavalin-max-pituus-kk+ :kuukausi]}]
+     {:aikavalin-rajoitus [90 :paiva]}]
     [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
                                      :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
                                      :lisaa-kaikki? true
                                      :materiaalit materiaali-nimet}]]
 
+   [lomake/lomake
+    {:otsikko "Hae suolatoteumia tieosoiteväliltä"
+     :muokkaa! #(reset! tiedot/ui-lomakkeen-tila %)
+     :footer-fn (fn [rivi]
+                  [:div
+                   [napit/yleinen-toissijainen "Hae"
+                    (fn []
+                                        ; aiheuta tiedot/toteumat -reaktio
+                      (reset! tiedot/lomakkeen-tila {:tierekisteriosoite (:tierekisteriosoite @tiedot/ui-lomakkeen-tila)
+                                                     :refresh (inc (:refresh @tiedot/lomakkeen-tila))}))
+                    {:ikoni (ikonit/livicon-search)}]
+                   [napit/yleinen-toissijainen "Tyhjennä tieosoiteväli"
+                    (fn []
+                      (reset! tiedot/lomakkeen-tila nil)
+                      (reset! tiedot/ui-lomakkeen-tila nil))]])
+     :ei-borderia? true}
+    [{:nimi :tierekisteriosoite
+      :otsikko "Tierekisteriosoite"
+      :tyyppi :tierekisteriosoite
+      :tyyli :rivitetty
+      :sijainti (atom nil)
+      :vaadi-vali? true}]
+    @tiedot/ui-lomakkeen-tila]
+
    [grid/grid {:otsikko "Talvisuolan käyttö"
                :tunniste :rivinumero
                :tallenna (if (oikeudet/voi-kirjoittaa?
-                               oikeudet/urakat-toteumat-suola
-                               (:id @nav/valittu-urakka))
+                              oikeudet/urakat-toteumat-suola
+                              (:id @nav/valittu-urakka))
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
                                   (paivita! tiedot/toteumat)))
                            :ei-mahdollinen)
@@ -139,14 +167,68 @@
                                          (piilota-toteumat-kartalla toteumat)
                                          (nayta-toteumat-kartalla toteumat))}
                            (ikonit/ikoni-ja-teksti
-                             (ikonit/map-marker)
-                             (if (valittu?)
-                               "Piilota kartalta"
-                               "Näytä kartalla"))]])))}]
+                            (ikonit/map-marker)
+                            (if (valittu?)
+                              "Piilota kartalta"
+                              "Näytä kartalla"))]])))}]
     listaus]
+   (if-not (empty? @tiedot/toteumat)
+     [:div.bold kaytetty-yhteensa]
+     [:div ""])])
 
-   (when-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa])])
+(defn pohjavesialueen-suola []
+  (komp/luo
+   (komp/sisaan
+    (fn []
+      (let [urakkaid @nav/valittu-urakka-id]
+        (go
+          (reset! tiedot/pohjavesialueen-toteuma nil)
+          (reset! tiedot/urakan-pohjavesialueet (<! (tiedot/hae-urakan-pohjavesialueet urakkaid)))))))
+   (fn []
+     (let [alueet @tiedot/urakan-pohjavesialueet
+           urakka @nav/valittu-urakka]
+       [:div
+        [urakka-valinnat/aikavali-nykypvm-taakse urakka
+         tiedot/valittu-aikavali
+         {:aikavalin-rajoitus [12 :kuukausi]}]
+        [grid/grid {:otsikko "Urakan pohjavesialueet"
+                    :tunniste :tunnus
+                    :mahdollista-rivin-valinta? true
+                    :rivi-valinta-peruttu (fn [rivi]
+                                            (reset! tiedot/pohjavesialueen-toteuma nil))
+                    :rivi-klikattu
+                    (fn [rivi]
+                      (go
+                        (reset! tiedot/pohjavesialueen-toteuma
+                                (<! (tiedot/hae-pohjavesialueen-suolatoteuma (:tunnus rivi) @tiedot/valittu-aikavali)))))
+                         
+                    :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
+                             [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
+                             "Ei pohjavesialueita")}
+         [{:otsikko "Tunnus" :nimi :tunnus :leveys 10}
+          {:otsikko "Nimi" :nimi :nimi}]
+         alueet]
+        (let [toteuma @tiedot/pohjavesialueen-toteuma]
+          (when toteuma
+            [grid/grid
+             {:otsikko "Pohjavesialueen suolatoteuma"
+              :tunniste :maara_t_per_km
+              :piilota-toiminnot? true
+              :tyhja (if (empty? toteuma)
+                       "Ei tietoja")
+              }
+             [{:otsikko "Määrä t/km"
+               :nimi :maara_t_per_km
+               :fmt #(fmt/desimaaliluku-opt % 1)
+               :leveys 10}
+              {:otsikko "Yhteensä"
+               :leveys 10
+               :fmt #(fmt/desimaaliluku-opt % 1)
+               :nimi :yhteensa}
+              {:otsikko "Käyttöraja"
+               :leveys 10
+               :nimi :kayttoraja}]
+             toteuma]))]))))
 
 (defn suolatoteumat []
   (komp/luo

@@ -217,7 +217,7 @@
 
 (defn datetime->gmt-0-pvm [date]
   (when date
-    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
+    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")]
       (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
       (.format dateformat date))))
 

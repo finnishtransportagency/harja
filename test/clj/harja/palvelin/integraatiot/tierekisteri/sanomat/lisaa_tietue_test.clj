@@ -44,4 +44,4 @@
   (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (harja.palvelin.integraatiot.tierekisteri.tietue/lisaa-tietue integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" lisattava-testitietue)))
+    (harja.palvelin.integraatiot.tierekisteri.tietue/lisaa-tietue integraatioloki "https://testisonja.vayla.fi/harja/tierekisteri" lisattava-testitietue)))

@@ -16,6 +16,13 @@
       "additionalProperties": false,
       "required": true,
       "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
+    },
+    "tyokone": {
+      "id": "urn:harja/reittitoteuma/tyokone",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tyokone.schema.json",
+      "required": false
     }
   }
 }

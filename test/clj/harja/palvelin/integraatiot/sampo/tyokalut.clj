@@ -37,6 +37,18 @@
       </Project>
     </Sampo2harja>")
 
+(def +testi-maanteiden-hoidon-urakka-sanoma+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+      <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
+        programId=\"TESTIHANKE\" vv_transferred_harja=\"2019-09-19T20:27:14+03:00\"
+        schedule_start=\"2019-10-01T08:00:00.0\" schedule_finish=\"2024-09-30T17:00:00.0\"
+        financialDepartmentHash=\"KP981303\"
+        vv_alueurakkanro=\"THJ-321\">
+        <documentLinks/>
+      </Project>
+    </Sampo2harja>")
+
 (def +testi-paallystysurakka-sanoma+
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
     <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
@@ -98,7 +110,7 @@
                id=\"TESTITOIMENPIDE\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
                name=\"TESTITOIMENPIDE\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"THIGT-2-1515-2\"
-               vv_operation=\"22111\">
+               vv_operation=\"20179\">
         <documentLinks/>
     </Operation>
 </Sampo2harja>")
@@ -118,7 +130,7 @@
                id=\"TESTIDUPTOIMENPI\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
                name=\"TESTIDUPTOIMENPI\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"THIGT-2-1515-2\"
-               vv_operation=\"22111\">
+               vv_operation=\"20179\">
         <documentLinks/>
     </Operation>
 </Sampo2harja>")
@@ -131,6 +143,18 @@
                name=\"TESTITPKTPI\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
                vv_operation=\"\">
+        <documentLinks/>
+    </Operation>
+</Sampo2harja>")
+
+(def +testi-toimenpide-sanoma-virheellinen-toimenpidekoodi+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+    <Operation financialDepartmentHash=\"KP921303\"
+               financialDepartmentOBS=\"/Liikennevirasto/ELYT, TOA/Varsinais-Suomen ELY, OSA/VAR Tienpidon hankinnat, YK/VAR Tienpidon hankinnat, KP\"
+               id=\"TESTITPKTPI2\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
+               name=\"TESTITPKTPI2\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
+               schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
+               vv_operation=\"31114\">
         <documentLinks/>
     </Operation>
 </Sampo2harja>")
@@ -161,6 +185,15 @@
    (let [sanoma (if sampo-id
                   (str/replace +testi-hoitourakka-sanoma+ "TESTIURAKKA" sampo-id )
                   +testi-hoitourakka-sanoma+)
+         urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
+     (urakat/kasittele-urakat testi/ds urakat))))
+
+(defn tuo-maanteiden-hoidon-urakka
+  ([] (tuo-maanteiden-hoidon-urakka nil))
+  ([sampo-id]
+   (let [sanoma (if sampo-id
+                  (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id )
+                  +testi-maanteiden-hoidon-urakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))
 
@@ -236,6 +269,10 @@
 
 (defn tuo-toimenpidekooditon-toimenpide []
   (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testi-toimenpidekooditon-toimenpide-sanoma+))]
+    (toimenpiteet/kasittele-toimenpiteet testi/ds toimenpiteet)))
+
+(defn tuo-toimenpide-virheellinen-toimenpidekoodi []
+  (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testi-toimenpide-sanoma-virheellinen-toimenpidekoodi+))]
     (toimenpiteet/kasittele-toimenpiteet testi/ds toimenpiteet)))
 
 (defn poista-toimenpide []

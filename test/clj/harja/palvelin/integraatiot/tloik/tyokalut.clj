@@ -263,7 +263,7 @@
     "414212" "7211797"))
 
 (defn hae-ilmoituksen-urakka-id [{:keys [urakkatyyppi sijainti]}]
-  (first (urakkapalvelu/hae-urakka-idt-sijainnilla (:db jarjestelma) urakkatyyppi sijainti)))
+  (urakkapalvelu/hae-lahin-urakka-id-sijainnilla (:db jarjestelma) urakkatyyppi sijainti))
 
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)]

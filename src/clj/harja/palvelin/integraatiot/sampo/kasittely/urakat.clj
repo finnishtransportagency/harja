@@ -35,7 +35,7 @@
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id alueurakkanro urakkatyyppi sopimustyyppi
                        hallintayksikko urakoitsija-id]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
-  (urakat-q/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko sopimustyyppi
+  (urakat-q/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko
                             alueurakkanro urakoitsija-id urakka-id))
 
 (defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi sopimustyyppi
@@ -98,7 +98,22 @@
            (first (organisaatiot-q/hae-id-y-tunnuksella db ytunnus))
            (organisaatiot-q/luo-organisaatio<! db nil nimi ytunnus nil nil "urakoitsija")))))
 
-(defn hae-hallintayksikko [db ely-hash urakkatyyppi]
+(defn -tarkista-ely-hash
+  "Jos kustannuspaikka (ely-hash) on Liikennevirasto, määritetään uusi ely-hash urakkakohtaisesti.
+  Harja vaatii, että kustannuspaikka on Ely. E18-urakoissa se on kuitenkin Liikennevirasto."
+  [ely-hash urakan-sampoid]
+  (if (= ely-hash "KP3310")
+    (case urakan-sampoid
+      "PR00020226" "KP911" ;UUD
+      "PR00033318" "KP921" ;VAR
+      "THPP-2-1501" "KP921" ;VAR
+      "PR00033567" "KP941" ;KAS
+      )
+    ely-hash)
+  )
+
+(defn hae-hallintayksikko
+  [db ely-hash urakkatyyppi urakan-sampoid]
   (:id
     (first
       (cond
@@ -117,7 +132,9 @@
         (organisaatiot-q/hae-id-lyhenteella db "MV")
 
         ;; Teiden hoidon ja ylläpidon urakat
-        :else (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))))
+        :else (organisaatiot-q/hae-ely-id-sampo-hashilla db
+                                                         (merkkijono/leikkaa 5
+                                                                             (-tarkista-ely-hash ely-hash urakan-sampoid)))))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
                                    ely-hash alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
@@ -130,7 +147,7 @@
             alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
             urakkatyyppi (urakkatyyppi/urakkatyyppi tyypit)
             sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
-            ely-id (hae-hallintayksikko db ely-hash urakkatyyppi)
+            ely-id (hae-hallintayksikko db ely-hash urakkatyyppi sampo-id)
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
                                        sopimustyyppi ely-id urakoitsija-id)]
         (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"

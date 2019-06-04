@@ -6,6 +6,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt tarkkaile!]]
+            [harja.ui.debug :as debug]
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.views.urakka.valinnat :as valinnat]
@@ -30,18 +31,18 @@
 (defonce suolasakot-nakyvissa? (atom false))
 
 (defonce suolasakot-ja-lampotilat
-  (reaction<! [ur @nav/valittu-urakka
-               nakymassa? @suolasakot-nakyvissa?]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and ur nakymassa?)
-                (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
+         (reaction<! [ur @nav/valittu-urakka
+                      nakymassa? @suolasakot-nakyvissa?]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when (and ur nakymassa?)
+                       (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
 (defonce suolasakko-kaytossa?
-  (reaction-writable
-   (let [hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
-         hoitokauden-tiedot (first (filter #(= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi %))
-                                           (:suolasakot @suolasakot-ja-lampotilat)))]
-     (:kaytossa hoitokauden-tiedot))))
+         (reaction-writable
+           (let [hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+                 hoitokauden-tiedot (first (filter #(= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi %))
+                                                   (:suolasakot @suolasakot-ja-lampotilat)))]
+             (:kaytossa hoitokauden-tiedot))))
 
 (defn yhden-hoitokauden-rivit [rivit hoitokauden-alkuvuosi]
   (when-not (empty? rivit)
@@ -49,20 +50,20 @@
             rivit)))
 
 (defonce syotettavat-tiedot
-  (reaction-writable
-   (let [ss @suolasakot-ja-lampotilat
-         hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
-     {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss) hoitokauden-alkuvuosi))
-      :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss) hoitokauden-alkuvuosi))})))
+         (reaction-writable
+           (let [ss @suolasakot-ja-lampotilat
+                 hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
+             {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss) hoitokauden-alkuvuosi))
+              :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss) hoitokauden-alkuvuosi))})))
 
 (defonce pohjavesialueet
-  (reaction-writable
-   (let [ss @suolasakot-ja-lampotilat]
-     (:pohjavesialueet ss))))
+         (reaction-writable
+           (let [ss @suolasakot-ja-lampotilat]
+             (:pohjavesialueet ss))))
 
 (defonce lampotilat
-  (reaction-writable
-   (:lampotilat @suolasakot-ja-lampotilat)))
+         (reaction-writable
+           (:lampotilat @suolasakot-ja-lampotilat)))
 
 (defn tallenna-suolasakko
   []
@@ -71,40 +72,69 @@
              :urakka (:id @nav/valittu-urakka)
              :hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi)))))
 
+(comment
+ (first
+  (keep-indexed (fn [i pv-raja]
+                  (and (= "11889008" (str (:pohjavesialue pv-raja)))
+                       i))
+                (:pohjavesialue-talvisuola @syotettavat-tiedot))))
 
+;; pohjavesialueet (:nimi :tunnus :tie :alue)
+
+;; pv-rajat "tunnus tie" ->
+;;      (:nimi
+;;      :pohjavesialue (tunnus)
+;;      :urakka
+;;      :hoitokauden_alkuvuosi
+;;      :talvisuolaraja
+;;      :tie)
+
+;; wrapped value
+;;   "tunnus tie" -> (:nimi :tunnus :tie :alue :talvisuolaraja)
+
+;; syotettavat-tiedot:pohjavesialue-talvisuola
+;;   (:nimi :pohjavesialue :urakka :hoitokauden_alkuvuosi :talvisuolaraja :tie)
 
 (defn pohjavesialueet-muokkausdata []
   (let [pohjavesialueet @pohjavesialueet
         pv-rajat (into {}
-                       (map (juxt :pohjavesialue identity))
+                       (map (juxt #(str (:pohjavesialue %) " " (:tie %)) identity))
                        (:pohjavesialue-talvisuola @syotettavat-tiedot))]
-    (wrap (into {}
+    (wrap (into (sorted-map)
                 (map (fn [pohjavesialue]
-                       [(:tunnus pohjavesialue)
-                        (assoc pohjavesialue
-                          :talvisuolaraja (:talvisuolaraja (get pv-rajat (:tunnus pohjavesialue))))]))
+                       (let [avain (str (:tunnus pohjavesialue) " " (:tie pohjavesialue))]
+                         [avain
+                          (assoc pohjavesialue :talvisuolaraja (:talvisuolaraja (get pv-rajat avain)))])))
                 pohjavesialueet)
           #(swap! syotettavat-tiedot update-in [:pohjavesialue-talvisuola]
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
-                              (log "PV " tunnus)
-                              (let [paivitettava (first (keep-indexed (fn [i pv-raja]
-                                                                        (and (= tunnus (:pohjavesialue pv-raja))
-                                                                             i))
-                                                                      pohjavesialue-talvisuola))]
-
-                                (log "PV paivitettava " paivitettava)
+                                        ;(log "PV " tunnus)
+                              (let [[tunnus-pohjavesialue tie] (clojure.string/split tunnus " ")
+                                    paivitettava (first (filter integer? (keep-indexed (fn [i pv-raja]
+                                                                                         (and (= tunnus-pohjavesialue (:pohjavesialue pv-raja))
+                                                                                              (= tie (:tie pv-raja))
+                                                                                              i))
+                                                                                       pohjavesialue-talvisuola)))]
+                                
+                                        ;(log "PV paivitettava " paivitettava)
                                 (if paivitettava
-                                  ;; olemassaoleva raja, päivitä sen arvo
-                                  (update-in pohjavesialue-talvisuola [paivitettava]
-                                             (fn [pv-raja]
-                                               (assoc pv-raja
-                                                 :talvisuolaraja (:talvisuolaraja (get % tunnus)))))
+                                  (do
+                                    (js/console.log "päivitettävä löytyi: " (pr-str tunnus-pohjavesialue tie))
+                                    ;; olemassaoleva raja, päivitä sen arvo
+                                    (update-in pohjavesialue-talvisuola [paivitettava]
+                                               (fn [pv-raja]
+                                                 (assoc pv-raja
+                                                        :tie (:tie (get % tunnus))
+                                                        :talvisuolaraja (:talvisuolaraja (get % tunnus))))))
                                   ;; tälle alueelle ei olemassaolevaa rajaa, lisätään uusi rivi
-                                  (conj pohjavesialue-talvisuola
-                                        {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
-                                         :pohjavesialue tunnus
-                                         :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
+                                  (do
+                                    (js/console.log "uusi tunnukselle" (pr-str tunnus-pohjavesialue tie))
+                                    (conj pohjavesialue-talvisuola
+                                          {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
+                                           :pohjavesialue tunnus-pohjavesialue
+                                           :tie (:tie (get % tunnus))
+                                           :talvisuolaraja (:talvisuolaraja (get % tunnus))})))))
                             (vec pohjavesialue-talvisuola)
                             (keys %)))))))
 
@@ -130,7 +160,8 @@
       (let [{:keys [pohjavesialueet]} @suolasakot-ja-lampotilat
             tiedot (:suolasakko @syotettavat-tiedot)
             lampotilat @lampotilat
-            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))]
+            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))
+            pohjavesialue-data (pohjavesialueet-muokkausdata)]
         [:span.suolasakkolomake
          [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
          [valinnat/urakan-hoitokausi urakka]
@@ -147,9 +178,9 @@
                                               (not @pohjavesialueita-muokattu?))
                                :ikoni (ikonit/tallenna)
                                :kun-onnistuu #(do
-                                               (viesti/nayta! "Tallentaminen onnistui" :success viesti/viestin-nayttoaika-lyhyt)
-                                               (reset! pohjavesialueita-muokattu? false)
-                                               (reset! suolasakot-ja-lampotilat %))}])]}
+                                                (viesti/nayta! "Tallentaminen onnistui" :success viesti/viestin-nayttoaika-lyhyt)
+                                                (reset! pohjavesialueita-muokattu? false)
+                                                (reset! suolasakot-ja-lampotilat %))}])]}
           [{:teksti "Suolasakko käytössä"
             :muokattava? (constantly saa-muokata?)
             :nimi :kaytossa :nayta-rivina? true
@@ -163,21 +194,21 @@
             :valinta-arvo first
             :muokattava? (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
-                             ""
-                             (if (nil? %) yleiset/+valitse-kuukausi+ (second %)))
+                              ""
+                              (if (nil? %) yleiset/+valitse-kuukausi+ (second %)))
             :valinnat [[5 "Toukokuu"] [6 "Kesäkuu"] [7 "Heinäkuu"]
                        [8 "Elokuu"] [9 "Syyskuu"]]}
 
-           {:otsikko     "Suola\u00ADsakko/bonus"
+           {:otsikko "Suola\u00ADsakko/bonus"
             :muokattava? (constantly saa-muokata?) :nimi :maara
-            :tyyppi      :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"
-            :varoita     [tarkista-sakko-ja-bonus]
-            :vihje       "Jos urakassa käytössä sekä suolasakko että -bonus, täytä vain tämä"}
-           {:otsikko     "Vain suola\u00ADsakko"
+            :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"
+            :varoita [tarkista-sakko-ja-bonus]
+            :vihje "Jos urakassa käytössä sekä suolasakko että -bonus, täytä vain tämä"}
+           {:otsikko "Vain suola\u00ADsakko"
             :muokattava? (constantly saa-muokata?) :nimi :vainsakkomaara
-            :tyyppi      :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"
-            :varoita     [tarkista-sakko-ja-bonus]
-            :vihje       "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"}
+            :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"
+            :varoita [tarkista-sakko-ja-bonus]
+            :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"}
 
            (when (urakka/indeksi-kaytossa?)
              {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
@@ -194,18 +225,24 @@
               :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
               :komponentti (fn [_]
                              [grid/muokkaus-grid {:piilota-toiminnot? true
-                                                 :voi-poistaa? (constantly false)
-                                                 :voi-lisata? false
-                                                 :jos-tyhja "Urakan alueella ei pohjavesialueita"}
-                             [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
-                               :hae #(hae-pohjavesialueen-nimi %)}
-                              {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
-                              {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
-                               :aseta (fn [rivi arvo]
-                                        (reset! pohjavesialueita-muokattu? true)
-                                        (assoc rivi :talvisuolaraja arvo))
-                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
-                             (pohjavesialueet-muokkausdata)])})]
+                                                  :voi-poistaa? (constantly false)
+                                                  :voi-lisata? false
+                                                  :jos-tyhja "Urakan alueella ei pohjavesialueita"}
+                              [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
+                                :hae #(hae-pohjavesialueen-nimi %)}
+                               {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
+                               {:otsikko "Tie" :nimi :tie :muokattava? (constantly false) :leveys "10%"}
+                               {:otsikko "Käyttöraja"
+                                :nimi :talvisuolaraja
+                                :tyyppi :positiivinen-numero
+                                :yksikko "t/km"
+                                :aseta (fn [rivi arvo]
+                                         (reset! pohjavesialueita-muokattu? true)
+                                         (assoc rivi :talvisuolaraja arvo))
+                                :placeholder "Ei rajoitusta"
+                                :leveys "30%"
+                                :muokattava? (constantly saa-muokata?)}]
+                              pohjavesialue-data])})]
           tiedot]
 
          [grid/grid
@@ -228,8 +265,8 @@
   (komp/luo
     (komp/lippu suolasakot-nakyvissa? pohjavesialueet/karttataso-pohjavesialueet)
     (komp/sisaan #(do
-                   (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                   (nav/vaihda-kartan-koko! :M)))
+                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                    (nav/vaihda-kartan-koko! :M)))
     (fn []
       (let [urakka @nav/valittu-urakka]
         [:span.suolasakot

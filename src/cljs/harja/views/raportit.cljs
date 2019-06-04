@@ -226,7 +226,14 @@
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))
         vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
-        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
+        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)
+        korkeintaan-edellinen-paiva (fn [uusi-paiva]
+                                      (not (pvm/sama-tai-jalkeen? uusi-paiva (pvm/nyt) true)))
+        hoitokauden-pvm-vali (if (or hoitourakassa? vesivaylaurakassa?)
+                               (u/hoito-tai-sopimuskaudet ur)
+                               (u/edelliset-hoitokaudet 5 false urakkatyyppi))
+        ;; Materiaaliraportissa ei näytetä meneillään olevaa päivää
+        pvm-rajattu-eiliseen? (boolean (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled
@@ -250,10 +257,9 @@
                 (and (= urakkatyyppi :vesivayla)
                      (or vesivaylaurakassa? (nil? ur))))
         [ui-valinnat/hoitokausi
-         {:disabled @vapaa-aikavali?}
-         (if (or hoitourakassa? vesivaylaurakassa?)
-           (u/hoito-tai-sopimuskaudet ur)
-           (u/edelliset-hoitokaudet 5 false urakkatyyppi))
+         {:disabled @vapaa-aikavali?
+          :disabloi-tulevat-hoitokaudet? true}
+         hoitokauden-pvm-vali
          valittu-hoitokausi
          #(do
            (reset! valittu-hoitokausi %)
@@ -269,7 +275,8 @@
                                             "Koko vuosi"
 
                                             :else
-                                            "Koko hoitokausi")}
+                                            "Koko hoitokausi")
+                             :disabloi-tulevat-kk? true}
        (cond-> @kuukaudet
                vain-kuukausivalinta? rest)
        valittu-kuukausi]]
@@ -280,7 +287,10 @@
                              :toiminto #(swap! vapaa-aikavali? not)
                              :komponentti (when @vapaa-aikavali?
                                             [:div
-                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]}]
+                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
+                                                                                   :validointi (if pvm-rajattu-eiliseen?
+                                                                                                 korkeintaan-edellinen-paiva
+                                                                                                 :korkeintaan-kuluva-paiva)}]
                                              [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
          @vapaa-aikavali?]])]))
 
@@ -522,8 +532,7 @@
                                                  (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
                                                "urakka"
                                                (raportit/urakkaraportin-parametrit
-                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))
-                                  _ (println "vie raportti, parametrit:  " (pr-str parametrit))]
+                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))]
@@ -817,5 +826,5 @@
         [:span
          (when-not @raportit/suoritettu-raportti
            [kartta/kartan-paikka])
-         (raporttivalinnat-ja-raportti)]
+         [raporttivalinnat-ja-raportti]]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))

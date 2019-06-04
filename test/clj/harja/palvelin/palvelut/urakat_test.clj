@@ -9,6 +9,7 @@
             [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.testi :refer :all]
+            [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
@@ -40,7 +41,7 @@
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-urakan-sopimustyyppi urakanvalvoja
-                        {:urakka-id @oulun-alueurakan-2005-2010-id
+                        {:urakka-id     @oulun-alueurakan-2005-2010-id
                          :sopimustyyppi :kokonaisurakka})]
     (is (= uusi-sopimustyyppi :kokonaisurakka))
     (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-2005-2010-id))))
@@ -71,17 +72,18 @@
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         urakoitsija-id (hae-vapaa-urakoitsija-id)
         [eka-sopimus-id toka-sopimus-id kolmas-sopimus-id] (hae-vapaat-sopimus-idt)
-        urakka {::u/nimi "lolurakka"
-                ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
-                ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
-                ::u/sopimukset [{::sop/id eka-sopimus-id
-                                 ::sop/paasopimus-id nil}
-                                {::sop/id toka-sopimus-id
-                                 ::sop/paasopimus-id eka-sopimus-id}
-                                {::sop/id kolmas-sopimus-id
-                                 ::sop/paasopimus-id eka-sopimus-id}]
-                ::u/hallintayksikko {::o/id hallintayksikko-id}
-                ::u/urakoitsija {::o/id urakoitsija-id}}
+        urakka {::u/nimi             "lolurakka"
+                ::u/alkupvm          #inst "2017-04-25T21:00:00.000-00:00"
+                ::u/loppupvm         #inst "2017-04-26T21:00:00.000-00:00"
+                ::u/sopimukset       [{::sop/id            eka-sopimus-id
+                                       ::sop/paasopimus-id nil}
+                                      {::sop/id            toka-sopimus-id
+                                       ::sop/paasopimus-id eka-sopimus-id}
+                                      {::sop/id            kolmas-sopimus-id
+                                       ::sop/paasopimus-id eka-sopimus-id}]
+                ::u/hallintayksikko  {::o/id hallintayksikko-id}
+                ::u/urakoitsija      {::o/id urakoitsija-id}
+                ::u/turvalaiteryhmat "3334, 3335"}
         urakat-lkm-ennen-testia (ffirst (q "SELECT COUNT(id) FROM urakka"))]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
@@ -91,7 +93,7 @@
 
     (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
 
-    ;; Luo uusi urakka
+    ;; Luo uusi vesiväyläurakka
     (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :tallenna-vesivaylaurakka +kayttaja-jvh+
                                           urakka)
@@ -99,7 +101,9 @@
           eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) urakan-sopimukset-kannassa))
           toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) urakan-sopimukset-kannassa))
           kolmas-sopimus-kannassa (first (filter #(= (:id %) kolmas-sopimus-id) urakan-sopimukset-kannassa))
-          urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
+          urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))
+          urakan-turvalaiteryhmat (first (q-map "SELECT id::text, array_to_string (turvalaiteryhmat, ',') as turvalaiteryhmat FROM vv_urakka_turvalaiteryhma WHERE urakka = " (::u/id urakka-kannassa) ";"))
+          urakan-urakkanro (ffirst (q "SELECT urakkanro FROM urakka WHERE  id = " (::u/id urakka-kannassa) ";"))]
 
       (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen)
           "Urakoiden määrä kasvoi yhdellä")
@@ -116,25 +120,32 @@
       (is (= (:paasopimus toka-sopimus-kannassa) eka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
       (is (= (:paasopimus kolmas-sopimus-kannassa) eka-sopimus-id) "Kolmas sopimus viittaa pääsopimukseen")
 
+      ;; Urakka-alue on tallennettu ja urakka-alueen numero on tallennettu
+      (is (= "3334,3335" (:turvalaiteryhmat urakan-turvalaiteryhmat)) "Vesiväyläurakan turvalaiteryhmat on tallennettu oikein.")
+      (is (= "3334, 3335" (::u/turvalaiteryhmat urakka-kannassa)) "Vesiväyläurakan turvalaiteryhmat palautuvat urakan tiedoissa.")
+      (is (= urakan-urakkanro (.toString (:id urakan-turvalaiteryhmat))) "Vesiväyläurakan urakka-alue on tallennettu urakan urakkanro-kenttään.")
+
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka
                                 ::u/id (::u/id urakka-kannassa)
                                 ;; Päivitetään nimi
                                 ::u/nimi (str (::u/nimi urakka) " päivitetty")
                                 ;; Toka soppari onkin nyt pääsoppari ja kolmas poistettiin
-                                ::u/sopimukset [{::sop/id eka-sopimus-id
+                                ::u/sopimukset [{::sop/id            eka-sopimus-id
                                                  ::sop/paasopimus-id toka-sopimus-id}
-                                                {::sop/id toka-sopimus-id
+                                                {::sop/id            toka-sopimus-id
                                                  ::sop/paasopimus-id nil}
-                                                {::sop/id kolmas-sopimus-id
+                                                {::sop/id            kolmas-sopimus-id
                                                  ::sop/paasopimus-id toka-sopimus-id
-                                                 :poistettu true}])
+                                                 :poistettu          true}]
+                                ::u/turvalaiteryhmat "3336")
             paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                        :tallenna-vesivaylaurakka +kayttaja-jvh+
                                                        paivitetty-urakka)
             paivitetyt-urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
             paivitetty-eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
-            paivitetty-toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))]
+            paivitetty-toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
+            paivitetyt-urakan-turvalaiteryhmat (first (q-map "SELECT id::text, array_to_string (turvalaiteryhmat, ',') as turvalaiteryhmat FROM vv_urakka_turvalaiteryhma WHERE urakka = " (::u/id paivitetty-urakka-kannassa) ";"))]
 
         ;; Urakka päivittyi
         (is (= (::u/nimi paivitetty-urakka-kannassa)
@@ -143,22 +154,45 @@
         ;; Sopparitkin päivittyi oikein
         (is (= (count paivitetyt-urakan-sopimukset-kannassa) 2))
         (is (= (:paasopimus paivitetty-eka-sopimus-kannassa) toka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
-        (is (nil? (:paasopimus paivitetty-toka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")))))
+        (is (nil? (:paasopimus paivitetty-toka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")
+
+        ;; Urakka-aluetiedot päivittyivät, urakkanro pysyi samana
+        (is (= "3336" (:turvalaiteryhmat paivitetyt-urakan-turvalaiteryhmat)) "Vesiväyläurakan turvalaiteryhmat on päivitetty oikein.")
+        (is (= "3336" (::u/turvalaiteryhmat paivitetty-urakka-kannassa)) "Vesiväyläurakan päivittyneet turvalaiteryhmat palautuvat urakan tiedoissa.")
+        (is (= urakan-urakkanro (.toString (:id paivitetyt-urakan-turvalaiteryhmat)))  "Vesiväyläurakan urakkanro ei päivity päivittäessä turvalaiteryhmätietoja.")
+
+        ;; Päivitetään urakka varatulla turvalaiteryhmällä
+        (let [uudelleen-paivitetty-urakka (assoc paivitetty-urakka
+                                            ::u/id (::u/id urakka-kannassa)
+                                            ::u/turvalaiteryhmat "3332,3336")]
+          (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :tallenna-vesivaylaurakka +kayttaja-jvh+
+                                                        uudelleen-paivitetty-urakka))
+              "Turvalaiteryhmä on jo kiinnitetty urakkaan"))
+
+        ;; Päivitetään urakka puuttuvalla turvalaiteryhmällä
+        (let [uudelleen-paivitetty-urakka (assoc paivitetty-urakka
+                                            ::u/id (::u/id urakka-kannassa)
+                                            ::u/turvalaiteryhmat "3332,9999")]
+          (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :tallenna-vesivaylaurakka +kayttaja-jvh+
+                                                        uudelleen-paivitetty-urakka))
+              "Kaikkia turvalaiteryhmiä ei löydy Harjasta."))))))
 
 (deftest urakan-tallennus-ei-toimi-virheellisilla-sopimuksilla
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         urakoitsija-id (hae-vapaa-urakoitsija-id)
         [eka-sopimus-id toka-sopimus-id] (hae-vapaat-sopimus-idt)
-        urakka {::u/nimi "lolurakka"
-                ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
-                ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
-                ::u/sopimukset [;; Virheellisesti kaksi pääsopimusta
-                                {::sop/id eka-sopimus-id
-                                 ::sop/paasopimus-id nil}
-                                {::sop/id toka-sopimus-id
-                                 ::sop/paasopimus-id nil}]
+        urakka {::u/nimi            "lolurakka"
+                ::u/alkupvm         #inst "2017-04-25T21:00:00.000-00:00"
+                ::u/loppupvm        #inst "2017-04-26T21:00:00.000-00:00"
+                ::u/sopimukset      [;; Virheellisesti kaksi pääsopimusta
+                                     {::sop/id            eka-sopimus-id
+                                      ::sop/paasopimus-id nil}
+                                     {::sop/id            toka-sopimus-id
+                                      ::sop/paasopimus-id nil}]
                 ::u/hallintayksikko {::o/id hallintayksikko-id}
-                ::u/urakoitsija {::o/id urakoitsija-id}}]
+                ::u/urakoitsija     {::o/id urakoitsija-id}}]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
     (assert eka-sopimus-id "Eka sopimus pitää olla")
@@ -175,12 +209,12 @@
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         urakoitsija-id (hae-vapaa-urakoitsija-id)
         sopimus-id (hae-vapaa-sopimus-id)
-        urakka {::u/nimi "lolurakka"
+        urakka {::u/nimi            "lolurakka"
                 ;; Alku ja loppu puuttuu
-                ::u/sopimukset [{::sop/id sopimus-id
-                                 ::sop/paasopimus-id nil}]
+                ::u/sopimukset      [{::sop/id            sopimus-id
+                                      ::sop/paasopimus-id nil}]
                 ::u/hallintayksikko {::o/id hallintayksikko-id}
-                ::u/urakoitsija {::o/id urakoitsija-id}}]
+                ::u/urakoitsija     {::o/id urakoitsija-id}}]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
     (assert sopimus-id "Sopimus pitää olla")

@@ -53,7 +53,7 @@
                                  [(when tulevia? :tulevat)
                                   (when kaynnissaolevia? :kaynnissa)
                                   (when paattyneita? :paattyneet)])]
-    [:div.row
+    [:div.row {:data-cy "urakat-valitse-urakka"}
      [:div.col-md-4
       (if (nil? urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]

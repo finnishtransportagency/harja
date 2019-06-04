@@ -1,4 +1,5 @@
 -- name: hae-harjassa-luodut-urakat
+-- Käytännössä kyse on vesiväyläurakoista
 SELECT
   u.id,
   u.nimi,
@@ -6,35 +7,39 @@ SELECT
   u.loppupvm,
   u.sampoid,
   u.urakkanro,
-  hal.id                   AS hallintayksikko_id,
-  hal.nimi                 AS hallintayksikko_nimi,
-  urk.id                   AS urakoitsija_id,
-  urk.nimi                 AS urakoitsija_nimi,
-  urk.ytunnus              AS urakoitsija_ytunnus,
-  s.nimi                   AS sopimus_nimi,
-  s.id                     AS sopimus_id,
-  s.paasopimus             AS "sopimus_paasopimus-id",
-  h.nimi                   AS hanke_nimi,
-  h.id                     AS hanke_id,
-  sl.lahetetty AS sahkelahetys_lahetetty,
-  sl.id AS sahkelahetys_id,
-  sl.onnistunut AS sahkelahetys_onnistunut
+  hal.id        AS hallintayksikko_id,
+  hal.nimi      AS hallintayksikko_nimi,
+  urk.id        AS urakoitsija_id,
+  urk.nimi      AS urakoitsija_nimi,
+  urk.ytunnus   AS urakoitsija_ytunnus,
+  s.nimi        AS sopimus_nimi,
+  s.id          AS sopimus_id,
+  s.paasopimus  AS "sopimus_paasopimus-id",
+  h.nimi        AS hanke_nimi,
+  h.id          AS hanke_id,
+  sl.lahetetty  AS sahkelahetys_lahetetty,
+  sl.id         AS sahkelahetys_id,
+  sl.onnistunut AS sahkelahetys_onnistunut,
+  array_to_string(ua.turvalaiteryhmat, ',') AS turvalaiteryhmat
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN sopimus s ON u.id = s.urakka
   LEFT JOIN sahkelahetys sl ON sl.urakka = u.id
+  LEFT JOIN vv_urakka_turvalaiteryhma ua ON u.id = ua.urakka
 WHERE u.harjassa_luotu IS TRUE
 ORDER BY u.alkupvm DESC, u.nimi;
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssi<!
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
-    VALUES (:urakka_id, :nimi, (SELECT id FROM toimenpidekoodi WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
+VALUES (:urakka_id, :nimi, (SELECT id
+                            FROM toimenpidekoodi
+                            WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
-INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES (:toimenpideinstanssi_id, :vaylatyyppi::vv_vaylatyyppi);
+INSERT INTO toimenpideinstanssi_vesivaylat ("toimenpideinstanssi-id", vaylatyyppi)
+VALUES (:toimenpideinstanssi_id, :vaylatyyppi :: vv_vaylatyyppi);
 
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT
@@ -43,38 +48,38 @@ SELECT
   u.tyyppi,
   u.urakkanro,
   COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-  st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
+           st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
-LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+  LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
--- Urakka on käynnissä
-(u.alkupvm <= current_date AND
-u.loppupvm >= current_date)
-OR
--- Urakka on käynnissä (loppua ei tiedossa)
-(u.alkupvm <= current_date AND
-u.loppupvm IS NULL)
-OR
--- Urakan takuuaika on voimassa
-(u.alkupvm <= current_date AND
-u.takuu_loppupvm >= current_date)
+  -- Urakka on käynnissä
+  (u.alkupvm <= current_date AND
+   u.loppupvm >= current_date)
+  OR
+  -- Urakka on käynnissä (loppua ei tiedossa)
+  (u.alkupvm <= current_date AND
+   u.loppupvm IS NULL)
+  OR
+  -- Urakan takuuaika on voimassa
+  (u.alkupvm <= current_date AND
+   u.takuu_loppupvm >= current_date)
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
 SELECT
-  u.id     AS urakka_id,
-  u.nimi   AS urakka_nimi,
-  u.tyyppi AS tyyppi,
-  o.id     AS hallintayksikko_id,
-  o.nimi   AS hallintayksikko_nimi,
+  u.id        AS urakka_id,
+  u.nimi      AS urakka_nimi,
+  u.tyyppi    AS tyyppi,
+  o.id        AS hallintayksikko_id,
+  o.nimi      AS hallintayksikko_nimi,
   o.elynumero AS hallintayksikko_elynumero,
   u.urakkanro AS urakka_urakkanro
 FROM urakka u
   JOIN organisaatio o ON u.hallintayksikko = o.id
-WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
-      (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
-      (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
-      (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko));
+WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
+      AND (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija)
+      AND (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi)
+      AND (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko));
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
@@ -82,8 +87,8 @@ SELECT
   u.nimi,
   u.tyyppi
 FROM urakka u
-WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
-      (u.loppupvm IS NULL OR u.loppupvm >= current_date);
+WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
 -- name: hae-kaynnissa-olevat-urakkatyypin-urakat
 SELECT
@@ -91,9 +96,9 @@ SELECT
   u.nimi,
   u.tyyppi
 FROM urakka u
-WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
-      (u.loppupvm IS NULL OR u.loppupvm >= current_date) AND
-      (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi);
+WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
+      AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
 -- name: hae-kaynnissa-olevat-ja-tulevat-urakat
 SELECT
@@ -104,9 +109,8 @@ SELECT
   u.loppupvm
 FROM urakka u
 WHERE u.alkupvm >= current_date
-      OR
-      (u.alkupvm <= current_date AND
-       u.loppupvm >= current_date);
+      OR (u.alkupvm <= current_date AND
+          u.loppupvm >= current_date);
 
 -- name: hae-hallintayksikon-urakat
 SELECT
@@ -130,46 +134,45 @@ SELECT
   u.sopimustyyppi,
   u.indeksi,
   u.urakkanro,
-  (SELECT * FROM indeksilaskennan_perusluku(u.id)) as indeksilaskennan_perusluku,
-  hal.id                      AS hallintayksikko_id,
-  hal.nimi                    AS hallintayksikko_nimi,
-  hal.lyhenne                 AS hallintayksikko_lyhenne,
-  urk.id                      AS urakoitsija_id,
-  urk.nimi                    AS urakoitsija_nimi,
-  urk.ytunnus                 AS urakoitsija_ytunnus,
-  yt.yhatunnus                AS yha_yhatunnus,
-  yt.yhaid                    AS yha_yhaid,
-  yt.yhanimi                  AS yha_yhanimi,
-  yt.elyt :: TEXT []          AS yha_elyt,
-  yt.vuodet :: INTEGER []     AS yha_vuodet,
-  yt.sidonta_lukittu          AS yha_sidonta_lukittu,
-  yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
-  yt.kohdeluettelo_paivittaja AS yha_kohdeluettelo_paivittaja,
-  k.etunimi                   AS yha_kohdeluettelo_paivittaja_etunimi,
-  k.sukunimi                  AS yha_kohdeluettelo_paivittaja_sukunimi,
+  (SELECT *
+   FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
+  hal.id                                  AS hallintayksikko_id,
+  hal.nimi                                AS hallintayksikko_nimi,
+  hal.lyhenne                             AS hallintayksikko_lyhenne,
+  urk.id                                  AS urakoitsija_id,
+  urk.nimi                                AS urakoitsija_nimi,
+  urk.ytunnus                             AS urakoitsija_ytunnus,
+  yt.yhatunnus                            AS yha_yhatunnus,
+  yt.yhaid                                AS yha_yhaid,
+  yt.yhanimi                              AS yha_yhanimi,
+  yt.elyt :: TEXT []                      AS yha_elyt,
+  yt.vuodet :: INTEGER []                 AS yha_vuodet,
+  yt.sidonta_lukittu                      AS yha_sidonta_lukittu,
+  yt.kohdeluettelo_paivitetty             AS yha_kohdeluettelo_paivitetty,
+  yt.kohdeluettelo_paivittaja             AS yha_kohdeluettelo_paivittaja,
+  k.etunimi                               AS yha_kohdeluettelo_paivittaja_etunimi,
+  k.sukunimi                              AS yha_kohdeluettelo_paivittaja_sukunimi,
   u.takuu_loppupvm,
-  (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
-                            THEN '*'
+  (SELECT array_agg(concat((CASE
+                            WHEN paasopimus IS NULL
+                              THEN '*'
                             ELSE '' END),
-                            id,
-                            '=',
-                            COALESCE (sampoid, nimi)))
+                           id,
+                           '=',
+                           COALESCE(sampoid, nimi)))
    FROM sopimus s
-   WHERE urakka = u.id)       AS sopimukset,
-
+   WHERE urakka = u.id)                   AS sopimukset,
   -- Urakka-alue: tällä hetkellä tuetaan joko hoidon alueurakan, teknisten laitteiden ja siltapalvelusopimusten alueita.
   CASE
   WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
     THEN ST_Simplify(sps.alue, 50)
   WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
     THEN ST_Simplify(tlu.alue, 50)
-  WHEN (u.tyyppi = 'hoito' :: urakkatyyppi AND au.alue IS NOT NULL)
-    THEN
-      -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
+  WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
+    THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
       hoidon_alueurakan_geometria(u.urakkanro)
-  ELSE
-    ST_Simplify(au.alue, 50)
-  END                         AS alueurakan_alue
+  ELSE ST_Simplify(au.alue, 50)
+  END                                     AS alueurakan_alue
 
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
@@ -188,18 +191,18 @@ WHERE hallintayksikko = :hallintayksikko
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
 -- Listaa ELY-kohtaista laskutusyhteenvetoa varten aikavälillä käynnissäolevat hoitourakat
-SELECT id,
-       nimi,
-       indeksi
-  FROM urakka u
- WHERE :urakkaid::INTEGER IS NULL AND
-       u.hallintayksikko = :hallintayksikkoid AND
-       u.tyyppi = :urakkatyyppi::urakkatyyppi AND
-       (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
-        u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
-       u.urakkanro IS NOT NULL
-       OR
-       u.id = :urakkaid::INTEGER;
+SELECT
+  id,
+  nimi,
+  indeksi
+FROM urakka u
+WHERE :urakkaid :: INTEGER IS NULL AND
+      u.hallintayksikko = :hallintayksikkoid AND
+      u.tyyppi = :urakkatyyppi :: urakkatyyppi AND
+      (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
+       u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
+      u.urakkanro IS NOT NULL
+      OR u.id = :urakkaid :: INTEGER;
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.
@@ -212,7 +215,8 @@ WHERE u.id = :urakka;
 
 -- name: urakan-hallintayksikko
 SELECT hallintayksikko AS "hallintayksikko-id"
-FROM urakka WHERE id = :id;
+FROM urakka
+WHERE id = :id;
 
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
@@ -226,16 +230,17 @@ SELECT
   u.tyyppi,
   u.sopimustyyppi,
   u.takuu_loppupvm,
-  hal.id                   AS hallintayksikko_id,
-  hal.nimi                 AS hallintayksikko_nimi,
-  hal.lyhenne              AS hallintayksikko_lyhenne,
-  urk.id                   AS urakoitsija_id,
-  urk.nimi                 AS urakoitsija_nimi,
-  urk.ytunnus              AS urakoitsija_ytunnus,
+  hal.id                        AS hallintayksikko_id,
+  hal.nimi                      AS hallintayksikko_nimi,
+  hal.lyhenne                   AS hallintayksikko_lyhenne,
+  urk.id                        AS urakoitsija_id,
+  urk.nimi                      AS urakoitsija_nimi,
+  urk.ytunnus                   AS urakoitsija_ytunnus,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
-   WHERE urakka = u.id and poistettu = FALSE)    AS sopimukset,
-  ST_Simplify(au.alue, 50) AS alueurakan_alue
+   WHERE urakka = u.id
+         AND poistettu = FALSE) AS sopimukset,
+  ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
@@ -257,16 +262,17 @@ SELECT
   u.tyyppi,
   u.sopimustyyppi,
   u.takuu_loppupvm,
-  hal.id                   AS hallintayksikko_id,
-  hal.nimi                 AS hallintayksikko_nimi,
-  hal.lyhenne              AS hallintayksikko_lyhenne,
-  urk.id                   AS urakoitsija_id,
-  urk.nimi                 AS urakoitsija_nimi,
-  urk.ytunnus              AS urakoitsija_ytunnus,
+  hal.id                        AS hallintayksikko_id,
+  hal.nimi                      AS hallintayksikko_nimi,
+  hal.lyhenne                   AS hallintayksikko_lyhenne,
+  urk.id                        AS urakoitsija_id,
+  urk.nimi                      AS urakoitsija_nimi,
+  urk.ytunnus                   AS urakoitsija_ytunnus,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
-   WHERE urakka = u.id and poistettu = FALSE)    AS sopimukset,
-  ST_Simplify(au.alue, 50) AS alueurakan_alue
+   WHERE urakka = u.id
+         AND poistettu = FALSE) AS sopimukset,
+  ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
@@ -335,13 +341,13 @@ WHERE u.id = :id;
 -- name: hae-urakoiden-organisaatiotiedot
 -- Hakee joukolle urakoita urakan ja hallintayksikön nimet ja id:t
 SELECT
-  u.id     AS urakka_id,
-  u.nimi   AS urakka_nimi,
-  u.tyyppi AS tyyppi,
-  hy.id    AS hallintayksikko_id,
-  hy.nimi  AS hallintayksikko_nimi,
+  u.id         AS urakka_id,
+  u.nimi       AS urakka_nimi,
+  u.tyyppi     AS tyyppi,
+  hy.id        AS hallintayksikko_id,
+  hy.nimi      AS hallintayksikko_nimi,
   hy.elynumero AS hallintayksikko_elynumero,
-  u.urakkanro AS urakka_urakkanro
+  u.urakkanro  AS urakka_urakkanro
 FROM urakka u
   JOIN organisaatio hy ON u.hallintayksikko = hy.id
 WHERE u.id IN (:id);
@@ -369,7 +375,8 @@ SELECT
   s.alkupvm,
   s.loppupvm
 FROM sopimus s
-WHERE s.urakka = :urakka and s.poistettu = FALSE;
+WHERE s.urakka = :urakka
+      AND s.poistettu = FALSE;
 
 -- name: onko-olemassa
 -- Tarkistaa onko id:n mukaista urakkaa olemassa tietokannassa
@@ -387,16 +394,54 @@ WHERE hanke_sampoid = :hanke_sampo_id;
 
 -- name: luo-urakka<!
 -- Luo uuden urakan.
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko,
-                    sopimustyyppi, urakkanro, urakoitsija)
-VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko,
-        :sopimustyyppi :: sopimustyyppi, :urakkanumero, :urakoitsijaid );
+INSERT INTO urakka (nimi,
+                    alkupvm,
+                    loppupvm,
+                    hanke_sampoid,
+                    sampoid,
+                    tyyppi,
+                    hallintayksikko,
+                    sopimustyyppi,
+                    urakkanro,
+                    urakoitsija)
+VALUES (:nimi,
+        :alkupvm,
+        :loppupvm,
+        :hanke_sampoid,
+        :sampoid,
+        :urakkatyyppi :: urakkatyyppi,
+        :hallintayksikko,
+        :sopimustyyppi :: sopimustyyppi,
+        :urakkanumero,
+        :urakoitsijaid);
 
 -- name: luo-harjassa-luotu-urakka<!
-INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
-                    harjassa_luotu, luotu, luoja, sampoid)
-VALUES (:nimi, :urakkanro, :alkupvm, :loppupvm, :alue, :hallintayksikko, :urakoitsija, :hanke, 'vesivayla-hoito',
-               TRUE, NOW(), :kayttaja, (SELECT 'PRHAR' || LPAD(currval(pg_get_serial_sequence('urakka', 'id'))::text, 5, '0')));
+INSERT INTO urakka (nimi,
+                    urakkanro,
+                    alkupvm,
+                    loppupvm,
+                    alue,
+                    hallintayksikko,
+                    urakoitsija,
+                    hanke,
+                    tyyppi,
+                    harjassa_luotu,
+                    luotu,
+                    luoja,
+                    sampoid)
+VALUES (:nimi,
+  :urakkanro,
+  :alkupvm,
+  :loppupvm,
+  :alue,
+  :hallintayksikko,
+  :urakoitsija,
+  :hanke,
+  'vesivayla-hoito',
+  TRUE,
+  NOW(),
+        :kayttaja,
+        (SELECT 'PRHAR' || LPAD(currval(pg_get_serial_sequence('urakka', 'id')) :: TEXT, 5, '0')));
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
@@ -405,11 +450,8 @@ SET nimi          = :nimi,
   alkupvm         = :alkupvm,
   loppupvm        = :loppupvm,
   hanke_sampoid   = :hanke_sampoid,
-
   tyyppi          = :urakkatyyppi :: URAKKATYYPPI,
   hallintayksikko = :hallintayksikko,
-
-  sopimustyyppi   = :sopimustyyppi :: SOPIMUSTYYPPI,
   urakkanro       = :urakkanro,
   urakoitsija     = :urakoitsija
 
@@ -427,7 +469,55 @@ SET nimi          = :nimi,
   urakoitsija     = :urakoitsija,
   muokattu        = NOW(),
   muokkaaja       = :kayttaja
-WHERE id = :id AND harjassa_luotu IS TRUE;
+WHERE id = :id
+      AND harjassa_luotu IS TRUE;
+
+-- name: luo-tai-paivita-vesivaylaurakan-alue<!
+INSERT INTO vv_urakka_turvalaiteryhma (
+  urakka,
+  turvalaiteryhmat,
+  alkupvm,
+  loppupvm,
+  luotu,
+  luoja)
+VALUES (
+  :urakka,
+  :turvalaiteryhmat :: TEXT [],
+  :alkupvm,
+  :loppupvm,
+  now(),
+  :kayttaja)
+ON CONFLICT (urakka)
+  DO
+  UPDATE SET
+    turvalaiteryhmat = :turvalaiteryhmat :: TEXT [],
+    alkupvm = :alkupvm::DATE,
+    loppupvm = :loppupvm::DATE,
+    muokattu         = now(),
+    muokkaaja        = :kayttaja;
+
+-- name: hae-vv-turvalaiteryhmien-nykyiset-urakat
+SELECT id, nimi FROM urakka where
+  array_append(ARRAY[]::int[], id)  &&
+  (SELECT array_agg(urakka) from vv_urakka_turvalaiteryhma
+            WHERE turvalaiteryhmat && string_to_array(replace (:turvalaiteryhmat, ' ', ''), ',') AND
+                  urakka != :urakkaid) AND
+                  (alkupvm, loppupvm) OVERLAPS (:alkupvm::DATE, :loppupvm::DATE);
+
+-- name: hae-loytyvat-reimari-turvalaiteryhmat
+SELECT tunnus FROM reimari_turvalaiteryhma
+WHERE tunnus::text IN (:turvalaiteryhma);
+
+-- name: tallenna-vv-urakkanro<!
+-- Vesiväyläurakoissa urakkanro viittaa vv_urakka_turvalaiteryhma-tauluun,
+-- jossa turvalaiteryhmät viittaavat reimari_turvalaiteryhma-tauluun, jonka
+-- sisältö tulee Reimarista. Muissa urakkatyypeissä urakkanro viittaa muihin tauluihin, esim.
+-- alueurakka-tauluun.
+UPDATE urakka
+SET urakkanro = :urakkanro,
+  muokattu    = NOW(),
+  muokkaaja   = :kayttaja
+  WHERE id = :urakka;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille
@@ -446,31 +536,26 @@ WHERE sampoid = :sampoid;
 -- name: aseta-urakoitsija-sopimuksen-kautta!
 -- Asettaa urakalle urakoitsijan sopimuksen Sampo id:n avulla
 UPDATE urakka
-SET urakoitsija = (
-  SELECT id
-  FROM organisaatio
-  WHERE sampoid = (
-    SELECT urakoitsija_sampoid
-    FROM sopimus
-    WHERE sampoid = :sopimus_sampoid))
-WHERE sampoid = (
-  SELECT urakka_sampoid
-  FROM sopimus
-  WHERE sampoid = :sopimus_sampoid AND
-        paasopimus IS NULL);
+SET urakoitsija = (SELECT id
+                   FROM organisaatio
+                   WHERE sampoid = (SELECT urakoitsija_sampoid
+                                    FROM sopimus
+                                    WHERE sampoid = :sopimus_sampoid))
+WHERE sampoid = (SELECT urakka_sampoid
+                 FROM sopimus
+                 WHERE sampoid = :sopimus_sampoid
+                       AND paasopimus IS NULL);
 
 -- name: aseta-urakoitsija-urakoille-yhteyshenkilon-kautta!
 -- Asettaa urakoille urakoitsijan yhteyshenkilön Sampo id:n avulla
 UPDATE urakka
-SET urakoitsija = (
-  SELECT id
-  FROM organisaatio
-  WHERE sampoid = :urakoitsija_sampoid)
-WHERE sampoid IN (
-  SELECT urakka_sampoid
-  FROM sopimus
-  WHERE urakoitsija_sampoid = :urakoitsija_sampoid AND
-        paasopimus IS NULL);
+SET urakoitsija = (SELECT id
+                   FROM organisaatio
+                   WHERE sampoid = :urakoitsija_sampoid)
+WHERE sampoid IN (SELECT urakka_sampoid
+                  FROM sopimus
+                  WHERE urakoitsija_sampoid = :urakoitsija_sampoid
+                        AND paasopimus IS NULL);
 
 -- name: hae-yksittainen-urakka
 -- Hakee yhden urakan id:n avulla
@@ -485,23 +570,24 @@ SELECT
   u.sopimustyyppi,
   u.takuu_loppupvm,
   u.urakkanro,
-  hal.id                                                        AS hallintayksikko_id,
-  hal.nimi                                                      AS hallintayksikko_nimi,
-  hal.lyhenne                                                   AS hallintayksikko_lyhenne,
-  urk.id                                                        AS urakoitsija_id,
-  urk.nimi                                                      AS urakoitsija_nimi,
-  urk.ytunnus                                                   AS urakoitsija_ytunnus,
-  yt.yhatunnus                                                  AS yha_yhatunnus,
-  yt.yhaid                                                      AS yha_yhaid,
-  yt.yhanimi                                                    AS yha_yhanimi,
-  yt.elyt :: TEXT []                                            AS yha_elyt,
-  yt.vuodet :: INTEGER []                                       AS yha_vuodet,
-  yt.kohdeluettelo_paivitetty                                   AS yha_kohdeluettelo_paivitetty,
-  yt.sidonta_lukittu                                            AS yha_sidonta_lukittu,
+  hal.id                        AS hallintayksikko_id,
+  hal.nimi                      AS hallintayksikko_nimi,
+  hal.lyhenne                   AS hallintayksikko_lyhenne,
+  urk.id                        AS urakoitsija_id,
+  urk.nimi                      AS urakoitsija_nimi,
+  urk.ytunnus                   AS urakoitsija_ytunnus,
+  yt.yhatunnus                  AS yha_yhatunnus,
+  yt.yhaid                      AS yha_yhaid,
+  yt.yhanimi                    AS yha_yhanimi,
+  yt.elyt :: TEXT []            AS yha_elyt,
+  yt.vuodet :: INTEGER []       AS yha_vuodet,
+  yt.kohdeluettelo_paivitetty   AS yha_kohdeluettelo_paivitetty,
+  yt.sidonta_lukittu            AS yha_sidonta_lukittu,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
-   WHERE urakka = u.id and poistettu = FALSE)                   AS sopimukset,
-  ST_Simplify(au.alue, 50)                                      AS alueurakan_alue
+   WHERE urakka = u.id
+         AND poistettu = FALSE) AS sopimukset,
+  ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
@@ -531,11 +617,11 @@ SELECT
   u.id,
   u.hanke,
   u.nimi,
-  lpad(cast(u.urakkanro as varchar), 4, '0') AS alueurakkanro
+  lpad(cast(u.urakkanro AS VARCHAR), 4, '0') AS alueurakkanro
 FROM urakka u
 WHERE u.id IN (SELECT id
                FROM urakka
-               WHERE (tyyppi = 'hoito' AND
+               WHERE (tyyppi IN ('hoito', 'teiden-hoito') AND
                       u.hanke IS NOT NULL AND
                       (SELECT EXTRACT(YEAR FROM u.alkupvm)) <= :vuosi AND
                       :vuosi <= (SELECT EXTRACT(YEAR FROM u.loppupvm))));
@@ -559,17 +645,15 @@ FROM urakka
 WHERE hallintayksikko = :hal
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date)
-      AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi);
+      AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi);
 
 -- name: onko-urakalla-tehtavaa
 SELECT EXISTS(
     SELECT tpk.id
     FROM toimenpidekoodi tpk
-      INNER JOIN toimenpideinstanssi tpi
-        ON tpi.toimenpide = tpk.emo
-    WHERE
-      tpi.urakka = :urakkaid AND
-      tpk.id = :tehtavaid);
+      INNER JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tpk.emo
+    WHERE tpi.urakka = :urakkaid
+          AND tpk.id = :tehtavaid);
 
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
@@ -579,46 +663,55 @@ FROM urakka u
 WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
-      AND
-      ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-      OR
-      (:urakkatyyppi = 'valaistus' AND
-       exists(SELECT id
-              FROM valaistusurakka vu
-              WHERE vu.valaistusurakkanro = u.urakkanro AND
-                    st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-OR
-((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-exists(SELECT id
-FROM paallystyspalvelusopimus pps
-WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
-st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
-OR
-((:urakkatyyppi = 'tekniset-laitteet') AND
-exists(SELECT id
-FROM tekniset_laitteet_urakka tlu
-WHERE tlu.urakkanro = u.urakkanro AND
-st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-OR
-((:urakkatyyppi = 'siltakorjaus') AND
-exists(SELECT id
-FROM siltapalvelusopimus sps
-WHERE sps.urakkanro = u.urakkanro AND
-st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
+      AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+           OR
+           (:urakkatyyppi = 'valaistus' AND
+            exists(SELECT id
+                   FROM valaistusurakka vu
+                   WHERE vu.valaistusurakkanro = u.urakkanro
+                         AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+           OR
+           ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+            exists(SELECT id
+                   FROM paallystyspalvelusopimus pps
+                   WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
+                         AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+           OR
+           ((:urakkatyyppi = 'tekniset-laitteet') AND
+            exists(SELECT id
+                   FROM tekniset_laitteet_urakka tlu
+                   WHERE tlu.urakkanro = u.urakkanro
+                         AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+           OR
+           ((:urakkatyyppi = 'siltakorjaus') AND
+            exists(SELECT id
+                   FROM siltapalvelusopimus sps
+                   WHERE sps.urakkanro = u.urakkanro
+                         AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero, "ely-nimi", nimi, luotu, luoja)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero, :elynimi, :nimi, CURRENT_TIMESTAMP, (select id from kayttaja WHERE kayttajanimi = 'Integraatio'));
+VALUES (:alueurakkanro,
+        ST_GeomFromText(:alue) :: GEOMETRY,
+        :elynumero,
+        :elynimi,
+        :nimi,
+        CURRENT_TIMESTAMP,
+        (SELECT id
+         FROM kayttaja
+         WHERE kayttajanimi = 'Integraatio'));
 
 -- name: paivita-alueurakka!
 UPDATE alueurakka
-SET alue    = ST_GeomFromText(:alue) :: GEOMETRY,
-elynumero = :elynumero,
-"ely-nimi" = :elynimi,
-nimi = :nimi,
-muokattu =  CURRENT_TIMESTAMP,
-muokkaaja = (select id from kayttaja WHERE kayttajanimi = 'Integraatio')
+SET alue     = ST_GeomFromText(:alue) :: GEOMETRY,
+  elynumero  = :elynumero,
+  "ely-nimi" = :elynimi,
+  nimi       = :nimi,
+  muokattu   = CURRENT_TIMESTAMP,
+  muokkaaja  = (SELECT id
+                FROM kayttaja
+                WHERE kayttajanimi = 'Integraatio')
 WHERE alueurakkanro = :alueurakkanro;
 
 -- name: hae-alueurakka-numerolla
@@ -627,7 +720,8 @@ FROM alueurakka
 WHERE alueurakkanro = :alueurakkanro;
 
 -- name: tuhoa-alueurakkadata!
-DELETE FROM alueurakka;
+DELETE
+FROM alueurakka;
 
 -- name: hae-urakan-geometria
 SELECT
@@ -639,15 +733,13 @@ WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
 SELECT
-  hoidon_paaurakan_geometria(u.id)          AS urakka_alue,
-  u.id                                      AS urakka_id,
+  hoidon_paaurakan_geometria(u.id) AS urakka_alue,
+  u.id                             AS urakka_id,
   CASE
-  WHEN (u.tyyppi = 'hoito'::urakkatyyppi AND alueurakka.alue IS NOT NULL)
-    THEN
-      hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
-  ELSE
-  hoidon_paaurakan_geometria(u.id)
-  END AS alueurakka_alue
+  WHEN (u.tyyppi IN ('hoito':: urakkatyyppi,'teiden-hoito':: urakkatyyppi)  AND alueurakka.alue IS NOT NULL)
+    THEN hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
+  ELSE hoidon_paaurakan_geometria(u.id)
+  END                              AS alueurakka_alue
 FROM urakka u
   LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
 WHERE u.id IN (:idt);
@@ -679,7 +771,8 @@ SET indeksi = :indeksi
 WHERE id = :urakka
 
 -- name: tuhoa-valaistusurakkadata!
-DELETE FROM valaistusurakka;
+DELETE
+FROM valaistusurakka;
 
 -- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
 SELECT alueurakka
@@ -691,7 +784,8 @@ INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka);
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
-DELETE FROM paallystyspalvelusopimus;
+DELETE
+FROM paallystyspalvelusopimus;
 
 -- name: hae-paallystyspalvelusopimus-alueurakkanumero-sijainnilla
 SELECT alueurakka
@@ -707,11 +801,10 @@ SELECT
   u.id,
   st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
-JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-WHERE
-u.alkupvm <= current_date AND
-u.loppupvm >= current_date AND
-st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+WHERE u.alkupvm <= current_date
+      AND u.loppupvm >= current_date
+      AND st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 
@@ -733,9 +826,9 @@ SELECT
 FROM urakka u
   JOIN organisaatio e ON e.id = u.hallintayksikko
   JOIN organisaatio o ON o.id = u.urakoitsija
-WHERE urakkanro = :urakkanro AND
-      alkupvm <= current_date AND
-      loppupvm >= current_date;
+WHERE urakkanro = :urakkanro
+      AND alkupvm <= current_date
+      AND loppupvm >= current_date;
 
 -- name: onko-olemassa-urakkanro?
 -- single?: true
@@ -744,7 +837,8 @@ SELECT exists(SELECT id
               WHERE urakkanro = :urakkanro);
 
 -- name: tuhoa-tekniset-laitteet-urakkadata!
-DELETE FROM tekniset_laitteet_urakka;
+DELETE
+FROM tekniset_laitteet_urakka;
 
 -- name: hae-tekniset-laitteet-urakan-urakkanumero-sijainnilla
 SELECT urakkanro
@@ -756,7 +850,8 @@ INSERT INTO tekniset_laitteet_urakka (urakkanro, alue)
 VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 
 -- name: tuhoa-siltapalvelusopimukset!
-DELETE FROM siltapalvelusopimus;
+DELETE
+FROM siltapalvelusopimus;
 
 -- name: hae-siltapalvelussopimuksen-urakkanumero-sijainnilla
 SELECT urakkanro
@@ -829,8 +924,9 @@ WHERE u.id = :id;
 -- name: kirjaa-sahke-lahetys!
 INSERT INTO sahkelahetys (urakka, lahetetty, onnistunut)
 VALUES (:urakka, now(), :onnistunut)
-on CONFLICT  (urakka) do
-update set lahetetty  = now(), onnistunut = :onnistunut;
+ON CONFLICT (urakka)
+  DO
+  UPDATE SET lahetetty = now(), onnistunut = :onnistunut;
 
 -- name: perustettu-harjassa?
 -- single?: true
@@ -856,32 +952,44 @@ SELECT
   urk.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
-WHERE
-  exists(SELECT klu.id
-         FROM kayttajan_lisaoikeudet_urakkaan klu
-           JOIN kayttaja k ON klu.kayttaja = k.id
-         WHERE klu.urakka = u.id AND
-               k.kayttajanimi = :kayttajanimi AND
-               k.jarjestelma)
-  OR
-  exists(SELECT o.id
-         FROM organisaatio o
-           JOIN kayttaja k ON o.id = k.organisaatio
-         WHERE o.id = urk.id AND
-               k.kayttajanimi = :kayttajanimi AND
-               k.jarjestelma);
-
+WHERE (exists(SELECT klu.id
+              FROM kayttajan_lisaoikeudet_urakkaan klu
+                JOIN kayttaja k ON klu.kayttaja = k.id
+              WHERE klu.urakka = u.id
+                    AND k.kayttajanimi = :kayttajanimi
+                    AND k.jarjestelma)
+       OR
+       exists(SELECT o.id
+              FROM organisaatio o
+                JOIN kayttaja k ON o.id = k.organisaatio
+              WHERE o.id = urk.id
+                    AND k.kayttajanimi = :kayttajanimi
+                    AND k.jarjestelma)
+       OR
+       exists(SELECT k.id
+              FROM kayttaja k
+                JOIN organisaatio o ON k.organisaatio = o.id
+              WHERE k.kayttajanimi = :kayttajanimi
+                    AND k.jarjestelma IS TRUE
+                    AND o.tyyppi = 'liikennevirasto'))
+      AND (:urakkatyyppi :: VARCHAR IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
 -- name: urakan-paasopimus-id
 -- single?: true
-SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL AND poistettu = FALSE;
+SELECT id
+FROM sopimus
+WHERE urakka = :urakka
+      AND paasopimus IS NULL
+      AND poistettu = FALSE;
 
 -- name: paivita-alue-urakalle!
 UPDATE urakka
-SET alue = ST_GeomFromText(:alue) :: GEOMETRY,
-muokattu = CURRENT_TIMESTAMP
+SET alue   = ST_GeomFromText(:alue) :: GEOMETRY,
+  muokattu = CURRENT_TIMESTAMP
 WHERE urakka.urakkanro = :urakkanro;
 
 -- name: hae-urakka-id-alueurakkanumerolla
 -- single?: true
-SELECT id FROM urakka WHERE urakkanro = :alueurakka
+SELECT id
+FROM urakka
+WHERE urakkanro = :alueurakka

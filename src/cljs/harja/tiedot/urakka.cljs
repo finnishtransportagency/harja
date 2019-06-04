@@ -449,9 +449,10 @@
   (reaction (when-let [ur @nav/valittu-urakka]
               (when (= :hoito (:tyyppi ur))
                 (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm ur))]
-                  (if (< urakan-alkuvuosi 2017)
-                    "MAKU 2005"
-                    "MAKU 2010"))))))
+                  (cond
+                    (< urakan-alkuvuosi 2017) "MAKU 2005"
+                    (< urakan-alkuvuosi 2019) "MAKU 2010"
+                    :default "MAKU 2015"))))))
 
 (defn lukitse-urakan-yha-sidonta! [urakka-id]
   (when (= @nav/valittu-urakka-id urakka-id)
@@ -507,5 +508,3 @@
          (= (:sopimustyyppi ur) :palvelusopimus))
     (and (= (:tyyppi ur) :tiemerkinta)
          (= (:sopimustyyppi ur) :palvelusopimus))))
-
-(def +toteumien-haun-aikavalin-max-pituus-kk+ 1)

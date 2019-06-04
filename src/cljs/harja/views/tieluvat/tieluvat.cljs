@@ -18,7 +18,7 @@
     [harja.pvm :as pvm]
     [harja.fmt :as fmt]
     [harja.ui.liitteet :as liitteet]
-    [reagent.core :as r]
+    [reagent.core :as r :refer [atom]]
     [clojure.set :as set]
     [harja.views.kartta.tasot :as tasot]
     [harja.tiedot.kartta :as kartta-tiedot])
@@ -689,12 +689,14 @@
     {:otsikko "Otsikko"
      :tyyppi :string
      :nimi ::tielupa/otsikko}
-    {:otsikko "Liite URL"
+    {:otsikko "Liite (linkki Tielupa-järjestelmän liitetilauspalveluun)"
      :tyyppi :linkki
      :nimi ::tielupa/liite-url}
-    {:otsikko "Katselmus URL"
-     :tyyppi :linkki
-     :nimi ::tielupa/katselmus-url}
+    {:otsikko ""
+     :tyyppi :linkki}
+    ;{:otsikko "Katselmus (linkki Tielupa-järjestelmään)"
+    ; :tyyppi :linkki
+    ; :nimi ::tielupa/katselmus-url}
     {:otsikko "Urakka"
      :tyyppi :string
      :nimi ::tielupa/urakan-nimi}
@@ -713,12 +715,6 @@
     {:otsikko "Tien nimi"
      :tyyppi :string
      :nimi ::tielupa/tien-nimi}
-    {:otsikko "Liitteet"
-     :nimi :liitteet
-     :palstoja 3
-     :tyyppi :komponentti
-     :komponentti (fn [{tielupa :data}]
-                    [liitteet/liitteet-ikonilistana (::tielupa/liitteet tielupa)])}
     (when (nayta-sijaintigrid? valittu-tielupa)
       {:otsikko (str "Sijainnit " (count (::tielupa/sijainnit valittu-tielupa)) "kpl")
        :tyyppi :komponentti
@@ -778,40 +774,79 @@
    [napit/takaisin "Takaisin lupataulukkoon" #(e! (tiedot/->ValitseTielupa nil))]
    [tielupalomake e! app]])
 
-(defn suodattimet [e! app]
-  (let [atomi (partial tiedot/valinta-wrap e! app)]
-    [valinnat/urakkavalinnat
-     {}
-     ^{:key "valinnat"}
-     [valinnat/valintaryhmat-3
-      [:div
-       [kentat/tee-otsikollinen-kentta {:otsikko "Tierekisteriosoiteväli"
-                                        :kentta-params {:tyyppi :tierekisteriosoite
-                                                        :sijainti (atomi :sijainti)}
-                                        :arvo-atom (atomi :tr)}]]
-      [:div
-       [kentat/tee-otsikollinen-kentta {:otsikko "Luvan numero"
-                                        :kentta-params {:tyyppi :string}
-                                        :arvo-atom (atomi :luvan-numero)}]
-       [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
-                                        :kentta-params {:tyyppi :valinta
-                                                        :valinnat (into [nil] (sort tielupa/lupatyyppi-vaihtoehdot))
-                                                        :valinta-nayta #(or (tielupa/tyyppi-fmt %) "- Ei käytössä -")}
-                                        :arvo-atom (atomi :lupatyyppi)}]
-       [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
-                                        :kentta-params {:tyyppi :haku
-                                                        :nayta ::tielupa/hakija-nimi
-                                                        :hae-kun-yli-n-merkkia 2
-                                                        :lahde tiedot/hakijahaku}
-                                        :arvo-atom (atomi :hakija)}]]
+(defn suodattimet [e! valinnat]
+  (let [luo-atomi (fn [avain]
+                    (atom (avain valinnat)))
+        sijainti-atomi (luo-atomi :sijainti)
+        tr-atomi (luo-atomi :tr)
+        luvan-numero-atomi (luo-atomi :luvan-numero)
+        lupatyyppi-atomi (luo-atomi :lupatyyppi)
+        hakija-atomi (luo-atomi :hakija)
+        myonnetty-atomi (luo-atomi :myonnetty)
+        voimassaolo-atomi (luo-atomi :voimassaolo)
 
-      [:div
-       [valinnat/aikavali (atomi :myonnetty) {:otsikko "Myönnetty välillä"}]
-       [valinnat/aikavali (atomi :voimassaolo) {:otsikko "Voimassaolon aikaväli"}]]]]))
+        suodatin-avain (fn [avain]
+                         (keyword (str "tilu-suodatin-" (name avain))))
+        lisaa-watch (fn [atomi avain]
+                      (add-watch atomi (suodatin-avain avain)
+                                 (fn [_ _ _ uusi-tila]
+                                   (e! (tiedot/->MuutaTila [:valinnat avain] uusi-tila))
+                                   (e! (tiedot/->PaivitaValinnat {avain uusi-tila})))))
+        poista-watch (fn [atomi avain]
+                       (remove-watch atomi (suodatin-avain avain)))
 
-(defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa?] :as app}]
+        lupatyyppivalinnat (into [nil] (sort tielupa/lupatyyppi-vaihtoehdot))
+        lupatyyppinayta-fn #(or (tielupa/tyyppi-fmt %) "- Ei käytössä -")]
+    (komp/luo
+      (komp/sisaan-ulos #(do
+                           (lisaa-watch sijainti-atomi :sijainti)
+                           (lisaa-watch tr-atomi :tr)
+                           (lisaa-watch luvan-numero-atomi :luvan-numero)
+                           (lisaa-watch lupatyyppi-atomi :lupatyyppi)
+                           (lisaa-watch hakija-atomi :hakija)
+                           (lisaa-watch myonnetty-atomi :myonnetty)
+                           (lisaa-watch voimassaolo-atomi :voimassaolo))
+                        #(do
+                           (poista-watch sijainti-atomi :sijainti)
+                           (poista-watch tr-atomi :tr)
+                           (poista-watch luvan-numero-atomi :luvan-numero)
+                           (poista-watch lupatyyppi-atomi :lupatyyppi)
+                           (poista-watch hakija-atomi :hakija)
+                           (poista-watch myonnetty-atomi :myonnetty)
+                           (poista-watch voimassaolo-atomi :voimassaolo)))
+      (fn [e! valinnat]
+        [valinnat/urakkavalinnat
+         {}
+         ^{:key "valinnat"}
+         [valinnat/valintaryhmat-3
+          [:div
+           [kentat/tee-otsikollinen-kentta {:otsikko "Tierekisteriosoiteväli"
+                                            :kentta-params {:tyyppi :tierekisteriosoite
+                                                            :sijainti sijainti-atomi}
+                                            :arvo-atom tr-atomi}]]
+          [:div
+           [kentat/tee-otsikollinen-kentta {:otsikko "Luvan numero"
+                                            :kentta-params {:tyyppi :string}
+                                            :arvo-atom luvan-numero-atomi}]
+           [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
+                                            :kentta-params {:tyyppi :valinta
+                                                            :valinnat lupatyyppivalinnat
+                                                            :valinta-nayta lupatyyppinayta-fn}
+                                            :arvo-atom lupatyyppi-atomi}]
+           [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
+                                            :kentta-params {:tyyppi :haku
+                                                            :nayta ::tielupa/hakija-nimi
+                                                            :hae-kun-yli-n-merkkia 2
+                                                            :lahde tiedot/hakijahaku}
+                                            :arvo-atom hakija-atomi}]]
+
+          [:div
+           [valinnat/aikavali myonnetty-atomi {:otsikko "Myönnetty välillä"}]
+           [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"}]]]]))))
+
+(defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa? valinnat] :as app}]
   [:div
-   [suodattimet e! app]
+   [suodattimet e! valinnat]
    [grid/grid
     {:otsikko (if tielupien-haku-kaynnissa?
                 [ajax-loader-pieni "Päivitetään listaa.."]

@@ -15,7 +15,12 @@
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                     AS urakka,
    ktp.id                                                         AS toimenpide_id,
    ktp.tyyppi                                                     AS toimenpidetyyppi,
@@ -64,7 +69,14 @@ UNION
      COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+                                       ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+                                        * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) ) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
    ktp.tyyppi                                                                     AS toimenpidetyyppi,
@@ -104,7 +116,12 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                     AS urakka,
    ktp.id                                                         AS toimenpide_id,
    ktp.tyyppi                                                     AS toimenpidetyyppi,
@@ -154,7 +171,14 @@ UNION
      COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+                                       ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+                                        * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) ) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
    ktp.tyyppi                                                                     AS toimenpidetyyppi,
@@ -195,7 +219,12 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                     AS urakka,
    ktp.id                                                         AS toimenpide_id,
    ktp.tyyppi                                                     AS toimenpidetyyppi,
@@ -245,7 +274,14 @@ UNION
      COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+                                       ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+                                        * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) ) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
    ktp.tyyppi                                                                     AS toimenpidetyyppi,
@@ -285,7 +321,12 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                     AS urakka,
    ktp.id                                                         AS toimenpide_id,
    ktp.tyyppi                                                     AS toimenpidetyyppi,
@@ -336,7 +377,14 @@ UNION
      COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+                                       ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+                                        * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) ) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
    ktp.tyyppi                                                                     AS toimenpidetyyppi,
@@ -376,7 +424,12 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-   0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                     AS urakka,
    u.nimi                                                         AS urakan_nimi,
    ktp.id                                                         AS toimenpide_id,
@@ -424,7 +477,14 @@ UNION
    COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
     * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
-    0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+                                       ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+                                        * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) ) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                                     AS urakka,
    u.nimi                                                                         AS urakan_nimi,
    ktp.id                                                                         AS toimenpide_id,
@@ -465,7 +525,12 @@ UNION
    sopimus_tyo.maara                                              AS maara,
    tyo.yksikkohinta                                               AS yksikkohinta,
    COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) AS summa,
-   0 AS indeksi,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(sopimus_tyo.maara, 0) * COALESCE(tyo.yksikkohinta, 0) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                     AS urakka,
    ktp.id                                                         AS toimenpide_id,
    ktp.tyyppi                                                     AS toimenpidetyyppi,
@@ -513,8 +578,15 @@ UNION
    hinnoiteltu_tyo.yksikkohinta                                                   AS yksikkohinta,
    COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
    ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
-    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )  AS summa,
-    0 AS indeksi,
+    * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) )                  AS summa,
+   COALESCE((SELECT korotus from
+       laske_kuukauden_indeksikorotus (DATE_PART('year', ktp.pvm) ::INTEGER ,
+                                       DATE_PART('month', ktp.pvm) ::INTEGER,
+                                       (select indeksi from urakka where id = ktp.urakka),
+                                       COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0) +
+                                       ((COALESCE(hinnoiteltu_tyo.summa, 0) + COALESCE(hinnoiteltu_tyo.maara, 0) * COALESCE(hinnoiteltu_tyo.yksikkohinta, 0))
+                                        * (COALESCE (hinnoiteltu_tyo.yleiskustannuslisa, 0) / 100) ) ::NUMERIC,
+                                       (select indeksilaskennan_perusluku (ktp.urakka)))), 0) AS indeksi,
    ktp.urakka                                                                     AS urakka,
    ktp.id                                                                         AS toimenpide_id,
    ktp.tyyppi                                                                     AS toimenpidetyyppi,

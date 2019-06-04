@@ -1,7 +1,23 @@
-<b>Nykyinen versio: 1.0.37</b>
-<b>Julkaistu: 27.07.2018</b>
+<b>Nykyinen versio: 1.0.44</b>
+<b>Julkaistu: 12.2.2019</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.44 Julkaistu 26.2.2019
+    - Pistetoteuman kirjauksen ja työkoneseurannan kirjauksen sisällössä pitää antaa jotain sijaintikentälle
+- Versionumero 1.0.43 Julkaistu 14.2.2019
+    - Paikkauskohteita voi poistaa uuden rajapinnan kautta
+- Versionumero 1.0.42 Julkaistu 12.2.2019
+    - Piste- ja reittitoteumakirjausten mukana voi nyt ilmoittaa työkonetyypin.
+- Versionumero 1.0.41 Julkaistu 8.2.2019
+    - Työkoneseurannassa voi antaa sijaintitiedon viivageometriana pisteen sijasta.
+- Versionumero 1.0.40 Julkaistu 21.12.2018
+    - Organisaatio päivitetty esimerkeissä Väyläksi. Päivitys ei sisällä toiminnallista rajapintamuutosta. 
+- Versionumero 1.0.39 Julkaistu 11.12.2018
+    - Päällystysilmoituksen kirjaus rajapinta on muuttunut. Pääkohteelle ei ilmoiteta kaistaa eikä ajorataa, mutta nämä tiedot on annettava alikohteille sekä alustalle tehdyille toimenpiteille.
+- Versionumero 1.0.38 Julkaistu 22.11.2018
+    - Urakoiden haku palauttaa Liikenneviraston järjestelmille kaikki urkat
+    - Mahdollisuus hakea urakat tyypeittäin.
+    - Mahdollisuus hakea ylläpitokohdeosien geometriat.
 - Versionumero 1.0.37 Julkaistu 27.07.2018
     - Tielupa hyväksyy kaapeliasennustyypiksi "Muuntamo":n
 - Versionumero 1.0.36 Julkaistu 9.7.2018

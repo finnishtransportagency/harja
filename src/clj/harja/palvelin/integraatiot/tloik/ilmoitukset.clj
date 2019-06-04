@@ -31,7 +31,7 @@
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
   (let [ilmoituksen-urakkatyyppi (ilmoitus/urakkatyyppi urakkatyyppi)
         hae-urakka (fn [urakkatyyppi]
-                     (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi sijainti))]
+                     (when-let [urakka-id (urakkapalvelu/hae-lahin-urakka-id-sijainnilla db urakkatyyppi sijainti)]
                        (first (urakat/hae-urakka db urakka-id))))
         urakka (hae-urakka ilmoituksen-urakkatyyppi)]
 
@@ -97,10 +97,10 @@
                                    "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
 
 (defn- kasittele-ilmoituksessa-kulunut-aika
-  [{:keys [ilmoitettu vastaanotettu viesti-id tapahtuma-id kehitysmoodi?]}]
+  [{:keys [ilmoitettu vastaanotettu viesti-id tapahtuma-id kehitysmoodi? uudelleen-lahetys?]}]
   (try (let [kulunut-aika (pvm/aikavali-sekuntteina ilmoitettu vastaanotettu)]
          ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
-         (when (and kulunut-aika (> kulunut-aika 300))
+         (when (and kulunut-aika (> kulunut-aika 300) (not uudelleen-lahetys?))
            (log/debug "SLACKIIN PITÄS LÄHTÄ VIESTIÄ")
            (laheta-slackiin-ilmoitus-hitaudesta
              {:kulunut-aika kulunut-aika :viesti-id viesti-id
@@ -129,7 +129,7 @@
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
           kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:ilmoitettu (:ilmoitettu ilmoitus) :vastaanotettu vastaanotettu
                                                               :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
-                                                              :kehitysmoodi? kehitysmoodi?})
+                                                              :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
                                            (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :date_part))
           lisatietoja (if uudelleen-lahetys?

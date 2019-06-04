@@ -7,7 +7,7 @@
             [harja.domain.organisaatio :as o]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]])
+            ])
     #?(:clj
             [specql.rel :as rel]))
   #?(:cljs

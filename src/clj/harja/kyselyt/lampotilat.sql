@@ -47,6 +47,11 @@ SELECT *
   FROM pohjavesialue_talvisuola pt
  WHERE pt.urakka = :urakka;
 
+-- name: hae-urakan-pohjavesialue-talvisuolarajat-teittain
+SELECT pa.nimi AS nimi, pa.tunnus AS pohjavesialue, pt.urakka, pt.hoitokauden_alkuvuosi, pt.talvisuolaraja, pa.tr_numero AS tie
+  FROM (SELECT DISTINCT nimi, tunnus, tr_numero FROM pohjavesialue) AS pa 
+  LEFT JOIN pohjavesialue_talvisuola pt ON pt.pohjavesialue = pa.tunnus AND pa.tr_numero = pt.tie
+  WHERE pt.urakka = :urakka ORDER by pa.nimi ASC;
 
 -- name: luo-suolasakko<!
 INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja, kaytossa)
@@ -65,12 +70,12 @@ SELECT id FROM suolasakko WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :ho
 -- name: paivita-pohjavesialue-talvisuola!
 UPDATE pohjavesialue_talvisuola
    SET talvisuolaraja = :talvisuolaraja
- WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND pohjavesialue = :pohjavesialue;
+ WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND pohjavesialue = :pohjavesialue AND tie = :tie;
 
 -- name: tallenna-pohjavesialue-talvisuola<!
 INSERT INTO pohjavesialue_talvisuola
-       (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue)
-VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
+       (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue, tie)
+VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue, :tie);
 
 -- name: hae-teiden-hoitourakoiden-lampotilat
 SELECT
@@ -84,6 +89,6 @@ SELECT
   lt.pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
 FROM urakka u
   LEFT JOIN lampotilat lt ON (lt.urakka = u.id AND lt.alkupvm = :alkupvm AND lt.loppupvm = :loppupvm)
-WHERE (u.tyyppi = 'hoito'::urakkatyyppi AND
+WHERE (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
        u.alkupvm <= :alkupvm AND
        :loppupvm <= u.loppupvm);

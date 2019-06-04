@@ -18,8 +18,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]])
-  (:import [java.sql.Date]
-           [java.util.Date]))
+  (:import (java.util Date)))
 
 (defn hae-sijainti [db sijainti]
   (let [parametrit {:tie (::tielupa/tie sijainti)

@@ -12,20 +12,24 @@
             [cljs-time.core :as t]
             [harja.ui.komponentti :as komp]))
 
-(defn tienumero [tienumero-atom]
-  [tee-otsikollinen-kentta
-   {:otsikko "Tienumero"
-    :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
-    :arvo-atom tienumero-atom
-    :luokka "label-ja-kentta-puolikas"}
-   "Tienumero"])
+(defn tienumero
+  ([tienumero-atom] (tienumero tienumero-atom nil))
+  ([tienumero-atom toiminta-f]
+   [tee-otsikollinen-kentta
+    {:otsikko "Tienumero"
+     :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f}
+     :arvo-atom tienumero-atom
+     :luokka "label-ja-kentta-puolikas"}
+    "Tienumero"]))
 
-(defn yllapitokohteen-kohdenumero [kohdenumero-atom]
-  [tee-otsikollinen-kentta
-   {:otsikko "Kohdenumero"
-    :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla"}
-    :arvo-atom kohdenumero-atom
-    :luokka "label-ja-kentta-puolikas"}])
+(defn yllapitokohteen-kohdenumero
+  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil))
+  ([kohdenumero-atom toiminta-f]
+   [tee-otsikollinen-kentta
+    {:otsikko "Kohdenumero"
+     :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f}
+     :arvo-atom kohdenumero-atom
+     :luokka "label-ja-kentta-puolikas"}]))
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
@@ -39,7 +43,7 @@
    u/valittu-hoitokauden-kuukausi
    u/valitse-hoitokauden-kuukausi!])
 
-(defn- urakan-vuosi
+(defn urakan-vuosi
   "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
   ([ur]
    (urakan-vuosi ur {}))
@@ -60,7 +64,7 @@
                                                  :valitse-kuukausi-fn u/valitse-hoitokauden-kuukausi!}}]))
 
 (defn aikavali []
-  (valinnat/aikavali u/valittu-aikavali))
+  [valinnat/aikavali u/valittu-aikavali])
 
 (def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
                         ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]

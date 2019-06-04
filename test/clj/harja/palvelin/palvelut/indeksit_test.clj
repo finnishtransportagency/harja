@@ -53,16 +53,19 @@
 (deftest urakkatyypin-indeksien-haku
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :urakkatyypin-indeksit +kayttaja-jvh+)
-        {:keys [hoito tiemerkinta paallystys]}
+        {:keys [hoito tiemerkinta paallystys vesivayla-kanavien-hoito]}
         (group-by :urakkatyyppi indeksit)]
     (is (some #(= "MAKU 2005" (:indeksinimi %)) hoito))
     (is (some #(= "MAKU 2010" (:indeksinimi %)) hoito))
+    (is (some #(= "MAKU 2015" (:indeksinimi %)) hoito))
     (is (not (some #(= "MAKU 2008" (:indeksinimi %)) hoito))) ;tällaista ei käytetä
     (is (some #(= "MAKU 2010" (:indeksinimi %)) tiemerkinta))
     (is (some #(= "Platts: FO 3,5%S CIF NWE Cargo" (:indeksinimi %)) paallystys))
     (is (some #(= "bitumi" (:raakaaine %)) paallystys))
     (is (some #(= "ABWGL03" (:koodi %)) paallystys))
-    (is (some #(str/includes? (:indeksinimi %) "Platts") paallystys))))
+    (is (some #(str/includes? (:indeksinimi %) "Platts") paallystys))
+    (is (some #(= "Palvelujen tuottajahintaindeksi 2010" (:indeksinimi %)) vesivayla-kanavien-hoito))
+    (is (some #(= "Palvelujen tuottajahintaindeksi 2015" (:indeksinimi %)) vesivayla-kanavien-hoito))))
 
 (deftest paallystysurakan-indeksitietojen-haku
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)

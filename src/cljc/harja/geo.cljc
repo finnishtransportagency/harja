@@ -237,7 +237,7 @@
      [coordinate]
      (if (vector? coordinate)
        (let [c (org.geotools.geometry.jts.JTS/transform
-                 (com.vividsolutions.jts.geom.Coordinate. (first coordinate) (second coordinate))
+                 (org.locationtech.jts.geom.Coordinate. (first coordinate) (second coordinate))
                  nil euref->wgs84-transform)]
          [(.y c) (.x c)])
        (org.geotools.geometry.jts.JTS/transform coordinate nil euref->wgs84-transform))))
@@ -248,7 +248,7 @@
 #?(:clj
    (defn wgs84->euref
      [coord]
-     (let [c (org.geotools.geometry.jts.JTS/transform (com.vividsolutions.jts.geom.Coordinate. (:x coord) (:y coord))
+     (let [c (org.geotools.geometry.jts.JTS/transform (org.locationtech.jts.geom.Coordinate. (:x coord) (:y coord))
                                                       nil wgs84->euref-transform)]
        {:x (.x c) :y (.y c)})))
 
@@ -549,3 +549,16 @@ pisteen [px py]."
                     (<= (math/pisteiden-etaisyys sijainti1 sijainti2) threshold))
                   (:points viiva2)))
           (:points viiva1))))
+
+(defprotocol IPiste
+  (xy [this] "Palauttaa vektorin [x y]"))
+
+(extend-protocol IPiste
+  #?(:clj  clojure.lang.PersistentVector
+     :cljs PersistentVector)
+  (xy [this]
+    this)
+  #?(:clj  clojure.lang.PersistentArrayMap
+     :cljs PersistentArrayMap)
+  (xy [{:keys [x y]}]
+    [x y]))

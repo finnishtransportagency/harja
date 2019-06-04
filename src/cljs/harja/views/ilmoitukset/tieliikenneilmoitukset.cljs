@@ -237,6 +237,7 @@
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
                  [ajax-loader "Haetaan ilmoituksia"])
+        :data-cy "ilmoitukset-grid"
         :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
                                   (nil? pikakuittaus))
                          (or valitse-ilmoitus!
@@ -316,6 +317,7 @@
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
+                         (nav/vaihda-urakkatyyppi! {:nimi "Kaikki" :arvo :kaikki})
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
                                                    (e! (v/->ValitseIlmoitus ilmoitus-infopaneelista)))

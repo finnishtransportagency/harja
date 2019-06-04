@@ -2,6 +2,7 @@
   "Urakan 'Toteumat' välilehden Yksikköhintaist työt osio"
   (:require [reagent.core :refer [atom]]
             [harja.ui.grid :as grid]
+            [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
@@ -44,7 +45,7 @@
     :tyyppi :yksikkohintainen
     :urakka-id (:id @nav/valittu-urakka)
     :sopimus-id (first @u/valittu-sopimusnumero)
-    :tehtavat (mapv rivi-tehtavaksi (grid/filteroi-uudet-poistetut lomakkeen-tehtavat))
+    :tehtavat (mapv rivi-tehtavaksi (gridin-muokkaus/filteroi-uudet-poistetut lomakkeen-tehtavat))
     :toimenpide-id (:tpi_id @u/valittu-toimenpideinstanssi)
     :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
     :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))

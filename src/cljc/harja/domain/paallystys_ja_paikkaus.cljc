@@ -55,7 +55,7 @@
   (case tila
     :hyvaksytty [:span.ilmoitus-hyvaksytty (kuvaile-paatostyyppi tila)]
     :hylatty [:span.ilmoitus-hylatty (kuvaile-paatostyyppi tila)]
-    ""))
+    [:span ""]))
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]
   (boolean (some #(and (:ennustettu-maara %)

@@ -12,10 +12,15 @@
     },
     "sijainti": {
       "id": "urn:harja/pistetoteuma/sijainti",
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/geometria-sijainti.schema.json"
+    },
+    "tyokone": {
+      "id": "urn:harja/pistetoteuma/tyokone",
       "type": "object",
       "additionalProperties": false,
-      "required": true,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
+      "$ref": "file:resources/api/schemas/entities/tyokone.schema.json",
+      "required": false
     }
   }
 }

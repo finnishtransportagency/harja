@@ -24,7 +24,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot 
+(deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot
     (let [db (tietokanta/luo-tietokanta testitietokanta)
           urakka-id @oulun-alueurakan-2005-2010-id
           maara-kannassa (ffirst (q
@@ -33,8 +33,7 @@
                                                 LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
-                                                          @oulun-alueurakan-2005-2010-id ") AND
-                                                         t4.poistettu = false")))
+                                                          @oulun-alueurakan-2005-2010-id ")")))
          response (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)]
     (is (not (nil? response)))
     (is (= (count response) maara-kannassa))
@@ -55,8 +54,7 @@
                                                 LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
-                                     urakka-id ") AND
-                                                         t4.poistettu = false")))
+                                     urakka-id ")")))
        response (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)]
      (is (not (nil? response)))
      (is (= (count response) maara-kannassa))))

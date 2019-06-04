@@ -46,7 +46,7 @@
 
           :hae-ilmoitukset
           {:hallintayksikko nil
-           :urakka nil
+           :urakka (hae-oulun-alueurakan-2014-2019-id)
            :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
            :aikavali nil
@@ -104,7 +104,7 @@
         idt #(into #{} (map :id) %)]
 
     ;; urakkatyypitön ilmoitus tulee aina, joten näitä on 2
-    (is (= 2 (count paallystys-ilmoitukset)))
+    (is (= 3 (count paallystys-ilmoitukset)))
 
     (is (< (count paallystys-ilmoitukset)
            (count hoito-ilmoitukset)
@@ -323,11 +323,11 @@
       (is (#{:toimenpidepyynto :tiedoitus :kysely}
             (:ilmoitustyyppi i)) "ilmoitustyyppi"))
     (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
-    (is (= ilmoitusten-maara-suoraan-kannasta 10040) "Ilmoitusten lukumäärä")))
+    (is (= ilmoitusten-maara-suoraan-kannasta 10042) "Ilmoitusten lukumäärä")))
 
 (deftest ^:perf hae-ilmoitukset-kesto
   (is (gatling-onnistuu-ajassa?
         "Hae ilmoitukset"
         {:concurrency 100
-         :timeout-in-ms 1500}
+         :timeout-in-ms 3000}
         #(hae hae-ilmoitukset-parametrit))))

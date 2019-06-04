@@ -374,7 +374,8 @@
                           paivittajan-nimi))
                    "ei koskaan"))])))
 
-(defn yha-lahetysnappi [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
+(defn yha-lahetysnappi [{:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset
+                                lahetys-kaynnissa-fn kun-onnistuu kun-virhe kohteet-yha-lahetyksessa]}]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
                                          (or (= :valmis (:tila paallystysilmoitus))
@@ -388,22 +389,28 @@
          "Lähetä kaikki kohteet YHAan")
        #(do
           (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-          (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
+          (lahetys-kaynnissa-fn kohde-idt)
           (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
                                           :sopimus-id sopimus-id
                                           :kohde-idt kohde-idt
-                                          :vuosi vuosi}))
+                                          :vuosi vuosi}
+                   nil
+                   true))
        {:luokka "nappi-grid nappi-ensisijainen"
-        :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
+        :disabled (or (not (empty? kohteet-yha-lahetyksessa))
                       (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
-        :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
+        :kun-valmis #(do
+                       ;; Tämä on jätetty tähän, koska paallystysilmoitukset atomia käytetään muuallakin kuin
+                       ;; Päällystysilmoituksissa
+                       (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset %))
+                       (lahetys-kaynnissa-fn nil))
         :kun-onnistuu (fn [vastaus]
-                        (if (:lahetys-onnistui? vastaus)
-                          (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
-                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
-                              (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
-                        (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+                        (kun-onnistuu (:paallystysilmoitukset vastaus)))
+        :kun-virhe (fn [vastaus]
+                     (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
+                     (kun-virhe vastaus))
+        :nayta-virheviesti? false
         :virheviesti "Ylläpitokohteen lähettäminen YHAan epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
                       tai ota yhteyttä Harjan asiakastukeen."}])))

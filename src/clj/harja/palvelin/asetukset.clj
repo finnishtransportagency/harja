@@ -124,12 +124,12 @@
                                            (s/optional-key :kanavien-osoite) s/Str
                                            (s/optional-key :kanavien-tuontikohde) s/Str}
 
-
-
-
    (s/optional-key :yha) {:url s/Str
                           :kayttajatunnus s/Str
                           :salasana s/Str}
+
+   (s/optional-key :velho) {:paallystetoteuma-url s/Str
+                            :autorisaatio s/Str}
 
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
@@ -223,10 +223,10 @@
 
 (defn crlf-filter [msg]
   (assoc msg :vargs (mapv (fn [s]
-                           (if (string? s)
-                             (str/replace s #"[\n\r]" "")
-                             s))
-                         (:vargs msg))))
+                            (if (string? s)
+                              (str/replace s #"[\n\r]" "")
+                              s))
+                          (:vargs msg))))
 
 (defn logitetaanko
   "Tämän palauttama middleware on hyödyllinen, jos testidatan puuttellisuus aiheuttaa suuret määrät logitusta turhaan.

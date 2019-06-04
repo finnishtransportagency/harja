@@ -15,9 +15,6 @@
   (mapv
     (fn [alikohde]
       (let [sijainti (:sijainti alikohde)
-            olemassa-oleva-paakohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)}))
-            paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata olemassa-oleva-paakohde)
-                                                          (:tr-kaista olemassa-oleva-paakohde)))
             ;; Päivitä alikohde. Mikäli pääkohteella on ajorata ja kaista, käytetään sitä, koska alikohde kuuluu
             ;; samalle ajoradalle ja kaistalle
             parametrit (merge
@@ -29,12 +26,8 @@
                           :tr_alkuetaisyys (:aet sijainti)
                           :tr_loppuosa (:losa sijainti)
                           :tr_loppuetaisyys (:let sijainti)
-                          :tr_ajorata (if paakohteella-ajorata-ja-kaista?
-                                        (:tr-ajorata olemassa-oleva-paakohde)
-                                        (:ajr sijainti))
-                          :tr_kaista (if paakohteella-ajorata-ja-kaista?
-                                       (:tr-kaista olemassa-oleva-paakohde)
-                                       (:kaista sijainti))
+                          :tr_ajorata (:ajr sijainti)
+                          :tr_kaista (:kaista sijainti)
                           :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
                           :raekoko (:raekoko alikohde)
                           :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
@@ -57,8 +50,8 @@
                         :tr_alkuetaisyys (:aet sijainti)
                         :tr_loppuosa (:losa sijainti)
                         :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (or (:ajr sijainti) (:tr-ajorata kohde))
-                        :tr_kaista (or (:kaista sijainti) (:tr-kaista kohde))
+                        :tr_ajorata (:ajr sijainti)
+                        :tr_kaista (:kaista sijainti)
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
                                    db parametrit)))))

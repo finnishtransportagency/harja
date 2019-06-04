@@ -1,8 +1,10 @@
-CREATE TABLE jarjestelman_tila (
-  id SERIAL PRIMARY KEY,
-  palvelin TEXT,
-  tila JSONB,
-  "osa-alue" TEXT,
-  paivitetty TIMESTAMP,
-  UNIQUE (palvelin, "osa-alue")
-);
+-- Päivitä kanavien toimenpiteen puuttuva tuotekoodi
+UPDATE toimenpidekoodi SET
+  tuotenumero = 201,
+  muokattu = current_timestamp,
+  muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') where
+koodi ='27100' and nimi = 'Vesiliikenteen käyttöpalvelut';
+
+
+
+

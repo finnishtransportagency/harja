@@ -260,7 +260,7 @@
                  "(tyokoneid, jarjestelma, organisaatio, viestitunniste,lahetysaika,tyokonetyyppi,"
                  "sijainti,urakkaid,tehtavat) "
                  "VALUES (666, 'yksikkötesti', " organisaatio ",666,NOW(),'yksikkötesti',"
-                 "ST_MakePoint(" x ", " y ")::POINT, "
+                 "ST_MakePoint(" x ", " y ")::GEOMETRY, "
                  (if urakka urakka "NULL") ", '{harjaus}')")]
     (u sql)))
 

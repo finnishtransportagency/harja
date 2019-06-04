@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.materiaaliraportti-test
   (:require [clojure.test :refer :all]
+            [clojure.core.async :as async]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
@@ -9,6 +10,7 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
+            [harja.kyselyt.raportit :as raportit-q]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
@@ -30,13 +32,20 @@
                         :raportit (component/using
                                     (raportit/->Raportit)
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
-
+  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
+  (async/<!! (async/go-loop
+               [k 1]
+               (let [materiaali-cache-ajettu? (ffirst (q "SELECT exists(SELECT 1 FROM raportti_toteutuneet_materiaalit)"))]
+                 (when (and (not materiaali-cache-ajettu?)
+                            (< k 10))
+                   (async/<! (async/timeout 1000))
+                   (recur (inc k))))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+                      urakkatieto-fixture
+                      jarjestelma-fixture))
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

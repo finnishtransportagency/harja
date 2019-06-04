@@ -54,6 +54,8 @@ jobs:
             cd /tmp/cypress-run
             tar xf /tmp/harja/testidata.tar
 
+            npm install transit-js
+
             cd tietokanta
             mvn flyway:migrate
             psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
@@ -78,10 +80,9 @@ jobs:
             echo +++++++++++++++++++
             echo
 
-            cd /tmp/cypress-run && npm i cypress@1.x && $(npm bin)/cypress verify
-            cd /tmp/cypress-run && $(npm bin)/cypress run --browser chrome
+            cd /tmp/cypress-run && $(npm bin)/cypress run
       - store_artifacts:
-          path: cypress/screenshots
+          path: /tmp/cypress-run/cypress/screenshots
 
 workflows:
   version: 2

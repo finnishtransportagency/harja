@@ -119,6 +119,15 @@ def ajaTestikannanLuonti (stagenNimi) {
     }
 }
 
+def ajaTestikannanLuontiTestStg (stagenNimi) {
+    try {
+        sh([script: "sh Jenkins/skriptit/testitietokanta_test_stg.sh"])
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
+    } catch (e) {
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi Jenkinsin testikannan luomiseen")
+    }
+}
+
 def ajaJarJaTestit (stagenNimi) {
     try {
         // Luo API docsit
@@ -164,13 +173,14 @@ def ajaTestiserverinKanta(stagenNimi) {
 
 def ajaTestiserverinApp(stagenNimi, buildNumber) {
     try {
-        ansiblePlaybook([installation: 'ansible 1.9.1',
-                         inventory   : 'inventory/testing',
-                         playbook    : 'playbooks/nightly.yml',
+        ansiblePlaybook([installation: 'ansible 2.7',
+                         inventory   : 'environments/testing/inventory',
+			 playbook    : 'playbooks/nightly.yml',
+			 vaultCredentialsId: 'Vault',
                          extraVars   : [
-                                 jenkins_build_number: buildNumber,
-                                 jenkins_job_name: env.JOB_BASE_NAME
-                         ]])
+                jenkins_build_number: buildNumber,
+                jenkins_job_name: env.JOB_BASE_NAME
+            ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
     } catch (e) {
         hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
@@ -216,8 +226,8 @@ def ajaStagingserverinKanta(stagenNimi) {
 
 def ajaStagingserverinApp(stagenNimi, buildNumber) {
     try {
-        ansiblePlaybook([installation: 'ansible 1.9.1',
-                         inventory   : 'inventory/staging',
+        ansiblePlaybook([installation: 'ansible 2.7',
+                         inventory   : 'environments/staging/inventory',
                          playbook    : 'playbooks/staging.yml',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
@@ -226,6 +236,43 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin appiksen luomiseen")
     } catch (e) {
         hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin appiksen luomiseen")
+    }
+}
+
+def ajaTuotantoserverinKanta(stagenNimi) {
+    try {
+        // withCredentials plugari ei toimi vielä yhteen configFileProvider:in kanssa (http://jenkins-ci.361315.n4.nabble.com/Using-Config-File-Provider-Plugin-with-placeholders-and-Token-Macro-Plugin-td4908235.html)
+        // Heti, kun tuo on korjattu, niin passun ja salasanan voi antaa suoraan tuonne conffi fileen tyylinsä näin: ${ENV, var="KAYTTAJA"}. Saattaa olla myös, että tuohon
+        // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
+        configFileProvider([configFile(fileId: 'Flyway_tuotantoserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
+            withCredentials([usernamePassword(credentialsId: 'TUOTANTOPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
+                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                        " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+            }
+        }
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
+    } catch (e) {
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen")
+    }
+}
+
+def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
+    try {
+        slackSend([color  : 'good',
+                   message: 'Aloitetaan tuotanto deployment'])
+        ansiblePlaybook([installation: 'ansible 2.7',
+                         inventory   : 'environments/production/inventory',
+                         playbook    : 'playbooks/production.yml',
+                         extraVars   : [
+                                 jenkins_build_number: buildNumber,
+                                 jenkins_job_name: env.JOB_BASE_NAME
+                         ]])
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin appiksen luomiseen")
+        slackSend([color  : 'good',
+                   message: 'Tuotanto deployment onnistui'])
+    } catch (e) {
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin appiksen luomiseen")
     }
 }
 

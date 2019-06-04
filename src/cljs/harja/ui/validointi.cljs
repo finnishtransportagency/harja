@@ -2,12 +2,10 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
-            [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]
-            [clojure.string :as str]
+            [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -104,7 +102,7 @@
     (or viesti (str "Arvon pitää löytyä joukosta " (clojure.string/join ", " @setti-atom)))))
 
 (defmethod validoi-saanto :ei-tyhja [_ _ data _ _ & [viesti]]
-  (when (str/blank? data)
+  (when (str-clj/blank? data)
     (or viesti "Anna arvo")))
 
 (defmethod validoi-saanto :ei-negatiivinen-jos-avaimen-arvo [_ _ data rivi _ & [avain arvo viesti]]
@@ -114,7 +112,7 @@
 
 (defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-nil
   [_ _ data rivi _ & [toinen-avain viesti]]
-  (when (and (str/blank? data)
+  (when (and (str-clj/blank? data)
              (not (toinen-avain rivi)))
     (or viesti "Anna arvo")))
 
@@ -135,7 +133,7 @@
                  (str "Anna joku näistä: "
                       (clojure.string/join ", "
                                            (map (comp clojure.string/capitalize name) avaimet))))]
-    (when-not (some #(not (str/blank? (% rivi))) avaimet) viesti)))
+    (when-not (some #(not (str-clj/blank? (% rivi))) avaimet) viesti)))
 
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
@@ -213,9 +211,9 @@
   (and
     data
     (let [ ;; Halkaistaan tunnus välimerkin kohdalta
-          [tunnus tarkastusmerkki :as halkaistu] (str/split data #"-")
+          [tunnus tarkastusmerkki :as halkaistu] (str-clj/split data #"-")
           ;; Kun pudotetaan pois numerot, pitäisi tulos olla ["" "-" nil]
-          [etuosa valimerkki loppuosa] (str/split data #"\d+")]
+          [etuosa valimerkki loppuosa] (str-clj/split data #"\d+")]
       (when-not (and (= 9 (count data))
                      (= 2 (count halkaistu))
                      (= 7 (count tunnus))
@@ -228,17 +226,24 @@
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]
-  (keep (fn [saanto]
-          (if (fn? saanto)
-            (saanto data rivi taulukko)
-            (let [[saanto & optiot] saanto]
-              (apply validoi-saanto saanto nimi data rivi taulukko optiot))))
-        saannot))
+  (sequence
+    (comp
+      (keep (fn [saanto]
+              (cond
+                (fn? saanto) (saanto data rivi taulukko)
+                (map? saanto) (apply (:fn saanto) data rivi taulukko (:args saanto))
+                :else (let [[saanto & optiot] saanto]
+                        (apply validoi-saanto saanto nimi data rivi taulukko optiot)))))
+      (mapcat (fn [virhe]
+                (if (vector? virhe)
+                  virhe
+                  [virhe]))))
+    saannot))
 
-(defn validoi-rivi
+(defn validoi-rivin-kentat
   "Tekee validoinnin yhden rivin / lomakkeen kaikille kentille. Palauttaa mäpin kentän nimi -> virheet vektori.
   Tyyppi on joko :validoi (default) tai :varoita"
-  ([taulukko rivi skeema] (validoi-rivi taulukko rivi skeema :validoi))
+  ([taulukko rivi skeema] (validoi-rivin-kentat taulukko rivi skeema :validoi))
   ([taulukko rivi skeema tyyppi]
    (loop [v {}
           [s & skeema] skeema]
@@ -256,13 +261,113 @@
              (recur (if (empty? virheet) v (assoc v nimi virheet))
                     skeema))))))))
 
+(defn validoi-rivi
+  [taulukko rivi skeema rivi-validointi]
+  (let [rivi-virheet-sarakkeille (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
+                                         (let [tulos (saanto rivi taulukko)]
+                                           (reduce-kv (fn [m k v]
+                                                        (assoc m k (v tulos)))
+                                                      {} sarakkeet)))
+                                       rivi-validointi)
+        rivi-virheet {::rivi-virheet (keep (fn [virheet]
+                                             (when-let [rivi-virhe (::rivi virheet)]
+                                               rivi-virhe))
+                                           rivi-virheet-sarakkeille)}
+        rivin-virheet (loop [v {}
+                              [s & skeema] skeema]
+                         (if-not s
+                           v
+                           (let [{:keys [nimi]} s
+                                 rivivirheet-sarakkeelle (flatten
+                                                           (keep (fn [virheet]
+                                                                   (when-let [virhe (get virheet nimi)]
+                                                                     virhe))
+                                                                 rivi-virheet-sarakkeille))]
+                             (recur (if (empty? rivivirheet-sarakkeelle)
+                                      v
+                                      (assoc v nimi rivivirheet-sarakkeelle))
+                                    skeema))))]
+    (merge rivin-virheet (when-not (empty? (::rivi-virheet rivi-virheet))
+                            rivi-virheet))))
+
+(defn validoi-taulukko
+  ([taulukko skeema taulukko-validointi] (validoi-taulukko taulukko skeema taulukko-validointi nil))
+  ([taulukko skeema taulukko-validointi poistettu-avain]
+   (let [taulukko (if (nil? poistettu-avain)
+                    taulukko
+                    (into {}
+                          (keep (fn [[_ rivi :as rivitiedot]]
+                                  (when-not (get rivi poistettu-avain)
+                                    rivitiedot))
+                                taulukko)))]
+     (into {}
+           (doall
+            (map (fn [[rivi-indeksi rivi]]
+                   (let [taulukko-virheet (mapv (fn [{saanto :fn sarakkeet :sarakkeet}]
+                                                  (let [tulos (saanto rivi-indeksi rivi taulukko)]
+                                                    (reduce-kv (fn [m k v]
+                                                                 (assoc m k (v tulos)))
+                                                               {} sarakkeet)))
+                                                taulukko-validointi)]
+                     [rivi-indeksi
+                      (loop [v {}
+                             [s & skeema] skeema]
+                        (if-not s
+                          v
+                          (let [{:keys [nimi]} s
+                                taulukkovirheet-sarakkeelle (vec
+                                                             (flatten
+                                                              (keep (fn [virheet]
+                                                                      (when-let [virhe (get virheet nimi)]
+                                                                        virhe))
+                                                                    taulukko-virheet)))]
+                            (if (empty? taulukkovirheet-sarakkeelle)
+                              (recur v skeema)
+                              (recur (assoc v nimi taulukkovirheet-sarakkeelle) skeema)))))]))
+                 taulukko))))))
+
+(defn liita-taulukkotason-virheet
+  [taulukon-virheet virheet]
+  (if taulukon-virheet
+    (reduce-kv (fn [m rivi-id uudet-rivin-taulukkotason-virheet]
+                 (update m rivi-id (fn [rivin-virheet]
+                                     (reduce-kv (fn [m2 sarakkeen-nimi virhe-vektori]
+                                                  (update m2 sarakkeen-nimi concat virhe-vektori))
+                                                rivin-virheet uudet-rivin-taulukkotason-virheet))))
+               virheet taulukon-virheet)
+    virheet))
+
+(defn liita-rivitason-virheet
+  [rivin-virheet virheet]
+  (if rivin-virheet
+    (reduce-kv (fn [m sarakkeen-nimi virhe-vektori]
+                 (update m sarakkeen-nimi concat virhe-vektori))
+               virheet rivin-virheet)
+    virheet))
+
+(defn validoi-ja-anna-virheet
+  ([gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi] (validoi-ja-anna-virheet gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi nil))
+  ([gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi poistettu-avain]
+   (let [virheet (into {}
+                       (keep (fn [[index rivi]]
+                               (let [kenttien-virheet (validoi-rivin-kentat gridin-tiedot rivi skeema tyyppi)
+                                     rivin-virheet (when rivivalidointi
+                                                     (validoi-rivi gridin-tiedot rivi skeema rivivalidointi))
+                                     virheet (liita-rivitason-virheet rivin-virheet kenttien-virheet)]
+                                 (when-not (empty? virheet)
+                                   [index virheet])))
+                             gridin-tiedot))
+         taulukkovirheet (when taulukkovalidointi
+                           (validoi-taulukko gridin-tiedot skeema taulukkovalidointi poistettu-avain))]
+     (liita-taulukkotason-virheet taulukkovirheet virheet))))
+
 (defn tyhja-tr-osoite? [arvo]
   (not (tr/validi-osoite? arvo)))
 
 
 (defn tyhja-arvo? [arvo]
   (or (nil? arvo)
-      (str/blank? arvo)))
+      (str-clj/blank? arvo)))
 
 (defn puuttuvat-pakolliset-kentat
   "Palauttaa pakolliset kenttäskeemat, joiden arvo puuttuu"

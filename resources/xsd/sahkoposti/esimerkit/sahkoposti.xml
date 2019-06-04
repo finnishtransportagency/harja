@@ -3,7 +3,7 @@
   <vastaanottajat>
     <vastaanottaja>erkki.esimerkki@example.com</vastaanottaja>
   </vastaanottajat>
-  <lahettaja>harja@liikennevirasto.fi</lahettaja>
+  <lahettaja>harja@vayla.fi</lahettaja>
   <otsikko>Testiviesti</otsikko>
   <sisalto>Tämä on testiviesti!</sisalto>
 </sahkoposti:sahkoposti>

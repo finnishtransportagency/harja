@@ -188,10 +188,10 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
   ROW('2008-09-09 10:03.00', st_makepoint(499271, 7248395) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
-      ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+      ARRAY[(1, 2), (7,4)]::reittipiste_materiaali[])::reittipistedata,
   ROW('2008-09-09 10:06.00', st_makepoint(499399, 7249019) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
-      ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+      ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
   ROW('2008-09-09 10:09.00', st_makepoint(440919, 7207099) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[]::reittipiste_materiaali[])::reittipistedata

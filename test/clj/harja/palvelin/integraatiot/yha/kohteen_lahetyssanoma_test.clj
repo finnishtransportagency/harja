@@ -16,7 +16,6 @@
    :kohdenumero nil,
    :sopimuksen_mukaiset_tyot 0M,
    :keskimaarainen_vuorokausiliikenne nil,
-   :tr-kaista 1,
    :aikataulu_paallystys_alku nil,
    :aikataulu_muokkaaja nil,
    :karttapvm (tee-pvm),
@@ -41,7 +40,6 @@
    :yhatunnus nil,
    :aikataulu_tiemerkinta_loppu nil,
    :yllapitokohdetyotyyppi "paallystys",
-   :tr-ajorata 0,
    :tr-alkuosa 36,
    :yhaid 251041528})
 
@@ -178,6 +176,8 @@
                                     :tr-loppuosa 1,
                                     :tr-alkuetaisyys 1,
                                     :tekninen-toimenpide 1,
+                                    :tr-ajorata 0,
+                                    :tr-kaista 1,
                                     :paksuus 1,
                                     :verkon-sijainti 2}]},
    :kohdeosa_id 59,

@@ -5,7 +5,7 @@
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    ]
         :cljs [[specql.impl.registry]])
     [clojure.string :as str])
   #?(:cljs

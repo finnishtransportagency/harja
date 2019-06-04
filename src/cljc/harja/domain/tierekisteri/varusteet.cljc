@@ -62,9 +62,10 @@
     "tl523" [1 2 3]
     "tl501" [1 2 3 8]
     "tl517" [1 2]
+    "tl506" [1 2 3]
     "tl507" [1 2 7]
     "tl508" [1 2 7]
-    "tl506" [1 2 3]
+    "tl509" [1 2 9]
     "tl522" [1 2 3 8]
     "tl513" [1 2 3]
     "tl196" [1 2 7]
@@ -196,7 +197,8 @@
                "tl751"} tietolaji))
 
 (defn tien-puolellinen-tietolaji? [tietolaji]
-  (not (= "tl509" tietolaji)))
+  ;; Kaikki tietolajit ovat nyt puolellisia.
+  true)
 
 (defn tarkastaminen-sallittu? [tietolaji]
   (nil? (#{"tl524" "tl523"} tietolaji)))

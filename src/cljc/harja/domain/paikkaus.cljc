@@ -7,7 +7,7 @@
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    ]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
@@ -17,6 +17,10 @@
 (define-tables
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "poistettu" ::muokkaustiedot/poistettu?
     ::paikkaukset (specql.rel/has-many ::id
                                        ::paikkaus
                                        ::paikkauskohde-id)

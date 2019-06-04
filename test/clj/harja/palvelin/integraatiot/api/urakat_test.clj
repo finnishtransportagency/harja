@@ -5,9 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.tyokalut.json-validointi :as json]
             [harja.kyselyt.konversio :as konversio]))
 
 (def kayttaja "yit-rakennus")
@@ -34,10 +32,22 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= 1 (count (:urakat encoodattu-body))))
-    (is (= "Oulun alueurakka 2014-2019" (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :nimi])))))
+    (is (= "Oulun alueurakka 2014-2019" (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :nimi]))))
 
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "livi" portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        urakoita-kannassa (ffirst (q "select count(id) from urakka where urakoitsija is not null and hallintayksikko is not null;"))]
+    (is (= 200 (:status vastaus)))
+    (is (= urakoita-kannassa (count (:urakat encoodattu-body))))))
 
+(deftest hae-jarjestelmakayttajan-urakat-tyypeittain
+  (let [urakkatyyppi "paallystys"
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "livi" {"urakkatyyppi" urakkatyyppi} portti)
+        urakat (:urakat (cheshire/decode (:body vastaus) true))]
+    (is (= 200 (:status vastaus)))
+    (is (every? #(= urakkatyyppi (get-in % [:urakka :tiedot :tyyppi])) urakat))))
 
+;; teiden-hoito urakkatyyppi palautetaan API:ssa hoito-urakkatyyppinä
 (deftest varmista-urakkatyyppien-yhteensopivuus
   (let [json "{
               \"urakat\": [
@@ -61,5 +71,7 @@
               }"
         urakkatyypit (konversio/pgarray->vector (ffirst (q "SELECT enum_range(NULL :: URAKKATYYPPI);")))]
     (doseq [urakkatyyppi urakkatyypit]
-      (is (nil? (json-skeemat/urakoiden-haku-vastaus (.replace json "[URAKKATYYPPI]" urakkatyyppi)))
+      (is (nil? (json-skeemat/urakoiden-haku-vastaus (.replace json "[URAKKATYYPPI]" (if (= "teiden-hoito" urakkatyyppi)
+                                                                                       "hoito"
+                                                                                       urakkatyyppi))))
           (format "JSON-skeema ei salli urakkatyyppiä: %s" urakkatyyppi)))))

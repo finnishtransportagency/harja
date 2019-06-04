@@ -40,7 +40,7 @@
   (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/maksuera-xml +maksuera+)) "UTF-8"))))]
     (is (= "2015-10-01T00:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
     (is (= "2017-12-31T17:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish)))) ;; Taloushallinnon speksaus: viimeiselle maksuerälle annetaan puskuri
-    (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))
+    (is (= "L934498" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product (z/attr :name))))
     (is (= "HA123456789" (z/xml1-> maksuera-xml :Products :Product (z/attr :objectID))))
     (is (= "SAMPOID" (z/xml1-> maksuera-xml :Products :Product :InvestmentAssociations :Allocations :ParentInvestment (z/attr :InvestmentID))))

@@ -16,21 +16,52 @@
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn- poista-paikkaustoteumat
+  "Merkitsee poistetuksi paikkaustoteumat eli paikkauskustannukset."
+  [db urakka-id kayttaja-id paikkaustoteumat]
+    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db kayttaja-id urakka-id paikkaustoteumat))
+
+(defn- poista-paikkaukset
+  "Merkitsee poistetuksi paikkaukset."
+  [db urakka-id kayttaja-id paikkaukset]
+    (paikkaus-q/paivita-paikkaukset-poistetuksi db kayttaja-id urakka-id paikkaukset))
+
+(defn- poista-paikkauskohteet
+  "Merkitsee poistetuksi paikkauskohteet sekä niistä riippuvaiset paikkaukset ja paikkaustoteumat eli paikkauskustannukset."
+  [db urakka-id kayttaja-id paikkauskohteet]
+  (paikkaus-q/paivita-paikkauskohteet-poistetuksi db kayttaja-id urakka-id paikkauskohteet))
+
+(defn poista-paikkaustiedot [db {id :id} data kayttaja]
+  (log/debug (format "Poistetaan paikkaustietoja urakasta: %s käyttäjän: %s toimesta"
+                     id kayttaja))
+  (let [urakka-id (Integer/parseInt id)
+        kayttaja-id (:id kayttaja)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (poista-paikkauskohteet db urakka-id kayttaja-id (:poistettavat-paikkauskohteet data))
+    (poista-paikkaukset db urakka-id kayttaja-id (:poistettavat-paikkaukset data))
+    (poista-paikkaustoteumat db urakka-id kayttaja-id (:poistettavat-paikkauskustannukset data))
+
+    )
+  (tee-kirjausvastauksen-body {:ilmoitukset "Paikkauskohteet ja -kustannukset poistettu onnistuneesti"}))
+
+
 (defn tallenna-paikkaus [db urakka-id kayttaja-id {paikkaukset :paikkaukset}]
   (let [paikkaukset (map #(paikkaussanoma/api->domain urakka-id (:paikkaus %)) paikkaukset)]
     (doseq [paikkaus paikkaukset]
-      (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaus))))
+      (paikkaus-q/tallenna-paikkaus db urakka-id kayttaja-id paikkaus))))
 
-(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id {paikkauskustannukset :paikkauskustannukset}]
+(defn tallenna-paikkaustoteuma
+  "Tallentaa paikkauskustannuksiin liittyvät tiedot. Poistaa sitä ennen kannasta."
+  [db urakka-id kayttaja-id {paikkauskustannukset :paikkauskustannukset}]
   (let [toteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkauskustannus %)) paikkauskustannukset)]
     (doseq [[ulkoinen-id toteumat] (group-by ::paikkaus/ulkoinen-id (apply concat toteumat))]
-      (paikkaus-q/poista-paikkaustoteumat db kayttaja-id ulkoinen-id)
+      (paikkaus-q/poista-paikkaustoteuma db kayttaja-id urakka-id ulkoinen-id)
       (doseq [toteuma toteumat]
-        (paikkaus-q/tallenna-paikkaustoteuma db kayttaja-id toteuma)))))
+        (paikkaus-q/tallenna-paikkaustoteuma db urakka-id kayttaja-id toteuma)))))
 
 (defn kirjaa-paikkaus [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
-                     (count (:paikkaus data)) id kayttaja))
+                     (count (:paikkaukset data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -39,7 +70,7 @@
 
 (defn kirjaa-paikkaustoteuma [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
-                     (count (:paikkaus data)) id kayttaja))
+                     (count (:paikkauskustannukset data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -73,8 +104,22 @@
                          (fn [parametrit data kayttaja db]
                            (kirjaa-paikkaustoteuma db parametrit data kayttaja))))
       true)
+    (julkaise-reitti
+      http :poista-paikkaustiedot
+      (DELETE "/api/urakat/:id/paikkaus" request
+        (kasittele-kutsu db
+                         integraatioloki
+                         :poista-paikkaustiedot
+                         request
+                         json-skeemat/paikkausten-poisto-request
+                         json-skeemat/kirjausvastaus
+                         (fn [parametrit data kayttaja db]
+                           (poista-paikkaustiedot db parametrit data kayttaja))))
+      true)
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :kirjaa-paikkaus :kirjaa-paikkaustoteuma)
+    (poista-palvelut http :kirjaa-paikkaus
+                     :kirjaa-paikkaustoteuma
+                     :poista-paikkaustiedot)
     this))

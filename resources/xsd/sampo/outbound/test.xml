@@ -2,7 +2,7 @@
     <Header action="write" externalSource="NIKU" objectType="Product" version="8.0"></Header>
     <Products>
         <Product financiAllocation="Kpito" financialDepartment="KP911303" financialProjectClass="INVCLASS"
-                 financialWipClass="WIPCLASS" finish="2015-12-31T01:01:00.000" managerUserName="A009717"
+                 financialWipClass="WIPCLASS" finish="2015-12-31T01:01:00.000" managerUserName="L934498"
                  name="Kokonaishintaiset työt 2015/11 (LA205081)" objectID="LA205081" start="2015-01-01T00:00:00.000">
             <InvestmentAssociations>
                 <Allocations>

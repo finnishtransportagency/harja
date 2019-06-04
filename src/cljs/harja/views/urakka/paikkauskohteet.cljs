@@ -40,14 +40,15 @@
        [yllapitokohteet-view/yllapitokohteet
         ur
         paikkaus/paikkauskohteet
-        {:otsikko "Paikkauskohteet"
-         :kohdetyyppi :paikkaus
-         :tallenna
-         (yllapitokohteet/kasittele-tallennettavat-kohteet!
-           #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))
-           :paikkaus
-           #(reset! paikkaus/paikkauskohteet %)
-           (constantly nil)) ;; Paikkauskohteissa ei ole validointeja palvelinpäässä
+        {:otsikko      "Paikkauskohteet"
+         :kohdetyyppi  :paikkaus
+         :tallenna     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))
+                         (fn [kohteet]
+                           (yllapitokohteet/kasittele-tallennettavat-kohteet!
+                             kohteet
+                             :paikkaus
+                             #(reset! paikkaus/paikkauskohteet %)
+                             (constantly nil))))            ;; Paikkauskohteissa ei ole validointeja palvelinpäässä
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 

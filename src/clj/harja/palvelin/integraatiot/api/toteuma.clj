@@ -33,7 +33,7 @@
                :virheet [{:koodi virheet/+sopimusta-ei-loydy+
                           :viesti (format "Urakalle (id: %s.) ei löydy sopimusta" urakka-id)}]}))))
 
-(defn paivita-toteuma [db urakka-id kirjaaja toteuma]
+(defn paivita-toteuma [db urakka-id kirjaaja toteuma tyokone]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
@@ -50,7 +50,10 @@
             :sopimus sopimus-id
             :id (get-in toteuma [:tunniste :id])
             :urakka urakka-id
-            :luoja (:id kirjaaja)}))))
+            :luoja (:id kirjaaja)
+            :tyokonetyyppi (:tyyppi tyokone)
+            :tyokonetunniste (:tunniste tyokone)
+            :tyokoneen-lisatieto (:lisatieto tyokone)}))))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
@@ -76,31 +79,40 @@
                           "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista urakan toteumista.")]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
-(defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
+(defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma tyokone]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
     (:id (q-toteumat/luo-toteuma<!
            db
-           urakka-id
-           sopimus-id
-           (aika-string->java-sql-date (:alkanut toteuma))
-           (aika-string->java-sql-date (:paattynyt toteuma))
-           (:toteumatyyppi toteuma)
-           (:id kirjaaja)
-           (get-in toteuma [:suorittaja :nimi])
-           (get-in toteuma [:suorittaja :ytunnus])
-           ""
-           (get-in toteuma [:tunniste :id])
-           (:reitti toteuma)
-           nil nil nil nil nil
-           "harja-api"))))
+           {:urakka urakka-id
+            :sopimus sopimus-id
+            :alkanut (aika-string->java-sql-date (:alkanut toteuma))
+            :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
+            :tyyppi (:toteumatyyppi toteuma)
+            :kayttaja (:id kirjaaja)
+            :suorittaja (get-in toteuma [:suorittaja :nimi])
+            :ytunnus (get-in toteuma [:suorittaja :ytunnus])
+            :lisatieto ""
+            :ulkoinen_id (get-in toteuma [:tunniste :id])
+            :reitti (:reitti toteuma),
+            :numero nil
+            :alkuosa nil
+            :alkuetaisyys nil
+            :loppuosa nil
+            :loppuetaisyys nil
+            :lahde "harja-api"
+            :tyokonetyyppi (:tyyppi tyokone)
+            :tyokonetunniste (:tunniste tyokone)
+            :tyokoneen-lisatieto (:lisatieto tyokone)}))))
 
-(defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
-  (if (q-toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja) urakka-id)
-    (paivita-toteuma db urakka-id kirjaaja toteuma)
-    (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
+(defn paivita-tai-luo-uusi-toteuma
+  ([db urakka-id kirjaaja toteuma] (paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma nil))
+  ([db urakka-id kirjaaja toteuma tyokone]
+   (if (q-toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja) urakka-id)
+     (paivita-toteuma db urakka-id kirjaaja toteuma tyokone)
+     (luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone))))
 
 (defn paivita-toteuman-reitti [db toteuma-id reitti]
   ;; Tuotantoon on lokakuun 2016 alussa toteumia, joilla pitäisi olla reitti, mutta ei ole.

@@ -411,7 +411,7 @@
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
       "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
                          [takuuaika ur])
-      "Tilaaja:" (if (u/vesivaylaurakka? ur) "Liikennevirasto" (:nimi (:hallintayksikko ur)))
+      "Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
       "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
                          (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
                          (if (u/vesivaylaurakka? ur)

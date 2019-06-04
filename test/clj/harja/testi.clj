@@ -418,8 +418,8 @@
   (ffirst (q (str "SELECT id
                      FROM toimenpidekoodi t4
                     WHERE t4.nimi = 'Ei yksilöity' and t4.taso = 4 AND t4.emo = (select id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide' and t3.taso = 3
-                          AND t3.emo = (select id from toimenpidekoodi t2 WHERE t2.nimi = 'Väylänhoito ' and t2.taso = 2
-                          AND t2.emo = (SELECT id FROM toimenpidekoodi t1 WHERE t1.nimi = 'Hoito, meri' AND t1.taso = 1)));"))))
+                          AND t3.emo = (select id from toimenpidekoodi t2 WHERE t2.nimi = 'Vesiliikenteen käyttöpalvelut' and t2.taso = 2
+                          AND t2.emo = (SELECT id FROM toimenpidekoodi t1 WHERE t1.nimi = 'Käyttö, meri' AND t1.taso = 1)));"))))
 
 
 (defn hae-kohde-soskua []
@@ -465,10 +465,13 @@
                    FROM   urakka
                    WHERE  urakoitsija = " urakoitsija-id ";"))))
 
-(defn hae-saimaan-kanavaurakan-toimenpiteet []
-  (q (str "SELECT id, toimenpidekoodi, tyyppi
+(defn hae-saimaan-kanavaurakan-toimenpiteet
+  ([] (hae-saimaan-kanavaurakan-toimenpiteet false))
+  ([q-map?]
+   (let [haku-fn (if q-map? q-map q)]
+     (haku-fn (str "SELECT id, toimenpidekoodi, tyyppi
            FROM kan_toimenpide
-           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))
+           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))))
 
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
@@ -658,7 +661,7 @@
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
   FROM toimenpidekoodi
-  WHERE nimi = 'Laaja toimenpide' AND taso = 3\nAND
+  WHERE nimi = 'Liikenneympäristön hoito laaja TPI' AND taso = 3\nAND
   emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
 
 (defn hae-yha-paallystysurakan-id []
@@ -676,6 +679,11 @@
 
 (defn hae-muhoksen-paallystysurakan-testikohteen-id []
   (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
+
+(defn hae-utajarven-paallystysurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Utajärven päällystysurakka'"))))
 
 (defn hae-oulun-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
@@ -721,6 +729,10 @@
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null)"))))
 
+(defn hae-utajarven-paallystysurakan-paasopimuksen-id []
+  (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
+                           (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka') AND paasopimus IS null)"))))
+
 (defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
@@ -730,8 +742,22 @@
 (defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
+                   AND poistettu IS FALSE"))))
+
+(defn hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
+                   AND poistettu IS FALSE"))))
 
 (defn hae-tiemerkintaurakkaan-osoitettu-yllapitokohde [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -1182,4 +1208,25 @@
                                        (println "Ran" simulation "without report"))}})
             opts))]
     (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
-    (= 0 (:ko yhteenveto))))
+    (or (= 0 (:ko yhteenveto))
+        (nil? (:ko yhteenveto)))))
+
+(defmacro is->
+  [testattava & fn-listat]
+  (let [testattava_ (gensym "testattava")
+        f_ (gensym "f")
+        loput_ (gensym "loput")]
+     `(list
+       ~@(let [testattava_ testattava]
+          (loop [[f_ & loput_] fn-listat
+                 iss# []]
+            (if (nil? f_)
+              iss#
+              (let [msg?# (string? (first loput_))
+                    is-lause# (if msg?#
+                                `(is (list ~f_ ~testattava_) (first '~loput_))
+                                `(is (list ~f_ ~testattava_)))]
+                (recur (if msg?#
+                         (rest loput_)
+                         loput_)
+                       (conj iss# is-lause#)))))))))
