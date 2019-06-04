@@ -18,15 +18,15 @@
            (java.net InetAddress)
            (java.util Enumeration Collections)))
 
-(defonce JMS-alkutila
-         {:yhteys nil :istunnot {}})
-(defonce ei-jms-yhteytta {:type :jms-yhteysvirhe
-                          :virheet [{:koodi :ei-yhteytta
-                                     :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
+(def JMS-alkutila
+  {:yhteys nil :istunnot {}})
+(def ei-jms-yhteytta {:type :jms-yhteysvirhe
+                      :virheet [{:koodi :ei-yhteytta
+                                 :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 
-(defonce aikakatkaisu-virhe {:type :jms-ruuhkaa
-                             :virheet [{:koodi :ruuhkaa
-                                        :viesti "Sonja-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
+(def aikakatkaisu-virhe {:type :jms-ruuhkaa
+                         :virheet [{:koodi :ruuhkaa
+                                    :viesti "Sonja-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
@@ -172,7 +172,7 @@
       connection-factory
       (konfiguroi-sonic-jms-connection-factory connection-factory))))
 
-(defn luo-istunto [yhteys jonon-nimi]
+(defn luo-istunto [yhteys]
   (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE))
 
 (defn- yhdista [{:keys [kayttaja salasana tyyppi] :as asetukset} qcf aika]
@@ -194,19 +194,18 @@
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (let [qcf (luo-connection-factory url tyyppi)
         yhteys (yhdista asetukset qcf 10000)]
-    (try
-      ;; Jos yhteys olio ollaan saatu luotua, mutta se on kiinni tilassa (brokerin päässä saattaa olla jotain
-      ;; vikaa), niin tämä nakkaa poikkeuksen. Se poikkeus otetaan kiinni ja yritetään luoda yhteyttä vielä uudestaan.
-      (when-let [testi-istunto (luo-istunto yhteys "yhteystesti-jono")]
-        (.close testi-istunto))
-      (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
-                                        (.getJMSProviderName meta-data)))
-      (if yhteys
-        (do
-          (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
-          {:yhteys yhteys :qcf qcf})
-        (throw (Exception. "Yhteys olio oli nil")))
-      (catch Throwable t
+    ;; Jos yhteys olio ollaan saatu luotua, mutta se on kiinni tilassa (brokerin päässä saattaa olla jotain
+    ;; vikaa), niin yritetään luoda yhteyttä vielä uudestaan.
+    (if (case tyyppi
+          :activemq (not (or (.isClosed yhteys) (.isClosing yhteys)))
+          ; ACTIVE:n arvo on 0
+          :sonicmq (= (.getConnectionState yhteys) 0))
+      (do
+        (log/info "Yhteyden metadata: " (when-let [meta-data (.getMetaData yhteys)]
+                                          (.getJMSProviderName meta-data)))
+        (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
+        {:yhteys yhteys :qcf qcf})
+      (do
         ;; ActiveMQ saattaa ainakin saada yhteyden borkeriin vaikkei yhteys olisi ok
         (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen." (.getMessage t) "\nStackTrace: " (.printStackTrace t))
         ;; Yhteys objekti kummiskin pitää sammuttaa, jotta ylimääräiset säikeet sammutetaan ja muistia vapautetaan
@@ -244,7 +243,7 @@
         {istunto :istunto jonot :jonot} (get istunnot jarjestelma)
         {jono :jono kasittelija-olio kasittelija kuuntelijat :kuuntelijat} (get jonot jonon-nimi)]
     (when-not (and istunto jono kasittelija-olio)
-      (let [istunto (or istunto (luo-istunto yhteys jonon-nimi))
+      (let [istunto (or istunto (luo-istunto yhteys))
             jono (or jono (.createQueue istunto jonon-nimi))
             kasittelija-olio (or kasittelija-olio (if (= kasittelija :vastaanottaja)
                                                     (let [vastaanottaja (.createReceiver istunto jono)]
@@ -275,14 +274,14 @@
                                       :aika (pvm/nyt-suomessa)})))
       (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi))))
 
-(defn ilmoita-oma-tila-yhdistamisen-aikana
+(defn yhteys-oliot!
   "Ilmoittaa omasta tilasta, kun yritetään yhdistää brokeriin."
   [yhteys-future {db :db {tyyppi :tyyppi} :asetukset :as sonja}]
   (jms-toiminto sonja {:jms-tilanne [tyyppi db]})
   (let [[yhteys-oliot _] (async/alts!! [(timeout 5000) (thread @yhteys-future)])]
     (if yhteys-oliot
       yhteys-oliot
-      (ilmoita-oma-tila-yhdistamisen-aikana yhteys-future sonja))))
+      (yhteys-oliot! yhteys-future sonja))))
 
 (defmulti jms-toiminto
   (fn [sonja kasky]
@@ -310,7 +309,7 @@
 (defmethod jms-toiminto :yhdista-uudelleen
   [{:keys [asetukset tila kaskytys-kanava] :as sonja} kasky]
   (try (let [yhteys-future (future (aloita-yhdistaminen asetukset))
-             yhteys-olio (ilmoita-oma-tila-yhdistamisen-aikana yhteys-future sonja)]
+             yhteys-olio (yhteys-oliot! yhteys-future sonja)]
          (swap! tila merge yhteys-olio)
          (swap! tila update :istunnot (fn [istunnot]
                                         (reduce (fn [tulos [istunnon-nimi m]]
@@ -420,11 +419,10 @@
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
-(defn laheta-viesti-jonoon [sonja kasky kaskytys-kanavan-vastaus]
+(defn laheta-viesti-jonoon [sonja kasky kaskyn-kasittelyn-selvitys]
   ;(println "---> KÄSKY: " kasky)
-  (>!! kaskytys-kanavan-vastaus :valmis-kasiteltavaksi)
-  (when (= :kasittele (<!! kaskytys-kanavan-vastaus))
-    (>!! kaskytys-kanavan-vastaus
+  (when (= :kasittele (<!! kaskyn-kasittelyn-selvitys))
+    (>!! kaskyn-kasittelyn-selvitys
          (let [vastaus (try (let [vastaus (jms-toiminto sonja kasky)]
                               (if (and (map? vastaus)
                                        (contains? vastaus :virhe)
@@ -440,7 +438,7 @@
 (defn luo-jms-saije
   "JMS spesifikaation mukaan connection oliota voi käyttää ihan vapaasti useasta eri säikeestä, mutta session olioita ja
    kaikkia sen luomia olioita ei voi. Niitä tulisi kohdella säijekohtaisesti. Mikään ei estä niiden käsittelyä useasta eri
-   säikeestä, mutta se on käyttäjän vastuulla, että samaa oliota ei käytetä yhtä aikaa, jonka takia tosiaa suositellaan,
+   säikeestä, mutta se on käyttäjän vastuulla, että samaa oliota ei käytetä yhtä aikaa, jonka takia tosiaan suositellaan,
    että manipulaatio tehdään yhdestä säikeestä. Tässä luodaan vain yksi säije, jossa luodaan kaikki sessiot ja siihen
    liittyvät muut oliot. Myöhemmin voi luoda useampia säikeitä joihin tulee vaikkapa vain tietyn järjestelmän sessiot, jos
    tähän on tarvesta. ActiveMQ ja SonicMQ ovat kumminkin implementoitu niin, että useamman session luominen johtaa jo
@@ -454,14 +452,16 @@
       (.setName "jms-saije"))
     ;; Ensin varmistetaan, että yhteys sonjaan on saatu. futuren dereffaaminen blokkaa, kunnes saadaan
     ;; joku arvo pihalle.
-    (let [yhteys-olio (ilmoita-oma-tila-yhdistamisen-aikana yhteys-future sonja)]
+    (let [yhteys-oliot (yhteys-oliot! yhteys-future sonja)]
       (log/debug "Yhteys oliot valmiit")
-      (swap! tila merge yhteys-olio)
+      (swap! tila merge yhteys-oliot)
       ;; Aloitetaan ikuinen looppi
       (loop [;; Tarkistetaan joka kieroksella, että onko tullut käsky tuhota tämä säije
              [lopetetaan? _] (async/alts!! [sammutus-kanava]
                                            :default false)]
-        (let [[{:keys [kasky kaskytys-kanavan-vastaus]} _] (if lopetetaan?
+        (when lopetetaan?
+          (async/close! kaskytys-kanava))
+        (let [[{:keys [kasky kaskyn-kasittelyn-selvitys]} _] (if lopetetaan?
                                                              ;; Lopetuksen jälkeen käsitellään ensin kaikki kanavassa jo olevat
                                                              ;; käskyt
                                                              (async/alts!! [kaskytys-kanava]
@@ -472,18 +472,19 @@
                                                              (async/alts!! [kaskytys-kanava (timeout 3000)]))]
           (if-not (or (= kasky :saije-lopetetaan)
                       ;; Tässä tapauksessa kaskytys-kanava on closetettu
-                      (and lopetetaan? (nil? kasky)))
+                      #_(and lopetetaan? (nil? kasky)))
             (do
               ;; Saatiinko käsky vai kerkesikö timeout mennä loppuun?
-              (when-not (or (nil? kaskytys-kanavan-vastaus)
-                            (= :aika-katkaisu (async/poll! kaskytys-kanavan-vastaus)))
-                (laheta-viesti-jonoon sonja kasky kaskytys-kanavan-vastaus))
+              (when-not (or (nil? kaskyn-kasittelyn-selvitys)
+                            ;; Ilmoitetaan, että voidaan käsitellä käsky. Kumminkin on huomioitava, että kasittelykanavaan on saatettu jo lähettää aikakatkaisuviesti
+                            (= :aika-katkaisu (first (async/alts!! [[kaskyn-kasittelyn-selvitys :valmis-kasiteltavaksi] kaskyn-kasittelyn-selvitys])))
+                            #_(= :aika-katkaisu (async/poll! kaskyn-kasittelyn-selvitys)))
+                (laheta-viesti-jonoon sonja kasky kaskyn-kasittelyn-selvitys))
               (recur (if lopetetaan?
                        [true nil]
                        (async/alts!! [sammutus-kanava]
                                      :default false))))
-            (do (async/close! kaskytys-kanava)
-                (>!! sammutus-kanava true))))))))
+            :jms-saije-lopetettu))))))
 
 (defn laheta-viesti-kaskytyskanavaan
   "Lähettää käskyn jms-saikeelle. Käskytyskanavalle on määritelty dropping-buffer, joten se pudottaa lähetetyn viestin
@@ -493,18 +494,20 @@
    tämän viestin.
    Palauttaa kanavan, josta tuloksen voi lukea."
   [kaskytys-kanava kasky]
-  (let [kaskytys-kanavan-vastaus (chan)
+  (let [kaskyn-kasittelyn-selvitys (chan)
         ;; put! ei blockaa
-        _ (async/put! kaskytys-kanava {:kasky kasky :kaskytys-kanavan-vastaus kaskytys-kanavan-vastaus})
-        [tulos _] (async/alts!! [(timeout 5000) kaskytys-kanavan-vastaus])]
+        _ (async/put! kaskytys-kanava {:kasky kasky :kaskyn-kasittelyn-selvitys kaskyn-kasittelyn-selvitys})
+        [tulos _] (async/alts!! [(thread (<!! (timeout 5000))
+                                         (>!! kaskyn-kasittelyn-selvitys :aika-katkaisu)
+                                         :aika-katkaistu)
+                                 kaskyn-kasittelyn-selvitys])]
     (if (= tulos :valmis-kasiteltavaksi)
       (thread
         (doto (Thread/currentThread)
           (.setName (str "jms-kasittelyn-odottelija*" (-> kasky keys first name) "*")))
-        (>!! kaskytys-kanavan-vastaus :kasittele)
-        (<!! kaskytys-kanavan-vastaus))
+        (>!! kaskyn-kasittelyn-selvitys :kasittele)
+        (<!! kaskyn-kasittelyn-selvitys))
       (do
-        (async/put! kaskytys-kanavan-vastaus :aika-katkaisu)
         (let [vastaus-kanava (chan)]
           (async/put! vastaus-kanava {:virhe "Aikakatkaistiin"})
           vastaus-kanava)))))
@@ -518,6 +521,8 @@
           kaskytys-kanava (chan (dropping-buffer 100))
           lopeta-tarkkailu-kanava (chan)
           saikeen-sammutus-kanava (chan)
+          ;; Tämä futuressa sen takia, koska yhdistämisen aloittamien voi mahdollisesti loopata ikuisuuden eikä haluta
+          ;; estää HARJA:n käynnistymistä sen takia.
           yhteys-future (future
                           (aloita-yhdistaminen asetukset))
           this (assoc this
@@ -532,16 +537,16 @@
       (assoc this
         :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytys-kanava lopeta-tarkkailu-kanava (:tyyppi asetukset) db))))
 
-  (stop [{:keys [lopeta-tarkkailu-kanava kaskytys-kanava saikeen-sammutus-kanava] :as this}]
+  (stop [{:keys [lopeta-tarkkailu-kanava kaskytys-kanava saikeen-sammutus-kanava tila] :as this}]
     (when @yhteys-ok?
       (let [tila @tila]
         (some-> tila :yhteys .close)))
     (>!! lopeta-tarkkailu-kanava true)
     (async/close! kaskytys-kanava)
     (>!! saikeen-sammutus-kanava true)
-    (loop [[sammutettu? _] (async/alts!! [saikeen-sammutus-kanava (timeout 5000)])
+    (loop [[jms-saije-paluuarvo _] (async/alts!! [(:jms-saije @tila) (timeout 5000)])
            kierroksia 1]
-      (if sammutettu?
+      (if (= :jms-saije-lopetettu jms-saije-paluuarvo)
         (log/info "Sonja säije sammutettu")
         (do
           (log/info "Ei saatu sammutettua Sonja säijettä " (* kierroksia 5) " sekunnin sisällä.")
