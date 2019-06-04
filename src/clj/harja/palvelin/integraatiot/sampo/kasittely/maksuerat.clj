@@ -71,9 +71,9 @@
     (if (empty? maksuerattomat-tpit)
       (log/debug "Kaikki maksuerät on jo perustettu urakoiden toimenpiteille"))
     (doseq [tpi maksuerattomat-tpit]
-      (doseq [maksueratyyppi (if (= (:urakkatyyppi tpi) "hoito")
-                               maksueratyypit
-                               maksueratyypit-maanteidenhoidon-urakoissa)]
+      (doseq [maksueratyyppi (if (= (:urakkatyyppi tpi) "teiden-hoito")
+                               maksueratyypit-maanteidenhoidon-urakoissa
+                               maksueratyypit)]
         (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi)
               maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
