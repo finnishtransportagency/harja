@@ -4,7 +4,7 @@
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [cheshire.core :as cheshire]
-            [clojure.core.async :refer [go-loop go <! >! thread >!! <!! timeout chan dropping-buffer] :as async]
+            [clojure.core.async :refer [thread >!! <!! timeout chan] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str]
@@ -120,9 +120,9 @@
                                          :default false)]
       (when-not lopetetaan?
         (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})
-        (<! (timeout 5000))
-        (recur (async/alts! [lopeta-tarkkailu-kanava]
-                            :default false))))))
+        (<!! (timeout 5000))
+        (recur (async/alts!! [lopeta-tarkkailu-kanava]
+                             :default false))))))
 
 (defn yhdista-uudelleen [{:keys [tila yhteys-ok? kaskytyskanava] :as sonja}]
   (let [katkos-alkoi (pvm/nyt-suomessa)
