@@ -208,7 +208,7 @@
         {:yhteys yhteys :qcf qcf})
       (do
         ;; ActiveMQ saattaa ainakin saada yhteyden borkeriin vaikkei yhteys olisi ok
-        (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen." (.getMessage t) "\nStackTrace: " (.printStackTrace t))
+        (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen.")
         ;; Yhteys objekti kummiskin pitää sammuttaa, jotta ylimääräiset säikeet sammutetaan ja muistia vapautetaan
         (try (.close yhteys)
              (catch Throwable t
