@@ -432,7 +432,7 @@
   (let [kaskytys-kanava (-> jarjestelma :sonja :kaskytys-kanava)
         db (:db jarjestelma)
         tyyppi (-> asetukset :sonja :tyyppi)
-        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]})))
+        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytys-kanava {:jms-tilanne [tyyppi db]})))
         _ (println "Lopetetetaan yhteys")
         _ (sonja-jolokia-connection nil :stop)
         ;; Odotetaan hetki, että restart prosessi on kerennyt lähtä käyntiin
@@ -443,7 +443,7 @@
         _ (sonja-jolokia-connection nil :start)
         status-aloituksen-jalkeen (loop [kertoja 1]
                                     (when (< kertoja 5)
-                                      (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan kaskytys-kanava {:jms-tilanne [tyyppi db]}))]
+                                      (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytys-kanava {:jms-tilanne [tyyppi db]}))]
                                         (if (= vastaus {:virhe "Aikakatkaistiin"})
                                           (recur (inc kertoja))
                                           (:vastaus vastaus)))))]

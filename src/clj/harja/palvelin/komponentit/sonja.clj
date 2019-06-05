@@ -109,14 +109,17 @@
            nil))))
 
 (declare tee-jms-poikkeuskuuntelija
-         laheta-viesti-kaskytyskanavaan
+         laheta-viesti-kaskytyskanavaan!
          jms-toiminto!)
 
 (defn aloita-sonja-yhteyden-tarkkailu [kaskytyskanava lopeta-tarkkailu-kanava tyyppi db]
-  (go-loop [[lopetetaan? _] (async/alts! [lopeta-tarkkailu-kanava]
+  (thread
+    (doto (Thread/currentThread)
+      (.setName "jms-yhteyden-tarkkailu-saije"))
+    (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
                                          :default false)]
-    (when-not lopetetaan?
-      (let [vastaus (laheta-viesti-kaskytyskanavaan kaskytyskanava {:jms-tilanne [tyyppi db]})]
+      (when-not lopetetaan?
+        (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})
         (<! (timeout 5000))
         (recur (async/alts! [lopeta-tarkkailu-kanava]
                             :default false))))))
@@ -136,9 +139,9 @@
     (thread
       (doto (Thread/currentThread)
         (.setName "jms-reconnecting-saije"))
-      (loop [{:keys [vastaus virhe]} (<!! (laheta-viesti-kaskytyskanavaan kaskytyskanava {:yhdista-uudelleen nil}))]
+      (loop [{:keys [vastaus virhe]} (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil}))]
         (if virhe
-          (recur (<!! (laheta-viesti-kaskytyskanavaan kaskytyskanava {:yhdista-uudelleen nil})))
+          (recur (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil})))
           (log/info "Sonja jonot pystytetty uudestaan. Aikaa meni: " (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
@@ -496,7 +499,7 @@
                                   (kasittele-kasky! kasky sonja)
                                   (recur (async/poll! kaskytyskanava)))))))))))
 
-(defn laheta-viesti-kaskytyskanavaan
+(defn laheta-viesti-kaskytyskanavaan!
   "Lähettää käskyn jms-saikeelle. Jos käskytyskanava on täynnä, palauttaa virheen.
    Lisäksi käskyä ei käsitellä, jos timeout kerkeää mennä loppuun.
    Palauttaa kanavan, josta tuloksen voi lukea. Tulos voi olla käskyn käsitelty tulos tai sitten virhe-map, jossa ilmoitetaan
@@ -536,7 +539,7 @@
            :as this}]
     (let [JMS-oliot (atom JMS-alkutila)
           yhteys-ok? (atom false)
-          ;; HUOM! käskytyskanavaan ei tulisi laittaa viestejä muuten kuin laheta-viesti-kaskytyskanavaan
+          ;; HUOM! käskytyskanavaan ei tulisi laittaa viestejä muuten kuin laheta-viesti-kaskytyskanavaan!
           ;; funktion kautta.
           kaskytyskanava (chan 100)
           lopeta-tarkkailu-kanava (chan)
@@ -587,7 +590,7 @@
         (swap! (:tila this) update-in [:istunnot jarjestelma :jonot jonon-nimi]
                (fn [{kuuntelijat :kuuntelijat}]
                  {:kuuntelijat (conj (or kuuntelijat #{}) kuuntelija-fn)}))
-        #(laheta-viesti-kaskytyskanavaan (:kaskytyskanava this) {:poista-kuuntelija [jarjestelma jonon-nimi kuuntelija-fn]}))
+        #(laheta-viesti-kaskytyskanavaan! (:kaskytyskanava this) {:poista-kuuntelija [jarjestelma jonon-nimi kuuntelija-fn]}))
       (do
         (log/warn "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä")
         (constantly nil))))
@@ -595,7 +598,7 @@
     (kuuntele! this jonon-nimi kuuntelija-fn (str "istunto-" jonon-nimi)))
 
   (laheta [{kaskytyskanava :kaskytyskanava :as this} jonon-nimi viesti otsikot jarjestelma]
-    (let [lahetyksen-viesti (<!! (laheta-viesti-kaskytyskanavaan kaskytyskanava
+    (let [lahetyksen-viesti (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava
                                                                  {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))]
       (if (contains? lahetyksen-viesti :virhe)
         (if (= "Aikakatkaistiin" (:virhe lahetyksen-viesti))
@@ -608,7 +611,7 @@
     (laheta this jonon-nimi viesti nil (str "istunto-" jonon-nimi)))
 
   (aloita-yhteys [{kaskytyskanava :kaskytyskanava :as this}]
-    (laheta-viesti-kaskytyskanavaan kaskytyskanava {:aloita-yhteys nil})))
+    (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:aloita-yhteys nil})))
 
 (defn luo-oikea-sonja [asetukset]
   (->SonjaYhteys asetukset nil nil))
