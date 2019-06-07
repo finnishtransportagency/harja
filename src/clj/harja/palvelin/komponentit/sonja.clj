@@ -13,10 +13,11 @@
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
-           (java.io EOFException)
+    ;(java.io EOFException)
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)
-           (java.util Enumeration Collections)))
+    ;(java.util Enumeration Collections)
+           ))
 
 (defonce jms-saije-sammutettu? (atom true))
 
@@ -26,9 +27,15 @@
                       :virheet [{:koodi :ei-yhteytta
                                  :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 
-(def aikakatkaisu-virhe {:type :jms-ruuhkaa
+(def aikakatkaisu-virhe {:type :jms-kaskytysvirhe
                          :virheet [{:koodi :ruuhkaa
                                     :viesti "Sonja-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
+(def kasykytyskanava-taynna-virhe {:type :jms-kaskytysvirhe
+                                   :virheet [{:koodi :taynna
+                                              :viesti "Sonja-säije ei pysty käsittelemään enempää viestejä."}]})
+(def jms-saije-sammutettu-virhe {:type :jms-kaskytysvirhe
+                                 :virheet [{:koodi :saije-sammutettu
+                                            :viesti "Sonja-säije on sammutettu."}]})
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
@@ -444,21 +451,21 @@
    sonja]
   (let [;; Ilmoitetaan, että voidaan käsitellä käsky. Kumminkin on huomioitava, että kasittelykanavaan on saatettu jo lähettää aikakatkaisuviesti
         [viesti kanava] (async/alts!! [[kaskyn-kasittely-kaskytys-saikeelle :valmis-kasiteltavaksi] kaskyn-kasittely-jms-saikeelle])]
-    (case kanava
-      kaskyn-kasittely-jms-saikeelle (when (= viesti :aikakatkaisu)
-                                       nil)
-      kaskyn-kasittely-kaskytys-saikeelle (case (<!! kaskyn-kasittely-jms-saikeelle)
-                                            :kasittele (let [vastaus (try (let [vastaus (jms-toiminto! sonja kasky)]
-                                                                            (if (and (map? vastaus)
-                                                                                     (contains? vastaus :virhe)
-                                                                                     (= (count vastaus) 1))
-                                                                              vastaus
-                                                                              {:vastaus vastaus}))
-                                                                          (catch Throwable t
-                                                                            (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
-                                                                            {:virhe t}))]
-                                                         ;(println "<---- VASTAUS: " vastaus)
-                                                         (>!! kaskyn-kasittely-kaskytys-saikeelle vastaus))))))
+    (cond
+      (= kanava kaskyn-kasittely-jms-saikeelle) (when (= viesti :aikakatkaisu)
+                                                  nil)
+      (= kanava kaskyn-kasittely-kaskytys-saikeelle) (case (<!! kaskyn-kasittely-jms-saikeelle)
+                                                       :kasittele (let [vastaus (try (let [vastaus (jms-toiminto! sonja kasky)]
+                                                                                       (if (and (map? vastaus)
+                                                                                                (contains? vastaus :virhe)
+                                                                                                (= (count vastaus) 1))
+                                                                                         vastaus
+                                                                                         {:vastaus vastaus}))
+                                                                                     (catch Throwable t
+                                                                                       (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
+                                                                                       {:virhe t}))]
+                                                                    ;(println "<---- VASTAUS: " vastaus)
+                                                                    (>!! kaskyn-kasittely-kaskytys-saikeelle vastaus))))))
 
 (defn luo-jms-saije
   "JMS spesifikaation mukaan connection oliota voi käyttää ihan vapaasti useasta eri säikeestä, mutta session olioita ja
@@ -523,7 +530,7 @@
           ;; kun jms-saie olisi valmis käsittelemään tämän viestin.
           (timeout 5000) (do (async/put! kaskyn-kasittely-jms-saikeelle
                                          :aikakatkaisu)
-                             {:kaskytysvirhe :aikakatkaistiin})
+                             {:kaskytysvirhe :aikakatkaisu})
           kaskyn-kasittely-kaskytys-saikeelle ([tulos _]
                                                 (case tulos
                                                   :valmis-kasiteltavaksi (do
@@ -574,7 +581,7 @@
         (do
           (log/info "Ei saatu sammutettua Sonja säijettä " (* kierroksia 5) " sekunnin sisällä.")
           (when (< kierroksia 5)
-            (recur (async/alts!! [saikeen-sammutus-kanava (timeout 5000)])
+            (recur (async/alts!! [(:jms-saije @tila) (timeout 5000)])
                    (inc kierroksia))))))
     (assoc this :tila nil
                 :yhteys-future nil
@@ -600,11 +607,13 @@
   (laheta [{kaskytyskanava :kaskytyskanava :as this} jonon-nimi viesti otsikot jarjestelma]
     (let [lahetyksen-viesti (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava
                                                                  {:laheta-viesti [jonon-nimi viesti otsikot jarjestelma]}))]
-      (if (contains? lahetyksen-viesti :virhe)
-        (if (= "Aikakatkaistiin" (:virhe lahetyksen-viesti))
-          (throw+ aikakatkaisu-virhe)
-          (throw (:virhe lahetyksen-viesti)))
-        (:vastaus lahetyksen-viesti))))
+      (cond
+        (contains? lahetyksen-viesti :virhe) (throw (:virhe lahetyksen-viesti))
+        (contains? lahetyksen-viesti :kaskytysvirhe) (case (:kaskytysvirhe lahetyksen-viesti)
+                                                       :jms-saije-sammutettu (throw+ jms-saije-sammutettu-virhe)
+                                                       :kasykytyskanava-taynna (throw+ kasykytyskanava-taynna-virhe)
+                                                       :aikakatkaisu (throw+ aikakatkaisu-virhe)))
+        :else (:vastaus lahetyksen-viesti)))
   (laheta [this jonon-nimi viesti otsikot]
     (laheta this jonon-nimi viesti otsikot (str "istunto-" jonon-nimi)))
   (laheta [this jonon-nimi viesti]

@@ -693,10 +693,20 @@
   (go
     (log/info "Aloitaetaan Sonjayhteys")
     (loop []
-      (let [{:keys [vastaus virhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
-        (if virhe
+      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
+        (when kaskytysvirhe
+          (log/error "Sonjayhteyden aloittamisessa käskytysvirhe: " kaskytysvirhe))
+        (<! (timeout 2000))
+        (if (or virhe kaskytysvirhe)
           (recur)
           vastaus)))))
+
+(defn kasittele-saikeen-kaatuminen
+  [saikeen-nimi]
+  (case saikeen-nimi
+    "jms-saije" (do (reset! sonja/jms-saije-sammutettu? true)
+                    (when-let [sonja-yhteys-ok (get-in harja-jarjestelma :sonja :yhteys-ok?)]
+                      (reset! sonja-yhteys-ok false)))))
 
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
@@ -706,7 +716,8 @@
       (reify Thread$UncaughtExceptionHandler
         (uncaughtException [_ thread e]
           (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-          (log/error "Virhe: " e))))
+          (log/error "Virhe: " e)
+          (kasittele-saikeen-kaatuminen (.getName thread)))))
     (alter-var-root #'harja-jarjestelma
                     (constantly
                       (-> (lue-asetukset asetusfile)
