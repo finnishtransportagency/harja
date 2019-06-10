@@ -33,9 +33,15 @@
 (def kasykytyskanava-taynna-virhe {:type :jms-kaskytysvirhe
                                    :virheet [{:koodi :taynna
                                               :viesti "Sonja-säije ei pysty käsittelemään enempää viestejä."}]})
+(def jms-saije-sammutetaan-virhe {:type :jms-kaskytysvirhe
+                                  :virheet [{:koodi :saije-sammutetaan
+                                             :viesti "Sonja-säijetta samutetaan."}]})
 (def jms-saije-sammutettu-virhe {:type :jms-kaskytysvirhe
                                  :virheet [{:koodi :saije-sammutettu
                                             :viesti "Sonja-säije on sammutettu."}]})
+
+(def viestin-kasittely-timeout 5000)
+
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
@@ -146,10 +152,12 @@
     (thread
       (doto (Thread/currentThread)
         (.setName "jms-reconnecting-saije"))
-      (loop [{:keys [vastaus virhe]} (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil}))]
-        (if virhe
-          (recur (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil})))
-          (log/info "Sonja jonot pystytetty uudestaan. Aikaa meni: " (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))))))))
+      (loop [{:keys [vastaus virhe kaskytysvirhe]} (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil}))]
+        (cond
+          (or virhe
+              (= :kasykytyskanava-taynna kaskytysvirhe)) (recur (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil})))
+          kaskytysvirhe  (log/info "Sonjaa ei käynnistetä uudelleen, sillä jms-saije sammutetaan")
+          vastaus (log/info "Sonja jonot pystytetty uudestaan. Aikaa meni: " (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))))))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -327,6 +335,17 @@
          (log/error "VIRHE TAPAHTUI :aloita-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
+(defmethod jms-toiminto! :lopeta-yhteys
+  [{:keys [tila yhteys-ok?] :as sonja} _]
+  (try (let [{:keys [yhteys]} @tila]
+         (log/debug "Lopetetaan yhteys")
+         (.close yhteys)
+         (reset! yhteys-ok? false)
+         true)
+       (catch Exception e
+         (log/error "VIRHE TAPAHTUI :lopeta-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
+         {:virhe e})))
+
 (defmethod jms-toiminto! :yhdista-uudelleen
   [{:keys [asetukset tila kaskytyskanava] :as sonja} kasky]
   (try (let [yhteys-future (future (aloita-yhdistaminen asetukset))
@@ -492,16 +511,26 @@
       (loop []
         (async/alt!!
           kaskytyskanava ([kasky _]
-                           (kasittele-kasky! kasky sonja)
-                           (recur))
+                           (println "KÄSKY OLI: ")
+                           (clojure.pprint/pprint kasky)
+                           (if (nil? kasky)
+                             (do (log/info "Yritettiin antaa sammutetulle käskytyskanavalle käsky")
+                                 (<!! (timeout 2000))
+                                 (recur))
+                             (do (kasittele-kasky! kasky sonja)
+                                 (recur))))
           sammutus-kanava (do
                             ;; Sammutetaan käskytyskanava, jottei sinne voi tulla enää lisää käskyjä
+                            (println "LOPETETAAN KANAVA")
                             (async/close! kaskytyskanava)
                             ;; Lopetuksen jälkeen käsitellään ensin kaikki kanavassa jo olevat
                             ;; käskyt
                             (loop [kasky (async/poll! kaskytyskanava)]
+                              (println "KÄSKYTYSKANAVASTA SAATIIN VIELÄ: " kasky)
                               (if (nil? kasky)
-                                (reset! jms-saije-sammutettu? true)
+                                (do
+                                  (jms-toiminto! sonja {:lopeta-yhteys nil})
+                                  (reset! jms-saije-sammutettu? true))
                                 (do
                                   (kasittele-kasky! kasky sonja)
                                   (recur (async/poll! kaskytyskanava)))))))))))
@@ -523,22 +552,26 @@
           lahetettiinko-kasky? (async/offer! kaskytyskanava {:kasky kasky
                                                              :kaskyn-kasittely-jms-saikeelle kaskyn-kasittely-jms-saikeelle
                                                              :kaskyn-kasittely-kaskytys-saikeelle kaskyn-kasittely-kaskytys-saikeelle})]
-      (if lahetettiinko-kasky?
-        (async/alt!!
-          ;; Timeoutin lisääminen aiheuttaa
-          ;; siinä mielessä harmia, että jms-saikeen täytyy kysyä tältä säikeeltä, onko timeout kerennyt jo tapahuta siinä vaiheessa,
-          ;; kun jms-saie olisi valmis käsittelemään tämän viestin.
-          (timeout 5000) (do (async/put! kaskyn-kasittely-jms-saikeelle
-                                         :aikakatkaisu)
-                             {:kaskytysvirhe :aikakatkaisu})
-          kaskyn-kasittely-kaskytys-saikeelle ([tulos _]
-                                                (case tulos
-                                                  :valmis-kasiteltavaksi (do
-                                                                           (>!! kaskyn-kasittely-jms-saikeelle :kasittele)
-                                                                           (<!! kaskyn-kasittely-kaskytys-saikeelle)))))
-        (if @jms-saije-sammutettu?
-          {:kaskytysvirhe :jms-saije-sammutettu}
-          {:kaskytysvirhe :kasykytyskanava-taynna})))))
+      (case lahetettiinko-kasky?
+        ;; Käskyn lähetys onnistui
+        true (async/alt!!
+               ;; Timeoutin lisääminen aiheuttaa
+               ;; siinä mielessä harmia, että jms-saikeen täytyy kysyä tältä säikeeltä, onko timeout kerennyt jo tapahuta siinä vaiheessa,
+               ;; kun jms-saie olisi valmis käsittelemään tämän viestin.
+               (timeout viestin-kasittely-timeout) (do (async/put! kaskyn-kasittely-jms-saikeelle
+                                                                   :aikakatkaisu)
+                                                       {:kaskytysvirhe :aikakatkaisu})
+               kaskyn-kasittely-kaskytys-saikeelle ([tulos _]
+                                                     (case tulos
+                                                       :valmis-kasiteltavaksi (do
+                                                                                (>!! kaskyn-kasittely-jms-saikeelle :kasittele)
+                                                                                (<!! kaskyn-kasittely-kaskytys-saikeelle)))))
+        ;; Käskytyskanava on sammutettu
+        false (if (= :sammutettu @jms-saije-sammutettu?)
+                {:kaskytysvirhe :jms-saije-sammutettu}
+                {:kaskytysvirhe :jms-saijetta-sammutetaan})
+        ;; Käskytyskanava on täynnä
+        nil {:kaskytysvirhe :kasykytyskanava-taynna}))))
 
 (defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
@@ -568,12 +601,18 @@
         :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava lopeta-tarkkailu-kanava (:tyyppi asetukset) db))))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
-    (when @yhteys-ok?
+    #_(when @yhteys-ok?
       (let [tila @tila]
         (some-> tila :yhteys .close)))
     (>!! lopeta-tarkkailu-kanava true)
-    (async/close! kaskytyskanava)
-    (>!! saikeen-sammutus-kanava true)
+    ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
+    (when-not @jms-saije-sammutettu?
+      (>!! saikeen-sammutus-kanava true))
+    ;; Odotetaan, että käsitteillä olevat viestit on käsitelty
+    (<!! (async/go-loop []
+           (when (not @jms-saije-sammutettu?)
+             (< (timeout 1000))
+             (recur))))
     (loop [[jms-saije-sammutettu? _] (async/alts!! [(:jms-saije @tila) (timeout 5000)])
            kierroksia 1]
       (if jms-saije-sammutettu?
@@ -611,6 +650,7 @@
         (contains? lahetyksen-viesti :virhe) (throw (:virhe lahetyksen-viesti))
         (contains? lahetyksen-viesti :kaskytysvirhe) (case (:kaskytysvirhe lahetyksen-viesti)
                                                        :jms-saije-sammutettu (throw+ jms-saije-sammutettu-virhe)
+                                                       :jms-saijetta-sammutetaan (throw+ jms-saije-sammutetaan-virhe)
                                                        :kasykytyskanava-taynna (throw+ kasykytyskanava-taynna-virhe)
                                                        :aikakatkaisu (throw+ aikakatkaisu-virhe)))
         :else (:vastaus lahetyksen-viesti)))

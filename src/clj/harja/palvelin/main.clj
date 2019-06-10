@@ -694,10 +694,12 @@
     (log/info "Aloitaetaan Sonjayhteys")
     (loop []
       (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
+        (when vastaus
+          (log/info "Sonja yhteys aloitettu"))
         (when kaskytysvirhe
           (log/error "Sonjayhteyden aloittamisessa käskytysvirhe: " kaskytysvirhe))
         (<! (timeout 2000))
-        (if (or virhe kaskytysvirhe)
+        (if (or virhe (= :kasykytyskanava-taynna kaskytysvirhe))
           (recur)
           vastaus)))))
 
