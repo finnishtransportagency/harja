@@ -201,6 +201,7 @@
 
 (defn- yllapitourakan-sopimustyyppi [ur]
   (when (and (not= :hoito (:tyyppi ur))
+             (not= :teiden-hoito (:tyyppi ur))
              (not (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
           sopimustyyppi (:sopimustyyppi ur)]

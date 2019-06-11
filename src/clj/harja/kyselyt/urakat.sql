@@ -763,12 +763,12 @@ WHERE sampoid = :sampoid;
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
 SET takuu_loppupvm = :loppupvm
-WHERE id = :urakka
+WHERE id = :urakka;
 
 -- name: aseta-urakan-indeksi!
 UPDATE urakka
 SET indeksi = :indeksi
-WHERE id = :urakka
+WHERE id = :urakka;
 
 -- name: tuhoa-valaistusurakkadata!
 DELETE
