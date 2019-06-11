@@ -138,9 +138,6 @@
                  [org.clojure/data.codec "0.1.1"]
                  [devcards "0.2.4" :exclusions [cljsjs/react]]
 
-                 ;; Parsi sourcemapit
-                 [com.atlassian.sourcemap/sourcemap "1.7.7"]
-
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
