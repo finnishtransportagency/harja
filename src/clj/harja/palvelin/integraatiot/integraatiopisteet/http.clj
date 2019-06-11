@@ -115,6 +115,8 @@
     [this url otsikot parametrit kutsudata])
   (HEAD
     [this url]
+    [this url otsikot parametrit])
+  (DELETE
     [this url otsikot parametrit]))
 
 (defrecord Http [lokittaja tapahtuma-id asetukset]
@@ -136,7 +138,10 @@
     (laheta-kutsu lokittaja tapahtuma-id url :head nil nil asetukset nil))
 
   (HEAD [_ url otsikot parametrit]
-    (laheta-kutsu lokittaja tapahtuma-id url :head otsikot parametrit asetukset nil)))
+    (laheta-kutsu lokittaja tapahtuma-id url :head otsikot parametrit asetukset nil))
+
+  (DELETE [_ url otsikot parametrit]
+    (laheta-kutsu lokittaja tapahtuma-id url :delete otsikot parametrit asetukset nil)))
 
 (defn luo-integraatiopiste
   ([lokittaja tapahtuma-id]

@@ -75,7 +75,7 @@ SELECT s.id,
                             ELSE array_to_string(k.tulos, '')
                             END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
-        WHERE k.siltatarkastus = s.id
+        WHERE k.siltatarkastus = s1.id
           AND (k.tulos && '{C}' OR k.tulos && '{B}')) AS kohteet
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
@@ -107,7 +107,7 @@ SELECT s.id,
                             ELSE array_to_string(k.tulos, '')
                             END, ':', k.lisatieto))
         FROM siltatarkastuskohde k
-        WHERE k.siltatarkastus = s.id
+        WHERE k.siltatarkastus = s1.id
           AND k.tulos && '{D}') AS kohteet
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id

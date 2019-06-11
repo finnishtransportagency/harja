@@ -47,6 +47,12 @@ VALUES ('4242523-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                             WHERE lyhenne = 'POP'), 'Utajärven päällystysurakka',
         '2019-10-01', '2023-09-30', 'paallystys', 'uta1', (SELECT id
                                                            FROM organisaatio
+                                                           WHERE ytunnus = '0651792-4')),
+       ('1337133-TES3', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
+                                                            FROM organisaatio
+                                                            WHERE lyhenne = 'UUD'), 'Porvoon päällystysurakka',
+        '2019-01-01', '2023-12-31', 'paallystys', 'por1', (SELECT id
+                                                           FROM organisaatio
                                                            WHERE ytunnus = '0651792-4'));
 INSERT INTO yhatiedot (urakka, yhaid, yhatunnus)
   VALUES ((SELECT id
@@ -1353,3 +1359,12 @@ INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, u
 VALUES ('1111-TES',(SELECT id FROM organisaatio WHERE lyhenne = 'POP'), 'Aktiivinen Oulu Testi', now() - interval '31 days', now() + interval '3 years', 'hoito', (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Oulu Testi'), (SELECT id FROM organisaatio WHERE ytunnus = '1565583-5')),
        ('1112-TES',(SELECT id FROM organisaatio WHERE lyhenne = 'POP'), 'Aktiivinen Kajaani Testi', now() - interval '31 days', now() + interval '3 years', 'hoito', (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Kajaani Testi'), (SELECT id FROM organisaatio WHERE ytunnus = '1565583-5')),
   ('1113-TES',(SELECT id FROM organisaatio WHERE lyhenne = 'POP'), 'Aktiivinen Oulu Päällystys Testi', now() - interval '31 days', now() + interval '3 years', 'paallystys', 'ouluPaa', (SELECT id FROM organisaatio WHERE ytunnus = '1565583-5'));
+
+-- Testiurakka uudelle urakkatyypille (MHU)
+-- INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue)
+-- VALUES ('1242141-OULU3', (SELECT id
+--                           FROM organisaatio
+--                           WHERE lyhenne = 'POP'), 'Oulun MHU 2019-2024', '2019-10-01', '2024-09-30', 'teiden-hoito',
+--         (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Oulu 2014-2019'), (SELECT id
+--                                                                                FROM organisaatio
+--                                                                                WHERE ytunnus = '1565583-5'),(select alue from urakka where nimi = 'Oulun alueurakka 2014-2019'));

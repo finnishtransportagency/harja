@@ -317,6 +317,7 @@
           [:h3 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
                           :muokkaa! muokkaa-fn
+                          :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}
            [{:otsikko "Kohde" :nimi :kohde
@@ -900,12 +901,12 @@
                    (e! (paallystys/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                     (apply f vanha-arvo args)))))
         paakohteen-validointi (fn [_ rivi taulukko]
-                                (let [{:keys [perustiedot vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
-                                      paakohde (select-keys perustiedot #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+                                (let [{:keys [vuodet tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
+                                      paakohde (select-keys (:tr-osoite rivi) #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
                                       vuosi (first vuodet)
                                       ;; Kohteiden päällekkyys keskenään validoidaan taulukko tasolla, jotta rivin päivittämine oikeaksi korjaa
                                       ;; myös toisilla riveillä olevat validoinnit.
-                                      validoitu (yllapitokohde-domain/validoi-kohde paakohde [] (get tr-osien-tiedot (:tr-numero rivi)) {:vuosi vuosi})]
+                                      validoitu (yllapitokohde-domain/validoi-kohde paakohde (get tr-osien-tiedot (get-in rivi [:tr-osoite :tr-numero])) {:vuosi vuosi})]
                                   (vec (flatten (vals (yllapitokohde-domain/validoitu-kohde-tekstit validoitu true))))))
 
         alikohteen-validointi (fn [rivi taulukko]
@@ -1065,6 +1066,7 @@
 
           [yhteenveto lomakedata-nyt]
 
+          [debug virheet]
           [tallennus e! lomakedata-nyt kayttaja urakka valmis-tallennettavaksi?]])))))
 
 ;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;

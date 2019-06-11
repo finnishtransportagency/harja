@@ -22,7 +22,7 @@
 
 (def istunto-alkoi (atom nil))
 
-(defn- aseta-kayttaja [k]
+(defn aseta-kayttaja [k]
   (reset! kayttaja k)
   (tapahtumat/julkaise! (merge {:aihe :kayttajatiedot} k)))
 

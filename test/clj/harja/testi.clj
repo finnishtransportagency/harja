@@ -340,6 +340,7 @@
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
+(def oulun-maanteiden-hoitourakan-2019-2024-id (atom nil))
 (def kajaanin-alueurakan-2014-2019-id (atom nil))
 (def vantaan-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-lampotila-hk-2014-2015 (atom nil))
@@ -583,6 +584,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
+
+(defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun MHU 2019-2024'"))))
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
@@ -1213,20 +1219,20 @@
 
 (defmacro is->
   [testattava & fn-listat]
-  `(do
-     ~(loop [[fn-lista & loput] fn-listat
-             iss []]
-        (if (nil? fn-lista)
-          iss
-          (let [msg? (string? (first loput))
-                [f & args] (if (seq? fn-lista)
-                             fn-lista
-                             [fn-lista])
-                is-lause (if msg?
-                           `(is (~f ~testattava ~@args) ~(first loput))
-                           `(is (~f ~testattava ~@args)))
-                loput (if msg?
-                        (rest loput)
-                        loput)]
-            (recur loput
-                   (conj iss is-lause)))))))
+  (let [testattava_ (gensym "testattava")
+        f_ (gensym "f")
+        loput_ (gensym "loput")]
+     `(list
+       ~@(let [testattava_ testattava]
+          (loop [[f_ & loput_] fn-listat
+                 iss# []]
+            (if (nil? f_)
+              iss#
+              (let [msg?# (string? (first loput_))
+                    is-lause# (if msg?#
+                                `(is (list ~f_ ~testattava_) (first '~loput_))
+                                `(is (list ~f_ ~testattava_)))]
+                (recur (if msg?#
+                         (rest loput_)
+                         loput_)
+                       (conj iss# is-lause#)))))))))
