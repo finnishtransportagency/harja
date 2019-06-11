@@ -134,13 +134,11 @@
    "yhteydenottopyynto" false})
 
 
-;; FIXME: ao. testi feilaillut todella paljon randomisti ja häiritsee CI putkea.
-;; Olisi syytä löytää syy epävakauteen ja palauttaa paremmin käyttäytyvänä testi takaisin
-#_(deftest kuuntele-urakan-ilmoituksia
+(deftest kuuntele-urakan-ilmoituksia
   (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"] kayttaja portti))
         tloik-kuittaukset (atom [])]
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
+    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
 
     (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 20000)
     (is (= 200 (:status @vastaus)))
