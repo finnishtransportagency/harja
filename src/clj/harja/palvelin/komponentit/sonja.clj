@@ -13,13 +13,11 @@
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
-    ;(java.io EOFException)
            (java.lang.reflect Proxy InvocationHandler)
-           (java.net InetAddress)
-    ;(java.util Enumeration Collections)
-           ))
+           (java.net InetAddress)))
 
 (defonce jms-saije-sammutettu? (atom true))
+(defonce jms-connection-tila (atom nil))
 
 (def JMS-alkutila
   {:yhteys nil :istunnot {}})
@@ -102,24 +100,29 @@
         ~(list 'catch 'Throwable 't
                nil)))
 
-(defn hae-jonon-viestit [istunto jono]
+(defn hae-jonon-viestit
   "Luodaan selailija olio aina uudestaan, koska se saa jonosta snapshot tilanteen silloin, kun se luodaan."
+  [istunto jono]
   (when (and istunto jono)
-    (try (let [selailija (.createBrowser istunto jono)
-               viesti-elementit (.getEnumeration selailija)]
-           (loop [elementit []]
-             ;; Selailija olio ei ainakaan ActiveMQ:n kanssa toimi oikein kun istunnossa on useita eri jonoja. hasMoreElements
-             ;; palauttaa oikein true sillin, kun siellä on viestejä, mutta nextElement palauttaa siitä huolimatta nil
-             (if (.hasMoreElements viesti-elementit)
-               (let [elementti (.nextElement viesti-elementit)]
-                 (if (nil? elementti)
-                   (conj elementit nil)
-                   (recur (conj elementit elementti))))
-               (do
-                 (.close selailija)
-                 elementit))))
-         (catch JMSException e
-           nil))))
+    ;; ainakin ActiveMQ:ssa createBrowser saattaa blokata ikuisesti jos istunto ei ole kunnossa. Tämän takia luodaan
+    ;; browseri omassa säikessään vaikkei näin suositella tekevän. Jms-säije kumminkin työstää tämän läpi ennen
+    ;; kuin tekee mitään muuta
+    (first (async/alts!! [(thread (try (let [selailija (.createBrowser istunto jono)
+                                             viesti-elementit (.getEnumeration selailija)]
+                                         (loop [elementit []]
+                                           ;; Selailija olio ei ainakaan ActiveMQ:n kanssa toimi oikein kun istunnossa on useita eri jonoja. hasMoreElements
+                                           ;; palauttaa oikein true sillin, kun siellä on viestejä, mutta nextElement palauttaa siitä huolimatta nil
+                                           (if (.hasMoreElements viesti-elementit)
+                                             (let [elementti (.nextElement viesti-elementit)]
+                                               (if (nil? elementti)
+                                                 (conj elementit nil)
+                                                 (recur (conj elementit elementti))))
+                                             (do
+                                               (.close selailija)
+                                               elementit))))
+                                       (catch Throwable t
+                                         nil)))
+                          (timeout 1000)]))))
 
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan!
@@ -137,44 +140,38 @@
         (recur (async/alts!! [lopeta-tarkkailu-kanava]
                              :default false))))))
 
-(defn yhdista-uudelleen [{:keys [tila yhteys-ok? kaskytyskanava] :as sonja}]
-  (let [katkos-alkoi (pvm/nyt-suomessa)
-        nukkumisaika 5000
-        {yhteys :yhteys} @tila]
-    (log/info "Yritetään yhdistään JMS-yhteys uudelleen. Katkos alkoi: " (str katkos-alkoi))
-    (when yhteys
-      (try
-        (.close yhteys)
-        (reset! yhteys-ok? false)
-        (catch Exception e
-          (log/error e "JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e))
-          (reset! yhteys-ok? false))))
-    (thread
-      (doto (Thread/currentThread)
-        (.setName "jms-reconnecting-saije"))
-      (loop [{:keys [vastaus virhe kaskytysvirhe]} (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil}))]
-        (cond
-          (or virhe
-              (= :kasykytyskanava-taynna kaskytysvirhe)) (recur (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:yhdista-uudelleen nil})))
-          kaskytysvirhe  (log/info "Sonjaa ei käynnistetä uudelleen, sillä jms-saije sammutetaan")
-          vastaus (log/info "Sonja jonot pystytetty uudestaan. Aikaa meni: " (pvm/aikavali-sekuntteina katkos-alkoi (pvm/nyt-suomessa))))))))
-
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
-                       0 (log/info "Sonja JMS yhteyden tila: ACTIVE")
-                       1 (log/info "Sonja JMS yhteyden tila: RECONNECTING")
-                       2 (log/error "Sonja JMS yhteyden tila: FAILED")
-                       3 (log/info "Sonja JMS yhteyden tila: CLOSED"))
+                       0 (do (log/info "Sonja JMS yhteyden tila: ACTIVE")
+                             (reset! jms-connection-tila "ACTIVE"))
+                       1 (do (log/info "Sonja JMS yhteyden tila: RECONNECTING")
+                             (reset! jms-connection-tila "RECONNECTING"))
+                       2 (do (log/error "Sonja JMS yhteyden tila: FAILED")
+                             (reset! jms-connection-tila "FAILED"))
+                       3 (do (log/info "Sonja JMS yhteyden tila: CLOSED")
+                             (reset! jms-connection-tila "CLOSED")))
         kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
         instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
     instanssi))
 
+(defn tee-activemq-jms-tilanmuutoskuuntelija []
+  (reify org.apache.activemq.transport.TransportListener
+    (onCommand [this komento]
+      ;; Ei tehdä tässä mitään, mutta kaikki interfacen metodit on implementoitava.
+      )
+    (onException [this e] (reset! jms-connection-tila "FAILED"))
+    (transportInterupted [this] (reset! jms-connection-tila "RECONNECTING"))
+    (transportResumed [this] (reset! jms-connection-tila "ACTIVE"))))
+
 (defn tee-jms-poikkeuskuuntelija [sonja]
   (reify ExceptionListener
     (onException [_ e]
-      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e)))
-      (yhdista-uudelleen sonja))))
+      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e))))))
+
+(defn konfiguroi-activemq-jms-connection-factory [connection-factory url]
+  (doto connection-factory
+    (.setBrokerURL (str "failover:(" url ")?initialReconnectDelay=100"))))
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
@@ -188,7 +185,7 @@
                                (.getConstructor (into-array Class [String]))
                                (.newInstance (into-array Object [url])))]
     (if (= tyyppi :activemq)
-      connection-factory
+      (konfiguroi-activemq-jms-connection-factory connection-factory url)
       (konfiguroi-sonic-jms-connection-factory connection-factory))))
 
 (defn luo-istunto [yhteys]
@@ -197,8 +194,9 @@
 (defn- yhdista [{:keys [kayttaja salasana tyyppi] :as asetukset} qcf aika]
   (try
     (let [yhteys (.createQueueConnection qcf kayttaja salasana)]
-      (when (= tyyppi :sonicmq)
-        (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija)))
+      (if (= tyyppi :sonicmq)
+        (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija))
+        (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
     (catch JMSException e
       (log/warn (format "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan %s millisekunnin päästä. " aika) e)
@@ -225,7 +223,6 @@
         (log/info "Saatiin yhteys Sonjan JMS-brokeriin.")
         {:yhteys yhteys :qcf qcf})
       (do
-        ;; ActiveMQ saattaa ainakin saada yhteyden borkeriin vaikkei yhteys olisi ok
         (log/error "Jokin meni vikaan, kun yritettiin saada yhteys Sonjaan... Yritetään yhdistää uudelleen.")
         ;; Yhteys objekti kummiskin pitää sammuttaa, jotta ylimääräiset säikeet sammutetaan ja muistia vapautetaan
         (try (.close yhteys)
@@ -329,6 +326,7 @@
          ;; Aloita yhteys
          (log/debug "Aloitetaan yhteys")
          (.start yhteys)
+         (reset! jms-connection-tila "ACTIVE")
          (reset! yhteys-ok? true)
          true)
        (catch Exception e
@@ -340,32 +338,13 @@
   (try (let [{:keys [yhteys]} @tila]
          (log/debug "Lopetetaan yhteys")
          (.close yhteys)
+         (reset! jms-connection-tila "CLOSED")
          (reset! yhteys-ok? false)
          true)
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :lopeta-yhteys " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
 
-(defmethod jms-toiminto! :yhdista-uudelleen
-  [{:keys [asetukset tila kaskytyskanava] :as sonja} kasky]
-  (try (let [yhteys-future (future (aloita-yhdistaminen asetukset))
-             yhteys-olio (yhteys-oliot! yhteys-future sonja)]
-         (swap! tila merge yhteys-olio)
-         ;; Tässä tiputetaan kaikki jms-oliot pois, jotta ne voidaan luoda uudestaan.
-         (swap! tila update :istunnot (fn [istunnot]
-                                        (reduce (fn [tulos [istunnon-nimi m]]
-                                                  (let [jonot (:jonot m)]
-                                                    (merge tulos
-                                                           {istunnon-nimi
-                                                            {:jonot (into {}
-                                                                          (map (fn [[jonon-nimi jms-oliot]]
-                                                                                 [jonon-nimi (select-keys jms-oliot [:kuuntelijat])])
-                                                                               jonot))}})))
-                                                {} istunnot)))
-         (jms-toiminto! sonja {:aloita-yhteys nil}))
-       (catch Exception e
-         (log/error "VIRHE TAPAHTUI :yhdista-uudelleen " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
-         {:virhe e})))
 
 (defmethod jms-toiminto! :laheta-viesti
   [{:keys [tila]} kasky]
@@ -411,17 +390,7 @@
                       (first params))
              [tyyppi db] params
              {:keys [yhteys istunnot]} @tila
-             yhteyden-tila (when yhteys
-                             (if (= tyyppi :activemq)
-                               (if (.isClosed yhteys)
-                                 "CLOSED"
-                                 "ACTIVE")
-                               (case (.getConnectionState yhteys)
-                                 0 "ACTIVE"
-                                 1 "RECONNECTING"
-                                 2 "FAILED"
-                                 3 "CLOSED"
-                                 (str (.getConnectionState yhteys)))))
+             yhteyden-tila @jms-connection-tila
              olioiden-tilat {:yhteyden-tila yhteyden-tila
                              :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
                                                ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
@@ -432,8 +401,10 @@
                                                   :jarjestelma jarjestelma
                                                   :jonot (mapv (fn [[jonon-nimi {:keys [jono tuottaja vastaanottaja virheet]}]]
                                                                  (let [jonon-viestit (mapv #(when %
-                                                                                              {:message-id (.getJMSMessageID %)
-                                                                                               :timestamp (.getJMSTimestamp %)})
+                                                                                              {:message-id (try (.getJMSMessageID %)
+                                                                                                                (catch Throwable t nil))
+                                                                                               :timestamp (try (.getJMSTimestamp %)
+                                                                                                               (catch Throwable t nil))})
                                                                                            (hae-jonon-viestit istunto jono))
                                                                        tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
                                                                        vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
@@ -483,7 +454,6 @@
                                                                                      (catch Throwable t
                                                                                        (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
                                                                                        {:virhe t}))]
-                                                                    ;(println "<---- VASTAUS: " vastaus)
                                                                     (>!! kaskyn-kasittely-kaskytys-saikeelle vastaus))))))
 
 (defn luo-jms-saije
@@ -511,8 +481,6 @@
       (loop []
         (async/alt!!
           kaskytyskanava ([kasky _]
-                           (println "KÄSKY OLI: ")
-                           (clojure.pprint/pprint kasky)
                            (if (nil? kasky)
                              (do (log/info "Yritettiin antaa sammutetulle käskytyskanavalle käsky")
                                  (<!! (timeout 2000))
@@ -521,12 +489,10 @@
                                  (recur))))
           sammutus-kanava (do
                             ;; Sammutetaan käskytyskanava, jottei sinne voi tulla enää lisää käskyjä
-                            (println "LOPETETAAN KANAVA")
                             (async/close! kaskytyskanava)
                             ;; Lopetuksen jälkeen käsitellään ensin kaikki kanavassa jo olevat
                             ;; käskyt
                             (loop [kasky (async/poll! kaskytyskanava)]
-                              (println "KÄSKYTYSKANAVASTA SAATIIN VIELÄ: " kasky)
                               (if (nil? kasky)
                                 (do
                                   (jms-toiminto! sonja {:lopeta-yhteys nil})
@@ -601,9 +567,6 @@
         :yhteyden-tiedot (aloita-sonja-yhteyden-tarkkailu kaskytyskanava lopeta-tarkkailu-kanava (:tyyppi asetukset) db))))
 
   (stop [{:keys [lopeta-tarkkailu-kanava kaskytyskanava saikeen-sammutus-kanava tila] :as this}]
-    #_(when @yhteys-ok?
-      (let [tila @tila]
-        (some-> tila :yhteys .close)))
     (>!! lopeta-tarkkailu-kanava true)
     ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
     (when-not @jms-saije-sammutettu?

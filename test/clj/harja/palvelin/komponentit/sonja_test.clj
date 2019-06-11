@@ -193,6 +193,22 @@
                       operation)]
     (sonja-jolokia sanoma)))
 
+(defn sonja-jolokia-broker [attribute operation]
+  (let [attribute (when attribute
+                    {:type "read"
+                     :attribute (case attribute
+                                  :status "health")})
+        operation (when operation
+                    {:type "EXEC"
+                     :operation (case operation
+                                  :start "start"
+                                  :restart "restart"
+                                  :stop "stop")})
+        sanoma (merge {:mbean "org.apache.activemq:type=Broker,brokerName=localhost"}
+                      attribute
+                      operation)]
+    (sonja-jolokia sanoma)))
+
 (defn sonja-laheta-odota [jonon-nimi sanoma]
   (let [kasitellyn-tapahtuman-id (fn []
                                    (not-empty
@@ -215,7 +231,7 @@
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
         {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
-         db :db kaskytys-kanava :kaskytys-kanava yhteyden-tiedot :yhteyden-tiedot} (:sonja jarjestelma)
+         db :db kaskytyskanava :kaskytyskanava yhteyden-tiedot :yhteyden-tiedot} (:sonja jarjestelma)
         {:keys [yhteys qcf istunnot jms-saije]} @tila]
     (is alkoiko-yhteys? "Yhteys ei alkanut 10 s sisällä")
     (is (= (:sonja asetukset) sonja-asetukset))
@@ -428,24 +444,27 @@
 
 (deftest jms-yhteys-kay-alhaalla
   (is (first (alts!! [*sonja-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
-  (let [kaskytys-kanava (-> jarjestelma :sonja :kaskytys-kanava)
+  (let [kaskytyskanava (-> jarjestelma :sonja :kaskytyskanava)
         db (:db jarjestelma)
         tyyppi (-> asetukset :sonja :tyyppi)
-        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytys-kanava {:jms-tilanne [tyyppi db]})))
+        status-ennen (:vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))
+        kysy-status (fn []
+                      (loop [kertoja 1]
+                        (when (< kertoja 5)
+                          (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]}))]
+                            (if (= vastaus {:kaskytysvirhe :aikakatkaisu})
+                              (recur (inc kertoja))
+                              (:vastaus vastaus))))))
         _ (println "Lopetetetaan yhteys")
         _ (sonja-jolokia-connection nil :stop)
-        ;; Odotetaan hetki, että restart prosessi on kerennyt lähtä käyntiin
-        _ (<!! (timeout 3000))
-        ;; Tilanne pitää katsoa kannasta, koska käskyjen lähettäminen vain blokkaa ja timeout tulee vastaukseksi
-        status-lopetuksen-jalkeen (konv/jsonb->clojuremap (ffirst (q "SELECT tila FROM jarjestelman_tila")))
+        ;; Odotetaan hetki, että yhteys on pysäytetty
+        _ (<!! (timeout 1500))
+        status-lopetuksen-jalkeen (kysy-status)
         _ (println "Aloitetaan yhteys uudestaan")
         _ (sonja-jolokia-connection nil :start)
-        status-aloituksen-jalkeen (loop [kertoja 1]
-                                    (when (< kertoja 5)
-                                      (let [vastaus (<!! (sonja/laheta-viesti-kaskytyskanavaan! kaskytys-kanava {:jms-tilanne [tyyppi db]}))]
-                                        (if (= vastaus {:virhe "Aikakatkaistiin"})
-                                          (recur (inc kertoja))
-                                          (:vastaus vastaus)))))]
+        ;; Odotetaan hetki, että yhteys on aloitettu
+        _ (<!! (timeout 1500))
+        status-aloituksen-jalkeen (kysy-status)]
 
     ;; STATUS ENNEN TESTIT
     (is (= (-> status-ennen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
@@ -456,13 +475,7 @@
       (is (some #(= (:nimi %) saije)
                 (:saikeiden-tilat status-ennen))))
     ;; STATUS LOPETUKSEN JÄLKEEN TESTIT
-    (is (= (-> status-lopetuksen-jalkeen :olioiden-tilat :yhteyden-tila) "CLOSED"))
-    (doseq [istunto (-> status-lopetuksen-jalkeen :olioiden-tilat :istunnot)]
-      (is (= (:istunnon-tila istunto) "CLOSED"))
-      (is (= (-> istunto :jonot first vals first :vastaanottaja :vastaanottajan-tila) "CLOSED")))
-    (doseq [saije ["jms-saije" "jms-reconnecting-saije" "jms-kasittelyn-odottelija*yhdista-uudelleen*"]]
-      (is (some #(= (:nimi %) saije)
-                (:saikeiden-tilat status-lopetuksen-jalkeen))))
+    (is (= (-> status-lopetuksen-jalkeen :olioiden-tilat :yhteyden-tila) "RECONNECTING"))
     ;; STATUS RECONNECTIN JÄLKEEN
     (is (= (-> status-aloituksen-jalkeen :olioiden-tilat :yhteyden-tila) "ACTIVE"))
     (doseq [istunto (-> status-aloituksen-jalkeen :olioiden-tilat :istunnot)]
