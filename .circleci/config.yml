@@ -19,6 +19,23 @@ jobs:
       - run: |
           cd /tmp
           bash sisus.bash test $CIRCLE_BRANCH
+  # Tänne voisi alkaa siirtelemään integraatiotestejä
+  integraatio-testit:
+    docker:
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harjadb:latest
+      - image: solita/harja-activemq:5.15.9
+        environment:
+          TCP_PORT: 61617
+          UI_PORT: 8162
+        auth:
+          username: solitaharja
+          password: $DOCKER_HUB_SALASANA
+
+    steps:
+      - run: |
+          cd /tmp
+          bash sisus.bash integraatio $CIRCLE_BRANCH
 
   prod-build:
     docker:
@@ -89,6 +106,7 @@ workflows:
   build_and_test:
     jobs:
       - back-testit
+      - integraatio-testit
       - front-testit
       - prod-build
       - e2e-testit:

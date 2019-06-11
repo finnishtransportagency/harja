@@ -346,6 +346,8 @@
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
                    :perf :perf
+                   :integraatio :integraatio
+                   :default (complement :integraatio)
                    }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

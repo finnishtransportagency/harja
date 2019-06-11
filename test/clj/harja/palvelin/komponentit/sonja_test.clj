@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.sonja-test
+(ns ^:integraatio harja.palvelin.komponentit.sonja-test
   (:require [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
@@ -380,9 +380,7 @@
 (deftest sonja-kuormitus-testi
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        _ (sonja-jolokia-jono "tloik-ilmoituskuittausjono" nil :purge)
         _ (sonja-jolokia-jono "testilahetys-jono" nil :purge)
-        _ (sonja-jolokia-jono "tloik-ilmoitusviestijono" nil :purge)
         _ (sonja-jolokia-jono "testijono-1" nil :purge)
         _ (sonja-jolokia-jono "testijono-2" nil :purge)
         {:keys [lahetys-fn testijonokanava tila]} (:testikomponentti jarjestelma)
@@ -397,18 +395,14 @@
                                                   (repeatedly 100 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
                                                  (repeatedly 100 #(str "<harja:testi xmlns:harja=\"\">"
-                                                                      "<viesti>jono-1" (gen/generate (s/gen ::testilahetys-viesti))
-                                                                      "</viesti></harja:testi>")))
+                                                                       "<viesti>jono-1" (gen/generate (s/gen ::testilahetys-viesti))
+                                                                       "</viesti></harja:testi>")))
         testijono-2-vastaanottamat-viestit (into #{}
                                                  (repeatedly 100 #(str "<harja:testi xmlns:harja=\"\">"
                                                                        "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
                                                                        "</viesti></harja:testi>")))
-        tloik-viestien-lkm 30
         testijono-1-lahetys-fn #(sonja-laheta "testijono-1" %)
         testijono-2-lahetys-fn #(sonja-laheta "testijono-2" %)
-        tloik-ilmoitus (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml")
-        tloik-lahetys-fn (fn [_]
-                           (sonja-laheta "tloik-ilmoitusviestijono" tloik-ilmoitus))
         ;; Lähetetään viestejä rinnakkain testikomponentista brokerille
         testijonon-lahetys (thread (suorita-rinnakkain lahetys-fn testikomponentin-lahettamat-viestit))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
@@ -416,7 +410,6 @@
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 2
         testijonon-vastaanotto-2 (thread (suorita-rinnakkain testijono-2-lahetys-fn testijono-2-vastaanottamat-viestit))
         ;; Vastaaanotetaan viestejä tloikista
-        tloik-vastaanotto (thread (suorita-rinnakkain tloik-lahetys-fn tloik-viestien-lkm))
         ;; Otetaan kaikki ne viestit, joita käsiteltiin testikomponentissa
         kasitellyt-viestit (<!! (go-loop [saadut-viestit #{}]
                                   (if-let [uusi-viesti (first (alts!! [testijonokanava (timeout 3000)]))]
@@ -427,24 +420,10 @@
       (is (string? (re-find #"ID:.*" viesti))))
     (is (= (count testikomponentin-lahettamat-viestit) (- (sonja-broker-tila "testilahetys-jono" :enqueue-count)
                                                           (sonja-broker-tila "testilahetys-jono" :dequeue-count))))
-    (doseq [tloik-viesti (<!! tloik-vastaanotto)
-            :let [lahetetty-viesti (-> tloik-viesti <!!)
-                  error (:error lahetetty-viesti)]]
-      (when error
-        (println error))
-      ;; Viesti lähetetty brokerilta Harjalle
-      (is (= 200 (:status lahetetty-viesti))))
     ;; Vain testijono-2 viestit pitäisi olla käsitelty, koska ykkönen nakkaa exceptionia
     (is (= kasitellyt-viestit testijono-2-vastaanottamat-viestit))
     ;; Tarkistetaan, että testijono-1:n vastaanottaja on kummiski vielä pystyssä
-    (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))
-    ;; Onhan TLOIK:iin lähetetty yhtä moneen kuittausta, kuin se on saanut viestejä
-    ;; Odotellaan kummiskin vähän aikaa, että Harja on kerennyt käsitellä TLOIK viestit ja
-    ;; lähettää kuittauksen jonoon
-    (<!! (timeout 500))
-    (is (= tloik-viestien-lkm
-           (- (sonja-broker-tila "tloik-ilmoituskuittausjono" :enqueue-count)
-              (sonja-broker-tila "tloik-ilmoituskuittausjono" :dequeue-count))))))
+    (is (= "ACTIVE" (sonja/exception-wrapper (-> jarjestelma :sonja :tila deref :istunnot (get "istunto-testijono-1") :jonot (get "testijono-1") :vastaanottaja) getMessageListener)))))
 
 
 (deftest main-komponentit-loytyy
