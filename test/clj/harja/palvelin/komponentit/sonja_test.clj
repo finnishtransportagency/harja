@@ -58,7 +58,7 @@
         (>!! testijonot
              (case (<!! lopputila)
                :ok {:testijono (sonja/kuuntele! sonja "testijono" (fn [_]) "testijarjestelma")}
-               :exception {:testijono (sonja/kuuntele! sonja "testijono" (fn [viesti]
+               :exception {:testijono (sonja/kuuntele! sonja "virhetestijono" (fn [viesti]
                                                                            (throw (Exception. "VIRHE")))
                                                        "testijarjestelma")}
                :useampi-kuuntelija {:testijono-1 (sonja/kuuntele! sonja "testijono" ^{:judu :testijono-1} (fn [_]
@@ -270,9 +270,19 @@
     (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
     (is (first (alts!! [*sonja-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
     (is (not (nil? (-> jarjestelma :testikomponentti :tila deref :testijono))))
-    (sonja-laheta "testijono" "foo")
-    (is (= "VIRHE" (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "testijono") :virheet first :viesti)))
-    (sonja-jolokia-jono "testijono" nil :purge))
+    (sonja-laheta "virhetestijono" "foo")
+    ;; Odotetaan, että viesti on käsitelty
+    (loop [n 0
+           kasitelty? false]
+      (println "Looppeja: " n)
+      (when (and (< n 3)
+                 (not kasitelty?))
+        (recur (inc n)
+               (= 0
+                  (- (-> (sonja-jolokia-jono "virhetestijono" :enqueue-count nil) :body (cheshire/decode) (get "value"))
+                     (-> (sonja-jolokia-jono "virhetestijono" :dequeue-count nil) :body (cheshire/decode) (get "value")))))))
+    (is (= "VIRHE" (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "virhetestijono") :virheet first :viesti)))
+    (sonja-jolokia-jono "virhetestijono" nil :purge))
 
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
