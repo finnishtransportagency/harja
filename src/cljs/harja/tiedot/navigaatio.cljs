@@ -88,6 +88,7 @@
   (filterv
     some?
     [{:nimi "Hoito" :arvo :hoito}
+     {:nimi "Maanteiden hoito" :arvo :teiden-hoito}
      {:nimi "Tiemerkintä" :arvo :tiemerkinta}
      {:nimi "Päällystys" :arvo :paallystys}
      {:nimi "Paikkaus" :arvo :paikkaus}
@@ -214,6 +215,7 @@
                   (case (:arvo ut)
                     :kaikki @urk/urakoitsijat-kaikki
                     :hoito @urk/urakoitsijat-hoito
+                    :teiden-hoito @urk/urakoitsijat-hoito
                     :paallystys @urk/urakoitsijat-paallystys
                     :paikkaus @urk/urakoitsijat-paikkaus
                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
