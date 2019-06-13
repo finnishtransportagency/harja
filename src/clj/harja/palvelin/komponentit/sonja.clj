@@ -7,7 +7,7 @@
             [clojure.core.async :refer [thread >!! <!! timeout chan] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [clojure.string :as str]
+            [clojure.string :as clj-str]
             [harja.pvm :as pvm]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
@@ -681,6 +681,6 @@
       (log/debug "Feikki Sonja, aloita muka yhteys"))))
 
 (defn luo-sonja [asetukset]
-  (if (and asetukset (not (str/blank? (:url asetukset))))
+  (if (and asetukset (not (clj-str/blank? (:url asetukset))))
     (luo-oikea-sonja asetukset)
     (luo-feikki-sonja)))
