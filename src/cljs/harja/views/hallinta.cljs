@@ -11,7 +11,7 @@
             [harja.views.hallinta.indeksit :as i]
             [harja.views.hallinta.yhteydenpito :as yhteydenpito]
             [harja.views.hallinta.lampotilat :as lampotilat]
-            [harja.views.hallinta.integraatioloki :as integraatioloki]
+            [harja.views.hallinta.integraatiotilanne :as integraatiotilanne]
             [harja.views.hallinta.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
@@ -48,11 +48,11 @@
      ^{:key "lämpötilat"}
      [lampotilat/lampotilat])
 
-   "Integraatioloki"
-   :integraatioloki
-   (when (oikeudet/hallinta-integraatioloki)
-     ^{:key "integraatioloki"}
-     [integraatioloki/integraatioloki])
+   "Integraatiotilanne"
+   :integraatiotilanne
+   (when (oikeudet/hallinta-integraatiotilanne)
+     ^{:key "integraatiotilanne"}
+     [integraatiotilanne/integraatiotilanne])
 
    "Yhteydenpito"
    :yhteydenpito

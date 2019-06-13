@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusten-haku-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
+            [clojure.core.async :refer [<!! timeout]]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-sonja]]
@@ -134,19 +135,22 @@
    "yhteydenottopyynto" false})
 
 
-;; FIXME: ao. testi feilaillut todella paljon randomisti ja häiritsee CI putkea.
-;; Olisi syytä löytää syy epävakauteen ja palauttaa paremmin käyttäytyvänä testi takaisin
-#_(deftest kuuntele-urakan-ilmoituksia
-  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"] kayttaja portti))
+(deftest kuuntele-urakan-ilmoituksia
+  (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode nyt))] kayttaja portti))
         tloik-kuittaukset (atom [])]
+    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
+    ;; Ennen lähetystä, odotetaan, että api-kutsu on kerennyt jäädä kuuntelemaan
+    (<!! (timeout 300))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
 
     (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 20000)
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
           ilmoitus (get (first (get vastausdata "ilmoitukset")) "ilmoitus")]
+      (when (not= 1 (count (get vastausdata "ilmoitukset")))
+        (println @vastaus))
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
       (is (= odotettu-ilmoitus ilmoitus)))
 

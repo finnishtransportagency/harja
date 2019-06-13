@@ -52,7 +52,7 @@
 (deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
   (let [ilmoitusviesti (atom nil)]
     (tloik-apurit/tee-testipaivystys)
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
+    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
     (sonja/laheta (:sonja jarjestelma)
                   tloik-apurit/+tloik-ilmoitusviestijono+
                   tloik-apurit/+testi-ilmoitus-sanoma+)

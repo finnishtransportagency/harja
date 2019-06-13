@@ -16,13 +16,13 @@
 
 (defn tee-sonja-viestikuuntelija [{:keys [db integraatioloki sonja]} lahetysjono-sisaan kuittausjono-sisaan]
   (log/debug "Käynnistetään Sampon Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
-  (sonja/kuuntele sonja lahetysjono-sisaan
+  (sonja/kuuntele! sonja lahetysjono-sisaan
                   (fn [viesti]
                     (tuonti/kasittele-viesti sonja integraatioloki db kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [{:keys [db integraatioloki sonja]} kuittausjono-ulos]
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
-  (sonja/kuuntele sonja kuittausjono-ulos
+  (sonja/kuuntele! sonja kuittausjono-ulos
                   (fn [viesti]
                     (vienti/kasittele-kuittaus integraatioloki db viesti kuittausjono-ulos))))
 

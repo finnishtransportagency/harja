@@ -755,7 +755,7 @@
         sahkoposti-valitetty (atom false)
         sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
+    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
                                                             (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
                                                                                                    .getText
                                                                                                    xml/lue

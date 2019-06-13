@@ -39,6 +39,12 @@ function cmd_help {
     echo komennot: phantom, test, test+phantom, back, help
 }
 
+function cmd_integraatio
+{
+    lein clean
+    lein test :integraatio
+}
+
 SUBCMD="$1"
 shift
 BRANCH="$1"

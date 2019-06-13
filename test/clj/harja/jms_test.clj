@@ -17,8 +17,8 @@
     this)
 
   sonja/Sonja
-  (kuuntele [_ nimi kuuntelija]
-    (log/debug "Lisätään kuuntelija:" kuuntelija ", jonoon: " nimi)
+  (kuuntele! [_ nimi kuuntelija jarjestelma]
+    (log/debug "Lisätään kuuntelija:" kuuntelija ", jonoon: " nimi ", jarjestelmaan: " jarjestelma)
     (swap! kuuntelijat
            update-in [nimi]
            (fn [vanhat-kuuntelijat]
@@ -26,8 +26,10 @@
                #{kuuntelija}
                (conj vanhat-kuuntelijat kuuntelija))))
     #(swap! kuuntelijat update-in [nimi] disj kuuntelija))
+  (kuuntele! [this nimi kuuntelija]
+    (sonja/kuuntele! this nimi kuuntelija nil))
 
-  (laheta [_ nimi viesti {:keys [correlation-id]}]
+  (laheta [_ nimi viesti {:keys [correlation-id]} jarjestelma]
     (log/info "Feikki Sonja lähettää jonoon: " nimi)
     (let [msg (sonja/luo-viesti viesti (reify javax.jms.Session
                                          (createTextMessage [this]
@@ -48,8 +50,14 @@
                 (log/warn "VIRHE KUUNTELIJASSA: " e)))))
       (.getJMSMessageID msg)))
 
+  (laheta [this nimi viesti otsikot]
+    (sonja/laheta this nimi viesti otsikot nil))
+
   (laheta [this nimi viesti]
-    (sonja/laheta this nimi viesti nil)))
+    (sonja/laheta this nimi viesti nil))
+
+  (aloita-yhteys [this]
+    (log/debug "Feikki Sonja, aloita muka yhteys")))
 
 
 (defn feikki-sonja []
