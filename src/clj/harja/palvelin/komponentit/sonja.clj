@@ -122,7 +122,7 @@
                                                elementit))))
                                        (catch Throwable t
                                          nil)))
-                          (timeout 1000)]))))
+                          (timeout 500)]))))
 
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan!
@@ -176,7 +176,11 @@
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
     (.setFaultTolerant true)
-    (.setFaultTolerantReconnectTimeout (int 300))))
+    (.setFaultTolerantReconnectTimeout (int 300))
+    ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
+    ;; odottamaan eri jonoon. Asyncisti sen takia, että JMS-säije ei blokkaa lähetykseen. Mahdolliset virheet
+    ;; otetaan kiinni sitten yhteysolion setRefectionListener:issä
+    (.setAsynchronousDeliveryMode (. progress.message.jclient.Constants ASYNC_DELIVERY_MODE_ENABLED))))
 
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
@@ -195,7 +199,23 @@
   (try
     (let [yhteys (.createQueueConnection qcf kayttaja salasana)]
       (if (= tyyppi :sonicmq)
-        (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija))
+        (doto yhteys
+          (.setConnectionStateChangeListener (tee-sonic-jms-tilamuutoskuuntelija))
+          ;; Otetaan kiinni epäonnistuneet lähetykset
+          (.setRejectionListener (reify progress.message.jclient.RejectionListener
+                                   (onRejectedMessage [this msg e]
+                                     ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
+                                     ;; eaiheuttaa muiden viestien käsittelyn.
+
+                                     ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
+                                     (try
+                                       (log/error (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
+                                                       " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
+                                       (log/error (str "Sonjalta tullut virhe msg: " msg
+                                                       " Virhekoodi: " (.getErrorCode e)))
+                                       (catch Throwable t
+                                         (log/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
+                                                         (.getMessage t) "\nStackTrace: " (.printStackTrace t)))))))))
         (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
     (catch JMSException e
