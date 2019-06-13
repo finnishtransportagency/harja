@@ -175,7 +175,10 @@
 
 (defmacro esta-class-not-found-virheet [tyyppi body]
   `(when (= ~tyyppi :sonicmq)
-      (eval ~body)))
+     (try
+       (eval ~body)
+       (catch Throwable ~'t
+         (taoensso.timbre/error "Sonjassa eval EPÄONNISTUI: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t))))))
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
@@ -209,17 +212,19 @@
           (.setRejectionListener (esta-class-not-found-virheet tyyppi
                                                                '(reify progress.message.jclient.RejectionListener
                                                                   (onRejectedMessage [this msg e]
-                                                                    ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
-                                                                    ;; eaiheuttaa muiden viestien käsittelyn.
-
-                                                                    ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
                                                                     (try
-                                                                      (log/error (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
-                                                                                      " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
-                                                                      (log/error (str "Sonjalta tullut virhe msg: " msg
-                                                                                      " Virhekoodi: " (.getErrorCode e)))
+                                                                      (taoensso.timbre/error
+                                                                        (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
+                                                                             " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
+                                                                      (taoensso.timbre/error
+                                                                        (str "Sonjalta tullut virhe msg: " msg
+                                                                             " Virhekoodi: " (.getErrorCode e)))
+                                                                      ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
+                                                                      ;; eaiheuttaa muiden viestien käsittelyn.
+
+                                                                      ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
                                                                       (catch Throwable t
-                                                                        (log/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
+                                                                        (taoensso.timbre/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
                                                                                         (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
         (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
