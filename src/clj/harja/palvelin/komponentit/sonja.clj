@@ -327,7 +327,7 @@
                      (take-last 10
                                 (conj (or virheet [])
                                       {:viesti (.getMessage e)
-                                       :aika (pvm/nyt-suomessa)})))))
+                                       :aika (.toString (pvm/nyt-suomessa))})))))
       (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi))))
 
 (defn yhteys-oliot!
