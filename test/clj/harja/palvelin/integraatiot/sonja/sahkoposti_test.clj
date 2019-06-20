@@ -66,7 +66,7 @@
 
 (deftest sahkopostin-lahetys
   (let [lahetetty (atom nil)]
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))
+    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))
 
     ;; Lähetetään viesti ja odotetaan, että se on mennyt jonoon
     (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma)

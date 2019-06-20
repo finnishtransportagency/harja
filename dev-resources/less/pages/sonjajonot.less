@@ -1,0 +1,63 @@
+.jms-viesti-container() {
+  display: flex;
+  flex-direction: column;
+  border: solid;
+  padding: 0.5em;
+  margin: 0.2em;
+  max-height: 50em;
+  overflow-y: scroll;
+}
+
+.tilat {
+  display: flex;
+  flex-direction: column;
+
+  .saije {
+    display: flex;
+    flex-direction: column;
+  }
+  .istunnot {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+
+    .jono {
+      display: flex;
+      flex-direction: column;
+
+      flex: 1;
+
+      .jms-viestit {
+        .jms-viesti-container;
+
+        .viesti-tiedot {
+          border-bottom: solid;
+          max-width: 40em;
+
+          span {
+            display: block;
+          }
+        }
+      }
+      .viestin-kasittelijat{
+        .jms-virheet {
+          .jms-viesti-container;
+          .virhe {
+            display: flex;
+            flex-direction: row;
+            border: solid;
+            padding: 0.5em;
+            margin: 0.2em;
+            .aika {
+              flex: 1;
+              border-right: solid;
+            }
+            .virhe-viesti {
+              flex: 1;
+            }
+          }
+        }
+      }
+    }
+  }
+}

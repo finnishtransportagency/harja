@@ -36,7 +36,7 @@
                                     jms-lahettaja kehitysmoodi?]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
-    (sonja/kuuntele
+    (sonja/kuuntele!
       sonja ilmoitusviestijono
       (partial ilmoitukset/vastaanota-ilmoitus
                sonja (tee-lokittaja this "ilmoituksen-kirjaus")

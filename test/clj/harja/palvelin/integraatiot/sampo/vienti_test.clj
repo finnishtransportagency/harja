@@ -47,7 +47,7 @@
 
 (deftest laheta-maksuera
   (let [viestit (atom [])]
-    (sonja/kuuntele (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
+    (sonja/kuuntele! (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
     (is (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) +testi-maksueran-numero+) "Lähetys onnistui")
     (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))

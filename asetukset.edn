@@ -49,13 +49,13 @@
        :testidata? true
        }
 
- ;:sonja
- ;{:url "tcp://localhost:61616"
- ; :kayttaja "harja"
- ; :salasana "harjaxx"
- ; :tyyppi :activemq}
- ;
- ;
+ :sonja
+ {:url "tcp://localhost:61616"
+  :kayttaja ""
+  :salasana ""
+  :tyyppi :activemq}
+
+
  ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
  ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
  ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"

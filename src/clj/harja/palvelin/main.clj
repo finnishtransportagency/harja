@@ -1,6 +1,7 @@
 (ns harja.palvelin.main
   (:require
     [taoensso.timbre :as log]
+    [clojure.core.async :as a :refer [<! go timeout]]
     ;; Yleiset palvelinkomponentit
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
@@ -84,6 +85,7 @@
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
+    [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -211,7 +213,9 @@
                        [:db])
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
-      :sonja (sonja/luo-sonja (:sonja asetukset))
+      :sonja (component/using
+               (sonja/luo-sonja (:sonja asetukset))
+               [:db])
       :sonja-sahkoposti
       (component/using
         (let [{:keys [vastausosoite jonot suora? palvelin]}
@@ -241,7 +245,7 @@
                                                (:lahetysjono-ulos sampo)
                                                (:kuittausjono-ulos sampo)
                                                (:paivittainen-lahetysaika sampo)))
-                              [:sonja :db :integraatioloki])
+                              [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
 
       ;; T-LOIK
       :tloik (component/using
@@ -563,6 +567,10 @@
                       (koordinaatit/->Koordinaatit)
                       [:http-palvelin])
 
+      :jarjestelman-tila (component/using
+                   (jarjestelman-tila/->JarjestelmanTila)
+                   [:db :http-palvelin])
+
       ;; Harja API
       :api-urakat (component/using
                     (api-urakat/->Urakat)
@@ -681,13 +689,43 @@
 
 (defonce harja-jarjestelma nil)
 
+(defn aloita-sonja [jarjestelma]
+  (go
+    (log/info "Aloitaetaan Sonjayhteys")
+    (loop []
+      (let [{:keys [vastaus virhe kaskytysvirhe]} (<! (sonja/aloita-yhteys (:sonja jarjestelma)))]
+        (when vastaus
+          (log/info "Sonja yhteys aloitettu"))
+        (when kaskytysvirhe
+          (log/error "Sonjayhteyden aloittamisessa käskytysvirhe: " kaskytysvirhe))
+        (<! (timeout 2000))
+        (if (or virhe (= :kasykytyskanava-taynna kaskytysvirhe))
+          (recur)
+          vastaus)))))
+
+(defn kasittele-saikeen-kaatuminen
+  [saikeen-nimi]
+  (case saikeen-nimi
+    "jms-saije" (do (reset! sonja/jms-saije-sammutettu? true)
+                    (when-let [sonja-yhteys-ok (get-in harja-jarjestelma :sonja :yhteys-ok?)]
+                      (reset! sonja-yhteys-ok false)))))
+
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
+    ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
+    ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
+    (Thread/setDefaultUncaughtExceptionHandler
+      (reify Thread$UncaughtExceptionHandler
+        (uncaughtException [_ thread e]
+          (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
+          (log/error "Virhe: " e)
+          (kasittele-saikeen-kaatuminen (.getName thread)))))
     (alter-var-root #'harja-jarjestelma
                     (constantly
                       (-> (lue-asetukset asetusfile)
                           luo-jarjestelma
                           component/start)))
+    (aloita-sonja harja-jarjestelma)
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")

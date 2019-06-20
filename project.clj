@@ -138,9 +138,6 @@
                  [org.clojure/data.codec "0.1.1"]
                  [devcards "0.2.4" :exclusions [cljsjs/react]]
 
-                 ;; Parsi sourcemapit
-                 [com.atlassian.sourcemap/sourcemap "1.7.7"]
-
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
@@ -346,6 +343,8 @@
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
                    :perf :perf
+                   :integraatio :integraatio
+                   :default (complement :integraatio)
                    }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen

@@ -51,7 +51,7 @@
   (with-redefs [t/now #(t/first-day-of-the-month 2017 2)]
     (let [viestit (atom [])]
       (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-      (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+      (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
       (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
@@ -79,7 +79,7 @@
 (deftest tarkista-paallystysurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-paallystysurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
@@ -95,7 +95,7 @@
 (deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-tiemerkintasurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
@@ -111,7 +111,7 @@
 (deftest tarkista-valaistusurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-valaistusurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
@@ -131,7 +131,7 @@
 #_(deftest aja-testipatteri
     (let [SIIRTOJA (COUNT TESTIDATAPATTERI)
           VIESTIT (ATOM [])]
-      (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+      (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
       (doseq [testidata testidatapatteri]
         (println "Lähetetään: " testidata)
         (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
