@@ -131,6 +131,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP MATERIALIZED VIEW pohjavesialue_kooste;
+CREATE MATERIALIZED VIEW pohjavesialue_kooste AS (
 SELECT (yhtenainen_pva).nimi AS nimi,
        (yhtenainen_pva).tunnus AS tunnus,
        (yhtenainen_pva).alue AS alue,
@@ -153,4 +155,5 @@ FROM (SELECT unnest(ypva) AS yhtenainen_pva
                          tr_numero
                   FROM pohjavesialue
                   ORDER BY tr_numero, tr_alkuosa, tr_alkuetaisyys) AS pohjavesialueet
-            GROUP BY tr_numero) AS tien_osat_taulu) AS yhtenaiset_pvat;
+            GROUP BY tr_numero) AS tien_osat_taulu) AS yhtenaiset_pvat
+);

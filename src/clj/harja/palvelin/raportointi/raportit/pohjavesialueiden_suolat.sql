@@ -2,18 +2,13 @@
 SELECT nimi,tunnus FROM pohjavesialueet_urakoittain WHERE urakka=:urakka;
 
 -- name: pohjavesialueen-tiekohtaiset-summat
-SELECT SUM(rp.maara) AS yhteensa, 
-       rp.tie, rp.alkuosa, rp.alkuet, rp.loppuosa, rp.loppuet,
-       (SELECT SUM(pituus) FROM pohjavesialue_kooste
-         WHERE tunnus=:pohjavesialue
-	   AND tie=rp.tie
-	   AND alkuosa=rp.alkuosa
-	   AND alkuet=rp.alkuet
-	   AND loppuosa=rp.loppuosa
-	   AND loppuet=rp.loppuet) AS pituus,
+SELECT SUM(rp.maara) AS yhteensa,
+       pva_k.tie, pva_k.alkuosa, pva_k.alkuet, pva_k.loppuosa, pva_k.loppuet,
+       SUM(pva_k.pituus) AS pituus, -- Tuossa pituudessa on vain yksi arvo
        (SELECT talvisuolaraja FROM pohjavesialue_talvisuola
          WHERE pohjavesialue=:pohjavesialue
-	   AND tie=rp.tie) AS kayttoraja
+	   AND tie=pva_k.tie) AS kayttoraja
 FROM suolatoteuma_reittipiste rp
+  JOIN pohjavesialue_kooste pva_k ON rp.pohjavesialue = pva_k.tunnus
 WHERE rp.pohjavesialue=:pohjavesialue AND rp.aika BETWEEN :alkupvm AND :loppupvm
-GROUP BY rp.tie, rp.alkuosa, rp.alkuet, rp.loppuosa, rp.loppuet;
+GROUP BY pva_k.tie, pva_k.alkuosa, pva_k.alkuet, pva_k.loppuosa, pva_k.loppuet
