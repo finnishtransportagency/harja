@@ -88,7 +88,6 @@
   (filterv
     some?
     [{:nimi "Hoito" :arvo :hoito}
-     {:nimi "Maanteiden hoito" :arvo :teiden-hoito}
      {:nimi "Tiemerkintä" :arvo :tiemerkinta}
      {:nimi "Päällystys" :arvo :paallystys}
      {:nimi "Paikkaus" :arvo :paikkaus}
