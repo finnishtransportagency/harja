@@ -10,7 +10,8 @@ CREATE TYPE tehtavaryhmatyyppi AS ENUM (
 
 CREATE TABLE tehtavaryhma (
    id serial primary key,    -- sisäinen id
-   nimi varchar (128) not null,       -- tehtäväryhmän nimi (esim. "Laaja toimenpide")
+   otsikko  varchar (128), -- korkean tason otsikko, joka kuvaa tehtäväryhmää (esim. Talvihoito)
+   nimi varchar (128) not null,       -- tehtäväryhmän nimi (esim. "Viheralueiden hoito")
    emo INTEGER REFERENCES toimenpidekoodi (id),  -- ylemmän tason tehtäväryhmä (NULL jos taso on tehtäväryhmissä ylimpänä)
    tyyppi TEHTAVARYHMATYYPPI not null,
    "ui-taso" integer, -- ryhmän järjestys käyttöliittymässä
