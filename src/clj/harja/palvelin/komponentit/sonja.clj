@@ -13,6 +13,7 @@
             [harja.fmt :as fmt]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (javax.jms Session ExceptionListener JMSException MessageListener)
+           (java.util Date)
            (java.lang.reflect Proxy InvocationHandler)
            (java.net InetAddress)))
 
@@ -38,7 +39,7 @@
                                  :virheet [{:koodi :saije-sammutettu
                                             :viesti "Sonja-säije on sammutettu."}]})
 
-(def viestin-kasittely-timeout 5000)
+(def viestin-kasittely-timeout 15000)
 
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
@@ -475,7 +476,8 @@
       (= kanava kaskyn-kasittely-jms-saikeelle) (when (= viesti :aikakatkaisu)
                                                   nil)
       (= kanava kaskyn-kasittely-kaskytys-saikeelle) (case (<!! kaskyn-kasittely-jms-saikeelle)
-                                                       :kasittele (let [vastaus (try (let [vastaus (jms-toiminto! sonja kasky)]
+                                                       :kasittele (let [kasittelyn-alku (.getTime (Date.))
+                                                                        vastaus (try (let [vastaus (jms-toiminto! sonja kasky)]
                                                                                        (if (and (map? vastaus)
                                                                                                 (contains? vastaus :virhe)
                                                                                                 (= (count vastaus) 1))
@@ -483,7 +485,11 @@
                                                                                          {:vastaus vastaus}))
                                                                                      (catch Throwable t
                                                                                        (log/error "Jokin meni vikaan sonjakäskyissä: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
-                                                                                       {:virhe t}))]
+                                                                                       {:virhe t}))
+                                                                        kasittelyn-kesto (float (/ (- (.getTime (Date.)) kasittelyn-alku)
+                                                                                                   1000))]
+                                                                    (when (> kasittelyn-kesto 1.5)
+                                                                      (log/info "sonja-säikeellä meni " kasittelyn-kesto " sekunttia käsitellä käsky: " kasky))
                                                                     (>!! kaskyn-kasittely-kaskytys-saikeelle vastaus))))))
 
 (defn luo-jms-saije
