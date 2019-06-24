@@ -70,12 +70,32 @@
                                                             :loppupvm loppupvm})))
            urakan-alueet))))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
-  (let [tulos (laske db urakka-id alkupvm loppupvm)]
+  (let [tulos (laske db urakka-id alkupvm loppupvm)
+        konteksti (cond
+                    (and urakka-id alkupvm loppupvm)
+                    :urakka
+
+                    (and hallintayksikko-id alkupvm loppupvm)
+                    :hallintayksikko
+
+                    (and alkupvm loppupvm)
+                    :koko-maa
+
+                    :default
+                    nil)
+        raportin-nimi "Pohjavesialueiden suolatoteumat"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
+                                                     db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)]
     (log/debug "löytyi " (count tulos) " toteumaa")
     (vec
      (concat
-      [:raportti {:nimi "Pohjavesialueiden suolatoteumat"
-                  :orientaatio :landscape}]
+      [:raportti {:orientaatio :landscape
+                  :nimi otsikko}]
       (mapv pohjavesialueen-taulukko (vals (group-by :tunnus tulos)))))))
