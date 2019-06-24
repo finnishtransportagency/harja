@@ -7,7 +7,7 @@
             [clojure.core.async :refer [thread >!! <!! timeout chan] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [clojure.string :as str]
+            [clojure.string :as clj-str]
             [harja.pvm :as pvm]
             [harja.kyselyt.jarjestelman-tila :as q]
             [harja.fmt :as fmt]
@@ -122,7 +122,7 @@
                                                elementit))))
                                        (catch Throwable t
                                          nil)))
-                          (timeout 1000)]))))
+                          (timeout 500)]))))
 
 (declare tee-jms-poikkeuskuuntelija
          laheta-viesti-kaskytyskanavaan!
@@ -173,10 +173,21 @@
   (doto connection-factory
     (.setBrokerURL (str "failover:(" url ")?initialReconnectDelay=100"))))
 
-(defn konfiguroi-sonic-jms-connection-factory [connection-factory]
+(defmacro esta-class-not-found-virheet [tyyppi body]
+  `(when (= ~tyyppi :sonicmq)
+     (try
+       (eval ~body)
+       (catch Throwable ~'t
+         (taoensso.timbre/error "Sonjassa eval EPÄONNISTUI: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t))))))
+
+(defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
     (.setFaultTolerant true)
-    (.setFaultTolerantReconnectTimeout (int 300))))
+    (.setFaultTolerantReconnectTimeout (int 300))
+    ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
+    ;; odottamaan eri jonoon. Asyncisti sen takia, että JMS-säije ei blokkaa lähetykseen. Mahdolliset virheet
+    ;; otetaan kiinni sitten yhteysolion setRefectionListener:issä
+    (.setAsynchronousDeliveryMode (esta-class-not-found-virheet tyyppi '(. progress.message.jclient.Constants ASYNC_DELIVERY_MODE_ENABLED)))))
 
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
@@ -186,7 +197,7 @@
                                (.newInstance (into-array Object [url])))]
     (if (= tyyppi :activemq)
       (konfiguroi-activemq-jms-connection-factory connection-factory url)
-      (konfiguroi-sonic-jms-connection-factory connection-factory))))
+      (konfiguroi-sonic-jms-connection-factory connection-factory tyyppi))))
 
 (defn luo-istunto [yhteys]
   (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE))
@@ -195,7 +206,26 @@
   (try
     (let [yhteys (.createQueueConnection qcf kayttaja salasana)]
       (if (= tyyppi :sonicmq)
-        (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija))
+        (doto yhteys
+          (.setConnectionStateChangeListener (tee-sonic-jms-tilamuutoskuuntelija))
+          ;; Otetaan kiinni epäonnistuneet lähetykset
+          (.setRejectionListener (esta-class-not-found-virheet tyyppi
+                                                               '(reify progress.message.jclient.RejectionListener
+                                                                  (onRejectedMessage [this msg e]
+                                                                    (try
+                                                                      (taoensso.timbre/error
+                                                                        (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
+                                                                             " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
+                                                                      (taoensso.timbre/error
+                                                                        (str "Sonjalta tullut virhe msg: " msg
+                                                                             " Virhekoodi: " (.getErrorCode e)))
+                                                                      ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
+                                                                      ;; eaiheuttaa muiden viestien käsittelyn.
+
+                                                                      ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
+                                                                      (catch Throwable t
+                                                                        (taoensso.timbre/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
+                                                                                        (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
         (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
     (catch JMSException e
@@ -297,7 +327,7 @@
                      (take-last 10
                                 (conj (or virheet [])
                                       {:viesti (.getMessage e)
-                                       :aika (pvm/nyt-suomessa)})))))
+                                       :aika (.toString (pvm/nyt-suomessa))})))))
       (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi))))
 
 (defn yhteys-oliot!
@@ -651,6 +681,6 @@
       (log/debug "Feikki Sonja, aloita muka yhteys"))))
 
 (defn luo-sonja [asetukset]
-  (if (and asetukset (not (str/blank? (:url asetukset))))
+  (if (and asetukset (not (clj-str/blank? (:url asetukset))))
     (luo-oikea-sonja asetukset)
     (luo-feikki-sonja)))

@@ -245,7 +245,7 @@
                                                (:lahetysjono-ulos sampo)
                                                (:kuittausjono-ulos sampo)
                                                (:paivittainen-lahetysaika sampo)))
-                              [:sonja :db :integraatioloki])
+                              [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
 
       ;; T-LOIK
       :tloik (component/using
