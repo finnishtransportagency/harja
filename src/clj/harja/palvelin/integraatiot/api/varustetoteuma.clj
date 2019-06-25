@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
@@ -354,7 +355,10 @@
           json-skeemat/varustetoteuman-kirjaus
           json-skeemat/kirjausvastaus
           (fn [parametit data kayttaja db]
-            (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
+            (if (ominaisuus-kaytossa? :tierekisteri)
+              (kirjaa-toteuma tierekisteri db parametit data kayttaja)
+              (throw+ {:type :tierekisteri-pois-käytöstä
+                       :virheet ["Tierekisterikomponentti ei ole käytössä"]}))))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-varustetoteuma)

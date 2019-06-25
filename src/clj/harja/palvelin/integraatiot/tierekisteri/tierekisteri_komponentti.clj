@@ -25,6 +25,7 @@
     [harja.kyselyt.toteumat :as toteumat-q]
     [harja.kyselyt.konversio :as konversio]
     [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
     [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
@@ -142,66 +143,79 @@
 (defrecord Tierekisteri [tierekisteri-api-url uudelleenlahetys-aikavali-minuutteina]
   component/Lifecycle
   (start [this]
-    (assoc this :uudelleenlahetys-tehtava (tee-uudelleenlahetystehtava this uudelleenlahetys-aikavali-minuutteina)))
+    (if (ominaisuus-kaytossa? :tierekisteri)
+      (assoc this :uudelleenlahetys-tehtava (tee-uudelleenlahetystehtava this uudelleenlahetys-aikavali-minuutteina))
+      this))
   (stop [this]
-    (:uudelleenlahetys-tehtava this)
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (:uudelleenlahetys-tehtava this))
     this)
 
   TierekisteriPalvelut
   (hae-tietolaji
     [this tietolajitunniste muutospvm]
-    (validoi-tietolajitunniste tietolajitunniste)
-    (when (not (empty? tierekisteri-api-url))
-      (tietolajit/hae-tietolaji
-        (:db this) (:integraatioloki this) tierekisteri-api-url tietolajitunniste muutospvm)))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste tietolajitunniste)
+      (when (not (empty? tierekisteri-api-url))
+        (tietolajit/hae-tietolaji
+          (:db this) (:integraatioloki this) tierekisteri-api-url tietolajitunniste muutospvm)))
 
-  (hae-kaikki-tietolajit
-    [this muutospvm]
-    (when (not (empty? tierekisteri-api-url))
-      (mapv
-        #(tietolajit/hae-tietolaji (:db this) (:integraatioloki this) tierekisteri-api-url % muutospvm)
-        tietolajitunnisteet)))
+    (hae-kaikki-tietolajit
+      [this muutospvm]
+      (when (ominaisuus-kaytossa? :tierekisteri)
+        (when (not (empty? tierekisteri-api-url))
+          (mapv
+            #(tietolajit/hae-tietolaji (:db this) (:integraatioloki this) tierekisteri-api-url % muutospvm)
+            tietolajitunnisteet)))))
 
   (hae-tietueet
     [this tr tietolajitunniste voimassaolopvm tilannepvm]
-    (validoi-tietolajitunniste tietolajitunniste)
-    (when-not (empty? tierekisteri-api-url)
-      (tietueet/hae-tietueet
-        (:db this) (:integraatioloki this)
-        tierekisteri-api-url tr tietolajitunniste voimassaolopvm tilannepvm)))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste tietolajitunniste)
+      (when-not (empty? tierekisteri-api-url)
+        (tietueet/hae-tietueet
+          (:db this) (:integraatioloki this)
+          tierekisteri-api-url tr tietolajitunniste voimassaolopvm tilannepvm))))
 
   (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm]
-    (validoi-tietolajitunniste tietolajitunniste)
-    (let [alueurakkanumero (:alueurakkanro (urakat-q/hae-urakan-alueurakkanumero (:db this) urakka))]
-      (when-not (empty? tierekisteri-api-url)
-        (tietueet/hae-urakan-tietueet
-          (:db this) (:integraatioloki this) tierekisteri-api-url alueurakkanumero tietolajitunniste tilannepvm))))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste tietolajitunniste)
+      (let [alueurakkanumero (:alueurakkanro (urakat-q/hae-urakan-alueurakkanumero (:db this) urakka))]
+        (when-not (empty? tierekisteri-api-url)
+          (tietueet/hae-urakan-tietueet
+            (:db this) (:integraatioloki this) tierekisteri-api-url alueurakkanumero tietolajitunniste tilannepvm)))))
 
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm]
-    (validoi-tietolajitunniste tietolajitunniste)
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/hae-tietue
-        (:db this) (:integraatioloki this)
-        tierekisteri-api-url tietueen-tunniste tietolajitunniste tilannepvm)))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste tietolajitunniste)
+      (when-not (empty? tierekisteri-api-url)
+        (tietue/hae-tietue
+          (:db this) (:integraatioloki this)
+          tierekisteri-api-url tietueen-tunniste tietolajitunniste tilannepvm))))
 
   (lisaa-tietue [this tiedot]
-    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/lisaa-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
+      (when-not (empty? tierekisteri-api-url)
+        (tietue/lisaa-tietue
+          (:db this) (:integraatioloki this) tierekisteri-api-url tiedot))))
 
   (paivita-tietue [this tiedot]
-    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/paivita-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
+      (when-not (empty? tierekisteri-api-url)
+        (tietue/paivita-tietue
+          (:db this) (:integraatioloki this) tierekisteri-api-url tiedot))))
 
   (poista-tietue [this tiedot]
-    (validoi-tietolajitunniste (:tietolajitunniste tiedot))
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/poista-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
+    (when (ominaisuus-kaytossa? :tierekisteri)
+      (validoi-tietolajitunniste (:tietolajitunniste tiedot))
+      (when-not (empty? tierekisteri-api-url)
+        (tietue/poista-tietue
+          (:db this) (:integraatioloki this) tierekisteri-api-url tiedot))))
 
   (laheta-varustetoteuma [this varustetoteuma-id]
     (when-not (empty? tierekisteri-api-url)
-      (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id))))
+      (if (ominaisuus-kaytossa? :tierekisteri)
+        (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id)
+        (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" "Tierekisteri pois käytöstä" varustetoteuma-id)))))
