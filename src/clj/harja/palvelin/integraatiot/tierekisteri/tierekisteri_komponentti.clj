@@ -160,16 +160,16 @@
         (when (not (empty? tierekisteri-api-url))
           (tietolajit/hae-tietolaji
             (:db this) (:integraatioloki this) tierekisteri-api-url tietolajitunniste muutospvm)))
-      (throw+ {:virhe :tierekisteri-pois-kaytosta}))
+      (throw+ {:virhe :tierekisteri-pois-kaytosta})))
 
-    (hae-kaikki-tietolajit
-      [this muutospvm]
-      (if (ominaisuus-kaytossa? :tierekisteri)
-        (when (not (empty? tierekisteri-api-url))
-          (mapv
-            #(tietolajit/hae-tietolaji (:db this) (:integraatioloki this) tierekisteri-api-url % muutospvm)
-            tietolajitunnisteet))
-        (throw+ {:virhe :tierekisteri-pois-kaytosta}))))
+  (hae-kaikki-tietolajit
+    [this muutospvm]
+    (if (ominaisuus-kaytossa? :tierekisteri)
+      (when (not (empty? tierekisteri-api-url))
+        (mapv
+          #(tietolajit/hae-tietolaji (:db this) (:integraatioloki this) tierekisteri-api-url % muutospvm)
+          tietolajitunnisteet))
+      (throw+ {:virhe :tierekisteri-pois-kaytosta})))
 
   (hae-tietueet
     [this tr tietolajitunniste voimassaolopvm tilannepvm]
