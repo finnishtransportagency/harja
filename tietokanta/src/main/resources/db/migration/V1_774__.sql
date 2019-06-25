@@ -10,12 +10,12 @@ CREATE TYPE tehtavaryhmatyyppi AS ENUM (
 
 CREATE TABLE tehtavaryhma (
    id serial primary key,    -- sisäinen id
-   otsikko  varchar (128), -- korkean tason otsikko, joka kuvaa tehtäväryhmää (esim. Talvihoito)
-   nimi varchar (128) not null,       -- tehtäväryhmän nimi (esim. "Viheralueiden hoito")
+   otsikko  text, -- korkean tason otsikko, joka kuvaa tehtäväryhmää (esim. Talvihoito)
+   nimi text not null,       -- tehtäväryhmän nimi (esim. "Viheralueiden hoito")
    emo INTEGER REFERENCES toimenpidekoodi (id),  -- ylemmän tason tehtäväryhmä (NULL jos taso on tehtäväryhmissä ylimpänä)
    tyyppi TEHTAVARYHMATYYPPI not null,
-   "ui-taso" integer, -- ryhmän järjestys käyttöliittymässä
-   "ei-nayteta" boolean, -- true, jos taso ei näy käyttäjälle käyttöliittymässä
+   jarjestys integer, -- ryhmän järjestys käyttöliittymässä
+   nakyva boolean, -- true, jos taso näkyy käyttäjälle käyttöliittymissä
    poistettu boolean DEFAULT false, -- true jos taso on poistettu käytöstä kaikissa urakoissa
    luotu timestamp,
    luoja integer REFERENCES kayttaja (id),
@@ -29,7 +29,13 @@ CREATE UNIQUE INDEX uniikki_tehtavaryhma_nimi ON tehtavaryhma (nimi);
 -- Lisää toimenpidekooditauluun viittaus tehtäväryhmään ja käyttöliittymä
 ALTER TABLE toimenpidekoodi
 ADD COLUMN api_tunnus numeric,
-ADD COLUMN tehtavaryhma numeric;
+ADD COLUMN tehtavaryhma numeric,
+ADD COLUMN ensisijainen boolean;
 
 UPDATE toimenpidekoodi
   SET api_tunnus = id WHERE taso = 4;
+
+
+
+ALTER TABLE toimenpidekoodi
+ADD COLUMN ensisijainen boolean;
