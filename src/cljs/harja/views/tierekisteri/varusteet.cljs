@@ -16,7 +16,8 @@
             [clojure.string :as str]
             [reagent.core :refer [atom] :as r]
             [harja.ui.liitteet :as liitteet]
-            [harja.ui.debug :as debug]))
+            [harja.ui.debug :as debug]
+            [harja.tiedot.istunto :as istunto]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -38,7 +39,8 @@
                      #(e! (v/->HaeVarusteita))
                      {:disabled (or (:haku-kaynnissa? hakuehdot)
                                     (and (not (tr-ok? tr-osoite))
-                                         (str/blank? varusteentunniste)))
+                                         (str/blank? varusteentunniste))
+                                    (not (istunto/ominaisuus-kaytossa? :tierekisteri)))
                       :ikoni (ikonit/livicon-search)}]
                     [napit/poista "Tyhjennä hakutulokset"
                      #(e! (v/->TyhjennaHakutulokset))
@@ -163,9 +165,10 @@
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       (if (varusteet/muokkaaminen-sallittu? tietolaji)
                                         [:div
-                                         (when (varusteet/tarkastaminen-sallittu? tietolaji) [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus tunniste tietolaji tie))])
-                                         [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus tunniste tie))]
-                                         [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste tie)]]
+                                         (when (varusteet/tarkastaminen-sallittu? tietolaji) [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus tunniste tietolaji tie))
+                                                                                              {:disabled (not (istunto/ominaisuus-kaytossa? :tierekisteri))}])
+                                         [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus tunniste tie)) {:disabled (not (istunto/ominaisuus-kaytossa? :tierekisteri))}]
+                                         [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste tie) {:disabled (not (istunto/ominaisuus-kaytossa? :tierekisteri))}]]
                                         [:div
                                          [napit/avaa "Avaa" #(e! (v/->AvaaVaruste tunniste tie))]])))}]
       (conj tietolajin-listaus-skeema toiminnot))
