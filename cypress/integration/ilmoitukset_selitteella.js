@@ -3,6 +3,20 @@ describe('Ilmoitus-näkymä', function () {
         cy.visit("http://localhost:3000/#ilmoitukset/tieliikenne?")
     })
 
+    it("Ilmoitusten default näkymä", function() {
+        cy.contains('.murupolku-urakkatyyppi', 'Kaikki')
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', {timeout: 10000}).should('not.be.visible')
+        cy.get('[data-cy=ilmoitukset-grid]').gridOtsikot().then(($gridOtsikot) => {
+            let $rivit = $gridOtsikot.grid.find('tbody tr');
+            let $otsikot = $gridOtsikot.otsikot;
+            let valitseTeksti = function (rivi, otsikko) {
+                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).text().trim()
+            };
+            cy.wrap(valitseTeksti(0, 'Urakka')).should('equal', 'Aktiivinen Oulu Testi');
+            cy.wrap(valitseTeksti(1, 'Urakka')).should('equal', 'Aktiivinen Oulu pääl. Testi');
+        })
+    })
+
     it("ilmoitusten haku selitteellä toimii", function () {
         cy.server()
         cy.route({url: "*/hae-ilmoitukset",
@@ -18,5 +32,4 @@ describe('Ilmoitus-näkymä', function () {
         cy.wait('@ihaku', {timeout: 10000})
         cy.contains("Tie on liukas ja urainen")
     })
-
 })

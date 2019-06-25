@@ -3,6 +3,7 @@ resources/public/css
 resources/public/js
 resources/~$roolit.xlsx
 target
+dev.cljs.edn
 .lein-repl-history
 .nrepl-port
 .repl/
@@ -43,6 +44,7 @@ opt/sonic/
 opt/sonic/7.6.2/sonic-client.jar
 opt/sonic/7.6.2/sonic-crypto.jar
 opt/sonic/7.6.2/sonic-xmessage.jar
+opt/sonic/8.6.0/
 tietokanta/harja_prod_dump
 tietokanta/restored_prod_dump.sql
 tietokanta/harja_stg_dump
@@ -57,3 +59,5 @@ resources/public/laadunseuranta/css/
 .deploy3_known_hosts
 testi.pdf
 checkouts/
+package-lock.json
+src/cljs-dev/harja/repl.cljs

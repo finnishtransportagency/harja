@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.yha-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
@@ -11,12 +10,11 @@
             [clojure.core.match :refer [match]]
             [harja.jms-test :refer [feikki-sonja]]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
-            [clojure.java.io :as io]
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yha :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+            [harja.kyselyt.yha :as yha-kyselyt]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use org.httpkit.fake))
 
@@ -147,17 +145,17 @@
                                          :kuulamylly nil
                                          :raekoko 16
                                          :rc-prosentti nil
-                                         :uusi-paallyste 14}}]
+                                         :uusi-paallyste 14}
+                  :yllapitoluokka 8
+                  :keskimaarainen-vuorokausiliikenne 5000
+                  :nykyinen-paallyste 14}]
     :yha-id 2
     :tierekisteriosoitevali (merge {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"}
                                    kohteen-osoite)
     :yha-kohdenumero 1
     :yllapitokohdetyyppi "paallyste"
-    :nykyinen-paallyste 14
     :nimi "YHA-kohde"
-    :yllapitokohdetyotyyppi :paallystys
-    :yllapitoluokka 8
-    :keskimaarainen-vuorokausiliikenne 5000}])
+    :yllapitokohdetyotyyppi :paallystys}])
 
 (deftest tallenna-uudet-yha-kohteet
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -171,9 +169,7 @@
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                   {:urakka-id urakka-id
-                                   :kohteet (luo-yha-kohteet {:ajorata 1
-                                                              :kaista 1
-                                                              :tienumero 20
+                                   :kohteet (luo-yha-kohteet {:tienumero 20
                                                               :aosa 1
                                                               :aet 1
                                                               :losa 1
@@ -200,9 +196,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 0
-                                                            :kaista 1
-                                                            :tienumero 9
+                                 :kohteet (luo-yha-kohteet {:tienumero 9
                                                             :aosa 328
                                                             :aet 3060
                                                             :losa 329
@@ -225,9 +219,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 2
                                                             :aet 1
                                                             :losa 3
@@ -249,9 +241,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 1
                                                             :losa 2
@@ -273,9 +263,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 1
                                                             :losa 3
@@ -292,38 +280,12 @@
     (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
            "Loppuosan pituus 9999999 ei kelpaa"))))
 
-(deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-ei-sisalla
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 1}
-                                                           {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 2})})]
-    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Kohdeosat eivät kohteen sisällä: 20 / 1 / 1 / 3 / 2 ajorata 1 kaista 1"))))
-
 (deftest tallenna-uudet-yha-kohteet-onnistuu
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
+                                 :kohteet (luo-yha-kohteet {:tienumero 20
                                                             :aosa 1
                                                             :aet 100
                                                             :losa 5
@@ -336,3 +298,12 @@
                                                             :losa 4
                                                             :let 200})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 0))))
+
+(deftest paattele-yhaan-lahetettava-sampoid-onnistuu
+  "Palveluurakasta lähetetään palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."
+  (let [muhos-kokonaisurakka-urakkaid (ffirst (q "select id from urakka where sampoid = '4242523-TES2'"))
+        oulu-palvelusopimus-urakkaid (ffirst (q "select id from urakka where sampoid = '666343-TES6'"))
+        muhos-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db jarjestelma) {:urakka muhos-kokonaisurakka-urakkaid}))
+        oulu-urakka (first (yha-kyselyt/hae-urakan-yhatiedot (:db jarjestelma) {:urakka oulu-palvelusopimus-urakkaid}))]
+    (is (= "4242523-TES2" (yha-integraatio/yhaan-lahetettava-sampoid muhos-urakka)))
+    (is (= "TYP-3003" (yha-integraatio/yhaan-lahetettava-sampoid oulu-urakka)))))

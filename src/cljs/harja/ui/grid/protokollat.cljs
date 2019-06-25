@@ -3,9 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [cljs.core.async :refer [<! put! chan]]
-            [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
@@ -72,7 +70,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
   (aseta-virhe! [this rivin-id kentta virheteksti] "Asettaa ulkoisesti virheen rivin kentälle")
-  (poista-virhe! [this rivin-id kentta] "Poistaa rivin kentän virheen ulkoisesti"))
+  (poista-virhe! [this rivin-id kentta] "Poistaa rivin kentän virheen ulkoisesti")
+  (validoi-grid [this] "Validoi gridin"))
 
 (defprotocol GridKahva
   "Sisäinen protokolla, jolle grid asettaa itsensä."
@@ -124,6 +123,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (aseta-virhe! @gridi rivin-id kentta virheteksti))
       (poista-virhe! [_ rivin-id kentta]
         (poista-virhe! @gridi rivin-id kentta))
+      (validoi-grid [_]
+        (validoi-grid @gridi))
 
       GridKahva
       (aseta-grid [_ grid]
@@ -159,26 +160,3 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        (if (vetolaatikko-auki? ohjaus id)
          (ikonit/livicon-chevron-down)
          (ikonit/livicon-chevron-right)))]))
-
-(defn filteroi-uudet-poistetut
-  "Ottaa datan muokkausgrid-muodossa (avaimet kokonaislukuja, jotka mappautuvat riveihin) ja palauttaa sellaiset
-  rivit, jotka eivät ole uusia ja poistettuja. Paluuarvo on vectori mappeja."
-  [rivit]
-  (filter
-    #(not (and (true? (:poistettu %))
-               (neg? (:id %)))) (vals rivit)))
-
-(defn poista-idt
-  "Ottaa mapin ja polun. Olettaa, että polun päässä on vector.
-  Palauttaa mapin, jossa polussa olevasta vectorista on jokaisesta itemistä poistettu id"
-  [lomake polku]
-  (assoc-in lomake polku (mapv
-                           (fn [rivi] (dissoc rivi :id))
-                           (get-in lomake polku))))
-
-(defn poista-poistetut
-  "Ottaa mapin ja polun. Olettaa, että polun päässä on vector.
-   Palauttaa mapin, jossa polussa olevasta vectorista on jokaisesta itemistä poistettu elementit, joilla
-   on :poistettu true."
-  [lomake polku]
-  (assoc-in lomake polku (filter (comp not :poistettu) (get-in lomake polku))))

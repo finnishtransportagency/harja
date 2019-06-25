@@ -151,10 +151,12 @@
                [v ch] (lue!)]
           (if (= ch timeout)
             (do (log/warn "Aika loppui haettaessa tienäkymän tietoja")
-                acc)
+                ;; Paluatetaan virheviestin kera se, mitä kerettiin löytää
+                {:timeout? true
+                 :tulos acc})
             (if v
               (recur (conj acc v) (lue!))
-              acc)))
+              {:tulos acc})))
         (finally
           (doseq [k kanavat]
             (async/close! k)))))))

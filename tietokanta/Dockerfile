@@ -13,6 +13,7 @@ RUN echo "host    all             all             0.0.0.0/0            trust" >>
 # Konffataan fsync ja full page writes pois
 RUN sed -i "s/#fsync.*/fsync = off/g" /etc/postgresql/9.5/main/postgresql.conf
 RUN sed -i "s/#full_page_writes.*/full_page_writes = off/g" /etc/postgresql/9.5/main/postgresql.conf
+RUN sed -i "s/#shared_preload_libraries.*/shared_preload_libraries = 'pg_stat_statements'/g" /etc/postgresql/9.5/main/postgresql.conf
 
 # Luodaan kanta
 RUN service postgresql restart && \
@@ -27,7 +28,8 @@ RUN service postgresql restart && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harja;" -U postgres  && \
     psql -c "CREATE EXTENSION postgis" -U postgres harja && \
     psql -c "CREATE EXTENSION postgis_topology" -U postgres harja && \
-    psql -c "CREATE EXTENSION pg_trgm" -U postgres harja
+    psql -c "CREATE EXTENSION pg_trgm" -U postgres harja && \
+    psql -c "CREATE EXTENSION pg_stat_statements" -U postgres harja
 
 # Ajetaan migraatiot
 COPY pom.xml /tmp

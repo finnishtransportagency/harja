@@ -19,6 +19,7 @@
     },
     "yllapitokohde": {
       "sijainti": {
+	"numero": 21,
         "aosa": 1,
         "aet": 1,
         "losa": 5,
@@ -30,6 +31,9 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
+              "numero": 21,
+              "kaista": 1,
+              "ajr": 1,
               "aosa": 1,
               "aet": 1,
               "losa": 5,
@@ -65,6 +69,8 @@
         "alustatoimenpide": {
           "sijainti": {
             "numero": 21,
+            "kaista": 1,
+            "ajr": 1,
             "aosa": 1,
             "aet": 1,
             "losa": 5,

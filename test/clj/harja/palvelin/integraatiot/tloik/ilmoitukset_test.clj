@@ -6,21 +6,19 @@
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.sonja :as sonja]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [cheshire.core :as cheshire]
-            [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm])
   (:import (org.postgis PGgeometry)))
 
@@ -54,6 +52,7 @@
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)]
+    (def ilmoitusasdf ilmoitus)
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
     (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49"))
     (is (= (:yhteydenottopyynto ilmoitus) false))
@@ -74,7 +73,7 @@
     (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
     (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."))
     (is (= #{"auraustarve"
-             "aurausvallitNakemaesteena"})))
+             "aurausvallitNakemaesteena"} (:selitteet ilmoitus))))
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
@@ -116,7 +115,7 @@
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
-    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+    (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                     #(swap! viestit conj (.getText %)))
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
@@ -141,8 +140,7 @@
       (let [{:keys [status body] :as vastaus} @ilmoitushaku]
         (println "ilmoitushaku: " vastaus)
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
-        ; FIXME Failaa randomisti Jenkinsillä, syy ei tiedossa
-        #_(is (= (-> (cheshire/decode body)
+        (is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
                    count) 1) "Ilmoituksia on vastauksessa yksi")))
     (poista-ilmoitus)))
@@ -150,7 +148,7 @@
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
         viestit (atom [])]
-    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+    (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                     #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
@@ -172,7 +170,7 @@
   (try
     (with-fake-http []
       (let [kuittausviestit (atom [])]
-        (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+        (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                         #(swap! kuittausviestit conj (.getText %)))
 
         (sonja/laheta (:sonja jarjestelma)
@@ -192,7 +190,7 @@
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
   (tuo-valaistusilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2018';"))
+  (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2050';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
@@ -201,7 +199,7 @@
   "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
   (let [sanoma +ilmoitus-hailuodon-jaatiella+
         viestit (atom [])]
-    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+    (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                     #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 

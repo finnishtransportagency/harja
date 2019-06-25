@@ -7,7 +7,7 @@
     [harja.domain.vesivaylat.materiaali :as vv-materiaali]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]
+    
     [specql.rel :as rel]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs

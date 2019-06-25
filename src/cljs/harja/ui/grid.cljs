@@ -13,10 +13,9 @@
 (def poista-virhe! protokollat/poista-virhe!)
 (def nollaa-historia! protokollat/nollaa-historia!)
 (def hae-virheet protokollat/hae-virheet)
-(def filteroi-uudet-poistetut protokollat/filteroi-uudet-poistetut)
-(def poista-idt protokollat/poista-idt)
-(def poista-poistetut protokollat/poista-poistetut)
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
+(def validoi-grid protokollat/validoi-grid)
+(def aseta-muokkaustila! protokollat/aseta-muokkaustila!)
 (def vakiosivutus 250)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)

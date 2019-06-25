@@ -56,11 +56,13 @@
     (let [urakka (some->> urakka-id (q-urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
 
-(defn hae-kayttajan-urakat [db kayttaja-id]
-  (log/debug (format "Haetaan käyttäjän: %s urakat" kayttaja-id))
-  (muodosta-vastaus-urakoiden-haulle
-    (konv/vector-mappien-alaviiva->rakenne
-      (q-urakat/hae-jarjestelmakayttajan-urakat db kayttaja-id))))
+(defn hae-kayttajan-urakat [db parametrit {:keys [kayttajanimi] :as kayttaja}]
+  (log/debug (format "Haetaan käyttäjän: %s urakat" kayttaja))
+  (let [urakkatyyppi (get parametrit "urakkatyyppi")]
+    (validointi/tarkista-urakkatyyppi urakkatyyppi)
+    (muodosta-vastaus-urakoiden-haulle
+      (konv/vector-mappien-alaviiva->rakenne
+        (q-urakat/hae-jarjestelmakayttajan-urakat db kayttajanimi urakkatyyppi)))))
 
 (defn hae-urakka-ytunnuksella [db parametrit {:keys [kayttajanimi] :as kayttaja}]
   (parametrivalidointi/tarkista-parametrit parametrit {:ytunnus "Y-tunnus puuttuu"})
@@ -82,8 +84,8 @@
    {:palvelu :hae-kayttajan-urakat
     :polku "/api/urakat/haku/"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
-    :kasittely-fn (fn [_ _ kayttaja-id db]
-                    (hae-kayttajan-urakat db kayttaja-id))}
+    :kasittely-fn (fn [parametrit _ kayttaja db]
+                    (hae-kayttajan-urakat db parametrit kayttaja))}
    {:palvelu :hae-urakka-ytunnuksella
     :polku "/api/urakat/haku/:ytunnus"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus

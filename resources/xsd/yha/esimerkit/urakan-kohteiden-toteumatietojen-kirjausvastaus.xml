@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
+<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns="http://www.vayla.fi/xsd/yha">
     <!--Optional:-->
     <virheet>
         <virhe>

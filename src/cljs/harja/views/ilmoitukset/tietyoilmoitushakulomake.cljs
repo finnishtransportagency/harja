@@ -212,7 +212,8 @@
        {:nimi :email-lahetykset-tloikiin
         :otsikko "PDF:n sähkö\u00ADposti\u00ADlähetykset Harjasta Tie\u00ADliikenne\u00ADkeskuksen sähkö\u00ADpostiin"
         :tyyppi :komponentti
-        :komponentti #(tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti (:data %))})]
+        :komponentti (fn [{:keys [data]}]
+                       [tietyo-yhteiset/tietyoilmoituksen-lahetystiedot-komponentti data])})]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
    [napit/uusi "Lisää työvaihe" #(e! (tiedot/->AloitaUusiTyovaiheilmoitus tietyoilmoitus)) {}]

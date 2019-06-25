@@ -29,7 +29,8 @@
     (case metodi
       :GET (http/GET http-piste url otsikot parametrit)
       :POST (http/POST http-piste url otsikot parametrit payload)
-      :HEAD (http/HEAD http-piste url otsikot parametrit))))
+      :HEAD (http/HEAD http-piste url otsikot parametrit)
+      :DELETE (http/DELETE http-piste url otsikot parametrit))))
 
 (defprotocol Integraatiotapahtuma
   (laheta

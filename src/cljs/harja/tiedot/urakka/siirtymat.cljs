@@ -131,7 +131,7 @@
 
       (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data
-        (reset! paallystys/paallystysilmoitus-lomakedata
+        (swap! paallystys/tila assoc :paallystysilmoitus-lomakedata
                 (assoc vastaus
                   :kirjoitusoikeus?
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset

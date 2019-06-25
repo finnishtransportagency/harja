@@ -201,6 +201,7 @@
 
 (defn- yllapitourakan-sopimustyyppi [ur]
   (when (and (not= :hoito (:tyyppi ur))
+             (not= :teiden-hoito (:tyyppi ur))
              (not (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
           sopimustyyppi (:sopimustyyppi ur)]
@@ -411,7 +412,7 @@
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
       "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
                          [takuuaika ur])
-      "Tilaaja:" (if (u/vesivaylaurakka? ur) "Liikennevirasto" (:nimi (:hallintayksikko ur)))
+      "Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
       "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
                          (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
                          (if (u/vesivaylaurakka? ur)

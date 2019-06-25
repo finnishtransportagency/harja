@@ -81,42 +81,35 @@
                   (tee-oletus-vuosisummat vuodet))
       (tee-oletus-vuosisummat vuodet))))
 
-(defn valitse-lpk-tilinumero [numero toimenpidekoodi tuotenumero]
-  (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
-    "43020000"
-    ; Hoitotuotteet 110 - 150, 536
-    (if (nil? tuotenumero)
-      (let [viesti (format "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui (numero %s)." numero)]
+(defn valitse-lpk-tilinumero
+  [numero toimenpidekoodi]
+  (case toimenpidekoodi
+    "23104" "43020000"
+    "23116" "43020000"
+    "23124" "43020000"
+    "20107" "43020000"
+    "20112" "43020000"
+    "20143" "43020000"
+    "20179" "43020000"
+    "23151" "43020000"
+    "20106" "12980010"
+    "20135" "12980010"
+    "20183" "12980010"
+    "14109" "12980010"
+    "141217" "12980010"
+    :else 0
+    (let [viesti
+            (format "Toimenpidekoodilla '%1$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle (numero: %s)."
+                    toimenpidekoodi numero)]
+        (log/warn viesti)
         (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
-                            :viesti viesti}]}))
-
-      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150))
-              (= tuotenumero 536)
-              (= tuotenumero 31)
-              (= tuotenumero 201)
-              (= tuotenumero 301))
-        "43020000"
-        ; Ostotuotteet: 210, 240-271 ja 310-321
-        (if (or (= tuotenumero 21)
-                (= tuotenumero 30)
-                (= tuotenumero 210)
-                (= tuotenumero 302)
-                (and (>= tuotenumero 240) (<= tuotenumero 271))
-                (and (>= tuotenumero 310) (<= tuotenumero 321)))
-          "12980010"
-          (let [viesti
-                (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle (numero: %s)."
-                        toimenpidekoodi tuotenumero numero)]
-            (log/warn viesti)
-            (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
-                     :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
-                                :viesti viesti}]})))))))
+                            :viesti viesti}]}))))
 
 (defn hae-maksueran-tiedot [db numero]
   (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (maksuerat/hae-lahetettava-maksuera db numero)))
         vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-        lkp-tilinnumero (valitse-lpk-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
+        lkp-tilinnumero (valitse-lpk-tilinumero numero (:toimenpidekoodi maksueran-tiedot))
         maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)]
     maksueran-tiedot))
 
@@ -152,10 +145,10 @@
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]
-    (if-let [maksuera (hae-kustannussuunnitelman-maksuera db viesti-id)]
-      (if (contains? kuittaus :virhe)
-        (do
-          (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
-          (merkitse-kustannussuunnitelmalle-lahetysvirhe db maksuera))
-        (merkitse-kustannussuunnitelma-lahetetyksi db maksuera))
-      (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
+                            (if-let [maksuera (hae-kustannussuunnitelman-maksuera db viesti-id)]
+                              (if (contains? kuittaus :virhe)
+                                (do
+                                  (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
+                                  (merkitse-kustannussuunnitelmalle-lahetysvirhe db maksuera))
+                                (merkitse-kustannussuunnitelma-lahetetyksi db maksuera))
+                              (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))

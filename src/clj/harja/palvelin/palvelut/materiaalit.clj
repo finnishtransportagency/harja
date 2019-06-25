@@ -225,23 +225,74 @@
                                                              :loppupvm loppupvm}))]
     toteumat))
 
+(defn hae-suolatoteumat-tr-valille [db user {:keys [urakka-id tie alkuosa alkuet loppuosa loppuet alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (into []
+        (comp
+         (map konv/alaviiva->rakenne)
+         (map #(konv/array->vec % :toteumaidt)))
+        (q/hae-suolatoteumat-tr-valille db {:urakka urakka-id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm
+                                            :threshold 50
+                                            :tie tie
+                                            :alkuosa alkuosa
+                                            :alkuet alkuet
+                                            :loppuosa loppuosa
+                                            :loppuet loppuet})))
+
 (defn hae-suolamateriaalit [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (into []
         (q/hae-suolamateriaalit db)))
 
 (defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
-  (let [t (toteumat-q/luo-toteuma<!
-            db urakka-id sopimus-id
-            (:pvm toteuma) (:pvm toteuma)
-            "kokonaishintainen"
-            (:id user) "" ""
-            (:lisatieto toteuma)
-            nil nil nil nil nil nil nil
-            "harja-ui")]
+  (let [t (toteumat-q/luo-toteuma<! db
+                                    {:urakka urakka-id
+                                     :sopimus sopimus-id
+                                     :alkanut (:pvm toteuma)
+                                     :paattynyt (:pvm toteuma)
+                                     :tyyppi "kokonaishintainen"
+                                     :kayttaja (:id user)
+                                     :suorittaja ""
+                                     :ytunnus ""
+                                     :lisatieto (:lisatieto toteuma)
+                                     :ulkoinen_id nil
+                                     :reitti nil
+                                     :numero nil
+                                     :alkuosa nil
+                                     :alkuetaisyys nil
+                                     :loppuosa nil
+                                     :loppuetaisyys nil
+                                     :lahde "harja-ui"
+                                     :tyokonetyyppi nil
+                                     :tyokonetunniste nil
+                                     :tyokoneen-lisatieto nil})]
     (toteumat-q/luo-toteuma-materiaali<!
       db (:id t) (:id (:materiaali toteuma))
       (:maara toteuma) (:id user))))
+
+(defn tallenna-kasinsyotetty-toteuma [db user {:keys [urakka-id sopimus-id toteuma]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
+    (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
+    (let [nyt (konv/sql-date (pvm/nyt))]
+      (toteumat-q/paivita-toteuma<! db
+                                    {:alkanut (:pvm nyt)
+                                     :paattynyt (:pvm nyt)
+                                     :tyyppi "kokonaishintainen"
+                                     :kayttaja (:id user)
+                                     :suorittaja (:suorittajan-nimi toteuma)
+                                     :ytunnus (:suorittajan-ytunnus toteuma)
+                                     :lisatieto (:lisatieto toteuma)
+                                     :numero (:numero (:tierekisteriosoite toteuma))
+                                     :alkuosa (:alkuosa (:tierekisteriosoite toteuma))
+                                     :alkuetaisyys nil
+                                     :loppuosa nil
+                                     :loppuetaisyys nil
+                                     :id (:tid toteuma)
+                                     :urakka urakka-id}))))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
@@ -333,6 +384,11 @@
                         (log/debug "hae-suolatoteumat: tiedot" tiedot)
                         (hae-suolatoteumat (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
+                      :hae-suolatoteumat-tr-valille
+                      (fn [user tiedot]
+                        (log/debug "hae-suolatoteumat-tr-valille: tiedot" tiedot)
+                        (hae-suolatoteumat-tr-valille (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
                       :hae-suolatoteumien-tarkat-tiedot
                       (fn [user tiedot]
                         (log/debug "hae-suolatoteumien-tarkat-tiedot: " tiedot)
@@ -345,6 +401,10 @@
                       :tallenna-suolatoteumat
                       (fn [user tiedot]
                         (tallenna-suolatoteumat (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-kasinsyotetty-suolatoteuma
+                      (fn [user tiedot]
+                        (tallenna-kasinsyotetty-toteuma (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -359,6 +419,7 @@
                      :hae-suolatoteumat
                      :hae-suolatoteumien-tarkat-tiedot
                      :hae-suolamateriaalit
-                     :tallenna-suolatoteumat)
+                     :tallenna-suolatoteumat
+                     :tallenna-kasinsyotetty-suolatoteuma)
 
     this))

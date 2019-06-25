@@ -29,14 +29,14 @@
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
     :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
-    :turi :yha-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
+    :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot
     :muut-tyot :toteumat :yllapitototeumat :paallystys :maaramuutokset :paikkaus
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :tr-haku
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
@@ -72,7 +72,8 @@
     :koordinaatit
     :tiedostopesula
     :tieluvat
-    :paikkaukset})
+    :paikkaukset
+    :jarjestelman-tila})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

@@ -21,7 +21,7 @@
             [specql.rel :as rel]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]])
+            ])
             [harja.pvm :as pvm])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))

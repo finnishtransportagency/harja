@@ -52,5 +52,5 @@
     (is (= "vastaus" (z/xml1-> data :tyyppi z/text)))
     (is (= "UskoUntamo04428121283usko.untamo@valittavaurakoitsija.fiVälittävä UrakoitsijaY1234" (z/xml1-> data :kasittelija z/text)))
     (is (= "KeijoKäsittelijä04428121283keijo.kasittelija@eioleolemassa.fiOrganisaatio RY1234567-8" (z/xml1-> data :ilmoittaja z/text)))
-    (is (= "2005-09-30T21:10:34" (z/xml1-> data :aika z/text)))))
+    (is (= "2005-09-30T21:10:34.500" (z/xml1-> data :aika z/text)))))
 

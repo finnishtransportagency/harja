@@ -14,7 +14,7 @@
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tila (atom {:valinnat nil
+(def tila (atom {:valinnat {:myonnetty (pvm/aikavali-nyt-miinus 0)}
                  :valittu-tielupa nil
                  :tielupien-haku-kaynnissa? false
                  :nakymassa? false}))
@@ -22,6 +22,7 @@
 (def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :voimassaolo :sijainti
                          :myonnetty])
 
+(defrecord MuutaTila [polku arvo])
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [uudet])
 (defrecord HaeTieluvat [valinnat aikaleima])
@@ -29,11 +30,6 @@
 (defrecord TieluvatEiHaettu [virhe aikaleima])
 (defrecord ValitseTielupa [tielupa])
 (defrecord AvaaTielupaPaneelista [id])
-
-(defn valinta-wrap [e! app polku]
-  (r/wrap (get-in app [:valinnat polku])
-          (fn [u]
-            (e! (->PaivitaValinnat {polku u})))))
 
 (defn hakuparametrit [valinnat]
   (or
@@ -122,7 +118,9 @@
         valittu-tielupa))))
 
 (extend-protocol tuck/Event
-
+  MuutaTila
+  (process-event [{:keys [polku arvo]} app]
+    (assoc-in app polku arvo))
   Nakymassa?
   (process-event [{n :nakymassa?} app]
     (assoc app :nakymassa? n))

@@ -4,7 +4,7 @@
 
 (def +onnistunut-urakoiden-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-   <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+   <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat>
       <urakka>
        <yha-id>3</yha-id>
@@ -22,20 +22,20 @@
 
 (def +virhevastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat/>
     <virhe>Tapahtui virhe</virhe>
   </urakoiden-hakuvastaus>")
 
 (def +urakoiden-tyhja-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat/>
   </urakoiden-hakuvastaus>")
 
 (def +invalidi-urakoiden-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <tagi-jonka-ei-kuulunut-elaa/>
     <urakat/>
     <virhe>Tapahtui virhe</virhe>
@@ -43,7 +43,7 @@
 
 (def +usean-urakan-hakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakoiden-hakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <urakat>
       <urakka>
        <yha-id>3</yha-id>
@@ -74,7 +74,7 @@
 
 (def +onnistunut-urakan-kohdehakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
@@ -83,9 +83,6 @@
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <tunnus>A</tunnus>
-        <yllapitoluokka>1</yllapitoluokka>
-        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-        <nykyinen-paallyste>1</nykyinen-paallyste>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
@@ -93,8 +90,6 @@
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -117,6 +112,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
           <alikohde>
             <yha-id>4</yha-id>
@@ -138,6 +136,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
         </alikohteet>
       </kohde>
@@ -147,7 +148,7 @@
 
 (def +urakan-kohdehakuvastaus-jossa-toisen-urakan-sidottu-kohde+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
@@ -156,9 +157,6 @@
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <tunnus>A</tunnus>
-        <yllapitoluokka>1</yllapitoluokka>
-        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-        <nykyinen-paallyste>1</nykyinen-paallyste>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
@@ -166,8 +164,6 @@
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -190,6 +186,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
           <alikohde>
             <yha-id>4</yha-id>
@@ -211,6 +210,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
         </alikohteet>
       </kohde>
@@ -221,9 +223,6 @@
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <tunnus>A</tunnus>
-        <yllapitoluokka>1</yllapitoluokka>
-        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-        <nykyinen-paallyste>1</nykyinen-paallyste>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
@@ -231,8 +230,6 @@
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -255,6 +252,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
           <alikohde>
             <yha-id>42502</yha-id>
@@ -276,6 +276,9 @@
               <kuulamylly>4</kuulamylly>
               <paallystetyomenetelma>22</paallystetyomenetelma>
             </paallystystoimenpide>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+            <yllapitoluokka>1</yllapitoluokka>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
           </alikohde>
         </alikohteet>
       </kohde>
@@ -284,7 +287,7 @@
 
 (def +invalidi-urakan-kohdehakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns:yha=\"http://www.vayla.fi/xsd/yha\">
     <tagi-jonka-ei-kuulunut-elaa/>
     <kohteet/>
     <virhe>Tapahtui virhe</virhe>
@@ -292,6 +295,22 @@
 
 (def +tyhja-urakan-kohteidenhakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+  <urakan-kohdehakuvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
     <kohteet/>
   </urakan-kohdehakuvastaus>")
+
+(defn +epaonnistunut-kohteen-poisto-vastaus+ [yha-kohde-id]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+        <urakan-kohteen-poiston-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
+        <palaute>palaute</palaute>
+        <virhe>
+            <kohde-yha-id>" yha-kohde-id "</kohde-yha-id>
+            <selite>virhe</selite>
+        </virhe>
+        </urakan-kohteen-poiston-kirjausvastaus>"))
+
+(def +onnistunut-kohteen-poisto-vastaus+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+   <urakan-kohteen-poiston-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">
+   <palaute>palaute</palaute>
+   </urakan-kohteen-poiston-kirjausvastaus>")

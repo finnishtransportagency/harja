@@ -8,7 +8,7 @@
     [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    ]
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m])
@@ -36,7 +36,8 @@
 
 (def kohteen-tiedot
   #{[::kohde #{:harja.domain.kanavat.kohde/nimi
-               :harja.domain.kanavat.kohde/id}]})
+               :harja.domain.kanavat.kohde/id
+               :harja.domain.kanavat.kohde/jarjestys}]})
 
 (def fmt-kohteenosa-tyyppi
   {:sulku "sulku"

@@ -30,35 +30,47 @@
         component-did-mount (keep :component-did-mount toteutukset)
         component-will-update (keep :component-will-update toteutukset)
         component-did-update (keep :component-did-update toteutukset)
-        component-will-unmount (keep :component-will-unmount toteutukset)]
+        component-will-unmount (keep :component-will-unmount toteutukset)
+        should-component-update (keep :should-component-update toteutukset)
+        display-name (last (keep :display-name toteutukset))]
 
     (r/create-class
-     {:reagent-render (fn [& args] (try
-                                     (apply render args)
-                                     (catch :default e
-                                       (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA!")
-                                       (error e) ;; Logita erikseen, jotta helpompi tarkistaa
-                                       [virhekasittely/rendaa-virhe e])))
-      :get-initial-state (fn [this]
-                           (reduce merge (map #(% this) get-initial-state)))
-      :component-will-receive-props (fn [this new-argv]
-                                      (doseq [f component-will-receive-props]
-                                        (apply f this new-argv)))
-      :component-will-mount (fn [this]
-                              (doseq [f component-will-mount]
-                                (f this)))
-      :component-did-mount (fn [this]
-                             (doseq [f component-did-mount]
-                               (f this)))
-      :component-will-update (fn [this new-argv]
-                               (doseq [f component-will-update]
-                                 (apply f this new-argv)))
-      :component-did-update (fn [this old-argv]
-                              (doseq [f component-did-update]
-                                (apply f this old-argv)))
-      :component-will-unmount (fn [this]
-                                (doseq [f component-will-unmount]
-                                  (f this)))})))
+      (merge
+        {:reagent-render (fn [& args] (try
+                                        (apply render args)
+                                        (catch :default e
+                                          (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA!")
+                                          (error e)         ;; Logita erikseen, jotta helpompi tarkistaa
+                                          [virhekasittely/rendaa-virhe e])))
+         :get-initial-state (fn [this]
+                              (reduce merge (map #(% this) get-initial-state)))
+         :should-component-update (fn [this old-argv new-argv]
+                                    (if-not (empty? should-component-update)
+                                      (every? true?
+                                              (map (fn [f should-component-update]
+                                                     (f this old-argv new-argv))
+                                                   should-component-update))
+                                      true))
+         :component-will-receive-props (fn [this new-argv]
+                                         (doseq [f component-will-receive-props]
+                                           (apply f this new-argv)))
+         :component-will-mount (fn [this]
+                                 (doseq [f component-will-mount]
+                                   (f this)))
+         :component-did-mount (fn [this]
+                                (doseq [f component-did-mount]
+                                  (f this)))
+         :component-will-update (fn [this new-argv]
+                                  (doseq [f component-will-update]
+                                    (apply f this new-argv)))
+         :component-did-update (fn [this old-argv]
+                                 (doseq [f component-did-update]
+                                   (apply f this old-argv)))
+         :component-will-unmount (fn [this]
+                                   (doseq [f component-will-unmount]
+                                     (f this)))}
+        (when display-name
+          {:display-name display-name})))))
 
 (defn kuuntelija
   "Komponentti mixin tapahtuma-aiheiden kuuntelemiseen.
@@ -81,7 +93,12 @@
       :component-will-unmount (fn [this _]
                                 (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                   (doseq [k kuuntelijat]
-                                    (k))))}))
+                                    (k))
+                                  (swap! (r/state-atom this) dissoc ::kuuntelijat)))}))
+
+(defn nimi
+  [nimi]
+  {:display-name nimi})
 
 (defn dom-kuuntelija
   "Mixin DOM tapahtumien kuuntelemiseen annetussa elementissä.

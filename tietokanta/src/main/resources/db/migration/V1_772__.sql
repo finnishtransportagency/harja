@@ -1,0 +1,1 @@
+CREATE INDEX yllapitokohde_urakka_idx ON yllapitokohde (urakka);

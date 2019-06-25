@@ -7,7 +7,7 @@
     [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    ]
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
@@ -151,6 +151,10 @@
                                                    ::vesipinta-alaraja])))
 
 (s/def ::hakuparametrit ::hae-liikennetapahtumat-kysely)
+
+;; Override koska frontilta ei saa bigdecimal-muodossa. Kannassa NUMERIC.
+(s/def ::vesipinta-alaraja (s/nilable number?))
+(s/def ::vesipinta-ylaraja (s/nilable number?))
 
 (s/def ::tallenna-liikennetapahtuma-kysely (s/keys :req [::aika
                                                          ::sopimus-id

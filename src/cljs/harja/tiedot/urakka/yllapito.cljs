@@ -11,5 +11,3 @@
 ;; Ylläpidon näkymien yhteiset suodattimet
 (def tienumero (atom nil))
 (def kohdenumero (atom nil))
-
-(def kohdejarjestys (atom :tila))

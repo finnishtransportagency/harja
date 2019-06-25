@@ -51,6 +51,7 @@ SELECT
   ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
   ypko.massamaara                       AS "kohdeosa_massamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
+  st_asgeojson(ypko.sijainti)           AS "kohdeosa_geometria",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
@@ -106,6 +107,44 @@ SELECT EXISTS(SELECT *
                    WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE)) AS "saa-poistaa"
 FROM yllapitokohde
 WHERE id = :id;
+
+-- name: kohteen-yhaid
+SELECT yhaid
+FROM yllapitokohde
+WHERE id=:kohde-id AND urakka=:urakka-id
+
+-- name: paallystyskohteen-saa-poistaa
+WITH tama_kohde AS (
+   SELECT *
+   FROM yllapitokohde
+   WHERE id = :id
+)
+SELECT EXISTS(SELECT *
+              FROM tama_kohde) AS "yllapitokohde-ei-olemassa",
+       EXISTS(SELECT *
+              FROM tama_kohde
+              WHERE lahetys_onnistunut IS NOT TRUE) AS "yllapitokohde-lahetetty",
+       NOT (EXISTS(SELECT *
+                   FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+                   WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE)) AS "tiemerkinnant-yh-toteuma",
+       NOT (EXISTS(SELECT *
+                   FROM sanktio s
+                   WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+                                                   (SELECT id
+                                                    FROM laatupoikkeama lp
+                                                    WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE))) AS "sanktio",
+       NOT (EXISTS(SELECT *
+                   FROM paallystysilmoitus pi
+                   WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE)) AS "paallystysilmoitus",
+       NOT (EXISTS(SELECT *
+                   FROM tietyomaa ttm
+                   WHERE yllapitokohde = :id)) AS tietyomaa,
+       NOT (EXISTS(SELECT *
+                   FROM laatupoikkeama lp
+                   WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) AS laatupoikkeama,
+       NOT (EXISTS(SELECT *
+                   FROM tarkastus t
+                   WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE)) AS "tarkastus";
 
 -- name: yllapitokohteet-joille-linkityksia
 -- Palauttaa ne ylläpitokohteiden idt annetusta id joukosta, joille on tehty jotain linkityksiä,
@@ -956,6 +995,7 @@ VALUES (:yllapitokohde, 0, 0, 0, 0, 0);
 SELECT
   ypk.id,
   u.nimi           AS "urakka",
+  u.id             AS "urakka-id",
   ypk.nimi,
   kohdenumero,
   tr_numero        AS "tr-numero",
@@ -968,7 +1008,32 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT []
+      AND ypk.poistettu IS NOT TRUE
       AND yhaid IS NOT NULL;
+
+-- name: hae-yhden-vuoden-muut-kohdeosat
+SELECT
+  ypko.id,
+  ypk.id           AS "kohde-id",
+  u.nimi           AS "urakka",
+  u.id             AS "urakka-id",
+  ypk.nimi         AS "kohteen-nimi",
+  ypko.nimi,
+  ypk.kohdenumero,
+  ypko.tr_numero        AS "tr-numero",
+  ypko.tr_alkuosa       AS "tr-alkuosa",
+  ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypko.tr_loppuosa      AS "tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypko.tr_ajorata       AS "tr-ajorata",
+  ypko.tr_kaista        AS "tr-kaista"
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
+      ypko.poistettu IS NOT TRUE AND
+      ypko.tr_numero = :tr-numero AND
+      ypko.yhaid IS NOT NULL;
 
 -- name: hae-yhden-vuoden-kohdeosat-teille
 SELECT
@@ -991,6 +1056,29 @@ FROM yllapitokohdeosa ypko
 WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
       ypko.poistettu IS NOT TRUE AND
       ypko.tr_numero IN (:tiet);
+
+-- name: hae-yhden-vuoden-kohdeosat-urakalle
+SELECT
+  u.nimi                AS "urakan-nimi",
+  ypk.nimi              AS "paakohteen-nimi",
+  ypk.tunnus            AS "paakohteen-tunnus",
+  ypk.kohdenumero       AS "paakohteen-kohdenumero",
+  ypko.nimi             AS "yllapitokohteen-nimi",
+  ypko.id,
+  ypko.tr_numero        AS "tr-numero",
+  ypko.tr_alkuosa       AS "tr-alkuosa",
+  ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypko.tr_loppuosa      AS "tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypko.tr_ajorata       AS "tr-ajorata",
+  ypko.tr_kaista        AS "tr-kaista"
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
+      ypko.poistettu IS NOT TRUE AND
+      ypk.id != :kohde-id AND
+      u.id IN (:urakka-id);
 
 -- name: hae-yllapitokohteen-vuodet
 -- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.

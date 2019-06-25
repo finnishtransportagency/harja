@@ -287,10 +287,12 @@
                         :komponentti (fn [] [ajax-loader "Haetaan edellisiä tietoja"])}]
 
                       [{:otsikko "Alapinta"
-                        :tyyppi :positiivinen-numero
+                        :tyyppi :numero
+                        :desimaalien-maara 2
                         :nimi ::lt/vesipinta-alaraja}
                        {:otsikko "Yläpinta"
-                        :tyyppi :positiivinen-numero
+                        :tyyppi  :numero
+                        :desimaalien-maara 2
                         :nimi ::lt/vesipinta-ylaraja}])
 
                     (when (and uusi-tapahtuma?

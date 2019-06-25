@@ -2,13 +2,16 @@
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
+            [specql.op :as op]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
-            [harja.domain.tierekisteri :as tierekisteri]))
+            [harja.domain.tierekisteri :as tierekisteri]
+            [taoensso.timbre :as log]))
 
 (def kayttaja "yit-rakennus")
 
@@ -46,11 +49,11 @@
                            ::paikkaus/kuulamylly "AN5"
                            ::paikkaus/massamenekki 12}
         odotettu-materiaali {::paikkaus/materiaalit [{::paikkaus/esiintyma "testi"
-                                                     ::paikkaus/kuulamylly-arvo "testi"
-                                                     ::paikkaus/muotoarvo "testi"
-                                                     ::paikkaus/lisa-aineet "lisäaineet"
-                                                     ::paikkaus/pitoisuus 1.2M
-                                                     ::paikkaus/sideainetyyppi "20/30"}]}
+                                                      ::paikkaus/kuulamylly-arvo "testi"
+                                                      ::paikkaus/muotoarvo "testi"
+                                                      ::paikkaus/lisa-aineet "lisäaineet"
+                                                      ::paikkaus/pitoisuus 1.2M
+                                                      ::paikkaus/sideainetyyppi "20/30"}]}
         odotettu-tienkohta {::paikkaus/tienkohdat [{::paikkaus/ajourat [2 3]
                                                     ::paikkaus/ajorata 1
                                                     ::paikkaus/keskisaumat [1 1]
@@ -76,16 +79,16 @@
                                    (update ::paikkaus/materiaalit (fn [materiaalit]
                                                                     [(dissoc (first materiaalit) ::paikkaus/materiaali-id)])))))
     (is (= odotettu-tienkohta (-> (select-keys tienkohta [::paikkaus/tienkohdat])
-                                   (update ::paikkaus/tienkohdat (fn [tienkohta]
-                                                                    [(dissoc (first tienkohta) ::paikkaus/tienkohta-id)])))))
+                                  (update ::paikkaus/tienkohdat (fn [tienkohta]
+                                                                  [(dissoc (first tienkohta) ::paikkaus/tienkohta-id)])))))
     (is (= odotettu-paikkauskohde (-> (select-keys paikkauskohde [::paikkaus/paikkauskohde])
-                                   (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
-                                                                      (dissoc paikkauskohde ::paikkaus/id))))))
+                                      (update ::paikkaus/paikkauskohde (fn [paikkauskohde]
+                                                                         (dissoc paikkauskohde ::paikkaus/id))))))
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id)))))
 
-(deftest kirjaa-paikkauskustannus
+(deftest kirjaa-paikkaustietoja
   (let [db (luo-testitietokanta)
         urakka (hae-oulun-alueurakan-2014-2019-id)
         toteumatunniste 234531
@@ -95,6 +98,8 @@
                (.replace "<TOTEUMATUNNISTE>" (str toteumatunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
+        poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
+        poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
         odotetut-paikkaustoteumat [{:harja.domain.paikkaus/yksikkohinta 200M,
                                     :harja.domain.paikkaus/maara 12.5M,
                                     :harja.domain.paikkaus/selite "asfaltti",
@@ -130,5 +135,61 @@
     (is (= odotettu-kohde (dissoc
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id
-                            ::paikkaus/kirjattu)))))
+                            ::paikkaus/kirjattu)))
+
+    (is (= 200 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
+
+ ;; TODO: Rakenna testiaineisto yit-käyttäjälle. Ja testaa poistoja.
+
+    ;
+    ;;; Paikkauskohteen poisto
+    ;;;
+    ;;; Toisen urakoitsijan kohdetta ei voi poistaa
+    ;(is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id 666
+    ;                                                           ::paikkaus/urakka-id 4
+    ;                                                           ::muokkaustiedot/luoja-id 9
+    ;                                                           ::muokkaustiedot/poistettu? true}))) "Paikkauskohteen poisto epäonnistui (1).")
+    ;
+    ;;;; Saman käyttäjän, samalla ulkoisella id:llä eri urakkaan tallentamaa kohdetta ei päivitetty
+    ;(is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id 666
+    ;                                                           ::paikkaus/urakka-id 21
+    ;                                                           ::muokkaustiedot/luoja-id 9
+    ;                                                           ::muokkaustiedot/poistettu? false}))) "Paikkauskohteen poisto epäonnistui (2).")
+    ;;; Poistettavan kohteen kaikki paikkaukset merkittiin poistetuksi
+    ;(is (= 0 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/paikkauskohde-id 1
+    ;                                                       ::paikkaus/urakka-id 4
+    ;                                                       ::muokkaustiedot/luoja-id 9
+    ;                                                       ::muokkaustiedot/poistettu? false}))) "Paikkausten poisto epäonnistui (1).")
+    ;;; Poistettavan kohteen kaikki toteumat merkittiin poistetuksi
+    ;(is (= 0 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/paikkauskohde-id 1
+    ;                                                            ::paikkaus/urakka-id 4
+    ;                                                            ::muokkaustiedot/luoja-id 9
+    ;                                                            ::muokkaustiedot/poistettu? false}))) "Paikkauskustannusten poisto epäonnistui (1).")
+    ;
+    ;;; Paikkauksen poisto
+    ;;;
+    ;;; Poistettavat paikkaukset merkittiin poistetuksi
+    ;(is (= 2 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id (op/in #{221, 222})
+    ;                                                       ::paikkaus/urakka-id 4
+    ;                                                       ::muokkaustiedot/luoja-id 9
+    ;                                                       ::muokkaustiedot/poistettu? true}))) "Paikkausten poisto epäonnistui (2).")
+    ;;; Saman paikkauskohteen muut paikkaukset ovat vielä voimassa
+    ;(is (= 2 (count (paikkaus-q/hae-paikkaukset db {::paikkaus/urakka-id 4
+    ;                                                       ::paikkaus/paikkauskohde-id 4
+    ;                                                       ::muokkaustiedot/luoja-id 9
+    ;                                                       ::muokkaustiedot/poistettu? false}))) "Paikkausten poisto epäonnistui (3).")
+    ;
+    ;;; Paikkaustoteuman poisto
+    ;;;
+    ;;; Poistettavat paikkaustoteumat merkittiin poistetuksi
+    ;(is (= 1 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id 133
+    ;                                                            ::paikkaus/urakka-id 4
+    ;                                                            ::muokkaustiedot/luoja-id 9
+    ;                                                            ::muokkaustiedot/poistettu? true}))) "Paikkauskustannusten poisto epäonnistui (2).")
+    ;;; Saman paikkauskohteen muut paikkaukset ovat vielä voimassa
+    ;(is (= 1 (count (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/urakka-id 4
+    ;                                                            ::paikkaus/paikkauskohde-id 3
+    ;                                                            ::muokkaustiedot/luoja-id 9
+    ;                                                            ::muokkaustiedot/poistettu? false}))))) "Paikkauskustannusten poisto epäonnistui (3).")
+    ;
 

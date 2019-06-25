@@ -52,7 +52,7 @@
 (deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
   (let [ilmoitusviesti (atom nil)]
     (tloik-apurit/tee-testipaivystys)
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
+    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
     (sonja/laheta (:sonja jarjestelma)
                   tloik-apurit/+tloik-ilmoitusviestijono+
                   tloik-apurit/+testi-ilmoitus-sanoma+)
@@ -66,7 +66,7 @@
 
       ;; Lähetä aloitettu kuittaus
       (sonja/laheta (:sonja jarjestelma) "email-to-harja"
-                    (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
+                    (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
                                        (:otsikko saapunut)
                                        (str "[Vastaanotettu] " viesti)))
 
@@ -79,7 +79,7 @@
 
         ;; Lähetä lopetettu toimenpitein kuittaus
         (sonja/laheta (:sonja jarjestelma) "email-to-harja"
-                      (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
+                      (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@vayla.fi"
                                          (:otsikko saapunut)
                                          (str "[Lopetettu toimenpitein] " viesti)))
         

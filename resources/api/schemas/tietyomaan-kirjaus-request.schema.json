@@ -23,15 +23,11 @@
         },
         "alkuaidan-sijainti": {
           "id": "urn:harja/tietyomaa/alkuaidan-sijainti",
-          "type": "object",
-          "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },
         "loppuaidan-sijainti": {
           "id": "urn:harja/tietyomaa/loppuaidan-sijainti",
-          "type": "object",
-          "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },

@@ -10,6 +10,11 @@
   (is (= 1 (count (hae-urakat))) "Luonnin jälkeen urakka löytyy Sampo id:llä.")
   (poista-urakka))
 
+(deftest maanteiden-hoidon-urakan-tallentuminen
+  (tuo-maanteiden-hoidon-urakka)
+  (is (= 1 (count (hae-urakat))) "Luonnin jälkeen maanteiden hoidon urakka löytyy Sampo id:llä.")
+  (poista-urakka))
+
 (deftest urakan-paivittaminen
   (tuo-urakka)
   (tuo-urakka)
@@ -78,7 +83,7 @@
         pop-ely (ffirst (q "select id from organisaatio where sampo_ely_hash = 'KP981'"))
         merivaylat (ffirst (q "select id from organisaatio where lyhenne = 'MV'"))
         kanavat (ffirst (q "select id from organisaatio where lyhenne = 'KAN'"))]
-    (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-hoito")))
-    (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-korjaus")))
-    (is (= merivaylat (urakat/hae-hallintayksikko db nil "vesivayla-hoito")))
-    (is (= pop-ely (urakat/hae-hallintayksikko db "KP981" "hoito")))))
+    (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-hoito" "KAN-001")))
+    (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-korjaus" "KAN-002")))
+    (is (= merivaylat (urakat/hae-hallintayksikko db nil "vesivayla-hoito" "VESI-001")))
+    (is (= pop-ely (urakat/hae-hallintayksikko db "KP981" "hoito" "TIE-001")))))

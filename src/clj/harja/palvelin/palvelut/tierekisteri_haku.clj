@@ -1,12 +1,15 @@
 (ns harja.palvelin.palvelut.tierekisteri-haku
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [clojure.spec.alpha :as s]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tieverkko :as tv]
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.tierekisteri :as tr-domain])
+            [harja.domain
+             [oikeudet :as oikeudet]
+             [yllapitokohde :as yllapitokohde]
+             [tierekisteri :as tr-domain]])
   (:import (org.postgresql.util PSQLException)))
 
 (def +threshold+ 250)
@@ -59,6 +62,14 @@
     (if geom
       [geom]
       {:virhe "Tierekisteriosoitetta ei löydy"})))
+
+(defn hae-tr-pituudet [db params]
+  ;; TODO heti, kun saadaan kaistakohtaiset pituudet, otetaan se käyttöön tässä
+  (reduce (fn [m pituuden-tiedot]
+            (update m (:osa pituuden-tiedot)
+                    (fn [osa]
+                      (assoc osa (:ajorata pituuden-tiedot) (:pituus pituuden-tiedot)))))
+          {} (tv/hae-ajoratojen-pituudet db params)))
 
 (defn hae-osien-pituudet
   "Hakee tierekisteriosien pituudet annetulle tielle ja osan välille.
@@ -136,6 +147,13 @@
                                   :osa2 osa2}))
       1))
 
+(defn hae-osien-tiedot
+  [db params]
+  {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
+  (map (fn [tieto]
+         (update tieto :pituudet konv/jsonb->clojuremap))
+       (tv/hae-trpisteiden-valinen-tieto db params)))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -156,7 +174,12 @@
       :hae-tr-osien-pituudet (fn [_ params]
                                (oikeudet/ei-oikeustarkistusta!)
                                (hae-osien-pituudet db params))
-
+      :hae-tr-pituudet (fn [_ params]
+                         (oikeudet/ei-oikeustarkistusta!)
+                         (hae-tr-pituudet db params))
+      :hae-tr-tiedot (fn [_ params]
+                       (oikeudet/ei-oikeustarkistusta!)
+                       (hae-osien-tiedot db params))
       :hae-tr-osan-ajoradat (fn [_ params]
                               (oikeudet/ei-oikeustarkistusta!)
                               (hae-tieosan-ajoradat db params))
@@ -170,6 +193,8 @@
                      :hae-tr-pisteella
                      :hae-tr-viivaksi
                      :hae-osien-pituudet
+                     :hae-tr-pituudet
+                     :hae-tr-tiedot
                      :hae-tr-osan-ajoradat
                      :hae-tr-gps-koordinaateilla)
     this))

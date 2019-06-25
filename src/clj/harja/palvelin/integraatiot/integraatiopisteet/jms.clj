@@ -40,7 +40,7 @@
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
      (try+
-       (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
+       (if-let [jms-viesti-id (sonja/laheta sonja jono viesti nil)]
          (do
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
            (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
@@ -66,14 +66,15 @@
                parametrit {:viesti-id viesti-id}]
            (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti parametrit)))))))
 
-(defn jonolahettaja [lokittaja sonja jono]
+(defn jonolahettaja
+  [lokittaja sonja jono]
   (fn [viesti viesti-id]
     (laheta-jonoon lokittaja sonja jono viesti viesti-id)))
 
 (defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
   (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
   (try
-    (sonja/kuuntele sonja jono
+    (sonja/kuuntele! sonja jono
                     (fn [viesti]
                       (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
                       (let [multipart-viesti? (try (instance? (Class/forName "progress.message.jimpl.xmessage.MultipartMessage") viesti)
@@ -100,7 +101,7 @@
 (defn jms-kuuntelu [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
   (try
-    (sonja/kuuntele
+    (sonja/kuuntele!
       sonja jono-sisaan
       (fn [viesti]
         (log/debug "Vastaanotettiin viesti jonosta " jono-sisaan ": " viesti)

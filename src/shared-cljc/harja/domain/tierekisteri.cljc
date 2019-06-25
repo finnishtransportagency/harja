@@ -4,7 +4,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
     #?@(:clj [
-            [clojure.future :refer :all]])
+            ])
             [harja.math :as math]
             [harja.geo :as geo]))
 
@@ -132,8 +132,8 @@
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
    (when (and (on-alku-ja-loppu? tie)
-              (or (= tr-alkuosa tr-loppuosa) ;; Pituus voidaan laskean suoraan
-                  (not (empty? osien-pituudet)))) ;; Tarvitaan osien pituudet laskuun
+              (or (= tr-alkuosa tr-loppuosa)                ;; Pituus voidaan laskean suoraan
+                  (not (empty? osien-pituudet))))           ;; Tarvitaan osien pituudet laskuun
      (let [{aosa :tr-alkuosa
             alkuet :tr-alkuetaisyys
             losa :tr-loppuosa
@@ -447,15 +447,23 @@
   ([kohdeosa muut-kohdeosat] (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat :id))
   ([kohdeosa muut-kohdeosat id-avain]
    (keep #(when (kohdeosat-paalekkain? kohdeosa %)
-            {:viesti "Kohdeosa on päällekkäin toisen kohdeosan kanssa"
+            {:viesti (str "Kohteenosa on päällekkäin "
+                          (if (empty? (:nimi %)) "toisen osan" (str "osan " (:nimi %)))
+                          " kanssa")
              :validointivirhe :kohteet-paallekain
              :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys id-avain) [% kohdeosa])})
          muut-kohdeosat)))
 
 (defn kohdeosat-keskenaan-paallekkain
-  ([kohdeosat] (kohdeosat-keskenaan-paallekkain kohdeosat :id))
-  ([kohdeosat id-avain]
-   (let [paallekkaiset (flatten (for [kohdeosa kohdeosat
+  ([kohdeosat] (kohdeosat-keskenaan-paallekkain kohdeosat :id nil))
+  ([kohdeosat id-avain] (kohdeosat-keskenaan-paallekkain kohdeosat id-avain nil))
+  ([kohdeosat id-avain rivi-indeksi]
+   (let [validoitavat-kohdeosat (if rivi-indeksi
+                                  (some #(when (= (id-avain %) rivi-indeksi)
+                                           [%])
+                                        kohdeosat)
+                                  kohdeosat)
+         paallekkaiset (flatten (for [kohdeosa validoitavat-kohdeosat
                                       :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
                                                                    (when-not (= (id-avain kohdeosa) (id-avain muu-kohdeosa))
                                                                      muu-kohdeosa))

@@ -38,20 +38,16 @@ node {
     // Lisää mvn pathiin
     env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-    stage('Siivoa workspace') {
-        cleanWs()
-    }
-
     if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
         if (params.ARCHIVE_BUILD_NUMBER) {
             slackSend([color  : '#3232ff',
                        message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])
             jenkinsinBuildNumber = params.ARCHIVE_BUILD_NUMBER
-            if (!onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
-                slackSend([color  : 'warning',
-                           message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
-                error([message: "JAR:ia ei löytynyt halutulla numerolla"])
-            }
+           // if (!omatFunktiot.onkoTiedostoOlemassa("${env.JENKINS_HOME}/jobs/Harja-pipeline/builds/" + jenkinsinBuildNumber + "/archive/target/harja-*-standalone.jar")) {
+           //     slackSend([color  : 'warning',
+           //                message: 'JAR:ia ei löytynyt halutulla numerolla: ' + jenkinsinBuildNumber])
+           //     error([message: "JAR:ia ei löytynyt halutulla numerolla"])
+           // }
         } else {
             // Jos build numberia ei ole annettu, niin etsitään se build number, joka on viimeksi mennyt onnistuneesti putken läpi.
             jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, true)
@@ -65,40 +61,40 @@ node {
         //Jos JAR:ia ei löytynyt, niin se saattaa johtua siitä, että ei olla laitettu mitään uutta develop branchiin
         //vähään aikaan.
         if (jenkinsinBuildNumber) {
-            // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-            if (!buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
-                /*
-                 * TESTISERVERIKANNAN LUOMINEN
-                 */
+    //         // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
+    //         if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+    //             /*
+    //              * TESTISERVERIKANNAN LUOMINEN
+    //              */
 
-                dir('Harja') {
-                    omatFunktiot.checkoutHarja('*/develop')
-                    stage(omatVarit.testiserverinKannanLuonti) {
-                        omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
-                    }
-                }
+    //             dir('Harja') {
+    //                 omatFunktiot.checkoutHarja('*/develop')
+    //                 stage(omatVarit.testiserverinKannanLuonti) {
+    //                     omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
+    //                 }
+    //             }
 
-                dir('CI') {
-                    omatFunktiot.checkoutCI()
-                    /*
-                     * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-                     */
+    //             dir('CI') {
+    //                 omatFunktiot.checkoutCI()
+    //                 /*
+    //                  * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+    //                  */
 
-                    stage(omatVarit.testiserverinAppLuonti) {
-                        omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
-                    }
-                }
+    //                 stage(omatVarit.testiserverinAppLuonti) {
+    //                     omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
+    //                 }
+    //             }
 
-                dir('E2E') {
-                    omatFunktiot.checkoutE2E()
-                    /*
-                     * E2E TESTIT
-                     */
-                    stage(omatVarit.e2eTestit) {
-                        omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-                    }
-                }
-            }
+    //             dir('E2E') {
+    //                 omatFunktiot.checkoutE2E()
+    //                 /*
+    //                  * E2E TESTIT
+    //                  */
+    //                 stage(omatVarit.e2eTestit) {
+    //                     omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+    //                 }
+    //             }
+    //         }
 
             dir('Harja') {
                 omatFunktiot.checkoutHarja('*/develop')
@@ -146,7 +142,7 @@ node {
                     omatFunktiot.ajaJarJaTestit(omatVarit.jarJaTestit)
                 }
             }
-            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, true)
+            jenkinsinBuildNumber = omatFunktiot.etsiKaytettavaJar(true, false)
 
             /*
              * TESTISERVERIKANNAN LUOMINEN
@@ -172,17 +168,17 @@ node {
             }
         }
 
-        dir('E2E') {
-            omatFunktiot.checkoutE2E()
-            /*
-             * E2E TESTIT
-             */
-            stage(omatVarit.e2eTestit) {
-                if (omatVarit.e2eTestitAjetaan) {
-                    omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-                }
-            }
-        }
+        // dir('E2E') {
+        //     omatFunktiot.checkoutE2E()
+        //     /*
+        //      * E2E TESTIT
+        //      */
+        //     stage(omatVarit.e2eTestit) {
+        //         if (omatVarit.e2eTestitAjetaan) {
+        //             omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+        //         }
+        //     }
+        // }
 
         dir('Harja') {
             /*

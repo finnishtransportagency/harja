@@ -8,7 +8,7 @@
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    ]
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
@@ -49,7 +49,8 @@
 (def perustiedot
   #{::id
     ::nimi
-    ::sijainti})
+    ::sijainti
+    ::jarjestys})
 
 (def kohde-ylos
   #{[::ylos perustiedot]})

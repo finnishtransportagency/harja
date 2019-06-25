@@ -13,13 +13,13 @@
     "lahetysaika": "2015-01-30T12:00:00+02:00"
   },
   "aikataulu": {
-    "kohde-aloitettu": "2015-01-09",
-    "paallystys-aloitettu": "2015-01-10",
-    "paallystys-valmis": "2015-01-12",
-    "valmis-tiemerkintaan": "2015-01-12",
-    "kohde-valmis": "2015-01-16",
+    "kohde-aloitettu": "2015-01-09T12:00:00+02:00",
+    "paallystys-aloitettu": "2015-01-10T12:00:00+02:00",
+    "paallystys-valmis": "2015-01-12T12:00:00+02:00",
+    "valmis-tiemerkintaan": "2015-01-12T12:00:00+02:00",
+    "kohde-valmis": "2015-01-16T12:00:00+02:00",
     "paallystysilmoitus": {
-      "takuupvm": "2015-02-15"
+      "takuupvm": "2015-02-15T12:00:00+02:00"
     }
   }
 }

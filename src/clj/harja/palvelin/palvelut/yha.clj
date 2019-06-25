@@ -15,6 +15,7 @@
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
+            [slingshot.slingshot :refer [try+]]
             [clj-time.core :as t]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
@@ -105,9 +106,6 @@
 
 (defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
-                                                          yllapitoluokka
-                                                          keskimaarainen-vuorokausiliikenne
-                                                          nykyinen-paallyste
                                                           nimi] :as kohde}]
   (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
   (let [kohde (yha-q/luo-yllapitokohde<!
@@ -118,22 +116,18 @@
                  :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                  :tr_loppuosa (:losa tierekisteriosoitevali)
                  :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                 :tr_ajorata (:ajorata tierekisteriosoitevali)
-                 :tr_kaista (:kaista tierekisteriosoitevali)
                  :tunnus tunnus
                  :yhaid yha-id
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)
                  :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
-                 :yllapitoluokka yllapitoluokka
-                 :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                 :nykyinen_paallyste nykyinen-paallyste
                  :nimi nimi
                  :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
                  :yha_kohdenumero yha-kohdenumero
                  :kohdenumero yha-kohdenumero})]
     (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})
     (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-kustannustaulu<! db {:yllapitokohde (:id kohde)})
-    (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
+    (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus
+                    yllapitoluokka nykyinen-paallyste keskimaarainen-vuorokausiliikenne] :as alikohde} alikohteet]
       (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
       (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
                             db
@@ -147,6 +141,9 @@
                              :tr_loppuetaisyys (:let tierekisteriosoitevali)
                              :tr_ajorata (:ajorata tierekisteriosoitevali)
                              :tr_kaista (:kaista tierekisteriosoitevali)
+                             :yllapitoluokka yllapitoluokka
+                             :nykyinen_paallyste nykyinen-paallyste
+                             :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                              :yhaid yha-id})]))))
 
 (defn- lisaa-kohteisiin-validointitiedot [db kohteet]
@@ -154,39 +151,13 @@
     (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
       (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)
             kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite-tieverkolla db (:tierekisteriosoitevali %))
-                                       alikohteet)
-            kohdeosat-kohteen-sisalla-tiedot
-            (map #(-> {:arvo (boolean
-                               (and (= (:tienumero %) (:tienumero tierekisteriosoitevali))
-                                    (tr-domain/tr-vali-paakohteen-sisalla?
-                                      {:tr-alkuosa (:aosa tierekisteriosoitevali)
-                                       :tr-alkuetaisyys (:aet tierekisteriosoitevali)
-                                       :tr-loppuosa (:losa tierekisteriosoitevali)
-                                       :tr-loppuetaisyys (:let tierekisteriosoitevali)}
-                                      {:tr-alkuosa (:aosa %)
-                                       :tr-alkuetaisyys (:aet %)
-                                       :tr-loppuosa (:losa %)
-                                       :tr-loppuetaisyys (:let %)})))
-                       :osoite %})
-                 (map :tierekisteriosoitevali alikohteet))
-            kohdeosat-kohteen-sisalla? (every? #(true? (:arvo %)) kohdeosat-kohteen-sisalla-tiedot)]
+                                       alikohteet)]
         (assoc kohde :kohde-validi? (and (:ok? kohteen-validointi)
-                                         (every? #(true? (:ok? %)) kohdeosien-validointi)
-                                         kohdeosat-kohteen-sisalla?)
+                                         (every? #(true? (:ok? %)) kohdeosien-validointi))
                      :kohde-epavalidi-syy
                      (first (remove nil?
                                     (concat [(:syy kohteen-validointi)]
-                                            (map :syy kohdeosien-validointi)
-                                            (when-not kohdeosat-kohteen-sisalla?
-                                              [(str "Kohdeosat eivät kohteen sisällä: "
-                                                    (str/join
-                                                      ", "
-                                                      (map #(str (tr-domain/tierekisteriosoite-tekstina
-                                                                   %
-                                                                   {:teksti-tie? false})
-                                                                 " ajorata " (:ajorata %)
-                                                                 " kaista " (:kaista %))
-                                                           (map :osoite kohdeosat-kohteen-sisalla-tiedot))))])))))))
+                                            (map :syy kohdeosien-validointi)))))))
     kohteet))
 
 (defn- tallenna-uudet-yha-kohteet
@@ -235,10 +206,15 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
-  (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
+  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id kohde-idt)
+                      (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                        virheet))
+        lahetys-onnistui? (not (contains? lahetys :virhe))
         paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
-    {:paallystysilmoitukset paivitetyt-ilmoitukset
-     :lahetys-onnistui? lahetys-onnistui?}))
+    (merge
+      {:paallystysilmoitukset paivitetyt-ilmoitukset}
+      (when-not lahetys-onnistui?
+        lahetys))))
 
 (defrecord Yha []
   component/Lifecycle

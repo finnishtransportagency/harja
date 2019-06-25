@@ -1,4 +1,4 @@
-# Liikenneviraston Harja-järjestelmä #
+# Väylän Harja-järjestelmä #
 
 [![Build Status](https://travis-ci.org/finnishtransportagency/harja.svg?branch=develop)](https://travis-ci.org/finnishtransportagency/harja)
 
@@ -245,7 +245,7 @@ Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkati
 
 ## Kirjautuminen
 
-Harja käyttää liikenneviraston extranetista tulevia headereita kirjautumiseen.
+Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
 Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä.
 
 Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
@@ -262,7 +262,7 @@ Seuraavat headerit tuettuna:
     * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
     * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
     * Urakan vastuuhenkilö: <urakan-sampoid>_vastuuhenkilo
-* OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto" tai "YIT Rakennus Oy"
+* OAM_ORGANIZATION: Organisaation nimi, esim. "Väylä" tai "YIT Rakennus Oy"
 * OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
 * OAM_USER_FIRST_NAME: Etunimi
 * OAM_USER_LAST_NAME: Sukunimi
@@ -298,7 +298,7 @@ upstream sms-kasittelija {
 6. Lähetä tekstiviesti numeroon +358 50 9023530
 -> Viesti pitäisi välittyä REPL:n
 
-## Liikenneviraston Harja-järjestelmän laadunseurantatyökalu #
+## Väylän Harja-järjestelmän laadunseurantatyökalu #
 
 Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
 
@@ -348,7 +348,7 @@ Harja käyttää FIM:iä käyttäjätietojen hakemiseen. FIM-komponentista on ka
 
 Oikean FIM:n testikäyttö:
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
-2. Avaa SSH-yhteys ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
+2. Avaa SSH-yhteys ssh -L6666:testioag.vayla.fi:443 harja-app1-stg
 
 ## Active MQ
 Käynnistys docker imagesta:

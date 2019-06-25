@@ -345,7 +345,8 @@
                       "Sähkömaakaapeli",
                       "Puistomuuntamo",
                       "Pylväsmuuntamo",
-                      "Muuntamo"
+                      "Muuntamo",
+                      "Kaapelikaivo"
                     ]
                   },
                   "asennustyyppi": {

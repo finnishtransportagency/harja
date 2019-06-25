@@ -1,7 +1,7 @@
 (ns harja.kyselyt.kanavat.kohteet
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
-            [clojure.future :refer :all]
+            
             [clojure.set :as set]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
@@ -77,6 +77,7 @@
                 {::m/poistettu? false}))
 
 (defn hae-kokonaisuudet-ja-kohteet [db user]
+  (sort-by :harja.domain.kanavat.kohdekokonaisuus/id
   (hae-kokonaisuudet-ja-kohteet*
     (specql/fetch db
                   ::kok/kohdekokonaisuus
@@ -86,23 +87,23 @@
                   {::m/poistettu? false
                    ::kok/kohteet (op/or {::m/poistettu? op/null?}
                                         {::m/poistettu? false})})
-    (partial hae-kohteiden-urakkatiedot db user)))
+    (partial hae-kohteiden-urakkatiedot db user))))
 
 (defn hae-urakan-kohteet [db user urakka-id]
   (->>
-    (specql/fetch db
+    (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db
                   ::kohde/kohde
                   (set/union
                     kohde/perustiedot
                     kohde/kohteen-kohdekokonaisuus
                     kohde/kohteenosat)
-                  {::m/poistettu? false})
+                  {::m/poistettu? false}))
     (hae-kohteiden-urakkatiedot db user urakka-id)
     (remove (comp empty? ::kohde/urakat))))
 
 (defn hae-urakan-kohteet-mukaanlukien-poistetut [db user urakka-id]
   (->>
-    (sort-by :harja.domain.kanavat.kohde/nimi (specql/fetch db
+    (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db
                   ::kohde/kohde
                   (set/union
                     kohde/perustiedot)

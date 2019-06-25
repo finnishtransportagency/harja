@@ -20,7 +20,8 @@
                       Palvelun nimikin käy, mutta kannattaa kuvata mieluummin konteksti,
                       sillä samaa palvelua saatetaan kutsua eri kontekstissa."
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
-                                  epaonnistui epaonnistui-parametrit lahetetty]}]
+                                  epaonnistui epaonnistui-parametrit lahetetty
+                                  paasta-virhe-lapi?]}]
   (assert (or (nil? viive)
               (and viive tunniste))
           "Viive vaatii tunnisteen!")
@@ -51,8 +52,8 @@
             (do
               (when lahetetty! (lahetetty!))
               (let [vastaus (if argumentit
-                              (<! (k/post! palvelu argumentit))
-                              (<! (k/get! palvelu)))]
+                              (<! (k/post! palvelu argumentit nil (boolean paasta-virhe-lapi?)))
+                              (<! (k/get! palvelu nil (boolean paasta-virhe-lapi?))))]
                 (if (k/virhe? vastaus)
                   (when epaonnistui! (epaonnistui! vastaus))
                   (when onnistui! (onnistui! vastaus)))))

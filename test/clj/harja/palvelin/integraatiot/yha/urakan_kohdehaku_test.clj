@@ -28,45 +28,44 @@
 
 (deftest tarkista-urakan-kohteiden-haku
   (let [urakka-id (hae-urakka-id)
-        odotettu-vastaus [{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124.0
-                                                                :kuulamylly 4
-                                                                :paallystetyomenetelma 22
-                                                                :raekoko 12
-                                                                :rc-prosentti 14
-                                                                :uusi-paallyste 11}
-                                         :tierekisteriosoitevali {:aet 3
-                                                                  :ajorata 0
-                                                                  :aosa 3
-                                                                  :kaista 11
-                                                                  :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                                  :let 3
-                                                                  :losa 3
-                                                                  :tienumero 3}
-                                         :tunnus nil
-                                         :yha-id 3}
-                                        {:paallystystoimenpide {:kokonaismassamaara 124.0
-                                                                :kuulamylly 4
-                                                                :paallystetyomenetelma 22
-                                                                :raekoko 12
-                                                                :rc-prosentti 14
-                                                                :uusi-paallyste 11}
-                                         :tierekisteriosoitevali {:aet 3
-                                                                  :ajorata 0
-                                                                  :aosa 3
-                                                                  :kaista 11
-                                                                  :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                                  :let 3
-                                                                  :losa 3
-                                                                  :tienumero 3}
-                                         :tunnus nil
-                                         :yha-id 4}]
-                           :keskimaarainen-vuorokausiliikenne 1000
+        odotettu-vastaus [{:alikohteet (mapv #(assoc % :nykyinen-paallyste 1
+                                                       :yllapitoluokka 1
+                                                       :keskimaarainen-vuorokausiliikenne 1000)
+                                             [{:paallystystoimenpide {:kokonaismassamaara 124.0
+                                                                      :kuulamylly 4
+                                                                      :paallystetyomenetelma 22
+                                                                      :raekoko 12
+                                                                      :rc-prosentti 14
+                                                                      :uusi-paallyste 11}
+                                               :tierekisteriosoitevali {:aet 3
+                                                                        :ajorata 0
+                                                                        :aosa 3
+                                                                        :kaista 11
+                                                                        :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                        :let 3
+                                                                        :losa 3
+                                                                        :tienumero 3}
+                                               :tunnus nil
+                                               :yha-id 3}
+                                              {:paallystystoimenpide {:kokonaismassamaara 124.0
+                                                                      :kuulamylly 4
+                                                                      :paallystetyomenetelma 22
+                                                                      :raekoko 12
+                                                                      :rc-prosentti 14
+                                                                      :uusi-paallyste 11}
+                                               :tierekisteriosoitevali {:aet 3
+                                                                        :ajorata 0
+                                                                        :aosa 3
+                                                                        :kaista 11
+                                                                        :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                        :let 3
+                                                                        :losa 3
+                                                                        :tienumero 3}
+                                               :tunnus nil
+                                               :yha-id 4}])
                            :nimi "string"
-                           :nykyinen-paallyste 1
                            :tierekisteriosoitevali {:aet 3
-                                                    :ajorata 0
                                                     :aosa 3
-                                                    :kaista 11
                                                     :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
                                                     :let 3
                                                     :losa 3
@@ -75,8 +74,7 @@
                            :yha-id 3
                            :yha-kohdenumero 666
                            :yllapitokohdetyotyyppi :paikkaus
-                           :yllapitokohdetyyppi "paallyste"
-                           :yllapitoluokka 1}]
+                           :yllapitokohdetyyppi "paallyste"}]
         url urakan-kohteet-url]
     (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
       (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")]

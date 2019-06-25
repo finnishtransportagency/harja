@@ -469,7 +469,7 @@ SELECT
   tpk.nimi                    AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys seur. SQL
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
@@ -508,6 +508,8 @@ SELECT
   t.alkanut AS alkanut,
   t.paattynyt AS paattynyt,
   t.suorittajan_nimi AS suorittaja_nimi,
+  t.tyokonetyyppi,
+  t.tyokoneen_lisatieto AS tyokonelisatieto,
   tpk.nimi           AS tehtava_toimenpide,
   tt.maara           AS tehtava_maara,
   tpk.yksikko        AS tehtava_yksikko,
@@ -522,18 +524,18 @@ SELECT
       alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-                    AND t.alkanut >= :alku
-                    AND t.paattynyt <= :loppu
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys ed. SQL
+                    AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
   LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu IS NOT TRUE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
-      (t.alkanut BETWEEN :alku AND :loppu) AND
-      (t.paattynyt BETWEEN :alku AND :loppu) AND
-      ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys ed. SQL
+                    AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
+                    AND ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
 
 -- name: osoite-reittipisteille
 -- Palauttaa tierekisteriosoitteen

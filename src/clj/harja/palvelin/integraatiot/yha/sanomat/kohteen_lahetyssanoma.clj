@@ -32,10 +32,11 @@
 
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
-                            lisaaineet] :as alikohde}]
+                            lisaaineet poistettu] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
+   [:poistettu (if poistettu 1 0)]
    (tee-tierekisteriosoitevali alikohde)
    (when
      (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly tyomenetelma leveys pinta-ala)
@@ -62,7 +63,7 @@
      [:lisa-aineet lisaaineet]]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                                              verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
+                                              tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
                                               verkon-sijainti]}
                                       kohteen-tienumero karttapvm]
   [:alustalle-tehty-toimenpide
@@ -76,7 +77,9 @@
     [:aosa tr-alkuosa]
     [:aet tr-alkuetaisyys]
     [:losa tr-loppuosa]
-    [:let tr-loppuetaisyys]]
+    [:let tr-loppuetaisyys]
+    [:ajorata tr-ajorata]
+    [:kaista tr-kaista]]
    [:kasittelymenetelma kasittelymenetelma]
    [:kasittelypaksuus paksuus]
    (when verkkotyyppi
@@ -105,7 +108,7 @@
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
    [:toteutunuthinta (laske-hinta-kokonaishinta paallystysilmoitus)]
-   (tee-tierekisteriosoitevali kohde)
+   (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
              (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
@@ -116,7 +119,7 @@
 
 (defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
-   {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
+   {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
     [:yha-id yhaid]
     [:harja-id harjaid]

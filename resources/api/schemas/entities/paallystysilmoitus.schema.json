@@ -20,7 +20,7 @@
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+          "$ref": "file:resources/api/schemas/entities/paaluvali.schema.json"
         },
         "alikohteet": {
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet",
@@ -49,7 +49,7 @@
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tieosoitevali-kaistalla-ja-ajoradalla.schema.json"
                   },
                   "paallystetyyppi": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/paallystetyyppi",
@@ -194,7 +194,7 @@
                 "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/sijainti",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+                "$ref": "file:resources/api/schemas/entities/tieosoitevali-kaistalla-ja-ajoradalla.schema.json"
               },
               "kasittelymenetelma": {
                 "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/kasittelymenetelma",

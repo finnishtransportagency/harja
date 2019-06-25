@@ -10,17 +10,15 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-04-12T23:20+02:00"
+    "lahetysaika": "2019-04-12T23:20+02:00"
   },
   "yllapitokohde": {
     "sijainti": {
-      "numero": 20,
+      "numero": 18642,
       "aosa": 1,
-      "aet": 1,
-      "losa": 26,
-      "let": 1,
-      "ajr": 1,
-      "kaista": 1
+      "aet": 13,
+      "losa": 1,
+      "let": 493
     },
     "alikohteet": [
       {
@@ -30,12 +28,12 @@
           },
           "nimi": "Päällekkäinen testialikohde",
           "sijainti": {
-            "numero": 20,
-            "aosa": 1,
-            "aet": 1,
-            "losa": 26,
-            "let": 1,
-            "ajr": 1,
+            "numero": 22,
+            "aosa": 12,
+            "aet": 4330,
+            "losa": 12,
+            "let": 7000,
+            "ajr": 0,
             "kaista": 1
           },
           "toimenpide": "testitoimenpide"

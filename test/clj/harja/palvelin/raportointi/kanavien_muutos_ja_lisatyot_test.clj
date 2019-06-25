@@ -20,7 +20,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :db ds
                         :http-palvelin (testi-http-palvelin)
                         :pdf-vienti (component/using
                                       (pdf-vienti/luo-pdf-vienti)
@@ -33,13 +33,13 @@
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (component/stop jarjestelma))
 
-(use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+(use-fixtures :each (compose-fixtures
+                     urakkatieto-fixture
+                     jarjestelma-fixture))
 
-(deftest raportin-suoritus-urakka
+#_(deftest raportin-suoritus-urakka
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
@@ -70,7 +70,7 @@
         nurkkasumma (last (last (last vastaus)))]
     (is (vector? vastaus))))
 
-(deftest raportin-suoritus-urakka-tehtava
+#_(deftest raportin-suoritus-urakka-tehtava
   (let [vaylanhoito-ei-yksiloity-tpk-id (hae-vaylanhoito-ei-yksiloity-tpk-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti

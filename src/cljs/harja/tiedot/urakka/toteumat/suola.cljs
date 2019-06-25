@@ -12,29 +12,50 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(declare hae-toteumat hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
+(declare hae-toteumat hae-toteumat-tr-valille hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
+
+(defonce urakan-pohjavesialueet (atom nil))
 
 (defonce suolatoteumissa? (atom false))
 
+(defonce ui-suodatin-valinnat (atom {:suola "Kaikki"}))
+
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
+
+(defonce kasinsyottolomake (atom {}))
 
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
                 (hae-materiaalit))))
 
+(defonce ui-valittu-aikavali (atom nil))
+
 (defonce
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
 
+(defonce ui-lomakkeen-tila (atom nil))
+(defonce lomakkeen-tila (atom nil))
+
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
                urakka @nav/valittu-urakka
-               aikavali @valittu-aikavali]
+               aikavali @valittu-aikavali
+               tr-vali @lomakkeen-tila]
               {:nil-kun-haku-kaynnissa? true}
               (when (and hae? urakka aikavali)
                 (go
-                  (<! (hae-toteumat (:id urakka) aikavali))))))
+                  (let [tr-vali (:tierekisteriosoite tr-vali)]
+                    (if (and (:numero tr-vali)
+                             (:loppuosa tr-vali))
+                      (<! (hae-toteumat-tr-valille (:id urakka) aikavali
+                                                   (:numero tr-vali)
+                                                   (:alkuosa tr-vali)
+                                                   (:alkuetaisyys tr-vali)
+                                                   (:loppuosa tr-vali)
+                                                   (:loppuetaisyys tr-vali)))
+                      (<! (hae-toteumat (:id urakka) aikavali))))))))
 
 (def valitut-toteumat (atom #{}))
 
@@ -48,6 +69,10 @@
 
 (def karttataso-suolatoteumat (atom false))
 
+(defn hae-toteuman-sijainti [toteuma]
+  
+  (:sijainti toteuma))
+
 (def suolatoteumat-kartalla
   (reaction
     (when @karttataso-suolatoteumat
@@ -59,13 +84,11 @@
                                             {:tid tid})
                                           kaikki-toteumat))]
           (map #(assoc % :tyyppi-kartalla :suolatoteuma
-                         :sijainti (hae-toteuman-sijainti %))
+                       :sijainti (hae-toteuman-sijainti %))
                yksittaiset-toteumat))
         #(constantly false)))))
 
-(defn hae-toteuman-sijainti [toteuma]
-  (:sijainti (first (filter #(= (:tid toteuma) (:id %))
-                            @valitut-toteumat-kartalla))))
+(defonce pohjavesialueen-toteuma (atom nil))
 
 (defn eriteltavat-toteumat [toteumat]
   (map #(hash-map :tid (:tid %)) toteumat))
@@ -80,12 +103,32 @@
                 (concat @valitut-toteumat
                         (eriteltavat-toteumat toteumat)))))
 
+(defn hae-urakan-pohjavesialueet [urakka-id]
+  {:pre [(int? urakka-id)]}
+  (k/post! :hae-urakan-pohjavesialueet {:urakka-id urakka-id}))
+
+(defn hae-pohjavesialueen-suolatoteuma [pohjavesialue [alkupvm loppupvm]]
+  (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm}))
+
 (defn poista-valituista-suolatoteumista [toteumat]
   (reset! valitut-toteumat
           (into #{}
                 (remove (into #{}
                               (eriteltavat-toteumat toteumat))
                         @valitut-toteumat))))
+
+(defn hae-toteumat-tr-valille [urakka-id [alkupvm loppupvm] tie alkuosa alkuet loppuosa loppuet]
+  {:pre [(int? urakka-id)]}
+  (k/post! :hae-suolatoteumat-tr-valille {:urakka-id urakka-id
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm
+                                          :tie tie
+                                          :alkuosa alkuosa
+                                          :alkuet alkuet
+                                          :loppuosa loppuosa
+                                          :loppuet loppuet}))
 
 (defn hae-toteumat [urakka-id [alkupvm loppupvm]]
   {:pre [(int? urakka-id)]}
@@ -107,6 +150,17 @@
              {:urakka-id urakka-id
               :sopimus-id sopimus-id
               :toteumat tallennettavat})))
+
+(defn tallenna-kasinsyotetty-toteuma [urakka-id sopimus-id rivi]
+  {:pre [(int? urakka-id)]}
+  (k/post! :tallenna-kasinsyotetty-suolatoteuma
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :toteuma {:pvm (pvm/nyt)
+                      :tierekisteriosoite (:tierekisteriosoite rivi)
+                      :lisatieto (:lisatieto rivi)
+                      :materiaali (:materiaali rivi)
+                      :maara (:maara rivi)}}))
 
 (defn hae-materiaalit []
   (k/get! :hae-suolamateriaalit))

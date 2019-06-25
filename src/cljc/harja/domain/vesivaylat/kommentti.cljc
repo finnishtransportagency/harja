@@ -6,7 +6,7 @@
     [harja.domain.kayttaja :as kayttaja]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]
+    
     [specql.rel :as rel]]
         :cljs [[specql.impl.registry]])
     [harja.pvm :as pvm])

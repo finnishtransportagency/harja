@@ -1,0 +1,1 @@
+-- Aiheuttaa virheen. Jos todella tarpeen, päivitä manuaalisesti. ALTER MATERIALIZED VIEW pohjavesialue_kooste OWNER TO harja;

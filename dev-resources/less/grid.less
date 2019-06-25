@@ -101,7 +101,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       > .varoitukset,
       > .virheet,
       > .huomautukset {
-        display: block;
+          display: block;
+	  
+	  > .varoitus,
+	  > .virhe,
+	  > .huomautus {
+	      text-align: left;
+	      width: max-content;
+	  }
       }
     }
 
@@ -233,9 +240,31 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     padding: @livi-taulukon-padding-muokatessa;
     &.parillinen {
       background-color: @harmaa10;
+      input[disabled].disabled {
+        background-color: @harmaa10;
+      }
+      .livi-alasveto {
+        .disabled {
+          background-color: @harmaa10;
+          span {
+            background-color: inherit;
+          }
+        }
+      }
     }
     &.pariton {
       background-color: @harmaa13;
+      input[disabled].disabled {
+        background-color: @harmaa13;
+      }
+      .livi-alasveto {
+        .disabled {
+          background-color: @harmaa13;
+          span {
+            background-color: inherit;
+          }
+        }
+      }
     }
     td {
       &.ei-muokattava {

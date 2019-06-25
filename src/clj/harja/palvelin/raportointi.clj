@@ -6,9 +6,12 @@
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.pdf :as pdf]
             [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [taoensso.timbre :as log]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.organisaatiot :as organisaatiot-q]
+            [harja.kyselyt
+             [urakat :as urakat-q]
+             [organisaatiot :as organisaatiot-q]
+             [raportit :as raportit-q]]
             [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
@@ -16,7 +19,6 @@
             [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
             [harja.transit :as t]
-            [harja.fmt :as fmt]
             [slingshot.slingshot :refer [throw+]]
             [clojure.java.io :as io]
             [harja.fmt :as fmt]))
@@ -119,13 +121,17 @@
             [:div "Raportoinnissa on nyt ruuhkaa. Yritetään kohta uudelleen. "
              "Sivu latautuu automaattisesti uudelleen hetken kuluttua."]]])})
 
+(defn paivita-raportti-cache-oisin! [db]
+  (ajastettu-tehtava/ajasta-paivittain [0 1 0]
+                                       (fn [_]
+                                         (raportit-q/paivita_raportti_cachet db))))
+
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
   (start [{db :db
            pdf-vienti :pdf-vienti
            excel-vienti :excel-vienti
            :as this}]
-
     ;; Rekisteröidään PDF-vientipalveluun uusi käsittelijä :raportointi, joka
     ;; suorittaa raportin ja prosessoi sen XSL-FO hiccupiksi
     (pdf-vienti/rekisteroi-pdf-kasittelija!
@@ -146,9 +152,11 @@
              (do (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
                  (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
                                        workbook)))))))
-    this)
+    ;; Aloita materiaalicachepäivitysten ajastettutehtävä
+    (assoc this :raportti-cache-ajastus (paivita-raportti-cache-oisin! db)))
 
   (stop [this]
+    ((:raportti-cache-ajastus this))
     this)
 
   RaportointiMoottori

@@ -158,7 +158,8 @@
          :otsikko "Lähetetty Tierekisteriin"
          :tyyppi :komponentti
          :muokattava? (constantly false)
-         :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
+         :komponentti (fn [{:keys [data]}]
+                        [nayta-varustetoteuman-lahetyksen-tila data])})
       (when (:lahetysvirhe varustetoteuma)
         {:nimi :lahetysvirhe
          :otsikko [:span.tila-virhe "Lähetysvirhe"]
@@ -168,7 +169,8 @@
         {:nimi :varustekortti
          :otsikko "Varustekortti"
          :tyyppi :komponentti
-         :komponentti #(varustekortti-linkki (:data %))}))))
+         :komponentti (fn [{:keys [data]}]
+                        [varustekortti-linkki data])}))))
 
 (defn hae-ajoradat [muokattava? varustetoteuma]
   (if muokattava?
@@ -290,7 +292,7 @@
                                                                       (:liitteet varustetoteuma))]
                                            (e! (v/->PaivitaLiitteet uudet-liitteet))))}))}])})
 
-(def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
+(def tietolajien-sisaltojen-kuvaukset-url "http://www.vayla.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
 
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)

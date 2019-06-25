@@ -73,7 +73,6 @@
                                             (or (get-in % [:alustatoimenpide :sijainti :numero])
                                                 kohteen-tienumero))
                                  (:alustatoimenpiteet paallystysilmoitus))
-        ;; TODO HAR-7826 Mahdollista muiden teiden alikohteiden päivitys POT-API:ssa
         alikohteet (mapv #(assoc-in (:alikohde %)
                             [:sijainti :numero]
                             (get-in % [:alikohde :sijainti :numero]
@@ -99,14 +98,6 @@
     (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde
                               :alustatoimenpiteet muunnetut-alustatoimenpiteet)))
 
-(defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
-  (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
-  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        alikohteet (get-in  paallystysilmoitus [:yllapitokohde :alikohteet])
-        alustatoimenpiteet (:alustatoimenpiteet paallystysilmoitus)
-        kohteen-tienumero (:tr-numero kohde)]
-    (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
-
 (defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
   (jdbc/with-db-transaction [db db]
     (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
@@ -122,6 +113,6 @@
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
         purettu-paallystysilmoitus (pura-paallystysilmoitus vkm db kohteen-tienumero data)
         valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
-        _ (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
+        _ (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
         id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde purettu-paallystysilmoitus valmis-kasiteltavaksi)]
     id))

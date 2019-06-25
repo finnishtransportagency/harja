@@ -8,7 +8,7 @@
             [harja.domain.muokkaustiedot :as m]
             [clojure.spec.alpha :as s]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-              [clojure.future :refer :all]]))
+              ]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -259,11 +259,8 @@
     (schema/optional-key :pitoisuus) (schema/maybe schema/Num)
     (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
-(def paallystysilmoitus-alustatoimet
-  [;; Kaudella 2017 ei ollut pakko olla tätä, koska kaikki toimet olivat pääkohteen tiellä
-   ;; Kaudella 2018 voi kirjata alustatoimenpiteitä kohdeosille, jotka ovat eri tiellä
-   ;; Hyväksytään molemmat mallit tässä skeemassa.
-   {(schema/optional-key :tr-numero) (schema/maybe schema/Int)
+(def paallystysilmoitus-alustatoimet-vanha
+  [{(schema/optional-key :tr-numero) (schema/maybe schema/Int)
     :tr-alkuosa schema/Int
     :tr-alkuetaisyys schema/Int
     :tr-loppuosa schema/Int
@@ -276,15 +273,28 @@
     (schema/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+
     (schema/optional-key :poistettu) schema/Bool}])
 
+(def paallystysilmoitus-alustatoimet
+  (-> paallystysilmoitus-alustatoimet-vanha
+      first
+      (dissoc (schema/optional-key :tr-numero))
+      (merge {:tr-numero schema/Int
+              :tr-ajorata schema/Int
+              :tr-kaista schema/Int})
+      vector))
+
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
+  {:osoitteet paallystysilmoitus-osoitteet
+   :alustatoimet paallystysilmoitus-alustatoimet})
+
+(def +vanha-paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet paallystysilmoitus-osoitteet
 
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet paallystysilmoitus-alustatoimet})
+   :alustatoimet paallystysilmoitus-alustatoimet-vanha})
 
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
@@ -323,3 +333,13 @@
 
 (s/def ::aseta-paallystysilmoituksen-tila
   (s/keys :req [::urakka/id ::paallystyskohde-id ::tila]))
+
+(s/def ::sopimus-id integer?)
+(s/def ::vuosi integer?)
+(s/def ::urakka-id integer?)
+;; Tässä on paljon muutakin, mutta tuo päällystyskohteen id pitää olla ainakin
+(s/def ::paallystysilmoitus #(and (integer? (:paallystyskohde-id %))
+                                  (every? integer? (vals (select-keys (:perustiedot %) #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})))))
+
+(s/def ::tallenna-paallystysilmoitus-kysely
+  (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))

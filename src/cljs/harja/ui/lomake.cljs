@@ -69,6 +69,7 @@ ja kaikki pakolliset kentät on täytetty"
   [data]
   (validi? data))
 
+;;TODO siirry käyttämään lomakkeen-muokkaus ns:ssa tätä
 (defn ilman-lomaketietoja
   "Palauttaa lomakkeen datan ilman lomakkeen ohjaustietoja"
   [data]
@@ -199,37 +200,45 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
+  [{:keys [tyyppi komponentti komponentti-args fmt hae nimi yksikko-kentalle valitse-ainoa? sisallon-leveys?] :as s}
    data muokattava? muokkaa arvo]
-  (let [kentta (if (= tyyppi :komponentti)
-                 [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                 :data data})]
-                 (if muokattava?
-                   (if (and valitse-ainoa?
-                            (= :valinta tyyppi)
-                            (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
-                     (do (reset! arvo (if-let [hae (:valinta-arvo s)]
-                                        (hae (first (:valinnat s)))
-                                        (first (:valinnat s))))
-                         [:div.form-control-static
-                          ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
-                          (nayta-arvo s arvo)])
+  (let [kentta (cond
+                 (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data data} komponentti-args)]
+                 (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                                              :data data}]
+                                                                                komponentti-args))]
+                 :else (if muokattava?
+                         (if (and valitse-ainoa?
+                                  (= :valinta tyyppi)
+                                  (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
+                           (do (reset! arvo (if-let [hae (:valinta-arvo s)]
+                                              (hae (first (:valinnat s)))
+                                              (first (:valinnat s))))
+                               [:div.form-control-static
+                                ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
+                                (nayta-arvo s arvo)])
 
-                     (do (have #(contains? % :tyyppi) s)
-                         [tee-kentta (assoc s :lomake? true) arvo]))
-                   [:div.form-control-static
-                    (if fmt
-                      (fmt ((or hae #(get % nimi)) data))
-                      (nayta-arvo s arvo))]))]
-    (if yksikko-kentalle
-      [:div.kentta-ja-yksikko
-       kentta
-       [:span.kentan-yksikko yksikko-kentalle]]
+                           (do (have #(contains? % :tyyppi) s)
+                               [tee-kentta (assoc s :lomake? true) arvo]))
+                         [:div.form-control-static
+                          (if fmt
+                            (fmt ((or hae #(get % nimi)) data))
+                            (nayta-arvo s arvo))]))
+        kentta (if yksikko-kentalle
+                 [:div.kentta-ja-yksikko
+                  kentta
+                  [:span.kentan-yksikko yksikko-kentalle]]
+                 kentta)]
+    (if sisallon-leveys?
+      [:div.kentan-leveys
+       kentta]
       kentta)))
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen?] :as s}
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
+           piilota-label?] :as s}
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
@@ -249,24 +258,27 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     " sisaltaa-varoituksen")
                                   (when-not (empty? huomautukset)
                                     " sisaltaa-huomautuksen"))}
-     (when-not (+piilota-label+ tyyppi)
-       [:label.control-label {:for nimi}
-        [:span
-         [:span.kentan-label otsikko]
-         (when yksikko [:span.kentan-yksikko yksikko])]])
-     [kentan-input s data muokattava? muokkaa arvo]
+     [:div {:class (when sisallon-leveys?
+                     "sisallon-leveys lomake-kentan-leveys")}
+      (when-not (or (+piilota-label+ tyyppi)
+                    piilota-label?)
+        [:label.control-label {:for nimi}
+         [:span
+          [:span.kentan-label otsikko]
+          (when yksikko [:span.kentan-yksikko yksikko])]])
+      [kentan-input s data muokattava? muokkaa arvo]
 
-     (when (and muokattu?
-                (not (empty? virheet)))
-       [virheen-ohje virheet :virhe])
-     (when (and muokattu?
-                (not (empty? varoitukset)))
-       [virheen-ohje varoitukset :varoitus])
-     (when (and muokattu?
-                (not (empty? huomautukset)))
-       [virheen-ohje huomautukset :huomautus])
+      (when (and muokattu?
+                 (not (empty? virheet)))
+        [virheen-ohje virheet :virhe])
+      (when (and muokattu?
+                 (not (empty? varoitukset)))
+        [virheen-ohje varoitukset :varoitus])
+      (when (and muokattu?
+                 (not (empty? huomautukset)))
+        [virheen-ohje huomautukset :huomautus])
 
-     [kentan-vihje s]]))
+      [kentan-vihje s]]]))
 
 (def ^:private col-luokat
   ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua
@@ -303,9 +315,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
-        kaikki-virheet (validointi/validoi-rivi nil tiedot kaikki-skeemat :validoi)
-        kaikki-varoitukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :varoita)
-        kaikki-huomautukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :huomauta)
+        kaikki-virheet (validointi/validoi-rivin-kentat nil tiedot kaikki-skeemat :validoi)
+        kaikki-varoitukset (validointi/validoi-rivin-kentat nil tiedot kaikki-skeemat :varoita)
+        kaikki-huomautukset (validointi/validoi-rivin-kentat nil tiedot kaikki-skeemat :huomauta)
         puuttuvat-pakolliset-kentat (into #{}
                                           (map :nimi)
                                           (validointi/puuttuvat-pakolliset-kentat tiedot
@@ -351,16 +363,33 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
   :data                 validoitu data
   "
-  [{validoi-alussa? :validoi-alussa? muokkaa! :muokkaa!} skeema data]
+  [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata?]} skeema data]
   (let [fokus (atom nil)
-        _ (when validoi-alussa? (muokkaa! (validoi data skeema)))]
+        validoi-avaimet (fn [skeema]
+                          (reduce (fn [skeema skeeman-osa]
+                                    (conj skeema (select-keys skeeman-osa validoitavat-avaimet)))
+                                  [] skeema))
+        edellinen-skeema (when validoitavat-avaimet
+                           (atom (validoi-avaimet skeema)))]
+    (when (and validoi-alussa? voi-muokata?)
+      (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata? ei-borderia?] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy] :as opts} skeema
          {muokatut ::muokatut
           :as data}]
+      (when validoitavat-avaimet
+        (let [validoitut-avaimet (validoi-avaimet skeema)]
+          (when (not= @edellinen-skeema validoitut-avaimet)
+            (reset! edellinen-skeema validoitut-avaimet)
+            (muokkaa! (validoi data skeema)))))
       (let [{virheet ::virheet
              varoitukset ::varoitukset
              huomautukset ::huomautukset :as validoitu-data} (validoi data skeema)]
+        (when (and kutsu-muokkaa-renderissa?
+                   (or (not= virheet (::virheet data))
+                       (not= varoitukset (::varoitukset data))
+                       (not= huomautukset (::huomautukset data))))
+          (muokkaa! validoitu-data))
         (kasittele-virhe
           (let [voi-muokata? (if (some? voi-muokata?)
                                voi-muokata?
@@ -376,8 +405,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
-             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
-                          luokka)}
+             (merge
+               {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
+                            luokka)}
+               (when data-cy
+                 {:data-cy data-cy}))
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall

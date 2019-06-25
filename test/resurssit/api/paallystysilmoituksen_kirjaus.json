@@ -15,16 +15,15 @@
 
   "paallystysilmoitus": {
     "perustiedot": {
-      "takuupvm": "2015-02-15T12:00:00Z"
+      "takuupvm": "2020-02-15T12:00:00Z"
     },
     "yllapitokohde": {
       "sijainti": {
+	"numero":22,
         "aosa": 1,
         "aet": 1,
-        "losa": 3,
-        "let": 5,
-        "ajr": 1,
-        "kaista": 1
+        "losa": 4,
+        "let": 5
       },
       "alikohteet": [
         {
@@ -32,12 +31,12 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 1,
+              "aosa": 3,
               "aet": 1,
-              "losa": 2,
-              "let": 0,
+              "losa": 3,
+              "let": 10,
               "ajr": 1,
-              "kaista": 1
+              "kaista": 11
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -67,12 +66,12 @@
             "nimi": "2. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 2,
-              "aet": 0,
-              "losa": 3,
+              "aosa": 3,
+              "aet": 3030,
+              "losa": 4,
               "let": 5,
-              "ajr": 1,
-              "kaista": 1
+              "ajr": 2,
+              "kaista": 21
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -103,11 +102,13 @@
       {
         "alustatoimenpide": {
           "sijainti": {
-            "numero": 21,
-            "aosa": 1,
+            "numero": 22,
+            "aosa": 3,
             "aet": 1,
             "losa": 3,
-            "let": 5
+            "let": 10,
+            "ajr": 1,
+            "kaista": 11
           },
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1,

@@ -1,7 +1,7 @@
 (ns harja.kyselyt.kanavat.liikennetapahtumat
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
-            [clojure.future :refer :all]
+            
             [clojure.set :as set]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
@@ -23,7 +23,8 @@
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.lt-ketjutus :as ketjutus]
             [harja.domain.kanavat.kohde :as kohde]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.core :as c]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
@@ -496,7 +497,6 @@
     (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"])
     (if (::m/poistettu? tapahtuma)
       (poista-tapahtuma! db user tapahtuma)
-
       (let [olemassa? (id-olemassa? (::lt/id tapahtuma))
             uusi-tapahtuma (if olemassa?
                              (do
@@ -506,13 +506,16 @@
                                                (merge
                                                  {::m/muokkaaja-id (:id user)
                                                   ::m/muokattu (pvm/nyt)}
-                                                 (dissoc tapahtuma
-                                                         ::lt/alukset
-                                                         ::lt/toiminnot))
+                                                 (-> tapahtuma
+                                                     (update ::lt/vesipinta-alaraja #(when-not (nil? %)
+                                                                                       (bigdec %)))
+                                                     (update ::lt/vesipinta-ylaraja #(when-not (nil? %)
+                                                                                       (bigdec %)))
+                                                     (dissoc ::lt/alukset ::lt/toiminnot)))
                                                {::lt/id (::lt/id tapahtuma)})
-                               ;; Palautetaan päivitetty tapahtuma
+                               ;; Palautetaan tapahtuma alkuperäisenä, koska update palauttaa vain ykkösen.
+                               ;; Ei haeta kannasta uudelleen, koska se on turhaa.
                                tapahtuma)
-
                              (specql/insert! db
                                              ::lt/liikennetapahtuma
                                              (merge
@@ -521,7 +524,6 @@
                                                        ::lt/id
                                                        ::lt/alukset
                                                        ::lt/toiminnot))))]
-
         (doseq [osa (::lt/toiminnot tapahtuma)]
           (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
 
