@@ -72,7 +72,12 @@
              [:raportti
               {:orientaatio :landscape,
                :nimi
-               "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta 24.06.2018 - 24.06.2020"}
+               (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta "
+                    (apply str (interpose "."
+                                          [(format "%02d" p) (format "%02d" kk) (dec v)]))
+                    " - "
+                    (apply str (interpose "."
+                                          [(format "%02d" p) (format "%02d" kk) (inc v)])))}
               [:taulukko
                {:otsikko "11244001-Kempeleenharju",
                 :viimeinen-rivi-yhteenveto? true}
