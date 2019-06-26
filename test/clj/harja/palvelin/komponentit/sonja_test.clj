@@ -460,7 +460,11 @@
         _ (println "Aloitetaan yhteys uudestaan")
         _ (sonja-jolokia-connection nil :start)
         ;; Odotetaan hetki, että yhteys on aloitettu
-        _ (<!! (timeout 1500))
+        _ (<!! (go-loop [i 0]
+                 (when (and (not= "ACTIVE" @sonja/jms-connection-tila)
+                            (< i 5))
+                   (<! (timeout 1000))
+                   (recur (inc i)))))
         status-aloituksen-jalkeen (kysy-status)]
 
     ;; STATUS ENNEN TESTIT
