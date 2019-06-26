@@ -137,7 +137,7 @@
                                          :default false)]
       (when-not lopetetaan?
         (try
-          (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))]
+          (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
             (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
                                           :palvelin (fmt/leikkaa-merkkijono 512
                                                                             (.toString (InetAddress/getLocalHost)))
@@ -423,35 +423,20 @@
 
 (defmethod jms-toiminto! :jms-tilanne
   [{:keys [tila]} kasky]
-  (try (let [params (when-let [params (vals kasky)]
-                      (first params))
-             [tyyppi db] params
-             {:keys [yhteys istunnot]} @tila
-             _ (log/info "CONNECTION TILA")
-             yhteyden-tila (time @jms-connection-tila)
+  (try (let [{:keys [yhteys istunnot]} @tila
+             yhteyden-tila @jms-connection-tila
              olioiden-tilat {:yhteyden-tila yhteyden-tila
                              :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
                                                ;; SonicMQ API:n avulla ei voi tarkistella suoraan onko sessio, vastaanottaja tai tuottaja sulettu,
                                                ;; joten täytyy yrittää käyttää sitä objektia johonkin ja katsoa nakataanko IllegalStateException
                                                (let [{:keys [jonot istunto]} istunto-tiedot
-                                                     _ (log/info "ISTUNNON TILA")
-                                                     istunnon-tila (time (exception-wrapper istunto getAcknowledgeMode))]
+                                                     istunnon-tila (exception-wrapper istunto getAcknowledgeMode)]
                                                  {:istunnon-tila istunnon-tila
                                                   :jarjestelma jarjestelma
-                                                  :jonot (mapv (fn [[jonon-nimi {:keys [jono tuottaja vastaanottaja virheet]}]]
-                                                                 (log/info "JONOJEN VIESTIT")
-                                                                 (let [jonon-viestit (time (mapv #(when %
-                                                                                                    {:message-id (try (.getJMSMessageID %)
-                                                                                                                      (catch Throwable t nil))
-                                                                                                     :timestamp (try (.getJMSTimestamp %)
-                                                                                                                     (catch Throwable t nil))})
-                                                                                                 (hae-jonon-viestit istunto jono)))
-                                                                       _ (log/info "TUOTTAJAN TILA")
-                                                                       tuottajan-tila (time (exception-wrapper tuottaja getDeliveryMode))
-                                                                       _ (log/info "VASTAANOTTAJAN TILA")
-                                                                       vastaanottajan-tila (time (exception-wrapper vastaanottaja getMessageListener))]
-                                                                   {jonon-nimi {:jonon-viestit jonon-viestit
-                                                                                :tuottaja (when tuottaja
+                                                  :jonot (mapv (fn [[jonon-nimi {:keys [tuottaja vastaanottaja virheet]}]]
+                                                                 (let [tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
+                                                                       vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
+                                                                   {jonon-nimi {:tuottaja (when tuottaja
                                                                                             {:tuottajan-tila tuottajan-tila
                                                                                              :virheet virheet})
                                                                                 :vastaanottaja (when vastaanottaja
@@ -459,14 +444,13 @@
                                                                                                   :virheet virheet})}}))
                                                                jonot)}))
                                              istunnot)}
-             _ (log/info "SÄIKEIDEN TILAT")
-             saikeiden-tilat (time (sequence (comp
-                                               (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija|reconnecting-saije)" (.getName %))
-                                                          %))
-                                               (map #(identity
-                                                       {:nimi (.getName %)
-                                                        :status (.. % getState toString)})))
-                                             (.keySet (Thread/getAllStackTraces))))]
+             saikeiden-tilat (sequence (comp
+                                         (filter #(if (re-find #"^jms-(saije|kasittelyn-odottelija|reconnecting-saije)" (.getName %))
+                                                    %))
+                                         (map #(identity
+                                                 {:nimi (.getName %)
+                                                  :status (.. % getState toString)})))
+                                       (.keySet (Thread/getAllStackTraces)))]
          {:olioiden-tilat olioiden-tilat
           :saikeiden-tilat saikeiden-tilat})
        (catch Exception e
