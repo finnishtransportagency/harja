@@ -1,6 +1,8 @@
 (ns harja.views.hallinta.sonjajonot
   (:require [tuck.core :as t]
             [harja.tiedot.hallinta.sonjajonot :as tila]
+            [harja.pvm :as pvm]
+            [cljs-time.coerce :as tc]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :as debug]))
@@ -28,33 +30,22 @@
                  {:key (:aika %)})
               virheet)]])]))
 
-(defn jono [e! [jonon-nimi {:keys [tuottaja vastaanottaja jonon-viestit]}]]
-  (let [viestit (map-indexed #(with-meta
-                                (let [{:keys [message-id timestamp]} %2]
-                                  [:div.viesti-tiedot
-                                   [:span "Message-id: " message-id]
-                                   [:span "Timestamp: " (.toString (js/Date. timestamp))]])
-                                {:key %1})
-                             jonon-viestit)]
-    [:div.thumbnail.jono
-     [:h3 jonon-nimi]
-     [:div.viestin-kasittelijat
-      (list
-        (when tuottaja
-          (with-meta
-            (when kasittelija-esitys
-              [kasittelija-esitys e! :tuottaja tuottaja])
-            {:key "tuottajan-tila"}))
-        (when vastaanottaja
-          (with-meta
-            (when kasittelija-esitys
-              [kasittelija-esitys e! :vastaanottaja vastaanottaja])
-            {:key "vastaanottajan-tila"})))]
-     [:span "Viestit"]
-     [:div.jms-viestit
-      (if (empty? viestit)
-        "Ei viestejä jonossa..."
-        viestit)]]))
+(defn jono [e! [jonon-nimi {:keys [tuottaja vastaanottaja]}]]
+  [:div.thumbnail.jono
+   [:h3 jonon-nimi]
+   [:div.viestin-kasittelijat
+    (list
+      (when tuottaja
+        (with-meta
+          (when kasittelija-esitys
+            [kasittelija-esitys e! :tuottaja tuottaja])
+          {:key "tuottajan-tila"}))
+      (when vastaanottaja
+        (with-meta
+          (when kasittelija-esitys
+            [kasittelija-esitys e! :vastaanottaja vastaanottaja])
+          {:key "vastaanottajan-tila"})))]
+   [:span "Viestit"]])
 
 (defn istunto [e! {jonot :jonot istunnon-tila :istunnon-tila}]
   [:div.thumbnail
@@ -68,7 +59,9 @@
   (let [{:keys [istunnot yhteyden-tila]} olioiden-tilat]
     [:div.tilat
      [:div.thumbnail
-      [:h2 (str palvelin " (Päivitetty: " paivitetty ")")]
+      [:h2 {:class (if (pvm/ennen? (tc/to-local-date-time (pvm/sekunttia-sitten 20)) (tc/to-local-date-time paivitetty))
+                     "bg-success" "bg-danger")}
+       (str palvelin " (Päivitetty: " paivitetty ")")]
       [:hr]
       [:h3 "Säikeet"]
       (map (fn [{:keys [nimi status]}]
@@ -80,7 +73,9 @@
            (reverse (sort-by :nimi saikeiden-tilat)))
       [:hr]
       [:h3 "JMS"]
-      [:span (str "Yhteyden tila: " yhteyden-tila)]
+      [:span {:class (if (= yhteyden-tila "ACTIVE")
+                       "bg-success" "bg-danger")}
+       (str "Yhteyden tila: " yhteyden-tila)]
       [:div.istunnot
        (map-indexed #(with-meta
                        (when istunto

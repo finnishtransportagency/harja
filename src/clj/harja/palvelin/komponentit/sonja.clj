@@ -136,8 +136,15 @@
     (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
                                          :default false)]
       (when-not lopetetaan?
-        (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})
-        (<!! (timeout 5000))
+        (try
+          (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne nil})))]
+            (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
+                                          :palvelin (fmt/leikkaa-merkkijono 512
+                                                                            (.toString (InetAddress/getLocalHost)))
+                                          :osa-alue "sonja"}))
+          (catch Throwable t
+            (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t)))))
+        (<!! (timeout 10000))
         (recur (async/alts!! [lopeta-tarkkailu-kanava]
                              :default false))))))
 
@@ -334,7 +341,6 @@
 (defn yhteys-oliot!
   "Ilmoittaa omasta tilasta, kun yritetään yhdistää brokeriin."
   [yhteys-future {db :db {tyyppi :tyyppi} :asetukset :as sonja}]
-  (jms-toiminto! sonja {:jms-tilanne [tyyppi db]})
   (let [[yhteys-oliot _] (async/alts!! [(timeout 5000) (thread @yhteys-future)])]
     (if yhteys-oliot
       yhteys-oliot
@@ -417,10 +423,7 @@
 
 (defmethod jms-toiminto! :jms-tilanne
   [{:keys [tila]} kasky]
-  (try (let [params (when-let [params (vals kasky)]
-                      (first params))
-             [tyyppi db] params
-             {:keys [yhteys istunnot]} @tila
+  (try (let [{:keys [yhteys istunnot]} @tila
              yhteyden-tila @jms-connection-tila
              olioiden-tilat {:yhteyden-tila yhteyden-tila
                              :istunnot (mapv (fn [[jarjestelma istunto-tiedot]]
@@ -430,17 +433,10 @@
                                                      istunnon-tila (exception-wrapper istunto getAcknowledgeMode)]
                                                  {:istunnon-tila istunnon-tila
                                                   :jarjestelma jarjestelma
-                                                  :jonot (mapv (fn [[jonon-nimi {:keys [jono tuottaja vastaanottaja virheet]}]]
-                                                                 (let [jonon-viestit (mapv #(when %
-                                                                                              {:message-id (try (.getJMSMessageID %)
-                                                                                                                (catch Throwable t nil))
-                                                                                               :timestamp (try (.getJMSTimestamp %)
-                                                                                                               (catch Throwable t nil))})
-                                                                                           (hae-jonon-viestit istunto jono))
-                                                                       tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
+                                                  :jonot (mapv (fn [[jonon-nimi {:keys [tuottaja vastaanottaja virheet]}]]
+                                                                 (let [tuottajan-tila (exception-wrapper tuottaja getDeliveryMode)
                                                                        vastaanottajan-tila (exception-wrapper vastaanottaja getMessageListener)]
-                                                                   {jonon-nimi {:jonon-viestit jonon-viestit
-                                                                                :tuottaja (when tuottaja
+                                                                   {jonon-nimi {:tuottaja (when tuottaja
                                                                                             {:tuottajan-tila tuottajan-tila
                                                                                              :virheet virheet})
                                                                                 :vastaanottaja (when vastaanottaja
@@ -454,14 +450,9 @@
                                          (map #(identity
                                                  {:nimi (.getName %)
                                                   :status (.. % getState toString)})))
-                                       (.keySet (Thread/getAllStackTraces)))
-             jms-tila {:olioiden-tilat olioiden-tilat
-                       :saikeiden-tilat saikeiden-tilat}]
-         (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
-                                       :palvelin (fmt/leikkaa-merkkijono 512
-                                                                         (.toString (InetAddress/getLocalHost)))
-                                       :osa-alue "sonja"})
-         jms-tila)
+                                       (.keySet (Thread/getAllStackTraces)))]
+         {:olioiden-tilat olioiden-tilat
+          :saikeiden-tilat saikeiden-tilat})
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))

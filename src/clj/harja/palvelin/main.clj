@@ -258,7 +258,7 @@
                       (component/using
                         (tierekisteri/->Tierekisteri (:url asetukset)
                                                      (:uudelleenlahetys-aikavali-minuutteina asetukset))
-                        [:db :integraatioloki]))
+                        [:db :integraatioloki :pois-kytketyt-ominaisuudet]))
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using

@@ -285,6 +285,7 @@
         (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/tietolajien-haku
                                (fn [parametrit _ kayttaja _]
                                  (validointi/tarkista-ominaisuus :varuste-api)
+                                 (validointi/tarkista-ominaisuus :tierekisteri)
                                  (hae-tietolajit tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -293,6 +294,7 @@
         (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
                                  (validointi/tarkista-ominaisuus :varuste-api)
+                                 (validointi/tarkista-ominaisuus :tierekisteri)
                                  (hae-varusteet tierekisteri db parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -301,6 +303,7 @@
         (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
                                  (validointi/tarkista-ominaisuus :varuste-api)
+                                 (validointi/tarkista-ominaisuus :tierekisteri)
                                  (hae-varuste tierekisteri db parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -309,6 +312,7 @@
         (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/varusteen-lisays json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (validointi/tarkista-ominaisuus :varuste-api)
+                                 (validointi/tarkista-ominaisuus :tierekisteri)
                                  (lisaa-varuste tierekisteri vkm db data kayttaja)))))
 
     (julkaise-reitti
@@ -317,6 +321,7 @@
         (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/varusteen-paivitys json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (validointi/tarkista-ominaisuus :varuste-api)
+                                 (validointi/tarkista-ominaisuus :tierekisteri)
                                  (paivita-varuste tierekisteri vkm db data kayttaja)))))
 
     (julkaise-reitti
@@ -325,6 +330,7 @@
         (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/varusteen-poisto json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (validointi/tarkista-ominaisuus :varuste-api)
+                                 (validointi/tarkista-ominaisuus :tierekisteri)
                                  (poista-varuste tierekisteri data kayttaja)))))
 
     (julkaise-palvelu http :hae-tietolajin-kuvaus

@@ -327,7 +327,8 @@
                                                            :info
                                                            viesti/viestin-nayttoaika-keskipitka))
                          :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                         :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
+                         :disabled (or (not (lomake/voi-tallentaa? toteuma))
+                                        (not (istunto/ominaisuus-kaytossa? :tierekisteri)))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
        (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
@@ -340,7 +341,7 @@
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when (oikeus-varusteiden-muokkaamiseen?)
-        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
+        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil)) {:disabled (not (istunto/ominaisuus-kaytossa? :tierekisteri))}])
       [varustehaku e! app]])
    [:div.sisalto-container
     [:h1 "Varustekirjaukset Harjassa"]
@@ -372,24 +373,36 @@
                                            :teksti "Valitse varustetoteuma"}
                           :varuste [{:teksti "Tarkasta"
                                      :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste tie]}]
-                                                 (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
-                                                   (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji tie))
-                                                   (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
-                                                                  :warning
+                                                 (if (istunto/ominaisuus-kaytossa? :tierekisteri)
+                                                   (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
+                                                     (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji tie))
+                                                     (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                    :warning
+                                                                    viesti/viestin-nayttoaika-keskipitka))
+                                                   (viesti/nayta! "Tierekisteri on pois käytöstä"
+                                                                  :info
                                                                   viesti/viestin-nayttoaika-keskipitka)))}
                                     {:teksti "Muokkaa"
                                      :toiminto (fn [{:keys [tunniste tietolajin-tunniste tie] :as data}]
-                                                 (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
-                                                   (e! (tv/->AloitaVarusteenMuokkaus tunniste tie))
-                                                   (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
-                                                                  :warning
+                                                 (if (istunto/ominaisuus-kaytossa? :tierekisteri)
+                                                   (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
+                                                     (e! (tv/->AloitaVarusteenMuokkaus tunniste tie))
+                                                     (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                    :warning
+                                                                    viesti/viestin-nayttoaika-keskipitka))
+                                                   (viesti/nayta! "Tierekisteri on pois käytöstä"
+                                                                  :info
                                                                   viesti/viestin-nayttoaika-keskipitka)))}
                                     {:teksti "Poista"
                                      :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste tie]}]
-                                                 (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
-                                                   (view/poista-varuste e! tietolaji tunniste tie)
-                                                   (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
-                                                                  :warning
+                                                 (if (istunto/ominaisuus-kaytossa? :tierekisteri)
+                                                   (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
+                                                     (view/poista-varuste e! tietolaji tunniste tie)
+                                                     (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                    :warning
+                                                                    viesti/viestin-nayttoaika-keskipitka))
+                                                   (viesti/nayta! "Tierekisteri on pois käytöstä"
+                                                                  :info
                                                                   viesti/viestin-nayttoaika-keskipitka)))}]})
                       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn [e! {nykyiset-valinnat :valinnat
