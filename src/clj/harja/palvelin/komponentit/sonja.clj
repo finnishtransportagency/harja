@@ -136,8 +136,15 @@
     (loop [[lopetetaan? _] (async/alts!! [lopeta-tarkkailu-kanava]
                                          :default false)]
       (when-not lopetetaan?
-        (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})
-        (<!! (timeout 5000))
+        (try
+          (let [jms-tila (:vastaus (<!! (laheta-viesti-kaskytyskanavaan! kaskytyskanava {:jms-tilanne [tyyppi db]})))]
+            (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
+                                          :palvelin (fmt/leikkaa-merkkijono 512
+                                                                            (.toString (InetAddress/getLocalHost)))
+                                          :osa-alue "sonja"}))
+          (catch Throwable t
+            (log/error (str "Jms tilan lukemisessa virhe: " (.getMessage ~'t) "\nStackTrace: " (.printStackTrace ~'t)))))
+        (<!! (timeout 10000))
         (recur (async/alts!! [lopeta-tarkkailu-kanava]
                              :default false))))))
 
@@ -334,7 +341,6 @@
 (defn yhteys-oliot!
   "Ilmoittaa omasta tilasta, kun yritetään yhdistää brokeriin."
   [yhteys-future {db :db {tyyppi :tyyppi} :asetukset :as sonja}]
-  (jms-toiminto! sonja {:jms-tilanne [tyyppi db]})
   (let [[yhteys-oliot _] (async/alts!! [(timeout 5000) (thread @yhteys-future)])]
     (if yhteys-oliot
       yhteys-oliot
@@ -454,14 +460,9 @@
                                          (map #(identity
                                                  {:nimi (.getName %)
                                                   :status (.. % getState toString)})))
-                                       (.keySet (Thread/getAllStackTraces)))
-             jms-tila {:olioiden-tilat olioiden-tilat
-                       :saikeiden-tilat saikeiden-tilat}]
-         (q/tallenna-sonjan-tila<! db {:tila (cheshire/encode jms-tila)
-                                       :palvelin (fmt/leikkaa-merkkijono 512
-                                                                         (.toString (InetAddress/getLocalHost)))
-                                       :osa-alue "sonja"})
-         jms-tila)
+                                       (.keySet (Thread/getAllStackTraces)))]
+         {:olioiden-tilat olioiden-tilat
+          :saikeiden-tilat saikeiden-tilat})
        (catch Exception e
          (log/error "VIRHE TAPAHTUI :jms-tilanne " (.getMessage e) "\nStackTrace: " (.printStackTrace e))
          {:virhe e})))
