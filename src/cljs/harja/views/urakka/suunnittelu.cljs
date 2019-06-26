@@ -5,6 +5,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
@@ -22,12 +23,14 @@
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
-    :materiaalit (and (not= tyyppi :tiemerkinta)
-                      (not= tyyppi :paallystys)
+    :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
                       (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-    :suola (= tyyppi :hoito)
+    :tehtavat (= tyyppi :teiden-hoito)
+    :suola (#{:hoito :teiden-hoito} tyyppi)
     :muut (not (ur/vesivaylaurakkatyyppi? tyyppi))
-    :kiintiot (= tyyppi :vesivayla-hoito)))
+    :kiintiot (= tyyppi :vesivayla-hoito)
+    :kokonaishintaiset (not= tyyppi :teiden-hoito)
+    :yksikkohintaiset (not= tyyppi :teiden-hoito)))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -38,15 +41,24 @@
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
+          "Tehtävät"
+          :tehtavat
+          (when (and (oikeudet/urakat-suunnittelu-tehtavat id)
+                     (valilehti-mahdollinen? :tehtavat ur))
+            ^{:key "tehtavat"}
+            [tehtavat/tehtavat ur])
+
           "Kokonaishintaiset työt"
           :kokonaishintaiset
-          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
+          (when (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
+                     (valilehti-mahdollinen? :kokonaishintaiset ur))
             ^{:key "kokonaishintaiset-tyot"}
             [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
 
           "Yksikköhintaiset työt"
           :yksikkohintaiset
-          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
+          (when (and (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
+                     (valilehti-mahdollinen? :yksikkohintaiset ur))
             ^{:key "yksikkohintaiset-tyot"}
             [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset])
 
