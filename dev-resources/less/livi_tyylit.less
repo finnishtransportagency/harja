@@ -302,7 +302,8 @@ table.table-striped {
 
     .disabled {
         background-color: @harmaa10;
-        color: @harmaa6;
+        color:red;
+       // color: @harmaa6;
     }
 
     .nappi-alasveto {
@@ -404,4 +405,31 @@ line.ei-aktiiviset-paivat {
 
 .sisaltaa-virheen-tai-varoituksen (@vari) {
     border-bottom: solid 2px @vari !important;
+}
+
+.kategorisoitu-checkbox-pudotusvalikko {
+    z-index:1000;
+    min-widtH:160px;
+    &.sisalto {
+        display:flex;
+        flex-direction:column;
+        position:absolute;
+    }
+
+    &.kategoria {
+        background-color:red;
+    }
+
+    &.kategoria-nimi {
+        &:hover {
+            background-color:yellow;
+        }
+    }
+
+    &.kategoria-valinta {
+        padding:15px;
+        &:hover {
+            background-color:blue;
+        }
+    }
 }

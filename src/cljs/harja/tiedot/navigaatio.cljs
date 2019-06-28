@@ -34,6 +34,15 @@
   (:import goog.History))
 
 
+;;(defonce master-atom (atom nil))
+
+;;(def valittu-urakka (atom nil))
+;;
+;
+; add-watch
+;
+;(remove-watch master-atom ::urakka)
+
 (def valittu-valilehti reitit/valittu-valilehti)
 (def valittu-valilehti-atom reitit/valittu-valilehti-atom)
 (def aseta-valittu-valilehti! reitit/aseta-valittu-valilehti!)
@@ -43,7 +52,6 @@
 (declare kasittele-url! paivita-url valitse-urakka!)
 
 (defonce murupolku-nakyvissa? (reaction (and (not @raportit/raportit-nakymassa?)
-                                             (not= @valittu-sivu :tilannekuva)
                                              (not= @valittu-sivu :tieluvat)
                                              (not= @valittu-sivu :about)
                                              (not= @valittu-sivu :hallinta))))
@@ -74,9 +82,9 @@
   (let [vanha-koko @kartan-kokovalinta]
     (when uusi-koko
       (reset! kartan-kokovalinta uusi-koko)
-      (t/julkaise! {:aihe :kartan-koko-vaihdettu
+      (t/julkaise! {:aihe       :kartan-koko-vaihdettu
                     :vanha-koko vanha-koko
-                    :uusi-koko uusi-koko}))))
+                    :uusi-koko  uusi-koko}))))
 
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 

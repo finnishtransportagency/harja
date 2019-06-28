@@ -4,8 +4,15 @@
 
 .murupolku {
     background-color: @harmaa10;
-    padding: 0 0 5px 0;
+    height:48px;
+    padding: 0;
     list-style: none;
+
+    display:flex;
+    flex-direction:row;
+    flex-wrap:wrap;
+    align-items:center;
+
     .disabled {
         .livicon-chevron-down {
             color: @harmaa7;
@@ -15,24 +22,13 @@
         color: @sininen4;
     }
 
-    .murupolku-vasen {
-        > li {
-            vertical-align: top;
-            display: inline-block;
-            margin-top: 17px;
-            margin-right: 5px
-        }
-    }
-
-    .murupolku-oikea {
-        > div {
-            float: right;
-        }
+    > li {
+        margin-left:8px;
     }
 
     .murupolku-urakoitsija, .murupolku-urakkatyyppi {
         display: inline-block;
-        margin-top: 2px;
+        margin-left:8px;
     }
 }
 
@@ -83,4 +79,26 @@
     display: inline-block;
     height: @murupolun-elementtikorkeus;
     padding: 6px;
+}
+
+.state-of-the-atom {
+    position:fixed;
+    top:0px;
+    right:0px;
+    width:500px;
+    height:500px;
+    overflow:scroll;
+    z-index:9999999999;
+    background-color:pink;
+
+    &--closed {
+        position:fixed;
+        top:0px;
+        right:0px;
+        width:500px;
+        height:50px;
+        overflow: hidden;
+        z-index:9999999999;
+        background-color:hotpink;
+    }
 }

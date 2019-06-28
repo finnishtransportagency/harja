@@ -194,12 +194,12 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
                                                     (keep #(organisaation-geometria % {:stroke {:color (str "rgb(0, 0, 0, 0)")}})
                                                           (domain/valitut-kentat urakkatyypit-rajoitta)))))))
 
-(defn seuraa-alueita! [suodattimet]
-  (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet @suodattimet)))
-  (add-watch suodattimet ::alueen-seuraus (fn [_ _ vanha-tila uusi-tila]
-                                             (when-not (= (domain/valitut-suodattimet (:alueet vanha-tila))
-                                                          (domain/valitut-suodattimet (:alueet uusi-tila)))
-                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet uusi-tila)))))))
+(defn seuraa-alueita! [{:keys [aluesuodattimet] :as suodattimet}]
+  (zoomaa-urakoihin! (aseta-valitut-organisaatiot! aluesuodattimet))
+  (add-watch suodattimet ::alueen-seuraus (fn [_ _ {vanha-tila :aluesuodattimet} {uusi-tila :aluesuodattimet}]
+                                             (when-not (= (domain/valitut-suodattimet vanha-tila)
+                                                          (domain/valitut-suodattimet uusi-tila))
+                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! uusi-tila))))))
 
 (defn lopeta-alueen-seuraus! [suodattimet]
   (remove-watch suodattimet ::alueen-seuraus))

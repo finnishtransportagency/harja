@@ -1,7 +1,9 @@
 (ns harja.views.main
   "Harjan päänäkymä"
-  (:require [harja.ui.bootstrap :as bs]
+  (:require [tuck.core :as tuck]
+            [harja.ui.bootstrap :as bs]
             [reagent.core :refer [atom]]
+            [harja.tilanhallinta.tila :as tila]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
@@ -196,7 +198,7 @@
     [header sivu]]
 
    [:div.container
-    [murupolku/murupolku]]
+    [tuck/tuck tila/master murupolku/murupolku]]
 
    ^{:key "harjan-paasisalto"}
    [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
@@ -208,7 +210,7 @@
         :ilmoitukset [ilmoitukset/ilmoitukset]
         :tienpidon-luvat [tieluvat/tieluvat]
         :hallinta [hallinta/hallinta]
-        :tilannekuva [tilannekuva/tilannekuva]
+        :tilannekuva [tuck/tuck tila/master tilannekuva/tilannekuva]
         :about [about/about]
         :tr [tierekisteri/tierekisteri]
 
@@ -229,7 +231,7 @@
                                    :overflow (if @nav/kartta-nakyvissa?
                                                "hidden"
                                                "visible")}}
-    [kartta/kartta]]])
+    [tuck/tuck tila/master kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []
   (if dom/ei-tuettu-ie?

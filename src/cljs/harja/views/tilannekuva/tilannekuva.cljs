@@ -28,7 +28,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu]
             [harja.ui.modal :as modal]
-            [harja.domain.tielupa :as tielupa])
+            [harja.domain.tielupa :as tielupa]
+            [tuck.core :as tuck]
+            [harja.tilanhallinta.tila :as tila])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]
                    [harja.tyokalut.ui :refer [for*]]))
@@ -193,17 +195,20 @@
               :nayta-lkm? true
               :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi elynumero]) false)}]))]])))
 
-(defn- aluesuodattimet []
+(defn- aluesuodattimet [e! app]
   (komp/luo
-    (fn []
+    (fn [e! {:keys [aluesuodattimet]}]
+      (log "alueet jne " aluesuodattimet)
       (let [onko-alueita? (some
                             (fn [[_ hy-ja-urakat]]
                               (some not-empty (vals hy-ja-urakat)))
-                            (:alueet @tiedot/suodattimet))
+                            aluesuodattimet)
             ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
                                              (nil? @tiedot/uudet-aluesuodattimet))
             tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))
-            alueita-valittu? (tiedot/alueita-valittu? @tiedot/suodattimet)]
+            tyypit-joissa-alueita (keys aluesuodattimet)
+            alueita-valittu? (tiedot/alueita-valittu? @tiedot/suodattimet)
+            ]
         [:div
          [asetuskokoelma
           (cond
@@ -278,12 +283,14 @@ suodatinryhmat
 (defn nykytilanne-valinnat []
   [:span.tilannekuva-nykytilanne-valinnat
    [aikasuodattimet]
-   [aluesuodattimet]])
+   ;[tuck/tuck tila/-master aluesuodattimet]
+   ])
 
 (defn historiakuva-valinnat []
   [:span.tilannekuva-historiakuva-valinnat
    [aikasuodattimet]
-   [aluesuodattimet]])
+   ;[tuck/tuck tila/-master aluesuodattimet]
+   ])
 
 (defn tienakyma []
   (komp/luo
@@ -369,7 +376,7 @@ suodatinryhmat
                  [tielupa-view/tielupalomake (constantly lupa) {:valittu-tielupa lupa}]))
     :teksti "Näytä tarkemmat tiedot"}})
 
-(defn tilannekuva []
+(defn tilannekuva [e! app]
   (komp/luo
     (komp/lippu tiedot/nakymassa? istunto/ajastin-taukotilassa?)
     (komp/watcher tiedot/valittu-tila
@@ -377,6 +384,8 @@ suodatinryhmat
                     (nayta-tai-piilota-karttataso! uusi)))
     (komp/sisaan-ulos
       #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
+           (e! (tiedot/->AjaTaustahaku))
+           (e! (tiedot/->HaeAluesuodattimet true))
            ;; Karttatason näyttäminen/piilottaminen täytyy tehdä täällä,
            ;; koska aktiivinen tila voi olla tienäkymä, eikä tienäkymässä
            ;; haluta näyttää esim. organisaatiorajoja. Jos tienäkymä
@@ -395,9 +404,10 @@ suodatinryhmat
            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
            (reset! kartta-tiedot/pida-geometriat-nakyvilla?
                    kartta-tiedot/pida-geometria-nakyvilla-oletusarvo)
-           (tiedot/lopeta-alueiden-seuraus!)))
+           (tiedot/lopeta-alueiden-seuraus!)
+           (e! (tiedot/->LopetaTaustahaku))))
     (komp/karttakontrollit :tilannekuva
                            [hallintapaneeli])
-    (fn []
+    (fn [e! app]
       [:span.tilannekuva
        [kartta/kartan-paikka]])))
