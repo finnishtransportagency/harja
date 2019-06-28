@@ -35,7 +35,3 @@ ADD COLUMN ensisijainen boolean;
 UPDATE toimenpidekoodi
   SET api_tunnus = id WHERE taso = 4;
 
-
-
-ALTER TABLE toimenpidekoodi
-ADD COLUMN ensisijainen boolean;
