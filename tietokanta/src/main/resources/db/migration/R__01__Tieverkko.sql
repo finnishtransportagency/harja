@@ -201,36 +201,15 @@ CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GE
   RETURNS tr_osan_kohta AS $$
 DECLARE
   aet INTEGER;
-  geom_ GEOMETRY;
-  ls GEOMETRY;
-  i INTEGER;
-  pit FLOAT;
-  kohta FLOAT;
-  etaisyys FLOAT;
-  osui INTEGER;
+  lahin_piste GEOMETRY;
 BEGIN
-  geom_ := ST_Multi(osan_geometria);
-  pit := 0.0;
-  etaisyys := NULL;
-  -- Katsotaan mihin linestringiin osuttiin
-  FOR i IN 1..ST_NumGeometries(geom_) LOOP
-    ls := ST_GeometryN(geom_, i);
-    --RAISE NOTICE 'ls# %, etäisyys %  (aiempi etäisyys %)', i, ST_Distance(piste,ls), etaisyys;
-    IF etaisyys IS NULL OR ST_Distance(piste, ls) < etaisyys THEN
-      etaisyys = ST_Distance(piste, ls);
-      osui := i;
-    END IF;
-  END LOOP;
-  -- Lasketaan etäisyys
-  FOR i IN 1..osui LOOP
-    ls := ST_GeometryN(geom_, i);
-    IF i < osui THEN
-      pit := pit + ST_Length(ls);
-    ELSE
-      aet := CAST(pit + ST_LineLocatePoint(ls, piste) * ST_Length(ls) AS INTEGER);
-      RETURN ROW(aet, ST_ClosestPoint(ls, piste)::GEOMETRY);
-    END IF;
-  END LOOP;
+  SELECT ST_ClosestPoint(osan_geometria, piste)
+  INTO lahin_piste;
+
+  SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
+  INTO aet;
+
+  RETURN ROW(aet, lahin_piste);
 END;
 $$ LANGUAGE plpgsql;
 

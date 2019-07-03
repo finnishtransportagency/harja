@@ -332,7 +332,7 @@
 
    {:nimi :pohjavesialueiden-suolatoteumat
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :konteksti #{"urakka"}
     :kuvaus "Pohjavesialueiden suolatoteumat"
     :suorita #'harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat/suorita
     :urakkatyyppi #{:hoito}}])
