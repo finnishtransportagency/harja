@@ -166,3 +166,5 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Paikkaukset
 \i testidata/paikkaukset.sql
+
+SELECT paivita_raportti_cachet();
