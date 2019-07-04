@@ -210,53 +210,8 @@ UPDATE suolatoteuma_reittipiste
 SET pohjavesialue=pisteen_pohjavesialue(sijainti, 50)
 WHERE pohjavesialue IS NULL;
 
-/*-- Tallennetaan sijaintiin perustuva tr_piste reittipisteestä
-ALTER TABLE suolatoteuma_reittipiste ADD tr_numero INTEGER;
-ALTER TABLE suolatoteuma_reittipiste ADD tr_alkuosa INTEGER;
-ALTER TABLE suolatoteuma_reittipiste ADD tr_alkuetaisyys INTEGER;*/
-
 -- Tätä funktiota ei käytetä missään
 DROP FUNCTION konvertoi_urakan_suolatoteumat(urakkaid INTEGER, threshold INTEGER);
-
-/*CREATE OR REPLACE FUNCTION paattele_tr_osoite_pisteelle(edellinen_piste POINT, nykyinen_piste POINT, seuraava_piste POINT)
-    RETURNS tr_osoite AS $$
-DECLARE
-    edellinen_piste_ geometry;
-    nykyinen_piste_ geometry;
-    seuraava_piste_ geometry;
-    edellinen_tr_osoite tr_osoite;
-    nykyinen_tr_osoite tr_osoite;
-    seuraava_tr_osoite tr_osoite;
-    palautettava_tr_osoite tr_osoite;
-BEGIN
-    IF edellinen_piste IS NOT NULL THEN
-        edellinen_piste_ = ('POINT(' || edellinen_piste[0] || ' ' || edellinen_piste[1] || ')')::geometry;
-        edellinen_tr_osoite = yrita_tierekisteriosoite_pisteelle2(edellinen_piste_, 50);
-    END IF;
-    IF nykyinen_piste IS NOT NULL THEN
-        nykyinen_piste_ = ('POINT(' || nykyinen_piste[0] || ' ' || nykyinen_piste[1] || ')')::geometry;
-        nykyinen_tr_osoite = yrita_tierekisteriosoite_pisteelle2(nykyinen_piste_, 50);
-    END IF;
-    IF seuraava_piste IS NOT NULL THEN
-        seuraava_piste_ = ('POINT(' || seuraava_piste[0] || ' ' || seuraava_piste[1] || ')')::geometry;
-        seuraava_tr_osoite = yrita_tierekisteriosoite_pisteelle2(seuraava_piste_, 50);
-    END IF;
-
-    IF (edellinen_tr_osoite IS NULL OR seuraava_tr_osoite IS NULL) THEN
-        palautettava_tr_osoite = nykyinen_tr_osoite;
-    ELSE
-        palautettava_tr_osoite = nykyinen_tr_osoite;
-        palautettava_tr_osoite.tie = (SELECT tie
-                                      FROM (SELECT count(*) AS maara,
-                                                   (unnest).tie AS tie
-                                            FROM unnest(ARRAY[edellinen_tr_osoite, nykyinen_tr_osoite, seuraava_tr_osoite]::tr_osoite[])
-                                            GROUP BY (unnest).tie) AS teiden_maarat
-                                      ORDER BY maara DESC
-                                      LIMIT 1);
-    END IF;
-    RETURN palautettava_tr_osoite;
-END;
-$$ LANGUAGE plpgsql;*/
 
 DROP FUNCTION pisteen_pohjavesialue_ja_tie(piste POINT, threshold INTEGER);
 DROP TYPE pisteen_pohjavesialue_tie;
