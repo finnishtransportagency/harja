@@ -57,29 +57,32 @@
      (into [] (map rivi-xf (loppusumma rivit)))]))
 
 (defn laske [db urakka-id alkupvm loppupvm]
-  (let [urakan-alueet (urakan-pohjavesialueet db {:urakka urakka-id})]
-    (flatten
-     (mapv (fn [pv-alue]
-             (mapv (fn [summa]
-                     (assoc summa
-                            :maara_t_per_km (/ (:yhteensa summa) (/ (:pituus summa) 1000))
-                            :tunnus (:tunnus pv-alue)
-                            :nimi (:nimi pv-alue)))
-                   (pohjavesialueen-tiekohtaiset-summat db {:pohjavesialue (:tunnus pv-alue)
-                                                            :alkupvm alkupvm
-                                                            :loppupvm loppupvm})))
-           urakan-alueet))))
+  (let [urakan-pohjavesialueiden-summat (map (fn [summa]
+                                               (assoc summa
+                                                 :maara_t_per_km (/ (:yhteensa summa) (/ (:pituus summa) 1000))))
+                                             (pohjavesialueen-tiekohtaiset-summat db {:urakka urakka-id
+                                                                                      :alkupvm alkupvm
+                                                                                      :loppupvm loppupvm}))
+        urakan-alueet (urakan-pohjavesialueet db {:urakka urakka-id})
+        pva-summat-alueittain (map (fn [summan-tiedot]
+                                     (assoc summan-tiedot :nimi (some #(when (= (:tunnus summan-tiedot) (:tunnus %))
+                                                                         (:nimi %))
+                                                                      urakan-alueet)))
+                                   urakan-pohjavesialueiden-summat)]
+    pva-summat-alueittain))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
   (let [tulos (laske db urakka-id alkupvm loppupvm)
         raportin-nimi "Pohjavesialueiden suolatoteumat"
         otsikko (raportin-otsikko
-                  (first (urakat-q/hae-urakka db urakka-id))
+                  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                   raportin-nimi alkupvm loppupvm)]
     (log/debug "löytyi " (count tulos) " toteumaa")
     (vec
      (concat
       [:raportti {:orientaatio :landscape
                   :nimi otsikko}]
-      (mapv pohjavesialueen-taulukko (vals (group-by :tunnus tulos)))))))
+      (mapv pohjavesialueen-taulukko (sort-by #(->> % first :nimi)
+                                              (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
+                                                   (vals (group-by :tunnus tulos)))))))))

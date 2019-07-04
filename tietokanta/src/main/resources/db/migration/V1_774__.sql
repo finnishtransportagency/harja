@@ -258,7 +258,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;*/
 
-DROP FUNCTION pisteen_pohjavesialue_ja_tie;
+DROP FUNCTION pisteen_pohjavesialue_ja_tie(piste POINT, threshold INTEGER);
 DROP TYPE pisteen_pohjavesialue_tie;
 
 
