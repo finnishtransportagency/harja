@@ -389,3 +389,32 @@ UPDATE toteuma t
 -- Varmistetaan, että kaikilla toteumilla on käyttäjä
 UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
 UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
+
+-- Suolatoteumia aktiiviselle Oulun urakalle
+
+INSERT INTO toteuma
+(lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi, luoja)
+VALUES
+('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi = 'Aktiivinen Oulu Testi'),
+(SELECT id FROM sopimus WHERE nimi = 'Aktiivinen Oulu Testi pääsopimus'),
+NOW(),
+NOW() - interval '1 hour',
+NOW() - interval '55 minute',
+'yksikkohintainen'::toteumatyyppi,
+'Tämä on käsin tekaistu juttu Aktiiviselle Oulun urakalle',
+'9184629-5',
+'Antti Aurakuski',
+(SELECT id FROM kayttaja WHERE kayttajanimi='jvh'));
+
+INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
+  (SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu Aktiiviselle Oulun urakalle'),
+  ARRAY[
+    ROW(NOW() - interval '59 minute',st_makepoint(430414, 7198924) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
+        ARRAY[ROW(1, 1)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata,
+    ROW(NOW() - interval '58 minute',st_makepoint(430702, 7198785) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
+        ARRAY[ROW(2, 2)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata,
+    ROW(NOW() - interval '57 minute',st_makepoint(430929, 7198500) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
+        ARRAY[ROW(2, 2)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata,
+    ROW(NOW() - interval '56 minute',st_makepoint(430969, 7198125) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[],
+        ARRAY[ROW(3, 3)::reittipiste_materiaali]::reittipiste_materiaali[])::reittipistedata
+  ]::reittipistedata[]);
