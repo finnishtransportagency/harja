@@ -43,10 +43,10 @@
 
           "Tehtävät"
           :tehtavat
-          (when (and (oikeudet/urakat-suunnittelu-tehtavat id)
+          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                      (valilehti-mahdollinen? :tehtavat ur))
             ^{:key "tehtavat"}
-            [tehtavat/tehtavat ur])
+            [tehtavat/tehtavat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
