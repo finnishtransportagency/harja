@@ -55,6 +55,9 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 
 \i testidata/pohjavesialueet.sql
 
+SELECT paivita_pohjavesialue_kooste();
+SELECT paivita_pohjavesialueet();
+
 -- Materiaalin käytöt
 \i testidata/materiaalin_kaytto.sql
 
@@ -163,3 +166,5 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Paikkaukset
 \i testidata/paikkaukset.sql
+
+SELECT paivita_raportti_cachet();

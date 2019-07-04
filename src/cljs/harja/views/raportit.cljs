@@ -233,7 +233,7 @@
                                (u/hoito-tai-sopimuskaudet ur)
                                (u/edelliset-hoitokaudet 5 false urakkatyyppi))
         ;; Materiaaliraportissa ei näytetä meneillään olevaa päivää
-        pvm-rajattu-eiliseen? (boolean (#{:materiaaliraportti} (:nimi @valittu-raporttityyppi)))]
+        pvm-rajattu-eiliseen? (boolean (#{:materiaaliraportti :pohjavesialueiden-suolatoteumat} (:nimi @valittu-raporttityyppi)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled

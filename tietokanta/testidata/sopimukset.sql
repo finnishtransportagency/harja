@@ -61,3 +61,8 @@ VALUES
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
   ('Lapin MHU testiurakan sopimus','2018-10-01','2023-09-30','MHU-TESTI-LAP', (SELECT id FROM urakka WHERE nimi='Lapin MHU testiurakka'));
+
+-- Aktiivinen oulu
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+  ('Aktiivinen Oulu Testi pääsopimus',NOW(),NOW() + INTERVAL '2 year','1111-TES', (SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'));
