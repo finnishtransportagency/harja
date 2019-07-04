@@ -207,7 +207,7 @@ ALTER TABLE suolatoteuma_reittipiste DROP COLUMN loppuosa;
 ALTER TABLE suolatoteuma_reittipiste DROP COLUMN loppuet;
 
 UPDATE suolatoteuma_reittipiste
-SET pohjavesialue=pisteen_pohjavesialue(sijainti, 50)
+SET pohjavesialue=pisteen_pohjavesialue(sijainti, 20)
 WHERE pohjavesialue IS NULL;
 
 -- Tätä funktiota ei käytetä missään
@@ -234,7 +234,7 @@ BEGIN
     FOREACH rp IN ARRAY NEW.reittipisteet LOOP
         FOREACH m IN ARRAY rp.materiaalit LOOP
             IF suolamateriaalikoodit @> ARRAY[m.materiaalikoodi] THEN
-                pohjavesialue_tunnus := pisteen_pohjavesialue(rp.sijainti, 50);
+                pohjavesialue_tunnus := pisteen_pohjavesialue(rp.sijainti, 20);
                 INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, pohjavesialue)
                 VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi, m.maara, pohjavesialue_tunnus);
             END IF;
@@ -249,22 +249,26 @@ CREATE INDEX ON pohjavesialue_kooste(tunnus);
 CREATE INDEX ON suolatoteuma_reittipiste(pohjavesialue);
 
 CREATE MATERIALIZED VIEW raportti_pohjavesialueiden_suolatoteumat AS
-    SELECT t.urakka                             AS "urakka-id",
-           date_trunc('day', rp.aika)           AS paiva,
-           SUM(rp.maara)                        AS yhteensa,
-           pva_k.tie,
-           pva_k.alkuosa,
-           pva_k.alkuet,
-           pva_k.loppuosa,
-           pva_k.loppuet,
-           (array_agg(pva_k.pituus))[1]         AS pituus, -- Tuossa pituudessa on vain yksi arvo
-           (array_agg(pva_k.tunnus))[1]         AS tunnus,
-           (array_agg(pva_k.talvisuolaraja))[1] AS kayttoraja
-    FROM suolatoteuma_reittipiste rp
-             LEFT JOIN toteuma t ON t.id = rp.toteuma
-             LEFT JOIN pohjavesialue_kooste pva_k ON (pva_k.tunnus = rp.pohjavesialue)
-    WHERE rp.pohjavesialue IS NOT NULL
-    GROUP BY t.urakka, paiva, pva_k.tie, pva_k.alkuosa, pva_k.alkuet, pva_k.loppuosa, pva_k.loppuet;
+SELECT t.urakka                             AS "urakka-id",
+       date_trunc('day', rp.aika)           AS paiva,
+       SUM(rp.maara)                        AS yhteensa,
+       pva_k.tie,
+       pva_k.alkuosa,
+       pva_k.alkuet,
+       pva_k.loppuosa,
+       pva_k.loppuet,
+       (array_agg(pva_k.pituus))[1]         AS pituus, -- Tuossa pituudessa on vain yksi arvo
+       (array_agg(pva_k.tunnus))[1]         AS tunnus,
+       (array_agg(pva_k.talvisuolaraja))[1] AS kayttoraja
+FROM suolatoteuma_reittipiste rp
+         LEFT JOIN toteuma t ON t.id = rp.toteuma
+         JOIN LATERAL (SELECT *
+                       FROM pohjavesialue_kooste pva_k
+                       WHERE pva_k.tunnus = rp.pohjavesialue
+                       ORDER BY ST_Distance(pva_k.alue, ST_Point(rp.sijainti[0], rp.sijainti[1]))
+                       LIMIT 1) AS pva_k ON TRUE
+WHERE rp.pohjavesialue IS NOT NULL
+GROUP BY t.urakka, paiva, pva_k.tie, pva_k.alkuosa, pva_k.alkuet, pva_k.loppuosa, pva_k.loppuet;
 
 
 CREATE OR REPLACE FUNCTION paivita_raportti_cachet()
