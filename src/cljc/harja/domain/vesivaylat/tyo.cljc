@@ -38,7 +38,7 @@
 
 (def metatiedot m/muokkauskentat)
 
-(defn- toiden-kokonaishinta [tyot suunnitellut-tyot]
+(defn toiden-kokonaishinta [tyot suunnitellut-tyot]
   (reduce + 0
           (map (fn [tyo]
                  (let [tyon-tpk (tpk/toimenpidekoodi-tehtavalla
@@ -47,7 +47,7 @@
                    (* (::maara tyo) (:yksikkohinta tyon-tpk))))
                tyot)))
 
-(defn- paivita-tyon-tiedot-idlla
+(defn paivita-tyon-tiedot-idlla
   "Päivittää töiden joukosta yksittäisen työn, jolla annettu id."
   [tyot tiedot]
   (mapv (fn [tyo]

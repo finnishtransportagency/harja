@@ -12,7 +12,7 @@
 
 (def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
 
-(defn- mailto-kehitystiimi []
+(defn mailto-kehitystiimi []
   (str "mailto:" sahkoposti-kehitystiimi))
 
 (def rivinvaihto "%0A")

@@ -210,7 +210,7 @@ VALUES ((SELECT id
 INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Lapin MHU testiurakka'),
+         WHERE nimi = 'Rovaniemen MHU testiurakka'),
         'Kunnossapitopäällikkö',
         (SELECT id
          FROM yhteyshenkilo
@@ -220,7 +220,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Lapin MHU testiurakka'),
+         WHERE nimi = 'Rovaniemen MHU testiurakka'),
         'Sillanvalvoja',
         (SELECT id
          FROM yhteyshenkilo
