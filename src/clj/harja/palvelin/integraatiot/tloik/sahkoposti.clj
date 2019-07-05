@@ -33,7 +33,7 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopet
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
 +virheellinen-toimenpide-viesti+
   {:otsikko "Virheellinen kuittausviesti"
-   :sisalto "Lähettämäsi viestistä ei voitu päätellä kuittauksen tietoja."})
+   :sisalto "Jos lähetit toimenpidekuittauksen tai muun määrämuotoisen viestin, tarkista viestin muoto ja lähetä se uudelleen. HARJA ei osannut käsitellä lähettämäsi sähköpostiviestin sisältöä."})
 
 (def ^{:doc "Viesti, joka lähetetään jos päivystäjätietoja tai ilmoitustietoja ei voida päätellä" :private true}
 +ilmoitustoimenpiteen-tallennus-epaonnistui+
