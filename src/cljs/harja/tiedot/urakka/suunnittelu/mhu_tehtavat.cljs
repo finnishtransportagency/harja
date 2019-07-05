@@ -24,12 +24,12 @@
     (update-in app polku f))
 
   LaajennaSoluaKlikattu
-  (process-event [{:keys [this auki?]} app]
+  (process-event [{:keys [laajenna-osa auki?]} app]
     (update-in app [:suunnittelu :tehtavat :tehtavat-taulukko]
                (fn [tila]
                  (map (fn [rivi]
                         (let [{:keys [vanhempi]} (meta rivi)
-                              rivi-alemmalla-tasolla? (= (p/osan-janan-id this) vanhempi)]
+                              rivi-alemmalla-tasolla? (= (p/osan-janan-id laajenna-osa) vanhempi)]
                           (cond
                             (and (= auki? true) rivi-alemmalla-tasolla?) (vary-meta (update rivi :class conj "piillota")
                                                                                     assoc :piillotettu? false)

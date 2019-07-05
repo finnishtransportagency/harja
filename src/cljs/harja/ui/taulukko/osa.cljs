@@ -30,6 +30,7 @@
             :on-click
             #(do (.preventDefault %)
                  (swap! auki? not)
+                 (println "TÄMÄ: " this)
                  (aukaise-fn this @auki?))}
            teksti
            (if @auki?

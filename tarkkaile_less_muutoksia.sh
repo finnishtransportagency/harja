@@ -11,5 +11,5 @@ while true; do
     echo "Muutoksia huomattu LESS tiedostoissa";
     lein less once;
   fi;
-  LESS_TIEDOSTOT=$LESS_TIEDOSTOT;
+  LESS_TIEDOSTOT=$LESS_TIEDOSTOT_UUSI;
 done

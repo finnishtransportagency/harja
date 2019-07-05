@@ -13,19 +13,18 @@
 (defn luo-taulukon-tehtavat
   [e! tehtavat]
   (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
+         (println "-------------<<<<")
+         (println [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi])
          (jana/->Rivi id
-                      [(if (= tehtavaryhmatyyppi "alataso")
-                         (with-meta (osa/->Teksti (str id "-teksti") nimi nil)
-                                    {:piillotettu? piillotettu?
-                                     :vanhempi vanhempi})
+                      [(if (= tehtavaryhmatyyppi "alitaso")
+                         (with-meta (osa/->Teksti (str id "-tehtava") nimi nil)
+                                    {:vanhempi vanhempi})
                          (with-meta (osa/->Laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)))
-                                    {:piillotettu? piillotettu?
-                                     :vanhempi vanhempi}))
-                       (with-meta (osa/->Teksti (str id "-teksti") maara nil)
-                                  {:piillotettu? piillotettu?
-                                   :vanhempi vanhempi})]
+                                    {:vanhempi vanhempi}))
+                       (with-meta (osa/->Teksti (str id "-maara") maara nil)
+                                  {:vanhempi vanhempi})]
                       (when piillotettu?
-                        "piillotettu")))
+                        #{"piillotettu"})))
        tehtavat))
 
 (defn tehtavat*
