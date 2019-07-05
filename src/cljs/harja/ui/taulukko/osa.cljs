@@ -16,12 +16,18 @@
   (osan-id [this]
     osan-id)
   (osan-janan-id [this]
-    (-> this meta ::janan-id)))
+    (-> this meta ::janan-id))
+  (osan-tila [this]))
 
-(defrecord Laajenna [osan-id teksti aukaise-fn]
+(defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
+  p/Tila
+  (hae-tila [this]
+    (:tila this))
+  (aseta-tila [this]
+    (assoc this :tila (atom false)))
   p/Osa
   (piirra-osa [this]
-    (let [auki? (atom false)]
+    (let [auki? (p/hae-tila this)]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
           [:span.klikattava.osa-laajenna
@@ -30,7 +36,6 @@
             :on-click
             #(do (.preventDefault %)
                  (swap! auki? not)
-                 (println "TÄMÄ: " this)
                  (aukaise-fn this @auki?))}
            teksti
            (if @auki?
@@ -43,6 +48,11 @@
   (osan-id [this]
     osan-id)
   (osan-janan-id [this]
-    (-> this meta ::janan-id)))
+    (-> this meta ::janan-id))
+  (osan-tila [this]
+    (p/hae-tila this)))
 
 (defrecord Raha [osan-id summa parametrit])
+
+(defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
+  (p/aseta-tila (->Laajenna osan-id teksti aukaise-fn parametrit)))

@@ -12,4 +12,9 @@
   (piirra-osa [this])
   (osan-id? [this id])
   (osan-janan-id [this])
-  (osan-id [this]))
+  (osan-id [this])
+  (osan-tila [this]))
+
+(defprotocol Tila
+  (hae-tila [this])
+  (aseta-tila [this]))

@@ -1,7 +1,8 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
             [clojure.string :as clj-str]
-            [harja.ui.taulukko.protokollat :as p]))
+            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.osa :as osa]))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -13,6 +14,22 @@
     "ylataso" (not= "ylataso" alempi-taso)
     "valitaso" (= "alataso" alempi-taso)
     "alataso" false))
+
+(defn klikatun-rivin-lapsenlapsi?
+  [janan-id klikatun-rivin-id taulukon-rivit]
+  (let [klikatun-rivin-lapset (get (group-by #(-> % meta :vanhempi)
+                                             taulukon-rivit)
+                                   klikatun-rivin-id)
+        on-lapsen-lapsi? (some #(= janan-id (p/janan-id %))
+                               klikatun-rivin-lapset)
+        recursion-vastaus (cond
+                            (nil? klikatun-rivin-lapset) false
+                            on-lapsen-lapsi? true
+                            :else (map #(klikatun-rivin-lapsenlapsi? janan-id (p/janan-id %) taulukon-rivit)
+                                       klikatun-rivin-lapset))]
+    (if (boolean? recursion-vastaus)
+      recursion-vastaus
+      (some true? recursion-vastaus))))
 
 (extend-protocol tuck/Event
   MuutaTila
@@ -26,14 +43,21 @@
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
     (update-in app [:suunnittelu :tehtavat :tehtavat-taulukko]
-               (fn [tila]
-                 (map (fn [rivi]
+               (fn [taulukon-rivit]
+                 (map (fn [{:keys [janan-id] :as rivi}]
                         (let [{:keys [vanhempi]} (meta rivi)
-                              rivi-alemmalla-tasolla? (= (p/osan-janan-id laajenna-osa) vanhempi)]
+                              klikatun-rivin-id (p/osan-janan-id laajenna-osa)
+                              klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
+                              klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
+                          (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
+                            (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
+                                                                   %)
+                                                                (:solut rivi))]
+                              (reset! (p/osan-tila rivin-laajenna-osa) false)))
                           (cond
-                            (and (= auki? true) rivi-alemmalla-tasolla?) (vary-meta (update rivi :class conj "piillota")
-                                                                                    assoc :piillotettu? false)
-                            (and (= auki? false) rivi-alemmalla-tasolla?) (vary-meta (update rivi :class disj "piillota")
+                            (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
+                                                                         assoc :piillotettu? false)
+                            (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
                                                                                      assoc :piillotettu? true)
                             :else rivi)))
-                      tila)))))
+                      taulukon-rivit)))))
