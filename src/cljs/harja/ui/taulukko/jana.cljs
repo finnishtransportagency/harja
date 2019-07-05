@@ -1,24 +1,15 @@
 (ns harja.ui.taulukko.jana
   (:require [clojure.spec.alpha :as s]
-            [harja.ui.taulukko.osa :as osa]))
-
-(defprotocol Jana
-  (piirra-jana [this]
-               "Tämän funktion pitäisi luoda html elementti, joka edustaa joko riviä tai saraketta.
-                Todennäiköisesti kutsuu myös osa/piirra-osa funktiota")
-  (janan-id? [this id])
-  (janan-osat [this]))
+            [harja.ui.taulukko.protokollat :as p]))
 
 (defrecord Otsikko [otsikot id]
-  Jana
+  p/Jana
   (piirra-jana [this]
     [:div {:class "janan-otsikko"}
      (for [o (:otsikot this)
            :let [{:keys [key class nimi id]} o]]
        ^{:key key}
-       (osa/piirra-osa (osa/->Teksti nimi
-                                     {:class class}
-                                     id)))])
+       (p/piirra-osa o))])
 
   (janan-id? [this id]
     (= (:id this) id))
@@ -27,14 +18,15 @@
     (:otsikot this)))
 
 (defrecord Rivi [janan-id solut class]
-  Jana
+  p/Jana
   (piirra-jana [this]
     [:div {:class (str "janan-rivi "
                        class)}
      (for [solu (:solut this)
            :let [{:keys [osan-id]} solu]]
        (with-meta
-         (osa/piirra-osa solu)
+         [p/piirra-osa (vary-meta solu
+                                  assoc :harja.ui.taulukko.osa/janan-id janan-id)]
          {:key osan-id}))])
 
   (janan-id? [this id]

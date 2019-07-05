@@ -153,7 +153,7 @@
                                   [com.bhauman/figwheel-main "0.2.1"]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
                    :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
-                   :resource-paths ["dev-resources/js" "resources"]
+                   :resource-paths ["dev-resources/js" "resources/public/css" "resources"]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.4.2"]
                              [lein-eftest "0.5.0"]]

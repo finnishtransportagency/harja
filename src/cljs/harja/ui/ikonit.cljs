@@ -500,10 +500,14 @@
   [:span.livicon-ban])
 (defn livicon-chevron-up []
   [:span.livicon-chevron.livicon-chevron-up])
-(defn livicon-chevron-right []
-  [:span.livicon-chevron.livicon-chevron-right])
-(defn livicon-chevron-down []
-  [:span.livicon-chevron.livicon-chevron-down])
+(defn livicon-chevron-right
+  ([] (livicon-chevron-right nil))
+  ([luokka]
+   [:span.livicon-chevron.livicon-chevron-right {:class luokka}]))
+(defn livicon-chevron-down
+  ([] (livicon-chevron-down nil))
+  ([luokka]
+   [:span.livicon-chevron.livicon-chevron-down {:class luokka}]))
 (defn livicon-chevron-left []
   [:span.livicon-chevron.livicon-chevron-left])
 (defn livicon-download []

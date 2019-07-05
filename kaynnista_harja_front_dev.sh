@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euxo -pipefail
 
-LESS_WATCH_PID=$( pgrep -f lein\ less\ auto )
+LESS_WATCH_PID=$( pgrep -f [l]ein\ less\ auto )
 
 if [ -n "$LESS_WATCH_PID" ];
 then

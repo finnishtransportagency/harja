@@ -1,17 +1,43 @@
-(ns harja.ui.taulukko.osa)
+(ns harja.ui.taulukko.osa
+  (:refer-clojure :exclude [atom])
+  (:require [reagent.core :refer [atom]]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.taulukko.protokollat :as p]))
 
-(defprotocol Osa
-  (piirra-osa [this])
-  (osan-id? [this id]))
-
-(defrecord Teksti [osan-id teksti parameters]
-  Osa
+(defrecord Teksti [osan-id teksti parametrit]
+  p/Osa
   (piirra-osa [this]
-    (let [{:keys [id class]} (:parameters this)]
+    (let [{:keys [id class]} (:parametrit this)]
       [:div {:class class
              :id id}
        (:teksti this)]))
   (osan-id? [this id]
-    (= (:osan-id this) id)))
+    (= (:osan-id this) id))
+  (osan-janan-id [this]
+    (-> this meta ::janan-id)))
 
-(defrecord Laajenna [osan-id teksti ])
+(defrecord Laajenna [osan-id teksti aukaise-fn]
+  p/Osa
+  (piirra-osa [this]
+    (let [auki? (atom false)]
+      (fn [this]
+        (let [{:keys [id class]} (:parametrit this)]
+          [:span.klikattava.osa-laajenna
+           {:class class
+            :id id
+            :on-click
+            #(do (.preventDefault %)
+                 (swap! auki? not)
+                 (aukaise-fn this @auki?))}
+           teksti
+           (if @auki?
+             ^{:key "laajenna-auki"}
+             [ikonit/livicon-chevron-down "oikealle"]
+             ^{:key "laajenna-kiini"}
+             [ikonit/livicon-chevron-right "oikealle"])]))))
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-janan-id [this]
+    (-> this meta ::janan-id)))
+
+(defrecord Raha [osan-id summa parametrit])
