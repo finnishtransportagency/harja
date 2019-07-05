@@ -1,4 +1,5 @@
 (ns harja.ui.taulukko.osa
+  "Määritellään taulukon osat täällä."
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom]]
             [harja.ui.ikonit :as ikonit]
@@ -27,7 +28,8 @@
     (assoc this :tila (atom false)))
   p/Osa
   (piirra-osa [this]
-    (let [auki? (p/hae-tila this)]
+    (let [auki? (or (p/hae-tila this)
+                    (atom false))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
           [:span.klikattava.osa-laajenna

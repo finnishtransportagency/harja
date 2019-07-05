@@ -49,14 +49,19 @@
                               klikatun-rivin-id (p/osan-janan-id laajenna-osa)
                               klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
                               klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
+                          ;; Jos joku rivi on kiinnitetty, halutaan sulkea myös kaikki lapset ja lasten lapset.
+                          ;; Kumminkin lapsirivien Laajenna osan sisäinen tila jää väärään tilaan, ellei sitä säädä ulko käsin.
+                          ;; Tässä otetaan ja muutetaan se oikeaksi.
                           (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
                             (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
                                                                    %)
                                                                 (:solut rivi))]
                               (reset! (p/osan-tila rivin-laajenna-osa) false)))
                           (cond
+                            ;; Jos riviä klikataan, piilotetaan lapset
                             (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
                                                                          assoc :piillotettu? false)
+                            ;; Jos rivillä on lapsen lapsia, piillotetaan myös ne
                             (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
                                                                                      assoc :piillotettu? true)
                             :else rivi)))
