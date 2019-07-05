@@ -1,18 +1,18 @@
 #!/bin/bash
-set -euxo -pipefail
+set -x
 
-LESS_WATCH_PID=$( pgrep -f [l]ein\ less\ auto )
+LESS_WATCH_PID="$( pgrep -f [t]arkkaile_less_muutoksia.sh )"
 
 if [ -n "$LESS_WATCH_PID" ];
 then
-  echo "----- Löydettiin käynnissä oleva less watch -----"
-  echo "$( ps -ax | grep [l]ein\ less\ auto )"
+  echo "----- Löydettiin käynnissä oleva less tarkkailu -----"
+  echo "$( ps -ax | grep [t]arkkaile_less_muutoksia.sh )"
   echo "Tapetaan prosessi $LESS_WATCH_PID"
-  echo "-------------------------------------------------"
+  echo "-----------------------------------------------------"
   kill -9 $LESS_WATCH_PID
 fi
 
 echo "Generoidaan less -> CSS taustalla..."
-lein less auto &
+bash tarkkaile_less_muutoksia.sh &
 echo "Käynnistetään figwheel"
 lein build-dev

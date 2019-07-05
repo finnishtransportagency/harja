@@ -13,6 +13,8 @@
        (:teksti this)]))
   (osan-id? [this id]
     (= (:osan-id this) id))
+  (osan-id [this]
+    osan-id)
   (osan-janan-id [this]
     (-> this meta ::janan-id)))
 
@@ -34,9 +36,11 @@
              ^{:key "laajenna-auki"}
              [ikonit/livicon-chevron-down "oikealle"]
              ^{:key "laajenna-kiini"}
-             [ikonit/livicon-chevron-right "oikealle"])]))))
+             [ikonit/livicon-chevron-left "oikealle"])]))))
   (osan-id? [this id]
     (= (:osan-id this) id))
+  (osan-id [this]
+    osan-id)
   (osan-janan-id [this]
     (-> this meta ::janan-id)))
 

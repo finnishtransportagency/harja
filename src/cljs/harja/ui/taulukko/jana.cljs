@@ -13,15 +13,17 @@
 
   (janan-id? [this id]
     (= (:id this) id))
+  (janan-id [this]
+    id)
 
   (janan-osat [this]
     (:otsikot this)))
 
-(defrecord Rivi [janan-id solut class]
+(defrecord Rivi [janan-id solut luokat]
   p/Jana
   (piirra-jana [this]
-    [:div {:class (str "janan-rivi "
-                       class)}
+    [:div.janan-rivi (when luokat
+                       {:class (apply str (interpose " " luokat))})
      (for [solu (:solut this)
            :let [{:keys [osan-id]} solu]]
        (with-meta
@@ -31,6 +33,8 @@
 
   (janan-id? [this id]
     (= (:janan-id this) id))
+  (janan-id [this]
+    janan-id)
 
   (janan-osat [this]
     (:solut this)))
@@ -46,6 +50,17 @@
 (s/def ::otsikot (s/coll-of ::otsikko-osa))
 (s/def ::otsikko-jana (s/keys :req-un [::otsikot ::id]))
 
+(s/def ::janan-id any?)
+(s/def ::solut (s/and sequential?
+                      (fn [solut]
+                        (every? #(satisfies? p/Osa %) solut))))
+(s/def ::luokat (s/nilable (s/coll-of string? :kind set?)))
+(s/def ::rivi-jana (s/keys :req-un [::janan-id ::solut ::luokat]))
+
 (s/fdef ->Otsikko
         :args (s/cat :otsikot ::otsikot :id ::id)
         :ret ::otsikko-jana)
+
+(s/fdef ->Rivi
+        :args (s/cat :id ::janan-id :solut ::solut :luokat ::luokat)
+        :ret ::rivi-jana)

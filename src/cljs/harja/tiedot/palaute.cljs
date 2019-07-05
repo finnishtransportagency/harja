@@ -19,7 +19,7 @@
 (def koodiblokki "%7Bcode%7D")
 (def valilyonti "%20")
 
-(defn- mailto-paakayttaja []
+(defn mailto-paakayttaja []
   (str "mailto:" sahkoposti-paakayttaja))
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin

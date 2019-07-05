@@ -5,9 +5,11 @@
                "Tämän funktion pitäisi luoda html elementti, joka edustaa joko riviä tai saraketta.
                 Todennäiköisesti kutsuu myös osa/piirra-osa funktiota")
   (janan-id? [this id])
-  (janan-osat [this]))
+  (janan-osat [this])
+  (janan-id [this]))
 
 (defprotocol Osa
   (piirra-osa [this])
   (osan-id? [this id])
-  (osan-janan-id [this]))
+  (osan-janan-id [this])
+  (osan-id [this]))

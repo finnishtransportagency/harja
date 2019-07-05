@@ -49,7 +49,7 @@
         [:meta {:charset "utf-8"}]
         [:meta {:name "mobile-web-app-capable" :content "yes"}]
         [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-        [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
+        [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
         [:script {:type "text/javascript" :src "js/less-3.9-0.js"}]]
        [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}

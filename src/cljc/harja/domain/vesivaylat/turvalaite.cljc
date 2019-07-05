@@ -6,7 +6,9 @@
     [specql.rel :as rel]
     #?@(:clj [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    ]))
+    ]
+        :cljs [
+               [specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 

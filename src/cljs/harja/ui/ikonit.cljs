@@ -508,8 +508,10 @@
   ([] (livicon-chevron-down nil))
   ([luokka]
    [:span.livicon-chevron.livicon-chevron-down {:class luokka}]))
-(defn livicon-chevron-left []
-  [:span.livicon-chevron.livicon-chevron-left])
+(defn livicon-chevron-left
+  ([] (livicon-chevron-left nil))
+  ([luokka]
+   [:span.livicon-chevron.livicon-chevron-left {:class luokka}]))
 (defn livicon-download []
   [:span.livicon-download])
 (defn livicon-info-sign []
