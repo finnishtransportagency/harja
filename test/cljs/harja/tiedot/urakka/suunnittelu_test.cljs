@@ -260,6 +260,12 @@
                                               :kuukausi 11}]
                                     (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
                                     (is (= (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm 2014)) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
+(deftest aseta-hoitokausi-testi-3 []
+                                  (let [hoitokaudet (u/hoito-tai-sopimuskaudet {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2019) :loppupvm (pvm/hoitokauden-loppupvm 2024)})
+                                        rivi {:vuosi 2021
+                                              :kuukausi 3}]
+                                    (is (= (pvm/hoitokauden-alkupvm 2021) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
+                                    (is (= (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm 2022)) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
 (deftest foo (is (= 1 1)))
 
 (deftest yllapitourakan-sopimuskaudet-monta-vuotta
