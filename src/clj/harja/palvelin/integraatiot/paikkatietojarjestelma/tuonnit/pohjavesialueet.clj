@@ -43,6 +43,6 @@
         (doseq [pohjavesialue (filter #(not (= "" (:pvnro %)))(shapefile/tuo shapefile))]
           (vie-pohjavesialue db pohjavesialue)))
       (p/paivita-pohjavesialueet db)
-      (p/paivita-pohjavesialue-kooste! db)
+      (p/paivita-pohjavesialue-kooste db)
       (log/debug "Pohjavesialueiden tuonti kantaan valmis."))
     (log/debug "Pohjavesialueiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

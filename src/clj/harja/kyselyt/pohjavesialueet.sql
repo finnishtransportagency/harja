@@ -64,5 +64,5 @@ INSERT INTO pohjavesialue
 -- name: paivita-pohjavesialueet
 SELECT paivita_pohjavesialueet();
 
--- name: paivita-pohjavesialue-kooste!
+-- name: paivita-pohjavesialue-kooste
 SELECT paivita_pohjavesialue_kooste();
