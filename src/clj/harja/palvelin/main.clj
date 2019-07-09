@@ -42,6 +42,7 @@
     [harja.palvelin.palvelut.indeksit :as indeksit]
     [harja.palvelin.palvelut.urakat :as urakat]
     [harja.palvelin.palvelut.urakan-toimenpiteet :as urakan-toimenpiteet]
+    [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
     [harja.palvelin.palvelut.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.kiinteahintaiset-tyot :as kiinteahintaiset-tyot]
@@ -325,6 +326,9 @@
       :urakan-toimenpiteet (component/using
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
                              [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :budjettisuunnittelu (component/using
+                               (budjettisuunnittelu/->Budjettisuunnittelu)
+                               [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yksikkohintaiset-tyot (component/using
                                (yksikkohintaiset-tyot/->Yksikkohintaiset-tyot)
                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
