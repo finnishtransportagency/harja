@@ -1,2 +1,3 @@
--- Tallenna ja hae tavoitebudjetti & kattohinta yms. tiedot
+-- name:tallenna-budjettiviitekehys
+select * from urakka limit 1;
 

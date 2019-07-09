@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.suunnittelu.kustannusarvioidut-tyot
-  "Tämä nimiavaruus hallinnoi urakan kustannusarvioituja töitä.
+  "Tämä nimiavaruus hallinnoi urakan kustannusarvioituja töitä. Töitä tehdään urakkatyypissä teiden-hoito.
   Kustannusarvioiduista töistä tehdään ennen hoitokauden alkua budjetti, joka lasketaan mukaan Sampoon lähetettävään kustannussuunnitelmaan.
   Arvio ei kuitenkaan kasvata maksuerää. Maksuerään summautuvat euromäärät saadaan urakoitsijan syöttämiltä laskuilta. Ne nivoutuvat tehtävähierarkian kautta kustannusarvioihin.
   Kustannusarvioita ja laskutustietoja vertaillaan raporteilla."

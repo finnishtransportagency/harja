@@ -34,5 +34,5 @@ WHERE toimenpideinstanssi = :toimenpideinstanssi AND tyyppi = :tyyppi
 -- Lisää kustannusarvioidunt tyon
 INSERT INTO kustannusarvioitu_tyo
 (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu, luoja)
-VALUES (:summa, :osuus-hoitokauden-summasta, :tehtava, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :kayttaja);
+VALUES (:vuosi, :kuukausi, :summa, :tyyppi, :tehtava, :tehtavaryhma, :toimenpideinstanssi, :sopimus, current_timestamp, :kayttaja);
 

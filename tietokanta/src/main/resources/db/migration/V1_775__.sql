@@ -29,7 +29,7 @@ CREATE TABLE kiinteahinainen_tyo (
                                      luoja integer references kayttaja(id),
                                      muokattu timestamp,
                                      muokkaaja integer references kayttaja(id),
-                                     unique (toimenpideinstanssi, tehtava, sopimus, vuosi, kuukausi));
+                                     unique (toimenpideinstanssi, sopimus, vuosi, kuukausi));
 
 
 COMMENT ON table kiinteahinainen_tyo IS

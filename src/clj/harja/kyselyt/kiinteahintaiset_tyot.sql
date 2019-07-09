@@ -30,8 +30,8 @@ WHERE toimenpideinstanssi = :toimenpideinstanssi
       AND vuosi = :vuosi AND kuukausi = :kuukausi;
 
 
--- name: lisaa-kustannusarvioitu-tyo<!
--- Lisää kustannusarvioidun tyon
+-- name: lisaa-kiinteahintainen-tyo<!
+-- Lisää kiinteähintaisen tyon
 INSERT INTO kiinteahintainen_tyo
 (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus, luotu, luoja)
 VALUES (:vuosi, :kuukausi, :summa, :toimenpideinstanssi, :sopimus, current_timestamp , :kayttaja);
