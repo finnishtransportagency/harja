@@ -19,7 +19,7 @@
             [clojure.set :as set]
             [harja.domain.roolit :as roolit]))
 
-(declare hae-urakan-budjetoidut-tyot tallenna-budjetoidut-tyot hae-urakan-budjettiviitekehys tallenna-urakan-bujettiviitekehys )
+(declare hae-urakan-budjetoidut-tyot tallenna-budjetoidut-tyot hae-urakan-budjettiviitekehys tallenna-urakan-bujettiviitekehys)
 
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
@@ -46,37 +46,29 @@
     (poista-palvelu (:http-palvelin this) :tallenna-budjettiviitekehys)
     this))
 
-(defn hae
-  [db user urakka-id])
-
-(defn hae-urakan-budjetoidut-tyot
-  "Palvelu, joka palauttaa urakan budjetoidut työt."
-  [db user urakka-id]
-  ;; kaikkien budjetoitujen töiden käyttäjäoikeudet ovat samat kuin kokonaishintaisten töiden käsittelyllä
-  ;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
-
-  ;; TODO: yhdistä hakujen palauttamat mapit
-  ;(kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
-  ;(kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
-  ;(ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)
-
-  )
 
 (defn hae-urakan-budjettiviitekehys
   "Palvelu joka hakee urakan budjetin viitekehyksen: hoitokausikohtaiset tavoite- ja kattohinnat."
   [db user urakka-id]
-  ;; TODO: toteuta haku
+  ;; TODO: suunnittele tietokantataulu ja toteuta haku
   )
 
 (defn tallenna-budjettiviitekehys
   "Palvelu joka tallentaa urakan budjetin viitekehyksen: hoitokausikohtaiset tavoite- ja kattohinnat."
   [db user urakka-id tavoitebudjetit kattohinnat]
-  ;; TODO: tallenna tavoitehinta ja kattohinta
+  ;; TODO: suunnittele tietokantataulu ja toteuta haku
   )
 
+(defn hae-urakan-budjetoidut-tyot
+  "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
+  [db user urakka-id]
 
+  ;; Kaikkien budjetoitujen töiden käyttäjäoikeudet ovat samat kuin kokonaishintaisten töiden käsittelyllä
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
 
-
+  {:kiinteahintaiset-tyot (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
+   :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
+   :yksikkohintaiset-tyot (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)})
 
 (defn tallenna-budjetoidut-tyot
   "Palvelu joka tallentaa urakan kustannusarvioidut tyot."
