@@ -32,19 +32,19 @@
   SuljeAlasveto
   (process-event [_ app]
     (log "Sulje " app)
-    (assoc app
-      :valinta-auki false))
+    (assoc-in app
+      [:murupolku :valinta-auki] false))
   Valitse
   (process-event [{valinta :valinta valittu? :valittu?} app]
     (log "Valitse " app)
-    (assoc app :valinta valinta))
+    (assoc-in app [:murupolku :valinta] valinta))
   AvaaAlasveto
   (process-event [{tila :tila} app]
     (log "Avaa " app)
     (do
       (log "Loggaan " tila)
-      (assoc app
-        :valinta-auki tila))))
+      (assoc-in app
+        [:murupolku :valinta-auki] tila))))
 
 (defn koko-maa []
   [:li
@@ -58,6 +58,7 @@
     "Koko maa"]])
 
 (defn hallintayksikko [e! valinta-auki]
+  (log "Hallinta " valinta-auki)
   (let [valittu @nav/valittu-hallintayksikko]
     [:li.dropdown.livi-alasveto {:class (when (= :hallintayksikko valinta-auki) "open")}
 
@@ -72,7 +73,9 @@
          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
      [:button.nappi-murupolkualasveto.dropdown-toggle
-      {:on-click #(when-not (= valinta-auki :hallintayksikko) (e! (->AvaaAlasveto :hallintayksikko)))}
+      {:on-click #(when-not (= valinta-auki :hallintayksikko)
+                    (log "Avaan alasvedon :hallintayksikko")
+                    (e! (->AvaaAlasveto :hallintayksikko)))}
       ;{:on-click #(swap! valinta-auki
       ;                   (fn [v]
       ;                     (if (= v :hallintayksikko)
@@ -87,6 +90,7 @@
         [:li.harja-alasvetolistaitemi
          [linkki (hal/elynumero-ja-nimi muu-yksikko)
           #(do (e! (->SuljeAlasveto))
+               (e! (tkuva/->AsetaHallintayksikko muu-yksikko))
                (nav/valitse-hallintayksikko! muu-yksikko))]])]]))
 
 (defn urakka [e! valinta-auki]
@@ -121,7 +125,11 @@
             ^{:key (str "urakka-" (:id urakka))}
             [:li.harja-alasvetolistaitemi {:class (when-not @nav/valittu-hallintayksikko "disabled")
                                            :disabled (not
-                                                       (boolean @nav/valittu-hallintayksikko)) } [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])))]]))
+                                                       (boolean @nav/valittu-hallintayksikko)) }
+             [linkki (:nimi urakka) #(do
+                                       (e! (tkuva/->AsetaValittuUrakka urakka))
+                                       (e! (->SuljeAlasveto))
+                                       (nav/valitse-urakka! urakka))]])))]])) ; legacy reasons
 
 (defn valinta [k v]
   ; (tlog/info "Luodaan valinta " k v (keys k))
@@ -222,4 +230,4 @@
                [urakoitsija])
              [urakkatyyppi]]
             [:ol.murupolku
-             [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]])])])))
+             [koko-maa] [hallintayksikko e! valinta-auki] [urakka e! valinta-auki] [lisaa-urakka e! aluesuodattimet]])])])))

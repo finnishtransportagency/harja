@@ -12,9 +12,10 @@
 The following keys are supported in the configuration:
 
   :active    An atom containing the selected tab number. Defaults to (atom 0).
-  :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
+  :style     Tab style, either :pills or :tabs. Defaults to :tabs.
+  :event     A function that is ran when clicked, gets passed the keyword"
 
-  [{:keys [active style classes]} & alternating-title-and-component]
+  [{:keys [active style classes event]} & alternating-title-and-component]
   (let [tarkista-aktiivinen-tabi (fn [active alternating-title-and-component]
                                    (let [tab-nimet (keep #(when (not (nil? (nth % 2)))
                                                            (nth % 1))
@@ -47,6 +48,7 @@ The following keys are supported in the configuration:
                 [:a.klikattava (merge
                                  {:on-click #(do
                                                (.preventDefault %)
+                                               (when event (event keyword))
                                                (reset! active keyword))}
                                  (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
                                        cy-title (-> title

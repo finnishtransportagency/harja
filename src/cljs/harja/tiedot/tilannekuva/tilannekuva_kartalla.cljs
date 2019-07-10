@@ -13,7 +13,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat-kartalla])
+            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat-kartalla]
+            [harja.tilanhallinta.tila :as tila])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -161,8 +162,8 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
                      uudet-tasot)
                    tasot)))))))
 
-(add-watch haetut-asiat :paivita-tilannekuvatasot
-           (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))
+(add-watch tila/master :paivita-tilannekuvatasot
+           (fn [_ _ {vanha :tilannekuva} {uusi :tilannekuva}] (paivita-tilannekuvatasot vanha uusi)))
 
 (defn- organisaation-geometria [piirrettava {stroke :stroke}]
   (let [alue (:alue piirrettava)]

@@ -44,7 +44,7 @@ bufferi 1000)
 ;; karttaa siirretään tai zoomataan
 (def ^{:doc   "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
        :const true}
-hakutiheys-nykytilanne 3000)                                ;30000
+hakutiheys-nykytilanne 30000)
 
 (def ^{:doc   "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}
@@ -163,7 +163,6 @@ hakutiheys-historiakuva 3000)                            ;1200000
 (defonce nykytilanteen-aikasuodattimen-arvo (atom 2))
 
 (defn kasaa-parametrit [tila nakyva-alue suodattimet & [alueet]]
-  (log "Kasaan parametreja")
   (merge
     {:urakat       (tk/valittujen-suodattimien-idt (or alueet
                                                        (:alueet suodattimet)))
@@ -390,13 +389,15 @@ hakutiheys-historiakuva 3000)                            ;1200000
       (reset! tilannekuva-kartalla/url-hakuparametrit
               (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
-      (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                      (assoc :tarkastukset (:tarkastukset hakuparametrit)))
-            tulos (kasittele-tilannekuvan-hakutulos tulos)]
-        (when @nakymassa?
-          (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
-          (reset! tilannekuva-kartalla/haetut-asiat tulos))
-        (kartta/aseta-paivitetaan-karttaa-tila! false)))))
+      ;(let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
+      ;                (assoc :tarkastukset (:tarkastukset hakuparametrit)))
+      ;      tulos (kasittele-tilannekuvan-hakutulos tulos)]
+      ;  (log "Hellurei ja hellät tunteet")
+      ;  (when @nakymassa?
+      ;    (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
+      ;    (reset! tilannekuva-kartalla/haetut-asiat tulos))
+        (kartta/aseta-paivitetaan-karttaa-tila! false)
+      )))
 
 (def asioiden-haku
   (reaction<! [hakuparametrit @hakuparametrit
@@ -470,31 +471,95 @@ hakutiheys-historiakuva 3000)                            ;1200000
              (log "valittu-tila muuttui " old " => " new)
              (pollaus-muuttui)))
 
-(defn taustahaku
+
+(defrecord HaeTilannekuvaan [])
+(defrecord AsetaTilannekuvaan [urakat])
+(defrecord AsetaValittuTila [valittu-tila])
+(defrecord AsetaValittuUrakka [urakka])
+(defrecord AsetaHallintayksikko [yksikko])
+
+(defn- taustahaku
   "Hakee taustalla"
-  [])
+  [app haku-fn]
+  (let [aja (atom true)]
+    (go-loop []
+             (<! (timeout 3000))
+             (when @aja
+               (haku-fn)
+               (recur)))
+    #(do
+       (log "Aja " @aja)
+       (reset! aja false))))
+
+(defn- etsi-ja-aseta-urakat-tilaan
+  [kaikki & urakat-ja-tilat]
+  (loop [[urakka tila] (first (partition 2 (filter #(not (nil? %)) urakat-ja-tilat)))
+         loput (rest (partition 2 (filter #(not (nil? %)) urakat-ja-tilat)))
+         alueurakat kaikki]
+    (let [urakka-id (:id urakka)
+          hallintayksikko-id (-> urakka :hallintayksikko :id)
+          urakka-avain (some
+                          #(when (= (:id %) urakka-id) %)
+                          (keys (get alueurakat hallintayksikko-id)))
+          alueet (assoc-in alueurakat [(get-in urakka [:hallintayksikko :id]) urakka-avain] tila)]
+       (if-not (empty? loput)
+       (recur
+         (first loput)
+         (rest loput)
+         alueet)
+       alueet))))
 
 (extend-protocol tuck/Event
+  AsetaHallintayksikko
+  (process-event [{yksikko :yksikko} app]
+    (let [app (assoc-in app [:navigaatio :valittu-urakka] nil)]
+      (assoc-in app [:navigaatio :valittu-hallintayksikko] yksikko)))
+  AsetaValittuUrakka
+  (process-event [{urakka :urakka} app]
+    (log "Asetetaan urakakk " urakka)
+    (let [nykyinen (get-in app [:navigaatio :valittu-urakka])
+          polku [:aluesuodattimet :hoito]
+          alueet (assoc-in
+                   app
+                   polku
+                   (etsi-ja-aseta-urakat-tilaan
+                     (get-in app polku)
+                     nykyinen (when-not (nil? nykyinen) false)
+                     urakka true))]
+      (assoc-in alueet [:navigaatio :valittu-urakka] urakka)))
+  AsetaValittuTila
+  (process-event [{valittu-tila :valittu-tila} app]
+    (assoc-in app [:navigaatio :valittu-tila] valittu-tila))
+  HaeTilannekuvaan
+  (process-event [_ app]
+    (let [async-aseta-fn (tuck/send-async! ->AsetaTilannekuvaan)]
+      ; (log "Moikka 2")
+      (go
+        (reset! tilannekuva-kartalla/url-hakuparametrit
+                (k/url-parametri (aikaparametrilla-kuva (dissoc @hakuparametrit :alue))))
+        (let [tulos (<!
+                        (k/post! :hae-tilannekuvaan
+                                 (aikaparametrilla @hakuparametrit)))]
+            (async-aseta-fn (kasittele-tilannekuvan-hakutulos (assoc tulos :tarkastukset (:tarkastukset @hakuparametrit))))))
+      (assoc-in app [:haku :haku-paalla?] true)))
+  AsetaTilannekuvaan
+  (process-event [{urakat :urakat} app]
+    ;(log "Moikka 3")
+    (merge app {:haku        (assoc (:haku app) :haku-paalla? false)
+                :tilannekuva urakat}))
   AjaTaustahaku
   (process-event [_ app]
     (log "Ajan taustahaun")
-    (let [a (fn []
-              (let [aja (atom true)]
-                (go-loop []
-                        (<! (timeout 3000))
-                        (when aja
-                          (log "Moikka moi")
-                          (recur)))
-                #(reset! aja false)))]
+    (let [haku-fn (tuck/send-async! ->HaeTilannekuvaan)]
       (merge app
-            {:haku {:lopeta-haku (a)
-                    :haku-kaynnissa? true}})))
+            {:haku {:lopeta-haku (taustahaku app haku-fn)
+                    :taustahaku-paalla? true}})))
   LopetaTaustahaku
   (process-event [_ app]
     (log "Lopetan taustahaun")
     (let [lopeta-haku (get-in app [:haku :lopeta-haku])]
       (merge app {:haku {:lopeta-haku (lopeta-haku)
-                         :haku-kaynnissa? false}})))
+                         :taustahaku-paalla? false}})))
   AsetaAluesuodatin
   (process-event [{suodatin :suodatin tila :tila polku :polku} app]
     ;(log "Asetetaan " suodatin " polussa " polku " tilaan " tila)

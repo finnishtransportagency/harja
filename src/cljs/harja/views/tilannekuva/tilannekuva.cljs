@@ -297,7 +297,7 @@ suodatinryhmat
     (fn []
       [tienakyma/tienakyma])))
 
-(defn suodattimet []
+(defn suodattimet [e!]
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
     (komp/luo
@@ -309,11 +309,11 @@ suodatinryhmat
       (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
-      (fn []
+      (fn [e!]
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus
                                       :overflow-x "hidden"
                                       :overflow-y "auto"}}
-         [bs/tabs {:active (nav/valittu-valilehti-atom :tilannekuva)}
+         [bs/tabs {:active (nav/valittu-valilehti-atom :tilannekuva) :event #(e! (tiedot/->AsetaValittuTila %))}
           "Nykytilanne"
           :nykytilanne
           [nykytilanne-valinnat]
@@ -329,13 +329,13 @@ suodatinryhmat
 
 (defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
 
-(defn hallintapaneeli []
+(defn hallintapaneeli [e!]
   [yleiset/haitari-paneelit
    {:auki @hallintapaneeli-auki
     :luokka "haitari-tilannekuva"
     :toggle-osio! #(swap! hallintapaneeli-auki update % not)}
 
-   "Hallintapaneeli" :hallintapaneeli [suodattimet]])
+   "Hallintapaneeli" :hallintapaneeli [suodattimet e!]])
 
 
 
@@ -407,7 +407,7 @@ suodatinryhmat
            (tiedot/lopeta-alueiden-seuraus!)
            (e! (tiedot/->LopetaTaustahaku))))
     (komp/karttakontrollit :tilannekuva
-                           [hallintapaneeli])
+                           [hallintapaneeli e!])
     (fn [e! app]
       [:span.tilannekuva
        [kartta/kartan-paikka]])))

@@ -13,21 +13,41 @@
                            :valinnat nil
                            :nakyvissa? true}
                :navigaatio {:valittu-hallintayksikko nil
-                            :valittu-urakka nil}
-               :haku {:haku-kaynnissa? false
+                            :valittu-urakka nil
+                            :valittu-sivu nil
+                            :valittu-valilehti nil}
+               :haku {:hakuparametrit []
+                      :haku-kaynnissa? false
                       :haku-taustalla? false}
                :aluesuodattimet {}})
 
 (defonce master (r/atom alkutila))
+(defonce debug (r/atom {}))
 
 (defn- sota-row [row]
-    (map (fn [x]
-            (let [curr (get row x)]
-              (if (and (coll? curr)
-                       (not (empty? curr)))
-                [:li (str x) [:ul (sota-row curr)]]
-                [:li (str (if (coll? x)
-                            (flatten (seq x)) x) " - " curr)]))) (keys row)))
+  (map
+    (fn [x]
+      (let [curr (get row x)]
+
+        (if (and (coll? curr)
+                 (not (empty? curr)))
+          [:li
+           (str x)
+           (if (= :polygons x)
+             " - (polygons)"
+             [:ul
+              (sota-row curr)])
+           ]
+          [:li (str
+                 (if (coll? x)
+                      (flatten
+                        (seq
+                          (assoc x :alue "(koordinaatit)")))
+                      x)
+                    " - " (cond
+                            (nil? curr) "(nil)"
+                            :else curr))])))
+    (if (vector? row) row (keys row))))
 
 (defn state-of-the-atom [& _]
   (let [open? (r/atom true)]
@@ -35,8 +55,8 @@
       (when a (log "Käytetään annettua ratomia"))
       (let [ks (keys (or a
                          @master))]
-        [:div {:class    (str "state-of-the-atom" (when-not @open? "--closed"))
-              :on-click #(swap! open? not)} (if @open? "Sulje ikkuna" "Avaa ikkuna")
+        [:div {:class    (str "state-of-the-atom" (when-not @open? "--closed"))}
+         [:span {:on-click #(swap! open? not)} (if @open? "Sulje ikkuna" "Avaa ikkuna")]
         [:ol
          (when @open?
            (map (fn [k]
