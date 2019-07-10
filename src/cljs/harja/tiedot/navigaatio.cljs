@@ -214,6 +214,7 @@
                   (case (:arvo ut)
                     :kaikki @urk/urakoitsijat-kaikki
                     :hoito @urk/urakoitsijat-hoito
+                    :teiden-hoito @urk/urakoitsijat-hoito
                     :paallystys @urk/urakoitsijat-paallystys
                     :paikkaus @urk/urakoitsijat-paikkaus
                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
