@@ -40,7 +40,7 @@
   "Palvelu, joka palauttaa urakan kiinteahintaiset työt."
   [db user urakka-id]
   ;; kokonaishintaisten töiden käyttäjäoikeudet ovat soveltuvat sellaisenaan myös kiinteähintaisiin töihin
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  ;;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
         (comp
          (map #(assoc %
@@ -53,9 +53,9 @@
 (defn tallenna-kiinteahintaiset-tyot
   "Palvelu joka tallentaa urakan kiinteahintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-    (oikeudet/vaadi-kirjoitusoikeus
-      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
+  ;(let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
+  ;  (oikeudet/vaadi-kirjoitusoikeus
+  ;    (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
     (let [nykyiset-arvot (hae-urakan-kiinteahintaiset-tyot c user urakka-id)

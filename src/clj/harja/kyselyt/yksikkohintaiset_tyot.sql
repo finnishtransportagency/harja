@@ -38,7 +38,7 @@ ORDER BY tpk.nimi;
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot
 UPDATE yksikkohintainen_tyo
 SET maara = :maara, yksikko = :yksikko, yksikkohinta = :yksikkohinta,
-    arvioitu_kustannus = :arvioitu_kustannus
+    arvioitu_kustannus = :arvioitu_kustannus, muokkaaja = :id, muokattu = current_timestamp
 WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
       AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
 
@@ -46,10 +46,10 @@ WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
 INSERT INTO yksikkohintainen_tyo
 (maara, yksikko, yksikkohinta,
  urakka, sopimus, tehtava,
- alkupvm, loppupvm, luoja, arvioitu_kustannus)
+ alkupvm, loppupvm, luoja, arvioitu_kustannus, luotu)
 VALUES (:maara, :yksikko, :yksikkohinta,
         :urakka, :sopimus, :tehtava,
-        :alkupvm, :loppupvm, :luoja, :arvioitu_kustannus);
+        :alkupvm, :loppupvm, :luoja, :arvioitu_kustannus, current_timestamp );
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä

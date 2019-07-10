@@ -5,12 +5,10 @@ SELECT
   kht.vuosi,
   kht.kuukausi,
   kht.summa,
-  kht.tyyppi,
   kht.tehtava,
   kht.tehtavaryhma,
   kht.toimenpideinstanssi,
   kht.sopimus,
-  kht."osuus-hoitokauden-summasta",
   tpi.id         AS tpi_id,
   tpi.nimi       AS tpi_nimi,
   tpi.toimenpide AS toimenpide

@@ -5,12 +5,11 @@ SELECT
   kat.vuosi,
   kat.kuukausi,
   kat.summa,
-  kat.tyyppi,
+  kat.tyyppi ::TOTEUMATYYPPI,
   kat.tehtava,
   kat.tehtavaryhma,
   kat.toimenpideinstanssi,
   kat.sopimus,
-  kat."osuus-hoitokauden-summasta",
   tpi.id         AS tpi_id,
   tpi.nimi       AS tpi_nimi,
   tpi.toimenpide AS toimenpide
@@ -26,7 +25,7 @@ SET
 summa = :summa,
 muokattu = current_timestamp,
 muokkaaja = :kayttaja
-WHERE toimenpideinstanssi = :toimenpideinstanssi AND tyyppi = :tyyppi
+WHERE toimenpideinstanssi = :toimenpideinstanssi AND tyyppi = :tyyppi ::TOTEUMATYYPPI
       AND vuosi = :vuosi AND kuukausi = :kuukausi;
 
 
@@ -34,5 +33,5 @@ WHERE toimenpideinstanssi = :toimenpideinstanssi AND tyyppi = :tyyppi
 -- Lisää kustannusarvioidunt tyon
 INSERT INTO kustannusarvioitu_tyo
 (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu, luoja)
-VALUES (:vuosi, :kuukausi, :summa, :tyyppi, :tehtava, :tehtavaryhma, :toimenpideinstanssi, :sopimus, current_timestamp, :kayttaja);
+VALUES (:vuosi, :kuukausi, :summa, :tyyppi ::TOTEUMATYYPPI, :tehtava, :tehtavaryhma, :toimenpideinstanssi, :sopimus, current_timestamp, :kayttaja);
 

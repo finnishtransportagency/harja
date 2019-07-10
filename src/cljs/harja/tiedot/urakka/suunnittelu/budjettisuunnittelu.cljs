@@ -11,7 +11,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-
 (defn hae-urakan-budjetoidut-tyot [{:keys [tyyppi id] :as ur}]
   (go (let [res (<! (k/post! :budjetoidut-tyot id))
             hoitokaudet (u/hoito-tai-sopimuskaudet ur)]

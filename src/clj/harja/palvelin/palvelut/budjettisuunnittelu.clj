@@ -86,9 +86,11 @@
   ;
   ;(let [kiinteahintaiset 2]
   ;;; TODO: filteröi kiinteähintaiset työt
-  ;
-  ;
-  ;
+
+  (kiinthint-tyot/tallenna-kiinteahintaiset-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
+  (kustarv-tyot/tallenna-kustannusarvioidut-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
+  (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
+
   ;;; TODO: filteröi kustannusarvioidut työt
   ;
   ;
