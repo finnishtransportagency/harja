@@ -1046,6 +1046,10 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Muut','14241',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='14240') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='14240') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='14240') );
 SELECT lisaa_toimenpidekoodi(
+    'MHU Korvausinvestointi','14300',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='14000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='14000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='14000') );
+SELECT lisaa_toimenpidekoodi(
+    'MHU Korvausinvestointi','14301',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='14300') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='14300') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='14300') );
+SELECT lisaa_toimenpidekoodi(
     'Korvausinvestointi, meri','15000',1,  null,  null,  NULL ,  NULL ,  NULL );
 SELECT lisaa_toimenpidekoodi(
     'Vesiväylä (kunnossapitoruoppaukset)','15100',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='15000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='15000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='15000') );
@@ -1714,7 +1718,7 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Projektiin liittyvä suunnittelu-, teettämis-, ja valvontapalvelu','20190',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20000') );
 SELECT lisaa_toimenpidekoodi(
-    'Ylläpidon suunnittelupalvelut','20191',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20190') );
+    'MHU Ylläpito','20191',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20190') );
 SELECT lisaa_toimenpidekoodi(
     'Ylläpidon teettämispalvelut','20192',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20190') );
 SELECT lisaa_toimenpidekoodi(
@@ -1962,7 +1966,14 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Muut','23150',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='23000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='23000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='23000') );
 SELECT lisaa_toimenpidekoodi(
-    'Muut','23151',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='23150') );
+    'Hallinnolliset toimenpiteet','23151',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='23150') );
+
+
+
+
+
+
+
 SELECT lisaa_toimenpidekoodi(
     'Hoito, meri','24000',1,  null,  null,  NULL ,  NULL ,  NULL );
 SELECT lisaa_toimenpidekoodi(
