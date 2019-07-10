@@ -36,9 +36,9 @@ UPDATE toimenpidekoodi
   SET api_tunnus = id WHERE taso = 4;
 
 -- MHU Yllapito takaisin käyttöön
-UPDATE harja."public".toimenpidekoodi
+UPDATE toimenpidekoodi
 set
-nimi = 'MHU Ylläpito'
+nimi = 'MHU Ylläpito',
 piilota = false,
 poistettu = false
 where koodi = '20191' and taso = 3;
