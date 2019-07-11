@@ -512,7 +512,11 @@ hakutiheys-historiakuva 3000)                            ;1200000
 (extend-protocol tuck/Event
   AsetaHallintayksikko
   (process-event [{yksikko :yksikko} app]
-    (let [app (assoc-in app [:navigaatio :valittu-urakka] nil)]
+    (let [nykyinen (get-in app [:navigaatio :valittu-urakka])
+          polku [:aluesuodattimet :hoito]
+          app (-> app
+                (assoc-in [:navigaatio :valittu-urakka] nil)
+                (assoc-in polku (etsi-ja-aseta-urakat-tilaan (get-in app polku) nykyinen (when-not (nil? nykyinen) false))))]
       (assoc-in app [:navigaatio :valittu-hallintayksikko] yksikko)))
   AsetaValittuUrakka
   (process-event [{urakka :urakka} app]

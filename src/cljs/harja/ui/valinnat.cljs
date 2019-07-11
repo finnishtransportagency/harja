@@ -519,7 +519,7 @@
                      (do
                        ;(tlog/info "am i open " @auki?)
                        (swap! auki? not)))}
-       (:kategoria m)]
+       (:kategoria m) [:span.livicon-chevron-down]]
       (when (if lokaali-tila
               @auki?
               auki?)
