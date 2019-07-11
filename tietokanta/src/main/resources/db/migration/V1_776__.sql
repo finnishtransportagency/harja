@@ -37,6 +37,11 @@ CREATE TABLE kustannusarvioitu_tyo (
                                      unique (toimenpideinstanssi, tehtava, sopimus, vuosi, kuukausi));
 
 
+ALTER TABLE yksikkohintainen_tyo
+ADD COLUMN kuukausi integer CHECK (13 < kuukausi AND kuukausi > 0),
+ADD COLUMN luotu TIMESTAMP;
+
+
 COMMENT ON table kustannusarvioitu_tyo IS
   E'Kustannusarvioitua työtä suunnitellaan urakkatyypissä teiden-hoito (MHU).
    Työlle suunniteltu kustannus lasketaan mukaan Sampoon lähetettävään kokonaishintaiseen kustannussuunnitelmaan, mutta suunniteltu summa ei kasvata Sampoon lähetettävää maksuerää (toisin kuin kiinteahintainen_tyo ja kokonaishintainen_tyo urakkatyypissä hoito).

@@ -11,7 +11,7 @@
             [harja.palvelin.palvelut.kiinteahintaiset-tyot :as kiinthint-tyot]
             [harja.palvelin.palvelut.kustannusarvioidut-tyot :as kustarv-tyot]
             [harja.palvelin.palvelut.yksikkohintaiset-tyot :as ykshint-tyot]
-            [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokhint-tyot]
+            [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokohint-kustannussuunnitelma]
             [harja.kyselyt.kokonaishintaiset-tyot :as kok-q]
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.domain.oikeudet :as oikeudet]
@@ -47,6 +47,9 @@
     this))
 
 
+(defn- nil-to-zero [v]
+  (if (nil? v) 0 v))
+
 (defn hae-urakan-budjettiviitekehys
   "Palvelu joka hakee urakan budjetin viitekehyksen: hoitokausikohtaiset tavoite- ja kattohinnat."
   [db user urakka-id]
@@ -64,16 +67,19 @@
   [db user urakka-id]
 
   ;; Kaikkien budjetoitujen töiden käyttäjäoikeudet ovat samat kuin kokonaishintaisten töiden käsittelyllä
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  ;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
 
-  {:kiinteahintaiset-tyot (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
+  {:kiinteahintaiset-tyot   (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
-   :yksikkohintaiset-tyot (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)})
+   :yksikkohintaiset-tyot   (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)})
+
+
 
 (defn tallenna-budjetoidut-tyot
   "Palvelu joka tallentaa urakan kustannusarvioidut tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
 
+  ;; TODO Palauta oikeustarkastukset tässä ja muissa töiden tallennuksissa ja hauissa
   ;;; Onko toiminto sallittu?
   ;(let [urakkatyyppi (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
   ;  (oikeudet/vaadi-kirjoitusoikeus
@@ -83,23 +89,34 @@
   ;(assert (vector? tyot) "Parametrin työt (tallenna-budjetoidut-tyot) tulee olla vektori.")
   ;
   ;
-  ;
-  ;(let [kiinteahintaiset 2]
-  ;;; TODO: filteröi kiinteähintaiset työt
 
-  (kiinthint-tyot/tallenna-kiinteahintaiset-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
-  (kustarv-tyot/tallenna-kustannusarvioidut-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
-  (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
-
-  ;;; TODO: filteröi kustannusarvioidut työt
-  ;
-  ;
-  ;
-  ;;; TODO: filteröi yksikköhintaiset työt
 
   ;(jdbc/with-db-transaction [c db]
-  ;
-  ;                          (let [nykyiset-arvot (hae-urakan-kustannusarvioidut-tyot c user urakka-id)
+
+
+
+  (let [kustannukset (flatten
+                       (merge
+                         (kiinthint-tyot/tallenna-kiinteahintaiset-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
+                         (kustarv-tyot/tallenna-kustannusarvioidut-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
+                         (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot db user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})))]
+
+;; kaikki kustannukset
+    (apply + (map #(+ (nil-to-zero (:summa %)) (nil-to-zero (:arvioitu_kustannus %))) kustannukset))
+
+;; kaske kuukausisummat ja muodosta sanomast
+
+    )
+
+
+
+
+
+
+  ;; TODO: palauta täältä jotakin järkevää esim. tallennetut tiedot + kokonaishintaiset_tyot eli kustannussuunnitelman määrä
+
+  ;; TODO: tsekkaa miten transakitot pitäiis täällä hoitooaa
+  ;  ;                          (let [nykyiset-arvot (hae-urakan-kustannusarvioidut-tyot c user urakka-id)
   ;                                valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))
   ;                                tyo-avain (fn [rivi]
   ;                                            [(:tyyppi rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
