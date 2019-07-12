@@ -38,7 +38,8 @@ CREATE TABLE kustannusarvioitu_tyo (
 
 
 ALTER TABLE yksikkohintainen_tyo
-ADD COLUMN kuukausi integer CHECK (13 < kuukausi AND kuukausi > 0),
+ADD COLUMN kuukausi integer CHECK (13 > kuukausi AND kuukausi > 0),
+ADD COLUMN vuosi integer CHECK (2015 < vuosi AND vuosi < 2100),
 ADD COLUMN luotu TIMESTAMP;
 
 
