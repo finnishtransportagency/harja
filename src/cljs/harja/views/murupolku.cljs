@@ -145,9 +145,10 @@
                                         (kategoria (ely/elynumero->nimi m) m k)
                                         (valinta m k)))) (keys valinnat))})
 
-(defn suodattimet->kategoriat [suodattimet]
+(defn suodattimet->kategoriat
+  [suodattimet]
   ;(tlog/info "Suodattimet->Kat" suodattimet)
-  (let [tyypit (keys (select-keys suodattimet [:paallystys :hoito :valaistus]))]
+  (let [tyypit (keys (select-keys suodattimet [:paallystys :hoito :valaistus :tiemerkinta]))]
     ;(tlog/info "Käsitellään" tyypit)
     {:kategoriat (into [] (map
                             (fn [k]
@@ -156,10 +157,13 @@
                                 (kategoria (name k) k contents)))
                             tyypit))}))
 
-(defn lisaa-urakka
+(defn lisaa-urakoita
   [e! app]
   [:li.dropdown.livi-alasveto
-   [valinnat/kategorisoitu-checkbox-pudotusvalikko (suodattimet->kategoriat app) (fn [suodatin tila polku] (e! (tkuva/->AsetaAluesuodatin suodatin tila polku)))]])
+   [valinnat/kategorisoitu-checkbox-pudotusvalikko
+    (suodattimet->kategoriat app)
+    (fn [suodatin tila polku]
+      (e! (tkuva/->AsetaAluesuodatin suodatin tila polku)))]])
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
@@ -225,9 +229,9 @@
                             "hide"))}
           (if ei-urakkaa?
             [:ol.murupolku
-             [koko-maa] [hallintayksikko e! valinta-auki] [urakka e! valinta-auki] [lisaa-urakka e! aluesuodattimet]
+             [koko-maa] [hallintayksikko e! valinta-auki] [urakka e! valinta-auki] [lisaa-urakoita e! aluesuodattimet]
              (when-not urakoitsija?
                [urakoitsija])
              [urakkatyyppi]]
             [:ol.murupolku
-             [koko-maa] [hallintayksikko e! valinta-auki] [urakka e! valinta-auki] [lisaa-urakka e! aluesuodattimet]])])])))
+             [koko-maa] [hallintayksikko e! valinta-auki] [urakka e! valinta-auki] [lisaa-urakoita e! aluesuodattimet]])])])))

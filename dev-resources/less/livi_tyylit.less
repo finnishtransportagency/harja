@@ -302,8 +302,7 @@ table.table-striped {
 
     .disabled {
         background-color: @harmaa10;
-        color:red;
-       // color: @harmaa6;
+        color: @harmaa6;
     }
 
     .nappi-alasveto {
@@ -409,27 +408,75 @@ line.ei-aktiiviset-paivat {
 
 .kategorisoitu-checkbox-pudotusvalikko {
     z-index:1000;
-    min-widtH:160px;
+    background-color:@valkoinen;
+    min-height:@input-korkeus;
+    &.checkbox {
+        width:20px;
+        min-height:20px;
+        border:1px solid @harmaa3;
+        display:flex;
+        margin-right:15px;
+        & > span.livicon-check {
+            margin:auto auto;
+        }
+        &:hover {
+            background-color:@harmaa12;
+        }
+    }
+    &.title {
+        border:1px solid @harmaa7;
+        width:100%;
+        padding-left:8px;
+        line-height:22px;
+    }
+    &.nappi {
+        margin-left:auto;
+        width:29px;
+    }
+    &.dropdown {
+        min-width:320px;
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+
+    }
     &.sisalto {
+        min-widtH:320px;
         display:flex;
         flex-direction:column;
         position:absolute;
+        border:1px solid @harmaa7;
+        width:100%;
     }
 
     &.kategoria {
-        background-color:red;
+        background-color:@harmaa8;
+        border:none;
     }
 
     &.kategoria-nimi {
+        display:flex;
+        align-items: center;
+        margin:0px;
+        font-weight:lighter;
+        border-bottom:1px solid @harmaa9;
+        padding-left:15px;
+        & > span {
+            padding:15px;
+            margin-left:auto;
+        }
         &:hover {
-            background-color:yellow;
+            background-color:@harmaa12;
         }
     }
 
     &.kategoria-valinta {
-        padding:15px;
+        padding:6px 15px;
+        display:flex;
+        align-items:center;
+        background-color:@harmaa15;
         &:hover {
-            background-color:blue;
+            background-color:@harmaa12;
         }
     }
 }
