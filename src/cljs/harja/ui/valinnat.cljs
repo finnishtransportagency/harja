@@ -501,7 +501,8 @@
 (defn- kategoria-valinta-item [x {:keys [on-change! polku]}]
   ;(tlog/info "tämmöts " x)
   [:div.kategorisoitu-checkbox-pudotusvalikko.kategoria-valinta
-   {:on-click #(on-change! (:lasti x) (not (:valittu? x)) polku)}
+   {:on-click #(on-change! (:lasti x) (not (:valittu? x)) polku)
+    :class (str "harmaa-" (- 16 (count polku)))}
    [:span.kategorisoitu-checkbox-pudotusvalikko.checkbox
     (when (:valittu? x) [:span.livicon-check])]
    [:span
@@ -523,8 +524,11 @@
                          (swap! tila not)))]
         [:div.kategorisoitu-checkbox-pudotusvalikko.kategoria
           [:label.kategorisoitu-checkbox-pudotusvalikko.kategoria-nimi
-          {:on-click on-click}
-         (:kategoria m)
+           {:on-click on-click
+            :class    (let [polku-pituus (count polku)]
+                        (when (> polku-pituus 0)
+                          (str "harmaa-" (- 16 (count polku)))))}
+         (str (:kategoria m))
            (if auki?
              [:span.livicon-chevron-down]
              [:span.livicon-chevron-right])]

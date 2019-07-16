@@ -145,6 +145,11 @@
                                         (kategoria (ely/elynumero->nimi m) m k)
                                         (valinta m k)))) (keys valinnat))})
 
+(def toimenpiteet {:hoito "Hoito"
+                   :paallystys "Päällystys"
+                   :valaistus "Valaistus"
+                   :tiemerkinta "Tiemerkintä"})
+
 (defn suodattimet->kategoriat
   [suodattimet]
   ;(tlog/info "Suodattimet->Kat" suodattimet)
@@ -154,7 +159,10 @@
                             (fn [k]
                               (let [contents (get suodattimet k)]
                                 ;(tlog/info "Käsittelen" k)
-                                (kategoria (name k) k contents)))
+                                (kategoria
+                                  (toimenpiteet k)
+                                  k
+                                  contents)))
                             tyypit))}))
 
 (defn lisaa-urakoita
@@ -217,7 +225,7 @@
                                            :naytetty? @nav/murupolku-nakyvissa?}))}
     (fn [e! {:keys [murupolku navigaatio aluesuodattimet] :as app-state}]
       [:div
-       [tila/state-of-the-atom app-state]
+       ;[tila/state-of-the-atom app-state]
        (let [{:keys [valinta-auki valinnat]} murupolku
              ur @nav/valittu-urakka
              ei-urakkaa? (nil? ur)
