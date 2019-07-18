@@ -1,8 +1,8 @@
 -- name:tallenna-budjettitavoite<!
-INSERT INTO (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja) INTO urakka_tavoite
-(:urakka, :hoitokausi, :tavoitehinta, :tavoitehinta_siirretty, :kattohinta, current_timestamp, :luoja)
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja) VALUES
+(:urakka, :hoitokausi, :tavoitehinta, :tavoitehinta_siirretty, :kattohinta, current_timestamp, :kayttaja);
 
--- name:paivita-budjettitavoite!
+-- name:paivita-budjettitavoite<!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,
 tavoitehinta_siirretty = :tavoitehinta_siirretty,

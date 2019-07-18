@@ -69,17 +69,17 @@
                             (let [nykyiset-arvot (q/hae-budjettitavoite c {:urakka urakka-id})
                                   valitut-hoitokaudet (into #{} (map :hoitokausi tavoitteet))
                                   tavoitteet-kannassa (into #{} (map :hoitokausi
-                                                               (filter #(valitut-hoitokaudet (:hoitokausi %)
-                                                                       nykyiset-arvot))))]
+                                                                     (filter #(valitut-hoitokaudet (:hoitokausi %))
+                                                                             nykyiset-arvot)))]
                             (doseq [hoitokausitavoite tavoitteet]
                               (as-> hoitokausitavoite hkt
                                     (assoc hkt :urakka urakka-id)
                                     (assoc hkt :kayttaja (:id user))
                                     (if (not (tavoitteet-kannassa (:hoitokausi hkt)))
-                                      (q/tallenna-budjettitavoite<! c (conj hkt {:urakka   urakka-id
-                                                                                      :kayttaja (:id user)})))
-                                    (q/paivita-budjettitavoite! c (conj hkt {:urakka   urakka-id
-                                                                                  :kayttaja (:id user)})))))))
+                                      (q/tallenna-budjettitavoite<! c hkt)
+                                    (q/paivita-budjettitavoite<! c hkt))
+
+                                    )))))
 
   (defn hae-urakan-budjetoidut-tyot
     "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
@@ -124,3 +124,5 @@
                                                 (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c toimenpideinstanssit))
 
                                 )))
+
+
