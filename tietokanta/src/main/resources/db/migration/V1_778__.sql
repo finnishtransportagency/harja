@@ -1,64 +1,18 @@
-CREATE TABLE alihankkija(
-      id serial primary key,       -- sisäinen ID
-      nimi text not null,
-      ytunnus text,
-      luotu timestamp,
-      luoja integer references kayttaja(id),
-      muokattu timestamp,
-      muokkaaja integer references kayttaja(id),
-      poistettu boolean,
-      unique (nimi))
+CREATE TABLE urakka_tavoite (
+                                     id serial primary key,       -- sisäinen ID
+                                     urakka integer not null references urakka(id),
+                                     hoitokausi smallint not null, -- yleensä 1 - 5
+                                     tavoitehinta numeric,
+                                     tavoitehinta_siirretty numeric,
+                                     kattohinta numeric,
+                                     luotu timestamp,
+                                     luoja integer references kayttaja(id),
+                                     muokattu timestamp,
+                                     muokkaaja integer references kayttaja(id),
+                                     unique (urakka, hoitokausi));
 
-COMMENT ON table alihankkija IS
-  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Alihankkijoiden tiedot tallennetaan tähän tauluun.
-   Alihankkijalistaa kasvatetaan laskutustietojen perusteella.' ;
-
-CREATE TABLE lasku_liite(
-         id serial primary key,                -- sisäinen ID
-         lasku integer not null references lasku(id),
-         liite integer not null references liite(id),
-         luotu timestamp,
-         luoja integer references kayttaja(id),
-         muokattu timestamp,
-         muokkaaja integer references kayttaja(id),
-         poistettu boolean,
-         unique (lasku, liite))
-
-COMMENT ON table lasku_liite IS
-  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Laskussa voi olla useita liitteitä. Lasku_liite-taulu linkkaa laskun ja liitteet toisiinsa.' ;
-
-CREATE TABLE lasku (
-         id serial primary key,    -- sisäinen ID
-         viite text not null,      -- viite tai muu ulkoisen järjestelmän tunniste laskulle
-         erapaiva date not null,
-         summa numeric not null,
-         urakka integer references urakka(id),
-         suorittaja references alihankkija(id),
-         luotu timestamp,
-         luoja integer references kayttaja(id),
-         muokattu timestamp,
-         muokkaaja integer references kayttaja(id),
-         poistettu boolean,
-         unique (ulkoinen-tunnus))
-
-COMMENT ON table lasku IS
-  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Laskun tiedot tallennetaan tähän tauluun. Summat kasvattavat
-   Sampoon lähetettäviä maksueriä. Useimmiten laskutettava työ kasvattaa kokonaishintaista maksuerää. Äkilliset hoitotyöt ja kolmansien osapuolten aiheuttamat vahingot
-   ovat tehtäviä, jotka kasvattavat kumpikin omia maksueriään (Äkilliset hoitotyöt ja Muut).' ;
-
-CREATE TABLE lasku_kohdistus(
-       id serial primary key,       -- sisäinen ID
-       lasku integer references lasku(id),
-       toimenpideinstanssi integer not null references toimenpideinstanssi(id),
-       tehtavaryhma integer references tehtavaryhma(id),
-       tehtava integer references toimenpidekoodi(id),
-       luotu timestamp,
-       luoja integer references kayttaja(id),
-       muokattu timestamp,
-       muokkaaja integer references kayttaja(id),
-       unique (lasku, toimenpideinstanssi, tehtavaryhma, tehtava))
-
-COMMENT ON table lasku_kohdistus IS
-  E'Lasku-tauluun tallennettu lasku voidaan kohdistaa useaan toimenpiteeseen,tehtäväryhmään ja/tai tehtävään.
-   Kohdistustiedot tallennetaan tähän tauluun. Kohdistuksen voi tehdä eri tasoilla: toimenpide, tehtäväryhmä ja tehtävä. Vain toimenpideinstanssi-taso on aina pakollinen.' ;
-
+COMMENT ON table urakka_tavoite IS
+  E'Urakan tavoitteet (tavoitehinta ja kattohinta) suunnitellaan urakkatyypissä teiden-hoito (MHU).
+   Urakalle määritellään hoitokausikohtainen tavoitehinta. Tavoitehinnan alitus tai ylistys vaikuttaa urakoitsijan saamaan palkkioon.
+   Urakoitsija voi siirtää edellisvuoden tavoitehinnan ylityksen tai alituksen seuraavalle hoitokaudella lisättäväksi tai vähennettäväksi varsinaisesta tavoitehinnasta.
+   Urakalle määritellään myös kattohinta, jota urakan kustannukset eivät missään tilanteessa ylitä. Urakoitsija vastaa kattohinnan ylittävistä kustannuksista yksin.' ;

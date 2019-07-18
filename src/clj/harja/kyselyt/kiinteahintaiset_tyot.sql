@@ -27,10 +27,19 @@ muokkaaja = :kayttaja
 WHERE toimenpideinstanssi = :toimenpideinstanssi
       AND vuosi = :vuosi AND kuukausi = :kuukausi;
 
-
 -- name: lisaa-kiinteahintainen-tyo<!
 -- Lisää kiinteähintaisen tyon
 INSERT INTO kiinteahintainen_tyo
 (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus, luotu, luoja)
 VALUES (:vuosi, :kuukausi, :summa, :toimenpideinstanssi, :sopimus, current_timestamp , :kayttaja);
+
+-- name: merkitse-kustannussuunnitelmat-likaisiksi!
+-- Merkitsee teiden hoidon urakan (MHU) kaikki kustannussuunnitelmat likaiseksi toimenpiteen mukaan
+UPDATE kustannussuunnitelma
+SET likainen = TRUE
+WHERE maksuera IN (SELECT m.numero
+                   FROM maksuera m
+                     JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                   WHERE m.tyyppi IN ('kokonaishintainen', 'akillinen-hoitotyo','muu')
+                   AND tpi.id IN (:toimenpideinstanssit));
 

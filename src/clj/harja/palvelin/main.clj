@@ -45,8 +45,6 @@
     [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
     [harja.palvelin.palvelut.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
-    [harja.palvelin.palvelut.kiinteahintaiset-tyot :as kiinteahintaiset-tyot]
-    [harja.palvelin.palvelut.kustannusarvioidut-tyot :as kustannusarvioidut-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
@@ -334,12 +332,6 @@
                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :kokonaishintaiset-tyot (component/using
                                 (kokonaishintaiset-tyot/->Kokonaishintaiset-tyot)
-                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :kiinteahintaiset-tyot (component/using
-                                 (kiinteahintaiset-tyot/->Kiinteahintaiset-tyot)
-                                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :kustannusarvioidut-tyot (component/using
-                                (kustannusarvioidut-tyot/->Kustannusarvioidut-tyot)
                                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :muut-tyot (component/using
                    (muut-tyot/->Muut-tyot)
