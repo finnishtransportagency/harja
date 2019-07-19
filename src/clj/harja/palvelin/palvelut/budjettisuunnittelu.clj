@@ -61,9 +61,9 @@
   Budjettitiedoissa: hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta.
   Budjettitavoitteet-vektorissa voi lähettää yhden tai useamman mäpin, jossa kussakin urakan yhden hoitokauden tiedot."
   [db user urakka-id tavoitteet]
-  ;(let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-  ;  (oikeudet/vaadi-kirjoitusoikeus
-  ;    (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
+  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
+    (oikeudet/vaadi-kirjoitusoikeus
+      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
   (assert (vector? tavoitteet) "tavoitteet tulee olla vektori")
   (jdbc/with-db-transaction [c db]
                             (let [nykyiset-arvot (q/hae-budjettitavoite c {:urakka urakka-id})
@@ -77,17 +77,13 @@
                                     (assoc hkt :kayttaja (:id user))
                                     (if (not (tavoitteet-kannassa (:hoitokausi hkt)))
                                       (q/tallenna-budjettitavoite<! c hkt)
-                                    (q/paivita-budjettitavoite<! c hkt))
-
-                                    )))))
+                                    (q/paivita-budjettitavoite<! c hkt)))))))
 
   (defn hae-urakan-budjetoidut-tyot
     "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
     [db user urakka-id]
-
     ;; Kaikkien budjetoitujen töiden käyttäjäoikeudet ovat samat kuin kokonaishintaisten töiden käsittelyllä
-    ;(oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
-
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
     {:kiinteahintaiset-tyot   (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
      :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
      :yksikkohintaiset-tyot   (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)})
@@ -123,6 +119,8 @@
                                 (when not-empty toimenpideinstanssit
                                                 (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c toimenpideinstanssit))
 
+                                ;; Palautetaan päivitetty tilanne urakan töissä
+                                (hae-urakan-budjetoidut-tyot c user urakka-id)
                                 )))
 
 
