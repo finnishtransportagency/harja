@@ -13,7 +13,8 @@
 (def urakoitsijat "Urakoitsijat" (atom #{}))
 
 (def urakoitsijat-hoito
-  (reaction (into #{} (filter #(= (:urakkatyyppi %) "hoito") @urakoitsijat))))
+  (reaction (into #{} (filter #(or (= (:urakkatyyppi %) "hoito")
+                                   (= (:urakkatyyppi %) "teiden-hoito")) @urakoitsijat))))
 (def urakoitsijat-paallystys
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "paallystys") @urakoitsijat))))
 (def urakoitsijat-paikkaus
