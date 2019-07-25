@@ -174,19 +174,12 @@
       sorateiden-hoidon-tyot (filter #(= (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23124") (:toimenpideinstanssi %)) kustannusarvioidut-tyot)
       talvihoidon-tyot (clojure.set/union (filter #(= (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23104") (:toimenpideinstanssi %)) kiinteahintaiset-tyot)
                                           (filter #(= (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23104") (:toimenpideinstanssi %)) kustannusarvioidut-tyot))
-      urakan-vastuuhenkilo (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-      vaara-urakan-vastuuhenkilo (ei-ole-oulun-urakan-urakoitsijan-urakkavastaava)
-      budjetoidut-tyot-kutsuja-urakanvalvoja (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                             :tallenna-budjetoidut-tyot urakan-vastuuhenkilo {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                                                                                                        :sopimusnumero @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id
-                                                                                                        :tyot budjetoidut-tyot})]
+      urakan-vastuuhenkilo (oulun-2019-urakan-urakoitsijan-urakkavastaava)]
 
   (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :tallenna-budjetoidut-tyot vaara-urakan-vastuuhenkilo {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                                :tallenna-budjetoidut-tyot urakan-vastuuhenkilo {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                            :sopimusnumero @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id
-                                                                                           :tyot budjetoidut-tyot})) "Ilman urakkakohtaisia oikeuksia, Urakan vastuuhenkilö-roolilla ei saa tallennettua budjetoituja töitä.")
-
-  (is (= urakan-budjetoidut-tyot budjetoidut-tyot-kutsuja-urakanvalvoja) "Järjestelmävastaava ja urakan vastuuhenkilö saavat samat tiedot tallennetuista budjetoiduista töistä.")
+                                                                                           :tyot budjetoidut-tyot})) "Urakan vastuuhenkilöllä ei ole kirjoitusoikeuksia suunnittelutietoihin.")
 
   (is (= (reduce + (map :summa kiinteahintaiset-tyot)) 17998.0) (str "Kiinteähintaiset työt yhteensä (e)." (reduce + (map :summa kiinteahintaiset-tyot))))
   (is (= (reduce + (map :summa kustannusarvioidut-tyot)) 3996.0) (str "Kustannusarvioidut työt yhteensä (e). " (reduce + (map :summa kustannusarvioidut-tyot))))

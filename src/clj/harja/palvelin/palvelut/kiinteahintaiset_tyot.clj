@@ -39,7 +39,7 @@
   (let [nykyiset-arvot (hae-urakan-kiinteahintaiset-tyot db user urakka-id)
         valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))
         tyo-avain (fn [rivi]
-                    [(:tyyppi rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
+                    [(:tyyppi rivi) (:tehtava rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
         tyot-kannassa (into #{} (map tyo-avain
                                      (filter #(and
                                                 (= (:sopimus %) sopimusnumero)
