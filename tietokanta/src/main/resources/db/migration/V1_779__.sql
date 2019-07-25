@@ -1,4 +1,4 @@
-CREATE TABLE alihankkija(
+CREATE TABLE aliurakoitsija(
       id serial primary key,       -- sisäinen ID
       nimi text not null,
       ytunnus text,
@@ -9,9 +9,9 @@ CREATE TABLE alihankkija(
       poistettu boolean,
       unique (nimi));
 
-COMMENT ON table alihankkija IS
-  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Alihankkijoiden tiedot tallennetaan tähän tauluun.
-   Alihankkijalistaa kasvatetaan laskutustietojen perusteella.' ;
+COMMENT ON table aliurakoitsija IS
+  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Aliurakoitsijoiden tiedot tallennetaan tähän tauluun.
+   Aliurakoitsijalistaa kasvatetaan laskutustietojen perusteella.' ;
 
 CREATE TABLE lasku (
          id serial primary key,    -- sisäinen ID
