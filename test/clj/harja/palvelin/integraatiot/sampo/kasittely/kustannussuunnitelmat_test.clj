@@ -14,9 +14,8 @@
                   {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 1}
                   {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 1}
                   {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 1}]
-        numero (first (q "select numero from maksuera where nimi = 'Oulu Talvihoito TP ME 2014-2019' and tyyppi = 'kokonaishintainen'; "))
-        maksuera (hae-maksueran-tiedot db numero)
-        vuosittaiset-summat (tee-vuosittaiset-summat db numero maksuera)]
+        maksuera (hae-maksueran-tiedot db 17)
+        vuosittaiset-summat (tee-vuosittaiset-summat db 17 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))
@@ -30,9 +29,8 @@
                   {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 1}
                   {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 1}
                   {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 1}]
-        numero (first (q "select numero from maksuera where nimi = 'Oulu Talvihoito TP ME 2014-2019' and tyyppi = 'yksikkohintainen'; "))
-        maksuera (hae-maksueran-tiedot db numero)
-        vuosittaiset-summat (tee-vuosittaiset-summat db numero maksuera)]
+        maksuera (hae-maksueran-tiedot db 18)
+        vuosittaiset-summat (tee-vuosittaiset-summat db 18 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))
@@ -58,9 +56,8 @@
                   {:alkupvm "2019-01-01T00:00:00.0"
                    :loppupvm "2019-12-31T00:00:00.0"
                    :summa 1}]
-        numero (first (q "select numero from maksuera where nimi = 'Oulu Talvihoito TP ME 2014-2019' and tyyppi = 'muu'; "))
-        maksuera (hae-maksueran-tiedot db numero)
-        vuosittaiset-summat (tee-vuosittaiset-summat db numero maksuera)]
+        maksuera (hae-maksueran-tiedot db 69)
+        vuosittaiset-summat (tee-vuosittaiset-summat db 69 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))

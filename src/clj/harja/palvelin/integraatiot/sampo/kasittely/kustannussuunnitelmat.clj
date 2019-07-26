@@ -84,18 +84,20 @@
         maksueratyyppi (:tyyppi (:maksuera maksueran-tiedot))
         urakkatyyppi (get-in maksueran-tiedot [:urakka :tyyppi])]
     (case maksueratyyppi
-      "kokonaishintainen" (if (= :teiden-hoito urakkatyyppi)
-                            (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))) ;;TODO
+      "kokonaishintainen" (if (= "teiden-hoito" urakkatyyppi)
+                            (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)) ;;TODO
                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
       "lisatyo" (if (contains? #{"vesivayla-kanavien-hoito" "vesivayla-kanavien-korjaus"} urakkatyyppi)
                   (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
                   (tee-oletus-vuosisummat vuodet))
-      "akillinen-hoitotyo" (when (= :teiden-hoito urakkatyyppi)
-                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))) ;;TODO
-      "muu" (when (= :teiden-hoito urakkatyyppi)
-              (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))) ;;TODO
-      (tee-oletus-vuosisummat vuodet)))
+      "akillinen-hoitotyo" (if (= "teiden-hoito" urakkatyyppi)
+                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
+                             (tee-oletus-vuosisummat vuodet)) ;;TODO
+      "muu" (if (= "teiden-hoito" urakkatyyppi)
+              (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
+              (tee-oletus-vuosisummat vuodet)) ;;TODO
+      (tee-oletus-vuosisummat vuodet))))
 
 (defn valitse-lpk-tilinumero
   [numero toimenpidekoodi]
