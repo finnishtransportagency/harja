@@ -10,12 +10,14 @@
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma :as kustannussuunnitelma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.domain.urakka :as ur])
+            [harja.domain.urakka :as ur]
+            [tuck.core :as tuck])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -74,4 +76,11 @@
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])]]))))
+            [kiintiot/kiintiot])
+
+          "Kustannussuunnitelma"
+          :kustannussuunnitelma
+          (when (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id) ;;; fix
+            ^{:key "kustannussuunnitelma"}
+            [tuck/tuck kustannussuunnitelma/mastertila
+             kustannussuunnitelma/kustannussuunnitelma ur])]]))))
