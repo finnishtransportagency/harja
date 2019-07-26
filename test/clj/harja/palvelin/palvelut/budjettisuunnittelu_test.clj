@@ -30,95 +30,102 @@
 
 
 (def budjetoidut-tyot {:kiinteahintaiset-tyot
-                                              [{:summa               333,
-                                                :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23104"),
+                                              [{:kuukausi            1,
                                                 :vuosi               2021,
+                                                :summa               333,
                                                 :maksupvm            "2021-01-15",
-                                                :sopimus             (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id),
-                                                :kuukausi            1}
-                                               {:summa               333,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23104"),
-                                                :vuosi               2021,
+                                                :sopimus             (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+                                                }
+                                               {:vuosi               2021,
+                                                :kuukausi            2,
+                                                :summa               333,
                                                 :maksupvm            "2021-02-15",
-                                                :sopimus             (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id),
-                                                :kuukausi            2}
-                                               {:summa               666,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23104"),
-                                                :vuosi               2021,
-                                                :maksupvm            "2021-03-15",
                                                 :sopimus             (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id),
-                                                :kuukausi            3}]
+                                                }
+                                               {:vuosi               2021,
+                                                :kuukausi            3,
+                                                :summa               666,
+                                                :maksupvm            "2021-03-15",
+                                                :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23104"),
+                                                :sopimus             (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id),
+                                                }]
                        :kustannusarvioidut-tyot
-                                              [{:summa               66,
+                                              [{:kuukausi            5
+                                                :vuosi               2021,
+                                                :summa               66,
+                                                :maksupvm            nil,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116"),
                                                 :tehtavaryhma        nil,
                                                 :tehtava             (hae-toimenpidekoodin-id "Äkillinen hoitotyö" "23116"),
                                                 :tyyppi              "akillinen-hoitotyo"
+                                                }
+                                               {:kuukausi            5
                                                 :vuosi               2021,
+                                                :summa               600,
                                                 :maksupvm            nil,
-                                                :kuukausi            5}
-                                               {:summa               600,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23124"),
                                                 :tehtavaryhma        nil,
                                                 :tehtava             (hae-toimenpidekoodin-id "Äkillinen hoitotyö" "23124"),
                                                 :tyyppi              "akillinen-hoitotyo"
+                                                }
+                                               {:kuukausi            5
                                                 :vuosi               2021,
+                                                :summa               66,
                                                 :maksupvm            nil,
-                                                :kuukausi            5}
-                                               {:summa               66,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23124"),
                                                 :tehtavaryhma        nil,
                                                 :tehtava             (hae-toimenpidekoodin-id "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen" "23124"),
                                                 :tyyppi              "vahinkojen-korjaukset"
+                                                }
+                                               {:kuukausi            5
                                                 :vuosi               2021,
+                                                :summa               500,
                                                 :maksupvm            nil,
-                                                :kuukausi            5}
-                                               {:summa               500,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151"),
                                                 :tehtavaryhma        (hae-tehtavaryhman-id "Muut liik.ymp.hoitosasiat"),
                                                 :tehtava             nil,
                                                 :tyyppi              "laskutettava-tyo"
-                                                :vuosi               2021,
-                                                :maksupvm            nil,
-                                                :kuukausi            5,
-                                                :alkupvm             #inst "2021-09-30T21:00:00.000-00:00"}
+                                                }
                                                {:summa               166,
+                                                :vuosi               2021,:kuukausi            5
+                                                :maksupvm            nil,
                                                 :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151"),
                                                 :tehtavaryhma        nil,
                                                 :tehtava             (hae-toimenpidekoodin-id "Hoito- ja korjaustöiden pientarvikevarasto" "23151")
                                                 :tyyppi              "laskutettava-tyo"
-                                                :vuosi               2021,
-                                                :maksupvm            nil,
-                                                :sopimus             (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id),
-                                                :kuukausi            5,
-                                                :alkupvm             #inst "2021-09-30T21:00:00.000-00:00"}]
-                       :yksikkohintaiset-tyot [{:vuosi              2021
-                                                :kuukausi           5
+                                                }]
+                       :yksikkohintaiset-tyot [{:kuukausi           5,
+                                                :vuosi              2021,
+                                                :alkupvm            #inst "2021-05-01T00:00:00.000-00:00",
+                                                :loppupvm           #inst "2021-05-31T00:00:00.000-00:00",
+                                                :maara              12,
                                                 :yksikko            "h",
+                                                :yksikkohinta       55,
                                                 :arvioitu_kustannus 660,
                                                 :tehtava            (hae-toimenpidekoodin-id "Hoitourakan työnjohto" "23151"),
-                                                :urakka             (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151"),
-                                                :yksikkohinta       55,
-                                                :maara              12,
-                                                :id                 13579,
                                                 :tehtavan_nimi      "Hoitourakan työnjohto",
+                                                :id                 13579,
                                                 :sopimus            (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
                                                 }
-                                               {:vuosi              2021
-                                                :kuukausi           5
-                                                :yksikko            "-",
-                                                :arvioitu_kustannus 6,
-                                                :tehtava            (hae-toimenpidekoodin-id "Hoitourakan työnjohto" "23151"),
-                                                :urakka             (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151"),
-                                                :yksikkohinta       2,
+                                               {:kuukausi           5,
+                                                :vuosi              2021,
+                                                :alkupvm            #inst "2021-05-01T00:00:00.000-00:00",
+                                                :loppupvm           #inst "2021-05-31T00:00:00.000-00:00",
                                                 :maara              3,
-                                                :id                 13580,
+                                                :yksikko            "-",
+                                                :yksikkohinta       2,
+                                                :arvioitu_kustannus 6,
+                                                :tehtava            (hae-toimenpidekoodin-id "Hoito- ja korjaustöiden pientarvikevarasto" "23151"),
                                                 :tehtavan_nimi      "Hoito- ja korjaustöiden pientarvikevarasto",
+                                                :id                 13580,
                                                 :sopimus            (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
                                                 }]})
 
 
-;; Testissä hyödynnetään etukäteen tallennettua testidataa.
+;; Testeissä hyödynnetään etukäteen tallennettua testidataa.
+
 ;; Haetaan budjetoidut työt. Lopputuloksen pitäisi olla:
 ;; Kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt on palautuvat oikein.
 ;; Puutteellisilla oikeuksilla saadaan virhe, urakan vastuuhenkilö saa tiedot.
@@ -137,7 +144,7 @@
         vaara-urakan-vastuuhenkilo (ei-ole-oulun-urakan-urakoitsijan-urakkavastaava)
         budjetoidut-tyot-kutsuja-urakanvalvoja (kutsu-palvelua (:http-palvelin jarjestelma) :budjetoidut-tyot
                                                                urakan-vastuuhenkilo @oulun-maanteiden-hoitourakan-2019-2024-id)]
-    (println palvelun-palauttamat-budjetoidut-tyot)
+
     (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma) :budjetoidut-tyot
                                                   vaara-urakan-vastuuhenkilo @oulun-maanteiden-hoitourakan-2019-2024-id)) "Ilman urakkakohtaisia oikeuksia, Urakan vastuuhenkilö-roolilla ei saa tietoja budjetoiduista töistä.")
 
@@ -146,13 +153,10 @@
     (is (= (reduce + (map :summa kiinteahintaiset-tyot)) 16666.0) (str "Kiinteähintaiset työt yhteensä (e)." (reduce + (map :summa kiinteahintaiset-tyot))))
     (is (= (reduce + (map :summa kustannusarvioidut-tyot)) 1866.0) (str "Kustannusarvioidut työt yhteensä (e). " (reduce + (map :summa kustannusarvioidut-tyot))))
     (is (= (reduce + (map :arvioitu_kustannus yksikkohintaiset-tyot)) 10485M) (str "Yksikköhintaiset työt yhteensä (e). " (reduce + (map :arvioitu_kustannus yksikkohintaiset-tyot))))
-
     (is (= (reduce + (map :summa akilliset-hoitotyot)) 650.0) (str "Äkilliset hoitotyöt yhteensä (e). " (reduce + (map :summa akilliset-hoitotyot))))
     (is (= (reduce + (map :summa vahinkojen-korjaukset)) 0) (str "Vahinkojenkorjaukset yhteensä (e). " (reduce + (map :summa vahinkojen-korjaukset))))
     (is (= (reduce + (map :summa hallinnolliset-tyot)) 666.0) (str "Hallinnolliset toimenpiteet yhteensä (e). " (reduce + (map :summa hallinnolliset-tyot))))
     (is (= (reduce + (map :summa talvihoidon-tyot)) 16816.0) (str "Talvihoito yhteensä (e). " (reduce + (map :summa talvihoidon-tyot))))))
-
-
 
 
 
@@ -182,12 +186,14 @@
                                                                                            :tyot budjetoidut-tyot})) "Urakan vastuuhenkilöllä ei ole kirjoitusoikeuksia suunnittelutietoihin.")
 
   (is (= (reduce + (map :summa kiinteahintaiset-tyot)) 17998.0) (str "Kiinteähintaiset työt yhteensä (e)." (reduce + (map :summa kiinteahintaiset-tyot))))
-  (is (= (reduce + (map :summa kustannusarvioidut-tyot)) 3996.0) (str "Kustannusarvioidut työt yhteensä (e). " (reduce + (map :summa kustannusarvioidut-tyot))))
+  (is (= (reduce + (map :summa kustannusarvioidut-tyot)) 3264.0) (str "Kustannusarvioidut työt yhteensä (e). " (reduce + (map :summa kustannusarvioidut-tyot))))
   (is (= (reduce + (map :arvioitu_kustannus yksikkohintaiset-tyot)) 11151M) (str "Yksikköhintaiset työt yhteensä (e). " (reduce + (map :arvioitu_kustannus yksikkohintaiset-tyot))))
-
   (is (= (reduce + (map :summa akilliset-hoitotyot)) 1316.0) (str "Äkilliset hoitotyöt yhteensä (e). " (reduce + (map :summa akilliset-hoitotyot))))
   (is (= (reduce + (map :summa vahinkojen-korjaukset)) 66.0) (str "Vahinkojenkorjaukset yhteensä (e). " (reduce + (map :summa vahinkojen-korjaukset))))
   (is (= (reduce + (map :summa hallinnolliset-tyot)) 1332.0) (str "Hallinnolliset kustannusarvioidut yhteensä (e). " (reduce + (map :summa hallinnolliset-tyot))))
-  (is (= (reduce + (map :summa liikenneympariston-hoidon-tyot)) 616.0) (str "Liikenteenympäristön hoito yhteensä (e). " (reduce + (map :summa liikenneympariston-hoidon-tyot))))
+  (is (= (reduce + (map :summa liikenneympariston-hoidon-tyot)) 1116.0) (str "Liikenteenympäristön hoito yhteensä (e). " (reduce + (map :summa liikenneympariston-hoidon-tyot))))
   (is (= (reduce + (map :summa sorateiden-hoidon-tyot)) 666.0) (str "Sorateiden hoito yhteensä (e). " (reduce + (map :summa hallinnolliset-tyot))))
-  (is (= (reduce + (map :summa talvihoidon-tyot)) 18148.0) (str "Talvihoito yhteensä (e). " (reduce + (map :summa talvihoidon-tyot))))))
+  (is (= (reduce + (map :summa talvihoidon-tyot)) 18148.0) (str "Talvihoito yhteensä (e). " (reduce + (map :summa talvihoidon-tyot)))))
+
+  ;; Onko oikea määrä kustannussuunnitelmia merkattu likaiseksi (= lähtettäväksi Sampoon)
+  (is (= 4 (ffirst (q "select count(maksuera) from kustannussuunnitelma where likainen is true and maksuera in (select numero from maksuera where toimenpideinstanssi in (select id from toimenpideinstanssi where urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id "));")))))

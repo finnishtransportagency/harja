@@ -116,19 +116,17 @@
                             (log/debug (:kustannusarvioidut-tyot tyot))
                             (let [tallennetut-tyot (group-by :toimenpideinstanssi (flatten (merge (kiinthint-tyot/tallenna-kiinteahintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
                                                                                                   (kustarv-tyot/tallenna-kustannusarvioidut-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
-                                                                                                  ;(ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
+                                                                                                  (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
 
                                                                                                   )))
                                   toimenpideinstanssit (into #{} (filter identity (map #(first %) tallennetut-tyot)))]
 
                               ;; Merkitään likaiseksi kaikki tallennettujen toimenpideinstanssien kustannussuunnitelmat.
                               ;; Periaatteessa tässä voisi myös selvittää ovatko kaikki tiedot päivittyneet ja jättää tarvittaessa osa kustannussuunnitelmista päivittämättä.
-
                               (when not-empty toimenpideinstanssit
                                               (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c toimenpideinstanssit))
 
-                              ;; Palautetaan päivitetty tilanne urakan töissä
-                              (hae-urakan-budjetoidut-tyot c user urakka-id)
-                              )))
+                              ;; Palautetaan päivitetty tilanne
+                              (hae-urakan-budjetoidut-tyot c user urakka-id))))
 
 

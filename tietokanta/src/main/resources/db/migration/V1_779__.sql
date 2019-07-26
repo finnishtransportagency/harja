@@ -19,7 +19,7 @@ CREATE TABLE lasku (
          erapaiva date not null,
          summa numeric not null,
          urakka integer not null references urakka(id),
-         suorittaja integer references alihankkija(id),
+         suorittaja integer references aliurakoitsija(id),
          luotu timestamp,
          luoja integer references kayttaja(id),
          muokattu timestamp,
