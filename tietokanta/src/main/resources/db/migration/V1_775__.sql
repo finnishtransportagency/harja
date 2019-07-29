@@ -34,8 +34,10 @@ ADD COLUMN ensisijainen boolean;
 
 UPDATE toimenpidekoodi
   SET api_tunnus = id WHERE taso = 4;
-
-
-
-ALTER TABLE toimenpidekoodi
-ADD COLUMN ensisijainen boolean;
+-- MHU Yllapito takaisin käyttöön
+UPDATE toimenpidekoodi
+set
+nimi = 'MHU Ylläpito',
+piilota = false,
+poistettu = false
+where koodi = '20191' and taso = 3;
