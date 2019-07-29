@@ -24,9 +24,12 @@
   (piirra-jana [this]
     [:div.janan-rivi (when luokat
                        {:class (apply str (interpose " " luokat))})
-     (for [solu (:solut this)]
-       [p/piirra-osa (vary-meta solu
-                                assoc :harja.ui.taulukko.osa/janan-id janan-id)])])
+     (for [solu (:solut this)
+           :let [{:keys [osan-id]} solu]]
+       (with-meta
+         [p/piirra-osa (vary-meta solu
+                                  assoc :harja.ui.taulukko.osa/janan-id janan-id)]
+         {:key osan-id}))])
 
   (janan-id? [this id]
     (= (:janan-id this) id))

@@ -28,10 +28,10 @@
   [e! app]
   (komp/luo
     (komp/sisaan (fn [this]
-                   (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get-in app [:suunnittelu :tehtavat :tehtava-ja-maaraluettelo]))]
-                     (e! (t/->MuutaTila [:suunnittelu :tehtavat :tehtavat-taulukko] taulukon-tehtavat)))))
+                   (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo))]
+                     (e! (t/->MuutaTila [:tehtavat-taulukko] taulukon-tehtavat)))))
     (fn [e! app]
-      (let [{{{taulukon-tehtavat :tehtavat-taulukko} :tehtavat} :suunnittelu} app]
+      (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         (println taulukon-tehtavat)
         [:div
          [debug/debug app]
@@ -40,4 +40,4 @@
            [yleiset/ajax-loader])]))))
 
 (defn tehtavat []
-  (tuck/tuck tila/tila tehtavat*))
+  (tuck/tuck tila/suunnittelu-tehtavat-tila tehtavat*))

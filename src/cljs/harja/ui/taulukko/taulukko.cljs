@@ -19,4 +19,5 @@
          (every? #(satisfies? p/Jana %) tila)]}
   [:div.taulukko.taulukko-rivit
    (for [jana tila]
-     [p/piirra-jana jana])])
+     (with-meta [p/piirra-jana jana]
+                {:key (:janan-id jana)}))])

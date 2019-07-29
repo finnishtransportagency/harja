@@ -42,7 +42,7 @@
 
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
-    (update-in app [:suunnittelu :tehtavat :tehtavat-taulukko]
+    (update app :tehtavat-taulukko
                (fn [taulukon-rivit]
                  (map (fn [{:keys [janan-id] :as rivi}]
                         (let [{:keys [vanhempi]} (meta rivi)
