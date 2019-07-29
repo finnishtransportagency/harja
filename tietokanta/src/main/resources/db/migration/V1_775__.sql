@@ -34,7 +34,7 @@ ADD COLUMN ensisijainen boolean;
 
 UPDATE toimenpidekoodi
   SET api_tunnus = id WHERE taso = 4;
-  
+
 -- MHU Yllapito takaisin käyttöön
 UPDATE toimenpidekoodi
 set
