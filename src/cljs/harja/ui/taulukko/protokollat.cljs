@@ -17,4 +17,4 @@
 
 (defprotocol Tila
   (hae-tila [this])
-  (aseta-tila [this]))
+  (aseta-tila! [this]))

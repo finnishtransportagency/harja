@@ -24,7 +24,7 @@
   p/Tila
   (hae-tila [this]
     (:tila this))
-  (aseta-tila [this]
+  (aseta-tila! [this]
     (assoc this :tila (atom false)))
   p/Osa
   (piirra-osa [this]
@@ -57,4 +57,4 @@
 (defrecord Raha [osan-id summa parametrit])
 
 (defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
-  (p/aseta-tila (->Laajenna osan-id teksti aukaise-fn parametrit)))
+  (p/aseta-tila! (->Laajenna osan-id teksti aukaise-fn parametrit)))
