@@ -9,8 +9,8 @@
   p/Osa
   (piirra-osa [this]
     (let [{:keys [id class]} (:parametrit this)]
-      [:div {:class class
-             :id id}
+      [:div.solu.osa-teksti {:class class
+                        :id id}
        (:teksti this)]))
   (osan-id? [this id]
     (= (:osan-id this) id))
@@ -32,7 +32,7 @@
                     (atom false))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
-          [:span.klikattava.osa-laajenna
+          [:span.solu.klikattava.osa-laajenna
            {:class class
             :id id
             :on-click

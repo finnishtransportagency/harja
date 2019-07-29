@@ -1,9 +1,11 @@
+@import "livi_tyylit";
 @chevron-suunnat: up, right, down, left;
 
 .chevron-loop(@suunnat; @i: length(@suunnat)) when (@i > 0) {
   @suunta: extract(@suunnat, @i);
   .livicon-chevron-@{suunta} {
     float: right;
+    color: @sininen4;
   }
   .chevron-loop(@suunnat; @i - 1);
 }
@@ -11,24 +13,37 @@
 .taulukko {
   display: flex;
   width: 100%;
+  border-bottom: 0.5px solid @harmaa8;
 
+  .jana {
+    border-right: 0.5px solid @harmaa8;
+    border-top: 0.5px solid @harmaa8;
+  }
+
+  .solu {
+    border-left: 0.5px solid @harmaa8;
+    padding: 5px;
+  }
+/* JANAT */
   .janan-rivi {
     display: flex;
     flex-direction: row;
-    width: 100%;
 
     &.piillotettu {
       display: none;
     }
   }
-
+/* SOLUT */
   .osa-laajenna {
     display: inline-block;
-    width: 100%;
+    color: @sininen4;
+    align-self: center;
     .chevron-loop(@chevron-suunnat);
+  }
+
+  .osa-teksti {
   }
 }
 .taulukko-rivit {
   flex-direction: column;
-  padding: 5px;
 }

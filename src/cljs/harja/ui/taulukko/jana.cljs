@@ -5,7 +5,7 @@
 (defrecord Otsikko [otsikot id]
   p/Jana
   (piirra-jana [this]
-    [:div {:class "janan-otsikko"}
+    [:div.jana.janan-otsikko.row
      (for [o (:otsikot this)
            :let [{:keys [key class nimi id]} o]]
        ^{:key key}
@@ -22,8 +22,8 @@
 (defrecord Rivi [janan-id solut luokat]
   p/Jana
   (piirra-jana [this]
-    [:div.janan-rivi (when luokat
-                       {:class (apply str (interpose " " luokat))})
+    [:div.jana.janan-rivi.row (when luokat
+                           {:class (apply str (interpose " " luokat))})
      (for [solu (:solut this)
            :let [{:keys [osan-id]} solu]]
        (with-meta
