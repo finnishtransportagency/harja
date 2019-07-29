@@ -32,7 +32,6 @@
                      (e! (t/->MuutaTila [:tehtavat-taulukko] taulukon-tehtavat)))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
-        (println taulukon-tehtavat)
         [:div
          [debug/debug app]
          (if taulukon-tehtavat

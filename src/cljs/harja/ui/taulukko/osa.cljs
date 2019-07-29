@@ -42,9 +42,9 @@
            teksti
            (if @auki?
              ^{:key "laajenna-auki"}
-             [ikonit/livicon-chevron-down "oikealle"]
+             [ikonit/livicon-chevron-down]
              ^{:key "laajenna-kiini"}
-             [ikonit/livicon-chevron-left "oikealle"])]))))
+             [ikonit/livicon-chevron-left])]))))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]

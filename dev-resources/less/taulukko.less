@@ -1,3 +1,13 @@
+@chevron-suunnat: up, right, down, left;
+
+.chevron-loop(@suunnat; @i: length(@suunnat)) when (@i > 0) {
+  @suunta: extract(@suunnat, @i);
+  .livicon-chevron-@{suunta} {
+    float: right;
+  }
+  .chevron-loop(@suunnat; @i - 1);
+}
+
 .taulukko {
   display: flex;
   width: 100%;
@@ -15,9 +25,7 @@
   .osa-laajenna {
     display: inline-block;
     width: 100%;
-    .oikealle {
-      float: right;
-    }
+    .chevron-loop(@chevron-suunnat);
   }
 }
 .taulukko-rivit {
