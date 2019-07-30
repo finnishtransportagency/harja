@@ -6,7 +6,10 @@
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
+
+(defrecord PaivitaMaara [janan-id solun-id arvo])
 (defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
+(defrecord JarjestaTehtavienMukaan [])
 
 (defn ylempi-taso?
   [ylempi-taso alempi-taso]
@@ -31,6 +34,33 @@
       recursion-vastaus
       (some true? recursion-vastaus))))
 
+(defn jarjesta-tehtavan-nimen-mukaan [tehtavat]
+  (let [tehtavan-nimi (fn [tehtava]
+                        (let [solun-index (first (keep-indexed (fn [i solu]
+                                                                 (when (= (-> solu meta :sarake) "Tehtävä")
+                                                                   i))
+                                                               (:solut tehtava)))]
+                          (get-in tehtava [:solut solun-index :teksti])))
+        tehtavan-id (fn [tehtava]
+                      (p/janan-id tehtava))
+        vanhemman-tehtava (fn [tehtava]
+                            (some #(when (= (:vanhempi (meta tehtava)) (p/janan-id %))
+                                     %)
+                                  tehtavat))
+        tehtavan-tunniste (juxt tehtavan-nimi tehtavan-id)]
+    (into []
+          (sort-by (fn [tehtava]
+                     (if (= (p/janan-id tehtava) :tehtavataulukon-otsikko)
+                       []
+                       (case (-> tehtava meta :tehtavaryhmatyyppi)
+                         "ylataso" [(tehtavan-tunniste tehtava) nil nil]
+                         "valitaso" [(tehtavan-tunniste (vanhemman-tehtava tehtava))
+                                     (tehtavan-tunniste tehtava) nil]
+                         "alitaso" [(-> tehtava vanhemman-tehtava vanhemman-tehtava tehtavan-tunniste)
+                                    (tehtavan-tunniste (vanhemman-tehtava tehtava))
+                                    (tehtavan-tunniste tehtava)])))
+                   tehtavat))))
+
 (extend-protocol tuck/Event
   MuutaTila
   (process-event [{:keys [polku arvo]} app]
@@ -39,6 +69,18 @@
   PaivitaTila
   (process-event [{:keys [polku f]} app]
     (update-in app polku f))
+
+  PaivitaMaara
+  (process-event [{:keys [janan-id solun-id arvo]} app]
+    (let [janan-index (first (keep-indexed #(when (= (p/janan-id %2) janan-id)
+                                              %1)
+                                           (:tehtavat-taulukko app)))
+          solun-index (first (keep-indexed #(when (= (p/osan-id %2) solun-id)
+                                              %1)
+                                           (get-in app [:tehtavat-taulukko janan-index :solut])))]
+      (update-in app [:tehtavat-taulukko janan-index :solut solun-index :parametrit]
+                       (fn [parametrit]
+                         (assoc parametrit :value arvo)))))
 
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
@@ -65,4 +107,9 @@
                             (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
                                                                                      assoc :piillotettu? true)
                             :else rivi)))
-                      taulukon-rivit)))))
+                      taulukon-rivit))))
+  JarjestaTehtavienMukaan
+  (process-event [_ app]
+    (update app :tehtavat-taulukko
+            (fn [tehtavat]
+              (jarjesta-tehtavan-nimen-mukaan tehtavat)))))
