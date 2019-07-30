@@ -1,7 +1,7 @@
 (ns harja.ui.taulukko.osa
   "Määritellään taulukon osat täällä."
   (:refer-clojure :exclude [atom])
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]))
 
@@ -16,6 +16,27 @@
     (= (:osan-id this) id))
   (osan-id [this]
     osan-id)
+  (osan-janan-id [this]
+    (-> this meta ::janan-id))
+  (osan-tila [this]))
+
+(defrecord Otsikko [osan-id otsikko jarjesta-fn! parametrit]
+  p/Osa
+  (piirra-osa [_]
+    (let [otsikon-jarjestys-fn! (fn [jarjesta-fn! e]
+                                  (.preventDefault e)
+                                  (jarjesta-fn!))]
+      (fn [this]
+        (let [{:keys [id class]} (:parametrit this)]
+          [:div.solu.osa-otsikko {:class class
+                                  :id id}
+           (:otsikko this)
+           [:span.klikattava.otsikon-jarjestys {:on-click (r/partial otsikon-jarjestys-fn! (:jarjesta-fn! this))}
+            [ikonit/sort]]]))))
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-id [this]
+    (:osan-id this))
   (osan-janan-id [this]
     (-> this meta ::janan-id))
   (osan-tila [this]))

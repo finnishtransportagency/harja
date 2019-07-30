@@ -17,17 +17,25 @@
 
 (defn luo-taulukon-tehtavat
   [e! tehtavat]
-  (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
-         (with-meta (jana/->Rivi id
-                                 [(if (= tehtavaryhmatyyppi "alitaso")
-                                    (osa/->Teksti (str id "-tehtava") nimi {:class (sarakkeiden-leveys :tehtava)})
-                                    (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (sarakkeiden-leveys :tehtava)}))
-                                  (osa/->Teksti (str id "-maara") maara {:class (sarakkeiden-leveys :maara)})]
-                                 (if piillotettu?
-                                   #{"piillotettu"}
-                                   #{}))
-                    {:vanhempi vanhempi}))
-       tehtavat))
+  (let [rivit (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
+                     (with-meta (jana/->Rivi id
+                                             [(case tehtavaryhmatyyppi
+                                                "ylataso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (sarakkeiden-leveys :tehtava)})
+                                                "valitaso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (str (sarakkeiden-leveys :tehtava)
+                                                                                                                                                                       " solu-sisenna-1")})
+                                                "alitaso" (osa/->Teksti (str id "-tehtava") nimi {:class (str (sarakkeiden-leveys :tehtava)
+                                                                                                              " solu-sisenna-2")}))
+                                              (osa/->Teksti (str id "-maara") maara {:class (sarakkeiden-leveys :maara)})]
+                                             (if piillotettu?
+                                               #{"piillotettu"}
+                                               #{}))
+                                {:vanhempi vanhempi}))
+                   tehtavat)
+        otsikot [(jana/->Rivi :tehtavataulukon-otsikko
+                              [(osa/->Otsikko "tehtava otsikko" "Tehtava" #(println "jarjesta tehtavat") {:class (sarakkeiden-leveys :tehtava)})
+                               (osa/->Otsikko "maara otsikko" "Maara" #(println "jarjesta määrät") {:class (sarakkeiden-leveys :maara)})]
+                              nil)]]
+    (concat otsikot rivit)))
 
 (defn tehtavat*
   [e! app]
