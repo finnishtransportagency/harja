@@ -7,6 +7,7 @@
             [harja.ui.taulukko.taulukko :as taulukko]
             [harja.ui.taulukko.jana :as jana]
             [harja.ui.taulukko.osa :as osa]
+            [harja.ui.taulukko.tyokalu :as tyokalu]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]))
 
@@ -16,7 +17,7 @@
     :maara "col-xs-12 col-sm-4 col-md-4 col-lg-4"))
 
 (defn luo-taulukon-tehtavat
-  [e! tehtavat]
+  [e! tehtavat on-oikeus?]
   (let [rivit (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
                      (with-meta (jana/->Rivi id
                                              [(case tehtavaryhmatyyppi
@@ -25,7 +26,14 @@
                                                                                                                                                                        " solu-sisenna-1")})
                                                 "alitaso" (osa/->Teksti (str id "-tehtava") nimi {:class (str (sarakkeiden-leveys :tehtava)
                                                                                                               " solu-sisenna-2")}))
-                                              (osa/->Teksti (str id "-maara") maara {:class (sarakkeiden-leveys :maara)})]
+                                              (osa/->Syote (str id "-maara")
+                                                           {:on-change #(println "muutettiin")}
+                                                           {:class (sarakkeiden-leveys :maara)
+                                                            :type "text"
+                                                            :disabled (not on-oikeus?)
+                                                            :pattern (tyokalu/positiivinen-numero-re)
+                                                            :value maara})
+                                              #_(osa/->Teksti (str id "-maara") maara {:class (sarakkeiden-leveys :maara)})]
                                              (if piillotettu?
                                                #{"piillotettu"}
                                                #{}))
@@ -41,7 +49,7 @@
   [e! app]
   (komp/luo
     (komp/sisaan (fn [this]
-                   (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo))]
+                   (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo) true)]
                      (e! (t/->MuutaTila [:tehtavat-taulukko] taulukon-tehtavat)))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]

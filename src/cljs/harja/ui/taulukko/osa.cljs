@@ -41,6 +41,64 @@
     (-> this meta ::janan-id))
   (osan-tila [this]))
 
+(defrecord Syote [osan-id toiminnot parametrit]
+  p/Osa
+  (piirra-osa [this]
+    (let [{:keys [id class type value name readonly? required? tabindex disabled?
+                  checked? default-checked? indeterminate?
+                  alt height src width
+                  autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
+          {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
+                  on-key-up]} (:toiminnot this)
+          parametrit (into {}
+                           (remove (fn [[_ arvo]]
+                                     (nil? arvo))
+                                   {;; Inputin parametrit
+                                    :class class
+                                    :id id
+                                    :type type
+                                    :value value
+                                    :name name
+                                    :read-only readonly?
+                                    :required required?
+                                    :tab-index tabindex
+                                    :disabled disabled?
+                                    ;; checkbox or radio paramterit
+                                    :checked checked?
+                                    :default-checked default-checked?
+                                    :indeterminate indeterminate?
+                                    ;; kuvan parametrit
+                                    :alt alt
+                                    :height height
+                                    :src src
+                                    :width width
+                                    ;; numero/teksti input
+                                    :auto-complete autocomplete
+                                    :max max
+                                    :max-length max-length
+                                    :min min
+                                    :min-length min-length
+                                    :pattern pattern
+                                    :placeholder placeholder
+                                    :size size
+                                    ;; GlobalEventHandlers
+                                    :on-blur on-blur
+                                    :on-change on-change
+                                    :on-click on-click
+                                    :on-focus on-focus
+                                    :on-input on-input
+                                    :on-key-down on-key-down
+                                    :on-key-press on-key-press
+                                    :on-key-up on-key-up}))]
+      [:input.solu.osa-syote parametrit]))
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-id [this]
+    osan-id)
+  (osan-janan-id [this]
+    (-> this meta ::janan-id))
+  (osan-tila [this]))
+
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
   p/Tila
   (hae-tila [this]
@@ -74,8 +132,6 @@
     (-> this meta ::janan-id))
   (osan-tila [this]
     (p/hae-tila this)))
-
-(defrecord Raha [osan-id summa parametrit])
 
 (defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
   (p/aseta-tila! (->Laajenna osan-id teksti aukaise-fn parametrit)))
