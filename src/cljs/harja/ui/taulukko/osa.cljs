@@ -3,7 +3,8 @@
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.taulukko.protokollat :as p]))
+            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.tyokalu :as tyokalut]))
 
 (defrecord Teksti [osan-id teksti parametrit]
   p/Osa
@@ -41,7 +42,11 @@
     (-> this meta ::janan-id))
   (osan-tila [this]))
 
-(defrecord Syote [osan-id toiminnot parametrit]
+;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
+;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
+;; voidaan wrapata johonkin 'toiminnot' funktioon 'kayttaytymiset' parametrien avulla.
+;; Käyttäytymiset määritellään eri ns:ssa.
+(defrecord Syote [osan-id toiminnot kayttaytymiset parametrit]
   p/Osa
   (piirra-osa [this]
     (let [{:keys [id class type value name readonly? required? tabindex disabled?
@@ -49,7 +54,7 @@
                   alt height src width
                   autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
           {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
-                  on-key-up]} (:toiminnot this)
+                  on-key-up]} (tyokalut/lisaa-kaytokset (:toiminnot this) (:kayttaytymiset this))
           parametrit (into {}
                            (remove (fn [[_ arvo]]
                                      (nil? arvo))

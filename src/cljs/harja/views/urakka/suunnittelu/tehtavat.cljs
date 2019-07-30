@@ -18,32 +18,37 @@
 
 (defn luo-taulukon-tehtavat
   [e! tehtavat on-oikeus?]
-  (let [rivit (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
-                     (with-meta (jana/->Rivi id
-                                             [(case tehtavaryhmatyyppi
-                                                "ylataso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (sarakkeiden-leveys :tehtava)})
-                                                "valitaso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (str (sarakkeiden-leveys :tehtava)
-                                                                                                                                                                       " solu-sisenna-1")})
-                                                "alitaso" (osa/->Teksti (str id "-tehtava") nimi {:class (str (sarakkeiden-leveys :tehtava)
-                                                                                                              " solu-sisenna-2")}))
-                                              (osa/->Syote (str id "-maara")
-                                                           {:on-change #(println "muutettiin")}
-                                                           {:class (sarakkeiden-leveys :maara)
-                                                            :type "text"
-                                                            :disabled (not on-oikeus?)
-                                                            :pattern (tyokalu/positiivinen-numero-re)
-                                                            :value maara})
-                                              #_(osa/->Teksti (str id "-maara") maara {:class (sarakkeiden-leveys :maara)})]
-                                             (if piillotettu?
-                                               #{"piillotettu"}
-                                               #{}))
-                                {:vanhempi vanhempi}))
-                   tehtavat)
+  (let [rivit (map-indexed (fn [index {:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
+                             (with-meta (jana/->Rivi id
+                                                     [(case tehtavaryhmatyyppi
+                                                        "ylataso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (sarakkeiden-leveys :tehtava)})
+                                                        "valitaso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (str (sarakkeiden-leveys :tehtava)
+                                                                                                                                                                               " solu-sisenna-1")})
+                                                        "alitaso" (osa/->Teksti (str id "-tehtava") nimi {:class (str (sarakkeiden-leveys :tehtava)
+                                                                                                                      " solu-sisenna-2")}))
+                                                      (osa/->Syote (str id "-maara")
+                                                                   {:on-change (fn [arvo]
+                                                                                 ;; Arvo tulee :positiivinen? kaytos-wrapperiltä, joten jos se on nil, ei syötetty arvo ollut positiivinen.
+                                                                                 (when arvo
+                                                                                   (e! (t/->PaivitaTila [:tehtavat-taulukko (inc index) :solut 1 :parametrit]
+                                                                                                        (fn [parametrit]
+                                                                                                          (assoc parametrit :value arvo))))))}
+                                                                   {:on-change [:positiivinen-numero :eventin-arvo]}
+                                                                   {:class (sarakkeiden-leveys :maara)
+                                                                    :type "text"
+                                                                    :disabled (not on-oikeus?)
+                                                                    :value maara})
+                                                      #_(osa/->Teksti (str id "-maara") maara {:class (sarakkeiden-leveys :maara)})]
+                                                     (if piillotettu?
+                                                       #{"piillotettu"}
+                                                       #{}))
+                                        {:vanhempi vanhempi}))
+                           tehtavat)
         otsikot [(jana/->Rivi :tehtavataulukon-otsikko
                               [(osa/->Otsikko "tehtava otsikko" "Tehtava" #(println "jarjesta tehtavat") {:class (sarakkeiden-leveys :tehtava)})
                                (osa/->Otsikko "maara otsikko" "Maara" #(println "jarjesta määrät") {:class (sarakkeiden-leveys :maara)})]
                               nil)]]
-    (concat otsikot rivit)))
+    (into [] (concat otsikot rivit))))
 
 (defn tehtavat*
   [e! app]
