@@ -10,14 +10,14 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-    (fn [_]
-      (component/start
-        (component/system-map
-          :db (tietokanta/luo-tietokanta testitietokanta)
-          :http-palvelin (testi-http-palvelin)
-          :tehtavamaarat (component/using
-                                   (->Tehtavamaarat)
-                                   [:http-palvelin :db])))))
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :tehtavamaarat (component/using
+                                         (->Tehtavamaarat)
+                                         [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -29,66 +29,108 @@
 
 
 (def paivitettavat-olemassaolevat-tehtavat
-  [{:tehtava 1430 :maara 111}
-   {:tehtava 1414 :maara 222}
-   {:tehtava 1511 :maara 33.3}
-   {:tehtava 1423 :maara 444}])
+  [{:tehtava-id 1430 :maara 111}
+   {:tehtava-id 1414 :maara 222}
+   {:tehtava-id 4579 :maara 666.6}
+   {:tehtava-id 4610 :maara 444}])
 
 (def uudet-tehtavat
-  [{:tehtava 1428 :maara 555}
-   {:tehtava 1440 :maara 666}
-   {:tehtava 1391 :maara 7.77}
-   {:tehtava 1510 :maara 88.8}
-   {:tehtava 1427 :maara 999}
-   {:tehtava 1435 :maara 666}])
+  [{:tehtava-id 1428 :maara 555}
+   {:tehtava-id 4561 :maara 666}
+   {:tehtava-id 4570 :maara 7.77}
+   {:tehtava-id 4583 :maara 88.8}
+   {:tehtava-id 4590 :maara 999}
+   {:tehtava-id 4617 :maara 666}])
+
+(def uuden-hoitokauden-tehtavat
+  [{:tehtava-id 4589 :maara 6.66}
+   {:tehtava-id 1430 :maara 999}])
 
 
-;; TODO: hae urkakkanumerot älä kovakoodaa
+;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
 
-;; käyttää ennakkoon tallennettua testidataa
-(deftest kaikki-tehtavamaarat-haettu-oikein
-         (let [tehtavamaarat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :tehtavamaarat  +kayttaja-jvh+ {:urakka-id 32
-                                                                                    :hoitokauden-alkuvuosi 2020})
-               tehtavamaarat-kannassa (ffirst (q
-                                                     (str "SELECT *
+
+;; jos tehtävähierarkian tehtävien tiedoissa tapahtuu muutoksia, tämä testi feilaa ja täytyy päivittää
+(deftest tehtavahierarkian-haku
+  (let [hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tehtavahierarkia +kayttaja-jvh+)]
+    (is (= (count hierarkia) 104) "Hierarkiassa on 104 osaa.")
+    (is (= (:tehtava (first (filter #(= 4579 (:tehtava-id %)) hierarkia))) "Rumpujen tarkastus") "Tehtävähierarkiassa palautuu tietoja.")))
+
+
+; käyttää ennakkoon tallennettua testidataa
+(deftest tallenna-tehtavamaarat-testi
+  (let [tehtavamaarat-ja-hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id             32
+                                                                                               :hoitokauden-alkuvuosi 2020})
+        tehtavamaarat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                     :hoitokauden-alkuvuosi 2020})
+        tehtavamaarat-kannassa (ffirst (q (str "SELECT count(*)
                                                              FROM urakka_tehtavamaara
-                                                            WHERE \"hoitokauden-aloitusvuosi\" = 2020 AND urakka = " 32)))]
+                                                            WHERE \"hoitokauden-alkuvuosi\" = 2020 AND urakka = " 32)))
 
-           (is (= (count tehtavamaarat) (count tehtavamaarat-kannassa)) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
-           (is (= (:maara (map [:tehtava 1511 :hoitokauden-alkuvuosi 2020]tehtavamaarat))  32.6) "Hoitokauden tehtävämäärä palautuu oikein.")))
+        tehtavamaarat-ennen-paivitysta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                       :tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                                      :hoitokauden-alkuvuosi 2020})
+        tehtavamaarat-paivita (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                                      :hoitokauden-alkuvuosi 2020
+                                                                                      :tehtavamaarat         paivitettavat-olemassaolevat-tehtavat})
+        tehtavamaarat-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                                         :hoitokauden-alkuvuosi 2020})
+        tehtavahierarkia-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                             :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id             32
+                                                                                                         :hoitokauden-alkuvuosi 2020})
+        tehtavamaarat-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                                    :hoitokauden-alkuvuosi 2020
+                                                                                    :tehtavamaarat         uudet-tehtavat})
+        tehtavamaarat-lisayksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                                       :hoitokauden-alkuvuosi 2020})
+        hoitokausi-2022-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                                      :hoitokauden-alkuvuosi 2022
+                                                                                      :tehtavamaarat         uuden-hoitokauden-tehtavat})
+        hoitokausi-2022 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                       :hoitokauden-alkuvuosi 2022})
+        hoitokausi-2020 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :tehtavamaarat +kayttaja-jvh+ {:urakka-id             32
+                                                                       :hoitokauden-alkuvuosi 2020})]
 
+    ;; tehtävähierarkia
+    (is (= (count tehtavamaarat-ja-hierarkia) 104) "Hierarkiassa on 104 osaa.")
+    (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
+                                        (= 2020 (:hoitokauden-alkuvuosi %))
+                                        (= 32 (:urakka %))) tehtavamaarat-ja-hierarkia))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa.")
 
-;(deftest tallenna-tehtavamaarat-testi
-;  (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-;                                             :muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
-;        muutoshintaisten-toiden-maara-ennen-paivitysta (ffirst (q
-;                                                                 (str "SELECT count(*)
-;                                                       FROM muutoshintainen_tyo
-;                                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
-;                                                                      ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2012-09-30'")))
-;
-;        muokattavan-tyon-tehtava (ffirst (q (str "select id from toimenpidekoodi where nimi = 'I rampit'")))
-;        muokattava-tyo (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) muutoshintaiset-tyot))
-;        uusi-yksikkohinta 888.0
-;        uusi-yksikko "kg"
-;        muokattava-tyo-uudet-arvot (assoc muokattava-tyo :yksikkohinta uusi-yksikkohinta :yksikko uusi-yksikko)
-;
-;        muutoshintaiset-tyot-paivitetty (kutsu-palvelua (:http-palvelin jarjestelma)
-;                                                        :tallenna-muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja)
-;                                                        {:urakka-id @oulun-alueurakan-2005-2010-id
-;                                                         :tyot       [muokattava-tyo-uudet-arvot]})
-;        muokattu-tyo-paivitetty (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava) muutoshintaiset-tyot-paivitetty))
-;
-;        alkuperaiset-arvot-palautettu (kutsu-palvelua (:http-palvelin jarjestelma)
-;                                                      :tallenna-muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja)
-;                                                      {:urakka-id @oulun-alueurakan-2005-2010-id
-;                                                       :tyot       [muokattava-tyo]})
-;        muokattu-tyo-palautuksen-jalkeen   (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) alkuperaiset-arvot-palautettu))]
-;
-;    (is (= (count muutoshintaiset-tyot)  muutoshintaisten-toiden-maara-ennen-paivitysta) "Tallennuksen jälkeen muutoshintaisten määrä")
-;
-;    (is (= (:yksikkohinta muokattu-tyo-paivitetty) uusi-yksikkohinta) "Tallennuksen jälkeen muutoshintaisen yksikköhinta")
-;    (is (= (:yksikko muokattu-tyo-paivitetty) uusi-yksikko) "Tallennuksen jälkeen muutoshintaisen yksikkö")
-;    (is (= (:yksikkohinta muokattu-tyo-palautuksen-jalkeen) 4.5) "Muutoshintaisen työn vanha tila palautettu, yksikköhinta")
-;    (is (= (:yksikko muokattu-tyo-palautuksen-jalkeen) "tiekm") "Muutoshintaisen työn vanha tila palautettu, yksikkö")))
+    ;; tehtävämäärä
+    (is (= (count tehtavamaarat) tehtavamaarat-kannassa) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
+    (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
+                                        (= 2020 (:hoitokauden-alkuvuosi %))
+                                        (= 32 (:urakka %))) tehtavamaarat))) 32.6M) "Hoitokauden tehtävämäärä palautuu oikein.")
+
+    ;; hoitokauden tietojen päivitys
+    (is (= (count tehtavamaarat-ennen-paivitysta) (count tehtavamaarat-paivityksen-jalkeen)) "Rivejä ei lisätty, kun tietoja päivitettiin.")
+    (is (= tehtavamaarat-paivita tehtavahierarkia-paivityksen-jalkeen) "Tallennusfunktio palauttaa vastauksena kannan tilan samanlaisena kuin erillinen hierarkianhakufunktio.")
+    (is (= (:maara (first (filter #(and (= 4579 (:tehtava-id %))
+                                        (= 2020 (:hoitokauden-alkuvuosi %))
+                                        (= 32 (:urakka %))) tehtavamaarat-paivita))) 666.6M) "Päivitys päivitti määrän.")
+
+    ;; hoitokauden tietojen lisäys
+    (is (= (count tehtavamaarat-lisayksen-jalkeen) 10) "Uudet rivit lisättiin, vanhat säilyivät.")
+    (is (= (:maara (first (filter #(and (= 4561 (:tehtava-id %))
+                                        (= 2020 (:hoitokauden-alkuvuosi %))
+                                        (= 32 (:urakka %))) tehtavamaarat-lisaa))) 666M) "Lisäys lisäsi määrän.")
+
+    ;; uuden hoitokauden lisäys
+    (is (= (count hoitokausi-2022-lisaa) 104) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
+    (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
+    (is (= (:maara (first (filter #(and (= 4589 (:tehtava-id %))
+                                        (= 2022 (:hoitokauden-alkuvuosi %))
+                                        (= 32 (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
+    (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
+    (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
