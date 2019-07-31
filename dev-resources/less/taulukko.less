@@ -1,0 +1,75 @@
+@import "livi_tyylit";
+@chevron-suunnat: up, right, down, left;
+@solu-padding: 5px;
+
+.chevron-loop(@suunnat; @i: length(@suunnat)) when (@i > 0) {
+  @suunta: extract(@suunnat, @i);
+  .livicon-chevron-@{suunta} {
+    float: right;
+    color: @sininen4;
+  }
+  .chevron-loop(@suunnat; @i - 1);
+}
+
+.taulukko {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-bottom: 0.5px solid @harmaa8;
+  font-size: @fontin-koko-taulukko;
+  word-break: break-all;
+
+  /* TAULUKON ELEMENTIT */
+
+  input {
+    border: none;
+  }
+
+/* JANAT */
+  .jana {
+    border-right: 0.5px solid @harmaa8;
+    border-top: 0.5px solid @harmaa8;
+  }
+  .janan-rivi {
+    display: flex;
+    flex-direction: row;
+
+    &.piillotettu {
+      display: none;
+    }
+  }
+/* SOLUT */
+  .solu {
+    border-left: 0.5px solid @harmaa8;
+    padding: @solu-padding;
+  }
+  .osa-laajenna {
+    display: inline-block;
+    color: @sininen4;
+    align-self: center;
+    .chevron-loop(@chevron-suunnat);
+  }
+  .osa-otsikko {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background: @harmaa8;
+
+    .otsikon-jarjestys {
+
+    }
+  }
+
+  .osa-teksti {
+  }
+  /* YLEISTÄ */
+  .solu-sisenna-1 {
+    padding-left: (@solu-padding + 20px);
+  }
+  .solu-sisenna-2 {
+    padding-left: (@solu-padding + 40px);
+  }
+  .solu-sisenna-3 {
+    padding-left: (@solu-padding + 60px);
+  }
+}

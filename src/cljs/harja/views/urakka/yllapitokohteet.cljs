@@ -930,7 +930,7 @@
                               :yllapitokohteet-atom kohteet-atom}])])))))
 
 
-(defn- vasta-muokatut-lihavoitu []
+(defn vasta-muokatut-lihavoitu []
   [yleiset/vihje "Viikon sisällä muokatut lihavoitu" "inline-block bold pull-right"])
 
 (defn yllapitokohteet

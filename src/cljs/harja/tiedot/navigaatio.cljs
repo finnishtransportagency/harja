@@ -390,6 +390,8 @@
       (into []
             (comp (filter #(or (= :kaikki v-ur-tyyppi)
                                (= v-ur-tyyppi (:tyyppi %))
+                               (and (= v-ur-tyyppi :hoito)
+                                    (= (:tyyppi %) :teiden-hoito))
                                (and (= v-ur-tyyppi :vesivayla)
                                     (urakka-domain/vesivaylaurakka? %))))
                   (filter #(or

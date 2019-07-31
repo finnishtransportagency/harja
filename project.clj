@@ -79,7 +79,6 @@
                                         ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.8.0"]
-                 [figwheel "0.5.19-SNAPSHOT"]
 
                  [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.6.1-0"] ; TODO Voisi päivittää, mutta tämä ja react-dom aiheuttaa ongelman: Undefined nameToPath for react
@@ -150,11 +149,16 @@
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]
-                                  [figwheel-sidecar "0.5.19-SNAPSHOT"]
-                                  [cider/piggieback "0.4.0"]]
+
+                                  [com.bhauman/figwheel-main "0.2.1"]
+                                  [com.bhauman/rebel-readline-cljs "0.1.4"]]
+                   :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
+                   :resource-paths ["dev-resources/js" "resources/public/css" "resources"]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.4.2"]
                              [lein-eftest "0.5.0"]]
+                   :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
+                             "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]}
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
@@ -178,7 +182,6 @@
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
-            [lein-figwheel "0.5.19-SNAPSHOT"]
             [lein-codox "0.10.6"]
             [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
@@ -191,7 +194,6 @@
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
                 ;; Clientin reload ja REPL
-                :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
                                         ;:parallel-build false Failaa randomisti
@@ -290,9 +292,6 @@
   :less {:source-paths ["dev-resources/less/application"
                         "dev-resources/less/laadunseuranta/application"]
          :target-path "resources/public/css/"}
-  
-  :figwheel {:server-port 3449
-             :reload-clj-files false}
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
@@ -307,8 +306,7 @@
   :repl-options {:init-ns harja.palvelin.main
                  :init (harja.palvelin.main/-main)
                  :port 4005
-                 :timeout 120000
-                 :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
+                 :timeout 120000}
 
   
 

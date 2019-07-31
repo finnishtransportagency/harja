@@ -7,6 +7,7 @@ INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Oulun alueurakka',
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Kajaanin alueurakka', '2014-10-01', '2019-09-30', 'kaj1');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Vantaan alueurakka', '2014-10-01', '2019-09-30', 'van1');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Espoon alueurakka', '2014-10-01', '2019-09-30', 'esp1');
+INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid) VALUES ('Lapin MHU urakka', '2018-10-01', '2023-09-30', 'lapMHU1');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
 VALUES ('Muhoksen päällystysurakka', '2014-10-01', '2018-09-30', '666');
 INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
@@ -61,3 +62,8 @@ SET hanke = (SELECT id
              FROM hanke
              WHERE sampoid = 'valai1')
 WHERE tyyppi = 'valaistus' AND nimi = 'Kempeleen valaistusurakka';
+UPDATE urakka
+SET hanke = (SELECT id
+             FROM hanke
+             WHERE sampoid = 'lapMHU1')
+WHERE tyyppi = 'teiden-hoito' AND nimi LIKE 'Lapin MHU%';
