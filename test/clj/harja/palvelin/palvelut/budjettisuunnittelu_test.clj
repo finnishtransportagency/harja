@@ -1,9 +1,5 @@
 (ns harja.palvelin.palvelut.budjettisuunnittelu-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
-
-            [harja.kyselyt.urakat :as urk-q]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.budjettisuunnittelu :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]))
@@ -21,7 +17,6 @@
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
-
 
 
 (use-fixtures :once (compose-fixtures

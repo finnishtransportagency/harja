@@ -12,6 +12,7 @@ SELECT
   yt.sopimus,
   yt.arvioitu_kustannus,
   yt.kuukausi,
+  yt.vuosi,
   tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt

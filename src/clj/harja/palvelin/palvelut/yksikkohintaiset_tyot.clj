@@ -15,9 +15,9 @@
 (defn hae-urakan-yksikkohintaiset-tyot
   "Palvelu, joka palauttaa urakan yksikkohintaiset työt."
   [db user urakka-id]
-  ;(or (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-yksikkohintaisettyot urakka-id user)
-  ;    (oikeudet/voi-lukea? oikeudet/urakat-toteumat-yksikkohintaisettyot urakka-id user))
-  ;(oikeudet/ei-oikeustarkistusta!)
+  (or (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-yksikkohintaisettyot urakka-id user)
+      (oikeudet/voi-lukea? oikeudet/urakat-toteumat-yksikkohintaisettyot urakka-id user))
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (map #(assoc %
                      :maara (if (:maara %) (double (:maara %)))
@@ -27,7 +27,7 @@
 (defn tallenna-urakan-yksikkohintaiset-tyot
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  ;(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
         (let [nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)

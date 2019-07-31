@@ -1,24 +1,23 @@
 (ns harja.palvelin.palvelut.budjettisuunnittelu
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
 
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.palvelin.palvelut.kiinteahintaiset-tyot :as kiinthint-tyot]
-            [harja.palvelin.palvelut.kustannusarvioidut-tyot :as kustarv-tyot]
-            [harja.palvelin.palvelut.yksikkohintaiset-tyot :as ykshint-tyot]
-            [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokhint]
-            [harja.kyselyt.budjettisuunnittelu :as q]
-            [harja.kyselyt.kokonaishintaiset-tyot :as kok-q]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-q]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tyokalut.big :as big]
-            [clojure.set :as set]
-            [harja.domain.roolit :as roolit]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.kyselyt
+             [budjettisuunnittelu :as q]
+             [urakat :as urakat-q]
+             [sopimukset :as sopimus-q]
+             [kokonaishintaiset-tyot :as kok-q]
+             [toimenpideinstanssit :as tpi-q]]
+            [harja.palvelin.palvelut
+             [kiinteahintaiset-tyot :as kiinthint-tyot]
+             [kustannusarvioidut-tyot :as kustarv-tyot]
+             [yksikkohintaiset-tyot :as ykshint-tyot]]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (declare hae-urakan-budjetoidut-tyot tallenna-budjetoidut-tyot hae-urakan-tavoite tallenna-urakan-tavoite)
 
@@ -49,9 +48,7 @@
 
 (defn hae-urakan-tavoite
   [db user urakka-id]
-  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-    (oikeudet/vaadi-lukuoikeus
-      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
 (defn tallenna-urakan-tavoite
@@ -59,29 +56,32 @@
   Budjettitiedoissa: hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta.
   Budjettitavoitteet-vektorissa voi lähettää yhden tai useamman mäpin, jossa kussakin urakan yhden hoitokauden tiedot."
   [db user urakka-id tavoitteet]
-  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-    (oikeudet/vaadi-kirjoitusoikeus
-      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
+
+  (let [urakkatyyppi (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
+    (if-not (= urakkatyyppi :teiden-hoito)
+      (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä " urakkatyyppi ". Tavoite kirjataan vain teiden hoidon urakoille."))))
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))
+
   (assert (vector? tavoitteet) "tavoitteet tulee olla vektori")
+
   (jdbc/with-db-transaction [c db]
-                            (let [nykyiset-arvot (q/hae-budjettitavoite c {:urakka urakka-id})
-                                  valitut-hoitokaudet (into #{} (map :hoitokausi tavoitteet))
-                                  tavoitteet-kannassa (into #{} (map :hoitokausi
-                                                                     (filter #(valitut-hoitokaudet (:hoitokausi %))
-                                                                             nykyiset-arvot)))]
+                            (let [tavoitteet-kannassa (q/hae-budjettitavoite c {:urakka urakka-id})
+                                  tallennettavat-hoitokaudet (into #{} (map :hoitokausi tavoitteet))
+                                  paivitettavat-tavoitteet (into #{}
+                                                                 (map :hoitokausi)
+                                                                 (filter #(tallennettavat-hoitokaudet (:hoitokausi %)) tavoitteet-kannassa))]
                               (doseq [hoitokausitavoite tavoitteet]
                                 (as-> hoitokausitavoite hkt
                                       (assoc hkt :urakka urakka-id)
                                       (assoc hkt :kayttaja (:id user))
-                                      (if (not (tavoitteet-kannassa (:hoitokausi hkt)))
+                                      (if (not (paivitettavat-tavoitteet (:hoitokausi hkt)))
                                         (q/tallenna-budjettitavoite<! c hkt)
                                         (q/paivita-budjettitavoite<! c hkt)))))))
 
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
   [db user urakka-id]
-  ;; Kaikkien budjetoitujen töiden käyttäjäoikeudet ovat samat kuin kokonaishintaisten töiden käsittelyllä
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   {:kiinteahintaiset-tyot   (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
    :yksikkohintaiset-tyot   (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)})
@@ -89,42 +89,37 @@
 
 (defn tallenna-budjetoidut-tyot
   "Palvelu joka tallentaa urakan kustannusarvioidut tyot."
-  [db user {:keys [urakka-id sopimusnumero tyot]}]
-
+  [db user {:keys [urakka-id tyot]}]
 
   (let [urakkatyyppi (keyword (:tyyppi
                                 (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
-        tallennettavat-toimenpideinstanssit (into #{} (filter identity (map #(first %) (group-by :toimenpideinstanssi (flatten (merge (:kiinteahintaiset-tyot tyot)
-                                                                                                                                      (:kustannusarvioidut-tyot tyot)
-                                                                                                                                      (:yksikkohintaiset-tyot tyot)))))))
-        urakan-tallennettavat-toimenpideinstanssit (into #{}
-                                                         (map :id)
-                                                         (tpi-q/urakan-toimenpideinstanssit-idlla db urakka-id tallennettavat-toimenpideinstanssit))]
-
+        sopimusnumero (:id
+                        (first (sopimus-q/hae-urakan-paasopimus db urakka-id))) ;; teiden hoidon urakoissa (MHU) on vain yksi sopimus
+        tallennettavat-toimenpideinstanssit (into #{}
+                                                  (keep :toimenpideinstanssi (concat (:kiinteahintaiset-tyot tyot)
+                                                                                     (:kustannusarvioidut-tyot tyot)
+                                                                                     (:yksikkohintaiset-tyot tyot))))
+        tallennettavat-toimenpideinstanssit-urakassa (into #{}
+                                                           (map :id)
+                                                           (tpi-q/urakan-toimenpideinstanssit-idlla db urakka-id tallennettavat-toimenpideinstanssit))]
 
     ;; Tarkistetaan oikeudet ja että kyseessä on maanteiden hoidon urakka (MHU) ja että käsitellyt toimenpideinstanssit kuuluvat urakkaan.
-    (oikeudet/vaadi-kirjoitusoikeus
-      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi) user urakka-id)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakan " urakka-id " budjetoituja töitä ei voi tallentaa urakkatyypillä " urakkatyyppi "."))))
-    (when-not (empty? (set/difference tallennettavat-toimenpideinstanssit
-                                      urakan-tallennettavat-toimenpideinstanssit))
-      (throw (IllegalArgumentException. "Väärän urakan toimenpideinstanssi"))))
+    (when-not (empty?
+                (set/difference tallennettavat-toimenpideinstanssit tallennettavat-toimenpideinstanssit-urakassa))
+      (throw (IllegalArgumentException. "Väärän urakan toimenpideinstanssi")))
 
+    (jdbc/with-db-transaction [c db]
+                              (kiinthint-tyot/tallenna-kiinteahintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
+                              (kustarv-tyot/tallenna-kustannusarvioidut-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
+                              (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
 
-  (jdbc/with-db-transaction [c db]
-                            (log/debug (:kustannusarvioidut-tyot tyot))
-                            (let [tallennetut-tyot (group-by :toimenpideinstanssi (flatten (merge (kiinthint-tyot/tallenna-kiinteahintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
-                                                                                                  (kustarv-tyot/tallenna-kustannusarvioidut-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
-                                                                                                  (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
-
-                                                                                                  )))
-                                  toimenpideinstanssit (into #{} (filter identity (map #(first %) tallennetut-tyot)))]
-
-                              ;; Merkitään likaiseksi kaikki tallennettujen toimenpideinstanssien kustannussuunnitelmat.
+                              ;; Merkitään likaiseksi tallennettujen toimenpideinstanssien kustannussuunnitelmat.
                               ;; Periaatteessa tässä voisi myös selvittää ovatko kaikki tiedot päivittyneet ja jättää tarvittaessa osa kustannussuunnitelmista päivittämättä.
-                              (when not-empty toimenpideinstanssit
-                                              (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c toimenpideinstanssit))
+                              (when not-empty tallennettavat-toimenpideinstanssit-urakassa
+                                              (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c tallennettavat-toimenpideinstanssit-urakassa))
 
                               ;; Palautetaan päivitetty tilanne
                               (hae-urakan-budjetoidut-tyot c user urakka-id))))
