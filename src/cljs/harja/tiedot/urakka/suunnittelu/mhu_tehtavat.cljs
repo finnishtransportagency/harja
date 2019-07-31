@@ -38,17 +38,18 @@
 
 (defn jarjesta-tehtavan-otsikon-mukaisesti [tehtavat otsikko]
   (let [tehtavan-nimi (fn [tehtava]
-                        (let [solun-index (first (keep-indexed (fn [i solu]
-                                                                 (when (= (-> solu meta :sarake) "Tehtävä")
-                                                                   i))
-                                                               (:solut tehtava)))]
-                          (get-in tehtava [:solut solun-index :teksti])))
+                        (let [solu (some #(when (= (-> % meta :sarake) "Tehtävä")
+                                            %)
+                                         (p/janan-osat tehtava))]
+                          (:teksti solu)))
         tehtavan-maara (fn [tehtava]
-                         (let [solun-index (first (keep-indexed (fn [i solu]
-                                                                  (when (= (-> solu meta :sarake) "Määrä")
-                                                                    i))
-                                                                (:solut tehtava)))]
-                           (get-in tehtava [:solut solun-index :parametrit :value])))
+                         (let [solu (some #(when (= (-> % meta :sarake) "Määrä")
+                                             %)
+                                          (p/janan-osat tehtava))
+                               maara (cond
+                                       (= (type solu) osa/Teksti) (get solu :teksti)
+                                       (= (type solu) osa/Syote) (get-in solu [:parametrit :value]))]
+                           (if (= "" maara) 0 (js/parseFloat maara))))
         tehtavan-id (fn [tehtava]
                       (p/janan-id tehtava))
         vanhemman-tehtava (fn [tehtava]
