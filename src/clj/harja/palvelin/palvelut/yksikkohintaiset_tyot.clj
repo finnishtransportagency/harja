@@ -51,11 +51,11 @@
                  urakka-id sopimusnumero (:tehtava tyo)
                  (java.sql.Date. (.getTime (:alkupvm tyo)))
                  (java.sql.Date. (.getTime (:loppupvm tyo)))
-                 (:id user) (:arvioitu_kustannus tyo)))
+                 (:id user) (:arvioitu_kustannus tyo) (:kuukausi tyo) (:vuosi tyo)))
               ;;update
               (do (log/debug " --> päivitetään vanha")
                   (q/paivita-urakan-yksikkohintainen-tyo!
-                   c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo) (:arvioitu_kustannus tyo)
+                   c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo) (:arvioitu_kustannus tyo) (:id user) (:kuukausi tyo) (:vuosi tyo)
                    urakka-id sopimusnumero (:tehtava tyo)
                    (java.sql.Date. (.getTime (:alkupvm tyo)))
                    (java.sql.Date. (.getTime (:loppupvm tyo)))))))
