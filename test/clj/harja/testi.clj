@@ -341,6 +341,7 @@
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def oulun-maanteiden-hoitourakan-2019-2024-id (atom nil))
+(def oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (atom nil))
 (def kajaanin-alueurakan-2014-2019-id (atom nil))
 (def vantaan-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-lampotila-hk-2014-2015 (atom nil))
@@ -589,6 +590,21 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
+
+(defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun MHU 2019-2024')"))))
+
+(defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
+  (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
+                   toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
+
+(defn hae-toimenpidekoodin-id [nimi koodi]
+  (ffirst (q (str "SELECT id from toimenpidekoodi where nimi = '" nimi "' AND emo = (select id from toimenpidekoodi WHERE koodi = '" koodi "');"))))
+
+(defn hae-tehtavaryhman-id [nimi]
+  (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
@@ -910,6 +926,8 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
+  (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
   (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
@@ -958,6 +976,14 @@
    :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
    :organisaatioroolit {}
    :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"vastuuhenkilo"}}})
+
+(defn oulun-2019-urakan-urakoitsijan-urakkavastaava []
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id @yit-rakennus-id, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@oulun-maanteiden-hoitourakan-2019-2024-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@oulun-maanteiden-hoitourakan-2019-2024-id #{"vastuuhenkilo"}}})
 
 (defn oulun-2014-urakan-urakoitsijan-laadunvalvoja []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

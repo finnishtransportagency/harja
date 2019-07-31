@@ -105,6 +105,10 @@ SELECT exists(SELECT id
 -- Palauttaa urakan toimenpideinstanssien idt
 SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka;
 
+-- name: urakan-toimenpideinstanssit-idlla
+-- Palauttaa urakan toimenpideinstanssien idt
+SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka AND id IN (:toimenpideinstanssit);
+
 
 -- name: sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja
 -- Jos urakkaa ei ole tuotu Harjaan, toimenpideinstansseja saa olla vain yksi.

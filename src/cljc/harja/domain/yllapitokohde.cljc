@@ -565,7 +565,8 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
                         (<= vuosi 2017) ::tr-paaluvali)
          validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
          validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
-                                                      (filter #(tr-valit-paallekkain? alustatoimenpide %)
+                                                      (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
+                                                                    (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))
                                                               toiset-alustatoimenpiteet))
          ;; Alustatoimenpiteen pitäisi olla jonku alikohteen sisällä
          validoitu-alikohdepaallekkyys (when (empty? validoitu-muoto)
