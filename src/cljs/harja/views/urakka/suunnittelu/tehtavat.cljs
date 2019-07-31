@@ -18,28 +18,36 @@
 
 (defn luo-taulukon-tehtavat
   [e! tehtavat on-oikeus?]
-  (let [rivit (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
+  (let [tehtava-solu (fn [tehtavaryhmatyyppi id nimi]
+                       (with-meta
+                         (case tehtavaryhmatyyppi
+                           "ylataso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (sarakkeiden-leveys :tehtava)})
+                           "valitaso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (str (sarakkeiden-leveys :tehtava)
+                                                                                                                                                  " solu-sisenna-1")})
+                           "alitaso" (osa/->Teksti (str id "-tehtava") nimi {:class (str (sarakkeiden-leveys :tehtava)
+                                                                                         " solu-sisenna-2")}))
+                         {:sarake "Tehtävä"}))
+        maara-solu (fn [id maara]
+                     (with-meta
+                       (if maara
+                         (osa/->Syote (str id "-maara")
+                                      {:on-change (fn [arvo]
+                                                    ;; Arvo tulee :positiivinen? kaytos-wrapperiltä, joten jos se on nil, ei syötetty arvo ollut positiivinen.
+                                                    (when arvo
+                                                      (e! (t/->PaivitaMaara id (str id "-maara") arvo))))}
+                                      {:on-change [:positiivinen-numero :eventin-arvo]}
+                                      {:class (sarakkeiden-leveys :maara)
+                                       :type "text"
+                                       :disabled (not on-oikeus?)
+                                       :value maara})
+                         (osa/->Teksti (str id "-maara")
+                                       ""
+                                       {:class (sarakkeiden-leveys :maara)}))
+                       {:sarake "Määrä"}))
+        rivit (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
                      (with-meta (jana/->Rivi id
-                                             [(with-meta
-                                                (case tehtavaryhmatyyppi
-                                                  "ylataso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (sarakkeiden-leveys :tehtava)})
-                                                  "valitaso" (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class (str (sarakkeiden-leveys :tehtava)
-                                                                                                                                                                         " solu-sisenna-1")})
-                                                  "alitaso" (osa/->Teksti (str id "-tehtava") nimi {:class (str (sarakkeiden-leveys :tehtava)
-                                                                                                                " solu-sisenna-2")}))
-                                                {:sarake "Tehtävä"})
-                                              (with-meta
-                                                (osa/->Syote (str id "-maara")
-                                                             {:on-change (fn [arvo]
-                                                                           ;; Arvo tulee :positiivinen? kaytos-wrapperiltä, joten jos se on nil, ei syötetty arvo ollut positiivinen.
-                                                                           (when arvo
-                                                                             (e! (t/->PaivitaMaara id (str id "-maara") arvo))))}
-                                                             {:on-change [:positiivinen-numero :eventin-arvo]}
-                                                             {:class (sarakkeiden-leveys :maara)
-                                                              :type "text"
-                                                              :disabled (not on-oikeus?)
-                                                              :value maara})
-                                                {:sarake "Määrä"})]
+                                             [(tehtava-solu tehtavaryhmatyyppi id nimi)
+                                              (maara-solu id maara)]
                                              (if piillotettu?
                                                #{"piillotettu"}
                                                #{}))
