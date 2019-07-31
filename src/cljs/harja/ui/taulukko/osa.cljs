@@ -11,7 +11,8 @@
   (piirra-osa [this]
     (let [{:keys [id class]} (:parametrit this)]
       [:div.solu.osa-teksti {:class class
-                        :id id}
+                        :id id
+                             :data-cy (:osan-id this)}
        (:teksti this)]))
   (osan-id? [this id]
     (= (:osan-id this) id))
@@ -28,7 +29,8 @@
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
           [:div.solu.osa-otsikko {:class class
-                                  :id id}
+                                  :id id
+                                  :data-cy (:osan-id this)}
            (:otsikko this)
            [:span.klikattava.otsikon-jarjestys {:on-click (r/partial otsikon-jarjestys-fn! (:jarjesta-fn! this))}
             [ikonit/sort]]]))))
@@ -57,6 +59,7 @@
                                          (nil? arvo))
                                        {;; Inputin parametrit
                                         :class class
+                                        :data-cy (:osan-id this)
                                         :id id
                                         :type type
                                         :value value
@@ -114,6 +117,7 @@
           [:span.solu.klikattava.osa-laajenna
            {:class class
             :id id
+            :data-cy (:osan-id this)
             :on-click
             #(do (.preventDefault %)
                  (swap! auki? not)

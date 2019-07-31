@@ -5,8 +5,9 @@
 (defrecord Rivi [janan-id solut luokat]
   p/Jana
   (piirra-jana [this]
-    [:div.jana.janan-rivi.row (when luokat
-                           {:class (apply str (interpose " " luokat))})
+    [:div.jana.janan-rivi.row {:class (when luokat
+                                        (apply str (interpose " " luokat)))
+                               :data-cy janan-id}
      (for [solu (:solut this)
            :let [{:keys [osan-id]} solu]]
        (with-meta

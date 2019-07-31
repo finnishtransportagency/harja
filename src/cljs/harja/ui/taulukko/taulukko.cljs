@@ -7,7 +7,7 @@
   [tila]
   {:pre [(sequential? tila)
          (every? #(satisfies? p/Jana %) tila)]}
-  [:div.taulukko.taulukko-rivit
+  [:div.taulukko {:data-cy "taulukko"}
    (for [jana tila]
      (with-meta [p/piirra-jana jana]
                 {:key (:janan-id jana)}))])
