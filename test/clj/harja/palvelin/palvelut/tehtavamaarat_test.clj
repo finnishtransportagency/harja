@@ -46,6 +46,9 @@
   [{:tehtava-id 4589 :maara 6.66}
    {:tehtava-id 1430 :maara 999}])
 
+(def virheellinen-tehtava
+  [{:tehtava-id 4589 :maara 6.66}
+   {:tehtava-id 666 :maara 999}])
 
 ;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
 
@@ -134,3 +137,16 @@
                                         (= 32 (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
     (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
     (is (= (:maara (first (filter #(= 1430 (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
+
+
+
+(deftest tallenna-tehtavamaarat-virhekasittely-testi
+  (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tehtavamaarat
+                                                +kayttaja-jvh+ {:urakka-id             @oulun-alueurakan-2014-2019-id
+                                                                 :hoitokauden-alkuvuosi 2022
+                                                                 :tehtavamaarat         uudet-tehtavat})) "Hoidon urakassa ei tallenneta tehtävä- ja määräluetteloa.")
+
+  (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tehtavamaarat
+                                                +kayttaja-jvh+ {:urakka-id             @oulun-alueurakan-2014-2019-id
+                                                                 :hoitokauden-alkuvuosi 2022
+                                                                 :tehtavamaarat         virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))

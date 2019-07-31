@@ -83,8 +83,8 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
--- name: hae-validit-tehtavakoodit
-SELECT id
+-- name: hae-validit-tehtava-idt
+SELECT id as "tehtava-id"
 FROM toimenpidekoodi
 WHERE tehtavaryhma IS NOT NULL
   AND poistettu IS NOT TRUE
