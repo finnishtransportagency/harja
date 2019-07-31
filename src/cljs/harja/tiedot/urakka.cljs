@@ -115,7 +115,7 @@
   (let [ensimmainen-vuosi (pvm/vuosi alkupvm)
         viimeinen-vuosi (pvm/vuosi loppupvm)]
     (cond
-      (= :hoito tyyppi)
+      (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)

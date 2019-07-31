@@ -260,6 +260,7 @@
                                               :kuukausi 11}]
                                     (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
                                     (is (= (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm 2014)) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
+
 (deftest foo (is (= 1 1)))
 
 (deftest yllapitourakan-sopimuskaudet-monta-vuotta
