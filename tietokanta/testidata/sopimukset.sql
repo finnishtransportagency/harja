@@ -60,7 +60,7 @@ VALUES
 -- MHU sopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
-  ('Rovaniemen MHU testiurakan sopimus','2018-10-01','2023-09-30','MHU-TESTI-LAP', (SELECT id FROM urakka WHERE nimi='Lapin MHU testiurakka'));
+  ('Rovaniemen MHU testiurakan sopimus','2018-10-01','2023-09-30','MHU-TESTI-LAP', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'));
 
 -- Aktiivinen oulu
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
