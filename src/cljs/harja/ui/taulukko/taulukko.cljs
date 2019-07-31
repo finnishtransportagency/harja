@@ -3,16 +3,6 @@
    joku rivi näyttää vaan jätetään se käyttäjän vastuulle"
   (:require [harja.ui.taulukko.protokollat :as p]))
 
-(defn jana
-  "Palauttaa jana(t) joiden id vastaa annettua"
-  [taulukko id]
-  (filter #(p/janan-id? % id) taulukko))
-
-(defn janan-osa
-  "Palauttaa janan elementi(t) joiden id vastaa annettua"
-  [jana id]
-  (filter #(p/osan-id? % id) (p/janan-osat jana)))
-
 (defn taulukko
   [tila]
   {:pre [(sequential? tila)

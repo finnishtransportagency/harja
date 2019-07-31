@@ -2,7 +2,8 @@
   (:require [tuck.core :refer [process-event] :as tuck]
             [clojure.string :as clj-str]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.osa :as osa]))
+            [harja.ui.taulukko.osa :as osa]
+            [harja.ui.taulukko.tyokalut :as tyokalut]))
 
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
@@ -10,6 +11,7 @@
 (defrecord PaivitaMaara [janan-id solun-id arvo])
 (defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
 (defrecord JarjestaTehtavienMukaan [])
+(defrecord JarjestaMaaranMukaan [])
 
 (defn ylempi-taso?
   [ylempi-taso alempi-taso]
@@ -34,20 +36,29 @@
       recursion-vastaus
       (some true? recursion-vastaus))))
 
-(defn jarjesta-tehtavan-nimen-mukaan [tehtavat]
+(defn jarjesta-tehtavan-otsikon-mukaisesti [tehtavat otsikko]
   (let [tehtavan-nimi (fn [tehtava]
                         (let [solun-index (first (keep-indexed (fn [i solu]
                                                                  (when (= (-> solu meta :sarake) "Tehtävä")
                                                                    i))
                                                                (:solut tehtava)))]
                           (get-in tehtava [:solut solun-index :teksti])))
+        tehtavan-maara (fn [tehtava]
+                         (let [solun-index (first (keep-indexed (fn [i solu]
+                                                                  (when (= (-> solu meta :sarake) "Määrä")
+                                                                    i))
+                                                                (:solut tehtava)))]
+                           (get-in tehtava [:solut solun-index :parametrit :value])))
         tehtavan-id (fn [tehtava]
                       (p/janan-id tehtava))
         vanhemman-tehtava (fn [tehtava]
                             (some #(when (= (:vanhempi (meta tehtava)) (p/janan-id %))
                                      %)
                                   tehtavat))
-        tehtavan-tunniste (juxt tehtavan-nimi tehtavan-id)]
+        tehtavan-tunniste (juxt (case otsikko
+                                  :tehtava tehtavan-nimi
+                                  :maara tehtavan-maara)
+                                tehtavan-id)]
     (into []
           (sort-by (fn [tehtava]
                      (if (= (p/janan-id tehtava) :tehtavataulukon-otsikko)
@@ -55,7 +66,8 @@
                        (case (-> tehtava meta :tehtavaryhmatyyppi)
                          "ylataso" [(tehtavan-tunniste tehtava) nil nil]
                          "valitaso" [(tehtavan-tunniste (vanhemman-tehtava tehtava))
-                                     (tehtavan-tunniste tehtava) nil]
+                                     (tehtavan-tunniste tehtava)
+                                     nil]
                          "alitaso" [(-> tehtava vanhemman-tehtava vanhemman-tehtava tehtavan-tunniste)
                                     (tehtavan-tunniste (vanhemman-tehtava tehtava))
                                     (tehtavan-tunniste tehtava)])))
@@ -72,12 +84,8 @@
 
   PaivitaMaara
   (process-event [{:keys [janan-id solun-id arvo]} app]
-    (let [janan-index (first (keep-indexed #(when (= (p/janan-id %2) janan-id)
-                                              %1)
-                                           (:tehtavat-taulukko app)))
-          solun-index (first (keep-indexed #(when (= (p/osan-id %2) solun-id)
-                                              %1)
-                                           (get-in app [:tehtavat-taulukko janan-index :solut])))]
+    (let [janan-index (tyokalut/janan-index (:tehtavat-taulukko app) janan-id)
+          solun-index (p/osan-index (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
       (update-in app [:tehtavat-taulukko janan-index :solut solun-index :parametrit]
                        (fn [parametrit]
                          (assoc parametrit :value arvo)))))
@@ -86,30 +94,38 @@
   (process-event [{:keys [laajenna-osa auki?]} app]
     (update app :tehtavat-taulukko
                (fn [taulukon-rivit]
-                 (map (fn [{:keys [janan-id] :as rivi}]
-                        (let [{:keys [vanhempi]} (meta rivi)
-                              klikatun-rivin-id (p/osan-janan-id laajenna-osa)
-                              klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
-                              klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
-                          ;; Jos joku rivi on kiinnitetty, halutaan sulkea myös kaikki lapset ja lasten lapset.
-                          ;; Kumminkin lapsirivien Laajenna osan sisäinen tila jää väärään tilaan, ellei sitä säädä ulko käsin.
-                          ;; Tässä otetaan ja muutetaan se oikeaksi.
-                          (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
-                            (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
-                                                                   %)
-                                                                (:solut rivi))]
-                              (reset! (p/osan-tila rivin-laajenna-osa) false)))
-                          (cond
-                            ;; Jos riviä klikataan, piilotetaan lapset
-                            (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
-                                                                         assoc :piillotettu? false)
-                            ;; Jos rivillä on lapsen lapsia, piillotetaan myös ne
-                            (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
-                                                                                     assoc :piillotettu? true)
-                            :else rivi)))
-                      taulukon-rivit))))
+                 (let [klikatun-rivin-id (first (keep (fn [rivi]
+                                                        (when (p/osan-index rivi laajenna-osa)
+                                                          (p/janan-id rivi)))
+                                                      taulukon-rivit))]
+                   (map (fn [{:keys [janan-id] :as rivi}]
+                          (let [{:keys [vanhempi]} (meta rivi)
+                                klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
+                                klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
+                            ;; Jos joku rivi on kiinnitetty, halutaan sulkea myös kaikki lapset ja lasten lapset.
+                            ;; Kumminkin lapsirivien Laajenna osan sisäinen tila jää väärään tilaan, ellei sitä säädä ulko käsin.
+                            ;; Tässä otetaan ja muutetaan se oikeaksi.
+                            (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
+                              (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
+                                                                     %)
+                                                                  (:solut rivi))]
+                                (reset! (p/osan-tila rivin-laajenna-osa) false)))
+                            (cond
+                              ;; Jos riviä klikataan, piilotetaan lapset
+                              (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
+                                                                           assoc :piillotettu? false)
+                              ;; Jos rivillä on lapsen lapsia, piillotetaan myös ne
+                              (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
+                                                                                       assoc :piillotettu? true)
+                              :else rivi)))
+                        taulukon-rivit)))))
   JarjestaTehtavienMukaan
   (process-event [_ app]
     (update app :tehtavat-taulukko
             (fn [tehtavat]
-              (jarjesta-tehtavan-nimen-mukaan tehtavat)))))
+              (jarjesta-tehtavan-otsikon-mukaisesti tehtavat :tehtava))))
+  JarjestaMaaranMukaan
+  (process-event [_ app]
+    (update app :tehtavat-taulukko
+            (fn [tehtavat]
+              (jarjesta-tehtavan-otsikon-mukaisesti tehtavat :maara)))))

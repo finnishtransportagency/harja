@@ -4,7 +4,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.tyokalu :as tyokalut]))
+            [harja.ui.taulukko.tyokalut :as tyokalut]))
 
 (defrecord Teksti [osan-id teksti parametrit]
   p/Osa
@@ -17,8 +17,6 @@
     (= (:osan-id this) id))
   (osan-id [this]
     osan-id)
-  (osan-janan-id [this]
-    (-> this meta ::janan-id))
   (osan-tila [this]))
 
 (defrecord Otsikko [osan-id otsikko jarjesta-fn! parametrit]
@@ -38,8 +36,6 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-janan-id [this]
-    (-> this meta ::janan-id))
   (osan-tila [this]))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
@@ -101,8 +97,6 @@
     (= (:osan-id this) id))
   (osan-id [this]
     osan-id)
-  (osan-janan-id [this]
-    (-> this meta ::janan-id))
   (osan-tila [this]))
 
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
@@ -134,8 +128,6 @@
     (= (:osan-id this) id))
   (osan-id [this]
     osan-id)
-  (osan-janan-id [this]
-    (-> this meta ::janan-id))
   (osan-tila [this]
     (p/hae-tila this)))
 

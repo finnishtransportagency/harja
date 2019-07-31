@@ -1,5 +1,6 @@
-(ns harja.ui.taulukko.tyokalu
-  (:require [harja.loki :as loki]))
+(ns harja.ui.taulukko.tyokalut
+  (:require [harja.loki :as loki]
+            [harja.ui.taulukko.protokollat :as p]))
 
 (defn numero-re
   ([] (numero-re {}))
@@ -70,3 +71,20 @@
                            (lisaa-kaytos kaytos lopullinen-toiminto)))))
               kayttaytymiset
               toiminnot))
+
+(defn jana
+  "Palauttaa jana(t) joiden id vastaa annettua"
+  [taulukko id]
+  (filter #(p/janan-id? % id) taulukko))
+
+(defn janan-osa
+  "Palauttaa janan elementi(t) joiden id vastaa annettua"
+  [jana id]
+  (filter #(p/osan-id? % id) (p/janan-osat jana)))
+
+(defn janan-index
+  "Palauttaa janan indeksin taulukossa"
+  [taulukko jana]
+  (first (keep-indexed #(when (= (p/janan-id %2) (p/janan-id jana))
+                          %1)
+                       taulukko)))

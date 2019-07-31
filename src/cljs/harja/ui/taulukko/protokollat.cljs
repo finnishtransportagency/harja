@@ -6,12 +6,13 @@
                 Todennäiköisesti kutsuu myös osa/piirra-osa funktiota")
   (janan-id? [this id])
   (janan-osat [this])
-  (janan-id [this]))
+  (janan-id [this])
+  (osan-index [this osa]
+              "Palauttaa nil, jos osa ei kuulu tähän janaan"))
 
 (defprotocol Osa
   (piirra-osa [this])
   (osan-id? [this id])
-  (osan-janan-id [this])
   (osan-id [this])
   (osan-tila [this]))
 

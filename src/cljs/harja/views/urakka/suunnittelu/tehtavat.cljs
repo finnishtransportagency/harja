@@ -7,7 +7,7 @@
             [harja.ui.taulukko.taulukko :as taulukko]
             [harja.ui.taulukko.jana :as jana]
             [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.tyokalu :as tyokalu]
+            [harja.ui.taulukko.tyokalut :as tyokalu]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]))
 
@@ -48,7 +48,7 @@
                    tehtavat)
         otsikot [(jana/->Rivi :tehtavataulukon-otsikko
                               [(osa/->Otsikko "tehtava otsikko" "Tehtävä" #(e! (t/->JarjestaTehtavienMukaan)) {:class (sarakkeiden-leveys :tehtava)})
-                               (osa/->Otsikko "maara otsikko" "Määrä" #(println "jarjesta määrät") {:class (sarakkeiden-leveys :maara)})]
+                               (osa/->Otsikko "maara otsikko" "Määrä" #(e! (t/->JarjestaMaaranMukaan)) {:class (sarakkeiden-leveys :maara)})]
                               nil)]]
     (into [] (concat otsikot rivit))))
 
