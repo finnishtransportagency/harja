@@ -56,8 +56,8 @@
                   {:alkupvm "2019-01-01T00:00:00.0"
                    :loppupvm "2019-12-31T00:00:00.0"
                    :summa 1}]
-        maksuera (hae-maksueran-tiedot db 48)
-        vuosittaiset-summat (tee-vuosittaiset-summat db 48 maksuera)]
+        maksuera (hae-maksueran-tiedot db 69)
+        vuosittaiset-summat (tee-vuosittaiset-summat db 69 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))
