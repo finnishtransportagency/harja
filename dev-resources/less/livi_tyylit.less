@@ -405,3 +405,88 @@ line.ei-aktiiviset-paivat {
 .sisaltaa-virheen-tai-varoituksen (@vari) {
     border-bottom: solid 2px @vari !important;
 }
+
+.kategorisoitu-checkbox-pudotusvalikko {
+    z-index:1000;
+    background-color:@valkoinen;
+    min-height:@input-korkeus;
+    &.checkbox {
+        width:20px;
+        min-height:20px;
+        border:1px solid @harmaa3;
+        display:flex;
+        margin-right:15px;
+        & > span.livicon-check {
+            margin:auto auto;
+        }
+        &:hover {
+            background-color:@harmaa12;
+        }
+    }
+    &.title {
+        border:1px solid @harmaa7;
+        width:100%;
+        padding-left:8px;
+        line-height:22px;
+    }
+    &.nappi {
+        margin-left:auto;
+        width:29px;
+    }
+    &.dropdown {
+        min-width:320px;
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+
+    }
+    &.sisalto {
+        min-widtH:320px;
+        display:flex;
+        flex-direction:column;
+        position:absolute;
+        border:1px solid @harmaa7;
+        width:100%;
+    }
+
+    &.kategoria {
+        background-color:@harmaa8;
+        border:none;
+    }
+
+    &.kategoria-nimi {
+        display:flex;
+        align-items: center;
+        margin:0px;
+        font-weight:lighter;
+        border-bottom:1px solid @harmaa9;
+        padding-left:15px;
+        & > span {
+            padding:15px;
+            margin-left:auto;
+        }
+        &:hover {
+            background-color:@harmaa12;
+        }
+    }
+
+    &.kategoria-valinta {
+        padding:6px 15px;
+        display:flex;
+        align-items:center;
+        background-color:@harmaa15;
+        &:hover {
+            background-color:@harmaa12;
+        }
+    }
+
+    &.harmaa-15 {
+        background-color:@harmaa15;
+    }
+    &.harmaa-14 {
+        background-color:@harmaa14;
+    }
+    &.harmaa-13 {
+        background-color:@harmaa13;
+    }
+}

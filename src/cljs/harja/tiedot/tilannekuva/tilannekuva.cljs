@@ -1,6 +1,7 @@
 (ns harja.tiedot.tilannekuva.tilannekuva
   (:require [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
+            [harja.tilanhallinta.tila :as th]
+            [cljs.core.async :refer [<! timeout]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.fmt :as format]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -14,33 +15,40 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tilannekuva :as tk]
             [reagent.core :as r]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [tuck.core :as tuck])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 (defonce nakymassa? (atom false))
 (defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
+(defrecord HaeAluesuodattimet [nykytilanne?])
+(defrecord TallennaAluesuodattimet [suodattimet])
+(defrecord AsetaAluesuodatin [suodatin tila polku])
+(defrecord AjaTaustahaku [])
+(defrecord LopetaTaustahaku [])
+
 (def
-  ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
+  ^{:doc   "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
     :const true}
   urakan-nimen-pituus 38)
 
-(def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun
+(def ^{:doc   "Aika joka odotetaan ennen uusien tietojen hakemista, kun
  parametrit muuttuvat"
        :const true}
 bufferi 1000)
 
 ;; 30s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
 ;; karttaa siirretään tai zoomataan
-(def ^{:doc "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
+(def ^{:doc   "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
        :const true}
 hakutiheys-nykytilanne 30000)
 
-(def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
+(def ^{:doc   "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}
-hakutiheys-historiakuva 1200000)
+hakutiheys-historiakuva 3000)                            ;1200000
 
 (def oletusalueet {})
 
@@ -48,75 +56,75 @@ hakutiheys-historiakuva 1200000)
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
-  (atom
-    {:yllapito {tk/paallystys false
-                tk/paikkaus false
-                tk/tietyomaat false
-                tk/paaasfalttilevitin false
-                tk/tiemerkintakone false
-                tk/kuumennuslaite false
-                tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false
-                tk/jyra false}
-     :ilmoitukset {:tyypit {tk/tpp false
-                            tk/tur false
-                            tk/urk false}}
-     :turvallisuus {tk/turvallisuuspoikkeamat false}
-     :tietyoilmoitukset {tk/tietyoilmoitukset false}
-     :laatupoikkeamat {tk/laatupoikkeama-tilaaja false
-                       tk/laatupoikkeama-urakoitsija false
-                       tk/laatupoikkeama-konsultti false}
-     :tarkastukset {tk/tarkastus-tiesto false
-                    tk/tarkastus-talvihoito false
-                    tk/tarkastus-soratie false
-                    tk/tarkastus-laatu false
-                    tk/tilaajan-laadunvalvonta false}
-     ;; Näiden pitää osua työkoneen enumeihin
-     ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
-     ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
-     ;; tekoa halutaan seurana livenä, niin arvot on täällä valmiiksi
-     ;; copypastettavissa..
-     :talvi {tk/auraus-ja-sohjonpoisto false
-             tk/suolaus false
-             tk/pistehiekoitus false
-             tk/linjahiekoitus false
-             tk/lumivallien-madaltaminen false
-             tk/sulamisveden-haittojen-torjunta false
-             ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
-             ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
-             ;; kokee tietävänsä asian varmaksi.
-             ;;tk/liuossuolaus false
-             tk/aurausviitoitus-ja-kinostimet false
-             tk/lumensiirto false
-             tk/paannejaan-poisto false
-             tk/muu false
-             ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
-             ;; mailissaan pyysi, että pinnan tasaus tulee myös
-             ;; talvitoimenpiteisiin. Maili liittyi suodattimien
-             ;; järjestykseen. Pyysin tarkennusta, mutta
-             ;; päätin commitoida tämän talteen ettei vaan pääse unohtumaan.
-             tk/pinnan-tasaus false}
-     :kesa {tk/koneellinen-niitto false
-            tk/koneellinen-vesakonraivaus false
-            tk/liikennemerkkien-puhdistus false
-            tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito false
-            tk/palteen-poisto false
-            tk/paallystetyn-tien-sorapientareen-taytto false
-            tk/ojitus false
-            tk/sorapientareen-taytto false
-            tk/sorateiden-muokkaushoylays false
-            tk/sorateiden-polynsidonta false
-            tk/sorateiden-tasaus false
-            tk/sorastus false
-            tk/harjaus false
-            tk/paallysteiden-paikkaus false
-            tk/paallysteiden-juotostyot false
-            tk/siltojen-puhdistus false
-            tk/l-ja-p-alueiden-puhdistus false
-            tk/muu false}
-     :alueet oletusalueet
-     :varustetoteumat {tk/varustetoteumat false}
-     :tieluvat {tk/tieluvat false}}))
+         (atom
+           {:yllapito          {tk/paallystys                    false
+                                tk/paikkaus                      false
+                                tk/tietyomaat                    false
+                                tk/paaasfalttilevitin            false
+                                tk/tiemerkintakone               false
+                                tk/kuumennuslaite                false
+                                tk/sekoitus-ja-stabilointijyrsin false
+                                tk/tma-laite                     false
+                                tk/jyra                          false}
+            :ilmoitukset       {:tyypit {tk/tpp false
+                                         tk/tur false
+                                         tk/urk false}}
+            :turvallisuus      {tk/turvallisuuspoikkeamat false}
+            :tietyoilmoitukset {tk/tietyoilmoitukset false}
+            :laatupoikkeamat   {tk/laatupoikkeama-tilaaja     false
+                                tk/laatupoikkeama-urakoitsija false
+                                tk/laatupoikkeama-konsultti   false}
+            :tarkastukset      {tk/tarkastus-tiesto        false
+                                tk/tarkastus-talvihoito    false
+                                tk/tarkastus-soratie       false
+                                tk/tarkastus-laatu         false
+                                tk/tilaajan-laadunvalvonta false}
+            ;; Näiden pitää osua työkoneen enumeihin
+            ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
+            ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
+            ;; tekoa halutaan seurana livenä, niin arvot on täällä valmiiksi
+            ;; copypastettavissa..
+            :talvi             {tk/auraus-ja-sohjonpoisto          false
+                                tk/suolaus                         false
+                                tk/pistehiekoitus                  false
+                                tk/linjahiekoitus                  false
+                                tk/lumivallien-madaltaminen        false
+                                tk/sulamisveden-haittojen-torjunta false
+                                ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
+                                ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
+                                ;; kokee tietävänsä asian varmaksi.
+                                ;;tk/liuossuolaus false
+                                tk/aurausviitoitus-ja-kinostimet   false
+                                tk/lumensiirto                     false
+                                tk/paannejaan-poisto               false
+                                tk/muu                             false
+                                ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
+                                ;; mailissaan pyysi, että pinnan tasaus tulee myös
+                                ;; talvitoimenpiteisiin. Maili liittyi suodattimien
+                                ;; järjestykseen. Pyysin tarkennusta, mutta
+                                ;; päätin commitoida tämän talteen ettei vaan pääse unohtumaan.
+                                tk/pinnan-tasaus                   false}
+            :kesa              {tk/koneellinen-niitto                                                                              false
+                                tk/koneellinen-vesakonraivaus                                                                      false
+                                tk/liikennemerkkien-puhdistus                                                                      false
+                                tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito false
+                                tk/palteen-poisto                                                                                  false
+                                tk/paallystetyn-tien-sorapientareen-taytto                                                         false
+                                tk/ojitus                                                                                          false
+                                tk/sorapientareen-taytto                                                                           false
+                                tk/sorateiden-muokkaushoylays                                                                      false
+                                tk/sorateiden-polynsidonta                                                                         false
+                                tk/sorateiden-tasaus                                                                               false
+                                tk/sorastus                                                                                        false
+                                tk/harjaus                                                                                         false
+                                tk/paallysteiden-paikkaus                                                                          false
+                                tk/paallysteiden-juotostyot                                                                        false
+                                tk/siltojen-puhdistus                                                                              false
+                                tk/l-ja-p-alueiden-puhdistus                                                                       false
+                                tk/muu                                                                                             false}
+            :alueet            oletusalueet
+            :varustetoteumat   {tk/varustetoteumat false}
+            :tieluvat          {tk/tieluvat false}}))
 
 (defn alueita-valittu?
   [suodattimet]
@@ -125,9 +133,9 @@ hakutiheys-historiakuva 1200000)
         valitut (mapcat vals urakat)]
     (some? (some true? valitut))))
 
-(defonce paivita-aluevalinta
-  (run! (let [valittuja? (alueita-valittu? @suodattimet)]
-          (reset! nav/tilannekuvassa-alueita-valittu? valittuja?))))
+;(defonce paivita-aluevalinta
+;         (run! (let [valittuja? (alueita-valittu? @suodattimet)]
+;                 (reset! nav/tilannekuvassa-alueita-valittu? valittuja?))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -138,25 +146,26 @@ hakutiheys-historiakuva 1200000)
 
 ;; Mäppi sisältää numeroarvot tekstuaaliselle esitykselle.
 (defonce nykytilanteen-aikasuodatin-tunteina
-  [["0-2h" 2]
-   ["0-4h" 4]
-   ["0-12h" 12]
-   ["1 vrk" (tunteja-vuorokausissa 1)]
-   ["2 vrk" (tunteja-vuorokausissa 2)]
-   ["3 vrk" (tunteja-vuorokausissa 3)]
-   ["1 vk" (tunteja-viikoissa 1)]
-   ["2 vk" (tunteja-viikoissa 2)]
-   ["3 vk" (tunteja-viikoissa 3)]])
+         [["0-2h" 2]
+          ["0-4h" 4]
+          ["0-12h" 12]
+          ["1 vrk" (tunteja-vuorokausissa 1)]
+          ["2 vrk" (tunteja-vuorokausissa 2)]
+          ["3 vrk" (tunteja-vuorokausissa 3)]
+          ["1 vk" (tunteja-viikoissa 1)]
+          ["2 vk" (tunteja-viikoissa 2)]
+          ["3 vk" (tunteja-viikoissa 3)]])
 
 (defonce historiakuvan-aikavali
-  ;; Valittu aikaväli vektorissa [alku loppu]
-  (atom (pvm/kuukauden-aikavali (pvm/nyt))))
+         ;; Valittu aikaväli vektorissa [alku loppu]
+         (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defonce nykytilanteen-aikasuodattimen-arvo (atom 2))
 
-(defn kasaa-parametrit [tila nakyva-alue suodattimet]
+(defn kasaa-parametrit [tila nakyva-alue suodattimet & [alueet]]
   (merge
-    {:urakat       (tk/valittujen-suodattimien-idt (:alueet suodattimet))
+    {:urakat       (tk/valittujen-suodattimien-idt (or alueet
+                                                       (:alueet suodattimet)))
      :nykytilanne? (= :nykytilanne tila)
      :alue         nakyva-alue}
     (tk/valitut-suodattimet (dissoc suodattimet :alueet))))
@@ -164,10 +173,10 @@ hakutiheys-historiakuva 1200000)
 (defn aikaparametrilla [parametrit]
   (merge
     parametrit
-    {:alku (if (= @valittu-tila :nykytilanne)
-             (t/minus (pvm/nyt)
-                      (t/hours @nykytilanteen-aikasuodattimen-arvo))
-             (first @historiakuvan-aikavali))
+    {:alku  (if (= @valittu-tila :nykytilanne)
+              (t/minus (pvm/nyt)
+                       (t/hours @nykytilanteen-aikasuodattimen-arvo))
+              (first @historiakuvan-aikavali))
      :loppu (if (= @valittu-tila :nykytilanne)
               (pvm/nyt)
               (second @historiakuvan-aikavali))}))
@@ -177,11 +186,11 @@ hakutiheys-historiakuva 1200000)
   Koska muuten kuvatason parametrit muuttuvat koko ajan ja karttataso vilkkuu koko ajan."
   [parametrit]
   (merge
-   parametrit
-   (if (= @valittu-tila :nykytilanne)
-     {:aikavalinta @nykytilanteen-aikasuodattimen-arvo}
-     {:alku (first @historiakuvan-aikavali)
-      :loppu (second @historiakuvan-aikavali)})))
+    parametrit
+    (if (= @valittu-tila :nykytilanne)
+      {:aikavalinta @nykytilanteen-aikasuodattimen-arvo}
+      {:alku  (first @historiakuvan-aikavali)
+       :loppu (second @historiakuvan-aikavali)})))
 
 (defn- hyt-joiden-urakoilla-ei-arvoa* [alueet boolean-arvo]
   (apply merge
@@ -249,7 +258,7 @@ hakutiheys-historiakuva 1200000)
     (get @hyt-joiden-urakoilla-ei-arvoa true)
     (get @hyt-joiden-urakoilla-ei-arvoa false)))
 
-(defn- aluesuodattimet-nested-mapiksi [tulos]
+(defn aluesuodattimet-nested-mapiksi [tulos]
   (into {}
         (map (fn [[tyyppi aluekokonaisuus]]
                {tyyppi (into {}
@@ -329,21 +338,21 @@ hakutiheys-historiakuva 1200000)
                       tulos)))))
 
 (defn seuraa-alueita! []
-  (tilannekuva-kartalla/seuraa-alueita! suodattimet))
+  (tilannekuva-kartalla/seuraa-alueita! th/master))
 
 (defn lopeta-alueiden-seuraus! []
-  (tilannekuva-kartalla/lopeta-alueen-seuraus! suodattimet))
+  (tilannekuva-kartalla/lopeta-alueen-seuraus! th/master))
 
 ;; FIXME: Tämä lasketaan uusiksi joka kerta, kun karttaa siirretään. Isohko homma korjata?
 (defonce hakuparametrit
-  (reaction
-    (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet)))
+         (reaction
+           (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet (:aluesuodattimet @th/master))))
 
 (def edellisen-haun-kayttajan-suodattimet
-  (atom {:tila @valittu-tila
+  (atom {:tila                 @valittu-tila
          :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-         :aikavali-historia @historiakuvan-aikavali
-         :suodattimet @suodattimet}))
+         :aikavali-historia    @historiakuvan-aikavali
+         :suodattimet          @suodattimet}))
 
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
@@ -359,34 +368,36 @@ hakutiheys-historiakuva 1200000)
 
 (defn- kasittele-tilannekuvan-hakutulos [tulos]
   (let [paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
-  (assoc tulos :paikkaus paikkaukset)))
+    (assoc tulos :paikkaus paikkaukset)))
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
   (when (#{:nykytilanne :historiakuva} @valittu-tila)
     (go
-     ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui
-     ;; käyttäjän vaihdettua suodattimia
-     (when (suodattimet-muuttuneet?)
-       (reset! edellisen-haun-kayttajan-suodattimet
-               {:tila @valittu-tila
-                :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-                :aikavali-historia @historiakuvan-aikavali
-                :suodattimet @suodattimet})
-       (kartta/aseta-paivitetaan-karttaa-tila! true))
+      ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui
+      ;; käyttäjän vaihdettua suodattimia
+      (when (suodattimet-muuttuneet?)
+        (reset! edellisen-haun-kayttajan-suodattimet
+                {:tila                 @valittu-tila
+                 :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
+                 :aikavali-historia    @historiakuvan-aikavali
+                 :suodattimet          @suodattimet})
+        (kartta/aseta-paivitetaan-karttaa-tila! true))
 
-     ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
-     ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
-     (reset! tilannekuva-kartalla/url-hakuparametrit
-             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
+      ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
+      ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
+      (reset! tilannekuva-kartalla/url-hakuparametrit
+              (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
-     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                     (assoc :tarkastukset (:tarkastukset hakuparametrit)))
-           tulos (kasittele-tilannekuvan-hakutulos tulos)]
-       (when @nakymassa?
-         (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
-         (reset! tilannekuva-kartalla/haetut-asiat tulos))
-       (kartta/aseta-paivitetaan-karttaa-tila! false)))))
+      ;(let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
+      ;                (assoc :tarkastukset (:tarkastukset hakuparametrit)))
+      ;      tulos (kasittele-tilannekuvan-hakutulos tulos)]
+      ;  (log "Hellurei ja hellät tunteet")
+      ;  (when @nakymassa?
+      ;    (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
+      ;    (reset! tilannekuva-kartalla/haetut-asiat tulos))
+        (kartta/aseta-paivitetaan-karttaa-tila! false)
+      )))
 
 (def asioiden-haku
   (reaction<! [hakuparametrit @hakuparametrit
@@ -394,12 +405,13 @@ hakutiheys-historiakuva 1200000)
                ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
-               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet,
-               ;; aikasuodattimeen ja tilaan sopivat urakat. Kun tämä haku on valmis,
-               ;; lähdetään hakemaan kartalle piirrettävät jutut. Tämän takia emme halua tehdä
-               ;; asioiden hakua tilaan sidottuna!
+              ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet,
+              ;; aikasuodattimeen ja tilaan sopivat urakat. Kun tämä haku on valmis,
+              ;; lähdetään hakemaan kartalle piirrettävät jutut. Tämän takia emme halua tehdä
+              ;; asioiden hakua tilaan sidottuna!
               {:odota bufferi}
               (when nakymassa?
+                (log "Nakymassa asioiden haku")
                 (hae-asiat hakuparametrit))))
 
 (defn paivita-ilmoituksen-tiedot [id]
@@ -458,3 +470,120 @@ hakutiheys-historiakuva 1200000)
            (fn [_ _ old new]
              (log "valittu-tila muuttui " old " => " new)
              (pollaus-muuttui)))
+
+
+(defrecord HaeTilannekuvaan [])
+(defrecord AsetaTilannekuvaan [urakat])
+(defrecord AsetaValittuTila [valittu-tila])
+(defrecord AsetaValittuUrakka [urakka])
+(defrecord AsetaHallintayksikko [yksikko])
+
+(defn- taustahaku
+  "Hakee taustalla"
+  [app haku-fn]
+  (let [aja (atom true)]
+    (go-loop []
+             (<! (timeout 3000))
+             (when @aja
+               (haku-fn)
+               (recur)))
+    #(do
+       (log "Aja " @aja)
+       (reset! aja false))))
+
+(defn- etsi-ja-aseta-urakat-tilaan
+  [kaikki & urakat-ja-tilat]
+  (loop [[urakka tila] (first (partition 2 (filter #(not (nil? %)) urakat-ja-tilat)))
+         loput (rest (partition 2 (filter #(not (nil? %)) urakat-ja-tilat)))
+         alueurakat kaikki]
+    (let [urakka-id (:id urakka)
+          hallintayksikko-id (-> urakka :hallintayksikko :id)
+          urakka-avain (some
+                          #(when (= (:id %) urakka-id) %)
+                          (keys (get alueurakat hallintayksikko-id)))
+          alueet (assoc-in alueurakat [(get-in urakka [:hallintayksikko :id]) urakka-avain] tila)]
+       (if-not (empty? loput)
+       (recur
+         (first loput)
+         (rest loput)
+         alueet)
+       alueet))))
+
+(extend-protocol tuck/Event
+  AsetaHallintayksikko
+  (process-event [{yksikko :yksikko} app]
+    (let [nykyinen (get-in app [:navigaatio :valittu-urakka])
+          polku [:aluesuodattimet :hoito]
+          app (-> app
+                (assoc-in [:navigaatio :valittu-urakka] nil)
+                (assoc-in polku (etsi-ja-aseta-urakat-tilaan (get-in app polku) nykyinen (when-not (nil? nykyinen) false))))]
+      (assoc-in app [:navigaatio :valittu-hallintayksikko] yksikko)))
+  AsetaValittuUrakka
+  (process-event [{urakka :urakka} app]
+    (log "Asetetaan urakakk " urakka)
+    (let [nykyinen (get-in app [:navigaatio :valittu-urakka])
+          polku [:aluesuodattimet :hoito]
+          alueet (assoc-in
+                   app
+                   polku
+                   (etsi-ja-aseta-urakat-tilaan
+                     (get-in app polku)
+                     nykyinen (when-not (nil? nykyinen) false)
+                     urakka true))]
+      (assoc-in alueet [:navigaatio :valittu-urakka] urakka)))
+  AsetaValittuTila
+  (process-event [{valittu-tila :valittu-tila} app]
+    (assoc-in app [:navigaatio :valittu-tila] valittu-tila))
+  HaeTilannekuvaan
+  (process-event [_ app]
+    (let [async-aseta-fn (tuck/send-async! ->AsetaTilannekuvaan)]
+      ; (log "Moikka 2")
+      (go
+        (reset! tilannekuva-kartalla/url-hakuparametrit
+                (k/url-parametri (aikaparametrilla-kuva (dissoc @hakuparametrit :alue))))
+        (let [tulos (<!
+                        (k/post! :hae-tilannekuvaan
+                                 (aikaparametrilla @hakuparametrit)))]
+            (async-aseta-fn (kasittele-tilannekuvan-hakutulos (assoc tulos :tarkastukset (:tarkastukset @hakuparametrit))))))
+      (assoc-in app [:haku :haku-paalla?] true)))
+  AsetaTilannekuvaan
+  (process-event [{urakat :urakat} app]
+    ;(log "Moikka 3")
+    (merge app {:haku        (assoc (:haku app) :haku-paalla? false)
+                :tilannekuva urakat}))
+  AjaTaustahaku
+  (process-event [_ app]
+    (log "Ajan taustahaun")
+    (let [haku-fn (tuck/send-async! ->HaeTilannekuvaan)]
+      (merge app
+            {:haku {:lopeta-haku (taustahaku app haku-fn)
+                    :taustahaku-paalla? true}})))
+  LopetaTaustahaku
+  (process-event [_ app]
+    (log "Lopetan taustahaun")
+    (let [lopeta-haku (get-in app [:haku :lopeta-haku])]
+      (merge app {:haku {:lopeta-haku (lopeta-haku)
+                         :taustahaku-paalla? false}})))
+  AsetaAluesuodatin
+  (process-event [{suodatin :suodatin tila :tila polku :polku} app]
+    ;(log "Asetetaan " suodatin " polussa " polku " tilaan " tila)
+    (assoc-in app (concat [:aluesuodattimet] polku [suodatin]) tila))
+  TallennaAluesuodattimet
+  (process-event [{suodattimet :suodattimet} app]
+    ;(log "Suodattimet!" (->> suodattimet
+    ;                         tkuva/aluesuodattimet-nested-mapiksi
+    ;                         (tkuva/yhdista-aluesuodattimet (:aluesuodattimet app))))
+    (assoc app :fetching false :aluesuodattimet (->> suodattimet
+                                                     aluesuodattimet-nested-mapiksi
+                                                     (yhdista-aluesuodattimet (:aluesuodattimet app)))))
+  HaeAluesuodattimet
+  (process-event [{nykytilanne? :nykytilanne?} app]
+    ;(log "HaeSuodattimet!" )
+    (let [send-fn (tuck/send-async! ->TallennaAluesuodattimet)]
+      (go
+        (send-fn
+          (<!
+            (k/post! :hae-urakat-tilannekuvaan
+                     (aikaparametrilla {:nykytilanne? nykytilanne?
+                                        :urakoitsija  (:id @nav/valittu-urakoitsija)})))))
+      (assoc app :fetching true))))

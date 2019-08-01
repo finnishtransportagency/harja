@@ -807,7 +807,7 @@
     (when (and @nav/kartta-nakyvissa? (pos? ladataan))
       [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}])))
 
-(defn kartta []
+(defn kartta [e! app]
   [:div.karttacontainer
    [paivitetaan-karttaa]
    [kartan-koko-kontrollit]

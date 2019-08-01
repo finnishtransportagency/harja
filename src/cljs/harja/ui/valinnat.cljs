@@ -18,7 +18,7 @@
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.ui.dom :as dom]
             [harja.domain.urakka :as u-domain]
-            [harja.loki :as log])
+            [taoensso.timbre :as tlog])
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -497,6 +497,91 @@
     ryhma3]
    [:div.valintaryhma.col-sm-12.col-md-3
     ryhma4]])
+
+(defn- kategoria-valinta-item [x {:keys [on-change! polku]}]
+  ;(tlog/info "tämmöts " x)
+  [:div.kategorisoitu-checkbox-pudotusvalikko.kategoria-valinta
+   {:on-click #(on-change! (:lasti x) (not (:valittu? x)) polku)
+    :class (str "harmaa-" (- 16 (count polku)))}
+   [:span.kategorisoitu-checkbox-pudotusvalikko.checkbox
+    (when (:valittu? x) [:span.livicon-check])]
+   [:span
+    (:otsikko x)]])
+
+(defn- kategoria-ryhma [m {:keys [on-change! on-click polku] :as opts}]
+  (let [lokaali-tila (nil? on-click)
+        tila (if lokaali-tila
+                (r/atom false)
+                (:kategoria-auki? m))]
+    (fn [m {:keys [on-click] :as opts}]
+      (let [auki? (if lokaali-tila
+                    @tila
+                    tila)
+            on-click (if on-click
+                       #(on-click 1 true)
+                       #(do
+                         ;(tlog/info "am i open " @auki?)
+                         (swap! tila not)))]
+        [:div.kategorisoitu-checkbox-pudotusvalikko.kategoria
+          [:label.kategorisoitu-checkbox-pudotusvalikko.kategoria-nimi
+           {:on-click on-click
+            :class    (let [polku-pituus (count polku)]
+                        (when (> polku-pituus 0)
+                          (str "harmaa-" (- 16 (count polku)))))}
+         (str (:kategoria m))
+           (if auki?
+             [:span.livicon-chevron-down]
+             [:span.livicon-chevron-right])]
+        (when auki?
+          (map
+            (fn [x]
+              (if (:kategoria x)
+                  [kategoria-ryhma x (merge opts
+                                            {:polku
+                                             (conj
+                                               (vec polku)
+                                               (or
+                                                 (when
+                                                   (not (keyword? (:tunnus m)))
+                                                   (keyword (:tunnus m)))
+                                                 (:tunnus m)))})]
+                  [kategoria-valinta-item x (merge opts
+                                                   {:polku
+                                                    (conj
+                                                      (vec polku) (:tunnus m))})]))
+            (:kategorian-valinnat m)))]))))
+
+(defn kategorisoitu-checkbox-pudotusvalikko
+  "Pudotusvalikko, jossa kategorisoituja alivalikoita. Mappi jossa metatiedot, eli avattu/suljettu vektori mappeja.
+   Näissä mapeissa label-teksti, sekä avattu-suljettu -status. Lisäksi mapeissa vektori, joissa itse valinnat. Valinnat
+   mappeja, jotka muotoa id, label, status.
+
+   Asetukset mapissa voi määrittää seuraavia juttuja:
+   :valinta-tekstit - annetaan mappi stringejä { :tyhja :kaikki-valittu :osa-valittu }, jos halutaan ylikirjoittaa oletustekstit
+   :kategoria-on-click - funktio, joka saa tunnisteen ja avattu-statuksen"
+  ([valinnat on-change!] (kategorisoitu-checkbox-pudotusvalikko valinnat on-change! {}))
+  ([valinnat on-change! {:keys [kategoria-on-click]}]
+   (let [auki? (atom false)]
+     (fn [valinnat on-change! {:keys [kategoria-on-click]}]
+       [:div.kategorisoitu-checkbox-pudotusvalikko
+        [:div.kategorisoitu-checkbox-pudotusvalikko.dropdown {:on-click #(swap! auki? not)}
+         [:span.kategorisoitu-checkbox-pudotusvalikko.title "Lisää urakoita"]
+         [:button.nappi-murupolkualasveto.dropdown-toggle.kategorisoitu-checkbox-pudotusvalikko.nappi
+          {:on-click #(log "gelllo")}
+          ;{:on-click #(swap! valinta-auki
+          ;                   (fn [v]
+          ;                     (if (= v :hallintayksikko)
+          ;                       nil
+          ;                       :hallintayksikko)))}
+          (if @auki?
+            [:span.livicon-chevron-up]
+            [:span.livicon-chevron-down])]]
+        (when @auki?
+          [:div.kategorisoitu-checkbox-pudotusvalikko.sisalto
+            (map (fn [m]
+                   [kategoria-ryhma m {:on-change! on-change!
+                                       :on-click   kategoria-on-click} []])
+                (:kategoriat valinnat))])]))))
 
 (defn checkbox-pudotusvalikko
   ([valinnat on-change teksti] (checkbox-pudotusvalikko valinnat on-change teksti {}))

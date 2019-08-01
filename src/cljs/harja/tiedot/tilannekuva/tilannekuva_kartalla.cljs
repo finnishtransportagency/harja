@@ -13,7 +13,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat-kartalla])
+            [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat-kartalla]
+            [harja.tilanhallinta.tila :as tila])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -161,8 +162,8 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
                      uudet-tasot)
                    tasot)))))))
 
-(add-watch haetut-asiat :paivita-tilannekuvatasot
-           (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))
+(add-watch tila/master :paivita-tilannekuvatasot
+           (fn [_ _ {vanha :tilannekuva} {uusi :tilannekuva}] (paivita-tilannekuvatasot vanha uusi)))
 
 (defn- organisaation-geometria [piirrettava {stroke :stroke}]
   (let [alue (:alue piirrettava)]
@@ -194,12 +195,12 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
                                                     (keep #(organisaation-geometria % {:stroke {:color (str "rgb(0, 0, 0, 0)")}})
                                                           (domain/valitut-kentat urakkatyypit-rajoitta)))))))
 
-(defn seuraa-alueita! [suodattimet]
-  (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet @suodattimet)))
-  (add-watch suodattimet ::alueen-seuraus (fn [_ _ vanha-tila uusi-tila]
-                                             (when-not (= (domain/valitut-suodattimet (:alueet vanha-tila))
-                                                          (domain/valitut-suodattimet (:alueet uusi-tila)))
-                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet uusi-tila)))))))
+(defn seuraa-alueita! [{:keys [aluesuodattimet] :as suodattimet}]
+  (zoomaa-urakoihin! (aseta-valitut-organisaatiot! aluesuodattimet))
+  (add-watch suodattimet ::alueen-seuraus (fn [_ _ {vanha-tila :aluesuodattimet} {uusi-tila :aluesuodattimet}]
+                                             (when-not (= (domain/valitut-suodattimet vanha-tila)
+                                                          (domain/valitut-suodattimet uusi-tila))
+                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! uusi-tila))))))
 
 (defn lopeta-alueen-seuraus! [suodattimet]
   (remove-watch suodattimet ::alueen-seuraus))
