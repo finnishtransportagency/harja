@@ -1,5 +1,6 @@
 .kustannussuunnitelma {
-  background-color:lightgrey;
+  display:flex;
+  flex-direction: column;
 }
 
 .hintalaskuri-vuodet {
@@ -33,8 +34,27 @@
 }
 
 #kuluva-hoitovuosi {
-  font-weight: bold;
-  button {
-    float: right;
+  display:flex;
+  > span {
+    flex:1;
+    font-weight: bold;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .hoitovuosi-napit {
+    flex:1;
+    display:flex;
+    justify-content: flex-end;
+  }
+}
+
+.haitari-laatikko {
+  flex: 1;
+
+  > span:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }

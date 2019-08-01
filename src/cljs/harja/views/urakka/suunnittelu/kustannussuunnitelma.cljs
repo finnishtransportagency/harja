@@ -1,5 +1,6 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma
-  (:require [reagent.core :as r]
+  (:refer-clojure :exclude [atom])
+  (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
@@ -8,12 +9,29 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]))
 
-(defn haitari [& sisalto]
-  [:div "--- TODO Haitari ---"
-   (map-indexed (fn [index komponentti]
-                  ^{:key index}
-                  [komponentti])
-                sisalto)])
+(defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn]} & _]
+  (let [auki? (atom alussa-auki?)
+        aukaise-fn! (comp (or aukaise-fn identity)
+                         (fn [event]
+                           (.preventDefault event)
+                           (js/console.log (.. event -target -attributes))
+                           (let [auki-nyt? (= "true" (.-value (.getNamedItem (.. event -target -attributes) "data-auki")))]
+                             (reset! auki? (not auki-nyt?))
+                             auki-nyt?)))]
+    (fn [otsikko _ & sisalto]
+      [:div.haitari-laatikko
+       [:span.klikattava {:on-click aukaise-fn!
+               :data-auki @auki?} otsikko
+        (if @auki?
+          ^{:key "haitari-auki"}
+          [ikonit/livicon-chevron-up]
+          ^{:key "haitari-kiinni"}
+          [ikonit/livicon-chevron-down])]
+       (when @auki?
+         (doall (map-indexed (fn [index komponentti]
+                               ^{:key index}
+                               [komponentti])
+                             sisalto)))])))
 
 (defn hintalaskuri-vuosi
   []
@@ -38,12 +56,14 @@
         urakan-aloitusvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
     (fn []
-      [:span#kuluva-hoitovuosi
-       (str "Kuluva hoitovuosi: " kuluva-urakan-vuosi
-            ". (" (pvm/pvm (first hoitovuoden-pvmt))
-            " - " (pvm/pvm (second hoitovuoden-pvmt)) ")")
-       [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
-       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]])))
+      [:div#kuluva-hoitovuosi
+       [:span
+        (str "Kuluva hoitovuosi: " kuluva-urakan-vuosi
+             ". (" (pvm/pvm (first hoitovuoden-pvmt))
+             " - " (pvm/pvm (second hoitovuoden-pvmt)) ")")]
+       [:div.hoitovuosi-napit
+        [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
+        [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]])))
 
 (defn tavoite-ja-kattohinta []
   [:div
@@ -179,9 +199,13 @@
    [:h1 "Kustannussuunnitelma"]
    [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
    [kuluva-hoitovuosi]
-   [haitari
+   [haitari-laatikko
+    "Tavoite- ja kattohinta lasketaan automaattisesti"
+    {:alussa-auki? true}
     tavoite-ja-kattohinta]
-   [haitari
+   [haitari-laatikko
+    "Suunnitelmien tila"
+    {:alussa-auki? true}
     suunnitelmien-tila]
    [hankintakustannukset e! app]
    [hallinnolliset-toimenpiteet]])
