@@ -15,4 +15,4 @@ fi
 echo "Generoidaan less -> CSS taustalla..."
 bash tarkkaile_less_muutoksia.sh &
 echo "Käynnistetään figwheel"
-lein build-dev
+lein do less once, build-dev

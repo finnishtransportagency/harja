@@ -32,7 +32,8 @@
     :muut (not (ur/vesivaylaurakkatyyppi? tyyppi))
     :kiintiot (= tyyppi :vesivayla-hoito)
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
-    :yksikkohintaiset (not= tyyppi :teiden-hoito)))
+    :yksikkohintaiset (not= tyyppi :teiden-hoito)
+    :kustannussuunnitelma (= tyyppi :teiden-hoito)))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -92,7 +93,7 @@
 
           "Kustannussuunnitelma"
           :kustannussuunnitelma
-          (when (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id) ;;; fix
+          (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
+                     (valilehti-mahdollinen? :kustannussuunnitelma ur))
             ^{:key "kustannussuunnitelma"}
-            [tuck/tuck kustannussuunnitelma/mastertila
-             kustannussuunnitelma/kustannussuunnitelma ur])]]))))
+            [kustannussuunnitelma/kustannussuunnitelma])]]))))
