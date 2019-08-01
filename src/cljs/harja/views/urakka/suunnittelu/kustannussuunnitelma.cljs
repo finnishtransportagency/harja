@@ -3,7 +3,10 @@
             [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
-            [harja.loki :refer [log]]))
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
+            [harja.loki :refer [log]]
+            [harja.pvm :as pvm]))
 
 (defn haitari [& sisalto]
   [:div "--- TODO Haitari ---"
@@ -31,7 +34,16 @@
 (def lahetyspaivat #{:kuukauden-15})
 
 (defn kuluva-hoitovuosi []
-  [:span "--- TODO Kuluva hoitovuosi ---"])
+  (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
+        urakan-aloitusvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
+    (fn []
+      [:span#kuluva-hoitovuosi
+       (str "Kuluva hoitovuosi: " kuluva-urakan-vuosi
+            ". (" (pvm/pvm (first hoitovuoden-pvmt))
+            " - " (pvm/pvm (second hoitovuoden-pvmt)) ")")
+       [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
+       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]])))
 
 (defn tavoite-ja-kattohinta []
   [:div
@@ -175,4 +187,4 @@
    [hallinnolliset-toimenpiteet]])
 
 (defn kustannussuunnitelma []
-  [tuck/tuck tila/kustannussuunnitelma kustannussuunnitelma*])
+  [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

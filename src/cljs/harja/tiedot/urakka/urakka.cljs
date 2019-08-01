@@ -1,9 +1,11 @@
 (ns harja.tiedot.urakka.urakka
   "MHU-urakoiden tila täällä. Hyvä olisi joskus saada muutkin tänne, yhden atomin alle."
   (:refer-clojure :exclude [atom])
-  (:require [reagent.core :refer [atom cursor]]))
+  (:require [reagent.core :refer [atom cursor]]
+            [harja.tiedot.navigaatio :as nav]))
 
-(defonce tila (atom {:suunnittelu {:tehtavat
+(defonce tila (atom {:yleiset {:urakka {}}
+                     :suunnittelu {:tehtavat
                                    {:tehtava-ja-maaraluettelo [{:id "rivin-id-1" :nimi "Laajenna" :tehtavaryhmatyyppi "ylataso" :vanhempi nil :piillotettu? false}
                                                                {:id "rivin-id-2" :nimi "Laajenna-valitaso" :tehtavaryhmatyyppi "valitaso" :vanhempi "rivin-id-1" :piillotettu? true}
                                                                {:id "rivin-id-3" :nimi "Teksti 2" :tehtavaryhmatyyppi "alitaso" :maara 30 :vanhempi "rivin-id-2" :piillotettu? true}
@@ -15,6 +17,12 @@
                                    :kustannussuunnitelma {:hankintakustannukset []
                                                           :suunnitellut-hankinnat {}}}}))
 
+(defonce yleiset (cursor tila [:yleiset]))
+
 (defonce suunnittelu-tehtavat-tila (cursor tila [:suunnittelu :tehtavat]))
 
-(defonce kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+(defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+
+(add-watch nav/valittu-urakka :urakan-id-watch
+           (fn [_ _ _ uusi-urakka]
+             (swap! tila assoc-in [:yleiset :urakka] (dissoc uusi-urakka :alue))))

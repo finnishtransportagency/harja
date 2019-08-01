@@ -133,15 +133,18 @@
          kasittele-resize-event (fn [this _]
                                   (maarita-sticky!))]
      (komp/luo
-       (komp/dom-kuuntelija js/window
-                            EventType/SCROLL kasittele-scroll-event
-                            EventType/RESIZE kasittele-resize-event)
-       (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
-                           (reset! disabled? disabled)
-                           (maarita-sticky!)))
-       (komp/piirretty #(reset! napin-etaisyys-ylareunaan
-                                (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                  (r/dom-node %))))
+       (when sticky?
+         (komp/dom-kuuntelija js/window
+                              EventType/SCROLL kasittele-scroll-event
+                              EventType/RESIZE kasittele-resize-event))
+       (when sticky?
+         (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
+                             (reset! disabled? disabled)
+                             (maarita-sticky!))))
+       (when sticky?
+         (komp/piirretty #(reset! napin-etaisyys-ylareunaan
+                                  (dom/elementin-etaisyys-dokumentin-ylareunaan
+                                    (r/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes] :as optiot}]
          [:button
           (merge
