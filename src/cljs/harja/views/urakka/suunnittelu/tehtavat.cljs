@@ -63,9 +63,9 @@
 (defn tehtavat*
   [e! app]
   (komp/luo
-    (komp/sisaan (fn [this]
-                   (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo) true)]
-                     (e! (t/->MuutaTila [:tehtavat-taulukko] taulukon-tehtavat)))))
+    (komp/piirretty (fn [this]
+                      (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo) true)]
+                        (e! (t/->MuutaTila [:tehtavat-taulukko] taulukon-tehtavat)))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div

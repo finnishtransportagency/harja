@@ -1,10 +1,43 @@
+@import "../livi_tyylit";
+
 .kustannussuunnitelma {
   display:flex;
   flex-direction: column;
+
+  > * {
+    margin-bottom: 10px;
+
+    &:last-child {
+      margin-bottom: inherit;
+    }
+  }
 }
 
 .hintalaskuri-vuodet {
   display:flex;
+  justify-content: space-evenly;
+  > div {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    > div {
+      flex: 1;
+      &:last-child {
+        color: @harmaa8;
+      }
+    }
+    &.hintalaskuri-yhtakuin {
+      flex: 1;
+      div:last-child {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        padding-right: 15px;
+        color: black;
+      }
+    }
+  }
 }
 
 .hankinnat-header {
@@ -50,11 +83,21 @@
 }
 
 .haitari-laatikko {
-  flex: 1;
+  &#tavoite-ja-kattohinta {
+    background-color: @harmaa13;
 
-  > span:first-child {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    .hintalaskuri:first-child {
+      border-bottom: 1px solid @harmaa8;
+    }
+
+    .hintalaskuri-vuodet {
+      padding-top: 15px;
+      padding-bottom: 15px;
+    }
   }
+}
+
+#tavoite-ja-kattohinta-huomio {
+  background-color: @harjan-taustavari;
+  display: block;
 }

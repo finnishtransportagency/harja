@@ -6,22 +6,20 @@
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.debug :as debug]
             [harja.loki :refer [log]]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn]} & _]
   (let [auki? (atom alussa-auki?)
         aukaise-fn! (comp (or aukaise-fn identity)
-                         (fn [event]
-                           (.preventDefault event)
-                           (js/console.log (.. event -target -attributes))
-                           (let [auki-nyt? (= "true" (.-value (.getNamedItem (.. event -target -attributes) "data-auki")))]
-                             (reset! auki? (not auki-nyt?))
-                             auki-nyt?)))]
-    (fn [otsikko _ & sisalto]
-      [:div.haitari-laatikko
-       [:span.klikattava {:on-click aukaise-fn!
-               :data-auki @auki?} otsikko
+                          (fn [event]
+                            (.preventDefault event)
+                            (swap! auki? not)))]
+    (fn [otsikko {:keys [id]} & sisalto]
+      [:div.haitari-laatikko {:id id}
+       [:span.klikattava {:on-click aukaise-fn!} otsikko
         (if @auki?
           ^{:key "haitari-auki"}
           [ikonit/livicon-chevron-up]
@@ -29,24 +27,29 @@
           [ikonit/livicon-chevron-down])]
        (when @auki?
          (doall (map-indexed (fn [index komponentti]
-                               ^{:key index}
-                               [komponentti])
+                               (with-meta
+                                 komponentti
+                                 {:key index}))
                              sisalto)))])))
 
-(defn hintalaskuri-vuosi
-  []
-  [:div
-   [:div "Vuosi 2"]
-   [:div "0.0e"]])
+(defn hintalaskuri-sarake
+  ([yla ala] (hintalaskuri-sarake yla ala nil))
+  ([yla ala luokat]
+   [:div {:class luokat}
+    [:div yla]
+    [:div ala]]))
 
 (defn hintalaskuri
-  [{:keys [otsikko selite vuodet]}]
-  [:div
+  [{:keys [otsikko selite hinnat]}]
+  [:div.hintalaskuri
    [:h5 otsikko]
    [:div selite]
    [:div.hintalaskuri-vuodet
-    (for [vuosi vuodet]
-      [hintalaskuri-vuosi])]])
+    (for [{:keys [summa vuosi]} hinnat]
+      ^{:key vuosi}
+      [hintalaskuri-sarake (str vuosi ". vuosi" (when (= 1 vuosi) "*")) (fmt/euro summa)])
+    [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
+    [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]])
 
 (def maksukaudet (into #{} (keys t/kaudet)))
 (def lahetyspaivat #{:kuukauden-15})
@@ -65,14 +68,14 @@
         [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
         [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]])))
 
-(defn tavoite-ja-kattohinta []
+(defn tavoite-ja-kattohinta [{:keys [tavoitehinnat kattohinnat]}]
   [:div
    [hintalaskuri {:otsikko "Tavoitehinta"
-                  :selite "Tykkään puurosta"
-                  :vuodet [1 2 3 4 5]}]
+                  :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
+                  :hinnat kattohinnat}]
    [hintalaskuri {:otsikko "Kattohinta"
-                  :selite "Tykkään puurosta * 1.1"
-                  :vuodet [1 2 3 4 5]}]])
+                  :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
+                  :hinnat tavoitehinnat}]])
 
 (defn suunnitelmien-tila
   []
@@ -184,11 +187,11 @@
 (defn hoidonjohtopalkkio []
   [:span "---- TODO hoidonjohtopalkkio ----"])
 
-(defn hallinnolliset-toimenpiteet []
+(defn hallinnolliset-toimenpiteet [{{:keys [yhteenveto]} :hallinnolliset-toimenpiteet}]
   [:div
    [hintalaskuri {:otsikko "Yhteenveto"
                   :selite "Tykkään puurosta"
-                  :vuodet [1 2 3 4 5]}]
+                  :hinnat yhteenveto}]
    [erillishankinnat]
    [johto-ja-hallintokorvaus]
    [hoidonjohtopalkkio]])
@@ -196,17 +199,21 @@
 (defn kustannussuunnitelma*
   [e! app]
   [:div.kustannussuunnitelma
+   [debug/debug app]
    [:h1 "Kustannussuunnitelma"]
    [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
    [kuluva-hoitovuosi]
    [haitari-laatikko
     "Tavoite- ja kattohinta lasketaan automaattisesti"
-    {:alussa-auki? true}
-    tavoite-ja-kattohinta]
+    {:alussa-auki? true
+     :id "tavoite-ja-kattohinta"}
+    [tavoite-ja-kattohinta app]
+    [:span#tavoite-ja-kattohinta-huomio
+     "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
    [haitari-laatikko
     "Suunnitelmien tila"
     {:alussa-auki? true}
-    suunnitelmien-tila]
+    [suunnitelmien-tila app]]
    [hankintakustannukset e! app]
    [hallinnolliset-toimenpiteet]])
 
