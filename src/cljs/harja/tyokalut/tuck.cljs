@@ -83,3 +83,15 @@
   (let [ch (chan)]
     (e! (apply tapahtuma (conj (vec tapahtuma-args) ch)))
     ch))
+
+(defrecord MuutaTila [polku arvo])
+(defrecord PaivitaTila [polku f])
+
+(extend-protocol tuck/Event
+  MuutaTila
+  (process-event [{:keys [polku arvo]} app]
+    (assoc-in app polku arvo))
+
+  PaivitaTila
+  (process-event [{:keys [polku f]} app]
+    (update-in app polku f)))

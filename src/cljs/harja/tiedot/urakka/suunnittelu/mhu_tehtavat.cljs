@@ -5,9 +5,6 @@
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.tyokalut :as tyokalut]))
 
-(defrecord MuutaTila [polku arvo])
-(defrecord PaivitaTila [polku f])
-
 (defrecord PaivitaMaara [janan-id solun-id arvo])
 (defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
 (defrecord JarjestaTehtavienMukaan [])
@@ -75,14 +72,6 @@
                    tehtavat))))
 
 (extend-protocol tuck/Event
-  MuutaTila
-  (process-event [{:keys [polku arvo]} app]
-    (assoc-in app polku arvo))
-
-  PaivitaTila
-  (process-event [{:keys [polku f]} app]
-    (update-in app polku f))
-
   PaivitaMaara
   (process-event [{:keys [janan-id solun-id arvo]} app]
     (let [janan-index (tyokalut/janan-index (:tehtavat-taulukko app) janan-id)

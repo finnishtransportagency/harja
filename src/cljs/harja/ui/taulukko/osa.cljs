@@ -10,10 +10,27 @@
   p/Osa
   (piirra-osa [this]
     (let [{:keys [id class]} (:parametrit this)]
-      [:div.solu.osa-teksti {:class class
-                        :id id
+      [:div.solu.osa-teksti {:class (when class
+                                      (apply str (interpose " " class)))
+                             :id id
                              :data-cy (:osan-id this)}
        (:teksti this)]))
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-id [this]
+    osan-id)
+  (osan-tila [this]))
+
+(defrecord Ikoni [osan-id ikoni-ja-teksti parametrit]
+  p/Osa
+  (piirra-osa [this]
+    (let [{:keys [id class]} (:parametrit this)]
+      [:div.solu.osa-ikoni-teksti {:class (when class
+                                            (apply str (interpose " " class)))
+                                   :id id
+                                   :data-cy (:osan-id this)}
+       [(-> this :ikoni-ja-teksti :ikoni)]
+       (-> this :ikoni-ja-teksti :teksti)]))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
@@ -28,7 +45,8 @@
                                   (jarjesta-fn!))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
-          [:div.solu.osa-otsikko {:class class
+          [:div.solu.osa-otsikko {:class (when class
+                                           (apply str (interpose " " class)))
                                   :id id
                                   :data-cy (:osan-id this)}
            (:otsikko this)
@@ -58,7 +76,8 @@
                                (remove (fn [[_ arvo]]
                                          (nil? arvo))
                                        {;; Inputin parametrit
-                                        :class class
+                                        :class (when class
+                                                 (apply str (interpose " " class)))
                                         :data-cy (:osan-id this)
                                         :id id
                                         :type type
@@ -115,7 +134,8 @@
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
           [:span.solu.klikattava.osa-laajenna
-           {:class class
+           {:class (when class
+                     (apply str (interpose " " class)))
             :id id
             :data-cy (:osan-id this)
             :on-click

@@ -1,12 +1,21 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :as r :refer [atom]]
+            [clojure.string :as clj-str]
             [tuck.core :as tuck]
+            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :as debug]
+            [harja.ui.taulukko.taulukko :as taulukko]
+            [harja.ui.taulukko.jana :as jana]
+            [harja.ui.taulukko.osa :as osa]
+            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.tyokalut :as tyokalu]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]))
@@ -77,14 +86,72 @@
                   :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
                   :hinnat tavoitehinnat}]])
 
+(defn suunnitelmien-taulukko [e! {toimenpiteet :toimenpiteet}]
+  (let [sarakkeiden-leveys (fn [sarake]
+                             (case sarake
+                               :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
+                               :kuukausisuunnitelmat "col-xs-12 col-sm-4 col-md-4 col-lg-4"
+                               :vuosisuunnittelmat "col-xs-12 col-sm-4 col-md-4 col-lg-4"))
+        toimenpiteiden-rivit (mapcat (fn [[toimenpide suunnitelmat]]
+                                       (concat [(jana/->Rivi toimenpide
+                                                             [(osa/->Laajenna (keyword (str (name toimenpide) "-teksti"))
+                                                                              (clj-str/capitalize (name toimenpide))
+                                                                              #(e! (t/->LaajennaSoluaKlikattu toimenpide %1 %2))
+                                                                              {:class #{(sarakkeiden-leveys :nimi)}})]
+                                                             nil)]
+                                               (map (fn [[suunnitelma maara]]
+                                                      (let [idn-osa (str (name toimenpide) "-" (name suunnitelma))]
+                                                        (case suunnitelma
+                                                          :hankinnat (with-meta (jana/->Rivi (keyword (str idn-osa "-h"))
+                                                                                             [(osa/->Teksti (keyword (str idn-osa "-h" "-nimi")) "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" {:class #{(sarakkeiden-leveys :nimi)
+                                                                                                                                                                                                                      "solu-sisenna-1"}})
+                                                                                              (osa/->Ikoni (keyword (str idn-osa "-h" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                                                                                                                          "solu-sisenna-1"}})
+                                                                                              (osa/->Ikoni (keyword (str idn-osa "-h" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                                                                                                                             "solu-sisenna-1"}})]
+                                                                                             #{"piillotettu"})
+                                                                                {:vanhempi toimenpide})
+                                                          :korjaukset (with-meta (jana/->Rivi (keyword (str idn-osa "-k"))
+                                                                                              [(osa/->Teksti (keyword (str idn-osa "-k" "-nimi")) "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" {:class #{(sarakkeiden-leveys :nimi)
+                                                                                                                                                                                                                       "solu-sisenna-1"}})
+                                                                                               (osa/->Ikoni (keyword (str idn-osa "-k" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                                                                                                                           "solu-sisenna-1"}})
+                                                                                               (osa/->Ikoni (keyword (str idn-osa "-k" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                                                                                                                              "solu-sisenna-1"}})]
+                                                                                              #{"piillotettu"})
+                                                                                 {:vanhempi toimenpide})
+                                                          :akilliset-hoitotyot (with-meta (jana/->Rivi (keyword (str idn-osa "-ah"))
+                                                                                                       [(osa/->Teksti (keyword (str idn-osa "-ah" "-nimi")) "Äkilliset hoitotyöt" {:class #{(sarakkeiden-leveys :nimi)
+                                                                                                                                                                                            "solu-sisenna-1"}})
+                                                                                                        (osa/->Ikoni (keyword (str idn-osa "-ah" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                                                                                                                                     "solu-sisenna-1"}})
+                                                                                                        (osa/->Ikoni (keyword (str idn-osa "-ah" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                                                                                                                                        "solu-sisenna-1"}})]
+                                                                                                       #{"piillotettu"})
+                                                                                          {:vanhempi toimenpide})
+                                                          :muut-rahavaraukset (with-meta (jana/->Rivi (keyword (str idn-osa "-mr"))
+                                                                                                      [(osa/->Teksti (keyword (str idn-osa "-mr" "-nimi")) "Muut tilaajan rahavaraukset" {:class #{(sarakkeiden-leveys :nimi)
+                                                                                                                                                                                                   "solu-sisenna-1"}})
+                                                                                                       (osa/->Ikoni (keyword (str idn-osa "-mr" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                                                                                                                                    "solu-sisenna-1"}})
+                                                                                                       (osa/->Ikoni (keyword (str idn-osa "-mr" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                                                                                                                                       "solu-sisenna-1"}})]
+                                                                                                      #{"piillotettu"})
+                                                                                         {:vanhempi toimenpide}))))
+                                                    suunnitelmat)))
+                                     toimenpiteet)]
+    toimenpiteiden-rivit))
+
 (defn suunnitelmien-tila
-  []
-  (let [avattu? (r/atom (into {}
-                              (map #(assoc {} % false)
-                                   t/toimenpiteet)))]
-    (fn [app]
-      [:div (for [[avain auki?] @avattu?]
-              [:div {:on-click #(swap! avattu? assoc avain (not auki?))} (str avain auki?)])])))
+  [e! app]
+  (komp/luo
+    (komp/piirretty (fn [this]
+                      (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e! app)]
+                        (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
+    (fn [e! {:keys [suunnitelmien-tila-taulukko]}]
+      (if suunnitelmien-tila-taulukko
+        [taulukko/taulukko suunnitelmien-tila-taulukko]
+        [yleiset/ajax-loader]))))
 
 (defn hankinnat-header
   [_ _ _]
@@ -213,7 +280,7 @@
    [haitari-laatikko
     "Suunnitelmien tila"
     {:alussa-auki? true}
-    [suunnitelmien-tila app]]
+    [suunnitelmien-tila e! app]]
    [hankintakustannukset e! app]
    [hallinnolliset-toimenpiteet]])
 

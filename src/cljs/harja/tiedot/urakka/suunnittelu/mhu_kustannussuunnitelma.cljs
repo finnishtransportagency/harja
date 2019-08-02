@@ -55,6 +55,8 @@
 (defrecord AsetaKustannussuunnitelmassa [polku arvo])
 (defrecord AsetaMaksukausi [polku arvo])
 
+(defrecord LaajennaSoluaKlikattu [rivin-id this auki?])
+
 (extend-protocol tuck/Event
   AsetaMaksukausi
   (process-event
@@ -67,4 +69,14 @@
   AsetaKustannussuunnitelmassa
   (process-event
     [{:keys [polku arvo]} app]
-    (assoc-in app polku arvo)))
+    (assoc-in app polku arvo))
+  LaajennaSoluaKlikattu
+  (process-event [{:keys [rivin-id auki?]} app]
+    (update app :suunnitelmien-tila-taulukko (fn [rivit]
+                                               (mapv (fn [rivi]
+                                                       (if (= (-> rivi meta :vanhempi) rivin-id)
+                                                         (if auki?
+                                                           (update rivi :luokat disj "piillotettu")
+                                                           (update rivi :luokat conj "piillotettu"))
+                                                         rivi))
+                                                     rivit)))))

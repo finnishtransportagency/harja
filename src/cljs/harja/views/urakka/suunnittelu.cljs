@@ -44,13 +44,6 @@
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
-          "Tehtävät"
-          :tehtavat
-          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                     (valilehti-mahdollinen? :tehtavat ur))
-            ^{:key "tehtavat"}
-            [tehtavat/tehtavat])
-
           "Kokonaishintaiset työt"
           :kokonaishintaiset
           (when (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
@@ -96,4 +89,11 @@
           (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
                      (valilehti-mahdollinen? :kustannussuunnitelma ur))
             ^{:key "kustannussuunnitelma"}
-            [kustannussuunnitelma/kustannussuunnitelma])]]))))
+            [kustannussuunnitelma/kustannussuunnitelma])
+
+          "Tehtävät"
+          :tehtavat
+          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                     (valilehti-mahdollinen? :tehtavat ur))
+            ^{:key "tehtavat"}
+            [tehtavat/tehtavat])]]))))
