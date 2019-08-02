@@ -41,21 +41,21 @@
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
                urakka @nav/valittu-urakka
-               aikavali @valittu-aikavali
+               #_#_aikavali @valittu-aikavali ;; kommentoitu, ettei haku käynnistyisi automaattisesti
                tr-vali @lomakkeen-tila]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? urakka aikavali)
+              (when (and hae? urakka @valittu-aikavali)
                 (go
                   (let [tr-vali (:tierekisteriosoite tr-vali)]
                     (if (and (:numero tr-vali)
                              (:loppuosa tr-vali))
-                      (<! (hae-toteumat-tr-valille (:id urakka) aikavali
+                      (<! (hae-toteumat-tr-valille (:id urakka) @valittu-aikavali
                                                    (:numero tr-vali)
                                                    (:alkuosa tr-vali)
                                                    (:alkuetaisyys tr-vali)
                                                    (:loppuosa tr-vali)
                                                    (:loppuetaisyys tr-vali)))
-                      (<! (hae-toteumat (:id urakka) aikavali))))))))
+                      (<! (hae-toteumat (:id urakka) @valittu-aikavali))))))))
 
 (def valitut-toteumat (atom #{}))
 

@@ -79,7 +79,7 @@
    [:span.valinnat
     [urakka-valinnat/aikavali-nykypvm-taakse urakka
      tiedot/valittu-aikavali
-     {:aikavalin-rajoitus [90 :paiva]}]
+     {:aikavalin-rajoitus [12 :kuukausi]}]
     [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
                                      :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
