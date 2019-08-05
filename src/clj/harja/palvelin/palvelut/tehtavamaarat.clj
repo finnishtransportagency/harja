@@ -30,6 +30,73 @@
   (into []
         (q/hae-tehtavahierarkia db)))
 
+
+
+
+(defn otsikko-rivi
+  []
+
+  )
+
+
+(defn max-pair
+  [v]
+  (loop [i 0
+         j 1
+         result 0]
+    (if (= i (dec (count v)))
+      result
+      (let [new-result (max result (+ (nth v i) (nth v j)))]
+        (if (= j (dec (count v)))
+          (recur (inc i) (-> i inc inc) new-result)
+          (recur i (inc j) new-result))))))
+
+
+(defn- jarjesta-tehtavahierarkia
+  [hierarkia]
+
+  ; rivi
+  ; {:id "rivin-id-2" :nimi "Laajenna-valitaso" :tehtavaryhmatyyppi "valitaso" :maara 50 :vanhempi "rivin-id-1" :piillotettu? true}
+
+
+  (let [rivinro 1
+        otsikko nil
+        tehtavalista (group-by :otsikko hierarkia)
+        tehtavat-palauta []]
+
+
+    (doseq [x *gtm]
+      (let [cnt (atom 1)]
+        (println "emo" (first x))
+        (doseq [y(second x) ]
+          (swap! cnt + 1)
+          (println cnt "       lapsi " y)
+          )))
+
+    (map
+      #(
+         (join (join ({:id nil
+                 :nimi (:otsikko %)
+                 :tehtavaryhmataso :otsikko
+                 :maara nil
+                 :vanhempi nil}) tehtavat-palauta)
+
+
+         )
+      tehtavalista)
+
+
+    (loop [osio tehtavalista]
+      (println "otsikko " (first osio))
+      (loop [tehtava (second osio)]
+        (println "       tehtava " tehtava))
+
+    ) )
+  )
+
+
+
+
 (defn hae-tehtavahierarkia-maarineen
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
   ;;TODO: tarkista oikeudet (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
@@ -80,8 +147,8 @@
                                     (do
                                       (apply q/paivita-tehtavamaara! parametrit)))))))
 
-  (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
-                                        :hoitokausi hoitokauden-alkuvuosi}))
+  (hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
+                                      :hoitokausi hoitokauden-alkuvuosi}))
 
 (defrecord Tehtavamaarat []
   component/Lifecycle
