@@ -191,7 +191,8 @@
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
     (.setFaultTolerant true)
-    (.setFaultTolerantReconnectTimeout (int 300))
+    ;; Yrittää reconnectata loputtomiin
+    (.setFaultTolerantReconnectTimeout 0)
     ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
     ;; odottamaan eri jonoon. Asyncisti sen takia, että JMS-säije ei blokkaa lähetykseen. Mahdolliset virheet
     ;; otetaan kiinni sitten yhteysolion setRefectionListener:issä
@@ -208,7 +209,10 @@
       (konfiguroi-sonic-jms-connection-factory connection-factory tyyppi))))
 
 (defn luo-istunto [yhteys]
-  (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE))
+  (try
+    (.createQueueSession yhteys false Session/AUTO_ACKNOWLEDGE)
+    (catch JMSException e
+      (log/error "Sonja ei saanut luotua sessiota. " (.getMessage e) "\n stackTrace: " (.printStackTrace e)))))
 
 (defn- yhdista [{:keys [kayttaja salasana tyyppi] :as asetukset} qcf aika]
   (try
@@ -221,10 +225,10 @@
                                                                '(reify progress.message.jclient.RejectionListener
                                                                   (onRejectedMessage [this msg e]
                                                                     (try
-                                                                      (taoensso.timbre/error
+                                                                      (log/error
                                                                         (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
                                                                              " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
-                                                                      (taoensso.timbre/error
+                                                                      (log/error
                                                                         (str "Sonjalta tullut virhe msg: " msg
                                                                              " Virhekoodi: " (.getErrorCode e)))
                                                                       ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
@@ -232,7 +236,7 @@
 
                                                                       ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
                                                                       (catch Throwable t
-                                                                        (taoensso.timbre/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
+                                                                        (log/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
                                                                                         (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
         (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
@@ -302,13 +306,17 @@
         {istunto :istunto jonot :jonot} (get istunnot jarjestelma)
         {jono :jono kasittelija-olio kasittelija kuuntelijat :kuuntelijat} (get jonot jonon-nimi)]
     (when-not (and istunto jono kasittelija-olio)
-      (let [istunto (or istunto (luo-istunto yhteys))
-            jono (or jono (.createQueue istunto jonon-nimi))
-            kasittelija-olio (or kasittelija-olio (if (= kasittelija :vastaanottaja)
-                                                    (let [vastaanottaja (.createReceiver istunto jono)]
-                                                      (aseta-viestien-kasittelija! vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
-                                                      vastaanottaja)
-                                                    (.createProducer istunto jono)))]
+      (let [istunnon-tila (when istunto
+                            (exception-wrapper istunto getAcknowledgeMode))
+            vanha-istunto (when (= "ACTIVE" istunnon-tila) istunto)
+            istunto (or vanha-istunto (luo-istunto yhteys))
+            jono (or (and vanha-istunto jono) (.createQueue istunto jonon-nimi))
+            kasittelija-olio (or (and vanha-istunto kasittelija-olio)
+                                 (if (= kasittelija :vastaanottaja)
+                                   (let [vastaanottaja (.createReceiver istunto jono)]
+                                     (aseta-viestien-kasittelija! vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
+                                     vastaanottaja)
+                                   (.createProducer istunto jono)))]
         (swap! tila (fn [tiedot]
                       (-> tiedot
                           (assoc-in [:istunnot jarjestelma :istunto] istunto)
