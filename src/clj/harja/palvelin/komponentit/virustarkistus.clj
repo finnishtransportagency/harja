@@ -12,7 +12,7 @@
         :error)
     (let [{:keys [status body error]}
           @(http/post url
-                      {:timeout 30000
+                      {:timeout 60000
                        :query-params {"name" nimi}
                        :multipart [{:name "file" :content sisalto :filename nimi}]})]
       (cond
