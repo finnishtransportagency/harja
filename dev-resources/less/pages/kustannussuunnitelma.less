@@ -12,7 +12,9 @@
     }
   }
 }
-
+.suunnitelman-tila-otsikko {
+  font-size: 14px;
+}
 .hintalaskuri-vuodet {
   display:flex;
   justify-content: space-evenly;
@@ -112,4 +114,14 @@
 #tavoite-ja-kattohinta-huomio {
   background-color: @harjan-taustavari;
   display: block;
+}
+
+#suunnitelman-selitteet {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0px;
+  span {
+    padding: 5px;
+    padding-left: inherit;
+  }
 }

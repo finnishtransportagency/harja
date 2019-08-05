@@ -1,23 +1,26 @@
 @import "livi_tyylit";
 @chevron-suunnat: up, right, down, left;
+@triangle-suunnat: top, right, bottom, left;
 @solu-padding: 5px;
 
-.chevron-loop(@suunnat; @i: length(@suunnat)) when (@i > 0) {
+.suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
   @suunta: extract(@suunnat, @i);
-  .livicon-chevron-@{suunta} {
-    float: right;
+  .@{ikoni}-@{suunta}{
     color: @sininen4;
   }
-  .chevron-loop(@suunnat; @i - 1);
+  .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
 }
 
 .taulukko {
   display: flex;
   flex-direction: column;
   width: 100%;
-  border-bottom: 0.5px solid @harmaa8;
+  border: 0.5px solid @harmaa8;
   font-size: @fontin-koko-taulukko;
   word-break: break-all;
+  &.reunaton {
+    border:none;
+  }
 
   /* TAULUKON ELEMENTIT */
 
@@ -27,8 +30,19 @@
 
 /* JANAT */
   .jana {
-    border-right: 0.5px solid @harmaa8;
     border-top: 0.5px solid @harmaa8;
+    &:first-child {
+      border-top: none;
+    }
+    &.reunaton {
+      border-top: none;
+    }
+    &.pariton-jana {
+      background-color: @harmaa13;
+    }
+    &.parillinen-jana {
+      background-color: @harmaa11;
+    }
   }
   .janan-rivi {
     display: flex;
@@ -39,15 +53,43 @@
     }
   }
 /* SOLUT */
-  .solu {
+  .osa {
     border-left: 0.5px solid @harmaa8;
+    &:first-child {
+      border-left: none;
+    }
     padding: @solu-padding;
+    &.reunaton {
+      border-left:none;
+    }
+    &.keskita {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    &.alas {
+      display:flex;
+      align-items: flex-end;
+    }
   }
   .osa-laajenna {
-    display: inline-block;
+    display: flex;
+    justify-content: space-between;
     color: @sininen4;
-    align-self: center;
-    .chevron-loop(@chevron-suunnat);
+    span {
+      align-self: center;
+      &:first-child {
+        flex: 1;
+      }
+    }
+    &.ikoni-vasemmalle {
+      .laajenna-teksti {
+        order: 1;
+        padding-left: @solu-padding;
+      }
+    }
+    .suunta-ikoni-loop(@chevron-suunnat; livicon-chevron);
+    .suunta-ikoni-loop(@triangle-suunnat; glyphicon-triangle);
   }
   .osa-otsikko {
     display: flex;
@@ -61,6 +103,8 @@
   }
 
   .osa-teksti {
+  }
+  .osa-ikoni {
   }
   /* YLEISTÄ */
   .solu-sisenna-1 {

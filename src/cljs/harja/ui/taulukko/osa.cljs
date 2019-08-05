@@ -10,7 +10,7 @@
   p/Osa
   (piirra-osa [this]
     (let [{:keys [id class]} (:parametrit this)]
-      [:div.solu.osa-teksti {:class (when class
+      [:div.osa.osa-teksti {:class (when class
                                       (apply str (interpose " " class)))
                              :id id
                              :data-cy (:osan-id this)}
@@ -18,23 +18,23 @@
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
-    osan-id)
+    (:osan-id this))
   (osan-tila [this]))
 
 (defrecord Ikoni [osan-id ikoni-ja-teksti parametrit]
   p/Osa
   (piirra-osa [this]
     (let [{:keys [id class]} (:parametrit this)]
-      [:div.solu.osa-ikoni-teksti {:class (when class
-                                            (apply str (interpose " " class)))
-                                   :id id
-                                   :data-cy (:osan-id this)}
+      [:div.osa.osa-ikoni {:class (when class
+                                     (apply str (interpose " " class)))
+                            :id id
+                            :data-cy (:osan-id this)}
        [(-> this :ikoni-ja-teksti :ikoni)]
        (-> this :ikoni-ja-teksti :teksti)]))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
-    osan-id)
+    (:osan-id this))
   (osan-tila [this]))
 
 (defrecord Otsikko [osan-id otsikko jarjesta-fn! parametrit]
@@ -45,7 +45,7 @@
                                   (jarjesta-fn!))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)]
-          [:div.solu.osa-otsikko {:class (when class
+          [:div.osa.osa-otsikko {:class (when class
                                            (apply str (interpose " " class)))
                                   :id id
                                   :data-cy (:osan-id this)}
@@ -114,11 +114,11 @@
                                         :on-key-down on-key-down
                                         :on-key-press on-key-press
                                         :on-key-up on-key-up}))]
-          [:input.solu.osa-syote parametrit]))))
+          [:input.osa.osa-syote parametrit]))))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
-    osan-id)
+    (:osan-id this))
   (osan-tila [this]))
 
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
@@ -132,8 +132,15 @@
     (let [auki? (or (p/hae-tila this)
                     (atom false))]
       (fn [this]
-        (let [{:keys [id class]} (:parametrit this)]
-          [:span.solu.klikattava.osa-laajenna
+        (let [{:keys [id class ikoni]} (:parametrit this)
+              ikoni (or ikoni "chevron")
+              ikoni-auki (if (= ikoni "chevron")
+                           ikonit/livicon-chevron-down
+                           ikonit/triangle-bottom)
+              ikoni-kiinni (if (= ikoni "chevron")
+                             ikonit/livicon-chevron-up
+                             ikonit/triangle-top)]
+          [:span.osa.klikattava.osa-laajenna
            {:class (when class
                      (apply str (interpose " " class)))
             :id id
@@ -142,18 +149,28 @@
             #(do (.preventDefault %)
                  (swap! auki? not)
                  (aukaise-fn this @auki?))}
-           teksti
+           [:span.laajenna-teksti teksti]
            (if @auki?
              ^{:key "laajenna-auki"}
-             [ikonit/livicon-chevron-down]
+             [ikoni-auki]
              ^{:key "laajenna-kiini"}
-             [ikonit/livicon-chevron-left])]))))
+             [ikoni-kiinni])]))))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
-    osan-id)
+    (:osan-id this))
   (osan-tila [this]
     (p/hae-tila this)))
+
+(defrecord Komponentti [osan-id komponentti komponentin-argumentit]
+  p/Osa
+  (piirra-osa [this]
+    [(:komponentti this) (:komponentin-argumentit this)])
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-id [this]
+    (:osan-id this))
+  (osan-tila [this]))
 
 (defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
   (p/aseta-tila! (->Laajenna osan-id teksti aukaise-fn parametrit)))

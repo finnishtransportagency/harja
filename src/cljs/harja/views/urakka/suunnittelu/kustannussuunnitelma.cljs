@@ -20,15 +20,18 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]))
 
-(defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn]} & _]
+(defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
   (let [auki? (atom alussa-auki?)
+        otsikko-elementti (or otsikko-elementti :span)
         aukaise-fn! (comp (or aukaise-fn identity)
                           (fn [event]
                             (.preventDefault event)
                             (swap! auki? not)))]
     (fn [otsikko {:keys [id]} & sisalto]
       [:div.haitari-laatikko {:id id}
-       [:span.klikattava {:on-click aukaise-fn!} otsikko
+       [otsikko-elementti {:on-click aukaise-fn!
+                           :class "klikattava"}
+        otsikko
         (if @auki?
           ^{:key "haitari-auki"}
           [ikonit/livicon-chevron-up]
@@ -86,61 +89,98 @@
                   :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
                   :hinnat tavoitehinnat}]])
 
-(defn suunnitelmien-taulukko [e! {toimenpiteet :toimenpiteet}]
+(defn suunnitelman-selitteet [luokat]
+  [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
+   [:span [ikonit/ok] "Kaikki kentätä täytetty"]
+   [:span [ikonit/livicon-question] "Keskeneräinen"]
+   [:span [ikonit/remove] "Suunnitelma puuttuu"]])
+
+(defn suunnitelmien-taulukko [e! {:keys [toimenpiteet hankintakustannukset]}]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-                               :kuukausisuunnitelmat "col-xs-12 col-sm-4 col-md-4 col-lg-4"
-                               :vuosisuunnittelmat "col-xs-12 col-sm-4 col-md-4 col-lg-4"))
+                               :kuukausisuunnitelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"
+                               :vuosisuunnittelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
+        paarivi (fn [nimi ikoni-v ikoni-kk]
+                   (jana/->Rivi (keyword nimi)
+                                [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                 (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat"))
+                                              {:ikoni (ikoni-v)}
+                                              {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                        "reunaton"
+                                                        "keskita"}})
+                                 (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat"))
+                                              {:ikoni (ikoni-kk)}
+                                              {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                        "reunaton"
+                                                        "keskita"}})]
+                                #{"reunaton"}))
+        paarivi-laajenna (fn [nimi]
+                            (jana/->Rivi (keyword nimi)
+                                         [(osa/->Laajenna (keyword (str nimi "-teksti"))
+                                                          (clj-str/capitalize nimi)
+                                                          #(e! (t/->LaajennaSoluaKlikattu (keyword nimi) %1 %2))
+                                                          {:class #{(sarakkeiden-leveys :nimi)
+                                                                    "ikoni-vasemmalle"}})
+                                          (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat")) {:ikoni ikonit/remove} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                                  "keskita"
+                                                                                                                                  "reunaton"}})
+                                          (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat")) {:ikoni ikonit/livicon-minus} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                                            "keskita"
+                                                                                                                                            "reunaton"}})]
+                                         #{"reunaton"}))
+        lapsirivi (fn [idn-alku teksti ikoni-v ikoni-kk]
+                     (jana/->Rivi (keyword idn-alku)
+                                  [(osa/->Teksti (keyword (str idn-alku "-nimi")) teksti {:class #{(sarakkeiden-leveys :nimi)
+                                                                                                   "solu-sisenna-1"
+                                                                                                   "reunaton"}})
+                                   (osa/->Ikoni (keyword (str idn-alku "-vuosisuunnitelmat")) {:ikoni (ikoni-v)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                           "keskita"
+                                                                                                                           "reunaton"}})
+                                   (osa/->Ikoni (keyword (str idn-alku "-kuukausisuunnitelmat")) {:ikoni (ikoni-kk)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                               "keskita"
+                                                                                                                               "reunaton"}})]
+                                  #{"piillotettu" "reunaton"}))
+        otsikkorivi (jana/->Rivi :otsikko-rivi
+                                 [(osa/->Komponentti :otsikko-selite suunnitelman-selitteet #{(sarakkeiden-leveys :nimi)})
+                                  (osa/->Teksti :otsikko-vuosisuunnitelmat "Vuosisuunnitelmat" {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                         "keskita"
+                                                                                                         "alas"
+                                                                                                         "suunnitelman-tila-otsikko"
+                                                                                                         "reunaton"}})
+                                  (osa/->Teksti :otsikko-kuukausisuunnitelmat "Kuukausisuunnitelmat*" {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                               "keskita"
+                                                                                                                "alas"
+                                                                                                                "suunnitelman-tila-otsikko"
+                                                                                                               "reunaton"}})]
+                                 #{"reunaton"})
+        taytettyja-hankintakustannuksia (count (keep :maara hankintakustannukset))
+        hankintakustannukset-ikoni (fn []
+                                     (case taytettyja-hankintakustannuksia
+                                       0 ikonit/remove
+                                       5 ikonit/ok
+                                       ikonit/livicon-question))
+        hankintakustannukset [(paarivi "hankintakustannukset" hankintakustannukset-ikoni hankintakustannukset-ikoni)]
         toimenpiteiden-rivit (mapcat (fn [[toimenpide suunnitelmat]]
-                                       (concat [(jana/->Rivi toimenpide
-                                                             [(osa/->Laajenna (keyword (str (name toimenpide) "-teksti"))
-                                                                              (clj-str/capitalize (name toimenpide))
-                                                                              #(e! (t/->LaajennaSoluaKlikattu toimenpide %1 %2))
-                                                                              {:class #{(sarakkeiden-leveys :nimi)}})]
-                                                             nil)]
+                                       (concat [(paarivi-laajenna (name toimenpide))]
                                                (map (fn [[suunnitelma maara]]
-                                                      (let [idn-osa (str (name toimenpide) "-" (name suunnitelma))]
+                                                      (let [idn-osa (str (name toimenpide) "-" (name suunnitelma))
+                                                            ikoni-v #(if (nil? maara) ikonit/remove ikonit/ok)
+                                                            ikoni-kk #(if (nil? maara) ikonit/remove ikonit/ok)]
                                                         (case suunnitelma
-                                                          :hankinnat (with-meta (jana/->Rivi (keyword (str idn-osa "-h"))
-                                                                                             [(osa/->Teksti (keyword (str idn-osa "-h" "-nimi")) "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" {:class #{(sarakkeiden-leveys :nimi)
-                                                                                                                                                                                                                      "solu-sisenna-1"}})
-                                                                                              (osa/->Ikoni (keyword (str idn-osa "-h" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                                                                                                                          "solu-sisenna-1"}})
-                                                                                              (osa/->Ikoni (keyword (str idn-osa "-h" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                                                                                                                             "solu-sisenna-1"}})]
-                                                                                             #{"piillotettu"})
+                                                          :hankinnat (with-meta (lapsirivi (str idn-osa "-h") "Suunnitellut hankinnat" ikoni-v ikoni-kk)
                                                                                 {:vanhempi toimenpide})
-                                                          :korjaukset (with-meta (jana/->Rivi (keyword (str idn-osa "-k"))
-                                                                                              [(osa/->Teksti (keyword (str idn-osa "-k" "-nimi")) "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" {:class #{(sarakkeiden-leveys :nimi)
-                                                                                                                                                                                                                       "solu-sisenna-1"}})
-                                                                                               (osa/->Ikoni (keyword (str idn-osa "-k" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                                                                                                                           "solu-sisenna-1"}})
-                                                                                               (osa/->Ikoni (keyword (str idn-osa "-k" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                                                                                                                              "solu-sisenna-1"}})]
-                                                                                              #{"piillotettu"})
+                                                          :korjaukset (with-meta (lapsirivi (str idn-osa "-k") "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" ikoni-v ikoni-kk)
                                                                                  {:vanhempi toimenpide})
-                                                          :akilliset-hoitotyot (with-meta (jana/->Rivi (keyword (str idn-osa "-ah"))
-                                                                                                       [(osa/->Teksti (keyword (str idn-osa "-ah" "-nimi")) "Äkilliset hoitotyöt" {:class #{(sarakkeiden-leveys :nimi)
-                                                                                                                                                                                            "solu-sisenna-1"}})
-                                                                                                        (osa/->Ikoni (keyword (str idn-osa "-ah" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                                                                                                                                     "solu-sisenna-1"}})
-                                                                                                        (osa/->Ikoni (keyword (str idn-osa "-ah" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                                                                                                                                        "solu-sisenna-1"}})]
-                                                                                                       #{"piillotettu"})
+                                                          :akilliset-hoitotyot (with-meta (lapsirivi (str idn-osa "-ah") "Äkilliset hoitotyöt" ikoni-v ikoni-kk)
                                                                                           {:vanhempi toimenpide})
-                                                          :muut-rahavaraukset (with-meta (jana/->Rivi (keyword (str idn-osa "-mr"))
-                                                                                                      [(osa/->Teksti (keyword (str idn-osa "-mr" "-nimi")) "Muut tilaajan rahavaraukset" {:class #{(sarakkeiden-leveys :nimi)
-                                                                                                                                                                                                   "solu-sisenna-1"}})
-                                                                                                       (osa/->Ikoni (keyword (str idn-osa "-mr" "-vuosisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                                                                                                                                    "solu-sisenna-1"}})
-                                                                                                       (osa/->Ikoni (keyword (str idn-osa "-mr" "-kuukausisuunnitelmat")) {:ikoni (if (nil? maara) ikonit/remove ikonit/ok)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                                                                                                                                       "solu-sisenna-1"}})]
-                                                                                                      #{"piillotettu"})
+                                                          :muut-rahavaraukset (with-meta (lapsirivi (str idn-osa "-mr") "Muut tilaajan rahavaraukset" ikoni-v ikoni-kk)
                                                                                          {:vanhempi toimenpide}))))
                                                     suunnitelmat)))
                                      toimenpiteet)]
-    toimenpiteiden-rivit))
+    (cons otsikkorivi
+          (map-indexed #(update %2 :luokat conj (if (odd? %1) "pariton-jana" "parillinen-jana"))
+                       (concat hankintakustannukset toimenpiteiden-rivit)))))
 
 (defn suunnitelmien-tila
   [e! app]
@@ -150,7 +190,7 @@
                         (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko]}]
       (if suunnitelmien-tila-taulukko
-        [taulukko/taulukko suunnitelmien-tila-taulukko]
+        [taulukko/taulukko suunnitelmien-tila-taulukko #{"reunaton"}]
         [yleiset/ajax-loader]))))
 
 (defn hankinnat-header
@@ -279,7 +319,8 @@
      "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
    [haitari-laatikko
     "Suunnitelmien tila"
-    {:alussa-auki? true}
+    {:alussa-auki? true
+     :otsikko-elementti :h1}
     [suunnitelmien-tila e! app]]
    [hankintakustannukset e! app]
    [hallinnolliset-toimenpiteet]])
