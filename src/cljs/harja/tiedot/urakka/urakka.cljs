@@ -70,10 +70,14 @@
                                                                                                   :korjaukset 2
                                                                                                   :akilliset-hoitotyot 2
                                                                                                   :muut-rahavaraukset 2}}
+                                                          :hankintakustannukset {:yhteenveto [{:vuosi 1 :summa 4000} {:vuosi 2 :summa 4000} {:vuosi 3 :summa 4000} {:vuosi 4 :summa 4000} {:vuosi 5 :summa 4000}]
+                                                                                 :valinnat {:toimenpide :talvihoito
+                                                                                            :maksetaan :talvikausi}}
+                                                          :hallinnolliset-toimenpiteet {:yhteenveto [{:vuosi 1 :summa 4000} {:vuosi 2 :summa 4000} {:vuosi 3 :summa 4000} {:vuosi 4 :summa 4000} {:vuosi 5 :summa 4000}]
+                                                                                        :erillishankinnat [{:vuosi 1 :maara-kk 300} {:vuosi 2 :maara-kk 300} {:vuosi 3 :maara-kk 300} {:vuosi 4 :maara-kk 300} {:vuosi 5 :maara-kk 300}]
+                                                                                        :hoidonjohtopalkkio []
+                                                                                        :johto-ja-hallintokorvaus []}
 
-                                                          :hallinnolliset-toimenpiteet {:yhteenveto [{:vuosi 1 :summa 4000} {:vuosi 2 :summa 4000} {:vuosi 3 :summa 4000} {:vuosi 4 :summa 4000} {:vuosi 5 :summa 4000}]}
-
-                                                          :hankintakustannukset []
                                                           :suunnitellut-hankinnat {}}}}))
 
 (defonce yleiset (cursor tila [:yleiset]))

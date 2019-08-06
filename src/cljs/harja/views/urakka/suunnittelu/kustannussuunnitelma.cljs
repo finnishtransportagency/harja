@@ -280,10 +280,45 @@
             auki?)])
        [:div (str "Suun hank " suun-hank)]])))
 
-(defn hankintakustannukset [e! app]
+(defn hankintojen-filter [e! _]
+  (let [aakkosta (fn [sana]
+                   (get {"kesakausi" "kesäkausi"
+                         "liikenneympariston hoito" "liikenneympäristön hoito"
+                         "mhu yllapito" "mhu-ylläpito"
+                         "paallystepaikkaukset" "päällystepaikkaukset"}
+                        sana
+                        sana))
+        toimenpide-tekstiksi (fn [toimenpide]
+                               (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/upper-case))
+        valitse-toimenpide (fn [toimenpide]
+                             (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :toimenpide] toimenpide)))
+        valitse-kausi (fn [kausi]
+                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi)))
+        kausi-tekstiksi (fn [kausi]
+                          (-> kausi name aakkosta clj-str/capitalize))]
+    (fn [_ {:keys [toimenpide maksetaan]}]
+      (let [toimenpide (toimenpide-tekstiksi toimenpide)]
+        [:div
+         [:div.label-ja-alasveto
+          [:span.alasvedon-otsikko "Toimenpide"]
+          [yleiset/livi-pudotusvalikko {:valinta toimenpide
+                                        :valitse-fn valitse-toimenpide
+                                        :format-fn toimenpide-tekstiksi}
+           (sort t/toimenpiteet)]]
+         [:div.label-ja-alasveto
+          [:span.alasvedon-otsikko "Maksetaan"]
+          [yleiset/livi-pudotusvalikko {:valinta maksetaan
+                                        :valitse-fn valitse-kausi
+                                        :format-fn kausi-tekstiksi}
+           [:kesakausi :talvikausi]]]]))))
+
+(defn hankintakustannukset [e! kustannukset]
   [:div
-   [:span "---- TODO Hankintakustannukset ----"]
-   [suunnitellut-hankinnat-ja-rahavaraukset e! app]])
+   [:h1 "Hankintakustannukset"]
+   [:span "----- TODO Yhteenveto -----"]
+   [:h2 "Suunnitellut hankinnat"]
+   [hankintojen-filter e! (:valinnat kustannukset)]
+   [suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
 
 (defn erillishankinnat []
   [:span "---- TODO erillishankinnat ----"])
@@ -322,7 +357,7 @@
     {:alussa-auki? true
      :otsikko-elementti :h1}
     [suunnitelmien-tila e! app]]
-   [hankintakustannukset e! app]
+   [hankintakustannukset e! (:hankintakustannukset app)]
    [hallinnolliset-toimenpiteet]])
 
 (defn kustannussuunnitelma []
