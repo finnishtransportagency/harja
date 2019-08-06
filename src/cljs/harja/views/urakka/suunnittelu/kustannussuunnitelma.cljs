@@ -95,7 +95,7 @@
    [:span [ikonit/livicon-question] "Keskeneräinen"]
    [:span [ikonit/remove] "Suunnitelma puuttuu"]])
 
-(defn suunnitelmien-taulukko [e! {:keys [toimenpiteet hankintakustannukset]}]
+(defn suunnitelmien-taulukko [e! {:keys [toimenpiteet yhteenveto]}]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
@@ -154,7 +154,7 @@
                                                                                                                 "suunnitelman-tila-otsikko"
                                                                                                                "reunaton"}})]
                                  #{"reunaton"})
-        taytettyja-hankintakustannuksia (count (keep :maara hankintakustannukset))
+        taytettyja-hankintakustannuksia (count (keep :maara yhteenveto))
         hankintakustannukset-ikoni (fn []
                                      (case taytettyja-hankintakustannuksia
                                        0 ikonit/remove
@@ -186,7 +186,7 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e! app)]
+                      (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e! (:hankintakustannukset app))]
                         (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko]}]
       (if suunnitelmien-tila-taulukko
@@ -312,13 +312,24 @@
                                         :format-fn kausi-tekstiksi}
            [:kesakausi :talvikausi]]]]))))
 
-(defn hankintakustannukset [e! kustannukset]
+(defn suunnitellut-hankinnat [e! toimenpiteet]
+  [:span "----- TODO: suunnitellut hankinnat ----"])
+
+(defn suunnitellut-rahavaraukset [e! toimenpiteet]
+  [:span "----- TODO: suunnitellut rahavaraukset -----"])
+
+(defn hankintakustannukset [e! {:keys [yhteenveto toimenpiteet] :as kustannukset}]
   [:div
-   [:h1 "Hankintakustannukset"]
-   [:span "----- TODO Yhteenveto -----"]
-   [:h2 "Suunnitellut hankinnat"]
+   [:h2 "Hankintakustannukset"]
+   [hintalaskuri {:otsikko "Yhteenveto"
+                  :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
+                  :hinnat yhteenveto}]
+   [:h5 "Suunnitellut hankinnat"]
    [hankintojen-filter e! (:valinnat kustannukset)]
-   [suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
+   [suunnitellut-hankinnat e! toimenpiteet]
+   [:h5 "Rahavarukset"]
+   [suunnitellut-rahavaraukset e! toimenpiteet]
+   #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
 
 (defn erillishankinnat []
   [:span "---- TODO erillishankinnat ----"])
@@ -355,7 +366,7 @@
    [haitari-laatikko
     "Suunnitelmien tila"
     {:alussa-auki? true
-     :otsikko-elementti :h1}
+     :otsikko-elementti :h2}
     [suunnitelmien-tila e! app]]
    [hankintakustannukset e! (:hankintakustannukset app)]
    [hallinnolliset-toimenpiteet]])

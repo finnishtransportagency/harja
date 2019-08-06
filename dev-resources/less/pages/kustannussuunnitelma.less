@@ -15,9 +15,18 @@
 .suunnitelman-tila-otsikko {
   font-size: 14px;
 }
+.hintalaskuri {
+  background-color: @harmaa13;
+  padding: 15px;
+  > *:first-child {
+    margin-top: 0;
+  }
+}
 .hintalaskuri-vuodet {
   display:flex;
   justify-content: space-evenly;
+  padding-top: 15px;
+  padding-bottom: 15px;
   > div {
     flex: 3;
     display: flex;
@@ -88,25 +97,25 @@
   &#tavoite-ja-kattohinta {
     background-color: @harmaa13;
 
+    // Tässä tehdään omat paddingit, hintalaskurin defaultin sijasta,
+    // jotta tuon hintalaskurin alareuna ei ulottuisi haitari-laatikon
+    // päästä päähän
     > * {
       padding-left: 15px;
       padding-right: 15px;
-
       &:first-child {
         padding-top: 17px;
       }
       &:last-child {
         padding: 0px;
       }
+      .hintalaskuri {
+        padding: 15px 0px 0px 0px;
+      }
     }
 
     .hintalaskuri:first-child {
       border-bottom: 1px solid @harmaa8;
-    }
-
-    .hintalaskuri-vuodet {
-      padding-top: 15px;
-      padding-bottom: 15px;
     }
   }
 }
