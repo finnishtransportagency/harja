@@ -1,6 +1,8 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
   (:require [tuck.core :as tuck]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.tyokalut :as tyokalut]))
 
 
 (def toimenpiteet #{:talvihoito
@@ -18,65 +20,23 @@
              :talvi talvikausi
              :kaikki hoitokausi})
 
-(defn tila
-  [a & [kausi]]
-  (assoc {} a
-            (into {:auki? false}
-                  (map #(assoc {} % 0) (get kaudet kausi talvikausi)))))
-(defn tila-vuodet
-  [a & [kausi]]
-  (log "a " a " kausi " kausi)
-  (assoc {} a (into {:lahetyspaiva :kuukauden-15
-                     :maksukausi   (or kausi :talvi)}
-                    (map #(tila % kausi) (range 1 6)))))
-
-(defn tilat-proto
-  [& [kausi]]
-  (into {}
-        (map #(tila-vuodet % kausi)
-             toimenpiteet)))
-
-(defn f
-  [data & [not?]]
-  (into {}
-        (map (fn [a]
-               {(first a)
-                (if (map? (second a))
-                  (into {}
-                        (filter (fn [b]
-                                  (if not?
-                                    (not (keyword? (first b)))
-                                    (keyword? (first b))))
-                                (second a)))
-                  (second a))})
-             data)))
-
-
-(defrecord AsetaKustannussuunnitelmassa [polku arvo])
-(defrecord AsetaMaksukausi [polku arvo])
-
-(defrecord LaajennaSoluaKlikattu [rivin-id this auki?])
+(defrecord LaajennaSoluaKlikattu [taulukon-polku rivin-id this auki?])
+(defrecord PaivitaToimenpiteenHankintaMaara [osa arvo])
 
 (extend-protocol tuck/Event
-  AsetaMaksukausi
-  (process-event
-    [{:keys [polku arvo]} app]
-    (let [uudet (f (get (tilat-proto arvo) (second polku)) true)
-          vanhat (f (get-in app [:suunnitellut-hankinnat (second polku)]))
-          mergattu (merge vanhat uudet)]
-      (log polku arvo uudet vanhat)
-      (assoc-in (assoc-in app (take 2 polku) mergattu) polku arvo)))
-  AsetaKustannussuunnitelmassa
-  (process-event
-    [{:keys [polku arvo]} app]
-    (assoc-in app polku arvo))
   LaajennaSoluaKlikattu
-  (process-event [{:keys [rivin-id auki?]} app]
-    (update app :suunnitelmien-tila-taulukko (fn [rivit]
+  (process-event [{:keys [taulukon-polku rivin-id auki?]} app]
+    (update-in app taulukon-polku (fn [rivit]
                                                (mapv (fn [rivi]
                                                        (if (= (-> rivi meta :vanhempi) rivin-id)
                                                          (if auki?
                                                            (update rivi :luokat disj "piillotettu")
                                                            (update rivi :luokat conj "piillotettu"))
                                                          rivi))
-                                                     rivit)))))
+                                                     rivit))))
+  PaivitaToimenpiteenHankintaMaara
+  (process-event [{:keys [osa arvo]} app]
+    (let [[janan-index solun-index] (tyokalut/osan-polku-taulukossa (get-in app [:hankintakustannukset :hankintataulukko]) osa)]
+      (update-in app [:hankintakustannukset :hankintataulukko janan-index :solut solun-index :parametrit]
+                 (fn [parametrit]
+                   (assoc parametrit :value arvo))))))

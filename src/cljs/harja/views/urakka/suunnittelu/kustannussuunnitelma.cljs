@@ -12,8 +12,6 @@
             [harja.ui.taulukko.taulukko :as taulukko]
             [harja.ui.taulukko.jana :as jana]
             [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.tyokalut :as tyokalu]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
@@ -119,7 +117,7 @@
                             (jana/->Rivi (keyword nimi)
                                          [(osa/->Laajenna (keyword (str nimi "-teksti"))
                                                           (clj-str/capitalize nimi)
-                                                          #(e! (t/->LaajennaSoluaKlikattu (keyword nimi) %1 %2))
+                                                          #(e! (t/->LaajennaSoluaKlikattu [:suunnitelmien-tila-taulukko] (keyword nimi) %1 %2))
                                                           {:class #{(sarakkeiden-leveys :nimi)
                                                                     "ikoni-vasemmalle"}})
                                           (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat")) {:ikoni ikonit/remove} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
@@ -193,93 +191,6 @@
         [taulukko/taulukko suunnitelmien-tila-taulukko #{"reunaton"}]
         [yleiset/ajax-loader]))))
 
-(defn hankinnat-header
-  [_ _ _]
-  (let [auki? (r/atom nil)
-        sulje-alasveto-ja (fn [funk & args]
-                            (apply funk args)
-                            (reset! auki? nil))]
-    (fn [toimenpide lahetyspaiva maksukausi valitse]
-      (log toimenpide lahetyspaiva maksukausi)
-      [:div.hankinnat-header
-       [:div
-        [:label "Toimenpide"]
-        [:div
-         {:on-click #(reset! auki? :toimenpide)}
-         toimenpide]
-        (when (= :toimenpide @auki?)
-          [:div.dropdown.livi-alasveto
-           (for [t t/toimenpiteet]
-             [:div
-              {:on-click #(sulje-alasveto-ja valitse :toimenpide t)}
-              (str t)])])]
-       [:div
-        [:label "Lähetyspäivä"]
-        [:div
-         {:on-click #(reset! auki? :lahetyspaiva)}
-         lahetyspaiva]
-        (when (= :lahetyspaiva @auki?)
-          [:div.dropdown.livi-alasveto
-           (for [l lahetyspaivat]
-             [:div
-              {:on-click #(sulje-alasveto-ja valitse :lahetyspaiva l)}
-              (str l)])])]
-       [:div
-        [:label "Maksetaan"]
-        [:div
-         {:on-click #(reset! auki? :maksetaan)}
-         maksukausi]
-        (when (= :maksetaan @auki?)
-          [:div.dropdown.livi-alasveto
-           (for [k maksukaudet]
-             [:div
-              {:on-click #(sulje-alasveto-ja valitse :maksukausi k)}
-              (str k)])])]])))
-
-(defn suunnitellut-hankinnat-ja-rahavaraukset
-  [_ _]
-  (let [valittu-toimenpide (r/atom :talvihoito)]
-    (fn [e! {suun-hank :suunnitellut-hankinnat}]
-      ;; toimenpidevalinta - lähetyspäivävalinta - maksetaanvalinta
-      [:div.suunnitellut-hankinnat
-       [:div.suunnitellut-hankinnat-header
-        [hankinnat-header
-         @valittu-toimenpide
-         (get-in suun-hank [@valittu-toimenpide :lahetyspaiva])
-         (get-in suun-hank [@valittu-toimenpide :maksukausi])
-         (fn [mode val] (case mode
-                          :lahetyspaiva (e!
-                                          (t/->AsetaKustannussuunnitelmassa [:suunnitellut-hankinnat @valittu-toimenpide mode] val))
-                          :maksukausi (e!
-                                        (t/->AsetaMaksukausi [:suunnitellut-hankinnat @valittu-toimenpide mode] val))
-                          :toimenpide (reset! valittu-toimenpide val)))]]
-       (for [[vuosi {:keys [auki?] :as kamat}]
-             (filter (fn [[k v]] (number? k)) (@valittu-toimenpide suun-hank))]
-         [:div.kustannussuunnitelma.hankinnat-kontti
-          [:div.kustannussuunnitelma.hankinnat-label
-           {:on-click #(e! (t/->AsetaKustannussuunnitelmassa [:suunnitellut-hankinnat @valittu-toimenpide vuosi :auki?] (not auki?)))}
-           [:span (str vuosi ". hoitovuosi ")]
-           [:span (str (apply + (filter number? (vals kamat))) "€")]
-           [:span.livicon-chevron.livicon-chevron-down]]
-          (if auki?
-            (for [kk (get t/kaudet (:maksukausi (@valittu-toimenpide suun-hank)))]
-              (when (number? kk)
-                [:div.kustannussuunnitelma.hankinnat-rivi
-                 [:span (str "15." kk ". ")]
-                 [:input {:value     (get kamat kk)
-                          ;:on-blur #(swap! tilat assoc-in [@valittu-toimenpide vuosi kk] (-> % .-target .-value js/parseFloat))
-                          ;:on-change #(swap! tilat assoc-in [@valittu-toimenpide vuosi kk] (-> % .-target .-value))
-                          :on-blur   #(e! (t/->AsetaKustannussuunnitelmassa
-                                            [:suunnitellut-hankinnat @valittu-toimenpide vuosi kk]
-                                            (-> % .-target .-value js/parseFloat)))
-                          :on-change #(e! (t/->AsetaKustannussuunnitelmassa
-                                            [:suunnitellut-hankinnat @valittu-toimenpide vuosi kk]
-                                            (-> % .-target .-value)))
-                          }]
-                 [:span (str "Kopioi muille kuukausille")]]))
-            auki?)])
-       [:div (str "Suun hank " suun-hank)]])))
-
 (defn hankintojen-filter [e! _]
   (let [aakkosta (fn [sana]
                    (get {"kesakausi" "kesäkausi"
@@ -312,13 +223,87 @@
                                         :format-fn kausi-tekstiksi}
            [:kesakausi :talvikausi]]]]))))
 
-(defn suunnitellut-hankinnat [e! toimenpiteet]
-  [:span "----- TODO: suunnitellut hankinnat ----"])
+(defn hankintojen-taulukko [e! toimenpiteet {valittu-toimenpide :toimenpide} on-oikeus?]
+  (let [sarakkeiden-leveys (fn [sarake]
+                             (case sarake
+                               :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
+                               :maara-kk "col-xs-12 col-sm-2 col-md-2 col-lg-2"
+                               :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
+        paarivi (fn [nimi yhteensa]
+                  (let [nimi-k (-> nimi (clj-str/replace #"ä" "a") (clj-str/replace #"ö" "o"))]
+                    (jana/->Rivi (keyword nimi-k)
+                                 [(osa/->Teksti (keyword nimi-k) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                  (osa/->Teksti (keyword (str nimi-k "-maara-kk")) "" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}})
+                                  (osa/->Teksti (keyword (str nimi-k "-yhteensa")) yhteensa {:class #{(sarakkeiden-leveys :yhteensa) "reunaton"}})]
+                                 #{"reunaton"})))
+        paarivi-laajenna (fn [rivi-id vuosi yhteensa]
+                           (jana/->Rivi rivi-id
+                                        [(osa/->Teksti (keyword (str vuosi "-nimi")) (str vuosi ". hoitovuosi") {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                         (osa/->Teksti (keyword (str vuosi "-maara-kk")) "" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}})
+                                         (osa/->Laajenna (keyword (str vuosi "-yhteensa"))
+                                                         yhteensa
+                                                         #(e! (t/->LaajennaSoluaKlikattu [:hankintakustannukset :hankintataulukko] rivi-id %1 %2))
+                                                         {:class #{(sarakkeiden-leveys :yhteensa)
+                                                                   "reunaton"}})]
+                                        #{"reunaton"}))
+        lapsirivi (fn [nimi maara]
+                    (jana/->Rivi (keyword nimi)
+                                 [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) "reunaton" "solu-sisenna-1"}})
+                                  (osa/->Syote (keyword (str nimi "-maara-kk"))
+                                               {:on-change (fn [arvo]
+                                                             (when arvo
+                                                               (e! (t/->PaivitaToimenpiteenHankintaMaara osa/*this* arvo))))}
+                                               {:on-change [:positiivinen-numero :eventin-arvo]}
+                                               {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}
+                                                :type "text"
+                                                :disabled (not on-oikeus?)
+                                                :value maara})
+                                  (osa/->Teksti (keyword (str nimi "-yhteensa"))
+                                                "0"
+                                                {:class #{(sarakkeiden-leveys :yhteensa)
+                                                         "reunaton"}})]
+                                 #{"piillotettu" "reunaton"}))
+        otsikkorivi (jana/->Rivi :otsikko-rivi
+                                 [(osa/->Teksti :tyhja-otsikko " " {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                  (osa/->Teksti :maara-kk-otsikko "Määrä €/kk" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}})
+                                  (osa/->Teksti :yhteensa-otsikko "Yhteensä" {:class #{(sarakkeiden-leveys :yhteensa) "reunaton"}})]
+                                 #{"reunaton"})
+        hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %)) (-> toimenpiteet valittu-toimenpide :hankinnat))
+        toimenpide-rivit (sequence
+                           (comp
+                             (map-indexed (fn [index [_ hoitokauden-hankinnat]]
+                                            [(inc index) hoitokauden-hankinnat]))
+                             (mapcat (fn [[vuosi hankinnat]]
+                                       (let [rivi-id (keyword (str vuosi))]
+                                         (concat [(paarivi-laajenna rivi-id vuosi (apply + (map :maara hankinnat)))]
+                                                 (map (fn [hankinta]
+                                                        (with-meta (lapsirivi (pvm/pvm (:pvm hankinta)) (:maara hankinta))
+                                                                   {:vanhempi rivi-id}))
+                                                      hankinnat))))))
+                           (sort-by ffirst hankinnat-hoitokausittain))
+        yhteensa-rivi (paarivi "Yhteensä" (reduce (fn [summa [toimenpide tiedot]]
+                                                    (apply + summa (map :maara (:hankinnat tiedot))))
+                                                  0 toimenpiteet))]
+    (concat [otsikkorivi]
+            (map-indexed #(update %2 :luokat conj (if (odd? %1) "pariton-jana" "parillinen-jana"))
+                         toimenpide-rivit)
+            [yhteensa-rivi])))
+
+(defn suunnitellut-hankinnat [e! kustannukset]
+  (komp/luo
+    (komp/piirretty (fn [this]
+                      ;; TODO: Korjaa oikeustarkistus
+                      (let [hankintataulukon-alkutila (hankintojen-taulukko e! (:toimenpiteet kustannukset) (:valinnat kustannukset) true)]
+                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :hankintataulukko] hankintataulukon-alkutila)))))
+    (fn [e! {:keys [hankintataulukko]}]
+      (if hankintataulukko
+        [taulukko/taulukko hankintataulukko #{"reunaton"}]
+        [yleiset/ajax-loader]))))
 
 (defn suunnitellut-rahavaraukset [e! toimenpiteet]
   [:span "----- TODO: suunnitellut rahavaraukset -----"])
 
-(defn hankintakustannukset [e! {:keys [yhteenveto toimenpiteet] :as kustannukset}]
+(defn hankintakustannukset [e! {:keys [yhteenveto] :as kustannukset}]
   [:div
    [:h2 "Hankintakustannukset"]
    [hintalaskuri {:otsikko "Yhteenveto"
@@ -326,9 +311,9 @@
                   :hinnat yhteenveto}]
    [:h5 "Suunnitellut hankinnat"]
    [hankintojen-filter e! (:valinnat kustannukset)]
-   [suunnitellut-hankinnat e! toimenpiteet]
+   [suunnitellut-hankinnat e! kustannukset]
    [:h5 "Rahavarukset"]
-   [suunnitellut-rahavaraukset e! toimenpiteet]
+   [suunnitellut-rahavaraukset e! kustannukset]
    #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
 
 (defn erillishankinnat []

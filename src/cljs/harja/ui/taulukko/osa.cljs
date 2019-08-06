@@ -6,6 +6,43 @@
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.tyokalut :as tyokalut]))
 
+(def ^:dynamic *this* nil)
+
+(defn lisaa-kaytokset
+  "Toiminnot on map, jossa avaimet vastaa input elementin saamia parametrejä. Nämä ovat siis on-change, on-key-down jne.
+   Toiminnot arvot on funktio, joka saa parametrina kayttaytymisfunktion palauttaman arvon tai arvot.
+   Kayttaytymiset on myös map, jossa avaimet vastaa toimintojen avaimia. Näiden avainten avulla kohdistetaan käyttäytymiset
+   oikealle toiminnolle. Kayttaytymisen arvo taasen on funktioita sisältävä sequable, jonka järjestyksellä on väliä!
+
+   Sequablen viimeinen funktio saa eventin argumentikseen. Tämän palauttama arvo annetaan toiseksi viimeiselle
+   käyttäytymiselle jne. Lopuksi arvo annetaan itse toiminnolle.
+
+   Funktioissa voi lisäksi käyttää *this* muuttujaa, jonka arvo on eventin laukaiseman osan record. Huom, *this* ei tulisi
+   käyttää async kutsuissa.
+
+   Esim.
+   (let [tila-atom (atom nil)
+         toiminnot {:on-change (fn [arvo] (reset! tila-atom arvo))}
+         kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]}
+
+         ;; Tässä lopputuloksena on funktio, jossa ensin oletetaan saavan javascript event (:eventin-arvo käyttäytyminen),
+         ;; jonka arvo annetaan :positiivinen-numero käyttäytymiselle, joka puolestaan antaa loppputuloksen toiminnolle,
+         ;; joka resetoi tila-atomin arvon.
+         f-map (lisaa-kaytokset toiminnot kayttaytymiset)]
+     [:input {:value @tila-atom :on-change (:on-change f-map)}])"
+  [toiminnot kayttaytymiset this]
+  (merge-with (fn [kayttaytymiset toiminto]
+                (loop [[kaytos & loput-kaytokset] kayttaytymiset
+                       lopullinen-toiminto toiminto]
+                  (if (nil? kaytos)
+                    (fn [event]
+                      (binding [*this* this]
+                        (lopullinen-toiminto event)))
+                    (recur loput-kaytokset
+                           (tyokalut/lisaa-kaytos kaytos lopullinen-toiminto)))))
+              kayttaytymiset
+              toiminnot))
+
 (defrecord Teksti [osan-id teksti parametrit]
   p/Osa
   (piirra-osa [this]
@@ -66,7 +103,7 @@
   p/Osa
   (piirra-osa [this]
     (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
-                  on-key-up]} (tyokalut/lisaa-kaytokset (:toiminnot this) (:kayttaytymiset this))]
+                  on-key-up]} (lisaa-kaytokset (:toiminnot this) (:kayttaytymiset this) this)]
       (fn [this]
         (let [{:keys [id class type value name readonly? required? tabindex disabled?
                       checked? default-checked? indeterminate?
