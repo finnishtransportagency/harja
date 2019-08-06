@@ -191,8 +191,8 @@
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
     (.setFaultTolerant true)
-    ;; Yrittää reconnectata loputtomiin
-    (.setFaultTolerantReconnectTimeout 0)
+    ;; Yrittää reconnectata loputtomiin. Pitää wrapata intiin, jotta tyypiksi tulee Integer, eikä Float
+    (.setFaultTolerantReconnectTimeout (int 0))
     ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
     ;; odottamaan eri jonoon. Asyncisti sen takia, että JMS-säije ei blokkaa lähetykseen. Mahdolliset virheet
     ;; otetaan kiinni sitten yhteysolion setRefectionListener:issä
