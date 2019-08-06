@@ -186,7 +186,7 @@
             #(do (.preventDefault %)
                  (swap! auki? not)
                  (aukaise-fn this @auki?))}
-           [:span.laajenna-teksti teksti]
+           [:span.laajenna-teksti (:teksti this)]
            (if @auki?
              ^{:key "laajenna-auki"}
              [ikoni-auki]

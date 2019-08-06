@@ -61,8 +61,13 @@
     [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
     [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]])
 
-(def maksukaudet (into #{} (keys t/kaudet)))
-(def lahetyspaivat #{:kuukauden-15})
+(defn aakkosta [sana]
+  (get {"kesakausi" "kesäkausi"
+        "liikenneympariston hoito" "liikenneympäristön hoito"
+        "mhu yllapito" "mhu-ylläpito"
+        "paallystepaikkaukset" "päällystepaikkaukset"}
+       sana
+       sana))
 
 (defn kuluva-hoitovuosi []
   (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
@@ -161,19 +166,20 @@
         hankintakustannukset [(paarivi "hankintakustannukset" hankintakustannukset-ikoni hankintakustannukset-ikoni)]
         toimenpiteiden-rivit (mapcat (fn [[toimenpide suunnitelmat]]
                                        (concat [(paarivi-laajenna (name toimenpide))]
-                                               (map (fn [[suunnitelma maara]]
-                                                      (let [idn-osa (str (name toimenpide) "-" (name suunnitelma))
-                                                            ikoni-v #(if (nil? maara) ikonit/remove ikonit/ok)
-                                                            ikoni-kk #(if (nil? maara) ikonit/remove ikonit/ok)]
-                                                        (case suunnitelma
-                                                          :hankinnat (with-meta (lapsirivi (str idn-osa "-h") "Suunnitellut hankinnat" ikoni-v ikoni-kk)
-                                                                                {:vanhempi toimenpide})
-                                                          :korjaukset (with-meta (lapsirivi (str idn-osa "-k") "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" ikoni-v ikoni-kk)
+                                               (keep (fn [[suunnitelma maara]]
+                                                       (let [idn-osa (str (name toimenpide) "-" (name suunnitelma))
+                                                             ikoni-v #(if (nil? maara) ikonit/remove ikonit/ok)
+                                                             ikoni-kk #(if (nil? maara) ikonit/remove ikonit/ok)]
+                                                         (case suunnitelma
+                                                           :hankinnat (with-meta (lapsirivi (str idn-osa "-h") "Suunnitellut hankinnat" ikoni-v ikoni-kk)
                                                                                  {:vanhempi toimenpide})
-                                                          :akilliset-hoitotyot (with-meta (lapsirivi (str idn-osa "-ah") "Äkilliset hoitotyöt" ikoni-v ikoni-kk)
+                                                           :korjaukset (with-meta (lapsirivi (str idn-osa "-k") "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" ikoni-v ikoni-kk)
+                                                                                  {:vanhempi toimenpide})
+                                                           :akilliset-hoitotyot (with-meta (lapsirivi (str idn-osa "-ah") "Äkilliset hoitotyöt" ikoni-v ikoni-kk)
+                                                                                           {:vanhempi toimenpide})
+                                                           :muut-rahavaraukset (with-meta (lapsirivi (str idn-osa "-mr") "Muut tilaajan rahavaraukset" ikoni-v ikoni-kk)
                                                                                           {:vanhempi toimenpide})
-                                                          :muut-rahavaraukset (with-meta (lapsirivi (str idn-osa "-mr") "Muut tilaajan rahavaraukset" ikoni-v ikoni-kk)
-                                                                                         {:vanhempi toimenpide}))))
+                                                           nil)))
                                                     suunnitelmat)))
                                      toimenpiteet)]
     (cons otsikkorivi
@@ -192,14 +198,7 @@
         [yleiset/ajax-loader]))))
 
 (defn hankintojen-filter [e! _]
-  (let [aakkosta (fn [sana]
-                   (get {"kesakausi" "kesäkausi"
-                         "liikenneympariston hoito" "liikenneympäristön hoito"
-                         "mhu yllapito" "mhu-ylläpito"
-                         "paallystepaikkaukset" "päällystepaikkaukset"}
-                        sana
-                        sana))
-        toimenpide-tekstiksi (fn [toimenpide]
+  (let [toimenpide-tekstiksi (fn [toimenpide]
                                (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/upper-case))
         valitse-toimenpide (fn [toimenpide]
                              (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :toimenpide] toimenpide)))
@@ -223,7 +222,10 @@
                                         :format-fn kausi-tekstiksi}
            [:kesakausi :talvikausi]]]]))))
 
-(defn hankintojen-taulukko [e! toimenpiteet {valittu-toimenpide :toimenpide} on-oikeus?]
+(defn hankintojen-taulukko [e! toimenpiteet
+                            {valittu-toimenpide :toimenpide
+                             laskutukseen-perustuen? :laskutukseen-perustuen?}
+                            on-oikeus? laskutuksen-perusteella-taulukko?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
@@ -238,13 +240,18 @@
                                  #{"reunaton"})))
         paarivi-laajenna (fn [rivi-id vuosi yhteensa]
                            (jana/->Rivi rivi-id
-                                        [(osa/->Teksti (keyword (str vuosi "-nimi")) (str vuosi ". hoitovuosi") {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
-                                         (osa/->Teksti (keyword (str vuosi "-maara-kk")) "" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}})
-                                         (osa/->Laajenna (keyword (str vuosi "-yhteensa"))
-                                                         yhteensa
-                                                         #(e! (t/->LaajennaSoluaKlikattu [:hankintakustannukset :hankintataulukko] rivi-id %1 %2))
-                                                         {:class #{(sarakkeiden-leveys :yhteensa)
-                                                                   "reunaton"}})]
+                                        [(with-meta (osa/->Teksti (keyword (str vuosi "-nimi")) (str vuosi ". hoitovuosi") {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                                    {:sarake :nimi})
+                                         (with-meta (osa/->Teksti (keyword (str vuosi "-maara-kk")) "" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}})
+                                                    {:sarake :maara})
+                                         (with-meta (osa/->Laajenna (keyword (str vuosi "-yhteensa"))
+                                                                    yhteensa
+                                                                    (if laskutuksen-perusteella-taulukko?
+                                                                      #(e! (t/->LaajennaSoluaKlikattu [:hankintakustannukset :hankintataulukko-laskutukseen-perustuen] rivi-id %1 %2))
+                                                                      #(e! (t/->LaajennaSoluaKlikattu [:hankintakustannukset :hankintataulukko] rivi-id %1 %2)))
+                                                                    {:class #{(sarakkeiden-leveys :yhteensa)
+                                                                              "reunaton"}})
+                                                    {:sarake :yhteensa})]
                                         #{"reunaton"}))
         lapsirivi (fn [nimi maara]
                     (jana/->Rivi (keyword nimi)
@@ -252,7 +259,7 @@
                                   (osa/->Syote (keyword (str nimi "-maara-kk"))
                                                {:on-change (fn [arvo]
                                                              (when arvo
-                                                               (e! (t/->PaivitaToimenpiteenHankintaMaara osa/*this* arvo))))}
+                                                               (e! (t/->PaivitaToimenpiteenHankintaMaara osa/*this* arvo laskutuksen-perusteella-taulukko?))))}
                                                {:on-change [:positiivinen-numero :eventin-arvo]}
                                                {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}
                                                 :type "text"
@@ -264,11 +271,19 @@
                                                          "reunaton"}})]
                                  #{"piillotettu" "reunaton"}))
         otsikkorivi (jana/->Rivi :otsikko-rivi
-                                 [(osa/->Teksti :tyhja-otsikko " " {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                 [(osa/->Teksti :tyhja-otsikko
+                                                (if laskutuksen-perusteella-taulukko?
+                                                  "Laskutuksen perusteella"
+                                                  (if laskutukseen-perustuen?
+                                                    "Kiinteät" " "))
+                                                {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
                                   (osa/->Teksti :maara-kk-otsikko "Määrä €/kk" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}})
                                   (osa/->Teksti :yhteensa-otsikko "Yhteensä" {:class #{(sarakkeiden-leveys :yhteensa) "reunaton"}})]
                                  #{"reunaton"})
-        hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %)) (-> toimenpiteet valittu-toimenpide :hankinnat))
+        hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
+                                            (if laskutuksen-perusteella-taulukko?
+                                              (-> toimenpiteet valittu-toimenpide :hankinnat-laskutukseen-perustuen)
+                                              (-> toimenpiteet valittu-toimenpide :hankinnat)))
         toimenpide-rivit (sequence
                            (comp
                              (map-indexed (fn [index [_ hoitokauden-hankinnat]]
@@ -281,9 +296,12 @@
                                                                    {:vanhempi rivi-id}))
                                                       hankinnat))))))
                            (sort-by ffirst hankinnat-hoitokausittain))
-        yhteensa-rivi (paarivi "Yhteensä" (reduce (fn [summa [toimenpide tiedot]]
-                                                    (apply + summa (map :maara (:hankinnat tiedot))))
-                                                  0 toimenpiteet))]
+        yhteensa-rivi (paarivi "Yhteensä" (reduce (fn [summa tiedot]
+                                                    (apply + summa (map :maara (get tiedot
+                                                                                    (if laskutuksen-perusteella-taulukko?
+                                                                                      :hankinnat-laskutukseen-perustuen
+                                                                                      :hankinnat)))))
+                                                  0 (get toimenpiteet valittu-toimenpide)))]
     (concat [otsikkorivi]
             (map-indexed #(update %2 :luokat conj (if (odd? %1) "pariton-jana" "parillinen-jana"))
                          toimenpide-rivit)
@@ -293,25 +311,58 @@
   (komp/luo
     (komp/piirretty (fn [this]
                       ;; TODO: Korjaa oikeustarkistus
-                      (let [hankintataulukon-alkutila (hankintojen-taulukko e! (:toimenpiteet kustannukset) (:valinnat kustannukset) true)]
+                      (let [hankintataulukon-alkutila (hankintojen-taulukko e! (:toimenpiteet kustannukset) (:valinnat kustannukset) true false)]
                         (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :hankintataulukko] hankintataulukon-alkutila)))))
     (fn [e! {:keys [hankintataulukko]}]
       (if hankintataulukko
         [taulukko/taulukko hankintataulukko #{"reunaton"}]
         [yleiset/ajax-loader]))))
 
+(defn laskutukseen-perustuvat-kustannukset [e! kustannukset]
+  (komp/luo
+    (komp/piirretty (fn [this]
+                      ;; TODO: Korjaa oikeustarkistus
+                      (let [hankintataulukon-alkutila (hankintojen-taulukko e! (:toimenpiteet kustannukset) (:valinnat kustannukset) true true)]
+                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :hankintataulukko-laskutukseen-perustuen] hankintataulukon-alkutila)))))
+    (fn [e! {:keys [hankintataulukko-laskutukseen-perustuen valinnat]}]
+      (if hankintataulukko-laskutukseen-perustuen
+        [taulukko/taulukko hankintataulukko-laskutukseen-perustuen #{"reunaton"
+                                                                     (when-not (:laskutukseen-perustuen? valinnat)
+                                                                       "piillotettu")}]
+        [yleiset/ajax-loader]))))
+
+(defn arvioidaanko-laskutukseen-perustuen [e! _ _]
+  (let [vaihda-fn (fn [nappi _]
+                    (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :laskutukseen-perustuen?]
+                                                 (= nappi :kylla))))]
+    (fn [e! {:keys [laskutukseen-perustuen?]} on-oikeus?]
+      [:div.laskutukseen-perustuen-filter
+       [:label
+        [:input {:type "radio" :disabled (not on-oikeus?) :checked (false? laskutukseen-perustuen?)
+                 :on-change (r/partial vaihda-fn :ei)}]
+        "Ei"]
+       [:label
+        [:input {:type "radio" :disabled (not on-oikeus?) :checked laskutukseen-perustuen?
+                 :on-change (r/partial vaihda-fn :kylla)}]
+        "Kyllä"]])))
+
 (defn suunnitellut-rahavaraukset [e! toimenpiteet]
   [:span "----- TODO: suunnitellut rahavaraukset -----"])
 
-(defn hankintakustannukset [e! {:keys [yhteenveto] :as kustannukset}]
+(defn hankintakustannukset [e! {:keys [yhteenveto valinnat] :as kustannukset}]
   [:div
    [:h2 "Hankintakustannukset"]
    [hintalaskuri {:otsikko "Yhteenveto"
                   :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
                   :hinnat yhteenveto}]
    [:h5 "Suunnitellut hankinnat"]
-   [hankintojen-filter e! (:valinnat kustannukset)]
+   [hankintojen-filter e! valinnat]
    [suunnitellut-hankinnat e! kustannukset]
+   [:span "Arivoidaanko urakassa laskutukseen perustuvia kustannuksia toimenpiteelle: "
+    [:b (-> valinnat :toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]
+   ;; TODO: Korjaa oikeus
+   [arvioidaanko-laskutukseen-perustuen e! valinnat true]
+   [laskutukseen-perustuvat-kustannukset e! kustannukset]
    [:h5 "Rahavarukset"]
    [suunnitellut-rahavaraukset e! kustannukset]
    #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])

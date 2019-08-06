@@ -21,7 +21,7 @@
              :kaikki hoitokausi})
 
 (defrecord LaajennaSoluaKlikattu [taulukon-polku rivin-id this auki?])
-(defrecord PaivitaToimenpiteenHankintaMaara [osa arvo])
+(defrecord PaivitaToimenpiteenHankintaMaara [osa arvo laskutuksen-perusteella-taulukko?])
 
 (extend-protocol tuck/Event
   LaajennaSoluaKlikattu
@@ -35,8 +35,30 @@
                                                          rivi))
                                                      rivit))))
   PaivitaToimenpiteenHankintaMaara
-  (process-event [{:keys [osa arvo]} app]
-    (let [[janan-index solun-index] (tyokalut/osan-polku-taulukossa (get-in app [:hankintakustannukset :hankintataulukko]) osa)]
-      (update-in app [:hankintakustannukset :hankintataulukko janan-index :solut solun-index :parametrit]
-                 (fn [parametrit]
-                   (assoc parametrit :value arvo))))))
+  (process-event [{:keys [osa arvo laskutuksen-perusteella-taulukko?]} app]
+    (let [polku-taulukkoon (if laskutuksen-perusteella-taulukko?
+                             [:hankintakustannukset :hankintataulukko-laskutukseen-perustuen]
+                             [:hankintakustannukset :hankintataulukko])
+          [janan-index solun-index] (tyokalut/osan-polku-taulukossa (get-in app polku-taulukkoon) osa)
+          vanhemman-janan-id (:vanhempi (meta (get-in app (conj polku-taulukkoon janan-index))))
+          vanhempi-jana (first (tyokalut/jana (get-in app polku-taulukkoon) vanhemman-janan-id))
+          vanhemman-janan-index (tyokalut/janan-index (get-in app polku-taulukkoon) vanhempi-jana)
+          yhteensa-index (first (keep-indexed (fn [index osa]
+                                                (when (= (-> osa meta :sarake) :yhteensa)
+                                                  index))
+                                              (p/janan-osat vanhempi-jana)))
+          polku-muutettuun-arvoon (if laskutuksen-perusteella-taulukko?
+                                    (conj polku-taulukkoon janan-index :solut solun-index :parametrit :value)
+                                    (conj polku-taulukkoon janan-index :solut solun-index :parametrit :value))
+          polku-yhteensa-arvoon (if laskutuksen-perusteella-taulukko?
+                                  (conj polku-taulukkoon vanhemman-janan-index :solut yhteensa-index :teksti)
+                                  (conj polku-taulukkoon vanhemman-janan-index :solut yhteensa-index :teksti))]
+      (-> app
+          (update-in polku-yhteensa-arvoon
+                     (fn [vanha-yhteensa]
+                       (let [vanha-arvo (get-in app polku-muutettuun-arvoon)
+                             lisays (- (js/parseInt arvo) (js/parseInt vanha-arvo))]
+                         (str (+ (js/parseInt vanha-yhteensa) (js/parseInt lisays))))))
+          (update-in polku-muutettuun-arvoon
+                     (fn [_]
+                       arvo))))))
