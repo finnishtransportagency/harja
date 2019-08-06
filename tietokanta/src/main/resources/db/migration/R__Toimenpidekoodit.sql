@@ -1966,7 +1966,7 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Muut','23150',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='23000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='23000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='23000') );
 SELECT lisaa_toimenpidekoodi(
-    'Hallinnolliset toimenpiteet','23151',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='23150') );
+    'MHU ja HJU Hoidon johto','23151',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='23150') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='23150') );
 
 
 
