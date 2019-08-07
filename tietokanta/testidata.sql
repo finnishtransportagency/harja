@@ -64,6 +64,9 @@ SELECT paivita_pohjavesialueet();
 -- Toteumat
 \i testidata/toteumat.sql
 
+-- Kustannussuunnitelma
+\i testidata/kustannussuunnittelu.sql
+
 -- Tieverkko
 \i testidata/tierekisteri.sql
 

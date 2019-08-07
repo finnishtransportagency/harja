@@ -1,5 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
   (:require [tuck.core :as tuck]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.urakka.urakka :as tiedot]
             [harja.loki :refer [log]]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.tyokalut :as tyokalut]))
@@ -20,10 +22,29 @@
              :talvi talvikausi
              :kaikki hoitokausi})
 
+(defrecord HaeKustannussuunnitelma [])
+(defrecord HaeTavoiteJaKattohinta [])
+(defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
+(defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [taulukon-polku rivin-id this auki?])
 (defrecord PaivitaToimenpiteenHankintaMaara [osa arvo laskutuksen-perusteella-taulukko?])
 
 (extend-protocol tuck/Event
+  HaeTavoiteJaKattohinta
+  (process-event [_ app]
+    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
+      (tuck-apurit/post! app :budjettitavoite
+                         {:urakka-id urakka-id}
+                         {:onnistui ->HaeTavoiteJaKattohintaOnnistui
+                          :epaonnistui ->HaeTavoiteJaKattohintaEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  HaeTavoiteJaKattohintaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    )
+  HaeTavoiteJaKattohintaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    ;;TODO
+    )
   LaajennaSoluaKlikattu
   (process-event [{:keys [taulukon-polku rivin-id auki?]} app]
     (update-in app taulukon-polku (fn [rivit]

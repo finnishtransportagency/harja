@@ -387,25 +387,29 @@
 
 (defn kustannussuunnitelma*
   [e! app]
-  [:div.kustannussuunnitelma
-   [debug/debug app]
-   [:h1 "Kustannussuunnitelma"]
-   [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
-   [kuluva-hoitovuosi]
-   [haitari-laatikko
-    "Tavoite- ja kattohinta lasketaan automaattisesti"
-    {:alussa-auki? true
-     :id "tavoite-ja-kattohinta"}
-    [tavoite-ja-kattohinta app]
-    [:span#tavoite-ja-kattohinta-huomio
-     "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
-   [haitari-laatikko
-    "Suunnitelmien tila"
-    {:alussa-auki? true
-     :otsikko-elementti :h2}
-    [suunnitelmien-tila e! app]]
-   [hankintakustannukset e! (:hankintakustannukset app)]
-   [hallinnolliset-toimenpiteet]])
+  (komp/luo
+    (komp/piirretty (fn [_]
+                      (e! (t/->HaeKustannussuunnitelma))))
+    (fn [e! app]
+      [:div.kustannussuunnitelma
+       [debug/debug app]
+       [:h1 "Kustannussuunnitelma"]
+       [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+       [kuluva-hoitovuosi]
+       [haitari-laatikko
+        "Tavoite- ja kattohinta lasketaan automaattisesti"
+        {:alussa-auki? true
+         :id "tavoite-ja-kattohinta"}
+        [tavoite-ja-kattohinta app]
+        [:span#tavoite-ja-kattohinta-huomio
+         "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
+       [haitari-laatikko
+        "Suunnitelmien tila"
+        {:alussa-auki? true
+         :otsikko-elementti :h2}
+        [suunnitelmien-tila e! app]]
+       [hankintakustannukset e! (:hankintakustannukset app)]
+       [hallinnolliset-toimenpiteet]])))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])
