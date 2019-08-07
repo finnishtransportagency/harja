@@ -47,7 +47,7 @@
            jms-viesti-id)
          (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)
                parametrit {:viesti-id viesti-id}]
-           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti parametrit)))
+           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id nil virheviesti parametrit)))
        (catch [:type :jms-yhteysvirhe] {:keys [virheet]}
          (let [poikkeus (:throwable &throw-context)
                virheviesti (str (format "Lähetys JMS jonoon: %s epäonnistui." jono)
