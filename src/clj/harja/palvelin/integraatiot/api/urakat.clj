@@ -35,6 +35,7 @@
 
 (defn- urakan-tiedot [urakka]
   (-> urakka
+      (when (= "teiden-hoito" :tyyppi) (assoc urakka :tyyppi "hoito")) ;; palautetaan myös uusissa teiden hoidon urakoissa (MHU) urakoitsijajärjestelmille urakkatyypiksi hoito
       (select-keys #{:id :nimi :tyyppi :alkupvm :loppupvm
                      :takuu_loppupvm :alueurakkanumero :urakoitsija})
       (assoc :vaylamuoto "tie")))
