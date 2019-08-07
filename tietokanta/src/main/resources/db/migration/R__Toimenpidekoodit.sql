@@ -1716,7 +1716,7 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Laaja toimenpide','20183',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20180') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20180') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20180') );
 SELECT lisaa_toimenpidekoodi(
-    'Projektiin liittyvä suunnittelu-, teettämis-, ja valvontapalvelu','20190',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20000') );
+    'MHU Ylläpito','20190',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20000') );
 SELECT lisaa_toimenpidekoodi(
     'MHU Ylläpito','20191',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='20190') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='20190') );
 SELECT lisaa_toimenpidekoodi(
