@@ -34,17 +34,21 @@
       {:materiaali {:nimi (:nimi materiaali) :yksikko (:yksikko materiaali)}})))
 
 (defn- urakan-tiedot [urakka]
-  (-> urakka
-      (select-keys #{:id :nimi :tyyppi :alkupvm :loppupvm
-                     :takuu_loppupvm :alueurakkanumero :urakoitsija})
-      (assoc :vaylamuoto "tie")))
+  (println (:tyyppi urakka))
+  (let [urakka (if (= "teiden-hoito"(:tyyppi urakka))
+                 (assoc urakka :tyyppi "hoito")
+                                urakka)]
+              (-> urakka
+                  (select-keys #{:id :nimi :tyyppi :alkupvm :loppupvm
+                                 :takuu_loppupvm :alueurakkanumero :urakoitsija})
+                  (assoc :vaylamuoto "tie"))))
 
 (defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka
-   {:tiedot (urakan-tiedot urakka)
-    :sopimukset (hae-urakan-sopimukset db id)
+   {:tiedot      (urakan-tiedot urakka)
+    :sopimukset  (hae-urakan-sopimukset db id)
     :materiaalit (hae-materiaalit db)
-    :tehtavat (hae-tehtavat db)}})
+    :tehtavat    (hae-tehtavat db)}})
 
 (defn muodosta-vastaus-urakoiden-haulle [urakat]
   {:urakat (mapv (fn [urakka] {:urakka {:tiedot (urakan-tiedot urakka)}}) urakat)})
@@ -76,21 +80,21 @@
       (muodosta-vastaus-urakoiden-haulle urakat))))
 
 (def hakutyypit
-  [{:palvelu :hae-urakka
-    :polku "/api/urakat/:id"
+  [{:palvelu        :hae-urakka
+    :polku          "/api/urakat/:id"
     :vastaus-skeema json-skeemat/urakan-haku-vastaus
-    :kasittely-fn (fn [parametrit _ kayttaja-id db]
-                    (hae-urakka-idlla db parametrit kayttaja-id))}
-   {:palvelu :hae-kayttajan-urakat
-    :polku "/api/urakat/haku/"
+    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
+                      (hae-urakka-idlla db parametrit kayttaja-id))}
+   {:palvelu        :hae-kayttajan-urakat
+    :polku          "/api/urakat/haku/"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
-    :kasittely-fn (fn [parametrit _ kayttaja db]
-                    (hae-kayttajan-urakat db parametrit kayttaja))}
-   {:palvelu :hae-urakka-ytunnuksella
-    :polku "/api/urakat/haku/:ytunnus"
+    :kasittely-fn   (fn [parametrit _ kayttaja db]
+                      (hae-kayttajan-urakat db parametrit kayttaja))}
+   {:palvelu        :hae-urakka-ytunnuksella
+    :polku          "/api/urakat/haku/:ytunnus"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
-    :kasittely-fn (fn [parametrit _ kayttaja-id db]
-                    (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
+    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
+                      (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
 
 (defrecord Urakat []
   component/Lifecycle
