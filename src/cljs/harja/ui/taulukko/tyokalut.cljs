@@ -66,3 +66,19 @@
                          (when-let [osan-index (p/osan-index jana osa)]
                            [rivin-index osan-index]))
                        taulukko)))
+
+(defn generoi-pohjadata
+  ([f oleelliset-datat olemassa-olevat] (generoi-pohjadata f oleelliset-datat olemassa-olevat nil))
+  ([f oleelliset-datat olemassa-olevat default-arvoja]
+   (for [data oleelliset-datat]
+     (if-let [loytynyt-olemassa-oleva-data (some (fn [olemassa-oleva-data]
+                                                   (when (every? true?
+                                                                 (vals (reduce-kv (fn [m k v]
+                                                                                    (if-let [loytynyt-arvo (m k)]
+                                                                                      (assoc m k (= loytynyt-arvo v))
+                                                                                      m))
+                                                                                  data olemassa-oleva-data)))
+                                                     olemassa-oleva-data))
+                                                 olemassa-olevat)]
+       loytynyt-olemassa-oleva-data
+       (f (merge data default-arvoja))))))

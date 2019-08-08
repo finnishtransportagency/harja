@@ -6,15 +6,11 @@ SELECT
   kat.kuukausi,
   kat.summa,
   kat.tyyppi ::TOTEUMATYYPPI,
-  kat.tehtava,
-  kat.tehtavaryhma,
-  kat.toimenpideinstanssi,
   kat.sopimus,
-  tpi.id         AS tpi_id,
-  tpi.nimi       AS tpi_nimi,
-  tpi.toimenpide AS toimenpide
+  tpik.nimi AS toimenpide
 FROM kustannusarvioitu_tyo kat
   LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id
+  LEFT JOIN toimenpidekoodi tpik ON tpik.id = tpi.toimenpide
 WHERE tpi.urakka = :urakka
 ORDER BY vuosi, kuukausi;
 

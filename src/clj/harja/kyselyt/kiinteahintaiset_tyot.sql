@@ -5,15 +5,10 @@ SELECT
   kht.vuosi,
   kht.kuukausi,
   kht.summa,
-  kht.tehtava,
-  kht.tehtavaryhma,
-  kht.toimenpideinstanssi,
-  kht.sopimus,
-  tpi.id         AS tpi_id,
-  tpi.nimi       AS tpi_nimi,
-  tpi.toimenpide AS toimenpide
+  tpik.nimi AS toimenpide
 FROM kiinteahintainen_tyo kht
   LEFT JOIN toimenpideinstanssi tpi ON kht.toimenpideinstanssi = tpi.id
+  LEFT JOIN toimenpidekoodi tpik ON tpik.id = tpi.toimenpide
 WHERE tpi.urakka = :urakka
 ORDER BY vuosi, kuukausi;
 

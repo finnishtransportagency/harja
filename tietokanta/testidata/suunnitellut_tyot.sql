@@ -503,12 +503,12 @@ INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta,
 INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
 
 -- Rovaniemen MHU-urakka
-
+--'Hallinnolliset toimenpiteet TP'
 DO $$
 DECLARE
-  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Hallinnolliset toimenpiteet TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
-  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '23151', '20107', '20191', '14301'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
   urakan_nimi TEXT := 'Rovaniemen MHU testiurakka';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
@@ -516,7 +516,7 @@ DECLARE
   vuosi_ INTEGER;
 BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
-  FOR i IN 1..7 LOOP
+  FOR i IN 1..6 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
@@ -535,7 +535,7 @@ BEGIN
         VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
     END LOOP;
     FOR i IN 1..12 LOOP
-      FOR vuosi_ IN 1..5 LOOP
+      FOR vuosi_ IN 1..4 LOOP
         INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
           VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
       END LOOP;

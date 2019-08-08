@@ -13,14 +13,7 @@
   "Funktio palauttaa urakan kiinteahintaiset työt. Käytetään teiden hoidon urakoissa (MHU)."
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (into []
-        (comp
-          (map #(assoc %
-                  :summa (if (:summa %) (double (:summa %)))))
-          (map #(if (:osuus-hoitokauden-summasta %)
-                  (update % :osuus-hoitokauden-summasta big/->big)
-                  %)))
-        (q/hae-kiinteahintaiset-tyot db urakka-id)))
+  (q/hae-kiinteahintaiset-tyot db {:urakka urakka-id}))
 
 (defn tallenna-kiinteahintaiset-tyot
   "Funktio tallentaa urakan kiinteahintaiset tyot. Käytetään teiden hoidon urakoissa (MHU)."

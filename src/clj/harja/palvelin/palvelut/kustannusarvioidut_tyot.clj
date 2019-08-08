@@ -12,14 +12,7 @@
   "Funktio palauttaa urakan kustannusarvioidut työt. Käytetään teiden hoidon urakoissa (MHU)."
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (into []
-        (comp
-          (map #(assoc %
-                  :summa (if (:summa %) (double (:summa %)))))
-          (map #(if (:osuus-hoitokauden-summasta %)
-                  (update % :osuus-hoitokauden-summasta big/->big)
-                  %)))
-        (q/hae-kustannusarvioidut-tyot db {:urakka urakka-id})))
+  (q/hae-kustannusarvioidut-tyot db {:urakka urakka-id}))
 
 (defn tallenna-kustannusarvioidut-tyot
   "Funktio tallentaa ja palautaa urakan kustannusarvioidut tyot. Käytetään teiden hoidon urakoissa (MHU)."

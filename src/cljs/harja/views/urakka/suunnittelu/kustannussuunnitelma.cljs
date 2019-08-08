@@ -55,9 +55,9 @@
    [:h5 otsikko]
    [:div selite]
    [:div.hintalaskuri-vuodet
-    (for [{:keys [summa vuosi]} hinnat]
-      ^{:key vuosi}
-      [hintalaskuri-sarake (str vuosi ". vuosi" (when (= 1 vuosi) "*")) (fmt/euro summa)])
+    (for [{:keys [summa hoitokausi]} hinnat]
+      ^{:key hoitokausi}
+      [hintalaskuri-sarake (str hoitokausi ". vuosi" (when (= 1 hoitokausi) "*")) (fmt/euro summa)])
     [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
     [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]])
 
@@ -84,13 +84,15 @@
         [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]])))
 
 (defn tavoite-ja-kattohinta [{:keys [tavoitehinnat kattohinnat]}]
-  [:div
-   [hintalaskuri {:otsikko "Tavoitehinta"
-                  :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                  :hinnat kattohinnat}]
-   [hintalaskuri {:otsikko "Kattohinta"
-                  :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
-                  :hinnat tavoitehinnat}]])
+  (if (and tavoitehinnat kattohinnat)
+    [:div
+     [hintalaskuri {:otsikko "Tavoitehinta"
+                    :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
+                    :hinnat kattohinnat}]
+     [hintalaskuri {:otsikko "Kattohinta"
+                    :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
+                    :hinnat tavoitehinnat}]]
+    [yleiset/ajax-loader]))
 
 (defn suunnitelman-selitteet [luokat]
   [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
@@ -222,7 +224,7 @@
                                         :format-fn kausi-tekstiksi}
            [:kesakausi :talvikausi]]]]))))
 
-(defn hankintojen-taulukko [e! toimenpiteet
+#_(defn hankintojen-taulukko [e! toimenpiteet
                             {valittu-toimenpide :toimenpide
                              laskutukseen-perustuen? :laskutukseen-perustuen?}
                             on-oikeus? laskutuksen-perusteella-taulukko?]
@@ -308,17 +310,19 @@
             [yhteensa-rivi])))
 
 (defn suunnitellut-hankinnat [e! kustannukset]
-  (komp/luo
-    (komp/piirretty (fn [this]
-                      ;; TODO: Korjaa oikeustarkistus
-                      (let [hankintataulukon-alkutila (hankintojen-taulukko e! (:toimenpiteet kustannukset) (:valinnat kustannukset) true false)]
-                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :hankintataulukko] hankintataulukon-alkutila)))))
-    (fn [e! {:keys [hankintataulukko]}]
-      (if hankintataulukko
-        [taulukko/taulukko hankintataulukko #{"reunaton"}]
-        [yleiset/ajax-loader]))))
+  (fn [e! {:keys [toimenpiteet valinnat]}]
+    (if toimenpiteet
+      ;[taulukko/taulukko (get toimenpiteet (:toimenpide valinnat))]
+      [:div
+       (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet
+             :let [nakyvissa? (= toimenpide-avain (:toimenpide valinnat))]]
+         ^{:key toimenpide-avain}
+         [taulukko/taulukko toimenpide-taulukko (if nakyvissa?
+                                                  #{"reunaton"}
+                                                  #{"reunaton" "piillotettu"})])]
+      [yleiset/ajax-loader])))
 
-(defn laskutukseen-perustuvat-kustannukset [e! kustannukset]
+#_(defn laskutukseen-perustuvat-kustannukset [e! kustannukset]
   (komp/luo
     (komp/piirretty (fn [this]
                       ;; TODO: Korjaa oikeustarkistus
@@ -362,7 +366,7 @@
     [:b (-> valinnat :toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]
    ;; TODO: Korjaa oikeus
    [arvioidaanko-laskutukseen-perustuen e! valinnat true]
-   [laskutukseen-perustuvat-kustannukset e! kustannukset]
+   #_[laskutukseen-perustuvat-kustannukset e! kustannukset]
    [:h5 "Rahavarukset"]
    [suunnitellut-rahavaraukset e! kustannukset]
    #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
@@ -389,7 +393,7 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
-                      (e! (t/->HaeKustannussuunnitelma))))
+                      (e! (t/->HaeKustannussuunnitelma e!))))
     (fn [e! app]
       [:div.kustannussuunnitelma
        [debug/debug app]
@@ -409,7 +413,7 @@
          :otsikko-elementti :h2}
         [suunnitelmien-tila e! app]]
        [hankintakustannukset e! (:hankintakustannukset app)]
-       [hallinnolliset-toimenpiteet]])))
+       #_[hallinnolliset-toimenpiteet]])))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

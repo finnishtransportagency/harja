@@ -24,13 +24,13 @@
                                                                          {:id "rivin-id-6" :nimi "Teksti 3" :tehtavaryhmatyyppi "alitaso" :maara 150 :vanhempi "rivin-id-5" :piillotettu? true}
                                                                          {:id "rivin-id-7" :nimi "Laajenna-valitaso-b" :tehtavaryhmatyyppi "valitaso" :vanhempi "rivin-id-1" :piillotettu? true}
                                                                          {:id "rivin-id-8" :nimi "Teksti 1" :tehtavaryhmatyyppi "alitaso" :maara 20 :vanhempi "rivin-id-7" :piillotettu? true}]}
-                                   :kustannussuunnitelma {:tavoitehinnat [{:vuosi 1 :summa 2500} {:vuosi 2 :summa 400} {:vuosi 3 :summa 8900} {:vuosi 4 :summa 3000} {:vuosi 5 :summa 1000}]
-                                                          :kattohinnat [{:vuosi 1 :summa 4000} {:vuosi 2 :summa 4000} {:vuosi 3 :summa 4000} {:vuosi 4 :summa 4000} {:vuosi 5 :summa 4000}]
-                                                          :hankintakustannukset {:yhteenveto [{:vuosi 1 :summa 4000} {:vuosi 2 :summa 4000} {:vuosi 3 :summa 4000} {:vuosi 4 :summa 4000} {:vuosi 5 :summa 4000}]
+                                   :kustannussuunnitelma {#_#_:tavoitehinnat [{:hoitokausi 1 :summa 2500} {:hoitokausi 2 :summa 400} {:hoitokausi 3 :summa 8900} {:hoitokausi 4 :summa 3000} {:hoitokausi 5 :summa 1000}]
+                                                          #_#_:kattohinnat [{:hoitokausi 1 :summa 4000} {:hoitokausi 2 :summa 4000} {:hoitokausi 3 :summa 4000} {:hoitokausi 4 :summa 4000} {:hoitokausi 5 :summa 4000}]
+                                                          :hankintakustannukset {:yhteenveto [{:hoitokausi 1 :summa 4000} {:hoitokausi 2 :summa 4000} {:hoitokausi 3 :summa 4000} {:hoitokausi 4 :summa 4000} {:hoitokausi 5 :summa 4000}]
                                                                                  :valinnat {:toimenpide :talvihoito
                                                                                             :maksetaan :talvikausi
                                                                                             :laskutukseen-perustuen? false}
-                                                                                 :toimenpiteet {:talvihoito {:hankinnat (hankinnat-testidata (rand-int 10000))
+                                                                                 #_#_:toimenpiteet {:talvihoito {:hankinnat (hankinnat-testidata (rand-int 10000))
                                                                                                              :hankinnat-laskutukseen-perustuen (hankinnat-testidata 0)
                                                                                                              :korjaukset 2
                                                                                                              :akilliset-hoitotyot 2
