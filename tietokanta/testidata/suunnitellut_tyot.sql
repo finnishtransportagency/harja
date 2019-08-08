@@ -516,10 +516,10 @@ DECLARE
   vuosi_ INTEGER;
 BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
-  FOR i IN 1..5 LOOP
+  FOR i IN 1..7 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
-               urakan_nimi || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   END LOOP;
   -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
@@ -528,7 +528,8 @@ BEGIN
       -- Jätetään soratiet suunnittelematta
       CONTINUE;
     END IF;
-    toimenpideinstanssin_nimi = urakan_nimi || toimenpidenimi;
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
     FOR i IN 10..12 LOOP
       INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
         VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
@@ -551,11 +552,11 @@ BEGIN
       -- Jätetään soratiet suunnittelematta
       continue;
     END IF;
-    toimenpideinstanssin_nimi = urakan_nimi || toimenpidenimi;
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
 
     -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
     FOR i IN 10..12 LOOP
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi)
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES -- kolmansien osapuolien aiheuttamat vahingot
                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
@@ -570,7 +571,8 @@ BEGIN
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'Alataso Sorateiden hoito'
                                                   END)),
                 NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi)),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus')),
                 -- Äkilliset hoitotyöt
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
@@ -585,24 +587,27 @@ BEGIN
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'Alataso Sorateiden hoito'
                                                   END)),
                 NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi)),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus')),
                 -- TODO: Muut tilaajan rahavaraukset
                 -- Erillishankinnat
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
                 (SELECT id FROM tehtavaryhma WHERE nimi='Erillishankinnat erillishinnoin'),
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi));
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi)
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
           VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
-                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi));
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
       END IF;
     END LOOP;
     FOR i IN 1..12 LOOP
-      FOR vuosi_ IN 1..5 LOOP
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi)
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
           VALUES -- kolmansien osapuolien aiheuttamat vahingot
                  ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
                   'vahinkojen-korjaukset'::TOTEUMATYYPPI,
@@ -617,7 +622,8 @@ BEGIN
                                                       WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'Alataso Sorateiden hoito'
                                                     END)),
                   NULL,
-                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi)),
+                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus')),
                 -- Äkilliset hoitotyöt
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
                  'akillinen-hoitotyo'::TOTEUMATYYPPI,
@@ -632,25 +638,28 @@ BEGIN
                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'Alataso Sorateiden hoito'
                                                    END)),
                  NULL,
-                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi)),
+                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus')),
                  -- TODO: Muut tilaajan rahavaraukset
                  -- Erillishankinnat
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
                 (SELECT id FROM tehtavaryhma WHERE nimi='Erillishankinnat erillishinnoin'),
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi));
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
         -- Laskutukseen perustusvat toimenpidekustannukset
         IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
-          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi)
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
             VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
-                    'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi));
+                    'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
         END IF;
       END LOOP;
     END LOOP;
     FOR i IN 1..9 LOOP
       -- kolmansien osapuolien aiheuttamat vahingot
-      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi)
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
         VALUES -- kolmansien osapuolien aiheuttamat vahingot
                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
@@ -665,7 +674,8 @@ BEGIN
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'Alataso Sorateiden hoito'
                                                   END)),
                 NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi)),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus')),
                 -- Äkilliset hoitotyöt
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
@@ -680,23 +690,26 @@ BEGIN
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'Alataso Sorateiden hoito'
                                                   END)),
                 NULL,
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi)),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus')),
                 -- TODO: Muut tilaajan rahavaraukset
                 -- Erillishankinnat
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
                 (SELECT id FROM tehtavaryhma WHERE nimi='Erillishankinnat erillishinnoin'),
-                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi));
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi)
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
           VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
-                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi));
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
       END IF;
     END LOOP;
   END LOOP;
 END $$;
 
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 13, 'h', 45, 585, (select id from toimenpidekoodi where nimi = 'Hoitourakan työnjohto'), (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'), (select id from sopimus where nimi = 'MHU Rovaniemi sopimus'));
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'), (select id from sopimus where nimi = 'MHU Rovaniemi sopimus'));
+INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 13, 'h', 45, 585, (select id from toimenpidekoodi where nimi = 'Hoitourakan työnjohto'), (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'), (select id from sopimus where nimi = 'Rovaniemen MHU testiurakan sopimus'));
+INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'), (select id from sopimus where nimi = 'Rovaniemen MHU testiurakan sopimus'));
