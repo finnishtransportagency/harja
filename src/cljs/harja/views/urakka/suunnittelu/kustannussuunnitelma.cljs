@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :as r :refer [atom]]
             [clojure.string :as clj-str]
+            [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tila]
@@ -12,6 +13,7 @@
             [harja.ui.taulukko.taulukko :as taulukko]
             [harja.ui.taulukko.jana :as jana]
             [harja.ui.taulukko.osa :as osa]
+            [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
@@ -309,56 +311,64 @@
                          toimenpide-rivit)
             [yhteensa-rivi])))
 
-(defn suunnitellut-hankinnat [e! kustannukset]
-  (fn [e! {:keys [toimenpiteet valinnat]}]
-    (if toimenpiteet
-      ;[taulukko/taulukko (get toimenpiteet (:toimenpide valinnat))]
-      [:div
-       (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet
-             :let [nakyvissa? (= toimenpide-avain (:toimenpide valinnat))]]
-         ^{:key toimenpide-avain}
-         [taulukko/taulukko toimenpide-taulukko (if nakyvissa?
-                                                  #{"reunaton"}
-                                                  #{"reunaton" "piillotettu"})])]
-      [yleiset/ajax-loader])))
+(defn suunnitellut-hankinnat [e! {:keys [toimenpiteet valinnat]}]
+  (if toimenpiteet
+    [:div
+     (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet
+           :let [nakyvissa? (= toimenpide-avain (:toimenpide valinnat))]]
+       ^{:key toimenpide-avain}
+       [taulukko/taulukko toimenpide-taulukko (if nakyvissa?
+                                                #{"reunaton"}
+                                                #{"reunaton" "piillotettu"})])]
+    [yleiset/ajax-loader]))
 
-#_(defn laskutukseen-perustuvat-kustannukset [e! kustannukset]
-  (komp/luo
-    (komp/piirretty (fn [this]
-                      ;; TODO: Korjaa oikeustarkistus
-                      (let [hankintataulukon-alkutila (hankintojen-taulukko e! (:toimenpiteet kustannukset) (:valinnat kustannukset) true true)]
-                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :hankintataulukko-laskutukseen-perustuen] hankintataulukon-alkutila)))))
-    (fn [e! {:keys [hankintataulukko-laskutukseen-perustuen valinnat]}]
-      (if hankintataulukko-laskutukseen-perustuen
-        [taulukko/taulukko hankintataulukko-laskutukseen-perustuen #{"reunaton"
-                                                                     (when-not (:laskutukseen-perustuen? valinnat)
-                                                                       "piillotettu")}]
-        [yleiset/ajax-loader]))))
+(defn laskutukseen-perustuvat-kustannukset [e! {:keys [toimenpiteet-laskutukseen-perustuen valinnat]}]
+  (if toimenpiteet-laskutukseen-perustuen
+    [:div
+     (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet-laskutukseen-perustuen
+           :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
+                                 (contains? (:laskutukseen-perustuen valinnat) toimenpide-avain))]]
+       ^{:key toimenpide-avain}
+       [taulukko/taulukko toimenpide-taulukko (if nakyvissa?
+                                                #{"reunaton"}
+                                                #{"reunaton" "piillotettu"})])]
+    [yleiset/ajax-loader]))
 
 (defn arvioidaanko-laskutukseen-perustuen [e! _ _]
-  (let [vaihda-fn (fn [nappi _]
-                    (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :laskutukseen-perustuen?]
-                                                 (= nappi :kylla))))]
-    (fn [e! {:keys [laskutukseen-perustuen?]} on-oikeus?]
+  (let [laskutukseen-perustuen? (fn [laskutukseen-perustuen toimenpide]
+                                 (contains? laskutukseen-perustuen toimenpide))
+        vaihda-fn (fn [nappi _]
+                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat]
+                                                   (fn [{:keys [toimenpide] :as valinnat}]
+                                                     (if (= nappi :kylla)
+                                                       (update valinnat :laskutukseen-perustuen conj toimenpide)
+                                                       (update valinnat :laskutukseen-perustuen disj toimenpide))))))]
+    (fn [e! {:keys [laskutukseen-perustuen toimenpide]} on-oikeus?]
       [:div.laskutukseen-perustuen-filter
        [:label
-        [:input {:type "radio" :disabled (not on-oikeus?) :checked (false? laskutukseen-perustuen?)
+        [:input {:type "radio" :disabled (not on-oikeus?) :checked (false? (laskutukseen-perustuen? laskutukseen-perustuen toimenpide))
                  :on-change (r/partial vaihda-fn :ei)}]
         "Ei"]
        [:label
-        [:input {:type "radio" :disabled (not on-oikeus?) :checked laskutukseen-perustuen?
+        [:input {:type "radio" :disabled (not on-oikeus?) :checked (laskutukseen-perustuen? laskutukseen-perustuen toimenpide)
                  :on-change (r/partial vaihda-fn :kylla)}]
         "Kyllä"]])))
 
 (defn suunnitellut-rahavaraukset [e! toimenpiteet]
   [:span "----- TODO: suunnitellut rahavaraukset -----"])
 
-(defn hankintakustannukset [e! {:keys [yhteenveto valinnat] :as kustannukset}]
+(defn hankintakustannukset [e! {:keys [valinnat yhteenveto] :as kustannukset}]
+  ;; Joka kerta kun muutetaan taulukon arvoja, täytyy yhteenveto päivittää myös
+  (async/put! t/viive-kanava [:hankintakustannukset (t/->PaivitaKustannussuunnitelmanYhteenveto)])
   [:div
    [:h2 "Hankintakustannukset"]
-   [hintalaskuri {:otsikko "Yhteenveto"
-                  :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
-                  :hinnat yhteenveto}]
+   (if yhteenveto
+     ^{:key "hankintakustannusten-yhteenveto"}
+     [hintalaskuri {:otsikko "Yhteenveto"
+                    :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
+                    :hinnat yhteenveto}]
+     ^{:key "hankintakustannusten-loader"}
+     [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
    [:h5 "Suunnitellut hankinnat"]
    [hankintojen-filter e! valinnat]
    [suunnitellut-hankinnat e! kustannukset]
@@ -366,7 +376,7 @@
     [:b (-> valinnat :toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]
    ;; TODO: Korjaa oikeus
    [arvioidaanko-laskutukseen-perustuen e! valinnat true]
-   #_[laskutukseen-perustuvat-kustannukset e! kustannukset]
+   [laskutukseen-perustuvat-kustannukset e! kustannukset]
    [:h5 "Rahavarukset"]
    [suunnitellut-rahavaraukset e! kustannukset]
    #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
@@ -393,6 +403,7 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
+                      (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 t/viive-kanava))
                       (e! (t/->HaeKustannussuunnitelma e!))))
     (fn [e! app]
       [:div.kustannussuunnitelma
