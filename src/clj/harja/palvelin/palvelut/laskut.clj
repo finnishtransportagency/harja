@@ -3,13 +3,11 @@
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt
              [laskut :as q]
-             [aliurakoitsijat :as ali-q]
+             [aliurakoitsijat :as ali-q]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [harja.tyokalut.big :as big]
-            [harja.pvm :as pvm]))
+            [harja.tyokalut.big :as big]))
 
 
 (defn kasittele-suorittaja
