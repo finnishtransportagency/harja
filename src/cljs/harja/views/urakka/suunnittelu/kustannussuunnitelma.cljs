@@ -97,7 +97,7 @@
                     :hinnat tavoitehinnat}]]
     [yleiset/ajax-loader]))
 
-(defn suunnitelman-selitteet [luokat]
+(defn suunnitelman-selitteet [this luokat _]
   [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
    [:span [ikonit/ok] "Kaikki kentätä täytetty"]
    [:span [ikonit/livicon-question] "Keskeneräinen"]
@@ -150,7 +150,7 @@
                                                                                                                                "reunaton"}})]
                                   #{"piillotettu" "reunaton"}))
         otsikkorivi (jana/->Rivi :otsikko-rivi
-                                 [(osa/->Komponentti :otsikko-selite suunnitelman-selitteet #{(sarakkeiden-leveys :nimi)})
+                                 [(osa/->Komponentti :otsikko-selite suunnitelman-selitteet #{(sarakkeiden-leveys :nimi)} nil)
                                   (osa/->Teksti :otsikko-vuosisuunnitelmat "Vuosisuunnitelmat" {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
                                                                                                          "keskita"
                                                                                                          "alas"
@@ -228,24 +228,24 @@
            [:kesakausi :talvikausi]]]]))))
 
 (defn hankintasuunnitelmien-syotto
-  [{:keys [luokat input-luokat nimi e! on-oikeus? maara polku-taulukkoon]}]
+  [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon]} value]
   (let [input-osa (osa/->Syote (keyword (str nimi "-maara-kk"))
                                {:on-change (fn [arvo]
                                              (when arvo
-                                               (e! (t/->PaivitaToimenpiteenHankintaMaara osa/*this* arvo polku-taulukkoon))))
+                                               (e! (t/->PaivitaToimenpiteenHankintaMaara this arvo polku-taulukkoon))))
                                 #_#_:on-blur (fn [_]
-                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))}
+                                               (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))}
                                {:on-change [:positiivinen-numero :eventin-arvo]}
                                {:class input-luokat
                                 :type "text"
                                 :disabled (not on-oikeus?)
-                                :value maara})
+                                :value value})
         tayta-alas! (fn [_]
                       (println "NAPPIA PAINETTU"))]
-    (fn [{:keys [luokat nimi e!]}]
+    (fn [this {:keys [luokat]} value]
       [:div {:class (apply str (interpose " " luokat))}
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" tayta-alas! {:luokka "piillotettu"}]
-       [p/piirra-osa input-osa]])))
+       [p/piirra-osa (p/aseta-osan-arvo input-osa value)]])))
 
 (defn hankintojen-taulukko [e! toimenpiteet
                             {laskutukseen-perustuen :laskutukseen-perustuen
@@ -261,7 +261,6 @@
                            [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen toimenpide-avain]
                            [:hankintakustannukset :toimenpiteet toimenpide-avain])
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (println "PÄIVITETÄÄN - POLKU TAULUKKOON: " polku-taulukkoon)
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
         laskutuksen-perusteella? (and (= toimenpide-avain valittu-toimenpide)
                                       (contains? laskutukseen-perustuen toimenpide-avain))
@@ -304,9 +303,10 @@
                        {:e! e!
                         :nimi nimi
                         :on-oikeus? on-oikeus?
-                        :maara maara
                         :polku-taulukkoon polku-taulukkoon
-                        :luokat #{(sarakkeiden-leveys :maara-kk) "reunaton"}}]
+                        :luokat #{(sarakkeiden-leveys :maara-kk)}
+                        :input-luokat #{"reunaton"}}
+                       maara]
                       [(keyword (str nimi "-yhteensa"))
                        maara
                        {:class #{(sarakkeiden-leveys :yhteensa)

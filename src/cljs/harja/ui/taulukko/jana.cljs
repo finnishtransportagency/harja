@@ -5,6 +5,7 @@
 (defrecord Rivi [janan-id solut luokat]
   p/Jana
   (piirra-jana [this]
+    (assert (vector? (:solut this)) (str "RIVIN: " janan-id " SOLUT EI OLE VEKTORI"))
     [:div.jana.janan-rivi.row {:class (when luokat
                                         (apply str (interpose " " luokat)))
                                :data-cy janan-id}
@@ -29,6 +30,7 @@
 (defrecord RiviLapsilla [janan-id janat]
   p/Jana
   (piirra-jana [this]
+    (assert (vector? (:janat this)) (str "RIVILAPSILLE: " janan-id " JANAT EI OLE VEKTORI"))
     (let [[vanhempi & lapset] (:janat this)]
       [:<>
        [p/piirra-jana vanhempi]

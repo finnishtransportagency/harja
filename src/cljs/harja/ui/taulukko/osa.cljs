@@ -248,19 +248,23 @@
   (aseta-osan-arvo [this arvo polku]
     (assoc-in this polku arvo)))
 
-(defrecord Komponentti [osan-id komponentti komponentin-argumentit]
+(defrecord Komponentti [osan-id komponentti komponentin-argumentit komponentin-tila]
   p/Osa
   (piirra-osa [this]
-    [(:komponentti this) (:komponentin-argumentit this)])
+    [(:komponentti this) this (:komponentin-argumentit this) (:komponentin-tila this)])
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
   (osan-tila [this])
-  (osan-arvo [this])
-  (osan-arvo [this polku])
-  (aseta-osan-arvo [this arvo])
-  (aseta-osan-arvo [this arvo polku]))
+  (osan-arvo [this]
+    (:komponentin-tila this))
+  (osan-arvo [this polku]
+    (get-in this polku))
+  (aseta-osan-arvo [this arvo]
+    (assoc this :komponentin-tila arvo))
+  (aseta-osan-arvo [this arvo polku]
+    (assoc-in this polku arvo)))
 
 (defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
   (p/aseta-tila! (->Laajenna osan-id teksti aukaise-fn parametrit)))

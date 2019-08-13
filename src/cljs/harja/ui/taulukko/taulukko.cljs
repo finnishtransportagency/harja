@@ -35,6 +35,7 @@
 (defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
   p/Taulukko
   (piirra-taulukko [this]
+    (assert (vector? (:rivit this)) (str "TAULUKON: " taulukon-id " RIVIT EI OLE VEKTORI"))
     (let [luokat (-> this :parametrit :class)]
       [:div.taulukko {:data-cy "taulukko"
                       :class (apply str (interpose " " luokat))}
@@ -96,7 +97,6 @@
   (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           solun-polku (solun-polku-taulukossa (:rivit this) paivitetty-solu)
-          _ (println "SOLUN POLKU: " solun-polku)
           paivitetty-taulukko (assoc-in this solun-polku paivitetty-solu)
           args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])]
       (assert paivita-taulukkko! "Taulukolle ei ole määritetty :taulukon-paivitys-fn! parametria")

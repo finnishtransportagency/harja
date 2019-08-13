@@ -115,8 +115,8 @@
                                       (if (= "*" nn)
                                         []
                                         (drop nn maaritelmat))
-                                      (concat janat uudet-janat)))))
-                         (map (fn [osan-maaritelma {:keys [osan-tyyppi]}]
+                                      (into [] (concat janat uudet-janat))))))
+                         (mapv (fn [osan-maaritelma {:keys [osan-tyyppi]}]
                                 (apply osan-tyyppi osan-maaritelma))
                               (get maaritelma index)
                               osat))
@@ -125,7 +125,8 @@
 
 (defn muodosta-rivit [riviskeemat & args]
   (let [rivi-maaritelmat (partition 2 args)]
-    (mapcat (fn [[skeeman-nimi maaritelmat]]
-              (mapv #(muodosta-rivi-skeemasta riviskeemat skeeman-nimi %)
-                    maaritelmat))
-          rivi-maaritelmat)))
+    (into []
+          (mapcat (fn [[skeeman-nimi maaritelmat]]
+                    (mapv #(muodosta-rivi-skeemasta riviskeemat skeeman-nimi %)
+                          maaritelmat))
+                  rivi-maaritelmat))))

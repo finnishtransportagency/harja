@@ -198,11 +198,13 @@
                                              (if (p/janan-id? rivi (p/janan-id rivin-container))
                                                (if auki?
                                                  (update rivi :janat (fn [[paa & lapset]]
-                                                                       (cons paa
-                                                                             (map #(update % :luokat disj "piillotettu") lapset))))
+                                                                       (into []
+                                                                             (cons paa
+                                                                                   (map #(update % :luokat disj "piillotettu") lapset)))))
                                                  (update rivi :janat (fn [[paa & lapset]]
-                                                                       (cons paa
-                                                                             (map #(update % :luokat conj "piillotettu") lapset)))))
+                                                                       (into []
+                                                                             (cons paa
+                                                                                   (map #(update % :luokat conj "piillotettu") lapset))))))
                                                rivi))
                                            rivit)))
                            app)))
