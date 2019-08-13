@@ -21,15 +21,16 @@
   (janan-osat [this]
     (:solut this))
   (osan-polku [this osa]
-    (first (keep-indexed #(when (= (p/osan-id %2) (p/osan-id osa))
-                            [:solut %1])
-                         (:solut this)))))
+    (when (satisfies? p/Osa osa)
+      (first (keep-indexed #(when (= (p/osan-id %2) (p/osan-id osa))
+                              [:solut %1])
+                           (:solut this))))))
 
 (defrecord RiviLapsilla [janan-id janat]
   p/Jana
   (piirra-jana [this]
     (let [[vanhempi & lapset] (:janat this)]
-      [:div
+      [:<>
        [p/piirra-jana vanhempi]
        (for [lapsi lapset]
          (with-meta [p/piirra-jana lapsi]
@@ -42,9 +43,15 @@
   (janan-osat [this]
     (:janat this))
   (osan-polku [this jana]
-    (first (keep-indexed #(when (= (p/janan-id %2) (p/janan-id jana))
-                            [:janat %1])
-                         (:janat this)))))
+    (cond
+      (satisfies? p/Jana jana) (first (keep-indexed #(when (= (p/janan-id %2) (p/janan-id jana))
+                                                       [:janat %1])
+                                                    (:janat this)))
+      (satisfies? p/Osa jana) (first (keep-indexed (fn [index-jana taman-jana]
+                                                     (when-let [taman-janan-polku (p/osan-polku taman-jana jana)]
+                                                       (into []
+                                                             (concat [:janat index-jana] taman-janan-polku))))
+                                                   (:janat this))))))
 
 ;;;;; SPECS ;;;;;
 

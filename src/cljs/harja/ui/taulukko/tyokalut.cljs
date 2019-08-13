@@ -1,6 +1,7 @@
 (ns harja.ui.taulukko.tyokalut
   (:require [harja.loki :as loki]
-            [harja.ui.taulukko.protokollat :as p]))
+            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.jana :as jana]))
 
 (defn numero-re
   ([] (numero-re {}))
@@ -71,6 +72,15 @@
                               (into []
                                     (cons index (p/osan-polku jana osa))))
                             (fn [jana] (p/osan-polku jana osa))))
+
+(defn rivin-vanhempi [rivit lapsen-id]
+  (ominaisuus-predikaatilla rivit
+                            (fn [_ rivi]
+                              rivi)
+                            (fn [rivi]
+                              (when (= (type rivi) jana/RiviLapsilla)
+                                (some #(p/janan-id? % lapsen-id)
+                                      (p/janan-osat rivi))))))
 
 (defn generoi-pohjadata
   ([f oleelliset-datat olemassa-olevat] (generoi-pohjadata f oleelliset-datat olemassa-olevat nil))

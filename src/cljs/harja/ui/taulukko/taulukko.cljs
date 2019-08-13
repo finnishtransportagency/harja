@@ -5,8 +5,7 @@
             [clojure.spec.alpha :as s]))
 
 
-{:paa {:janan-tyyppi harja.ui.taulukko.jana/->Rivi
-       :osat [{:osan-tyyppi harja.ui.taulukko.osa/->Teksti}]}}
+(defonce tyhja-arvo (gensym))
 
 (defn taulukon-jana-validi?
   [jana janan-skeema]
@@ -30,7 +29,7 @@
   (first (keep-indexed (fn [rivin-index rivi]
                          (when-let [solun-polku (p/osan-polku rivi solu)]
                            (into []
-                                 (cons rivin-index solun-polku))))
+                                 (concat [:rivit rivin-index] solun-polku))))
                        rivit)))
 
 (defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
@@ -54,38 +53,69 @@
           (:skeema-rivi this)))
   (paivita-taulukko! [this a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
-          args (remove #(= ::tyhja %) [a1 a2 a3 a4 a5 a6 a7])]
+          args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])]
       (assert paivita-taulukkko! "Taulukolle ei ole määritetty :taulukon-paivitys-fn! parametria")
       ;taulukon-paivitys-fn ottaa taulukon uuden arvon ja päivittää tilan
       (apply paivita-taulukkko! this args)))
   (paivita-taulukko! [this a1 a2 a3 a4 a5 a6]
-    (p/paivita-taulukko! this a1 a2 a3 a4 a5 a6 ::tyhja))
+    (p/paivita-taulukko! this a1 a2 a3 a4 a5 a6 tyhja-arvo))
   (paivita-taulukko! [this a1 a2 a3 a4 a5]
-    (p/paivita-taulukko! this a1 a2 a3 a4 a5 ::tyhja ::tyhja))
+    (p/paivita-taulukko! this a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
   (paivita-taulukko! [this a1 a2 a3 a4]
-    (p/paivita-taulukko! this a1 a2 a3 a4 ::tyhja ::tyhja ::tyhja))
+    (p/paivita-taulukko! this a1 a2 a3 a4 tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-taulukko! [this a1 a2 a3]
-    (p/paivita-taulukko! this a1 a2 a3 ::tyhja ::tyhja ::tyhja ::tyhja))
+    (p/paivita-taulukko! this a1 a2 a3 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-taulukko! [this a1 a2]
-    (p/paivita-taulukko! this a1 a2 ::tyhja ::tyhja ::tyhja ::tyhja ::tyhja))
+    (p/paivita-taulukko! this a1 a2 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-taulukko! [this a1]
-    (p/paivita-taulukko! this a1 ::tyhja ::tyhja ::tyhja ::tyhja ::tyhja ::tyhja))
+    (p/paivita-taulukko! this a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-taulukko! [this]
-    (p/paivita-taulukko! this ::tyhja ::tyhja ::tyhja ::tyhja ::tyhja ::tyhja ::tyhja))
-  (paivita-rivi! [this paivitetty-rivi]
+    (p/paivita-taulukko! this tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           rivin-index (rivin-index (:rivit this) paivitetty-rivi)
-          paivitetty-taulukko (assoc-in this [:rivit rivin-index] paivitetty-rivi)]
+          paivitetty-taulukko (assoc-in this [:rivit rivin-index] paivitetty-rivi)
+          args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])]
       (assert paivita-taulukkko! "Taulukolle ei ole määritetty :taulukon-paivitys-fn! parametria")
       ;taulukon-paivitys-fn ottaa taulukon uuden arvon ja päivittää tilan
-      (paivita-taulukkko! paivitetty-taulukko)))
-  (paivita-solu! [this paivitetty-solu]
+      (apply paivita-taulukkko! paivitetty-taulukko args)))
+  (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5 a6]
+    (p/paivita-rivi! this paivitetty-rivi a1 a2 a3 a4 a5 a6 tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5]
+    (p/paivita-rivi! this paivitetty-rivi  a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4]
+    (p/paivita-rivi! this paivitetty-rivi a1 a2 a3 a4 tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi a1 a2 a3]
+    (p/paivita-rivi! this paivitetty-rivi a1 a2 a3 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi a1 a2]
+    (p/paivita-rivi! this paivitetty-rivi a1 a2 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi a1]
+    (p/paivita-rivi! this paivitetty-rivi a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-rivi! [this paivitetty-rivi]
+    (p/paivita-rivi! this paivitetty-rivi tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           solun-polku (solun-polku-taulukossa (:rivit this) paivitetty-solu)
-          paivitetty-taulukko (assoc-in this solun-polku paivitetty-solu)]
+          _ (println "SOLUN POLKU: " solun-polku)
+          paivitetty-taulukko (assoc-in this solun-polku paivitetty-solu)
+          args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])]
       (assert paivita-taulukkko! "Taulukolle ei ole määritetty :taulukon-paivitys-fn! parametria")
       ;taulukon-paivitys-fn ottaa taulukon uuden arvon ja päivittää tilan
-      (paivita-taulukkko! paivitetty-taulukko))))
+      (apply paivita-taulukkko! paivitetty-taulukko args)))
+  (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5 a6]
+    (p/paivita-solu! this paivitetty-solu a1 a2 a3 a4 a5 a6 tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5]
+    (p/paivita-solu! this paivitetty-solu  a1 a2 a3 a4 a5 tyhja-arvo tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu a1 a2 a3 a4]
+    (p/paivita-solu! this paivitetty-solu a1 a2 a3 a4 tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu a1 a2 a3]
+    (p/paivita-solu! this paivitetty-solu a1 a2 a3 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu a1 a2]
+    (p/paivita-solu! this paivitetty-solu a1 a2 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu a1]
+    (p/paivita-solu! this paivitetty-solu a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  (paivita-solu! [this paivitetty-solu]
+    (p/paivita-solu! this paivitetty-solu tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo)))
 
 (defn taulukko
   ([tila] [taulukko tila nil])

@@ -184,7 +184,9 @@
     app)
   LaajennaSoluaKlikattu
   (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]
-    (let [rivin-container (tyokalut/ominaisuus-predikaatilla (get-in app (conj polku-taulukkoon :rivit))
+    (let [rivin-container (tyokalut/rivin-vanhempi (get-in app (conj polku-taulukkoon :rivit))
+                                                   rivin-id)
+          #_#__ (tyokalut/ominaisuus-predikaatilla (get-in app (conj polku-taulukkoon :rivit))
                                                              (fn [index rivi]
                                                                rivi)
                                                              (fn [rivi]
@@ -206,7 +208,10 @@
                            app)))
   PaivitaToimenpiteenHankintaMaara
   (process-event [{:keys [osa arvo polku-taulukkoon]} app]
-    (let [[janan-index & _ :as osan-polku] (tyokalut/osan-polku-taulukossa (get-in app polku-taulukkoon) osa)
+    (p/paivita-solu! (get-in app polku-taulukkoon)
+                     (p/aseta-osan-arvo osa arvo)
+                     app)
+    #_(let [[janan-index & _ :as osan-polku] (tyokalut/osan-polku-taulukossa (get-in app polku-taulukkoon) osa)
           vanhemman-janan-id (:vanhempi (meta (get-in app (conj polku-taulukkoon janan-index))))
           vanhempi-jana (first (tyokalut/jana (get-in app polku-taulukkoon) vanhemman-janan-id))
           vanhemman-janan-index (tyokalut/janan-index (get-in app polku-taulukkoon) vanhempi-jana)
