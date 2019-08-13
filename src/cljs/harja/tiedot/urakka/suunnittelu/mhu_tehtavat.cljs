@@ -75,7 +75,8 @@
   PaivitaMaara
   (process-event [{:keys [janan-id solun-id arvo]} app]
     (let [janan-index (tyokalut/janan-index (:tehtavat-taulukko app) janan-id)
-          solun-index (p/osan-index (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
+          ;; TODO vissiin väärä nimi solun-id:llä
+          [solun-index & _] (p/osan-polku (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
       (update-in app [:tehtavat-taulukko janan-index :solut solun-index :parametrit]
                        (fn [parametrit]
                          (assoc parametrit :value arvo)))))
@@ -85,7 +86,7 @@
     (update app :tehtavat-taulukko
                (fn [taulukon-rivit]
                  (let [klikatun-rivin-id (first (keep (fn [rivi]
-                                                        (when (p/osan-index rivi laajenna-osa)
+                                                        (when (p/osan-polku rivi laajenna-osa)
                                                           (p/janan-id rivi)))
                                                       taulukon-rivit))]
                    (map (fn [{:keys [janan-id] :as rivi}]

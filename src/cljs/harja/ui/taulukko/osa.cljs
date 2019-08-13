@@ -56,7 +56,15 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  (osan-arvo [this]
+    (:teksti this))
+  (osan-arvo [this polku]
+    (get-in this polku))
+  (aseta-osan-arvo [this arvo]
+    (assoc this :teksti arvo))
+  (aseta-osan-arvo [this arvo polku]
+    (assoc-in this polku arvo)))
 
 (defrecord Ikoni [osan-id ikoni-ja-teksti parametrit]
   p/Osa
@@ -72,7 +80,15 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  (osan-arvo [this]
+    (:ikoni-ja-teksti this))
+  (osan-arvo [this polku]
+    (get-in this polku))
+  (aseta-osan-arvo [this arvo]
+    (assoc this :ikoni-ja-teksti arvo))
+  (aseta-osan-arvo [this arvo polku]
+    (assoc-in this polku arvo)))
 
 (defrecord Otsikko [osan-id otsikko jarjesta-fn! parametrit]
   p/Osa
@@ -93,7 +109,15 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  (osan-arvo [this]
+    (:otsikko this))
+  (osan-arvo [this polku]
+    (get-in this polku))
+  (aseta-osan-arvo [this arvo]
+    (assoc this :otsikko arvo))
+  (aseta-osan-arvo [this arvo polku]
+    (assoc-in this polku arvo)))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
 ;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
@@ -156,7 +180,24 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  (osan-arvo [this]
+    (let [parametrit (:parametrit this)
+          tyyppi (:type parametrit)]
+      (if (or (= tyyppi :checkbox)
+              (= tyyppi :radio))
+        (:checked? parametrit)
+        (:value parametrit))))
+  (osan-arvo [this polku]
+    (get-in this polku))
+  (aseta-osan-arvo [this arvo]
+    (let [tyyppi (-> this :parametrit :type)]
+      (if (or (= tyyppi :checkbox)
+              (= tyyppi :radio))
+        (assoc-in this [:parametrit :checked?] arvo)
+        (assoc-in this [:parametrit :value] arvo))))
+  (aseta-osan-arvo [this arvo polku]
+    (assoc-in this polku arvo)))
 
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
   p/Tila
@@ -197,7 +238,15 @@
   (osan-id [this]
     (:osan-id this))
   (osan-tila [this]
-    (p/hae-tila this)))
+    (p/hae-tila this))
+  (osan-arvo [this]
+    (:teksti this))
+  (osan-arvo [this polku]
+    (get-in this polku))
+  (aseta-osan-arvo [this arvo]
+    (assoc this :teksti arvo))
+  (aseta-osan-arvo [this arvo polku]
+    (assoc-in this polku arvo)))
 
 (defrecord Komponentti [osan-id komponentti komponentin-argumentit]
   p/Osa
@@ -207,7 +256,11 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  (osan-arvo [this])
+  (osan-arvo [this polku])
+  (aseta-osan-arvo [this arvo])
+  (aseta-osan-arvo [this arvo polku]))
 
 (defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
   (p/aseta-tila! (->Laajenna osan-id teksti aukaise-fn parametrit)))

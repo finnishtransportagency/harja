@@ -43,6 +43,12 @@
   toiminto)
 
 
+(defn ominaisuus-predikaatilla [janat-tai-osat ominaisuus predikaatti]
+  (first (keep-indexed (fn [index jana-tai-osa]
+                         (when (predikaatti jana-tai-osa)
+                           (ominaisuus index jana-tai-osa)))
+                       janat-tai-osat)))
+
 (defn jana
   "Palauttaa jana(t) joiden id vastaa annettua"
   [taulukko id]
@@ -56,16 +62,15 @@
 (defn janan-index
   "Palauttaa janan indeksin taulukossa"
   [taulukko jana]
-  (first (keep-indexed #(when (= (p/janan-id %2) (p/janan-id jana))
-                          %1)
-                       taulukko)))
+  (ominaisuus-predikaatilla taulukko (fn [index _] index) #(= (p/janan-id %1) (p/janan-id jana))))
 
 (defn osan-polku-taulukossa
   [taulukko osa]
-  (first (keep-indexed (fn [rivin-index jana]
-                         (when-let [osan-index (p/osan-index jana osa)]
-                           [rivin-index osan-index]))
-                       taulukko)))
+  (ominaisuus-predikaatilla taulukko
+                            (fn [index jana]
+                              (into []
+                                    (cons index (p/osan-polku jana osa))))
+                            (fn [jana] (p/osan-polku jana osa))))
 
 (defn generoi-pohjadata
   ([f oleelliset-datat olemassa-olevat] (generoi-pohjadata f oleelliset-datat olemassa-olevat nil))
@@ -82,3 +87,35 @@
                                                  olemassa-olevat)]
        loytynyt-olemassa-oleva-data
        (f (merge data default-arvoja))))))
+
+(defn muodosta-rivi-skeemasta [riviskeemat skeeman-nimi maaritelma]
+  (let [{:keys [janan-tyyppi osat janat index] :as riviskeema} (get riviskeemat skeeman-nimi)
+        osat-tai-janat (if janat
+                         (loop [[[skeeman-nimi nn] & skeemat] (partition 2 janat)
+                                maaritelmat (get maaritelma index)
+                                janat []]
+                           (if (nil? skeeman-nimi)
+                             janat
+                             (let [uudet-janat (map (fn [maaritelma]
+                                                      (muodosta-rivi-skeemasta riviskeemat skeeman-nimi maaritelma))
+                                                    (if (= "*" nn)
+                                                      maaritelmat
+                                                      (take nn maaritelmat)))]
+                               (recur skeemat
+                                      (if (= "*" nn)
+                                        []
+                                        (drop nn maaritelmat))
+                                      (concat janat uudet-janat)))))
+                         (map (fn [osan-maaritelma {:keys [osan-tyyppi]}]
+                                (apply osan-tyyppi osan-maaritelma))
+                              (get maaritelma index)
+                              osat))
+        tyypin-argumentit (concat (take index maaritelma) [osat-tai-janat] (drop (inc index) maaritelma))]
+    (apply janan-tyyppi tyypin-argumentit)))
+
+(defn muodosta-rivit [riviskeemat & args]
+  (let [rivi-maaritelmat (partition 2 args)]
+    (mapcat (fn [[skeeman-nimi maaritelmat]]
+              (mapv #(muodosta-rivi-skeemasta riviskeemat skeeman-nimi %)
+                    maaritelmat))
+          rivi-maaritelmat)))

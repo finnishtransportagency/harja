@@ -18,11 +18,11 @@
   border: 0.5px solid @harmaa8;
   font-size: @fontin-koko-taulukko;
   word-break: break-all;
-  &.reunaton {
-    border:none;
-  }
-  &.piillotettu {
+  .piillotettu, &.piillotettu {
     display:none;
+  }
+  &.reunaton {
+    border: none;
   }
 
   /* TAULUKON ELEMENTIT */
