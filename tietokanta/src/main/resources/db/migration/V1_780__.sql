@@ -28,6 +28,7 @@ COMMENT ON table lasku IS
 
 CREATE TABLE lasku_kohdistus(
                               id serial primary key,       -- sisäinen ID
+                              rivi integer not null,
                               lasku integer references lasku(id),
                               summa NUMERIC not null, -- summa voi olla nolla, mutta se ei voi olla tyhjä
                               toimenpideinstanssi integer not null references toimenpideinstanssi(id),
@@ -40,7 +41,8 @@ CREATE TABLE lasku_kohdistus(
                               luoja integer references kayttaja(id),
                               muokattu timestamp,
                               muokkaaja integer references kayttaja(id),
-                              poistettu boolean default false);
+                              poistettu boolean default false,
+                              unique (lasku, rivi));
 
 COMMENT ON table lasku_kohdistus IS
   E'Lasku-tauluun tallennettu lasku voidaan kohdistaa useaan toimenpiteeseen,tehtäväryhmään ja/tai tehtävään.
