@@ -44,7 +44,7 @@
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord PaivitaToimenpiteenHankintaMaara [osa arvo polku-taulukkoon])
-(defrecord PaivitaKustannussuunnitelmanYhteenvedot [])
+(defrecord PaivitaKustannussuunnitelmanYhteenvedot [maara-solu arvo polku-taulukkoon])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -59,60 +59,30 @@
                                    (range (pvm/vuosi urakan-aloitus-pvm) (+ (pvm/vuosi urakan-aloitus-pvm) 6))))))))
 
 (extend-protocol tuck/Event
-  #_PaivitaKustannussuunnitelmanYhteenvedot
-  #_(process-event [_ {:keys [hankintakustannukset] :as app}]
-    (let [{:keys [toimenpiteet toimenpiteet-laskutukseen-perustuen]} hankintakustannukset
-          rivi-predikaatti (fn [rivi]
-                             (contains? (meta rivi) :hoitokausi))
-          osa-predikaatti (fn [osa]
-                            (-> osa meta :sarake (= :yhteensa)))
-          osan-arvo (fn [osa]
-                      (-> osa :teksti js/parseInt))
-          yhteenveto-fn (fn [toimenpiteet]
-                          (reduce (fn [yhteenveto [_ taulukko]]
-                                    (reduce (fn [yhteenveto rivi]
-                                              (update yhteenveto (dec (:hoitokausi (meta rivi)))
-                                                      (fn [hoitokauden-yhteenveto]
-                                                        (update hoitokauden-yhteenveto :summa + (some #(when (osa-predikaatti %)
-                                                                                                         (osan-arvo %))
-                                                                                                      (p/janan-osat rivi))))))
-                                            yhteenveto (filter rivi-predikaatti taulukko)))
-                                  (mapv #(identity {:hoitokausi % :summa 0})
-                                        (range 1 6))
-                                  toimenpiteet))
-          toimenpiteet-yhteenveto (sort-by :hoitokausi (yhteenveto-fn toimenpiteet))
-          toimenpiteet-lp-yhteenveto (sort-by :hoitokausi (yhteenveto-fn toimenpiteet-laskutukseen-perustuen))
-          yhteenveto (mapv #(update %1 :summa + (:summa %2))
-                           toimenpiteet-yhteenveto
-                           toimenpiteet-lp-yhteenveto)
-
-          yhteenveto-fn (fn [toimenpiteet]
-                          (map (fn [toimenpide taulukko]
-                                 (let [rivit (filter #(-> % meta :rivi :lapsi) taulukko)
-                                       ryhmitellyt-rivit (group-by :hoitokausi rivit)]
-                                   {toimenpide (mapv (fn [[hoitokausi hoitokauden-rivit]]
-                                                       ())
-                                                     (sort-by ffirst ryhmitellyt-rivit))}))
-                               toimenpiteet))
-          toimenpiteiden-summat {:toimenpiteet ""
-                                 :toimenpiteet-laskutukseen-perustuen ""}]
-      (assoc-in app [:hankintakustannukset :yhteenveto] yhteenveto)
-
+  PaivitaKustannussuunnitelmanYhteenvedot
+  (process-event [{:keys [maara-solu arvo polku-taulukkoon]} {:keys [hankintakustannukset] :as app}]
+    (let [taulukko (get-in app polku-taulukkoon)
+          [polku-riviin _] (p/osan-polku-taulukossa taulukko maara-solu)
+          hoitokauden-container (get-in taulukko polku-riviin)
+          hoitokauden-yhteensa-rivi (first (p/janan-osat hoitokauden-container))
+          yhteensa-rivi-yhteensa-solu (nth (p/janan-osat hoitokauden-yhteensa-rivi)
+                                           (p/otsikon-index taulukko "Yhteensä"))
+          yhteensa-sarakkeen-index (p/otsikon-index taulukko "Yhteensä")
+          maara-rivi-yhteensa-solu (some (fn [lapsirivi]
+                                           (when (p/osan-polku lapsirivi maara-solu)
+                                             (nth (p/janan-osat lapsirivi)
+                                                  yhteensa-sarakkeen-index)))
+                                         (p/janan-osat (get-in taulukko polku-riviin)))
+          maara-sarakkeen-index (p/otsikon-index taulukko "Määrä")
+          yhteensa-rivin-arvo (reduce (fn [summa lapsi-rivi]
+                                        (+ summa (js/parseInt (p/osan-arvo (nth (p/janan-osat lapsi-rivi)
+                                                                                maara-sarakkeen-index)))))
+                                      0 (rest (p/janan-osat hoitokauden-container)))
+          paivita-solu! (fn [app osa]
+                         (p/paivita-solu! (get-in app polku-taulukkoon) osa app))]
       (-> app
-          (update-in [:hankintakustannukset :toimenpiteet]
-                     (fn [toimenpiteet]
-                       (into {}
-                             (map (fn [toimenpide taulukko]
-                                    [toimenpide (map (fn [rivi]
-                                                       (let [rivin-tyyppi (-> rivi meta :rivi)
-                                                             hoitokausi (-> rivi meta :hoitokausi)]
-                                                         (case rivin-tyyppi
-                                                           :paa (-> toimenpiteiden-summat :toimenpiteet toimenpide (get hoitokausi))
-                                                           :lapsi
-                                                           :otsikko
-                                                           :yhteensa)))
-                                                     taulukko)])
-                                  toimenpiteet)))))))
+          (paivita-solu! (p/aseta-osan-arvo maara-rivi-yhteensa-solu arvo))
+          (paivita-solu! (p/aseta-osan-arvo yhteensa-rivi-yhteensa-solu yhteensa-rivin-arvo)))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
@@ -212,23 +182,4 @@
   (process-event [{:keys [osa arvo polku-taulukkoon]} app]
     (p/paivita-solu! (get-in app polku-taulukkoon)
                      (p/aseta-osan-arvo osa arvo)
-                     app)
-    #_(let [[janan-index & _ :as osan-polku] (tyokalut/osan-polku-taulukossa (get-in app polku-taulukkoon) osa)
-          vanhemman-janan-id (:vanhempi (meta (get-in app (conj polku-taulukkoon janan-index))))
-          vanhempi-jana (first (tyokalut/jana (get-in app polku-taulukkoon) vanhemman-janan-id))
-          vanhemman-janan-index (tyokalut/janan-index (get-in app polku-taulukkoon) vanhempi-jana)
-          yhteensa-index (first (keep-indexed (fn [index osa]
-                                                (when (= (-> osa meta :sarake) :yhteensa)
-                                                  index))
-                                              (p/janan-osat vanhempi-jana)))
-          polku-muutettuun-arvoon (concat polku-taulukkoon osan-polku [:parametrit :value])
-          polku-yhteensa-arvoon (conj polku-taulukkoon vanhemman-janan-index :solut yhteensa-index :teksti)]
-      (-> app
-          (update-in polku-yhteensa-arvoon
-                     (fn [vanha-yhteensa]
-                       (let [vanha-arvo (get-in app polku-muutettuun-arvoon)
-                             lisays (- (js/parseInt arvo) (js/parseInt vanha-arvo))]
-                         (str (+ (js/parseInt vanha-yhteensa) (js/parseInt lisays))))))
-          (update-in polku-muutettuun-arvoon
-                     (fn [_]
-                       arvo))))))
+                     app)))

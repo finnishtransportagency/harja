@@ -233,9 +233,10 @@
                                {:on-change (fn [arvo]
                                              (when arvo
                                                (e! (t/->PaivitaToimenpiteenHankintaMaara this arvo polku-taulukkoon))))
-                                #_#_:on-blur (fn [_]
-                                               (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))}
-                               {:on-change [:positiivinen-numero :eventin-arvo]}
+                                :on-blur (fn [arvo]
+                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot this arvo polku-taulukkoon)))}
+                               {:on-change [:positiivinen-numero :eventin-arvo]
+                                :on-blur [:eventin-arvo]}
                                {:class input-luokat
                                 :type "text"
                                 :disabled (not on-oikeus?)
