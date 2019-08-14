@@ -57,81 +57,81 @@
         (doseq [tehtava tehtavalista]
           (swap! cnt + 1)
           ;; TODO: Muodosta tehtävätyyppinen rivi
-          (println "{:id" @cnt ":tehtava-id" (:tehtava-id tehtava) ":nimi" (:tehtava tehtava) ":tehtavaryhmatyyppi tehtava :maara" (:maara tehtava) ":vanhempi" emo ":piillotettu? false}")))))
+          (println "{:id" @cnt ":tehtava-id" (:tehtava-id tehtava) ":nimi" (:tehtava tehtava) ":tehtavaryhmatyyppi tehtava :maara" (:maara tehtava) ":vanhempi" emo ":piillotettu? false}"))))))
 
-  (defn hae-tehtavahierarkia-maarineen
-    "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
-    [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
-    ;;TODO: tarkista oikeudet (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-    (jarjesta-tehtavahierarkia
-      (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
-                                            :hoitokausi hoitokauden-alkuvuosi})))
+(defn hae-tehtavahierarkia-maarineen
+  "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
+  ;;TODO: tarkista oikeudet (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (jarjesta-tehtavahierarkia
+    (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
+                                          :hoitokausi hoitokauden-alkuvuosi})))
 
-  (defn tallenna-tehtavamaarat
-    "Luo tai päivittää urakan hoitokauden tehtävämäärät."
-    [db user {:keys [urakka-id hoitokauden-alkuvuosi tehtavamaarat]}]
-    ;;TODO: tarkista oikeudet (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+(defn tallenna-tehtavamaarat
+  "Luo tai päivittää urakan hoitokauden tehtävämäärät."
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi tehtavamaarat]}]
+  ;;TODO: tarkista oikeudet (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
 
-    (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
-          validit-tehtavat (hae-validit-tehtavat db)]
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
+        validit-tehtavat (hae-validit-tehtavat db)]
 
-      (if-not (= urakkatyyppi :teiden-hoito)
-        (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määäräluettelon tietoja."))))
+    (if-not (= urakkatyyppi :teiden-hoito)
+      (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määäräluettelon tietoja."))))
 
-      (jdbc/with-db-transaction [c db]
-                                (doseq [tm tehtavamaarat]
-                                  (let [nykyiset-arvot (hae-tehtavamaarat c user {:urakka-id             urakka-id
-                                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-                                        tehtavamaara-avain (fn [rivi]
-                                                             [(:hoitokauden-alkuvuosi rivi) (:tehtava-id rivi) (:urakka rivi)])
-                                        tehtavamaarat-kannassa (into #{} (map tehtavamaara-avain nykyiset-arvot))
-                                        parametrit [c {:urakka     urakka-id
-                                                       :hoitokausi hoitokauden-alkuvuosi
-                                                       :tehtava    (:tehtava-id tm)
-                                                       :maara      (:maara tm)
-                                                       :kayttaja   (:id user)}]]
-                                    ;; TODO: Kaikki feilaa jos yksi feilaa. Olisiko parempi tallentaa ne mitkä voidaan?
-                                    (when (empty?
-                                            (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
-                                      (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
+    (jdbc/with-db-transaction [c db]
+                              (doseq [tm tehtavamaarat]
+                                (let [nykyiset-arvot (hae-tehtavamaarat c user {:urakka-id             urakka-id
+                                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                                      tehtavamaara-avain (fn [rivi]
+                                                           [(:hoitokauden-alkuvuosi rivi) (:tehtava-id rivi) (:urakka rivi)])
+                                      tehtavamaarat-kannassa (into #{} (map tehtavamaara-avain nykyiset-arvot))
+                                      parametrit [c {:urakka     urakka-id
+                                                     :hoitokausi hoitokauden-alkuvuosi
+                                                     :tehtava    (:tehtava-id tm)
+                                                     :maara      (:maara tm)
+                                                     :kayttaja   (:id user)}]]
+                                  ;; TODO: Kaikki feilaa jos yksi feilaa. Olisiko parempi tallentaa ne mitkä voidaan?
+                                  (when (empty?
+                                          (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
+                                    (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
 
-                                    (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
-                                                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
-                                      ;; insert
-                                      (do
-                                        (apply q/lisaa-tehtavamaara<! parametrit))
-                                      ;;  update
-                                      (do
-                                        (apply q/paivita-tehtavamaara! parametrit)))))))
+                                  (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
+                                                                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+                                    ;; insert
+                                    (do
+                                      (apply q/lisaa-tehtavamaara<! parametrit))
+                                    ;;  update
+                                    (do
+                                      (apply q/paivita-tehtavamaara! parametrit)))))))
 
-    (hae-tehtavahierarkia-maarineen db user {:urakka     urakka-id
-                                             :hoitokausi hoitokauden-alkuvuosi}))
+  (hae-tehtavahierarkia-maarineen db user {:urakka     urakka-id
+                                           :hoitokausi hoitokauden-alkuvuosi}))
 
-  (defrecord Tehtavamaarat []
-    component/Lifecycle
-    (start [this]
-      (doto (:http-palvelin this)
-        (julkaise-palvelu
-          :tehtavahierarkia
-          (fn [user]
-            (hae-tehtavahierarkia (:db this) user)))
-        (julkaise-palvelu
-          :tehtavamaarat-hierarkiassa
-          (fn [user tiedot]
-            (hae-tehtavahierarkia-maarineen (:db this) user tiedot)))
-        (julkaise-palvelu
-          :tehtavamaarat
-          (fn [user tiedot]
-            (hae-tehtavamaarat (:db this) user tiedot)))
-        (julkaise-palvelu
-          :tallenna-tehtavamaarat
-          (fn [user tiedot]
-            (tallenna-tehtavamaarat (:db this) user tiedot))))
-      this)
+(defrecord Tehtavamaarat []
+  component/Lifecycle
+  (start [this]
+    (doto (:http-palvelin this)
+      (julkaise-palvelu
+        :tehtavahierarkia
+        (fn [user]
+          (hae-tehtavahierarkia (:db this) user)))
+      (julkaise-palvelu
+        :tehtavamaarat-hierarkiassa
+        (fn [user tiedot]
+          (hae-tehtavahierarkia-maarineen (:db this) user tiedot)))
+      (julkaise-palvelu
+        :tehtavamaarat
+        (fn [user tiedot]
+          (hae-tehtavamaarat (:db this) user tiedot)))
+      (julkaise-palvelu
+        :tallenna-tehtavamaarat
+        (fn [user tiedot]
+          (tallenna-tehtavamaarat (:db this) user tiedot))))
+    this)
 
-    (stop [this]
-      (poista-palvelu (:http-palvelin this) :tehtavahierarkia)
-      (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
-      (poista-palvelu (:http-palvelin this) :tehtavamaarat)
-      (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
-      this))
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :tehtavahierarkia)
+    (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
+    (poista-palvelu (:http-palvelin this) :tehtavamaarat)
+    (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
+    this))
