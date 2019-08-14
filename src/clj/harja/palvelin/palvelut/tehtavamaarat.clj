@@ -26,8 +26,7 @@
                                                       :hoitokausi hoitokauden-alkuvuosi})))
 (defn hae-tehtavahierarkia
   "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
-  [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  [db user urakka-id]
   (into []
         (q/hae-tehtavahierarkia db)))
 
