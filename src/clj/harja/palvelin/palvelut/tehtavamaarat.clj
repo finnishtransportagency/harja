@@ -27,7 +27,7 @@
 (defn hae-tehtavahierarkia
   "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
   [db user]
-  ;;TODO: tarkista oikeudet (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (into []
         (q/hae-tehtavahierarkia db)))
 
@@ -62,7 +62,7 @@
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
-  ;;TODO: tarkista oikeudet (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (jarjesta-tehtavahierarkia
     (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka-id
                                           :hoitokausi hoitokauden-alkuvuosi})))
@@ -70,7 +70,7 @@
 (defn tallenna-tehtavamaarat
   "Luo tai päivittää urakan hoitokauden tehtävämäärät."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi tehtavamaarat]}]
-  ;;TODO: tarkista oikeudet (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
 
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
