@@ -4,7 +4,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.tyokalut :as tyokalut]))
+            [harja.ui.taulukko.kaytokset :as kaytokset]))
 
 (def ^:dynamic *this* nil)
 
@@ -39,7 +39,7 @@
                       (binding [*this* this]
                         (lopullinen-toiminto event)))
                     (recur loput-kaytokset
-                           (tyokalut/lisaa-kaytos kaytos lopullinen-toiminto)))))
+                           (kaytokset/lisaa-kaytos kaytos lopullinen-toiminto)))))
               kayttaytymiset
               toiminnot))
 

@@ -1,47 +1,230 @@
 (ns harja.ui.taulukko.tyokalut
-  (:require [harja.loki :as loki]
-            [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.jana :as jana]))
+  (:require [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.taulukko :as taulukko]
+            [harja.ui.taulukko.jana :as jana]
+            [harja.ui.taulukko.osa :as osa]
+            [harja.loki :as loki]))
 
-(defn numero-re
-  ([] (numero-re {}))
-  ([{kokonaisosan-maara :kokonaisosan-maara desimaalien-maara :desimaalien-maara
-     positiivinen? :positiivinen? kokonaisluku? :kokonaisluku?
-     :or {kokonaisosan-maara 10 desimaalien-maara 10 positiivinen? false kokonaisluku? false}}]
-   (str (when-not positiivinen? "-?")
-        "\\d{1," kokonaisosan-maara "}"
-        (when-not kokonaisluku? (str "((\\.|,)\\d{0," desimaalien-maara "})?")))))
 
-(defn positiivinen-numero-re
-  ([] (positiivinen-numero-re {}))
-  ([asetukset]
-    (numero-re (assoc asetukset :positiivinen? true))))
+(defmulti arvo
+          (fn [taulukon-asia _]
+            (type taulukon-asia)))
 
-(defmulti lisaa-kaytos
-          (fn [kaytos _]
-            (cond
-              (map? kaytos) (first (keys kaytos))
-              (keyword? kaytos) kaytos
-              :else nil)))
+(defmethod arvo taulukko/Taulukko
+  [taulukko avain]
+  (let [muuta-avain {:id [:taulukon-id]
+                     :lapset [:skeema-sarake]
+                     :class [:parametrit :class]}]
+    (get-in taulukko (muuta-avain avain))))
 
-(defmethod lisaa-kaytos :eventin-arvo
-  [_ toiminto]
-  (comp toiminto
-        (fn [event]
-          (.. event -target -value))))
+(defmethod arvo jana/Rivi
+  [rivi avain]
+  (let [muuta-avain {:id [:janan-id]
+                     :lapset [:solut]
+                     :class [:luokat]}]
+    (get-in rivi (muuta-avain avain))))
 
-(defmethod lisaa-kaytos :positiivinen-numero
-  [_ toiminto]
-  (comp toiminto
-        (fn [arvo]
-          (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re)) arvo)]
-            (when (or (= "" arvo) positiivinen-arvo?)
-              arvo)))))
+(defmethod arvo jana/RiviLapsilla
+  [rivi avain]
+  (let [muuta-avain {:id [:janan-id]
+                     :lapset [:janat]}]
+    (get-in rivi (muuta-avain avain))))
 
-(defmethod lisaa-kaytos :default
-  [kaytos toiminto]
-  (loki/warn "KAYTOSTÄ: " kaytos " EI OLE MÄÄRITETTY!")
-  toiminto)
+(defmethod arvo osa/Teksti
+  [osa avain]
+  (let [muuta-avain {:arvo [:teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
+
+(defmethod arvo osa/Ikoni
+  [osa avain]
+  (let [muuta-avain {:arvo [:ikoni-ja-teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
+
+(defmethod arvo osa/Otsikko
+  [osa avain]
+  (let [muuta-avain {:arvo [:otsikko]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
+
+(defmethod arvo osa/Syote
+  [osa avain]
+  (let [muuta-avain {:arvo [:parametrit :value]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
+
+(defmethod arvo osa/Laajenna
+  [osa avain]
+  (let [muuta-avain {:arvo [:teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
+
+(defmethod arvo osa/Komponentti
+  [osa avain]
+  (let [muuta-avain {:arvo [:komponentin-tila]
+                     :id [:osan-id]}]
+    (get-in osa (muuta-avain avain))))
+
+(defmethod arvo :default
+  [osa avain]
+  (loki/warn "TAULUKON OSALLE: " osa " AVAIMEN " avain " arvo defmethod OLE MÄÄRITETTY!")
+  (loki/warn "OSAN TYYPPI: " (type osa))
+  osa)
+
+(defn aseta-asian-arvo [asia avain-arvo muuta-avain]
+  (let [asian-avain-arvo (map (fn [[avain arvo]]
+                                   [(muuta-avain avain) arvo])
+                              (partition 2 avain-arvo))]
+    (reduce (fn [asia [polku arvo]]
+              (assoc-in asia polku arvo))
+            asia asian-avain-arvo)))
+
+(defmulti aseta-arvo
+          (fn [taulukon-asia & _]
+            (type taulukon-asia)))
+
+(defmethod aseta-arvo taulukko/Taulukko
+  [taulukko & avain-arvo]
+  (let [muuta-avain {:id [:taulukon-id]
+                     :lapset [:skeema-sarake]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo taulukko avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo jana/Rivi
+  [rivi & avain-arvo]
+  (let [muuta-avain {:id [:janan-id]
+                     :lapset [:solut]
+                     :class [:luokat]}]
+    (aseta-asian-arvo rivi avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo jana/RiviLapsilla
+  [rivi & avain-arvo]
+  (let [muuta-avain {:id [:janan-id]
+                     :lapset [:janat]}]
+    (aseta-asian-arvo rivi avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Teksti
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Ikoni
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:ikoni-ja-teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Otsikko
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:otsikko]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Syote
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:parametrit :value]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Laajenna
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Komponentti
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:komponentin-tila]
+                     :id [:osan-id]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo :default
+  [taulukon-asia avain & _]
+  (loki/warn "TAULUKON ASIALLE: " taulukon-asia " AVAIMEN ASETTAMIS FN EI OLE MÄÄRITETTY!")
+  (loki/warn "ASIAN TYYPPI: " (type taulukon-asia))
+  taulukon-asia)
+
+(defmulti paivita-arvo
+          (fn [taulukon-asia & _]
+            (type taulukon-asia)))
+
+(defmethod paivita-arvo taulukko/Taulukko
+  [taulukko avain f & args]
+  (let [muuta-avain {:id [:taulukon-id]
+                     :lapset [:rivit]
+                     :class [:parametrit :class]}]
+    (apply update-in taulukko (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo jana/Rivi
+  [rivi avain f & args]
+  (let [muuta-avain {:id [:janan-id]
+                     :lapset [:solut]
+                     :class [:luokat]}]
+    (apply update-in rivi (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo jana/RiviLapsilla
+  [rivi avain f & args]
+  (let [muuta-avain {:id [:janan-id]
+                     :lapset [:janat]}]
+    (apply update-in rivi (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Teksti
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Ikoni
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:ikoni-ja-teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Otsikko
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:otsikko]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Syote
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:parametrit :value]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Laajenna
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:teksti]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Komponentti
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:komponentin-tila]
+                     :id [:osan-id]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo :default
+  [taulukon-asia avain & _]
+  (loki/warn "TAULUKON ASIALLE: " taulukon-asia " AVAIMEN ASETTAMIS FN EI OLE MÄÄRITETTY!")
+  taulukon-asia)
 
 
 (defn ominaisuus-predikaatilla [janat-tai-osat ominaisuus predikaatti]
@@ -97,36 +280,3 @@
                                                  olemassa-olevat)]
        loytynyt-olemassa-oleva-data
        (f (merge data default-arvoja))))))
-
-(defn muodosta-rivi-skeemasta [riviskeemat skeeman-nimi maaritelma]
-  (let [{:keys [janan-tyyppi osat janat index] :as riviskeema} (get riviskeemat skeeman-nimi)
-        osat-tai-janat (if janat
-                         (loop [[[skeeman-nimi nn] & skeemat] (partition 2 janat)
-                                maaritelmat (get maaritelma index)
-                                janat []]
-                           (if (nil? skeeman-nimi)
-                             janat
-                             (let [uudet-janat (map (fn [maaritelma]
-                                                      (muodosta-rivi-skeemasta riviskeemat skeeman-nimi maaritelma))
-                                                    (if (= "*" nn)
-                                                      maaritelmat
-                                                      (take nn maaritelmat)))]
-                               (recur skeemat
-                                      (if (= "*" nn)
-                                        []
-                                        (drop nn maaritelmat))
-                                      (into [] (concat janat uudet-janat))))))
-                         (mapv (fn [osan-maaritelma {:keys [osan-tyyppi]}]
-                                (apply osan-tyyppi osan-maaritelma))
-                              (get maaritelma index)
-                              osat))
-        tyypin-argumentit (concat (take index maaritelma) [osat-tai-janat] (drop (inc index) maaritelma))]
-    (apply janan-tyyppi tyypin-argumentit)))
-
-(defn muodosta-rivit [riviskeemat & args]
-  (let [rivi-maaritelmat (partition 2 args)]
-    (into []
-          (mapcat (fn [[skeeman-nimi maaritelmat]]
-                    (mapv #(muodosta-rivi-skeemasta riviskeemat skeeman-nimi %)
-                          maaritelmat))
-                  rivi-maaritelmat))))

@@ -13,7 +13,7 @@
        (= (type jana) (:janan-tyyppi janan-skeema))
        (every? true?
                (map (fn [osan-skeema osa]
-                      (= (type osa) (:osan-tyyppi osan-skeema)))
+                      (= (type osa) osan-skeema))
                     (:osat janan-skeema)
                     (p/janan-osat jana)))))
 
@@ -35,8 +35,8 @@
          (with-meta [p/piirra-jana rivi]
                     {:key (p/janan-id rivi)}))]))
   (otsikon-index [this otsikko]
-    (first (keep-indexed (fn [index ss]
-                           (when (= (:otsikko ss) otsikko)
+    (first (keep-indexed (fn [index s-otsikko]
+                           (when (= s-otsikko otsikko)
                              index))
                          (:skeema-sarake this))))
   (rivin-skeema [this rivi]
