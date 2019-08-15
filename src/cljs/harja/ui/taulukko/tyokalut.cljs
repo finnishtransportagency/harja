@@ -34,8 +34,11 @@
   [osa avain]
   (let [muuta-avain {:arvo [:teksti]
                      :id [:osan-id]
-                     :class [:parametrit :class]}]
-    (get-in osa (muuta-avain avain))))
+                     :class [:parametrit :class]}
+        palautettava-arvo (get-in osa (muuta-avain avain))]
+    (if (= avain :arvo)
+      (js/parseInt palautettava-arvo)
+      palautettava-arvo)))
 
 (defmethod arvo osa/Ikoni
   [osa avain]

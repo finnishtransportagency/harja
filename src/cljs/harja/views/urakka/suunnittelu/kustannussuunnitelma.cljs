@@ -74,9 +74,7 @@
        sana))
 
 (defn kuluva-hoitovuosi []
-  (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
-        urakan-aloitusvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-        kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
+  (let [[kuluva-urakan-vuosi hoitovuoden-pvmt] (t/hoitokausi-nyt)]
     (fn []
       [:div#kuluva-hoitovuosi
        [:span
@@ -247,7 +245,7 @@
     (fn [this {:keys [luokat]} value]
       [:div {:class (apply str (interpose " " luokat))}
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" tayta-alas! {:luokka "piillotettu"}]
-       [p/piirra-osa (p/aseta-osan-arvo input-osa value)]])))
+       [p/piirra-osa (tyokalut/aseta-arvo input-osa :arvo value)]])))
 
 (defn osien-paivitys-fn [nimi maara yhteensa]
   (fn [osat]

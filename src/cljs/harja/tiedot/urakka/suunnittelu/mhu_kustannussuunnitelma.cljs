@@ -37,6 +37,12 @@
              :talvi talvikausi
              :kaikki hoitokausi})
 
+(defn hoitokausi-nyt []
+  (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
+        urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
+        kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
+    [kuluva-urakan-vuosi hoitovuoden-pvmt]))
+
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
@@ -73,16 +79,22 @@
                                              (nth (p/janan-osat lapsirivi)
                                                   yhteensa-sarakkeen-index)))
                                          (p/janan-osat (get-in taulukko polku-riviin)))
+          entinen-arvo (tyokalut/arvo maara-rivi-yhteensa-solu :arvo)
+          arvon-muutos (- arvo entinen-arvo)
+          [kuluva-hoitokausi _] (hoitokausi-nyt)
           maara-sarakkeen-index (p/otsikon-index taulukko "Määrä")
-          yhteensa-rivin-arvo (reduce (fn [summa lapsi-rivi]
-                                        (+ summa (js/parseInt (p/osan-arvo (nth (p/janan-osat lapsi-rivi)
-                                                                                maara-sarakkeen-index)))))
+          yhteensa-rivin-arvo (+ (tyokalut/arvo yhteensa-rivi-yhteensa-solu :arvo)
+                                 arvon-muutos) #_(reduce (fn [summa lapsi-rivi]
+                                        (+ summa (js/parseInt (tyokalut/arvo (nth (p/janan-osat lapsi-rivi)
+                                                                                  maara-sarakkeen-index)
+                                                                             :arvo))))
                                       0 (rest (p/janan-osat hoitokauden-container)))
           paivita-solu! (fn [app osa]
-                         (p/paivita-solu! (get-in app polku-taulukkoon) osa app))]
+                          (p/paivita-solu! (get-in app polku-taulukkoon) osa app))]
       (-> app
-          (paivita-solu! (p/aseta-osan-arvo maara-rivi-yhteensa-solu arvo))
-          (paivita-solu! (p/aseta-osan-arvo yhteensa-rivi-yhteensa-solu yhteensa-rivin-arvo)))))
+          (paivita-solu! (tyokalut/aseta-arvo maara-rivi-yhteensa-solu :arvo arvo))
+          (paivita-solu! (tyokalut/aseta-arvo yhteensa-rivi-yhteensa-solu :arvo yhteensa-rivin-arvo))
+          (update-in [:hankintakustannukset :yhteenveto (dec kuluva-hoitokausi) :summa] + arvon-muutos))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
@@ -132,10 +144,17 @@
                                                     (map (fn [{:keys [vuosi kuukausi] :as maarat}]
                                                            (assoc maarat :pvm (pvm/luo-pvm vuosi (dec kuukausi) 15)))
                                                          valmis-data))))
-          toimenpiteet (toimenpiteiden-kasittely-fn (:kiinteahintaiset-tyot vastaus))
-          toimenpiteet-laskutukseen-perustuen (toimenpiteiden-kasittely-fn (map #(= (:tyyppi % "laskutettava-tyo"))
-                                                                                (:kustannusarvioidut-tyot vastaus)))]
+          hankinnat (:kiinteahintaiset-tyot vastaus)
+          hankinnat-laskutukseen-perustuen (filter #(= (:tyyppi % "laskutettava-tyo"))
+                                                   (:kustannusarvioidut-tyot vastaus))
+          toimenpiteet (toimenpiteiden-kasittely-fn hankinnat)
+          toimenpiteet-laskutukseen-perustuen (toimenpiteiden-kasittely-fn hankinnat-laskutukseen-perustuen)]
       (-> app
+          (assoc-in [:hankintakustannukset :yhteenveto] (into []
+                                                              (map-indexed (fn [index [vuosi tiedot]]
+                                                                             {:hoitokausi (inc index)
+                                                                              :summa (apply + (map :summa tiedot))})
+                                                                           (group-by :vuosi (concat hankinnat-laskutukseen-perustuen hankinnat)))))
           (assoc-in [:hankintakustannukset :toimenpiteet]
                     (into {}
                           (map (fn [[toimenpide-avain toimenpide-nimi]]
@@ -157,11 +176,11 @@
     (let [rivin-container (tyokalut/rivin-vanhempi (get-in app (conj polku-taulukkoon :rivit))
                                                    rivin-id)
           #_#__ (tyokalut/ominaisuus-predikaatilla (get-in app (conj polku-taulukkoon :rivit))
-                                                             (fn [index rivi]
-                                                               rivi)
-                                                             (fn [rivi]
-                                                               (when (= (type rivi) jana/RiviLapsilla)
-                                                                 (p/janan-id? (first (p/janan-osat rivi)) rivin-id))))]
+                                                   (fn [index rivi]
+                                                     rivi)
+                                                   (fn [rivi]
+                                                     (when (= (type rivi) jana/RiviLapsilla)
+                                                       (p/janan-id? (first (p/janan-osat rivi)) rivin-id))))]
       (p/paivita-taulukko! (update (get-in app polku-taulukkoon) :rivit
                                    (fn [rivit]
                                      (mapv (fn [rivi]
