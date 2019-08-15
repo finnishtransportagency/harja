@@ -30,18 +30,22 @@
          ;; joka resetoi tila-atomin arvon.
          f-map (lisaa-kaytokset toiminnot kayttaytymiset)]
      [:input {:value @tila-atom :on-change (:on-change f-map)}])"
-  [toiminnot kayttaytymiset this]
-  (merge-with (fn [kayttaytymiset toiminto]
-                (loop [[kaytos & loput-kaytokset] kayttaytymiset
-                       lopullinen-toiminto toiminto]
-                  (if (nil? kaytos)
-                    (fn [event]
-                      (binding [*this* this]
-                        (lopullinen-toiminto event)))
-                    (recur loput-kaytokset
-                           (kaytokset/lisaa-kaytos kaytos lopullinen-toiminto)))))
-              kayttaytymiset
-              toiminnot))
+  [toiminnot kayttaytymiset]
+  (into {}
+        (map (fn [[nimi f]]
+               [nimi (fn [this]
+                       (fn [event]
+                         (binding [*this* this]
+                           (f event))))])
+             (merge-with (fn [kayttaytymiset toiminto]
+                           (loop [[kaytos & loput-kaytokset] kayttaytymiset
+                                  lopullinen-toiminto toiminto]
+                             (if (nil? kaytos)
+                               lopullinen-toiminto
+                               (recur loput-kaytokset
+                                      (kaytokset/lisaa-kaytos kaytos lopullinen-toiminto)))))
+                         kayttaytymiset
+                         toiminnot))))
 
 (defrecord Teksti [osan-id teksti parametrit]
   p/Osa
@@ -127,7 +131,7 @@
   p/Osa
   (piirra-osa [this]
     (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
-                  on-key-up]} (lisaa-kaytokset (:toiminnot this) (:kayttaytymiset this) this)]
+                  on-key-up]} (lisaa-kaytokset (:toiminnot this) (:kayttaytymiset this))]
       (fn [this]
         (let [{:keys [id class type value name readonly? required? tabindex disabled?
                       checked? default-checked? indeterminate?
@@ -167,14 +171,22 @@
                                         :placeholder placeholder
                                         :size size
                                         ;; GlobalEventHandlers
-                                        :on-blur on-blur
-                                        :on-change on-change
-                                        :on-click on-click
-                                        :on-focus on-focus
-                                        :on-input on-input
-                                        :on-key-down on-key-down
-                                        :on-key-press on-key-press
-                                        :on-key-up on-key-up}))]
+                                        :on-blur (when on-blur
+                                                   (on-blur this))
+                                        :on-change (when on-change
+                                                     (on-change this))
+                                        :on-click (when on-click
+                                                    (on-click this))
+                                        :on-focus (when on-focus
+                                                    (on-focus this))
+                                        :on-input (when on-input
+                                                    (on-input this))
+                                        :on-key-down (when on-key-down
+                                                       (on-key-down this))
+                                        :on-key-press (when on-key-press
+                                                        (on-key-press this))
+                                        :on-key-up (when on-key-up
+                                                     (on-key-up this))}))]
           [:input.osa.osa-syote parametrit]))))
   (osan-id? [this id]
     (= (:osan-id this) id))

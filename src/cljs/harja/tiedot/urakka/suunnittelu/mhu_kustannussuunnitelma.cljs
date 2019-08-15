@@ -50,7 +50,7 @@
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord PaivitaToimenpiteenHankintaMaara [osa arvo polku-taulukkoon])
-(defrecord PaivitaKustannussuunnitelmanYhteenvedot [maara-solu arvo polku-taulukkoon])
+(defrecord PaivitaKustannussuunnitelmanYhteenvedot [maara-solu polku-taulukkoon])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -66,8 +66,9 @@
 
 (extend-protocol tuck/Event
   PaivitaKustannussuunnitelmanYhteenvedot
-  (process-event [{:keys [maara-solu arvo polku-taulukkoon]} {:keys [hankintakustannukset] :as app}]
+  (process-event [{:keys [maara-solu polku-taulukkoon]} {:keys [hankintakustannukset] :as app}]
     (let [taulukko (get-in app polku-taulukkoon)
+          arvo (tyokalut/arvo maara-solu :arvo)
           [polku-riviin _] (p/osan-polku-taulukossa taulukko maara-solu)
           hoitokauden-container (get-in taulukko polku-riviin)
           hoitokauden-yhteensa-rivi (first (p/janan-osat hoitokauden-container))
@@ -82,13 +83,8 @@
           entinen-arvo (tyokalut/arvo maara-rivi-yhteensa-solu :arvo)
           arvon-muutos (- arvo entinen-arvo)
           [kuluva-hoitokausi _] (hoitokausi-nyt)
-          maara-sarakkeen-index (p/otsikon-index taulukko "Määrä")
           yhteensa-rivin-arvo (+ (tyokalut/arvo yhteensa-rivi-yhteensa-solu :arvo)
-                                 arvon-muutos) #_(reduce (fn [summa lapsi-rivi]
-                                        (+ summa (js/parseInt (tyokalut/arvo (nth (p/janan-osat lapsi-rivi)
-                                                                                  maara-sarakkeen-index)
-                                                                             :arvo))))
-                                      0 (rest (p/janan-osat hoitokauden-container)))
+                                 arvon-muutos)
           paivita-solu! (fn [app osa]
                           (p/paivita-solu! (get-in app polku-taulukkoon) osa app))]
       (-> app
@@ -200,5 +196,5 @@
   PaivitaToimenpiteenHankintaMaara
   (process-event [{:keys [osa arvo polku-taulukkoon]} app]
     (p/paivita-solu! (get-in app polku-taulukkoon)
-                     (p/aseta-osan-arvo osa arvo)
+                     (tyokalut/aseta-arvo osa :arvo arvo)
                      app)))

@@ -228,24 +228,32 @@
 
 (defn hankintasuunnitelmien-syotto
   [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon]} value]
-  (let [input-osa (osa/->Syote (keyword (str nimi "-maara-kk"))
-                               {:on-change (fn [arvo]
-                                             (when arvo
-                                               (e! (t/->PaivitaToimenpiteenHankintaMaara this arvo polku-taulukkoon))))
-                                :on-blur (fn [arvo]
-                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot this arvo polku-taulukkoon)))}
-                               {:on-change [:positiivinen-numero :eventin-arvo]
-                                :on-blur [:eventin-arvo]}
+  (let [on-change (fn [arvo]
+                    (when arvo
+                      (e! (t/->PaivitaToimenpiteenHankintaMaara (:tama-komponentti osa/*this*) arvo polku-taulukkoon))))
+        on-blur (fn [_]
+                  (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot (:tama-komponentti osa/*this*) polku-taulukkoon)))
+        on-key-down (fn [event]
+                      (when (= "Enter" (.. event -key))
+                        (.. event -target blur)))
+        input-osa (osa/->Syote (keyword (str nimi "-maara-kk"))
+                               {:on-change on-change
+                                :on-blur on-blur
+                                :on-key-down on-key-down}
+                               {:on-change [:positiivinen-numero :eventin-arvo]}
                                {:class input-luokat
                                 :type "text"
                                 :disabled (not on-oikeus?)
                                 :value value})
+
         tayta-alas! (fn [_]
                       (println "NAPPIA PAINETTU"))]
     (fn [this {:keys [luokat]} value]
       [:div {:class (apply str (interpose " " luokat))}
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" tayta-alas! {:luokka "piillotettu"}]
-       [p/piirra-osa (tyokalut/aseta-arvo input-osa :arvo value)]])))
+       [p/piirra-osa (-> input-osa
+                         (tyokalut/aseta-arvo :arvo value)
+                         (assoc :tama-komponentti this))]])))
 
 (defn osien-paivitys-fn [nimi maara yhteensa]
   (fn [osat]
