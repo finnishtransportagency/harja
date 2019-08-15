@@ -87,7 +87,7 @@
         [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
         [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]])))
 
-(defn tavoite-ja-kattohinta [{:keys [tavoitehinnat kattohinnat]}]
+(defn tavoite-ja-kattohinta [tavoitehinnat kattohinnat]
   (if (and tavoitehinnat kattohinnat)
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
@@ -249,111 +249,16 @@
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" tayta-alas! {:luokka "piillotettu"}]
        [p/piirra-osa (p/aseta-osan-arvo input-osa value)]])))
 
-#_(defn hankintojen-taulukko [e! toimenpiteet
-                            {laskutukseen-perustuen :laskutukseen-perustuen
-                             valittu-toimenpide :toimenpide}
-                            toimenpide-avain
-                            on-oikeus? laskutuksen-perusteella-taulukko?]
-  (let [sarakkeiden-leveys (fn [sarake]
-                             (case sarake
-                               :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-                               :maara-kk "col-xs-12 col-sm-2 col-md-2 col-lg-2"
-                               :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
-        polku-taulukkoon (if laskutuksen-perusteella-taulukko?
-                           [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen toimenpide-avain]
-                           [:hankintakustannukset :toimenpiteet toimenpide-avain])
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
-        laskutuksen-perusteella? (and (= toimenpide-avain valittu-toimenpide)
-                                      (contains? laskutukseen-perustuen toimenpide-avain))
-        riviskeema {:normaali {:janan-tyyppi jana/Rivi
-                               :index 1
-                               :osat [{:osan-tyyppi osa/Teksti}
-                                      {:osan-tyyppi osa/Teksti}
-                                      {:osan-tyyppi osa/Teksti}]}
-                    :laajenna {:janan-tyyppi jana/Rivi
-                               :index 1
-                               :osat [{:osan-tyyppi osa/Teksti}
-                                      {:osan-tyyppi osa/Teksti}
-                                      {:osan-tyyppi osa/Laajenna}]}
-                    :lapset {:janan-tyyppi jana/Rivi
-                             :index 1
-                             :osat [{:osan-tyyppi osa/Teksti}
-                                    {:osan-tyyppi osa/Komponentti}
-                                    {:osan-tyyppi osa/Teksti}]}
-                    :laajenna-lapsilla {:janan-tyyppi jana/RiviLapsilla
-                                        :index 1
-                                        :janat [:laajenna 1 :lapset "*"]}}
-        sarakeskeema [{:otsikko "Nimi"} {:otsikko "Määrä"} {:otsikko "Yhteensä"}]
-        hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
-                                            toimenpiteet)
-        paarivi-laajenna (fn [rivin-id hoitokausi yhteensa]
-                           [rivin-id
-                            [[(str rivin-id "-nimi") (str hoitokausi ". hoitovuosi") {:class #{(sarakkeiden-leveys :nimi) "reunaton"}}]
-                             [(keyword (str rivin-id "-maara-kk")) "" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}}]
-                             [(keyword (str rivin-id "-yhteensa"))
-                              yhteensa
-                              #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2))
-                              {:class #{(sarakkeiden-leveys :yhteensa)
-                                        "reunaton"}}]]
-                            #{"reunaton"}])
-        lapsirivi (fn [nimi maara]
-                    [(keyword nimi)
-                     [[(keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) "reunaton" "solu-sisenna-1"}}]
-                      [(keyword (str nimi "-maara"))
-                       hankintasuunnitelmien-syotto
-                       {:e! e!
-                        :nimi nimi
-                        :on-oikeus? on-oikeus?
-                        :polku-taulukkoon polku-taulukkoon
-                        :luokat #{(sarakkeiden-leveys :maara-kk)}
-                        :input-luokat #{"reunaton"}}
-                       maara]
-                      [(keyword (str nimi "-yhteensa"))
-                       maara
-                       {:class #{(sarakkeiden-leveys :yhteensa)
-                                 "reunaton"}}]]
-                     #{"piillotettu" "reunaton"}])
-        rivit (muodosta-rivit riviskeema
-                                       :normaali [[:otsikko-rivi
-                                                   [[:tyhja-otsikko
-                                                     (cond
-                                                       laskutuksen-perusteella-taulukko? "Laskutuksen perusteella"
-                                                       laskutuksen-perusteella? "Kiinteät"
-                                                       :else " ")
-                                                     {:class #{(sarakkeiden-leveys :nimi) "reunaton"}}]
-                                                    [:maara-kk-otsikko "Määrä €/kk" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}}]
-                                                    [:yhteensa-otsikko "Yhteensä" {:class #{(sarakkeiden-leveys :yhteensa) "reunaton"}}]]
-                                                   #{"reunaton"}]]
-                                       :laajenna-lapsilla (map-indexed (fn [index [_ hoitokauden-hankinnat]]
-                                                                         (let [hoitokausi (inc index)
-                                                                               laajenna-rivin-id (str hoitokausi)]
-                                                                           [laajenna-rivin-id
-                                                                            (into []
-                                                                                  (concat
-                                                                                    [(paarivi-laajenna (str laajenna-rivin-id "-paa") hoitokausi (apply + (map :summa hoitokauden-hankinnat)))]
-                                                                                    (map (fn [hankinta]
-                                                                                           (lapsirivi (pvm/pvm (:pvm hankinta)) (:summa hankinta)))
-                                                                                         hoitokauden-hankinnat)))]))
-                                                                           hankinnat-hoitokausittain)
-                                       :normaali [[:yhteensa
-                                                   [[(keyword "yhteensa-nimi") "YHTEENSÄ" {:class #{(sarakkeiden-leveys :nimi) "reunaton"}}]
-                                                    [(keyword "yhteensa-maara-kk") "" {:class #{(sarakkeiden-leveys :maara-kk) "reunaton"}}]
-                                                    [(keyword "yhteensa-yhteensa")
-                                                     (reduce (fn [yhteensa {:keys [summa]}]
-                                                               (+ yhteensa summa))
-                                                             0 toimenpiteet)
-                                                     {:class #{(sarakkeiden-leveys :yhteensa) "reunaton"}}]]
-                                                   #{"reunaton"}]])]
-    (taulukko/->Taulukko (if laskutuksen-perusteella-taulukko? :hankinnat-taulukko-laskutukseen-perustuen :hankinnat-taulukko)
-                         riviskeema
-                         sarakeskeema
-                         rivit
-                         {:class (if (and laskutuksen-perusteella-taulukko?
-                                          (not laskutuksen-perusteella?))
-                                   #{"reunaton" "piillotettu"}
-                                   #{"reunaton"})
-                          :taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+(defn osien-paivitys-fn [nimi maara yhteensa]
+  (fn [osat]
+    (mapv (fn [osa]
+            (let [otsikko (p/osan-id osa)]
+              (case otsikko
+                "Nimi" (nimi osa)
+                "Määrä" (maara osa)
+                "Yhteensä" (yhteensa osa))))
+          osat)))
+
 (defn hankintojen-taulukko [e! toimenpiteet
                             {laskutukseen-perustuen :laskutukseen-perustuen
                              valittu-toimenpide :toimenpide}
@@ -380,76 +285,70 @@
                          (tyokalut/aseta-arvo :id :otsikko-rivi
                                               :class #{"reunaton"})
                          (tyokalut/paivita-arvo :lapset
-                                                (fn [osat]
-                                                  (mapv (fn [osa]
-                                                         (let [otsikko (p/osan-id osa)]
-                                                           (case otsikko
-                                                             "Nimi" (tyokalut/aseta-arvo osa
-                                                                                         :arvo (cond
-                                                                                                 laskutuksen-perusteella-taulukko? "Laskutuksen perusteella"
-                                                                                                     laskutuksen-perusteella? "Kiinteät"
-                                                                                                     :else " ")
-                                                                                         :class #{(sarakkeiden-leveys :nimi) "reunaton"})
-                                                             "Määrä" (tyokalut/aseta-arvo osa
+                                                (osien-paivitys-fn (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo (cond
+                                                                                                  laskutuksen-perusteella-taulukko? "Laskutuksen perusteella"
+                                                                                                  laskutuksen-perusteella? "Kiinteät"
+                                                                                                  :else " ")
+                                                                                          :class #{(sarakkeiden-leveys :nimi) "reunaton"}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
                                                                                           :arvo "Määrä €/kk"
-                                                                                          :class #{(sarakkeiden-leveys :maara-kk) "reunaton"})
-                                                             "Yhteensä" (tyokalut/aseta-arvo osa
-                                                                                             :arvo "Yhteensä"
-                                                                                             :class #{(sarakkeiden-leveys :yhteensa) "reunaton"}))))
-                                                       osat)))))
+                                                                                          :class #{(sarakkeiden-leveys :maara-kk) "reunaton"}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Yhteensä"
+                                                                                          :class #{(sarakkeiden-leveys :yhteensa) "reunaton"}))))))
         paarivi-laajenna (fn [rivin-pohja rivin-id hoitokausi yhteensa]
                            (-> rivin-pohja
                                (tyokalut/aseta-arvo :id rivin-id
                                                     :class #{"reunaton"})
                                (tyokalut/paivita-arvo :lapset
-                                                      (fn [osat]
-                                                        (mapv (fn [osa]
-                                                                (let [otsikko (p/osan-id osa)]
-                                                                  (case otsikko
-                                                                    "Nimi" (tyokalut/aseta-arvo osa
+                                                      (osien-paivitys-fn (fn [osa]
+                                                                           (tyokalut/aseta-arvo osa
                                                                                                 :id (keyword (str rivin-id "-nimi"))
                                                                                                 :arvo (str hoitokausi ". hoitovuosi")
-                                                                                                :class #{(sarakkeiden-leveys :nimi) "reunaton"})
-                                                                    "Määrä" (tyokalut/aseta-arvo osa
-                                                                                                 :id (keyword (str rivin-id "-maara-kk"))
-                                                                                                 :arvo ""
-                                                                                                 :class #{(sarakkeiden-leveys :maara-kk) "reunaton"})
-                                                                    "Yhteensä" (-> osa
-                                                                                   (tyokalut/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
-                                                                                                        :arvo yhteensa
-                                                                                                        :class #{(sarakkeiden-leveys :yhteensa)
-                                                                                                                 "reunaton"})
-                                                                                   (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2)))))))
-                                                              osat)))))
+                                                                                                :class #{(sarakkeiden-leveys :nimi) "reunaton"}))
+                                                                         (fn [osa]
+                                                                           (tyokalut/aseta-arvo osa
+                                                                                                :id (keyword (str rivin-id "-maara-kk"))
+                                                                                                :arvo ""
+                                                                                                :class #{(sarakkeiden-leveys :maara-kk) "reunaton"}))
+                                                                         (fn [osa]
+                                                                           (-> osa
+                                                                               (tyokalut/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
+                                                                                                    :arvo yhteensa
+                                                                                                    :class #{(sarakkeiden-leveys :yhteensa)
+                                                                                                             "reunaton"})
+                                                                               (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2)))))))))
         lapsirivi (fn [rivin-pohja nimi maara]
                     (-> rivin-pohja
                         (tyokalut/aseta-arvo :id (keyword nimi)
                                              :class #{"piillotettu" "reunaton"})
                         (tyokalut/paivita-arvo :lapset
-                                               (fn [osat]
-                                                 (mapv (fn [osa]
-                                                         (let [otsikko (p/osan-id osa)]
-                                                           (case otsikko
-                                                             "Nimi" (tyokalut/aseta-arvo osa
+                                               (osien-paivitys-fn (fn [osa]
+                                                                    (tyokalut/aseta-arvo osa
                                                                                          :id (keyword (str nimi "-nimi"))
                                                                                          :arvo (clj-str/capitalize nimi)
-                                                                                         :class #{(sarakkeiden-leveys :nimi) "reunaton" "solu-sisenna-1"})
-                                                             "Määrä" (-> osa
-                                                                         (tyokalut/aseta-arvo :id (keyword (str nimi "-maara"))
-                                                                                              :arvo maara)
-                                                                         (assoc :komponentti hankintasuunnitelmien-syotto
-                                                                                :komponentin-argumentit {:e! e!
-                                                                                                         :nimi nimi
-                                                                                                         :on-oikeus? on-oikeus?
-                                                                                                         :polku-taulukkoon polku-taulukkoon
-                                                                                                         :luokat #{(sarakkeiden-leveys :maara-kk)}
-                                                                                                         :input-luokat #{"reunaton"}}))
-                                                             "Yhteensä" (tyokalut/aseta-arvo osa
-                                                                                             :id (keyword (str nimi "-yhteensa"))
-                                                                                             :arvo maara
-                                                                                             :class #{(sarakkeiden-leveys :yhteensa)
-                                                                                                      "reunaton"}))))
-                                                       osat)))))
+                                                                                         :class #{(sarakkeiden-leveys :nimi) "reunaton" "solu-sisenna-1"}))
+                                                                  (fn [osa]
+                                                                    (-> osa
+                                                                        (tyokalut/aseta-arvo :id (keyword (str nimi "-maara"))
+                                                                                             :arvo maara)
+                                                                        (assoc :komponentti hankintasuunnitelmien-syotto
+                                                                               :komponentin-argumentit {:e! e!
+                                                                                                        :nimi nimi
+                                                                                                        :on-oikeus? on-oikeus?
+                                                                                                        :polku-taulukkoon polku-taulukkoon
+                                                                                                        :luokat #{(sarakkeiden-leveys :maara-kk)}
+                                                                                                        :input-luokat #{"reunaton"}})))
+                                                                  (fn [osa]
+                                                                    (tyokalut/aseta-arvo osa
+                                                                                         :id (keyword (str nimi "-yhteensa"))
+                                                                                         :arvo maara
+                                                                                         :class #{(sarakkeiden-leveys :yhteensa)
+                                                                                                  "reunaton"}))))))
         laajenna-lapsille-fn (fn [laajenna-lapsille-pohja]
                                (map-indexed (fn [index [_ hoitokauden-hankinnat]]
                                               (let [hoitokausi (inc index)
@@ -475,25 +374,23 @@
                           (tyokalut/aseta-arvo :id :yhteensa
                                                :class #{"reunaton"})
                           (tyokalut/paivita-arvo :lapset
-                                                 (fn [osat]
-                                                   (mapv (fn [osa]
-                                                           (let [otsikko (p/osan-id osa)]
-                                                             (case otsikko
-                                                               "Nimi" (tyokalut/aseta-arvo osa
+                                                 (osien-paivitys-fn (fn [osa]
+                                                                      (tyokalut/aseta-arvo osa
                                                                                            :id :yhteensa-nimi
                                                                                            :arvo "YHTEENSÄ"
-                                                                                           :class #{(sarakkeiden-leveys :nimi) "reunaton"})
-                                                               "Määrä" (tyokalut/aseta-arvo osa
-                                                                                            :id :yhteensa-maara-kk
-                                                                                            :arvo ""
-                                                                                            :class #{(sarakkeiden-leveys :maara-kk) "reunaton"})
-                                                               "Yhteensä" (tyokalut/aseta-arvo osa
-                                                                                               :id :yhteensa-yhteensa
-                                                                                               :arvo (reduce (fn [yhteensa {:keys [summa]}]
-                                                                                                               (+ yhteensa summa))
-                                                                                                             0 toimenpiteet)
-                                                                                               :class #{(sarakkeiden-leveys :yhteensa) "reunaton"}))))
-                                                         osat)))))]
+                                                                                           :class #{(sarakkeiden-leveys :nimi) "reunaton"}))
+                                                                    (fn [osa]
+                                                                      (tyokalut/aseta-arvo osa
+                                                                                           :id :yhteensa-maara-kk
+                                                                                           :arvo ""
+                                                                                           :class #{(sarakkeiden-leveys :maara-kk) "reunaton"}))
+                                                                    (fn [osa]
+                                                                      (tyokalut/aseta-arvo osa
+                                                                                           :id :yhteensa-yhteensa
+                                                                                           :arvo (reduce (fn [yhteensa {:keys [summa]}]
+                                                                                                           (+ yhteensa summa))
+                                                                                                         0 toimenpiteet)
+                                                                                           :class #{(sarakkeiden-leveys :yhteensa) "reunaton"}))))))]
     (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
                          :hankinnat-taulukko-laskutukseen-perustuen
                          :hankinnat-taulukko)
@@ -551,7 +448,7 @@
               :normaali (tyokalut/paivita-arvo rivi :class conj (get rivien-luokat (p/janan-id rivi)))))
           rivit)))
 
-(defn suunnitellut-hankinnat [e! {:keys [toimenpiteet valinnat]}]
+(defn suunnitellut-hankinnat [e! toimenpiteet valinnat]
   (if toimenpiteet
     [:div
      (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet
@@ -568,16 +465,22 @@
                                                                  rivit))))])]
     [yleiset/ajax-loader]))
 
-(defn laskutukseen-perustuvat-kustannukset [e! {:keys [toimenpiteet-laskutukseen-perustuen valinnat]}]
+(defn laskutukseen-perustuvat-kustannukset [e! toimenpiteet-laskutukseen-perustuen valinnat]
   (if toimenpiteet-laskutukseen-perustuen
     [:div
      (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet-laskutukseen-perustuen
            :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
                                  (contains? (:laskutukseen-perustuen valinnat) toimenpide-avain))]]
        ^{:key toimenpide-avain}
-       [taulukko/taulukko toimenpide-taulukko (if nakyvissa?
-                                                #{"reunaton"}
-                                                #{"reunaton" "piillotettu"})])]
+       [p/piirra-taulukko (-> toimenpide-taulukko
+                              (tyokalut/paivita-arvo :class (fn [luokat]
+                                                              (if nakyvissa?
+                                                                (disj luokat "piillotettu")
+                                                                (conj luokat "piillotettu"))))
+                              (tyokalut/paivita-arvo :lapset (fn [rivit]
+                                                               (if nakyvissa?
+                                                                 (aseta-rivien-luokat rivit toimenpide-taulukko)
+                                                                 rivit))))])]
     [yleiset/ajax-loader]))
 
 (defn arvioidaanko-laskutukseen-perustuen [e! _ _]
@@ -603,7 +506,7 @@
 (defn suunnitellut-rahavaraukset [e! toimenpiteet]
   [:span "----- TODO: suunnitellut rahavaraukset -----"])
 
-(defn hankintakustannukset [e! {:keys [valinnat yhteenveto] :as kustannukset}]
+(defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen] :as kustannukset}]
   [:div
    [:h2 "Hankintakustannukset"]
    (if yhteenveto
@@ -615,12 +518,12 @@
      [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
    [:h5 "Suunnitellut hankinnat"]
    [hankintojen-filter e! valinnat]
-   [suunnitellut-hankinnat e! kustannukset]
-   #_[:span "Arivoidaanko urakassa laskutukseen perustuvia kustannuksia toimenpiteelle: "
+   [suunnitellut-hankinnat e! toimenpiteet valinnat]
+   [:span "Arivoidaanko urakassa laskutukseen perustuvia kustannuksia toimenpiteelle: "
     [:b (-> valinnat :toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]
    ;; TODO: Korjaa oikeus
-   #_[arvioidaanko-laskutukseen-perustuen e! valinnat true]
-   #_[laskutukseen-perustuvat-kustannukset e! kustannukset]
+   [arvioidaanko-laskutukseen-perustuen e! valinnat true]
+   [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
    [:h5 "Rahavarukset"]
    #_[suunnitellut-rahavaraukset e! kustannukset]
    #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
@@ -648,7 +551,7 @@
   (komp/luo
     (komp/piirretty (fn [_]
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!)))))
-    (fn [e! app]
+    (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset] :as app}]
       [:div.kustannussuunnitelma
        [debug/debug app]
        [:h1 "Kustannussuunnitelma"]
@@ -658,7 +561,7 @@
         "Tavoite- ja kattohinta lasketaan automaattisesti"
         {:alussa-auki? true
          :id "tavoite-ja-kattohinta"}
-        [tavoite-ja-kattohinta app]
+        [tavoite-ja-kattohinta tavoitehinnat kattohinnat]
         [:span#tavoite-ja-kattohinta-huomio
          "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
        [haitari-laatikko
@@ -666,7 +569,7 @@
         {:alussa-auki? true
          :otsikko-elementti :h2}
         [suunnitelmien-tila e! app]]
-       [hankintakustannukset e! (:hankintakustannukset app)]
+       [hankintakustannukset-taulukot e! hankintakustannukset]
        #_[hallinnolliset-toimenpiteet]])))
 
 (defn kustannussuunnitelma []
