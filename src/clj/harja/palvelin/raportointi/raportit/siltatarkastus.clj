@@ -10,7 +10,7 @@
     [taoensso.timbre :as log]
     [harja.kyselyt.konversio :as konv]
     [harja.domain.siltatarkastus :as siltadomain]
-    [harja.domain.raportointi :refer [info-solu]]
+    [harja.domain.raportointi :refer [info-solu lopetettu-solu]]
     [harja.math :as math]
     [clj-time.coerce :as c]))
 
@@ -18,6 +18,7 @@
 
 (def ^{:private true} korosta-kun-arvoa-d-vahintaan 1)
 (def tarkastamatta-info (info-solu "Tarkastamatta"))
+(def lopetettu-info (lopetettu-solu "Lopetettu"))
 
 (defn- muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
@@ -27,8 +28,8 @@
                                                     (s/join ", "
                                                             (konv/pgarray->vector tulos))))))
                          (hae-sillan-tarkastuskohteet db {:urakka urakka-id
-                                                          :vuosi vuosi
-                                                          :silta silta-id}))
+                                                          :vuosi  vuosi
+                                                          :silta  silta-id}))
         kohderivit (sort-by :kohde (konv/sarakkeet-vektoriin
                                      kohderivit
                                      {:liite :liitteet}
@@ -64,16 +65,16 @@
      nil
      nil
      nil
-     [:arvo-ja-osuus {:arvo a-yhteensa
+     [:arvo-ja-osuus {:arvo  a-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            a-yhteensa kaikki-yhteensa))}]
-     [:arvo-ja-osuus {:arvo b-yhteensa
+     [:arvo-ja-osuus {:arvo  b-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            b-yhteensa kaikki-yhteensa))}]
-     [:arvo-ja-osuus {:arvo c-yhteensa
+     [:arvo-ja-osuus {:arvo  c-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            c-yhteensa kaikki-yhteensa))}]
-     [:arvo-ja-osuus {:arvo d-yhteensa
+     [:arvo-ja-osuus {:arvo  d-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            d-yhteensa kaikki-yhteensa))}]
      [:liitteet nil]]))
@@ -82,7 +83,7 @@
   (let [tarkastukset (into []
                            (map konv/alaviiva->rakenne)
                            (hae-urakan-siltatarkastukset db {:urakka urakka-id
-                                                             :vuosi vuosi}))
+                                                             :vuosi  vuosi}))
         tarkastukset (konv/sarakkeet-vektoriin
                        tarkastukset
                        {:liite :liitteet})
@@ -91,21 +92,24 @@
                   (let [arvioidut-kohteet-yhteensa (reduce + 0 ((juxt :a :b :c :d) tarkastus))]
                     [(:siltanro tarkastus)
                      (:siltanimi tarkastus)
-                     (if (:tarkastusaika tarkastus)
-                       (:tarkastusaika tarkastus)
-                       tarkastamatta-info)
+                     (if (or (not (nil? (:loppupvm tarkastus)))
+                             (not (nil? (:lakkautuspvm tarkastus))))
+                       lopetettu-info
+                       (if (:tarkastusaika tarkastus)
+                         (:tarkastusaika tarkastus)
+                         tarkastamatta-info))
                      (or (:tarkastaja tarkastus)
                          "-")
-                     [:arvo-ja-osuus {:arvo (:a tarkastus)
+                     [:arvo-ja-osuus {:arvo  (:a tarkastus)
                                       :osuus (Math/round (math/osuus-prosentteina
                                                            (:a tarkastus) arvioidut-kohteet-yhteensa))}]
-                     [:arvo-ja-osuus {:arvo (:b tarkastus)
+                     [:arvo-ja-osuus {:arvo  (:b tarkastus)
                                       :osuus (Math/round (math/osuus-prosentteina
                                                            (:b tarkastus) arvioidut-kohteet-yhteensa))}]
-                     [:arvo-ja-osuus {:arvo (:c tarkastus)
+                     [:arvo-ja-osuus {:arvo  (:c tarkastus)
                                       :osuus (Math/round (math/osuus-prosentteina
                                                            (:c tarkastus) arvioidut-kohteet-yhteensa))}]
-                     [:arvo-ja-osuus {:arvo (:d tarkastus)
+                     [:arvo-ja-osuus {:arvo  (:d tarkastus)
                                       :osuus (Math/round (math/osuus-prosentteina
                                                            (:d tarkastus) arvioidut-kohteet-yhteensa))}]
                      [:liitteet (:liitteet tarkastus)]]))
@@ -125,36 +129,36 @@
         d-yhteensa (reduce + 0 (keep :d rivit))
         kaikki-yhteensa (+ a-yhteensa b-yhteensa c-yhteensa d-yhteensa)]
     ["Yhteensä"
-     [:arvo-ja-osuus {:arvo a-yhteensa
+     [:arvo-ja-osuus {:arvo  a-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            a-yhteensa kaikki-yhteensa))}]
-     [:arvo-ja-osuus {:arvo b-yhteensa
+     [:arvo-ja-osuus {:arvo  b-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            b-yhteensa kaikki-yhteensa))}]
-     [:arvo-ja-osuus {:arvo c-yhteensa
+     [:arvo-ja-osuus {:arvo  c-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            c-yhteensa kaikki-yhteensa))}]
-     [:arvo-ja-osuus {:arvo d-yhteensa
+     [:arvo-ja-osuus {:arvo  d-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            d-yhteensa kaikki-yhteensa))}]]))
 
 (defn- muodosta-hallintayksikon-datarivit [db hallintayksikko-id vuosi]
   (let [urakkarivit (hae-hallintayksikon-siltatarkastukset db {:hallintayksikko hallintayksikko-id
-                                                               :vuosi vuosi})
+                                                               :vuosi           vuosi})
         taulukkorivit (mapv
                         (fn [rivi]
                           (let [arvioidut-kohteet-yhteensa (reduce + 0 ((juxt :a :b :c :d) rivi))]
                             [(:nimi rivi)
-                             [:arvo-ja-osuus {:arvo (:a rivi)
+                             [:arvo-ja-osuus {:arvo  (:a rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:a rivi) arvioidut-kohteet-yhteensa))}]
-                             [:arvo-ja-osuus {:arvo (:b rivi)
+                             [:arvo-ja-osuus {:arvo  (:b rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:b rivi) arvioidut-kohteet-yhteensa))}]
-                             [:arvo-ja-osuus {:arvo (:c rivi)
+                             [:arvo-ja-osuus {:arvo  (:c rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:c rivi) arvioidut-kohteet-yhteensa))}]
-                             [:arvo-ja-osuus {:arvo (:d rivi)
+                             [:arvo-ja-osuus {:arvo  (:d rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:d rivi) arvioidut-kohteet-yhteensa))}]]))
                         urakkarivit)
@@ -167,16 +171,16 @@
                         (fn [rivi]
                           (let [arvioidut-kohteet-yhteensa (reduce + ((juxt :a :b :c :d) rivi))]
                             [(:nimi rivi)
-                             [:arvo-ja-osuus {:arvo (:a rivi)
+                             [:arvo-ja-osuus {:arvo  (:a rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:a rivi) arvioidut-kohteet-yhteensa))}]
-                             [:arvo-ja-osuus {:arvo (:b rivi)
+                             [:arvo-ja-osuus {:arvo  (:b rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:b rivi) arvioidut-kohteet-yhteensa))}]
-                             [:arvo-ja-osuus {:arvo (:c rivi)
+                             [:arvo-ja-osuus {:arvo  (:c rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:c rivi) arvioidut-kohteet-yhteensa))}]
-                             [:arvo-ja-osuus {:arvo (:d rivi)
+                             [:arvo-ja-osuus {:arvo  (:d rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
                                                                    (:d rivi) arvioidut-kohteet-yhteensa))}]]))
                         elyrivit)
@@ -225,12 +229,12 @@
         yksittaisen-sillan-perustiedot (when (and (= konteksti :urakka)
                                                   (not= silta-id :kaikki))
                                          (first (hae-sillan-tarkastus db {:urakka urakka-id
-                                                                          :vuosi vuosi
-                                                                          :silta silta-id})))
+                                                                          :vuosi  vuosi
+                                                                          :silta  silta-id})))
         datarivit (muodosta-raportin-datarivit db urakka-id hallintayksikko-id konteksti silta-id vuosi)
         urakan-vuoden-tarkastusmaarat (when (= konteksti :urakka)
                                         (first (hae-urakan-tarkastettujen-siltojen-lkm db {:urakka urakka-id
-                                                                                           :vuosi vuosi})))
+                                                                                           :vuosi  vuosi})))
         raportin-nimi "Siltatarkastusraportti"
         liita (fn [rivi kentta arvo] (assoc (if (map? rivi) rivi {:rivi rivi}) kentta arvo))
         kentta-indeksilla (fn [rivi indeksi] (nth (if (map? rivi) (:rivi rivi) rivi) indeksi))
@@ -265,6 +269,16 @@
                                false)
                            (liita rivi :tarkastamaton? true)
                            (liita rivi :tarkastamaton? false)))
+        lopetettu? (fn [rivi]
+                     (if (cond
+                           (and (= konteksti :urakka) (= silta-id :kaikki))
+                           (let [lopetettu (kentta-indeksilla rivi 2)]
+                             (= lopetettu lopetettu-info))
+
+                           :else
+                           false)
+                       (liita rivi :lopetettu? true)
+                       (liita rivi :lopetettu? false)))
 
         lihavoi (fn [rivi]
                   (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
@@ -286,11 +300,11 @@
         jarjesta-ryhmien-sisallot (fn [tila-ja-rivit]
                                     (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         jarjesta-ryhmiin (fn [rivit]
-                           (let [jarjestys (fn [a b] (let [arvo {[true false] 0 ;; kts. alla oleva juxt
-                                                                 [false true] 1
+                           (let [jarjestys (fn [a b] (let [arvo {[true false]  0 ;; kts. alla oleva juxt
+                                                                 [false true]  1
                                                                  [false false] 2}]
                                                        (< (arvo a) (arvo b))))]
-                             (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe?) rivit))))
+                             (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe? :lopetettu?) rivit))))
         otsikko (case konteksti
                   :urakka
                   (if (= silta-id :kaikki)
@@ -304,15 +318,15 @@
                   (str raportin-nimi ", KOKO MAA " vuosi))]
 
     [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
-                 :tyhja (if silta-id
-                          "Sillalle ei ole tehty tarkastusta valittuna vuonna."
-                          "Ei raportoitavia siltatarkastuksia.")
+                :nimi        raportin-nimi}
+     [:taulukko {:otsikko                    otsikko
+                 :tyhja                      (if silta-id
+                                               "Sillalle ei ole tehty tarkastusta valittuna vuonna."
+                                               "Ei raportoitavia siltatarkastuksia.")
                  :viimeinen-rivi-yhteenveto? (or (and (= konteksti :urakka) (= silta-id :kaikki))
                                                  (= konteksti :hallintayksikko)
                                                  (= konteksti :koko-maa))
-                 :sheet-nimi raportin-nimi}
+                 :sheet-nimi                 raportin-nimi}
       otsikkorivit
       (cond
         (and (= konteksti :urakka) (= silta-id :kaikki))
@@ -322,6 +336,7 @@
                         butlast
                         (map virhe?)
                         (map tarkastamaton?)
+                        (map lopetettu?)
                         (map korosta)
                         (map lihavoi)
                         jarjesta-ryhmiin

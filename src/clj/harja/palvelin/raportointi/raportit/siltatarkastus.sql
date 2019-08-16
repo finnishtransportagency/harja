@@ -4,6 +4,8 @@ SELECT
   s.id,
   siltanro,
   siltanimi,
+  loppupvm,
+  lakkautuspvm,
   (SELECT tarkastusaika
    FROM siltatarkastus st
    WHERE st.silta = s.id

@@ -16,13 +16,17 @@
 (defn- varita-silta [silta]
   ;; PENDING: tämä ehkä korjausstatuksen mukaan?
   ;; Nyt sillat ovat punaisia
-  (-> silta
-      (assoc-in [:alue :fill] "red")))
+  (if (not (and (nil? (:loppupvm silta))
+                (nil? (:lakkautpvm silta))))
+    (-> silta
+        (assoc-in [:alue :fill] "black"))
+    (-> silta
+        (assoc-in [:alue :fill] "green"))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat
            {:urakka-id (:id urakka)
-            :listaus listaus}))
+            :listaus   listaus}))
 
 (def haetut-sillat
   (reaction<! [paalla? @karttataso-sillat
@@ -49,13 +53,13 @@
 
 (def sillat-kartalla
   (reaction-writable
-   (skaalaa-sillat-zoom-tason-mukaan
-    @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
+    (skaalaa-sillat-zoom-tason-mukaan
+      @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
 
 
 (defn paivita-silta! [id funktio & args]
   (swap! sillat-kartalla (fn [sillat]
-                  (mapv (fn [silta]
-                          (if (= id (:id silta))
-                            (apply funktio silta args)
-                            silta)) sillat))))
+                           (mapv (fn [silta]
+                                   (if (= id (:id silta))
+                                     (apply funktio silta args)
+                                     silta)) sillat))))

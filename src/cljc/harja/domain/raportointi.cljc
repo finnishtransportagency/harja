@@ -4,7 +4,8 @@
 (def virhetyylit
   {:virhe "rgb(221,0,0)"
    :varoitus "rgb(255,153,0)"
-   :info "rgb(0,136,204)"})
+   :info "rgb(0,136,204)"
+   :hailakka "rgb(192,192,192)"})
 
 
 ;; rajat-excel, virhetyylit-excel, ja solun-oletustyyli-excel ovat exceliin sidottuja,
@@ -46,6 +47,7 @@
 (def info-solu (partial varillinen-teksti :info))
 (def varoitus-solu (partial varillinen-teksti :varoitus))
 (def virhe-solu (partial varillinen-teksti :virhe))
+(def lopetettu-solu (partial varillinen-teksti :hailakka))
 
 (defn raporttielementti?
   "Raporttielementit ovat soluja, joissa on muutakin, kuin pelkkkä arvo.
