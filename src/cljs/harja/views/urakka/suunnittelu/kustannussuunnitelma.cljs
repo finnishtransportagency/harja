@@ -265,6 +265,7 @@
                       (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false))))
+                      (e! (t/->TaytaAlas this polku-taulukkoon))
                       (println "NAPPIA PAINETTU"))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div {:class (apply str (interpose " " luokat))

@@ -37,7 +37,9 @@
                      :class [:parametrit :class]}
         palautettava-arvo (get-in osa (muuta-avain avain))]
     (if (= avain :arvo)
-      (js/parseInt palautettava-arvo)
+      (try (js/parseInt palautettava-arvo)
+           (catch :default e
+             palautettava-arvo))
       palautettava-arvo)))
 
 (defmethod arvo osa/Ikoni
@@ -155,7 +157,7 @@
 
 (defmethod aseta-arvo :default
   [taulukon-asia avain & _]
-  (loki/warn "TAULUKON ASIALLE: " taulukon-asia " AVAIMEN ASETTAMIS FN EI OLE MÄÄRITETTY!")
+  (loki/warn "TAULUKON ASIALLE: " (str taulukon-asia) " AVAIMEN ASETTAMIS FN EI OLE MÄÄRITETTY!")
   (loki/warn "ASIAN TYYPPI: " (type taulukon-asia))
   taulukon-asia)
 
@@ -226,7 +228,8 @@
 
 (defmethod paivita-arvo :default
   [taulukon-asia avain & _]
-  (loki/warn "TAULUKON ASIALLE: " taulukon-asia " AVAIMEN ASETTAMIS FN EI OLE MÄÄRITETTY!")
+  (loki/warn "TAULUKON ASIALLE: " (str taulukon-asia) " AVAIMEN PAIVITTÄMIS FN EI OLE MÄÄRITETTY!")
+  (loki/warn (type taulukon-asia))
   taulukon-asia)
 
 
@@ -283,3 +286,21 @@
                                                  olemassa-olevat)]
        loytynyt-olemassa-oleva-data
        (f (merge data default-arvoja))))))
+
+(defn mapv-indexed [f coll]
+  (into []
+        (map-indexed f coll)))
+
+(defn map-range
+  ([alku f coll] (map-range alku (count coll) f coll))
+  ([alku loppu f coll]
+   (concat
+     (take alku coll)
+     (map f
+          (->> coll (drop alku) (take loppu)))
+     (drop loppu coll))))
+
+(defn mapv-range
+  ([alku f coll] (into [] (map-range alku f coll)))
+  ([alku loppu f coll]
+   (into [] (map-range alku loppu f coll))))

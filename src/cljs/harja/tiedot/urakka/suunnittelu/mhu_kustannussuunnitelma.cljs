@@ -52,6 +52,7 @@
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
 (defrecord PaivitaTaulukonOsa [osa polku-taulukkoon paivitys-fn])
 (defrecord PaivitaKustannussuunnitelmanYhteenvedot [maara-solu polku-taulukkoon])
+(defrecord TaytaAlas [maara-solu polku-taulukkoon])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -203,4 +204,54 @@
   (process-event [{:keys [osa polku-taulukkoon paivitys-fn]} app]
     (p/paivita-solu! (get-in app polku-taulukkoon)
                      (tyokalut/paivita-arvo osa :arvo paivitys-fn)
-                     app)))
+                     app))
+  TaytaAlas
+  (process-event [{:keys [maara-solu polku-taulukkoon]} app]
+    (let [taulukko (get-in app polku-taulukkoon)
+          [polku-riviin _] (p/osan-polku-taulukossa taulukko maara-solu)
+          tayta-rivista-eteenpain (first (keep-indexed (fn [index rivi]
+                                                         (when (p/osan-polku rivi maara-solu)
+                                                           index))
+                                                       (tyokalut/arvo (get-in taulukko polku-riviin) :lapset)))
+          value (:value (tyokalut/arvo maara-solu :arvo))
+          maara-otsikon-index (p/otsikon-index taulukko "Määrä")
+          yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
+          ;; Päivitetään ensin kaikkien maararivien 'määrä' ja 'yhteensä' solut
+          app (p/paivita-rivi! taulukko
+                               (tyokalut/paivita-arvo (get-in taulukko polku-riviin) :lapset
+                                                      (fn [rivit]
+                                                        (tyokalut/mapv-range tayta-rivista-eteenpain
+                                                                             (fn [maara-rivi]
+                                                                               (tyokalut/paivita-arvo maara-rivi
+                                                                                                      :lapset
+                                                                                                      (fn [osat]
+                                                                                                        (tyokalut/mapv-indexed
+                                                                                                          (fn [index osa]
+                                                                                                            (cond
+                                                                                                              (= index maara-otsikon-index) (tyokalut/paivita-arvo osa :arvo assoc :value value)
+                                                                                                              (= index yhteensa-otsikon-index) (tyokalut/aseta-arvo osa :arvo value)
+                                                                                                              :else osa))
+                                                                                                          osat))))
+                                                                             rivit)))
+                               app)
+          taulukko (get-in app polku-taulukkoon)]
+      ;; Sitten päivitetään yhteensä rivin yhteensä solu
+      (p/paivita-rivi! taulukko
+                       (tyokalut/paivita-arvo (get-in taulukko polku-riviin) :lapset
+                                              (fn [rivit]
+                                                (tyokalut/mapv-range 0 1
+                                                                     (fn [yhteensa-rivi]
+                                                                       (tyokalut/paivita-arvo yhteensa-rivi
+                                                                                              :lapset
+                                                                                              (fn [osat]
+                                                                                                (tyokalut/mapv-indexed
+                                                                                                  (fn [index osa]
+                                                                                                    (if (= index yhteensa-otsikon-index)
+                                                                                                      (tyokalut/aseta-arvo osa :arvo (apply + (map (fn [rivi]
+                                                                                                                                                     (tyokalut/arvo (get (tyokalut/arvo rivi :lapset) yhteensa-otsikon-index)
+                                                                                                                                                                    :arvo))
+                                                                                                                                                   (rest rivit))))
+                                                                                                      osa))
+                                                                                                  osat))))
+                                                                     rivit)))
+                       app))))
