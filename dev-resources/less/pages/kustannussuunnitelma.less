@@ -51,31 +51,6 @@
   }
 }
 
-.hankinnat-header {
-  display:flex;
-}
-
-.hankinnat-rivi {
-  display:block;
-}
-
-.hankinnat-kontti {
-  display:flex;
-  flex-direction:column;
-}
-
-.hankinnat-label {
-  padding:8px;
-  display:flex;
-  justify-content: space-between;
-  cursor:pointer;
-  &:hover {
-    background-color:grey;
-  }
-  &.livicon-chevron-down {
-    margin-left:auto;
-  }
-}
 
 #kuluva-hoitovuosi {
   display:flex;
@@ -132,5 +107,14 @@
   span {
     padding: 5px;
     padding-left: inherit;
+  }
+}
+
+.kustannus-syotto {
+  position: relative;
+  .kopioi-nappi {
+    position: absolute;
+    top: -100%;
+    right: 0px;
   }
 }

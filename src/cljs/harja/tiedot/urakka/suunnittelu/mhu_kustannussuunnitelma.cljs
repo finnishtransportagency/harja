@@ -193,25 +193,15 @@
   (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]
     (let [rivin-container (tyokalut/rivin-vanhempi (get-in app (conj polku-taulukkoon :rivit))
                                                    rivin-id)
-          #_#__ (tyokalut/ominaisuus-predikaatilla (get-in app (conj polku-taulukkoon :rivit))
-                                                   (fn [index rivi]
-                                                     rivi)
-                                                   (fn [rivi]
-                                                     (when (= (type rivi) jana/RiviLapsilla)
-                                                       (p/janan-id? (first (p/janan-osat rivi)) rivin-id))))]
+          toggle-fn (if auki? disj conj)]
       (p/paivita-taulukko! (update (get-in app polku-taulukkoon) :rivit
                                    (fn [rivit]
                                      (mapv (fn [rivi]
                                              (if (p/janan-id? rivi (p/janan-id rivin-container))
-                                               (if auki?
-                                                 (update rivi :janat (fn [[paa & lapset]]
-                                                                       (into []
-                                                                             (cons paa
-                                                                                   (map #(update % :luokat disj "piillotettu") lapset)))))
-                                                 (update rivi :janat (fn [[paa & lapset]]
-                                                                       (into []
-                                                                             (cons paa
-                                                                                   (map #(update % :luokat conj "piillotettu") lapset))))))
+                                               (update rivi :janat (fn [[paa & lapset]]
+                                                                     (into []
+                                                                           (cons paa
+                                                                                 (map #(update % :luokat toggle-fn "piillotettu") lapset)))))
                                                rivi))
                                            rivit)))
                            app)))

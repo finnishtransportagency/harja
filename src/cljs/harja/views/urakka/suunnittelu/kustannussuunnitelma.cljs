@@ -268,12 +268,12 @@
                       (e! (t/->TaytaAlas this polku-taulukkoon))
                       (println "NAPPIA PAINETTU"))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
-      [:div {:class (apply str (interpose " " luokat))
+      [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
              :tab-index -1
              :data-id (str (p/osan-id this))}
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" (r/partial tayta-alas! this)
-        {:luokka (when-not nappi-nakyvilla?
-                   "piillotettu")
+        {:luokka (str "kopioi-nappi " (when-not nappi-nakyvilla?
+                                        "piillotettu"))
          :data-attributes {:data-kopioi-allaoleviin true}
          :tabindex 0}]
        [p/piirra-osa (-> input-osa
