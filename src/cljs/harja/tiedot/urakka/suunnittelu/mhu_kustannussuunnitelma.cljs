@@ -49,7 +49,8 @@
 (defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
-(defrecord PaivitaToimenpiteenHankintaMaara [osa arvo polku-taulukkoon])
+(defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
+(defrecord PaivitaTaulukonOsa [osa polku-taulukkoon paivitys-fn])
 (defrecord PaivitaKustannussuunnitelmanYhteenvedot [maara-solu polku-taulukkoon])
 
 (defn hankinnat-pohjadata []
@@ -68,7 +69,7 @@
   PaivitaKustannussuunnitelmanYhteenvedot
   (process-event [{:keys [maara-solu polku-taulukkoon]} {:keys [hankintakustannukset] :as app}]
     (let [taulukko (get-in app polku-taulukkoon)
-          arvo (tyokalut/arvo maara-solu :arvo)
+          arvo (:value (tyokalut/arvo maara-solu :arvo))
           [polku-riviin _] (p/osan-polku-taulukossa taulukko maara-solu)
           hoitokauden-container (get-in taulukko polku-riviin)
           hoitokauden-yhteensa-rivi (first (p/janan-osat hoitokauden-container))
@@ -193,8 +194,13 @@
                                                rivi))
                                            rivit)))
                            app)))
-  PaivitaToimenpiteenHankintaMaara
+  MuutaTaulukonOsa
   (process-event [{:keys [osa arvo polku-taulukkoon]} app]
     (p/paivita-solu! (get-in app polku-taulukkoon)
                      (tyokalut/aseta-arvo osa :arvo arvo)
+                     app))
+  PaivitaTaulukonOsa
+  (process-event [{:keys [osa polku-taulukkoon paivitys-fn]} app]
+    (p/paivita-solu! (get-in app polku-taulukkoon)
+                     (tyokalut/paivita-arvo osa :arvo paivitys-fn)
                      app)))

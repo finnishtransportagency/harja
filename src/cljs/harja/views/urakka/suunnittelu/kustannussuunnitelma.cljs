@@ -230,30 +230,54 @@
   [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon]} value]
   (let [on-change (fn [arvo]
                     (when arvo
-                      (e! (t/->PaivitaToimenpiteenHankintaMaara (:tama-komponentti osa/*this*) arvo polku-taulukkoon))))
-        on-blur (fn [_]
-                  (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot (:tama-komponentti osa/*this*) polku-taulukkoon)))
+                      (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
+                                                  (fn [komponentin-tila]
+                                                    (assoc komponentin-tila :value arvo))))))
+        on-blur (fn [event]
+                  (let [klikattu-elementti (.-relatedTarget event)]
+                    (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot (::tama-komponentti osa/*this*) polku-taulukkoon))
+                    ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
+                    (when-not (and (not (nil? klikattu-elementti))
+                                   (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
+                                       (= (str (.getAttribute klikattu-elementti "data-id"))
+                                          (str (p/osan-id this)))))
+                      (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
+                                                  (fn [komponentin-tila]
+                                                    (assoc komponentin-tila :nappi-nakyvilla? false)))))))
+        on-focus (fn [_]
+                   (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
+                                               (fn [komponentin-tila]
+                                                 (assoc komponentin-tila :nappi-nakyvilla? true)))))
         on-key-down (fn [event]
                       (when (= "Enter" (.. event -key))
                         (.. event -target blur)))
         input-osa (osa/->Syote (keyword (str nimi "-maara-kk"))
                                {:on-change on-change
                                 :on-blur on-blur
+                                :on-focus on-focus
                                 :on-key-down on-key-down}
                                {:on-change [:positiivinen-numero :eventin-arvo]}
                                {:class input-luokat
                                 :type "text"
                                 :disabled (not on-oikeus?)
                                 :value value})
-
-        tayta-alas! (fn [_]
+        tayta-alas! (fn [this _]
+                      (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
+                                                  (fn [komponentin-tila]
+                                                    (assoc komponentin-tila :nappi-nakyvilla? false))))
                       (println "NAPPIA PAINETTU"))]
-    (fn [this {:keys [luokat]} value]
-      [:div {:class (apply str (interpose " " luokat))}
-       [napit/yleinen-ensisijainen "Kopioi allaoleviin" tayta-alas! {:luokka "piillotettu"}]
+    (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
+      [:div {:class (apply str (interpose " " luokat))
+             :tab-index -1
+             :data-id (str (p/osan-id this))}
+       [napit/yleinen-ensisijainen "Kopioi allaoleviin" (r/partial tayta-alas! this)
+        {:luokka (when-not nappi-nakyvilla?
+                   "piillotettu")
+         :data-attributes {:data-kopioi-allaoleviin true}
+         :tabindex 0}]
        [p/piirra-osa (-> input-osa
                          (tyokalut/aseta-arvo :arvo value)
-                         (assoc :tama-komponentti this))]])))
+                         (assoc ::tama-komponentti this))]])))
 
 (defn osien-paivitys-fn [nimi maara yhteensa]
   (fn [osat]
@@ -341,7 +365,7 @@
                                                                   (fn [osa]
                                                                     (-> osa
                                                                         (tyokalut/aseta-arvo :id (keyword (str nimi "-maara"))
-                                                                                             :arvo maara)
+                                                                                             :arvo {:value maara})
                                                                         (assoc :komponentti hankintasuunnitelmien-syotto
                                                                                :komponentin-argumentit {:e! e!
                                                                                                         :nimi nimi
@@ -559,7 +583,7 @@
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!)))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset] :as app}]
       [:div.kustannussuunnitelma
-       [debug/debug app]
+       ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
        [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
        [kuluva-hoitovuosi]

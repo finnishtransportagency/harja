@@ -145,13 +145,14 @@
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
                                     (r/dom-node %)))))
-       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes] :as optiot}]
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex] :as optiot}]
          [:button
           (merge
             {:class (str (when disabled "disabled ")
                          (when @naulattu? "nappi-naulattu ")
                          (when ikoninappi? "nappi-ikoni ")
                          luokka)
+             :tab-index tabindex
              :disabled disabled
              :style style
              :title title
