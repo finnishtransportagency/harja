@@ -1,0 +1,219 @@
+@import "colors.less";
+
+.input-yhteiset-arvot() {
+  font-size: 0.875rem;
+  background-color: @white;
+  height: 40px;
+  outline-style: solid;
+}
+.font-yhteiset-arvot() {
+  font-family: "Open Sans", sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 0.75rem;
+  color: @gray25;
+}
+
+label {
+  &.input, &.select {
+    .font-yhteiset-arvot();
+
+    &:focus {
+      color: @focus-color;
+    }
+    &:disabled {
+      color: @gray100;
+    }
+    &-error {
+      color: @red;
+    }
+  }
+}
+.error-message {
+  .font-yhteiset-arvot();
+  color: @red;
+}
+
+.input- {
+  &default {
+    .font-yhteiset-arvot();
+    .input-yhteiset-arvot();
+    outline-color: @gray200;
+    outline-width: 1px;
+    outline-offset: -1px;
+
+    &:hover {
+      outline-color: @gray200;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+
+    &:focus {
+      outline-color: @focus-color;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+
+    &:disabled {
+      background-color: @gray225;
+      outline-color: @gray200;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+  }
+
+  &error- {
+    &default {
+      .font-yhteiset-arvot();
+      .input-yhteiset-arvot();
+      outline-color: @red;
+      outline-width: 1px;
+      outline-offset: -1px;
+
+      &:hover {
+        outline-width: 2px;
+        outline-offset: -2px;
+      }
+      &:focus {
+        outline-width: 3px;
+        outline-offset: -3px;
+      }
+    }
+  }
+}
+
+.select- {
+  &default {
+    .font-yhteiset-arvot();
+    .input-yhteiset-arvot();
+    outline-color: @gray200;
+    outline-width: 1px;
+    outline-offset: -1px;
+
+    &:hover {
+      outline-color: @gray200;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+
+    &:focus {
+      outline-color: @focus-color;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+
+    &:disabled {
+      background-color: @gray225;
+      outline-color: @gray200;
+    }
+  }
+
+  &error- {
+    &default {
+      .font-yhteiset-arvot();
+      .input-yhteiset-arvot();
+      outline-color: @red;
+      outline-width: 1px;
+      outline-offset: -1px;
+      &:hover {
+        outline-width: 2px;
+        outline-offset: -2px;
+      }
+      &:focus {
+        outline-width: 3px;
+        outline-offset: -3px;
+      }
+    }
+  }
+}
+
+.select-date- {
+  &default {
+    .font-yhteiset-arvot();
+    .input-yhteiset-arvot();
+    outline-color: @gray200;
+    outline-width: 1px;
+    outline-offset: -1px;
+
+    &:hover {
+      outline-color: @gray200;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+
+    &:focus {
+      outline-color: @focus-color;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+
+    &:disabled {
+      background-color: @gray225;
+      outline-color: @gray200;
+    }
+  }
+
+  &error- {
+    &default {
+      .font-yhteiset-arvot();
+      .input-yhteiset-arvot();
+      outline-color: @red;
+      outline-width: 1px;
+      outline-offset: -1px;
+      &:hover {
+        outline-width: 2px;
+        outline-offset: -2px;
+      }
+      &:focus {
+        outline-width: 3px;
+        outline-offset: -3px;
+      }
+    }
+  }
+}
+
+.select-time- {
+  &default {
+    .font-yhteiset-arvot();
+    .input-yhteiset-arvot();
+    outline-color: @gray200;
+    outline-width: 1px;
+    outline-offset: -1px;
+
+    &:hover {
+      outline-color: @gray200;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+
+    &:focus {
+      outline-color: @focus-color;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+
+    &:disabled {
+      background-color: @gray225;
+      outline-color: @gray200;
+    }
+  }
+
+  &error- {
+    &default {
+      .font-yhteiset-arvot();
+      .input-yhteiset-arvot();
+      outline-color: @red;
+      outline-width: 1px;
+      outline-offset: -1px;
+
+      &:hover {
+        outline-width: 2px;
+        outline-offset: -2px;
+      }
+      &:focus {
+        outline-width: 3px;
+        outline-offset: -3px;
+      }
+    }
+  }
+}

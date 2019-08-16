@@ -1,0 +1,77 @@
+@import "colors.less";
+
+.table- {
+  &default {
+    font-size: 0.75rem;
+    font-weight: normal;
+    color: @gray25;
+    min-height: 40px;
+    &-odd {
+      background-color: @gray250;
+      &:hover, &:focus {
+        background-color: @gray230;
+      }
+    }
+    &-even {
+      background-color: @gray240;
+      &:hover, &:focus {
+        background-color: @gray230;
+      }
+    }
+    &-header {
+      font-size: 0.875rem;
+      font-weight: 700;
+      background-color: @gray220;
+    }
+    &-sum {
+      font-weight: 700;
+      background-color: @gray230;
+    }
+  }
+  &-pressed {
+    &-odd {
+      background-color: @gray220;
+    }
+    &-even {
+      background-color: @gray220;
+    }
+  }
+}
+
+.table-border- {
+  &default {
+    font-size: 0.75rem;
+    font-weight: normal;
+    color: @gray25;
+    min-height: 40px;
+    &-odd {
+      background-color: transparent;
+      &:hover, &:focus {
+        background-color: @gray230;
+      }
+    }
+    &-even {
+      background-color: transparent;
+      &:hover, &:focus {
+        background-color: @gray230;
+      }
+    }
+    &-header {
+      font-size: 0.875rem;
+      font-weight: 700;
+      background-color: transparent;
+    }
+    &-sum {
+      font-weight: 700;
+      background-color: transparent;
+    }
+  }
+  &-pressed {
+    &-odd {
+      background-color: @gray220;
+    }
+    &-even {
+      background-color: @gray220;
+    }
+  }
+}

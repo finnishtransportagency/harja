@@ -1,0 +1,104 @@
+.accordion-yhteiset() {
+  color: @gray25;
+  height: 40px;
+
+  font-family: "Open Sans", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.accordion {
+  &-1- {
+    &default {
+      .accordion-yhteiset();
+      text-transform: uppercase;
+      background-color: @gray220;
+      border-top: 1px solid @gray200;
+    }
+    &hover {
+      .accordion-yhteiset();
+      text-transform: uppercase;
+      background-color: @gray210;
+      border-top: 1px solid @gray200;
+    }
+    &focus {
+      .accordion-yhteiset();
+      text-transform: uppercase;
+      background-color: @gray210;
+      outline: 2px dashed @white;
+      outline-offset: -2px;
+    }
+    &active {
+      .accordion-yhteiset();
+      text-transform: uppercase;
+      background-color: @gray200;
+      border-top: 1px solid @gray200;
+    }
+    &disabled {
+      .accordion-yhteiset();
+      text-transform: uppercase;
+      color: @gray175;
+      background-color: @gray220;
+      border-top: 1px solid @gray200;
+    }
+  }
+  &-2- {
+    &default {
+      .accordion-yhteiset();
+      background-color: @gray230;
+      border-top: 1px solid @gray210;
+    }
+    &hover {
+      .accordion-yhteiset();
+      background-color: @gray220;
+      border-top: 1px solid @gray210;
+    }
+    &focus {
+      .accordion-yhteiset();
+      background-color: @gray220;
+      outline: 2px dashed @white;
+      outline-offset: -2px;
+    }
+    &active {
+      .accordion-yhteiset();
+      background-color: @gray210;
+      border-top: 1px solid @gray210;
+    }
+    &disabled {
+      .accordion-yhteiset();
+      color: @gray175;
+      background-color: @gray230;
+      border-top: 1px solid @gray210;
+    }
+  }
+  &-3- {
+    &default {
+      .accordion-yhteiset();
+      background-color: @gray240;
+      border-top: 1px solid @gray220;
+    }
+    &hover {
+      .accordion-yhteiset();
+      background-color: @gray230;
+      border-top: 1px solid @gray220;
+    }
+    &focus {
+      .accordion-yhteiset();
+      background-color: @gray230;
+      outline: 2px dashed @white;
+      outline-offset: -2px;
+    }
+    &active {
+      .accordion-yhteiset();
+      background-color: @gray220;
+      border-top: 1px solid @gray220;
+    }
+    &disabled {
+      .accordion-yhteiset();
+      color: @gray175;
+      background-color: @gray240;
+      border-top: 1px solid @gray220;
+    }
+  }
+}
