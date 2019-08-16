@@ -24,6 +24,7 @@
                           %1)
                        rivit)))
 
+; {:taulukon-id 1 :skeema-rivi .. :skeema-sarake :rivit [] :parametrit}
 (defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
   p/Taulukko
   (piirra-taulukko [this]

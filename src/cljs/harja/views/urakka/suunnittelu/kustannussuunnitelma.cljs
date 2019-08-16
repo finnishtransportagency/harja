@@ -398,7 +398,8 @@
                                                                                                    :lapset (map (fn [hankinta]
                                                                                                                   (lapsirivi rivin-pohja (pvm/pvm (:pvm hankinta)) (:summa hankinta)))
                                                                                                                 hoitokauden-hankinnat)))))
-                                                                                             [] rivit)))))))
+                                                                                             [] rivit))))
+                                                    (assoc :hoitokausi hoitokausi))))
                                             hankinnat-hoitokausittain))
         yhteensa-fn (fn [yhteensa-pohja]
                       (-> yhteensa-pohja
@@ -426,17 +427,14 @@
                          :hankinnat-taulukko-laskutukseen-perustuen
                          :hankinnat-taulukko)
                        {:normaali {:janan-tyyppi jana/Rivi
-                                   :index 1
                                    :osat [osa/Teksti
                                           osa/Teksti
                                           osa/Teksti]}
                         :laajenna {:janan-tyyppi jana/Rivi
-                                   :index 1
                                    :osat [osa/Teksti
                                           osa/Teksti
                                           osa/Laajenna]}
                         :lapset {:janan-tyyppi jana/Rivi
-                                 :index 1
                                  :osat [osa/Teksti
                                         osa/Komponentti
                                         osa/Teksti]}

@@ -13,7 +13,7 @@
 (defmethod arvo taulukko/Taulukko
   [taulukko avain]
   (let [muuta-avain {:id [:taulukon-id]
-                     :lapset [:skeema-sarake]
+                     :lapset [:rivit]
                      :class [:parametrit :class]}]
     (get-in taulukko (muuta-avain avain))))
 

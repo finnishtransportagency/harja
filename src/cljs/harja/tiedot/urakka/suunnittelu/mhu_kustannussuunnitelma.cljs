@@ -43,6 +43,25 @@
         kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
     [kuluva-urakan-vuosi hoitovuoden-pvmt]))
 
+(defn yhteensa-yhteenveto [paivitetty-hoitokausi app]
+  (apply +
+         (map (fn [taulukko]
+                (let [yhteensa-sarake-index (p/otsikon-index taulukko "Yhteensä")]
+                  (transduce
+                    (comp (filter (fn [rivi]
+                                    (= :laajenna-lapsilla (p/rivin-skeema taulukko rivi))))
+                          (filter (fn [laajenna-lapsilla-rivi]
+                                    (= (:hoitokausi laajenna-lapsilla-rivi) paivitetty-hoitokausi)))
+                          (map (fn [laajenna-lapsilla-rivi]
+                                 (first (tyokalut/arvo laajenna-lapsilla-rivi :lapset))))
+                          (map (fn [yhteensa-rivi]
+                                 (get (tyokalut/arvo yhteensa-rivi :lapset) yhteensa-sarake-index)))
+                          (map (fn [yhteensa-solu]
+                                 (tyokalut/arvo yhteensa-solu :arvo))))
+                    + 0 (tyokalut/arvo taulukko :lapset))))
+              (concat (vals (get-in app [:hankintakustannukset :toimenpiteet]))
+                      (vals (get-in app [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]))))))
+
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
@@ -88,11 +107,12 @@
           yhteensa-rivin-arvo (+ (tyokalut/arvo yhteensa-rivi-yhteensa-solu :arvo)
                                  arvon-muutos)
           paivita-solu! (fn [app osa]
-                          (p/paivita-solu! (get-in app polku-taulukkoon) osa app))]
+                          (p/paivita-solu! (get-in app polku-taulukkoon) osa app))
+          paivitetty-hoitokausi (:hoitokausi hoitokauden-container)]
       (-> app
           (paivita-solu! (tyokalut/aseta-arvo maara-rivi-yhteensa-solu :arvo arvo))
           (paivita-solu! (tyokalut/aseta-arvo yhteensa-rivi-yhteensa-solu :arvo yhteensa-rivin-arvo))
-          (update-in [:hankintakustannukset :yhteenveto (dec kuluva-hoitokausi) :summa] + arvon-muutos))))
+          (update-in [:hankintakustannukset :yhteenveto (dec paivitetty-hoitokausi) :summa] + arvon-muutos))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
@@ -214,6 +234,7 @@
                                                            index))
                                                        (tyokalut/arvo (get-in taulukko polku-riviin) :lapset)))
           value (:value (tyokalut/arvo maara-solu :arvo))
+          paivitetty-hoitokausi (:hoitokausi (get-in taulukko polku-riviin))
           maara-otsikon-index (p/otsikon-index taulukko "Määrä")
           yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
           ;; Päivitetään ensin kaikkien maararivien 'määrä' ja 'yhteensä' solut
@@ -234,24 +255,28 @@
                                                                                                           osat))))
                                                                              rivit)))
                                app)
-          taulukko (get-in app polku-taulukkoon)]
-      ;; Sitten päivitetään yhteensä rivin yhteensä solu
-      (p/paivita-rivi! taulukko
-                       (tyokalut/paivita-arvo (get-in taulukko polku-riviin) :lapset
-                                              (fn [rivit]
-                                                (tyokalut/mapv-range 0 1
-                                                                     (fn [yhteensa-rivi]
-                                                                       (tyokalut/paivita-arvo yhteensa-rivi
-                                                                                              :lapset
-                                                                                              (fn [osat]
-                                                                                                (tyokalut/mapv-indexed
-                                                                                                  (fn [index osa]
-                                                                                                    (if (= index yhteensa-otsikon-index)
-                                                                                                      (tyokalut/aseta-arvo osa :arvo (apply + (map (fn [rivi]
-                                                                                                                                                     (tyokalut/arvo (get (tyokalut/arvo rivi :lapset) yhteensa-otsikon-index)
-                                                                                                                                                                    :arvo))
-                                                                                                                                                   (rest rivit))))
-                                                                                                      osa))
-                                                                                                  osat))))
-                                                                     rivit)))
-                       app))))
+          taulukko (get-in app polku-taulukkoon)
+          ;; Sitten päivitetään yhteensä rivin yhteensä solu
+          app (p/paivita-rivi! taulukko
+                               (tyokalut/paivita-arvo (get-in taulukko polku-riviin) :lapset
+                                                      (fn [rivit]
+                                                        (tyokalut/mapv-range 0 1
+                                                                             (fn [yhteensa-rivi]
+                                                                               (tyokalut/paivita-arvo yhteensa-rivi
+                                                                                                      :lapset
+                                                                                                      (fn [osat]
+                                                                                                        (tyokalut/mapv-indexed
+                                                                                                          (fn [index osa]
+                                                                                                            (if (= index yhteensa-otsikon-index)
+                                                                                                              (tyokalut/aseta-arvo osa :arvo (apply + (map (fn [rivi]
+                                                                                                                                                             (tyokalut/arvo (get (tyokalut/arvo rivi :lapset) yhteensa-otsikon-index)
+                                                                                                                                                                            :arvo))
+                                                                                                                                                           (rest rivit))))
+                                                                                                              osa))
+                                                                                                          osat))))
+                                                                             rivit)))
+                               app)
+          hoitokauden-summa (yhteensa-yhteenveto paivitetty-hoitokausi app)]
+      ;; Lopuksi yhteenvedon summa
+      (assoc-in app [:hankintakustannukset :yhteenveto (dec paivitetty-hoitokausi) :summa]
+                hoitokauden-summa))))
