@@ -297,7 +297,7 @@
    (concat
      (take alku coll)
      (map f
-          (->> coll (drop alku) (take loppu)))
+          (->> coll (drop alku) (take (- loppu alku))))
      (drop loppu coll))))
 
 (defn mapv-range

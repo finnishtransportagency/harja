@@ -651,7 +651,7 @@ BEGIN
         -- Laskutukseen perustusvat toimenpidekustannukset
         IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
           INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-            VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+            VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
                     'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
         END IF;
@@ -703,7 +703,7 @@ BEGIN
       -- Laskutukseen perustusvat toimenpidekustannukset
       IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-          VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+          VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
                   'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus'));
       END IF;

@@ -90,10 +90,10 @@
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
                     :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                    :hinnat kattohinnat}]
+                    :hinnat tavoitehinnat}]
      [hintalaskuri {:otsikko "Kattohinta"
                     :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
-                    :hinnat tavoitehinnat}]]
+                    :hinnat kattohinnat}]]
     [yleiset/ajax-loader]))
 
 (defn suunnitelman-selitteet [this luokat _]
@@ -110,18 +110,18 @@
                                :vuosisuunnittelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
         paarivi (fn [nimi ikoni-v ikoni-kk]
                    (jana/->Rivi (keyword nimi)
-                                [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) "reunaton"}})
+                                [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) }})
                                  (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat"))
                                               {:ikoni (ikoni-v)}
                                               {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                        "reunaton"
+
                                                         "keskita"}})
                                  (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat"))
                                               {:ikoni (ikoni-kk)}
                                               {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                        "reunaton"
+
                                                         "keskita"}})]
-                                #{"reunaton"}))
+                                #{}))
         paarivi-laajenna (fn [nimi]
                             (jana/->Rivi (keyword nimi)
                                          [(osa/->Laajenna (keyword (str nimi "-teksti"))
@@ -131,36 +131,36 @@
                                                                     "ikoni-vasemmalle"}})
                                           (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat")) {:ikoni ikonit/remove} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
                                                                                                                                   "keskita"
-                                                                                                                                  "reunaton"}})
+                                                                                                                                  }})
                                           (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat")) {:ikoni ikonit/livicon-minus} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
                                                                                                                                             "keskita"
-                                                                                                                                            "reunaton"}})]
-                                         #{"reunaton"}))
+                                                                                                                                            }})]
+                                         #{}))
         lapsirivi (fn [idn-alku teksti ikoni-v ikoni-kk]
                      (jana/->Rivi (keyword idn-alku)
                                   [(osa/->Teksti (keyword (str idn-alku "-nimi")) teksti {:class #{(sarakkeiden-leveys :nimi)
                                                                                                    "solu-sisenna-1"
-                                                                                                   "reunaton"}})
+                                                                                                   }})
                                    (osa/->Ikoni (keyword (str idn-alku "-vuosisuunnitelmat")) {:ikoni (ikoni-v)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
                                                                                                                            "keskita"
-                                                                                                                           "reunaton"}})
+                                                                                                                           }})
                                    (osa/->Ikoni (keyword (str idn-alku "-kuukausisuunnitelmat")) {:ikoni (ikoni-kk)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
                                                                                                                                "keskita"
-                                                                                                                               "reunaton"}})]
-                                  #{"piillotettu" "reunaton"}))
+                                                                                                                               }})]
+                                  #{"piillotettu" }))
         otsikkorivi (jana/->Rivi :otsikko-rivi
                                  [(osa/->Komponentti :otsikko-selite suunnitelman-selitteet #{(sarakkeiden-leveys :nimi)} nil)
                                   (osa/->Teksti :otsikko-vuosisuunnitelmat "Vuosisuunnitelmat" {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
                                                                                                          "keskita"
                                                                                                          "alas"
                                                                                                          "suunnitelman-tila-otsikko"
-                                                                                                         "reunaton"}})
+                                                                                                         }})
                                   (osa/->Teksti :otsikko-kuukausisuunnitelmat "Kuukausisuunnitelmat*" {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
                                                                                                                "keskita"
                                                                                                                 "alas"
                                                                                                                 "suunnitelman-tila-otsikko"
-                                                                                                               "reunaton"}})]
-                                 #{"reunaton"})
+                                                                                                               }})]
+                                 #{})
         taytettyja-hankintakustannuksia (count (keep :maara yhteenveto))
         hankintakustannukset-ikoni (fn []
                                      (case taytettyja-hankintakustannuksia
@@ -198,7 +198,7 @@
                         (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko]}]
       (if suunnitelmien-tila-taulukko
-        [taulukko/taulukko suunnitelmien-tila-taulukko #{"reunaton"}]
+        [taulukko/taulukko suunnitelmien-tila-taulukko #{}]
         [yleiset/ajax-loader]))))
 
 (defn hankintojen-filter [e! _]
@@ -272,8 +272,9 @@
              :tab-index -1
              :data-id (str (p/osan-id this))}
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" (r/partial tayta-alas! this)
-        {:luokka (str "kopioi-nappi " (when-not nappi-nakyvilla?
-                                        "piillotettu"))
+        {:luokka (str "kopioi-nappi button-primary-default "
+                      (when-not nappi-nakyvilla?
+                        "piillotettu"))
          :data-attributes {:data-kopioi-allaoleviin true}
          :tabindex 0}]
        [p/piirra-osa (-> input-osa
@@ -314,7 +315,7 @@
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (tyokalut/aseta-arvo :id :otsikko-rivi
-                                              :class #{"reunaton"})
+                                              :class #{"table-default" "table-default-header"})
                          (tyokalut/paivita-arvo :lapset
                                                 (osien-paivitys-fn (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
@@ -322,47 +323,46 @@
                                                                                                   laskutuksen-perusteella-taulukko? "Laskutuksen perusteella"
                                                                                                   laskutuksen-perusteella? "Kiinteät"
                                                                                                   :else " ")
-                                                                                          :class #{(sarakkeiden-leveys :nimi) "reunaton"}))
+                                                                                          :class #{(sarakkeiden-leveys :nimi)}))
                                                                    (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
                                                                                           :arvo "Määrä €/kk"
-                                                                                          :class #{(sarakkeiden-leveys :maara-kk) "reunaton"}))
+                                                                                          :class #{(sarakkeiden-leveys :maara-kk)}))
                                                                    (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
                                                                                           :arvo "Yhteensä"
-                                                                                          :class #{(sarakkeiden-leveys :yhteensa) "reunaton"}))))))
+                                                                                          :class #{(sarakkeiden-leveys :yhteensa)}))))))
         paarivi-laajenna (fn [rivin-pohja rivin-id hoitokausi yhteensa]
                            (-> rivin-pohja
                                (tyokalut/aseta-arvo :id rivin-id
-                                                    :class #{"reunaton"})
+                                                    :class #{"table-default"})
                                (tyokalut/paivita-arvo :lapset
                                                       (osien-paivitys-fn (fn [osa]
                                                                            (tyokalut/aseta-arvo osa
                                                                                                 :id (keyword (str rivin-id "-nimi"))
                                                                                                 :arvo (str hoitokausi ". hoitovuosi")
-                                                                                                :class #{(sarakkeiden-leveys :nimi) "reunaton"}))
+                                                                                                :class #{(sarakkeiden-leveys :nimi)}))
                                                                          (fn [osa]
                                                                            (tyokalut/aseta-arvo osa
                                                                                                 :id (keyword (str rivin-id "-maara-kk"))
                                                                                                 :arvo ""
-                                                                                                :class #{(sarakkeiden-leveys :maara-kk) "reunaton"}))
+                                                                                                :class #{(sarakkeiden-leveys :maara-kk)}))
                                                                          (fn [osa]
                                                                            (-> osa
                                                                                (tyokalut/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
                                                                                                     :arvo yhteensa
-                                                                                                    :class #{(sarakkeiden-leveys :yhteensa)
-                                                                                                             "reunaton"})
+                                                                                                    :class #{(sarakkeiden-leveys :yhteensa)})
                                                                                (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2)))))))))
         lapsirivi (fn [rivin-pohja nimi maara]
                     (-> rivin-pohja
                         (tyokalut/aseta-arvo :id (keyword nimi)
-                                             :class #{"piillotettu" "reunaton"})
+                                             :class #{"table-default" "piillotettu"})
                         (tyokalut/paivita-arvo :lapset
                                                (osien-paivitys-fn (fn [osa]
                                                                     (tyokalut/aseta-arvo osa
                                                                                          :id (keyword (str nimi "-nimi"))
                                                                                          :arvo (clj-str/capitalize nimi)
-                                                                                         :class #{(sarakkeiden-leveys :nimi) "reunaton" "solu-sisenna-1"}))
+                                                                                         :class #{(sarakkeiden-leveys :nimi)  "solu-sisenna-1"}))
                                                                   (fn [osa]
                                                                     (-> osa
                                                                         (tyokalut/aseta-arvo :id (keyword (str nimi "-maara"))
@@ -373,13 +373,12 @@
                                                                                                         :on-oikeus? on-oikeus?
                                                                                                         :polku-taulukkoon polku-taulukkoon
                                                                                                         :luokat #{(sarakkeiden-leveys :maara-kk)}
-                                                                                                        :input-luokat #{"reunaton"}})))
+                                                                                                        :input-luokat #{"input-default"}})))
                                                                   (fn [osa]
                                                                     (tyokalut/aseta-arvo osa
                                                                                          :id (keyword (str nimi "-yhteensa"))
                                                                                          :arvo maara
-                                                                                         :class #{(sarakkeiden-leveys :yhteensa)
-                                                                                                  "reunaton"}))))))
+                                                                                         :class #{(sarakkeiden-leveys :yhteensa)}))))))
         laajenna-lapsille-fn (fn [laajenna-lapsille-pohja]
                                (map-indexed (fn [index [_ hoitokauden-hankinnat]]
                                               (let [hoitokausi (inc index)
@@ -404,25 +403,25 @@
         yhteensa-fn (fn [yhteensa-pohja]
                       (-> yhteensa-pohja
                           (tyokalut/aseta-arvo :id :yhteensa
-                                               :class #{"reunaton"})
+                                               :class #{"table-default" "table-default-sum"})
                           (tyokalut/paivita-arvo :lapset
                                                  (osien-paivitys-fn (fn [osa]
                                                                       (tyokalut/aseta-arvo osa
                                                                                            :id :yhteensa-nimi
                                                                                            :arvo "YHTEENSÄ"
-                                                                                           :class #{(sarakkeiden-leveys :nimi) "reunaton"}))
+                                                                                           :class #{(sarakkeiden-leveys :nimi)}))
                                                                     (fn [osa]
                                                                       (tyokalut/aseta-arvo osa
                                                                                            :id :yhteensa-maara-kk
                                                                                            :arvo ""
-                                                                                           :class #{(sarakkeiden-leveys :maara-kk) "reunaton"}))
+                                                                                           :class #{(sarakkeiden-leveys :maara-kk)}))
                                                                     (fn [osa]
                                                                       (tyokalut/aseta-arvo osa
                                                                                            :id :yhteensa-yhteensa
                                                                                            :arvo (reduce (fn [yhteensa {:keys [summa]}]
                                                                                                            (+ yhteensa summa))
                                                                                                          0 toimenpiteet)
-                                                                                           :class #{(sarakkeiden-leveys :yhteensa) "reunaton"}))))))]
+                                                                                           :class #{(sarakkeiden-leveys :yhteensa)}))))))]
     (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
                          :hankinnat-taulukko-laskutukseen-perustuen
                          :hankinnat-taulukko)
@@ -445,8 +444,8 @@
                        [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]
                        {:class (if (and laskutuksen-perusteella-taulukko?
                                         (not laskutuksen-perusteella?))
-                                 #{"reunaton" "piillotettu"}
-                                 #{"reunaton"})
+                                 #{ "piillotettu"}
+                                 #{})
                         :taulukon-paivitys-fn! taulukon-paivitys-fn!})))
 
 (defn aseta-rivien-luokat [rivit taulukko]
@@ -460,8 +459,8 @@
                                                                                                  [(+ i index) rivi]))
                                                                                   (map (fn [[i rivi]]
                                                                                          {(p/janan-id rivi) (if (odd? i)
-                                                                                                              "pariton-jana"
-                                                                                                              "parillinen-jana")})))
+                                                                                                              "table-default-odd"
+                                                                                                              "table-default-even")})))
                                                                                 merge {} nakyvat-rivit))])
                                         :normaali [(inc index) rivien-luokat]))
                                     [0 {}] rivit))]

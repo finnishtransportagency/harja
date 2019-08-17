@@ -1,11 +1,15 @@
 @import "colors.less";
 
+.table-perusarvot() {
+  font-size: 0.75rem;
+  font-weight: normal;
+  color: @gray25;
+  min-height: 40px;
+}
+
 .table- {
   &default {
-    font-size: 0.75rem;
-    font-weight: normal;
-    color: @gray25;
-    min-height: 40px;
+    .table-perusarvot();
     &-odd {
       background-color: @gray250;
       &:hover, &:focus {
@@ -29,6 +33,7 @@
     }
   }
   &-pressed {
+    .table-perusarvot();
     &-odd {
       background-color: @gray220;
     }
@@ -40,10 +45,7 @@
 
 .table-border- {
   &default {
-    font-size: 0.75rem;
-    font-weight: normal;
-    color: @gray25;
-    min-height: 40px;
+    .table-perusarvot();
     &-odd {
       background-color: transparent;
       &:hover, &:focus {
@@ -67,6 +69,7 @@
     }
   }
   &-pressed {
+    .table-perusarvot();
     &-odd {
       background-color: @gray220;
     }

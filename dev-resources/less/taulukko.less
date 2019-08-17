@@ -1,4 +1,4 @@
-@import "livi_tyylit";
+@import "vayla/tables.less";
 @chevron-suunnat: up, right, down, left;
 @triangle-suunnat: top, right, bottom, left;
 @solu-padding: 5px;
@@ -6,7 +6,7 @@
 .suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
   @suunta: extract(@suunnat, @i);
   .@{ikoni}-@{suunta}{
-    color: @sininen4;
+    color: @blue;
   }
   .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
 }
@@ -15,14 +15,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  border: 0.5px solid @harmaa8;
-  font-size: @fontin-koko-taulukko;
+  border: none;
   word-break: break-all;
   .piillotettu, &.piillotettu {
     display:none;
-  }
-  &.reunaton {
-    border: none;
   }
 
   /* TAULUKON ELEMENTIT */
@@ -33,19 +29,7 @@
 
 /* JANAT */
   .jana {
-    border-top: 0.5px solid @harmaa8;
-    &:first-child {
-      border-top: none;
-    }
-    &.reunaton {
-      border-top: none;
-    }
-    &.pariton-jana {
-      background-color: @harmaa13;
-    }
-    &.parillinen-jana {
-      background-color: @harmaa11;
-    }
+    border: none;
   }
   .janan-rivi {
     display: flex;
@@ -57,14 +41,9 @@
   }
 /* SOLUT */
   .osa {
-    border-left: 0.5px solid @harmaa8;
-    &:first-child {
-      border-left: none;
-    }
-    padding: @solu-padding;
-    &.reunaton {
-      border-left:none;
-    }
+    border-left: none;
+    padding-left: @solu-padding;
+    align-self: center;
     &.keskita {
       display: flex;
       justify-content: center;
@@ -78,7 +57,6 @@
   .osa-laajenna {
     display: flex;
     justify-content: space-between;
-    color: @sininen4;
     span {
       align-self: center;
       &:first-child {
@@ -98,7 +76,6 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    background: @harmaa8;
 
     .otsikon-jarjestys {
 
