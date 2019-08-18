@@ -209,8 +209,11 @@
         valitse-kausi (fn [kausi]
                         (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi)))
         kausi-tekstiksi (fn [kausi]
-                          (-> kausi name aakkosta clj-str/capitalize))]
-    (fn [_ {:keys [toimenpide maksetaan]}]
+                          (-> kausi name aakkosta clj-str/capitalize))
+        vaihda-fn (fn [event]
+                    (.preventDefault event)
+                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))]
+    (fn [_ {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
         [:div
          [:div.label-ja-alasveto
@@ -224,7 +227,11 @@
           [yleiset/livi-pudotusvalikko {:valinta maksetaan
                                         :valitse-fn valitse-kausi
                                         :format-fn kausi-tekstiksi}
-           [:kesakausi :talvikausi]]]]))))
+           [:kesakausi :talvikausi]]]
+         [:label.kopioi-tuleville-vuosille
+          [:input {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
+                   :on-change (r/partial vaihda-fn :ei)}]
+          "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
 
 (defn hankintasuunnitelmien-syotto
   [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon]} value]
@@ -265,8 +272,7 @@
                       (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false))))
-                      (e! (t/->TaytaAlas this polku-taulukkoon))
-                      (println "NAPPIA PAINETTU"))]
+                      (e! (t/->TaytaAlas this polku-taulukkoon)))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
              :tab-index -1
@@ -416,11 +422,10 @@
                                                                                            :arvo ""
                                                                                            :class #{(sarakkeiden-leveys :maara-kk)}))
                                                                     (fn [osa]
-                                                                      (tyokalut/aseta-arvo osa
-                                                                                           :id :yhteensa-yhteensa
-                                                                                           :arvo (reduce (fn [yhteensa {:keys [summa]}]
-                                                                                                           (+ yhteensa summa))
-                                                                                                         0 toimenpiteet)
+                                                                      (tyokalut/aseta-arvo osa :id :yhteensa-yhteensa
+                                                                                           #_#_:arvo (reduce (fn [yhteensa {:keys [summa]}]
+                                                                                                               (+ yhteensa summa))
+                                                                                                             0 toimenpiteet)
                                                                                            :class #{(sarakkeiden-leveys :yhteensa)}))))))]
     (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
                          :hankinnat-taulukko-laskutukseen-perustuen

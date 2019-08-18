@@ -67,8 +67,16 @@
   [osa avain]
   (let [muuta-avain {:arvo [:teksti]
                      :id [:osan-id]
-                     :class [:parametrit :class]}]
-    (get-in osa (muuta-avain avain))))
+                     :class [:parametrit :class]}
+        {renderointi :atom muodosta-arvo :muodosta-arvo} (:tilan-seuranta osa)
+        palautettava-arvo (if (and renderointi (= avain :arvo))
+                            (muodosta-arvo osa @renderointi)
+                            (get-in osa (muuta-avain avain)))]
+    (if (= avain :arvo)
+      (try (js/parseInt palautettava-arvo)
+           (catch :default e
+             palautettava-arvo))
+      palautettava-arvo)))
 
 (defmethod arvo osa/Komponentti
   [osa avain]
@@ -304,3 +312,8 @@
   ([alku f coll] (into [] (map-range alku f coll)))
   ([alku loppu f coll]
    (into [] (map-range alku loppu f coll))))
+
+(defn get-in-riviryhma
+  [riviryhma [rivin-index otsikon-index]]
+  {:pre [(= (type riviryhma) jana/RiviLapsilla)]}
+  (-> riviryhma (arvo :lapset) (nth rivin-index) (arvo :lapset) (nth otsikon-index)))

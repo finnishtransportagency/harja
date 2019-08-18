@@ -14,9 +14,7 @@
   (piirra-osa [this])
   (osan-id? [this id])
   (osan-id [this])
-  (osan-tila [this])
-  (osan-arvo [this] [this polku] "Palauttaa osan arvon polusta. Jos polkua ei ole annettu, niin 'pääarvon'")
-  (aseta-osan-arvo [this arvo] [this arvo polku]))
+  (osan-tila [this]))
 
 (defprotocol Tila
   (hae-tila [this])
@@ -30,3 +28,10 @@
   (paivita-taulukko! [this] [this a1] [this a1 a2] [this a1 a2 a3] [this a1 a2 a3 a4] [this a1 a2 a3 a4 a5] [this a1 a2 a3 a4 a5 a6] [this a1 a2 a3 a4 a5 a6 a7])
   (paivita-rivi! [this paivitetty-rivi] [this paivitetty-rivi a1] [this paivitetty-rivi a1 a2] [this paivitetty-rivi a1 a2 a3] [this paivitetty-rivi a1 a2 a3 a4] [this paivitetty-rivi a1 a2 a3 a4 a5] [this paivitetty-rivi a1 a2 a3 a4 a5 a6] [this paivitetty-rivi a1 a2 a3 a4 a5 a6 a7])
   (paivita-solu! [this paivitetty-osa] [this paivitetty-osa a1] [this paivitetty-osa a1 a2] [this paivitetty-osa a1 a2 a3] [this paivitetty-osa a1 a2 a3 a4] [this paivitetty-osa a1 a2 a3 a4 a5] [this paivitetty-osa a1 a2 a3 a4 a5 a6] [this paivitetty-osa a1 a2 a3 a4 a5 a6 a7]))
+
+(defprotocol TilanSeuranta
+  "Tämän avulla lisätään taulukon asiaan derefable renderöinti funktioon, jonka seurauksena asia renderöidään uudestaan.
+   Hyödyllinen, jos asian arvo on riippuvainen jostain siitä riippumattomasta arvosta.
+   Esim. 'summa'/'yhteensä' osat ovat riippuvaisia muista arvoista."
+  (lisaa-renderointi-derefable! [this tila polut] [this tila polut alkutila] "Palauttaa derefablen, jonka dereferointi aiheuttaa asian re-renderöinnin")
+  (lisaa-muodosta-arvo [this f] "Muodostaa asian arvon tämän funktion perusteella."))

@@ -29,7 +29,8 @@
                                                           :hankintakustannukset {#_#_:yhteenveto [{:hoitokausi 1 :summa 4000} {:hoitokausi 2 :summa 4000} {:hoitokausi 3 :summa 4000} {:hoitokausi 4 :summa 4000} {:hoitokausi 5 :summa 4000}]
                                                                                  :valinnat {:toimenpide :talvihoito
                                                                                             :maksetaan :talvikausi
-                                                                                            :laskutukseen-perustuen #{}}
+                                                                                            :laskutukseen-perustuen #{}
+                                                                                            :kopioi-tuleville-vuosille? true}
                                                                                  #_#_:toimenpiteet {:talvihoito {:hankinnat (hankinnat-testidata (rand-int 10000))
                                                                                                              :hankinnat-laskutukseen-perustuen (hankinnat-testidata 0)
                                                                                                              :korjaukset 2
