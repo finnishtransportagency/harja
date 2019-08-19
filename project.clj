@@ -157,13 +157,43 @@
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
                  ]
 
-  :plugins [[lein-less "1.7.5"]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.6"]
             [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.8"]]
+
+  ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
+  :cljsbuild {:builds [{:id "test"
+                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+                                       "test/cljs" "test/doo" "test/shared-cljs"]
+                        :compiler {:output-to "target/cljs/test/test.js"
+                                   :output-dir "target/cljs/test"
+                                   :optimizations :none
+                                   :pretty-print true
+                                   :source-map true
+                                   ;:parallel-build false Failaa randomisti
+                                   :libs ["src/js/kuvataso.js"]
+                                   :closure-output-charset "US-ASCII"
+                                   :main harja.runner}
+                        :notify-command ["./run-karma.sh"]}
+                       {:id "laadunseuranta-test"
+                        :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                                       "laadunseuranta/test-src/cljs" "test/shared-cljs"]
+
+                        :compiler {:main harja-laadunseuranta.test-main
+                                   ;;:asset-path "laadunseuranta/js/out"
+                                   :output-to "resources/private/laadunseuranta/js/unit-test.js"
+                                   ;;:output-dir "resources/private/laadunseuranta/js/out"
+                                   :source-map-timestamp true
+                                   :foreign-libs
+                                   [{:file "resources/public/laadunseuranta/js/proj4.js"
+                                     :provides ["proj4"]}
+                                    {:file "resources/public/laadunseuranta/js/epsg3067.js"
+                                     :provides ["epsg3067"]}]}}]}
 
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
@@ -208,9 +238,9 @@
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
-                      "with-profile +test" "test,"
+                      "test,"
                       "doo" "phantom" "test" "once,"
-                      "with-profile" "+laadunseuranta-test" "doo" "phantom" "laadunseuranta-test" "once"]
+                      "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
