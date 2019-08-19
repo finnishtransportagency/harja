@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.raportit.siltatarkastus
   (:require
+    [clojure.string :as s]
     [jeesql.core :refer [defqueries]]
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -20,7 +21,11 @@
 
 (defn- muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
-                         (map konv/alaviiva->rakenne)
+                         (comp
+                           (map konv/alaviiva->rakenne)
+                           (map #(update % :tulos (fn [tulos]
+                                                    (s/join ", "
+                                                            (konv/pgarray->vector tulos))))))
                          (hae-sillan-tarkastuskohteet db {:urakka urakka-id
                                                           :vuosi vuosi
                                                           :silta silta-id}))
