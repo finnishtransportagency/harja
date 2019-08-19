@@ -1,0 +1,10 @@
+{:output-to "target/cljs/test/test.js"
+ :output-dir "target/cljs/test"
+ :asset-path "cljs/test"
+ :optimizations :none
+ :pretty-print true
+ :source-map true
+ ;:parallel-build false Failaa randomisti
+ :libs ["src/js/kuvataso.js"]
+ :closure-output-charset "US-ASCII"
+ :main harja.runner}
