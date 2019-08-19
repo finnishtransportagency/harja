@@ -5,6 +5,7 @@
             [clojure.set :as set]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt
@@ -100,19 +101,20 @@
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
   (start [this]
-    (doto (:http-palvelin this)
-      (julkaise-palvelu
-        :budjetoidut-tyot (fn [user tiedot]
-                            (hae-urakan-budjetoidut-tyot (:db this) user tiedot)))
-      (julkaise-palvelu
-        :tallenna-budjetoidut-tyot (fn [user tiedot]
-                                     (tallenna-budjetoidut-tyot (:db this) user tiedot)))
-      (julkaise-palvelu
-        :budjettitavoite (fn [user tiedot]
-                           (hae-urakan-tavoite (:db this) user tiedot)))
-      (julkaise-palvelu
-        :tallenna-budjettitavoite (fn [user tiedot]
-                                    (tallenna-urakan-tavoite (:db this) user tiedot))))
+    (when (ominaisuus-kaytossa? :mhu-urakka)
+      (doto (:http-palvelin this)
+        (julkaise-palvelu
+          :budjetoidut-tyot (fn [user tiedot]
+                              (hae-urakan-budjetoidut-tyot (:db this) user tiedot)))
+        (julkaise-palvelu
+          :tallenna-budjetoidut-tyot (fn [user tiedot]
+                                       (tallenna-budjetoidut-tyot (:db this) user tiedot)))
+        (julkaise-palvelu
+          :budjettitavoite (fn [user tiedot]
+                             (hae-urakan-tavoite (:db this) user tiedot)))
+        (julkaise-palvelu
+          :tallenna-budjettitavoite (fn [user tiedot]
+                                      (tallenna-urakan-tavoite (:db this) user tiedot)))))
     this)
 
   (stop [this]

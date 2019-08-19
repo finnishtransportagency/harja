@@ -5,6 +5,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
@@ -87,13 +88,15 @@
           "Kustannussuunnitelma"
           :kustannussuunnitelma
           (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                     (valilehti-mahdollinen? :kustannussuunnitelma ur))
+                     (valilehti-mahdollinen? :kustannussuunnitelma ur)
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "kustannussuunnitelma"}
             [kustannussuunnitelma/kustannussuunnitelma])
 
           "Tehtävät"
           :tehtavat
           (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                     (valilehti-mahdollinen? :tehtavat ur))
+                     (valilehti-mahdollinen? :tehtavat ur)
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "tehtavat"}
             [tehtavat/tehtavat])]]))))
