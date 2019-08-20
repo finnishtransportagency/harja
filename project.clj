@@ -225,15 +225,15 @@
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
             "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
-            "build-prod" ["trampoline" "run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
-            "build-laadunseuranta-prod" ["trampoline" "run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
+            "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
+            "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "+prod" "build-prod,"
+                        "with-profile" "+prod" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "with-profile" "+laadunseuranta-prod" "build-laadunseuranta-prod,"
+                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
@@ -251,8 +251,8 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
-                               "with-profile" "+prod" "build-prod,"
-                               "with-profile" "+laadunseuranta-prod" "build-laadunseuranta-prod,"
+                               "with-profile" "+prod" "compile-prod,"
+                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors { ;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
