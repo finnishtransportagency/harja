@@ -2,7 +2,7 @@ version: 2
 jobs:
   front-testit:
     docker:
-      - image: solita/harja-testit:lein-2.7.1 # eka image = "primary container"
+      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
