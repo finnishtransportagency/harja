@@ -164,7 +164,7 @@
             [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
-            [lein-doo "0.1.8"]]
+            [lein-doo "0.1.10"]]
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
@@ -239,8 +239,8 @@
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
-                      "doo" "phantom" "test" "once,"
-                      "doo" "phantom" "laadunseuranta-test" "once"]
+                      "with-profile" "+test" "doo" "phantom" "test" "once,"
+                      "with-profile" "+test" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi

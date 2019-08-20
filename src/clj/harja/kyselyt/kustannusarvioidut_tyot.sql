@@ -6,6 +6,9 @@ SELECT
   kat.kuukausi,
   kat.summa,
   kat.tyyppi ::TOTEUMATYYPPI,
+  kat.tehtava,
+  kat.tehtavaryhma,
+  kat.toimenpideinstanssi,
   kat.sopimus,
   tpik.nimi AS toimenpide
 FROM kustannusarvioitu_tyo kat

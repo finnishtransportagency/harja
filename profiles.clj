@@ -1,7 +1,6 @@
 ;; Profiilit mergetään https://github.com/technomancy/leiningen/blob/master/doc/PROFILES.md
 ;; ellei erikseen käytetä with-profile
 {:dev {:dependencies [[prismatic/dommy "1.1.0"]
-                      [cljs-react-test "0.1.4-SNAPSHOT" :exclusions [cljsjs/react-with-addons]]
                       [org.clojure/test.check "0.9.0"]
                       [org.apache.pdfbox/pdfbox "2.0.8"]
 
@@ -17,7 +16,15 @@
        }
  :test {:dependencies [[clj-webdriver "0.7.2"]
                        [org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]
+                       [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
+                       ;; TODO tuosta cljs-react-test riippuvuudesta pitäisi päästä eroon. Testit, jotka
+                       ;; käyttää sitä, voi kirjoittaa uusiksi Cypressillä.
+                       ;; Jotta frontti testit toimii, pitää säilyttää tuo riippuvuus, jonka takia myös
+                       ;; reagentti pitää downgradeta testejä varten.
+                       [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
+                       [cljsjs/react-with-addons "15.6.1-0"]
+                       [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
+                       [cljs-react-test "0.1.4-SNAPSHOT"]]
         :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]
         :notify-command ["./run-karma.sh"]}
  :prod {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}

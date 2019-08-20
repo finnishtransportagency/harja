@@ -96,7 +96,7 @@
                                               (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c tallennettavat-toimenpideinstanssit-urakassa))
 
                               ;; Palautetaan päivitetty tilanne
-                              (hae-urakan-budjetoidut-tyot c user urakka-id))))
+                              (hae-urakan-budjetoidut-tyot c user {:urakka-id urakka-id}))))
 
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
