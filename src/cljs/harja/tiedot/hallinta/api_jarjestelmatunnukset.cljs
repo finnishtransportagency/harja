@@ -27,12 +27,12 @@
               (when (and nakymassa? oikeus?)
                 (k/post! :hae-urakat-lisaoikeusvalintaan nil))))
 
-(defn- tallenna-jarjestelmatunnukset [muuttuneet-tunnukset]
+(defn tallenna-jarjestelmatunnukset [muuttuneet-tunnukset]
   (go (let [uudet-tunnukset (<! (k/post! :tallenna-jarjestelmatunnukset
                                          muuttuneet-tunnukset))]
         (reset! jarjestelmatunnukset uudet-tunnukset))))
 
-(defn- tallenna-jarjestelmatunnuksen-lisaoikeudet [muuttuneet-oikeudet kayttaja-id tulos-atom]
+(defn tallenna-jarjestelmatunnuksen-lisaoikeudet [muuttuneet-oikeudet kayttaja-id tulos-atom]
   (go (let [uudet-oikeudet (<! (k/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
                                         {:oikeudet muuttuneet-oikeudet
                                          :kayttaja-id kayttaja-id}))]

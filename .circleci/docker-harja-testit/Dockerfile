@@ -17,4 +17,4 @@ ENV PATH="/home/circleci/phantomjs-2.1.1-linux-x86_64/bin:${PATH}"
 EXPOSE 3000
 COPY sisus.bash /tmp/
 ENTRYPOINT ["bash", "/tmp/sisus.bash"]
- CMD ["develop", "help"]
+ CMD ["help", "develop"]

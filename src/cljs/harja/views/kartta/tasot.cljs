@@ -330,7 +330,7 @@
                      {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
                    @(geometrioiden-atomit :tilannekuva)))))))
 
-(def ^{:private true} tasojen-nakyvyys-atomit
+(def tasojen-nakyvyys-atomit
   {:organisaatio (atom true)
    :pohjavesi pohjavesialueet/karttataso-pohjavesialueet
    :sillat sillat/karttataso-sillat

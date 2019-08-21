@@ -9,7 +9,7 @@ cd harja
 # git pull origin develop
 function cmd_phantom
 {
-    lein doo phantom test once
+    lein with-profile +test doo phantom test once
 }
 
 function cmd_test
@@ -21,7 +21,7 @@ function cmd_test+phantom
 {
     lein clean
     lein test
-    lein doo phantom test once
+    lein with-profile +test doo phantom test once
 }
 
 function cmd_back

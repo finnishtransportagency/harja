@@ -625,7 +625,7 @@
 
 (defn hae-vapaat-sopimus-idt []
   (map :id (q-map (str "SELECT id FROM sopimus
-                   WHERE urakka IS NULL;"))))
+                   WHERE urakka IS NULL AND harjassa_luotu IS TRUE;"))))
 
 (defn hae-vantaan-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id

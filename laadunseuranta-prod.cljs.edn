@@ -1,0 +1,9 @@
+{:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
+ :output-dir "resources/public/laadunseuranta/js/compiled/out"
+ :main harja-laadunseuranta.prod-core
+ :optimizations :advanced
+ :language-in :ecmascript5
+ :language-out :ecmascript5
+ :externs ["laadunseuranta/externs.js"]
+ ;:parallel-build false Failaa randomisti
+ :pretty-print false}

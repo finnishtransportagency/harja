@@ -4,7 +4,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta]
+                                      alasveto-ei-loydoksia livi-pudotusvalikko]
              :as yleiset]
             [harja.visualisointi :as vis]
             [harja.ui.komponentti :as komp]

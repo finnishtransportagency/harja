@@ -323,7 +323,8 @@
                 [:http-palvelin :db :sahke :pois-kytketyt-ominaisuudet])
       :urakan-toimenpiteet (component/using
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
-                             [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                             [:http-palvelin :db :pois-kytketyt-ominaisuudet
+                              :pois-kytketyt-ominaisuudet])
       :budjettisuunnittelu (component/using
                                (budjettisuunnittelu/->Budjettisuunnittelu)
                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])

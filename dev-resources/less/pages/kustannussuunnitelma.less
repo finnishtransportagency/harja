@@ -1,0 +1,125 @@
+@import "../livi_tyylit";
+
+.kustannussuunnitelma {
+  display:flex;
+  flex-direction: column;
+
+  > * {
+    margin-bottom: 10px;
+
+    &:last-child {
+      margin-bottom: inherit;
+    }
+  }
+}
+.suunnitelman-tila-otsikko {
+  font-size: 14px;
+}
+.hintalaskuri {
+  background-color: @harmaa13;
+  padding: 15px;
+  > *:first-child {
+    margin-top: 0;
+  }
+}
+.hintalaskuri-vuodet {
+  display:flex;
+  justify-content: space-evenly;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  > div {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    > div {
+      flex: 1;
+      &:last-child {
+        color: @harmaa8;
+      }
+    }
+    &.hintalaskuri-yhtakuin {
+      flex: 1;
+      div:last-child {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        padding-right: 15px;
+        color: black;
+      }
+    }
+  }
+}
+
+
+#kuluva-hoitovuosi {
+  display:flex;
+  > span {
+    flex:1;
+    font-weight: bold;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .hoitovuosi-napit {
+    flex:1;
+    display:flex;
+    justify-content: flex-end;
+  }
+}
+
+.haitari-laatikko {
+  &#tavoite-ja-kattohinta {
+    background-color: @harmaa13;
+
+    // Tässä tehdään omat paddingit, hintalaskurin defaultin sijasta,
+    // jotta tuon hintalaskurin alareuna ei ulottuisi haitari-laatikon
+    // päästä päähän
+    > * {
+      padding-left: 15px;
+      padding-right: 15px;
+      &:first-child {
+        padding-top: 17px;
+      }
+      &:last-child {
+        padding: 0px;
+      }
+      .hintalaskuri {
+        padding: 15px 0px 0px 0px;
+      }
+    }
+
+    .hintalaskuri:first-child {
+      border-bottom: 1px solid @harmaa8;
+    }
+  }
+}
+
+#tavoite-ja-kattohinta-huomio {
+  background-color: @harjan-taustavari;
+  display: block;
+}
+
+#suunnitelman-selitteet {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0px;
+  span {
+    padding: 5px;
+    padding-left: inherit;
+  }
+}
+
+.kustannus-syotto {
+  position: relative;
+  padding: 0px;
+  .kopioi-nappi {
+    position: absolute;
+    top: -100%;
+    right: 0px;
+    margin: 0px;
+  }
+}
+.kopioi-tuleville-vuosille {
+  display: block;
+}

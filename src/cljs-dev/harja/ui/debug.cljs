@@ -4,6 +4,8 @@
             [harja.loki :refer [log]]
             [reagent.core :as r]))
 
+(defonce kehitys? true)
+
 (defn voi-avata? [item]
   (some #(% item) [map? coll?]))
 

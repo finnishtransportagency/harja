@@ -72,7 +72,7 @@
 (defn elementti-idlla [id]
   (.getElementById js/document (name id)))
 
-(defn- elementti-idlla-odota
+(defn elementti-idlla-odota
   "Pollaa DOMia 10ms välein kunnes annettu elementti löytyy. Palauttaa kanavan, josta
   elementin voi lukea."
   [id]

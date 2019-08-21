@@ -321,17 +321,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    [livi-pudotusvalikko optiot valinnat]])
 
 
-(defn radiovalinta [otsikko valinta valitse-fn disabled & vaihtoehdot]
-  (let [vaihda-valinta (fn [e] (valitse-fn (keyword (.-value (.-target e)))))]
-    [:div.btn-group.pull-right.murupolku-radiovalinta
-     [:div otsikko " "]
-     (for [[otsikko arvo] (partition 2 vaihtoehdot)]
-       ^{:key (hash otsikko)}
-       [:label.btn.btn-primary {:disabled (if disabled "disabled" "")}
-        [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta
-                 :disabled (if disabled "disabled" "")
-                 :checked (if (= arvo valinta) true false)} " " otsikko]])]))
-
 (defn kaksi-palstaa-otsikkoja-ja-arvoja
   "Tekee geneeriset kaksi palstaa. Optiossa voi olla :class, joka asetaan containerin lisäluokaksi."
   [{:keys [class]} & otsikot-ja-arvot]

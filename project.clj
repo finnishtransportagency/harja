@@ -79,11 +79,8 @@
                                         ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.8.0"]
-                 [figwheel "0.5.19-SNAPSHOT"]
 
-                 [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "15.6.1-0"] ; TODO Voisi päivittää, mutta tämä ja react-dom aiheuttaa ongelman: Undefined nameToPath for react
-                 [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
+                 [reagent "0.8.1"]
 
                  [alandipert/storage-atom "2.0.1"]
 
@@ -146,23 +143,8 @@
   :managed-dependencies [[org.apache.poi/poi "3.17"]
                          [org.apache.poi/poi-scratchpad "3.17"]
                          [org.apache.poi/poi-ooxml "3.17"]]
-  :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
-                                  [cljs-react-test "0.1.4-SNAPSHOT"]
-                                  [org.clojure/test.check "0.9.0"]
-                                  [org.apache.pdfbox/pdfbox "2.0.8"]
-                                  [figwheel-sidecar "0.5.19-SNAPSHOT"]
-                                  [cider/piggieback "0.4.0"]]
-                   :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.4.2"]
-                             [lein-eftest "0.5.0"]]
-                   :test2junit-run-ant ~(not jenkinsissa?)
-                   ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
-                   ;; :resource-paths ["opt/sonic/7.6.2/*"]
-                   }
-             :test {:dependencies [[clj-webdriver "0.7.2"]
-                                   [org.seleniumhq.selenium/selenium-java "3.8.1"]
-                                   [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}}
-  
+  :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
   :repositories [["osgeo" "https://download.osgeo.org/webdav/geotools/"]
@@ -178,109 +160,41 @@
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
-            [lein-figwheel "0.5.19-SNAPSHOT"]
             [lein-codox "0.10.6"]
             [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
-            [lein-doo "0.1.8"]]
+            [lein-doo "0.1.10"]]
 
+  ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
+  :cljsbuild {:builds [{:id "test"
+                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+                                       "test/cljs" "test/doo" "test/shared-cljs"]
+                        :compiler {:output-to "target/cljs/test/test.js"
+                                   :output-dir "target/cljs/test"
+                                   :optimizations :none
+                                   :pretty-print true
+                                   :source-map true
+                                   ;:parallel-build false Failaa randomisti
+                                   :libs ["src/js/kuvataso.js"]
+                                   :closure-output-charset "US-ASCII"
+                                   :main harja.runner}
+                        :notify-command ["./run-karma.sh"]}
+                       {:id "laadunseuranta-test"
+                        :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                                       "laadunseuranta/test-src/cljs" "test/shared-cljs"]
 
-  ;; Asiakaspuolen cljs buildin tietoja
-  :cljsbuild {:builds
-              [{:id "dev"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
-                ;; Clientin reload ja REPL
-                :figwheel true
-                :compiler {:optimizations :none
-                           :source-map true
-                                        ;:parallel-build false Failaa randomisti
-                           ;;:preamble ["reagent/react.js"]
-                           :output-to "dev-resources/js/harja.js"
-                           :output-dir "dev-resources/js/out"
-                           :libs ["src/js/kuvataso.js"]
-                           :closure-output-charset "US-ASCII"
-                           :recompile-dependents false
-                           }}
-               {:id "test"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
-                               "test/cljs" "test/doo" "test/shared-cljs"]
-                :compiler {:output-to "target/cljs/test/test.js"
-                           :output-dir "target/cljs/test"
-                           :optimizations :none
-                           :pretty-print true
-                           :source-map true
-                                        ;:parallel-build false Failaa randomisti
-                           :libs ["src/js/kuvataso.js"]
-                           :closure-output-charset "US-ASCII"
-                           :main harja.runner}
-                :notify-command ["./run-karma.sh"]}
-               ;;:warning-handlers [utils.cljs-warning-handler/handle]}
+                        :compiler {:main harja-laadunseuranta.test-main
+                                   ;;:asset-path "laadunseuranta/js/out"
+                                   :output-to "resources/private/laadunseuranta/js/unit-test.js"
+                                   ;;:output-dir "resources/private/laadunseuranta/js/out"
+                                   :source-map-timestamp true
+                                   :foreign-libs
+                                   [{:file "resources/public/laadunseuranta/js/proj4.js"
+                                     :provides ["proj4"]}
+                                    {:file "resources/public/laadunseuranta/js/epsg3067.js"
+                                     :provides ["epsg3067"]}]}}]}
 
-               {:id "prod"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]
-                :compiler {:optimizations :advanced
-                           ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
-                           :recompile-dependents false
-                           ;;:preamble ["reagent/react.min.js"]
-                           :output-to "resources/public/js/harja.js"
-
-                           ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
-                           :source-map "resources/public/js/harja.js.map"
-                           :output-dir "resources/public/js/"
-
-                                        ;:parallel-build false Failaa randomisti
-                           :libs ["src/js/kuvataso.js"]
-                           :closure-output-charset "US-ASCII"}}
-
-               ;; Laadunseurannan buildit
-               {:id "laadunseuranta-dev"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-                :figwheel true
-                :compiler {:main harja-laadunseuranta.dev-core
-                           :asset-path "js/compiled/dev_out"
-                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
-                           :output-dir "resources/public/laadunseuranta/js/compiled/dev_out"
-                           :source-map-timestamp true}}
-
-               {:id "laadunseuranta-devcards"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-
-                :figwheel {:devcards true}
-
-                :compiler {:main harja-laadunseuranta.devcards-core
-                           :asset-path "js/compiled/devcards_out"
-                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_devcards.js"
-                           :output-dir "resources/public/laadunseuranta/js/compiled/devcards_out"
-                           :source-map-timestamp true}}
-
-               {:id "laadunseuranta-test"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
-                               "laadunseuranta/test-src/cljs" "test/shared-cljs"]
-
-                :compiler {:main harja-laadunseuranta.test-main
-                           ;;:asset-path "laadunseuranta/js/out"
-                           :output-to "resources/private/laadunseuranta/js/unit-test.js"
-                           ;;:output-dir "resources/private/laadunseuranta/js/out"
-                           :source-map-timestamp true
-                           :foreign-libs
-                           [{:file "resources/public/laadunseuranta/js/proj4.js"
-                             :provides ["proj4"]}
-                            {:file "resources/public/laadunseuranta/js/epsg3067.js"
-                             :provides ["epsg3067"]}]}}
-
-               {:id "laadunseuranta-min"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-                :jar true
-                :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
-                           :output-dir "resources/public/laadunseuranta/js/compiled/out"
-                           :main harja-laadunseuranta.prod-core
-                           :optimizations :advanced
-                           :language-in :ecmascript5
-                           :language-out :ecmascript5
-                           :externs ["laadunseuranta/externs.js"]
-                                        ;:parallel-build false Failaa randomisti
-                           :pretty-print false}}]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
                                      "resources/public/js/harja.js"
@@ -290,9 +204,6 @@
   :less {:source-paths ["dev-resources/less/application"
                         "dev-resources/less/laadunseuranta/application"]
          :target-path "resources/public/css/"}
-  
-  :figwheel {:server-port 3449
-             :reload-clj-files false}
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
@@ -307,26 +218,29 @@
   :repl-options {:init-ns harja.palvelin.main
                  :init (harja.palvelin.main/-main)
                  :port 4005
-                 :timeout 120000
-                 :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
+                 :timeout 120000}
 
   
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
+  :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
+            "build-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
+            "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "prod"]
+            "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "laadunseuranta-prod"]
+            "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
-                        "cljsbuild" "once" "prod,"
                         "less" "once,"
+                        "with-profile" "+prod" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "cljsbuild" "once" "laadunseuranta-min,"
+                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
                       "test,"
-                      "doo" "phantom" "test" "once,"
-                      "doo" "phantom" "laadunseuranta-test" "once"]
+                      "with-profile" "+test" "doo" "phantom" "test" "once,"
+                      "with-profile" "+test" "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
@@ -336,9 +250,10 @@
             "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
-                               "cljsbuild" "once" "prod,"
-                               "cljsbuild" "once" "laadunseuranta-min,"
-                               "less" "once," "uberjar"]}
+                               "less" "once,"
+                               "with-profile" "+prod" "compile-prod,"
+                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               "uberjar"]}
   :test-selectors { ;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
                    :no-perf (complement :perf)
