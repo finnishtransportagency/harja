@@ -15,6 +15,7 @@
             [harja.views.urakka.suunnittelu.kustannussuunnitelma :as kustannussuunnitelma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
+            [harja.ui.debug :as debug]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
@@ -25,16 +26,18 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
+  ;; TODO, kun on tarkoitus näyttää MHU urakat loppukäyttäjille,
+  ;; muuta '(if debug/kehitys? :teiden-hoito ::foo)' => ':teiden-hoito'
   (case valilehti
-    :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
+    :materiaalit (and (not (#{(if debug/kehitys? :teiden-hoito ::foo) :paallystys :tiemerkinta} tyyppi))
                       (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-    :tehtavat (= tyyppi :teiden-hoito)
-    :suola (#{:hoito :teiden-hoito} tyyppi)
+    :tehtavat (= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
+    :suola (#{:hoito (if debug/kehitys? :teiden-hoito ::foo)} tyyppi)
     :muut (not (ur/vesivaylaurakkatyyppi? tyyppi))
     :kiintiot (= tyyppi :vesivayla-hoito)
-    :kokonaishintaiset (not= tyyppi :teiden-hoito)
-    :yksikkohintaiset (not= tyyppi :teiden-hoito)
-    :kustannussuunnitelma (= tyyppi :teiden-hoito)))
+    :kokonaishintaiset (not= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
+    :yksikkohintaiset (not= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
+    :kustannussuunnitelma (= tyyppi (if debug/kehitys? :teiden-hoito ::foo))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -44,6 +47,22 @@
         [:span.suunnittelu
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)}
+          
+          "Kustannussuunnitelma"
+          :kustannussuunnitelma
+          (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
+                     (valilehti-mahdollinen? :kustannussuunnitelma ur)
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
+            ^{:key "kustannussuunnitelma"}
+            [kustannussuunnitelma/kustannussuunnitelma])
+
+          "Tehtävät"
+          :tehtavat
+          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                     (valilehti-mahdollinen? :tehtavat ur)
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
+            ^{:key "tehtavat"}
+            [tehtavat/tehtavat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -83,20 +102,4 @@
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])
-
-          "Kustannussuunnitelma"
-          :kustannussuunnitelma
-          (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                     (valilehti-mahdollinen? :kustannussuunnitelma ur)
-                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
-            ^{:key "kustannussuunnitelma"}
-            [kustannussuunnitelma/kustannussuunnitelma])
-
-          "Tehtävät"
-          :tehtavat
-          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                     (valilehti-mahdollinen? :tehtavat ur)
-                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
-            ^{:key "tehtavat"}
-            [tehtavat/tehtavat])]]))))
+            [kiintiot/kiintiot])]]))))

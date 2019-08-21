@@ -134,8 +134,6 @@
         kiinteahintaiset-tyot (:kiinteahintaiset-tyot palvelun-palauttamat-budjetoidut-tyot)
         kustannusarvioidut-tyot (:kustannusarvioidut-tyot palvelun-palauttamat-budjetoidut-tyot)
         yksikkohintaiset-tyot (:yksikkohintaiset-tyot palvelun-palauttamat-budjetoidut-tyot)
-        _ (println "KUSTANNUSARVIOIDUT TYÖT: ")
-        _ (clojure.pprint/pprint kustannusarvioidut-tyot)
         akilliset-hoitotyot (filter #(= "akillinen-hoitotyo" (:tyyppi %)) kustannusarvioidut-tyot)
         vahinkojen-korjaukset (filter #(= "vahinkojen-korjaukset" (:tyyppi %)) kustannusarvioidut-tyot)
         hallinnolliset-tyot (filter #(= (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151") (:toimenpideinstanssi %)) kustannusarvioidut-tyot)
