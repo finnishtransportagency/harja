@@ -198,7 +198,7 @@
                         (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko]}]
       (if suunnitelmien-tila-taulukko
-        [taulukko/taulukko suunnitelmien-tila-taulukko #{}]
+        [taulukko/taulukko suunnitelmien-tila-taulukko #{"suunnitelma-ikonien-varit"}]
         [yleiset/ajax-loader]))))
 
 (defn hankintojen-filter [e! _]
@@ -443,7 +443,6 @@
                                         osa/Komponentti
                                         osa/Teksti]}
                         :laajenna-lapsilla {:janan-tyyppi jana/RiviLapsilla
-                                            :index 1
                                             :janat [:laajenna :lapset]}}
                        ["Nimi" "Määrä" "Yhteensä"]
                        [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]

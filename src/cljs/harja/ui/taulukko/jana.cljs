@@ -24,7 +24,7 @@
   (osan-polku [this osa]
     (when (satisfies? p/Osa osa)
       (first (keep-indexed #(when (= (p/osan-id %2) (p/osan-id osa))
-                              [:solut %1])
+                              [[:solut %1]])
                            (:solut this))))))
 
 (defrecord RiviLapsilla [janan-id janat]
@@ -47,12 +47,11 @@
   (osan-polku [this jana]
     (cond
       (satisfies? p/Jana jana) (first (keep-indexed #(when (= (p/janan-id %2) (p/janan-id jana))
-                                                       [:janat %1])
+                                                       [[:janat %1]])
                                                     (:janat this)))
       (satisfies? p/Osa jana) (first (keep-indexed (fn [index-jana taman-jana]
                                                      (when-let [taman-janan-polku (p/osan-polku taman-jana jana)]
-                                                       (into []
-                                                             (concat [:janat index-jana] taman-janan-polku))))
+                                                       (into [] (cons [:janat index-jana] taman-janan-polku))))
                                                    (:janat this))))))
 
 ;;;;; SPECS ;;;;;

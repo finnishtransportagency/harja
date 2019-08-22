@@ -76,7 +76,7 @@
   (process-event [{:keys [janan-id solun-id arvo]} app]
     (let [janan-index (tyokalut/janan-index (:tehtavat-taulukko app) janan-id)
           ;; TODO vissiin väärä nimi solun-id:llä
-          [solun-index & _] (p/osan-polku (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
+          [[_ solun-index] & _] (p/osan-polku (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
       (update-in app [:tehtavat-taulukko janan-index :solut solun-index :parametrit]
                        (fn [parametrit]
                          (assoc parametrit :value arvo)))))

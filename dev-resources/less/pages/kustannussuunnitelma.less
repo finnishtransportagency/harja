@@ -1,4 +1,4 @@
-@import "../livi_tyylit";
+@import "../vayla/colors.less";
 
 .kustannussuunnitelma {
   display:flex;
@@ -16,7 +16,7 @@
   font-size: 14px;
 }
 .hintalaskuri {
-  background-color: @harmaa13;
+  background-color: @gray245;
   padding: 15px;
   > *:first-child {
     margin-top: 0;
@@ -34,7 +34,7 @@
     > div {
       flex: 1;
       &:last-child {
-        color: @harmaa8;
+        color: @gray200;
       }
     }
     &.hintalaskuri-yhtakuin {
@@ -70,7 +70,7 @@
 
 .haitari-laatikko {
   &#tavoite-ja-kattohinta {
-    background-color: @harmaa13;
+    background-color: @gray245;
 
     // Tässä tehdään omat paddingit, hintalaskurin defaultin sijasta,
     // jotta tuon hintalaskurin alareuna ei ulottuisi haitari-laatikon
@@ -90,13 +90,13 @@
     }
 
     .hintalaskuri:first-child {
-      border-bottom: 1px solid @harmaa8;
+      border-bottom: 1px solid @gray200;
     }
   }
 }
 
 #tavoite-ja-kattohinta-huomio {
-  background-color: @harjan-taustavari;
+  background-color: @gray250;
   display: block;
 }
 
@@ -107,6 +107,18 @@
   span {
     padding: 5px;
     padding-left: inherit;
+  }
+}
+
+.suunnitelma-ikonien-varit {
+  .glyphicon-ok {
+    color: @green;
+  }
+  .livicon-question {
+    color: @blue;
+  }
+  .glyphicon-remove {
+    color: @red;
   }
 }
 

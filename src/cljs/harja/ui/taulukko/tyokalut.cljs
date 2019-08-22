@@ -317,3 +317,41 @@
   [riviryhma [rivin-index otsikon-index]]
   {:pre [(= (type riviryhma) jana/RiviLapsilla)]}
   (-> riviryhma (arvo :lapset) (nth rivin-index) (arvo :lapset) (nth otsikon-index)))
+
+(defn paivita-asia-taulukossa-predicate
+  [taulukko index asia polun-osa]
+  (cond
+    (integer? polun-osa) (= index polun-osa)
+    (keyword? polun-osa) (= polun-osa (p/rivin-skeema taulukko asia))
+    (string? polun-osa) (= index (p/otsikon-index taulukko polun-osa))))
+
+(defn paivita-asia-taulukossa
+  ([taulukko polku f]
+   (let [taulukon-rivit (arvo taulukko :lapset)]
+     (println "PAIVITA ASIAT TAULUKOSSA TAULUKON LAPSET: " (paivita-asia-taulukossa taulukko taulukon-rivit polku f))
+     (aseta-arvo taulukko :lapset
+                 (paivita-asia-taulukossa taulukko taulukon-rivit polku f))))
+  ([taulukko kierroksen-asiat polku f]
+   (if-not (empty? (rest polku))
+     (mapv-indexed (fn [index asia]
+                     (println "POLKU: " polku)
+                     (println "PREDICATE ARVO: " (paivita-asia-taulukossa-predicate taulukko index asia (first polku)))
+                     (if (paivita-asia-taulukossa-predicate taulukko index asia (first polku))
+                       (paivita-asia-taulukossa taulukko
+                                                (arvo asia :lapset)
+                                                (into [] (rest polku))
+                                                f)
+                       asia))
+                   kierroksen-asiat)
+     (mapv-indexed (fn [index asia]
+                     (println "POLKU: " polku)
+                     (println "PREDICATE ARVO VIIMENE: " (paivita-asia-taulukossa-predicate taulukko index asia (first polku)))
+                     (if (paivita-asia-taulukossa-predicate taulukko index asia (first polku))
+                       (let [asian-polku-taulukossa (apply concat (p/osan-polku-taulukossa taulukko asia))]
+                         (println asian-polku-taulukossa)
+                         (f taulukko (reduce (fn [polut polun-osa]
+                                               (conj polut
+                                                     (conj (last polut) polun-osa)))
+                                             [[(first asian-polku-taulukossa)]] (rest asian-polku-taulukossa))))
+                       asia))
+                   kierroksen-asiat))))

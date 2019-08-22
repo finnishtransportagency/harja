@@ -48,7 +48,8 @@
   (osan-polku-taulukossa [this osa]
     (first (keep-indexed (fn [rivin-index rivi]
                            (when-let [solun-polku (p/osan-polku rivi osa)]
-                             [[:rivit rivin-index] solun-polku]))
+                             (into []
+                                   (cons [:rivit rivin-index] solun-polku))))
                          (:rivit this))))
   (paivita-taulukko! [this a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
