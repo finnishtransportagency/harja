@@ -63,11 +63,9 @@
         (fn [this]
           (let [{:keys [id class]} (:parametrit this)
                 teksti (if tilan-seuranta-lisatty?
+                         ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
                          (muodosta-arvo this @renderointi)
                          (:teksti this))]
-            (when tilan-seuranta-lisatty?
-              ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
-              @renderointi)
             [:div.osa.osa-teksti {:class (when class
                                            (apply str (interpose " " class)))
                                   :id id
@@ -247,11 +245,9 @@
                                ikonit/livicon-chevron-up
                                ikonit/triangle-top)
                 teksti (if tilan-seuranta-lisatty?
+                         ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
                          (muodosta-arvo this @renderointi)
                          (:teksti this))]
-            (when tilan-seuranta-lisatty?
-              ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
-              @renderointi)
             [:span.osa.klikattava.osa-laajenna
              {:class (when class
                        (apply str (interpose " " class)))
@@ -281,8 +277,10 @@
           renderointi-atomin-muutos! (fn [uusi]
                                        (swap! renderointi (fn [v]
                                                             (assoc v :vanha (:uusi v)
-                                                                     :uusi (zipmap polut
-                                                                                   (map #(get-in uusi %) polut))))))
+                                                                     :uusi (into {}
+                                                                                 (map (fn [polku]
+                                                                                        [polku (get-in uusi polku)])
+                                                                                      polut))))))
           seurannan-aloitus (fn []
                               (add-watch tila watch-id
                                          (fn [_ _ vanha uusi]

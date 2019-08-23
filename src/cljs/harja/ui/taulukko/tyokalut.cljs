@@ -344,7 +344,6 @@
      (mapv-indexed (fn [index asia]
                      (if (paivita-asia-taulukossa-predicate taulukko index asia (first polku))
                        (let [asian-polku-taulukossa (apply concat (p/osan-polku-taulukossa taulukko asia))]
-                         (println asian-polku-taulukossa)
                          (f taulukko (reduce (fn [polut polun-osa]
                                                (conj polut
                                                      (conj (last polut) polun-osa)))

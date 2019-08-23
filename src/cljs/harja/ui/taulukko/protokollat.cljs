@@ -33,5 +33,5 @@
   "Tämän avulla lisätään taulukon asiaan derefable renderöinti funktioon, jonka seurauksena asia renderöidään uudestaan.
    Hyödyllinen, jos asian arvo on riippuvainen jostain siitä riippumattomasta arvosta.
    Esim. 'summa'/'yhteensä' osat ovat riippuvaisia muista arvoista."
-  (lisaa-renderointi-derefable! [this tila polut] [this tila polut alkutila] "Palauttaa derefablen, jonka dereferointi aiheuttaa asian re-renderöinnin")
+  (lisaa-renderointi-derefable! [this tila polut] [this tila polut alkutila] "Palauttaa tämän muutettuna siten, että jokainen muutos poluissa aiheuttaa tämän re-renderöinnin.")
   (lisaa-muodosta-arvo [this f] "Muodostaa asian arvon tämän funktion perusteella."))

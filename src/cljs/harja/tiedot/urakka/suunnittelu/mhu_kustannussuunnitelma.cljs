@@ -53,12 +53,12 @@
                                     (= :laajenna-lapsilla (p/rivin-skeema taulukko rivi))))
                           (filter (fn [laajenna-lapsilla-rivi]
                                     (= (:hoitokausi laajenna-lapsilla-rivi) paivitetty-hoitokausi)))
-                          (map (fn [laajenna-lapsilla-rivi]
-                                 (first (tyokalut/arvo laajenna-lapsilla-rivi :lapset))))
-                          (map (fn [yhteensa-rivi]
-                                 (get (tyokalut/arvo yhteensa-rivi :lapset) yhteensa-sarake-index)))
-                          (map (fn [yhteensa-solu]
-                                 (tyokalut/arvo yhteensa-solu :arvo))))
+                          (mapcat (fn [laajenna-lapsilla-rivi]
+                                    (rest (tyokalut/arvo laajenna-lapsilla-rivi :lapset))))
+                          (map (fn [kk-rivi]
+                                 (get (tyokalut/arvo kk-rivi :lapset) yhteensa-sarake-index)))
+                          (map (fn [kk-solu]
+                                 (tyokalut/arvo kk-solu :arvo))))
                     + 0 (tyokalut/arvo taulukko :lapset))))
               (concat (vals (get-in app [:hankintakustannukset :toimenpiteet]))
                       (vals (get-in app [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]))))))
@@ -113,8 +113,7 @@
     (-> taulukko
         (tyokalut/paivita-asia-taulukossa [:laajenna-lapsilla 0 yhteensa-otsikon-index]
                                           (fn [taulukko taulukon-asioiden-polut]
-                                            (let [[rivit laajenna-lapsilla-rivit laajenna-lapsilla-rivi paarivi osat osa] taulukon-asioiden-polut
-                                                  _ (println "LAAJENNA LAPSILLA RIVIN ASIAT: " taulukon-asioiden-polut)
+                                            (let [[rivit laajenna-lapsilla-rivi laajenna-lapsilla-rivit paarivi osat osa] taulukon-asioiden-polut
                                                   laajenna-lapsilla-rivit (get-in taulukko laajenna-lapsilla-rivit)
                                                   paarivi (get-in taulukko paarivi)
                                                   osa (get-in taulukko osa)
@@ -126,102 +125,31 @@
                                                                                                                  (nth (tyokalut/arvo laajenna-rivi :lapset)
                                                                                                                       yhteensa-otsikon-index)))))
                                                                          (rest laajenna-lapsilla-rivit))]
-                                              (println "Laajenna lapsilla rivit: " laajenna-lapsilla-rivit)
-                                              (println "Päärivi: " paarivi)
-                                              (println "OSA: " osa)
                                               (-> osa
                                                   (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-summa-osiin app)
                                                   (p/lisaa-muodosta-arvo (fn [this {summa-osat :uusi}]
                                                                            (apply + (map (fn [osa]
                                                                                            (tyokalut/arvo osa :arvo))
-                                                                                         (vals summa-osat))))))
-                                              #_(tyokalut/paivita-arvo paarivi :lapset
-                                                                     (fn [osat]
-                                                                       (let [polut-summa-osiin (map (fn [laajenna-rivi]
-                                                                                                      (into []
-                                                                                                            (apply concat polku-taulukkoon
-                                                                                                                   (p/osan-polku-taulukossa taulukko
-                                                                                                                                            (nth (tyokalut/arvo laajenna-rivi :lapset)
-                                                                                                                                                 yhteensa-otsikon-index)))))
-                                                                                                    (rest laajenna-lapsilla-rivit))]
-                                                                         (-> osa
-                                                                             (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-summa-osiin app)
-                                                                             (p/lisaa-muodosta-arvo (fn [this {summa-osat :uusi}]
-                                                                                                      (apply + (map (fn [osa]
-                                                                                                                      (tyokalut/arvo osa :arvo))
-                                                                                                                    (vals summa-osat))))))))))))
+                                                                                         (vals summa-osat)))))))))
         (tyokalut/paivita-asia-taulukossa [summa-rivin-index yhteensa-otsikon-index]
-                                         (fn [taulukko taulukon-asioiden-polut]
-                                           (let [[rivit rivi osat osa] taulukon-asioiden-polut
-                                                 rivit (get-in taulukko rivit)
-                                                 osa (get-in taulukko osa)
-                                                 polut-yhteenlasku-osiin (apply concat
-                                                                                (keep (fn [rivi]
-                                                                                        (when (= :laajenna-lapsilla (p/rivin-skeema taulukko rivi))
-                                                                                          (map (fn [index]
-                                                                                                 (into [] (apply concat polku-taulukkoon
-                                                                                                                 (p/osan-polku-taulukossa taulukko (tyokalut/get-in-riviryhma rivi [index yhteensa-otsikon-index])))))
-                                                                                               (range 1 (count (tyokalut/arvo rivi :lapset))))))
-                                                                                      rivit))]
-                                             (println "SUMMARIVIN ASIAT" taulukon-asioiden-polut)
-                                             (-> osa
-                                                 (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-yhteenlasku-osiin app)
-                                                 (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
-                                                                          (apply + (map (fn [osa]
-                                                                                          (tyokalut/arvo osa :arvo))
-                                                                                        (vals yhteenlasku-osat))))))))))
-    #_(tyokalut/paivita-arvo taulukko :lapset
-                           (fn [rivit]
-                             (tyokalut/mapv-indexed (fn [index rivi]
-                                                      (cond
-                                                        (= index summa-rivin-index) (tyokalut/paivita-arvo rivi
-                                                                                                           :lapset
-                                                                                                           (fn [osat]
-                                                                                                             (tyokalut/mapv-indexed
-                                                                                                               (fn [index osa]
-                                                                                                                 (if (= index yhteensa-otsikon-index)
-                                                                                                                   (let [polut-yhteenlasku-osiin (apply concat
-                                                                                                                                                        (keep (fn [rivi]
-                                                                                                                                                                (when (= :laajenna-lapsilla (p/rivin-skeema taulukko rivi))
-                                                                                                                                                                  (map (fn [index]
-                                                                                                                                                                         (into [] (apply concat polku-taulukkoon
-                                                                                                                                                                                         (p/osan-polku-taulukossa taulukko (tyokalut/get-in-riviryhma rivi [index yhteensa-otsikon-index])))))
-                                                                                                                                                                       (range 1 (count (tyokalut/arvo rivi :lapset))))))
-                                                                                                                                                              rivit))]
-                                                                                                                     (-> osa
-                                                                                                                         (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-yhteenlasku-osiin app)
-                                                                                                                         (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
-                                                                                                                                                  (apply + (map (fn [osa]
-                                                                                                                                                                  (tyokalut/arvo osa :arvo))
-                                                                                                                                                                (vals yhteenlasku-osat)))))))
-                                                                                                                   osa))
-                                                                                                               osat)))
-                                                        (= (p/rivin-skeema taulukko rivi) :laajenna-lapsilla) (tyokalut/paivita-arvo rivi
-                                                                                                                                     :lapset
-                                                                                                                                     (fn [laajenna-rivit]
-                                                                                                                                       (update laajenna-rivit 0 (fn [paarivi]
-                                                                                                                                                                  (tyokalut/paivita-arvo paarivi :lapset
-                                                                                                                                                                                         (fn [osat]
-                                                                                                                                                                                           (tyokalut/mapv-indexed
-                                                                                                                                                                                             (fn [index osa]
-                                                                                                                                                                                               (if (= index yhteensa-otsikon-index)
-                                                                                                                                                                                                 (let [polut-summa-osiin (map (fn [laajenna-rivi]
-                                                                                                                                                                                                                                (into []
-                                                                                                                                                                                                                                      (apply concat polku-taulukkoon
-                                                                                                                                                                                                                                             (p/osan-polku-taulukossa taulukko
-                                                                                                                                                                                                                                                                      (nth (tyokalut/arvo laajenna-rivi :lapset)
-                                                                                                                                                                                                                                                                           yhteensa-otsikon-index)))))
-                                                                                                                                                                                                                              (rest laajenna-rivit))]
-                                                                                                                                                                                                   (-> osa
-                                                                                                                                                                                                       (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-summa-osiin app)
-                                                                                                                                                                                                       (p/lisaa-muodosta-arvo (fn [this {summa-osat :uusi}]
-                                                                                                                                                                                                                                (apply + (map (fn [osa]
-                                                                                                                                                                                                                                                (tyokalut/arvo osa :arvo))
-                                                                                                                                                                                                                                              (vals summa-osat)))))))
-                                                                                                                                                                                                 osa))
-                                                                                                                                                                                             osat)))))))
-                                                        :else rivi))
-                                                  rivit)))))
+                                          (fn [taulukko taulukon-asioiden-polut]
+                                            (let [[rivit rivi osat osa] taulukon-asioiden-polut
+                                                  rivit (get-in taulukko rivit)
+                                                  osa (get-in taulukko osa)
+                                                  polut-yhteenlasku-osiin (apply concat
+                                                                                 (keep (fn [rivi]
+                                                                                         (when (= :laajenna-lapsilla (p/rivin-skeema taulukko rivi))
+                                                                                           (map (fn [index]
+                                                                                                  (into [] (apply concat polku-taulukkoon
+                                                                                                                  (p/osan-polku-taulukossa taulukko (tyokalut/get-in-riviryhma rivi [index yhteensa-otsikon-index])))))
+                                                                                                (range 1 (count (tyokalut/arvo rivi :lapset))))))
+                                                                                       rivit))]
+                                              (-> osa
+                                                  (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-yhteenlasku-osiin app)
+                                                  (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
+                                                                           (apply + (map (fn [osa]
+                                                                                           (tyokalut/arvo osa :arvo))
+                                                                                         (vals yhteenlasku-osat))))))))))))
 
 (extend-protocol tuck/Event
   PaivitaKustannussuunnitelmanYhteenvedot
@@ -334,6 +262,14 @@
                                     [toimenpide-avain (paivita-summat-automaattisesti toimenpide
                                                                                       [:hankintakustannukset :toimenpiteet toimenpide-avain]
                                                                                       app)])
+                                  toimenpiteet))))
+          (update-in [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]
+                     (fn [toimenpiteet]
+                       (into {}
+                             (map (fn [[toimenpide-avain toimenpide]]
+                                    [toimenpide-avain (paivita-summat-automaattisesti toimenpide
+                                                                                      [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen toimenpide-avain]
+                                                                                      app)])
                                   toimenpiteet)))))))
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -393,50 +329,6 @@
                                                                                                               (= index maara-otsikon-index) (tyokalut/paivita-arvo osa :arvo assoc :value value)
                                                                                                               (= index yhteensa-otsikon-index) (tyokalut/aseta-arvo osa :arvo value)
                                                                                                               :else osa))
-                                                                                                          osat))))
-                                                                             rivit)))
-                               app)
-          taulukko (get-in app polku-taulukkoon)
-          ;; Sitten päivitetään yhteensä rivin yhteensä solu
-          app (p/paivita-rivi! taulukko
-                               (tyokalut/paivita-arvo (get-in taulukko polku-riviin) :lapset
-                                                      (fn [rivit]
-                                                        (tyokalut/mapv-range 0 1
-                                                                             (fn [yhteensa-rivi]
-                                                                               (tyokalut/paivita-arvo yhteensa-rivi
-                                                                                                      :lapset
-                                                                                                      (fn [osat]
-                                                                                                        (tyokalut/mapv-indexed
-                                                                                                          (fn [index osa]
-                                                                                                            (if (= index yhteensa-otsikon-index)
-                                                                                                              (tyokalut/aseta-arvo osa :arvo (apply + (map (fn [rivi]
-                                                                                                                                                             (tyokalut/arvo (get (tyokalut/arvo rivi :lapset) yhteensa-otsikon-index)
-                                                                                                                                                                            :arvo))
-                                                                                                                                                           (rest rivit))))
-                                                                                                              osa))
-                                                                                                          osat))))
-                                                                             rivit)))
-                               app)
-          ;; Sitten Summarivin yhteensä solu
-          taulukko (get-in app polku-taulukkoon)
-          app (p/paivita-taulukko! (tyokalut/paivita-arvo taulukko :lapset
-                                                      (fn [rivit]
-                                                        (tyokalut/mapv-range (dec (count rivit)) (count rivit)
-                                                                             (fn [summa-rivi]
-                                                                               (tyokalut/paivita-arvo summa-rivi
-                                                                                                      :lapset
-                                                                                                      (fn [osat]
-                                                                                                        (tyokalut/mapv-indexed
-                                                                                                          (fn [index osa]
-                                                                                                            (if (= index yhteensa-otsikon-index)
-                                                                                                              (tyokalut/aseta-arvo osa :arvo (apply + (keep (fn [rivi]
-                                                                                                                                                              (when (= :laajenna-lapsilla (p/rivin-skeema taulukko rivi))
-                                                                                                                                                                (tyokalut/arvo (nth (tyokalut/arvo (first (tyokalut/arvo rivi :lapset))
-                                                                                                                                                                                                   :lapset)
-                                                                                                                                                                                    yhteensa-otsikon-index)
-                                                                                                                                                                               :arvo)))
-                                                                                                                                                           rivit)))
-                                                                                                              osa))
                                                                                                           osat))))
                                                                              rivit)))
                                app)

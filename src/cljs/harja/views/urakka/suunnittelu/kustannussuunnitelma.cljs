@@ -230,7 +230,7 @@
            [:kesakausi :talvikausi]]]
          [:label.kopioi-tuleville-vuosille
           [:input {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
-                   :on-change (r/partial vaihda-fn :ei)}]
+                   :on-change (r/partial vaihda-fn)}]
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
 
 (defn hankintasuunnitelmien-syotto
@@ -399,7 +399,7 @@
                                                                                                (concat
                                                                                                  rivit
                                                                                                  (case rivin-tyyppi
-                                                                                                   :laajenna [(paarivi-laajenna rivin-pohja (str laajenna-rivin-id "-paa") hoitokausi (apply + (map :summa hoitokauden-hankinnat)))]
+                                                                                                   :laajenna [(paarivi-laajenna rivin-pohja (str laajenna-rivin-id "-paa") hoitokausi nil)]
                                                                                                    :lapset (map (fn [hankinta]
                                                                                                                   (lapsirivi rivin-pohja (pvm/pvm (:pvm hankinta)) (:summa hankinta)))
                                                                                                                 hoitokauden-hankinnat)))))
@@ -423,9 +423,6 @@
                                                                                            :class #{(sarakkeiden-leveys :maara-kk)}))
                                                                     (fn [osa]
                                                                       (tyokalut/aseta-arvo osa :id :yhteensa-yhteensa
-                                                                                           #_#_:arvo (reduce (fn [yhteensa {:keys [summa]}]
-                                                                                                               (+ yhteensa summa))
-                                                                                                             0 toimenpiteet)
                                                                                            :class #{(sarakkeiden-leveys :yhteensa)}))))))]
     (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
                          :hankinnat-taulukko-laskutukseen-perustuen
