@@ -582,7 +582,7 @@
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!)))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset] :as app}]
       [:div.kustannussuunnitelma
-       ;[debug/debug app]
+       [debug/debug app]
        [:h1 "Kustannussuunnitelma"]
        [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
        [kuluva-hoitovuosi]

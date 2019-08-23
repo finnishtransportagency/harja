@@ -111,8 +111,8 @@
   (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
         summa-rivin-index (-> taulukko (tyokalut/arvo :lapset) count dec)]
     (-> taulukko
-        (tyokalut/paivita-asia-taulukossa [:laajenna-lapsilla 0 yhteensa-otsikon-index]
-                                          (fn [taulukko taulukon-asioiden-polut]
+        (tyokalut/paivita-asiat-taulukossa [:laajenna-lapsilla 0 yhteensa-otsikon-index]
+                                           (fn [taulukko taulukon-asioiden-polut]
                                             (let [[rivit laajenna-lapsilla-rivi laajenna-lapsilla-rivit paarivi osat osa] taulukon-asioiden-polut
                                                   laajenna-lapsilla-rivit (get-in taulukko laajenna-lapsilla-rivit)
                                                   paarivi (get-in taulukko paarivi)
@@ -131,8 +131,8 @@
                                                                            (apply + (map (fn [osa]
                                                                                            (tyokalut/arvo osa :arvo))
                                                                                          (vals summa-osat)))))))))
-        (tyokalut/paivita-asia-taulukossa [summa-rivin-index yhteensa-otsikon-index]
-                                          (fn [taulukko taulukon-asioiden-polut]
+        (tyokalut/paivita-asiat-taulukossa [summa-rivin-index yhteensa-otsikon-index]
+                                           (fn [taulukko taulukon-asioiden-polut]
                                             (let [[rivit rivi osat osa] taulukon-asioiden-polut
                                                   rivit (get-in taulukko rivit)
                                                   osa (get-in taulukko osa)
@@ -153,25 +153,51 @@
 
 (extend-protocol tuck/Event
   PaivitaKustannussuunnitelmanYhteenvedot
-  (process-event [{:keys [maara-solu polku-taulukkoon]} {:keys [hankintakustannukset] :as app}]
-    (let [taulukko (get-in app polku-taulukkoon)
+  (process-event [{:keys [maara-solu polku-taulukkoon]} app]
+    (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
+          taulukko (get-in app polku-taulukkoon)
           arvo (:value (tyokalut/arvo maara-solu :arvo))
-          [polku-riviin _] (p/osan-polku-taulukossa taulukko maara-solu)
-          hoitokauden-container (get-in taulukko polku-riviin)
-          yhteensa-sarakkeen-index (p/otsikon-index taulukko "Yhteensä")
-          maara-rivi-yhteensa-solu (some (fn [lapsirivi]
-                                           (when (p/osan-polku lapsirivi maara-solu)
-                                             (nth (p/janan-osat lapsirivi)
-                                                  yhteensa-sarakkeen-index)))
-                                         (p/janan-osat (get-in taulukko polku-riviin)))
-          entinen-arvo (tyokalut/arvo maara-rivi-yhteensa-solu :arvo)
-          arvon-muutos (- arvo entinen-arvo)
-          paivita-solu! (fn [app osa]
-                          (p/paivita-solu! (get-in app polku-taulukkoon) osa app))
-          paivitetty-hoitokausi (:hoitokausi hoitokauden-container)]
-      (-> app
-          (paivita-solu! (tyokalut/aseta-arvo maara-rivi-yhteensa-solu :arvo arvo))
-          (update-in [:hankintakustannukset :yhteenveto (dec paivitetty-hoitokausi) :summa] + arvon-muutos))))
+          [polku-container-riviin polku-riviin polku-soluun] (p/osan-polku-taulukossa taulukko maara-solu)
+          muokattu-hoitokausi (:hoitokausi (get-in taulukko polku-container-riviin))
+          tulevien-vuosien-rivien-indexit (when kopioidaan-tuleville-vuosille?
+                                            (keep-indexed (fn [index rivi]
+                                                            (when (> (:hoitokausi rivi) muokattu-hoitokausi)
+                                                              index))
+                                                          (tyokalut/arvo taulukko :lapset)))
+          paivitettavien-yhteenvetojen-hoitokaudet (if kopioidaan-tuleville-vuosille?
+                                                     (keep (fn [rivi]
+                                                             (when (>= (:hoitokausi rivi) muokattu-hoitokausi)
+                                                               (:hoitokausi rivi)))
+                                                           (tyokalut/arvo taulukko :lapset))
+                                                     [muokattu-hoitokausi])
+          yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
+          maara-otsikon-index (p/otsikon-index taulukko "Määrä")
+          uusi-taulukko (tyokalut/paivita-asiat-taulukossa taulukko [:laajenna-lapsilla (last polku-riviin)]
+                                                           (fn [taulukko taulukon-asioiden-polut]
+                                                             (let [[rivit hoitokauden-container laajenna-lapsilla-rivit rivi] taulukon-asioiden-polut
+                                                                   hoitokauden-container (get-in taulukko hoitokauden-container)
+                                                                   rivi (get-in taulukko rivi)
+                                                                   kasiteltavan-rivin-hoitokausi (:hoitokausi hoitokauden-container)
+                                                                   arvo-paivitetaan? (or (= kasiteltavan-rivin-hoitokausi muokattu-hoitokausi)
+                                                                                         (and kopioidaan-tuleville-vuosille?
+                                                                                              (some #(= kasiteltavan-rivin-hoitokausi %)
+                                                                                                    tulevien-vuosien-rivien-indexit)))]
+                                                               (if arvo-paivitetaan?
+                                                                 (tyokalut/paivita-arvo rivi :lapset
+                                                                                        (fn [osat]
+                                                                                          (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                   (cond
+                                                                                                                     (= index yhteensa-otsikon-index) (tyokalut/aseta-arvo osa :arvo arvo)
+                                                                                                                     (= index maara-otsikon-index) (tyokalut/paivita-arvo osa :arvo assoc :value arvo)
+                                                                                                                     :else osa))
+                                                                                                                 osat)))
+                                                                 rivi))))
+          app (p/paivita-taulukko! uusi-taulukko app)]
+      (update-in app [:hankintakustannukset :yhteenveto]
+                 (fn [yhteenvedot]
+                   (reduce (fn [yhteenvedot hoitokausi]
+                             (assoc-in yhteenvedot [(dec hoitokausi) :summa] (yhteensa-yhteenveto hoitokausi app)))
+                           yhteenvedot paivitettavien-yhteenvetojen-hoitokaudet)))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]

@@ -325,20 +325,20 @@
     (keyword? polun-osa) (= polun-osa (p/rivin-skeema taulukko asia))
     (string? polun-osa) (= index (p/otsikon-index taulukko polun-osa))))
 
-(defn paivita-asia-taulukossa
+(defn paivita-asiat-taulukossa
   ([taulukko polku f]
    (let [taulukon-rivit (arvo taulukko :lapset)]
      (aseta-arvo taulukko :lapset
-                 (paivita-asia-taulukossa taulukko taulukon-rivit polku f))))
+                 (paivita-asiat-taulukossa taulukko taulukon-rivit polku f))))
   ([taulukko kierroksen-asiat polku f]
    (if-not (empty? (rest polku))
      (mapv-indexed (fn [index asia]
                      (if (paivita-asia-taulukossa-predicate taulukko index asia (first polku))
                        (aseta-arvo asia :lapset
-                                   (paivita-asia-taulukossa taulukko
-                                                            (arvo asia :lapset)
-                                                            (into [] (rest polku))
-                                                            f))
+                                   (paivita-asiat-taulukossa taulukko
+                                                             (arvo asia :lapset)
+                                                             (into [] (rest polku))
+                                                             f))
                        asia))
                    kierroksen-asiat)
      (mapv-indexed (fn [index asia]
