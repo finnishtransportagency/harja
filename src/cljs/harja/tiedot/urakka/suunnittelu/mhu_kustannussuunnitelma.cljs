@@ -58,7 +58,9 @@
                           (map (fn [kk-rivi]
                                  (get (tyokalut/arvo kk-rivi :lapset) yhteensa-sarake-index)))
                           (map (fn [kk-solu]
-                                 (tyokalut/arvo kk-solu :arvo))))
+                                 (let [arvo (tyokalut/arvo kk-solu :arvo)]
+                                   (if (integer? arvo)
+                                     arvo 0)))))
                     + 0 (tyokalut/arvo taulukko :lapset))))
               (concat (vals (get-in app [:hankintakustannukset :toimenpiteet]))
                       (vals (get-in app [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]))))))
@@ -129,7 +131,9 @@
                                                   (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-summa-osiin app)
                                                   (p/lisaa-muodosta-arvo (fn [this {summa-osat :uusi}]
                                                                            (apply + (map (fn [osa]
-                                                                                           (tyokalut/arvo osa :arvo))
+                                                                                           (let [arvo (tyokalut/arvo osa :arvo)]
+                                                                                             (if (integer? arvo)
+                                                                                               arvo 0)))
                                                                                          (vals summa-osat)))))))))
         (tyokalut/paivita-asiat-taulukossa [summa-rivin-index yhteensa-otsikon-index]
                                            (fn [taulukko taulukon-asioiden-polut]
@@ -148,7 +152,9 @@
                                                   (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-yhteenlasku-osiin app)
                                                   (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
                                                                            (apply + (map (fn [osa]
-                                                                                           (tyokalut/arvo osa :arvo))
+                                                                                           (let [arvo (tyokalut/arvo osa :arvo)]
+                                                                                             (if (integer? arvo)
+                                                                                               arvo 0)))
                                                                                          (vals yhteenlasku-osat))))))))))))
 
 (extend-protocol tuck/Event
@@ -241,7 +247,7 @@
                                                                                hankintojen-pohjadata
                                                                                (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
                                                                                        hankinnat)
-                                                                               {:summa 0
+                                                                               {:summa ""
                                                                                 :toimenpide (get toimenpiteiden-avaimet toimenpide)})))
                                          (map (fn [{:keys [vuosi kuukausi] :as data}]
                                                 (assoc data :pvm (pvm/luo-pvm vuosi (dec kuukausi) 15)))))
@@ -267,7 +273,9 @@
                   (assoc-in [:hankintakustannukset :yhteenveto] (into []
                                                                       (map-indexed (fn [index [_ tiedot]]
                                                                                      {:hoitokausi (inc index)
-                                                                                      :summa (apply + (map :summa tiedot))})
+                                                                                      :summa (apply + (map #(if (integer? (:summa %))
+                                                                                                              (:summa %) 0)
+                                                                                                           tiedot))})
                                                                                    hankinnat-hoitokausittain)))
                   (assoc-in [:hankintakustannukset :toimenpiteet]
                             (into {}
