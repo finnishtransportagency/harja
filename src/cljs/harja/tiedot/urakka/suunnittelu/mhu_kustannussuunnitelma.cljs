@@ -22,6 +22,10 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
+(def toimenpiteet-rahavarauksilla #{:talvihoito
+                                    :liikenneympariston-hoito
+                                    :sorateiden-hoito})
+
 (def toimenpiteiden-avaimet
   {:paallystepaikkaukset "Päällysteiden paikkaus (hoidon ylläpito)"
    :mhu-yllapito "MHU Ylläpito"
@@ -65,10 +69,10 @@
               (concat (vals (get-in app [:hankintakustannukset :toimenpiteet]))
                       (vals (get-in app [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]))))))
 
-(defrecord HaeKustannussuunnitelma [hankintojen-taulukko])
+(defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
-(defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko])
+(defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
@@ -87,6 +91,12 @@
                                               :kuukausi %})
                                           (range 1 13)))
                                    (range (pvm/vuosi urakan-aloitus-pvm) (+ (pvm/vuosi urakan-aloitus-pvm) 6))))))))
+
+(defn rahavarauket-pohjadata []
+  ;; TODO "Muut rahavaraukset" pitää korjata kannassa olevaan nimeen
+  [{:tyyppi "vahinkojen-korjaukset"}
+   {:tyyppi "akillinen-hoitotyo"}
+   {:tyyppi "muut-rahavaraukset"}])
 
 (defn tarkista-datan-validius! [hankinnat hankinnat-laskutukseen-perustuen]
   (let [[nil-pvm-hankinnat hankinnat] (reduce (fn [[nil-pvmt pvmt] {:keys [vuosi kuukausi] :as hankinta}]
@@ -109,7 +119,30 @@
                              nil-pvm-hankintoja? (str nil-hankintoja-teksti))
                      :warning viesti/viestin-nayttoaika-pitka))))
 
-(defn paivita-summat-automaattisesti [taulukko polku-taulukkoon app]
+(defn paivita-rahavaraus-summat-automaattisesti [taulukko polku-taulukkoon app]
+  (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
+        yhteensa-rivin-index (-> taulukko (tyokalut/arvo :lapset) count dec)]
+    (tyokalut/paivita-asiat-taulukossa taulukko
+                                       [yhteensa-rivin-index yhteensa-otsikon-index]
+                                       (fn [taulukko taulukon-asioiden-polut]
+                                         (let [[rivit rivi osat osa] taulukon-asioiden-polut
+                                               rivit (get-in taulukko rivit)
+                                               osa (get-in taulukko osa)
+                                               polut-yhteenlasku-osiin (keep (fn [rivi]
+                                                                               (when (= :syottorivi (p/rivin-skeema taulukko rivi))
+                                                                                 (into [] (apply concat polku-taulukkoon
+                                                                                                 (p/osan-polku-taulukossa taulukko (nth (tyokalut/arvo rivi :lapset) yhteensa-otsikon-index))))))
+                                                                             (butlast (rest rivit)))]
+                                           (-> osa
+                                               (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma polut-yhteenlasku-osiin app)
+                                               (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
+                                                                        (apply + (map (fn [osa]
+                                                                                        (let [arvo (tyokalut/arvo osa :arvo)]
+                                                                                          (if (integer? arvo)
+                                                                                            arvo 0)))
+                                                                                      (vals yhteenlasku-osat)))))))))))
+
+(defn paivita-hankinta-summat-automaattisesti [taulukko polku-taulukkoon app]
   (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
         summa-rivin-index (-> taulukko (tyokalut/arvo :lapset) count dec)]
     (-> taulukko
@@ -205,7 +238,7 @@
                              (assoc-in yhteenvedot [(dec hoitokausi) :summa] (yhteensa-yhteenveto hoitokausi app)))
                            yhteenvedot paivitettavien-yhteenvetojen-hoitokaudet)))))
   HaeKustannussuunnitelma
-  (process-event [{:keys [hankintojen-taulukko]} app]
+  (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app
           (tuck-apurit/post! :budjettitavoite
@@ -216,7 +249,7 @@
           (tuck-apurit/post! :budjetoidut-tyot
                              {:urakka-id urakka-id}
                              {:onnistui ->HaeHankintakustannuksetOnnistui
-                              :onnistui-parametrit [hankintojen-taulukko]
+                              :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
                               :paasta-virhe-lapi? true}))))
   HaeTavoiteJaKattohintaOnnistui
@@ -236,7 +269,7 @@
     (println "HAE TAVOITE JA KATTOHINTA EPÄONNISTUI")
     app)
   HaeHankintakustannuksetOnnistui
-  (process-event [{:keys [vastaus hankintojen-taulukko]} {{valinnat :valinnat} :hankintakustannukset :as app}]
+  (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko]} {{valinnat :valinnat} :hankintakustannukset :as app}]
     (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
           hankintojen-taydennys-fn (fn [hankinnat]
@@ -268,14 +301,38 @@
           hankinnat-laskutukseen-perustuen-toimenpiteittain (group-by :toimenpide hankinnat-laskutukseen-perustuen-hoitokausille)
           hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
                                               (concat hankinnat-laskutukseen-perustuen-hoitokausille hankinnat-hoitokausille))
+
+          rahavarausten-pohjadata (rahavarauket-pohjadata)
+          rahavarausten-taydennys-fn (fn [rahavaraukset]
+                                       (mapcat (fn [toimenpide]
+                                              (tyokalut/generoi-pohjadata identity
+                                                                          rahavarausten-pohjadata
+                                                                          (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
+                                                                                  rahavaraukset)
+                                                                          {:summa ""
+                                                                           :toimenpide (get toimenpiteiden-avaimet toimenpide)}))
+                                            toimenpiteet-rahavarauksilla))
+          ;; Kantaan ollaan tallennettu kk-tasolla, koska integroituvat järjestelmät näin haluaa. Kumminkin frontilla
+          ;; näytetään vain yksi rivi, joka on sama jokaiselle kk ja vuodelle
+          ;; TODO Muut tilaajan rahavaraukset tuohon settiin
+          rahavaraukset (distinct (keep #(when (#{"vahinkojen-korjaukset" "akillinen-hoitotyo"} (:tyyppi %))
+                                           (select-keys % #{:tyyppi :summa :toimenpide}))
+                                        (:kustannusarvioidut-tyot vastaus)))
+          rahavaraukset-hoitokausile (rahavarausten-taydennys-fn rahavaraukset)
+          rahavarauket-toimenpiteittain (group-by :toimenpide rahavaraukset-hoitokausile)
+
           app (-> app
                   (assoc-in [:hankintakustannukset :valinnat :laskutukseen-perustuen] laskutukseen-perustuvat-toimenpiteet)
                   (assoc-in [:hankintakustannukset :yhteenveto] (into []
                                                                       (map-indexed (fn [index [_ tiedot]]
                                                                                      {:hoitokausi (inc index)
-                                                                                      :summa (apply + (map #(if (integer? (:summa %))
-                                                                                                              (:summa %) 0)
-                                                                                                           tiedot))})
+                                                                                      :summa (+
+                                                                                               ;; Hankintakustannukset
+                                                                                               (apply + (map #(if (integer? (:summa %))
+                                                                                                                (:summa %) 0)
+                                                                                                             tiedot))
+                                                                                               ;; Rahavaraukset
+                                                                                               (* 12 (apply + (map :summa rahavaraukset))))})
                                                                                    hankinnat-hoitokausittain)))
                   (assoc-in [:hankintakustannukset :toimenpiteet]
                             (into {}
@@ -286,6 +343,12 @@
                             (into {}
                                   (map (fn [[toimenpide-avain toimenpide-nimi]]
                                          [toimenpide-avain (hankintojen-taulukko (get hankinnat-laskutukseen-perustuen-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true true)])
+                                       toimenpiteiden-avaimet)))
+                  (assoc-in [:hankintakustannukset :rahavaraukset]
+                            (into {}
+                                  (keep (fn [[toimenpide-avain toimenpide-nimi]]
+                                          (when (toimenpiteet-rahavarauksilla toimenpide-avain)
+                                            [toimenpide-avain (rahavarausten-taulukko (get rahavarauket-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true)]))
                                        toimenpiteiden-avaimet))))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       (-> app
@@ -293,17 +356,25 @@
                      (fn [toimenpiteet]
                        (into {}
                              (map (fn [[toimenpide-avain toimenpide]]
-                                    [toimenpide-avain (paivita-summat-automaattisesti toimenpide
-                                                                                      [:hankintakustannukset :toimenpiteet toimenpide-avain]
-                                                                                      app)])
+                                    [toimenpide-avain (paivita-hankinta-summat-automaattisesti toimenpide
+                                                                                               [:hankintakustannukset :toimenpiteet toimenpide-avain]
+                                                                                               app)])
                                   toimenpiteet))))
           (update-in [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]
                      (fn [toimenpiteet]
                        (into {}
                              (map (fn [[toimenpide-avain toimenpide]]
-                                    [toimenpide-avain (paivita-summat-automaattisesti toimenpide
-                                                                                      [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen toimenpide-avain]
-                                                                                      app)])
+                                    [toimenpide-avain (paivita-hankinta-summat-automaattisesti toimenpide
+                                                                                               [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen toimenpide-avain]
+                                                                                               app)])
+                                  toimenpiteet))))
+          (update-in [:hankintakustannukset :rahavaraukset]
+                     (fn [toimenpiteet]
+                       (into {}
+                             (map (fn [[toimenpide-avain toimenpide]]
+                                    [toimenpide-avain (paivita-rahavaraus-summat-automaattisesti toimenpide
+                                                                                                 [:hankintakustannukset :rahavaraukset toimenpide-avain]
+                                                                                                 app)])
                                   toimenpiteet)))))))
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
