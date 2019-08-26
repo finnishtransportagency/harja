@@ -244,7 +244,8 @@
                                                     (assoc komponentin-tila :value arvo))))))
         on-blur (fn [event]
                   (let [klikattu-elementti (.-relatedTarget event)]
-                    (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot (::tama-komponentti osa/*this*) polku-taulukkoon))
+                    (e! (t/->PaivitaToimenpideTaulukko (::tama-komponentti osa/*this*) polku-taulukkoon))
+                    (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
                     ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
                     (when-not (and (not (nil? klikattu-elementti))
                                    (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
@@ -445,11 +446,7 @@
                                             :janat [:laajenna :lapset]}}
                        ["Nimi" "Määrä" "Yhteensä"]
                        [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]
-                       {:class (if (and laskutuksen-perusteella-taulukko?
-                                        (not laskutuksen-perusteella?))
-                                 #{ "piillotettu"}
-                                 #{})
-                        :taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
 
 (defn rahavarausten-taulukko [e! toimenpiteet
                               {valittu-toimenpide :toimenpide}
@@ -497,15 +494,26 @@
                                                                                                      :arvo (tyyppi->nimi tyyppi)
                                                                                                      :class #{(sarakkeiden-leveys :nimi)}))
                                                                               (fn [osa]
-                                                                                (tyokalut/aseta-arvo osa
-                                                                                                     :id (keyword (str tyyppi "-" (p/osan-id osa)))
-                                                                                                     :arvo summa
-                                                                                                     :class #{(sarakkeiden-leveys :maara-kk)
-                                                                                                              "input-default"}))
+                                                                                (assoc (tyokalut/aseta-arvo osa
+                                                                                                            :id (keyword (str tyyppi "-" (p/osan-id osa)))
+                                                                                                            :arvo summa
+                                                                                                            :class #{(sarakkeiden-leveys :maara-kk)
+                                                                                                                     "input-default"})
+                                                                                  :toiminnot {:on-change (fn [arvo]
+                                                                                                           (when arvo
+                                                                                                             (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                              :on-blur (fn [arvo]
+                                                                                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (* 12 arvo)))
+                                                                                                         (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))
+                                                                                              :on-key-down (fn [event]
+                                                                                                             (when (= "Enter" (.. event -key))
+                                                                                                               (.. event -target blur)))}
+                                                                                  :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
+                                                                                                   :on-blur [:str->int :positiivinen-numero :eventin-arvo]}))
                                                                               (fn [osa]
                                                                                 (tyokalut/aseta-arvo osa
                                                                                                      :id (keyword (str tyyppi "-" (p/osan-id osa)))
-                                                                                                     :arvo summa
+                                                                                                     :arvo (* summa 12)
                                                                                                      :class #{(sarakkeiden-leveys :yhteensa)}))))))
                               toimenpiteet))
         yhteensa-fn (fn [yhteensa-pohja]
@@ -617,7 +625,8 @@
                                                    (fn [{:keys [toimenpide] :as valinnat}]
                                                      (if (= nappi :kylla)
                                                        (update valinnat :laskutukseen-perustuen conj toimenpide)
-                                                       (update valinnat :laskutukseen-perustuen disj toimenpide))))))]
+                                                       (update valinnat :laskutukseen-perustuen disj toimenpide)))))
+                    (e! (t/->ToggleHankintakustannuksetOtsikko (= nappi :kylla))))]
     (fn [e! {:keys [laskutukseen-perustuen toimenpide]} on-oikeus?]
       [:div#laskutukseen-perustuen-filter
        [:label
@@ -692,7 +701,7 @@
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset] :as app}]
       [:div.kustannussuunnitelma
-       [debug/debug app]
+       ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
        [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
        [kuluva-hoitovuosi]
