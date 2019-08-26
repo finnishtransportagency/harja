@@ -47,9 +47,13 @@
           (:skeema-rivi this)))
   (osan-polku-taulukossa [this osa]
     (first (keep-indexed (fn [rivin-index rivi]
-                           (when-let [solun-polku (p/osan-polku rivi osa)]
-                             (into []
-                                   (cons [:rivit rivin-index] solun-polku))))
+                           (let [solun-polku (p/osan-polku rivi osa)
+                                 rivin-polku [:rivit rivin-index]]
+                             (cond
+                               (= osa rivi) [rivin-polku]
+                               solun-polku (into []
+                                                 (cons rivin-polku solun-polku))
+                               :else nil)))
                          (:rivit this))))
   (paivita-taulukko! [this a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
