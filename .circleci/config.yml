@@ -108,9 +108,11 @@ workflows:
       - back-testit
       - integraatio-testit
       - front-testit
-      - prod-build: # Ei sinänsä tarvi front-testejä valmiiksi, mutta jostain syystä tämä feilaa, jos front ajetaan yhtäaikaa. Tulee vain exit code 1 eikä muuta.
+      - prod-build: # Ei sinänsä tarvi valmiiksi muita buildeja, mutta jostain syystä tämä feilaa, jos ajetaan yhtäaikaa muiden kanssa. Tulee vain exit code 1 eikä muuta.
           requires:
            - front-testit
+           - back-testit
+           - integraatio-testit
       - e2e-testit:
           requires:
            - prod-build
