@@ -105,14 +105,16 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - back-testit
-      - integraatio-testit
-      - front-testit
-      - prod-build: # Ei sinänsä tarvi valmiiksi muita buildeja, mutta jostain syystä tämä feilaa, jos ajetaan yhtäaikaa muiden kanssa. Tulee vain exit code 1 eikä muuta.
+      - prod-build
+      - back-testit:
           requires:
-           - front-testit
-           - back-testit
-           - integraatio-testit
+            - prod-build
+      - integraatio-testit:
+          requires:
+            - prod-build
+      - front-testit:
+          requires:
+            - prod-build
       - e2e-testit:
           requires:
-           - prod-build
+            - prod-build
