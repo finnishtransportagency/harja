@@ -651,7 +651,7 @@
                                                                                                      :arvo kk-v
                                                                                                      :class #{(sarakkeiden-leveys :kk-v)}))))))
                               jh-laskulla))]
-    (muodosta-taulukko :rahavaraukset-taulukko
+    (muodosta-taulukko :jh-laskulla
                        {:otsikko {:janan-tyyppi jana/Rivi
                                    :osat [osa/Teksti
                                           osa/Teksti
@@ -666,6 +666,86 @@
                                             osa/Teksti]}}
                        ["Toimenkuva" "Tunnit/kk" "Tuntipalkka" "Yhteensä/kk" "kk/v"]
                        [:otsikko otsikko-fn :syottorivi syottorivi-fn]
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+
+(defn johto-ja-hallintokorvaus-yhteenveto-taulukko
+  [e! jh-yhteenveto on-oikeus?]
+  (let [osien-paivitys-fn (fn [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]
+                            (fn [osat]
+                              (mapv (fn [osa]
+                                      (let [otsikko (p/osan-id osa)]
+                                        (case otsikko
+                                          "Toimenkuva" (toimenkuva osa)
+                                          "kk/v" (kk-v osa)
+                                          "1.vuosi/€" (hoitokausi-1 osa)
+                                          "2.vuosi/€" (hoitokausi-2 osa)
+                                          "3.vuosi/€" (hoitokausi-3 osa)
+                                          "4.vuosi/€" (hoitokausi-4 osa)
+                                          "5.vuosi/€" (hoitokausi-5 osa))))
+                                    osat)))
+        polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
+                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        rivi-fn (fn [rivi-pohja]
+                  (into []
+                        (cons
+                          (-> rivi-pohja
+                              (tyokalut/aseta-arvo :id :otsikko-rivi
+                                                   :class #{"table-default" "table-default-header"
+                                                            "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"})
+                              (tyokalut/paivita-arvo :lapset
+                                                     (osien-paivitys-fn (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "Toimenkuva"))
+                                                                        (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "kk/v"))
+                                                                        (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "1.vuosi/€"))
+                                                                        (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "2.vuosi/€"))
+                                                                        (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "3.vuosi/€"))
+                                                                        (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "4.vuosi/€"))
+                                                                        (fn [osa]
+                                                                          (tyokalut/aseta-arvo osa
+                                                                                               :arvo "5.vuosi/€")))))
+                          (map (fn [{:keys [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]}]
+                                 (-> rivi-pohja
+                                     (tyokalut/aseta-arvo :id (keyword toimenkuva)
+                                                          :class #{"table-default"})
+                                     (tyokalut/paivita-arvo :lapset
+                                                            (osien-paivitys-fn (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo toimenkuva))
+                                                                               (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo kk-v))
+                                                                               (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo hoitokausi-1))
+                                                                               (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo hoitokausi-2))
+                                                                               (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo hoitokausi-3))
+                                                                               (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo hoitokausi-4))
+                                                                               (fn [osa]
+                                                                                 (tyokalut/aseta-arvo osa :arvo hoitokausi-5))))))
+                               jh-yhteenveto))))]
+    (muodosta-taulukko :jh-yhteenveto
+                       {:rivi {:janan-tyyppi jana/Rivi
+                               :osat [osa/Teksti
+                                      osa/Teksti
+                                      osa/Teksti
+                                      osa/Teksti
+                                      osa/Teksti
+                                      osa/Teksti
+                                      osa/Teksti]}}
+                       ["Toimenkuva" "kk/v" "1.vuosi/€" "2.vuosi/€" "3.vuosi/€" "4.vuosi/€" "5.vuosi/€"]
+                       [:rivi rivi-fn]
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
 
 (defn aseta-rivien-luokat
@@ -684,7 +764,7 @@
                                                                                                               "table-default-odd"
                                                                                                               "table-default-even")})))
                                                                                 merge {} nakyvat-rivit))])
-                                        :syottorivi [(inc index) (merge rivien-luokat
+                                        (:rivi :syottorivi) [(inc index) (merge rivien-luokat
                                                                         {(p/janan-id rivi)
                                                                          (if (odd? index)
                                                                            "table-default-odd"
@@ -807,21 +887,30 @@
                                                                     (aseta-rivien-luokat rivit jh-laskulla)))]
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [e! jh-laskulla]
+(defn jh-toimenkuva-yhteenveto [e! jh-yhteenveto]
+  (if jh-yhteenveto
+    [p/piirra-taulukko (-> jh-yhteenveto
+                           (assoc-in [:parametrit :id] "jh-toimenkuva-yhteenveto")
+                           (tyokalut/paivita-arvo :lapset (fn [rivit]
+                                                            (aseta-rivien-luokat rivit jh-yhteenveto))))]
+    [yleiset/ajax-loader]))
+
+(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto]
   [:div#johto-ja-hallintokorvaus
    [:span "---- TODO johto- ja hallintokorvaus  yhteenveto----"]
-   [jh-toimenkuva-laskulla e! jh-laskulla]])
+   [jh-toimenkuva-laskulla e! jh-laskulla]
+   [jh-toimenkuva-yhteenveto e! jh-yhteenveto]])
 
 (defn hoidonjohtopalkkio []
   [:span "---- TODO hoidonjohtopalkkio ----"])
 
-(defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [yhteenveto johto-ja-hallintokorvaus-laskulla]}]
+(defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [yhteenveto johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto]}]
   [:div
    [hintalaskuri {:otsikko "Yhteenveto"
                   :selite "Tykkään puurosta"
                   :hinnat yhteenveto}]
    [erillishankinnat]
-   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla]
+   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto]
    [hoidonjohtopalkkio]])
 
 (defn kustannussuunnitelma*
@@ -829,7 +918,8 @@
   (komp/luo
     (komp/piirretty (fn [_]
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)
-                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)))))
+                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
+                                                       (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet] :as app}]
       [:div.kustannussuunnitelma
        ;[debug/debug app]

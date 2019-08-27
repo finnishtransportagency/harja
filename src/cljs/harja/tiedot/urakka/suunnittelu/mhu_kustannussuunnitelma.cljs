@@ -85,10 +85,10 @@
                         + 0 (tyokalut/arvo taulukko :lapset))))
                   (vals (get-in app [:hankintakustannukset :rahavaraukset]))))))
 
-(defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko])
+(defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
-(defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko])
+(defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
@@ -266,7 +266,8 @@
                            (assoc-in yhteenvedot [(dec hoitokausi) :summa] (yhteensa-yhteenveto hoitokausi app)))
                          yhteenvedot (range 1 6)))))
   HaeKustannussuunnitelma
-  (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko]} app]
+  (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app
           (tuck-apurit/post! :budjettitavoite
@@ -277,7 +278,7 @@
           (tuck-apurit/post! :budjetoidut-tyot
                              {:urakka-id urakka-id}
                              {:onnistui ->HaeHankintakustannuksetOnnistui
-                              :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko]
+                              :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
                               :paasta-virhe-lapi? true}))))
   HaeTavoiteJaKattohintaOnnistui
@@ -297,7 +298,8 @@
     (println "HAE TAVOITE JA KATTOHINTA EPÄONNISTUI")
     app)
   HaeHankintakustannuksetOnnistui
-  (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko]}
+  (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset :as app}]
     (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
@@ -351,13 +353,24 @@
           rahavarauket-toimenpiteittain (group-by :toimenpide rahavaraukset-hoitokausile)
 
           jh-laskulla [] ;; TODO tämä kannasta
-          jh-laskulla-pohjadata (jh-laskulla-pohjadata)
+          jh-laskut-pohjadata (jh-laskulla-pohjadata)
           jh-laskut (tyokalut/generoi-pohjadata identity
-                                                jh-laskulla-pohjadata
+                                                jh-laskut-pohjadata
                                                 jh-laskulla
                                                 {:tunnit-kk ""
                                                  :tuntipalkka ""
                                                  :yhteensa-kk ""})
+
+          jh-yhteenvedot [] ;; TODO tämä kannasta
+          jh-yhteenvedot-pohjadata (jh-laskulla-pohjadata)  ;; sama pohjadata kuin laskulla
+          jh-yhteenveto (tyokalut/generoi-pohjadata identity
+                                                    jh-yhteenvedot-pohjadata
+                                                    jh-yhteenvedot
+                                                    {:hoitokausi-1 ""
+                                                     :hoitokausi-2 ""
+                                                     :hoitokausi-3 ""
+                                                     :hoitokausi-4 ""
+                                                     :hoitokausi-5 ""})
 
           valinnat (assoc valinnat :laskutukseen-perustuen laskutukseen-perustuvat-toimenpiteet)
 
@@ -390,7 +403,8 @@
                                           (when (toimenpiteet-rahavarauksilla toimenpide-avain)
                                             [toimenpide-avain (rahavarausten-taulukko (get rahavarauket-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true)]))
                                        toimenpiteiden-avaimet)))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-laskut true)))]
+                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-laskut true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true)))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       (-> app
           (update-in [:hankintakustannukset :toimenpiteet]

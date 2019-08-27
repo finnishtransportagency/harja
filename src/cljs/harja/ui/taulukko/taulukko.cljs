@@ -29,8 +29,10 @@
   p/Taulukko
   (piirra-taulukko [this]
     (assert (vector? (:rivit this)) (str "TAULUKON: " taulukon-id " RIVIT EI OLE VEKTORI"))
-    (let [luokat (-> this :parametrit :class)]
+    (let [luokat (-> this :parametrit :class)
+          dom-id (-> this :parametrit :id)]
       [:div.taulukko {:data-cy "taulukko"
+                      :id dom-id
                       :class (apply str (interpose " " luokat))}
        (for [rivi (:rivit this)]
          (with-meta [p/piirra-jana rivi]
