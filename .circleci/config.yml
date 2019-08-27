@@ -43,11 +43,13 @@ jobs:
       - image: solita/harjadb:latest
 
     steps:
-      - run: |
-          cd /tmp
-          bash sisus.bash uberjar $CIRCLE_BRANCH
-          cd /tmp/harja
-          tar cf testidata.tar cypress cypress.json tietokanta
+      - run:
+          no_output_timeout: 60m
+          command: |
+              cd /tmp
+              bash sisus.bash uberjar $CIRCLE_BRANCH
+              cd /tmp/harja
+              tar cf testidata.tar cypress cypress.json tietokanta
 
       - persist_to_workspace:
           root: /tmp/harja
