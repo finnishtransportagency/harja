@@ -482,9 +482,9 @@
                                                                      (tyokalut/aseta-arvo osa
                                                                                           :arvo "Yhteensä"
                                                                                           :class #{(sarakkeiden-leveys :yhteensa)}))))))
-        syottorivi-fn (fn [otsikko-pohja]
+        syottorivi-fn (fn [syotto-pohja]
                         (mapv (fn [{:keys [summa tyyppi]}]
-                                (-> otsikko-pohja
+                                (-> syotto-pohja
                                     (tyokalut/aseta-arvo :class #{"table-default"}
                                                          :id (keyword tyyppi))
                                     (tyokalut/paivita-arvo :lapset
@@ -545,6 +545,127 @@
                                             osa/Teksti]}}
                        ["Nimi" "Määrä" "Yhteensä"]
                        [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+
+(defn johto-ja-hallintokorvaus-laskulla-taulukko
+  [e! jh-laskulla on-oikeus?]
+  (let [sarakkeiden-leveys (fn [sarake]
+                             (case sarake
+                               :toimenkuva "col-xs-12 col-sm-12 col-md-5 col-lg-5"
+                               :tunnit-kk "col-xs-12 col-sm-3 col-md-2 col-lg-2"
+                               :tuntipalkka "col-xs-12 col-sm-3 col-md-2 col-lg-2"
+                               :yhteensa-kk "col-xs-12 col-sm-3 col-md-2 col-lg-2"
+                               :kk-v "col-xs-12 col-sm-3 col-md-1 col-lg-1"))
+        osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
+                            (fn [osat]
+                              (mapv (fn [osa]
+                                      (let [otsikko (p/osan-id osa)]
+                                        (case otsikko
+                                          "Toimenkuva" (toimenkuva osa)
+                                          "Tunnit/kk" (tunnit-kk osa)
+                                          "Tuntipalkka" (tuntipalkka osa)
+                                          "Yhteensä/kk" (yhteensa-kk osa)
+                                          "kk/v" (kk-v osa))))
+                                    osat)))
+        polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
+                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        otsikko-fn (fn [otsikko-pohja]
+                     (-> otsikko-pohja
+                         (tyokalut/aseta-arvo :id :otsikko-rivi
+                                              :class #{"table-default" "table-default-header"})
+                         (tyokalut/paivita-arvo :lapset
+                                                (osien-paivitys-fn (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Toimenkuva"
+                                                                                          :class #{(sarakkeiden-leveys :toimenkuva)}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Tunnit/kk, h"
+                                                                                          :class #{(sarakkeiden-leveys :tunnit-kk)}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Tuntipalkka, €"
+                                                                                          :class #{(sarakkeiden-leveys :tuntipalkka)}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Yhteensä/kk"
+                                                                                          :class #{(sarakkeiden-leveys :yhteensa-kk)}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "kk/v"
+                                                                                          :class #{(sarakkeiden-leveys :kk-v)}))))))
+        syottorivi-fn (fn [syotto-pohja]
+                        (mapv (fn [{:keys [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]}]
+                                (-> syotto-pohja
+                                    (tyokalut/aseta-arvo :class #{"table-default"}
+                                                         :id (keyword toimenkuva))
+                                    (tyokalut/paivita-arvo :lapset
+                                                           (osien-paivitys-fn (fn [osa]
+                                                                                (tyokalut/aseta-arvo osa
+                                                                                                     :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                                     :arvo toimenkuva
+                                                                                                     :class #{(sarakkeiden-leveys :toimenkuva)}))
+                                                                              (fn [osa]
+                                                                                (assoc (tyokalut/aseta-arvo osa
+                                                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                                            :arvo tunnit-kk
+                                                                                                            :class #{(sarakkeiden-leveys :tunnit-kk)
+                                                                                                                     "input-default"})
+                                                                                  :toiminnot {:on-change (fn [arvo]
+                                                                                                           (when arvo
+                                                                                                             (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                              :on-blur (fn [arvo]
+
+                                                                                                         )
+                                                                                              :on-key-down (fn [event]
+                                                                                                             (when (= "Enter" (.. event -key))
+                                                                                                               (.. event -target blur)))}
+                                                                                  :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
+                                                                                                   :on-blur [:str->int :positiivinen-numero :eventin-arvo]}))
+                                                                              (fn [osa]
+                                                                                (assoc (tyokalut/aseta-arvo osa
+                                                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                                            :arvo tuntipalkka
+                                                                                                            :class #{(sarakkeiden-leveys :tuntipalkka)
+                                                                                                                     "input-default"})
+                                                                                  :toiminnot {:on-change (fn [arvo]
+                                                                                                           (when arvo
+                                                                                                             (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                              :on-blur (fn [arvo]
+
+                                                                                                         )
+                                                                                              :on-key-down (fn [event]
+                                                                                                             (when (= "Enter" (.. event -key))
+                                                                                                               (.. event -target blur)))}
+                                                                                  :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
+                                                                                                   :on-blur [:str->int :positiivinen-numero :eventin-arvo]}))
+                                                                              (fn [osa]
+                                                                                (tyokalut/aseta-arvo osa
+                                                                                                     :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                                     :arvo yhteensa-kk
+                                                                                                     :class #{(sarakkeiden-leveys :yhteensa-kk)}))
+                                                                              (fn [osa]
+                                                                                (tyokalut/aseta-arvo osa
+                                                                                                     :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                                     :arvo kk-v
+                                                                                                     :class #{(sarakkeiden-leveys :kk-v)}))))))
+                              jh-laskulla))]
+    (muodosta-taulukko :rahavaraukset-taulukko
+                       {:otsikko {:janan-tyyppi jana/Rivi
+                                   :osat [osa/Teksti
+                                          osa/Teksti
+                                          osa/Teksti
+                                          osa/Teksti
+                                          osa/Teksti]}
+                        :syottorivi {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Syote
+                                            osa/Syote
+                                            osa/Teksti
+                                            osa/Teksti]}}
+                       ["Toimenkuva" "Tunnit/kk" "Tuntipalkka" "Yhteensä/kk" "kk/v"]
+                       [:otsikko otsikko-fn :syottorivi syottorivi-fn]
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
 
 (defn aseta-rivien-luokat
@@ -639,20 +760,22 @@
         "Kyllä"]])))
 
 (defn suunnitellut-rahavaraukset [e! rahavaraukset valinnat]
-  [:div
-   (for [[toimenpide-avain rahavaraus-taulukko] rahavaraukset
-         :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
-                               (t/toimenpiteet-rahavarauksilla toimenpide-avain))]]
-     ^{:key toimenpide-avain}
-     [p/piirra-taulukko (-> rahavaraus-taulukko
-                            (tyokalut/paivita-arvo :class (fn [luokat]
-                                                            (if nakyvissa?
-                                                              (disj luokat "piillotettu")
-                                                              (conj luokat "piillotettu"))))
-                            (tyokalut/paivita-arvo :lapset (fn [rivit]
-                                                             (if nakyvissa?
-                                                               (aseta-rivien-luokat rivit rahavaraus-taulukko)
-                                                               rivit))))])])
+  (if rahavaraukset
+    [:div
+     (for [[toimenpide-avain rahavaraus-taulukko] rahavaraukset
+           :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
+                                 (t/toimenpiteet-rahavarauksilla toimenpide-avain))]]
+       ^{:key toimenpide-avain}
+       [p/piirra-taulukko (-> rahavaraus-taulukko
+                              (tyokalut/paivita-arvo :class (fn [luokat]
+                                                              (if nakyvissa?
+                                                                (disj luokat "piillotettu")
+                                                                (conj luokat "piillotettu"))))
+                              (tyokalut/paivita-arvo :lapset (fn [rivit]
+                                                               (if nakyvissa?
+                                                                 (aseta-rivien-luokat rivit rahavaraus-taulukko)
+                                                                 rivit))))])]
+    [yleiset/ajax-loader]))
 
 (defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}]
   [:div
@@ -673,33 +796,41 @@
    [arvioidaanko-laskutukseen-perustuen e! valinnat true]
    [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
    [:h3 "Rahavarukset"]
-   [suunnitellut-rahavaraukset e! rahavaraukset valinnat]
-   #_[suunnitellut-hankinnat-ja-rahavaraukset e! kustannukset]])
+   [suunnitellut-rahavaraukset e! rahavaraukset valinnat]])
 
 (defn erillishankinnat []
   [:span "---- TODO erillishankinnat ----"])
 
-(defn johto-ja-hallintokorvaus []
-  [:span "---- TODO johto- ja hallintokorvaus ----"])
+(defn jh-toimenkuva-laskulla [e! jh-laskulla]
+  (if jh-laskulla
+    [p/piirra-taulukko (tyokalut/paivita-arvo jh-laskulla :lapset (fn [rivit]
+                                                                    (aseta-rivien-luokat rivit jh-laskulla)))]
+    [yleiset/ajax-loader]))
+
+(defn johto-ja-hallintokorvaus [e! jh-laskulla]
+  [:div#johto-ja-hallintokorvaus
+   [:span "---- TODO johto- ja hallintokorvaus  yhteenveto----"]
+   [jh-toimenkuva-laskulla e! jh-laskulla]])
 
 (defn hoidonjohtopalkkio []
   [:span "---- TODO hoidonjohtopalkkio ----"])
 
-(defn hallinnolliset-toimenpiteet [{{:keys [yhteenveto]} :hallinnolliset-toimenpiteet}]
+(defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [yhteenveto johto-ja-hallintokorvaus-laskulla]}]
   [:div
    [hintalaskuri {:otsikko "Yhteenveto"
                   :selite "Tykkään puurosta"
                   :hinnat yhteenveto}]
    [erillishankinnat]
-   [johto-ja-hallintokorvaus]
+   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla]
    [hoidonjohtopalkkio]])
 
 (defn kustannussuunnitelma*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
-                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)))))
-    (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset] :as app}]
+                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)
+                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)))))
+    (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet] :as app}]
       [:div.kustannussuunnitelma
        ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
@@ -718,7 +849,7 @@
          :otsikko-elementti :h2}
         [suunnitelmien-tila e! app]]
        [hankintakustannukset-taulukot e! hankintakustannukset]
-       #_[hallinnolliset-toimenpiteet]])))
+       [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-toimenpiteet]])))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

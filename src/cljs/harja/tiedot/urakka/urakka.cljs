@@ -28,8 +28,8 @@
                                                                                             :maksetaan :talvikausi
                                                                                             :laskutukseen-perustuen #{}
                                                                                             :kopioidaan-tuleville-vuosille? true}}
-                                                          :hallinnolliset-toimenpiteet {:yhteenveto [{:vuosi 1 :summa 4000} {:vuosi 2 :summa 4000} {:vuosi 3 :summa 4000} {:vuosi 4 :summa 4000} {:vuosi 5 :summa 4000}]
-                                                                                        :erillishankinnat [{:vuosi 1 :maara-kk 300} {:vuosi 2 :maara-kk 300} {:vuosi 3 :maara-kk 300} {:vuosi 4 :maara-kk 300} {:vuosi 5 :maara-kk 300}]
+                                                          :hallinnolliset-toimenpiteet {:yhteenveto [{:hoitokausi 1 :summa 4000} {:hoitokausi 2 :summa 4000} {:hoitokausi 3 :summa 4000} {:hoitokausi 4 :summa 4000} {:hoitokausi 5 :summa 4000}]
+                                                                                        :erillishankinnat [{:hoitokausi 1 :maara-kk 300} {:hoitokausi 2 :maara-kk 300} {:hoitokausi 3 :maara-kk 300} {:hoitokausi 4 :maara-kk 300} {:hoitokausi 5 :maara-kk 300}]
                                                                                         :hoidonjohtopalkkio []
                                                                                         :johto-ja-hallintokorvaus []}
 
