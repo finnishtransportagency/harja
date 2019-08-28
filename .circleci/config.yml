@@ -108,9 +108,15 @@ workflows:
   build_and_test:
     jobs:
       - prod-build
-      - back-testit
-      - integraatio-testit
-      - front-testit
+      - back-testit:
+          requires:
+            - prod-build
+      - integraatio-testit:
+          requires:
+            - prod-build
+      - front-testit:
+          requires:
+            - prod-build
       - e2e-testit:
           requires:
             - prod-build
