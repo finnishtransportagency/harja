@@ -61,3 +61,4 @@ checkouts/
 package-lock.json
 src/cljs-dev/harja/repl.cljs
 .rebel_readline_history
+*.log
