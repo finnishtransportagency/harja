@@ -352,3 +352,11 @@
                                              [[(first asian-polku-taulukossa)]] (rest asian-polku-taulukossa))))
                        asia))
                    kierroksen-asiat))))
+
+(defn osan-sisar [taulukko osa sisaren-tunniste]
+  (let [osan-rivi (get-in taulukko
+                          (into [] (apply concat
+                                          (butlast (p/osan-polku-taulukossa taulukko osa)))))]
+    (cond
+      (integer? sisaren-tunniste) (nth (arvo osan-rivi :lapset) sisaren-tunniste)
+      (string? sisaren-tunniste) (nth (arvo osan-rivi :lapset) (p/otsikon-index taulukko sisaren-tunniste)))))

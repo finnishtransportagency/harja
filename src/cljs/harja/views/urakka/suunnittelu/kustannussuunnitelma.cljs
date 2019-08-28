@@ -602,8 +602,8 @@
                                                                                                                       (when arvo
                                                                                                                         (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                                          :on-blur (fn [arvo]
-
-                                                                                                                    )
+                                                                                                                    (when arvo
+                                                                                                                      (e! (t/->PaivitaJHRivit osa/*this*))))
                                                                                                          :on-key-down (fn [event]
                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                           (.. event -target blur)))}
@@ -620,8 +620,8 @@
                                                                                                                       (when arvo
                                                                                                                         (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                                          :on-blur (fn [arvo]
-
-                                                                                                                    )
+                                                                                                                    (when arvo
+                                                                                                                      (e! (t/->PaivitaJHRivit osa/*this*))))
                                                                                                          :on-key-down (fn [event]
                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                           (.. event -target blur)))}

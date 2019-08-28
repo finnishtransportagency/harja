@@ -94,12 +94,13 @@
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
-(defrecord MuutaTaulukonOsanSisarta [osa sisar polku-taulukkoon arvo])
+(defrecord MuutaTaulukonOsanSisarta [osa sisaren-tunniste polku-taulukkoon arvo])
 (defrecord PaivitaTaulukonOsa [osa polku-taulukkoon paivitys-fn])
 (defrecord PaivitaKustannussuunnitelmanYhteenvedot [])
 (defrecord PaivitaToimenpideTaulukko [maara-solu polku-taulukkoon])
 (defrecord TaytaAlas [maara-solu polku-taulukkoon])
 (defrecord ToggleHankintakustannuksetOtsikko [kylla?])
+(defrecord PaivitaJHRivit [paivitetty-osa])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -494,14 +495,9 @@
                      (tyokalut/aseta-arvo osa :arvo arvo)
                      app))
   MuutaTaulukonOsanSisarta
-  (process-event [{:keys [osa sisar polku-taulukkoon arvo]} app]
+  (process-event [{:keys [osa sisaren-tunniste polku-taulukkoon arvo]} app]
     (let [taulukko (get-in app polku-taulukkoon)
-          osan-rivi (get-in taulukko
-                            (into [] (apply concat
-                                            (butlast (p/osan-polku-taulukossa taulukko osa)))))
-          sisar-osa (cond
-                      (integer? sisar) (nth (tyokalut/arvo osan-rivi :lapset) sisar)
-                      (string? sisar) (nth (tyokalut/arvo osan-rivi :lapset) (p/otsikon-index taulukko sisar)))]
+          sisar-osa (tyokalut/osan-sisar taulukko osa sisaren-tunniste)]
       (p/paivita-solu! taulukko
                        (tyokalut/aseta-arvo sisar-osa :arvo arvo)
                        app)))
@@ -578,4 +574,25 @@
                                                                   (tyokalut/aseta-arvo osa :arvo
                                                                                        (if kylla?
                                                                                          "Kiinteät" " ")))))
-                           app))))
+                           app)))
+  PaivitaJHRivit
+  (process-event [{:keys [paivitetty-osa]} app]
+    ;; Nämä arvothan voisi päivittää automaattisesti Taulukon TilanSeuranta protokollan avulla, mutta se aiheuttaisi
+    ;; saman agregoinnin useaan kertaan. Lasketaan tässä kerralla kaikki tarvittava.
+    (let [laskulla-taulukon-polku [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
+          yhteenveto-taulukon-polku [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
+          laskulla-taulukko (get-in app laskulla-taulukon-polku)
+          tunnit-sarakkeen-index (p/otsikon-index laskulla-taulukko "Tunnit/kk")
+          tuntipalkka-sarakkeen-index (p/otsikon-index laskulla-taulukko "Tuntipalkka")
+          [rivin-polku _] (p/osan-polku-taulukossa laskulla-taulukko paivitetty-osa)
+          laskulla-taulukko (tyokalut/paivita-asiat-taulukossa laskulla-taulukko [(last rivin-polku) "Yhteensä/kk"]
+                                                               (fn [taulukko polut]
+                                                                 (let [[rivit rivi osat osa] polut
+                                                                       osat (get-in taulukko osat)
+                                                                       yhteensaosa (get-in taulukko osa)
+                                                                       tunnit (js/Number (tyokalut/arvo (nth osat tunnit-sarakkeen-index) :arvo))
+                                                                       tunnit (if (number? tunnit) tunnit 0)
+                                                                       tuntipalkka (js/Number (tyokalut/arvo (nth osat tuntipalkka-sarakkeen-index) :arvo))
+                                                                       tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)]
+                                                                   (tyokalut/aseta-arvo yhteensaosa :arvo (* tunnit tuntipalkka)))))]
+      (p/paivita-taulukko! laskulla-taulukko app))))
