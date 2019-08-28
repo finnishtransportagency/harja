@@ -61,40 +61,40 @@ node {
         //Jos JAR:ia ei löytynyt, niin se saattaa johtua siitä, että ei olla laitettu mitään uutta develop branchiin
         //vähään aikaan.
         if (jenkinsinBuildNumber) {
-    //         // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
-    //         if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
-    //             /*
-    //              * TESTISERVERIKANNAN LUOMINEN
-    //              */
+             // Jos E2E testejä ei ole ajettu käytettävällä JAR:lla, niin ajetaan ne.
+             if (!omatFunktiot.buildNumberinEnv(jenkinsinBuildNumber, "E2E_ONNISTUI")) {
+                 /*
+                  * TESTISERVERIKANNAN LUOMINEN
+                  */
 
-    //             dir('Harja') {
-    //                 omatFunktiot.checkoutHarja('*/develop')
-    //                 stage(omatVarit.testiserverinKannanLuonti) {
-    //                     omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
-    //                 }
-    //             }
+                 dir('Harja') {
+                     omatFunktiot.checkoutHarja('*/develop')
+                     stage(omatVarit.testiserverinKannanLuonti) {
+                         omatFunktiot.ajaTestiserverinKanta(omatVarit.testiserverinKannanLuonti)
+                     }
+                 }
 
-    //             dir('CI') {
-    //                 omatFunktiot.checkoutCI()
-    //                 /*
-    //                  * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
-    //                  */
+                 dir('CI') {
+                     omatFunktiot.checkoutCI()
+                     /*
+                      * TESTISERVERIAPPIKSEN DEPLOYAAMINEN
+                      */
 
-    //                 stage(omatVarit.testiserverinAppLuonti) {
-    //                     omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
-    //                 }
-    //             }
+                     stage(omatVarit.testiserverinAppLuonti) {
+                         omatFunktiot.ajaTestiserverinApp(omatVarit.testiserverinAppLuonti, jenkinsinBuildNumber)
+                     }
+                 }
 
-    //             dir('E2E') {
-    //                 omatFunktiot.checkoutE2E()
-    //                 /*
-    //                  * E2E TESTIT
-    //                  */
-    //                 stage(omatVarit.e2eTestit) {
-    //                     omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-    //                 }
-    //             }
-    //         }
+                 dir('E2E') {
+                     omatFunktiot.checkoutE2E()
+                     /*
+                      * E2E TESTIT
+                      */
+                     stage(omatVarit.e2eTestit) {
+                         omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+                     }
+                 }
+             }
 
             dir('Harja') {
                 omatFunktiot.checkoutHarja('*/develop')
@@ -168,17 +168,21 @@ node {
             }
         }
 
-        // dir('E2E') {
-        //     omatFunktiot.checkoutE2E()
-        //     /*
-        //      * E2E TESTIT
-        //      */
-        //     stage(omatVarit.e2eTestit) {
-        //         if (omatVarit.e2eTestitAjetaan) {
-        //             omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
-        //         }
-        //     }
-        // }
+        // Selenium E2E testit on hyvä ajaa vaikka Cypress testit joskus kattaisivatkin kaikki tilanteet.
+        // Tämä siksi, että tämän avulla varmistetaan testiserverin varmasti olevan toimiva.
+        // Kerran käynyt niin, että lokaalisiti ja Cypressissä kaikki toimii kivasti, mutta testi ja stageing
+        // servereillä Harjaan jää näkyviin vain latauspallo eikä se siitä etene.
+         dir('E2E') {
+             omatFunktiot.checkoutE2E()
+             /*
+              * E2E TESTIT
+              */
+             stage(omatVarit.e2eTestit) {
+                 if (omatVarit.e2eTestitAjetaan) {
+                     omatFunktiot.ajaE2ETestit(omatVarit.e2eTestit)
+                 }
+             }
+         }
 
         dir('Harja') {
             /*

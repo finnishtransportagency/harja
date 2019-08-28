@@ -48,7 +48,7 @@
                  [org.locationtech.jts/jts-core "1.16.1"]
                  [com.mchange/c3p0 "0.9.5.4"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "20180706"]
+                 [specql "20190301"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "21.0"]

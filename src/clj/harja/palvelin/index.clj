@@ -40,38 +40,23 @@
 (defn tee-paasivu [random-avain devmode]
   (html
     "<!DOCTYPE html>\n"
-    (if devmode
-      [:html
-       [:head
-        [:title "HARJA"]
-        [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
-        [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-        [:meta {:charset "utf-8"}]
-        [:meta {:name "mobile-web-app-capable" :content "yes"}]
-        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-        [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
-        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]]
-       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
-        [:div#app]
-        [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
-        [:script {:src "js/harja.js" :type "text/javascript"}]
-        [:script {:type "text/javascript"}
-         "goog.require(\"harja.asiakas.main\");"]]]
-
-      [:html
-       [:head
-        [:title "HARJA"]
-        [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
-        [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
-        [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-        [:meta {:name "mobile-web-app-capable" :content "yes"}]
-        [:meta {:charset "utf-8"}]
-        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-        [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
-        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-        [:script {:type "text/javascript" :src "js/harja.js"}]]
-       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
-        [:div#app]]])))
+    [:html
+     [:head
+      [:title "HARJA"]
+      [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
+      [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
+      [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
+      [:meta {:name "mobile-web-app-capable" :content "yes"}]
+      [:meta {:charset "utf-8"}]
+      [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
+      [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
+      [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]]
+     [:body {:data-anti-csrf-token random-avain}
+      [:div#app
+       [:div {:style "display: flex;"}
+        [:div {:style "flex: 1; display: flex; justify-content: center; align-items: center; height: 100vh;"}
+         [:img {:src "images/ajax-loader.gif"}]]]]
+      [:script {:type "text/javascript" :src "js/harja.js"}]]]))
 
 (defn tee-ls-paasivu [random-avain devmode]
   (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"
@@ -96,53 +81,27 @@
                           livicons-36))]
     (html
       "<!DOCTYPE html>\n"
-      (if devmode
-        [:html
-         [:head
-          [:title "HARJA Mobiili laadunseuranta"]
-          [:meta {:charset "utf-8"}]
-          [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
-          [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-          [:meta {:name "mobile-web-app-capable" :content "yes"}]
-          [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-          [:link {:href "../less/laadunseuranta/application/laadunseuranta.less" :rel "stylesheet/less" :type "text/css"}]
-          [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-          [:script {:type "text/javascript" :src "js/json3.min.js"}]
-          [:script {:type "text/javascript" :src "js/proj4.js"}]
-          [:script {:type "text/javascript"}
-           "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
-            proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body {:data-anti-csrf-token random-avain}
-          [:div {:style "display: none;"}
-           inline-svg-18 inline-svg-24 inline-svg-36]
-          [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
-           [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
-           [:source {:src "video/keep_alive.webm" :type "video/webm"}]
-           [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
-          [:div#app]
-          [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta_dev.js"}]]]
-
-        [:html
-         [:head
-          [:title "HARJA Mobiili laadunseuranta"]
-          [:meta {:charset "utf-8"}]
-          [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
-          [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-          [:meta {:name "mobile-web-app-capable" :content "yes"}]
-          [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-          [:link {:href "../css/laadunseuranta.css" :rel "stylesheet" :type "text/css"}]
-          [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-          [:script {:type "text/javascript" :src "js/json3.min.js"}]
-          [:script {:type "text/javascript" :src "js/proj4.js"}]
-          [:script {:type "text/javascript"}
-           "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
-            proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body {:data-anti-csrf-token random-avain}
-          [:div {:style "display: none;"}
-           inline-svg-18 inline-svg-24 inline-svg-36]
-          [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
-           [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
-           [:source {:src "video/keep_alive.webm" :type "video/webm"}]
-           [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
-          [:div#app]
-          [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]))))
+      [:html
+       [:head
+        [:title "HARJA Mobiili laadunseuranta"]
+        [:meta {:charset "utf-8"}]
+        [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
+        [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
+        [:meta {:name "mobile-web-app-capable" :content "yes"}]
+        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
+        [:link {:href "../css/laadunseuranta.css" :rel "stylesheet" :type "text/css"}]
+        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
+        [:script {:type "text/javascript" :src "js/json3.min.js"}]
+        [:script {:type "text/javascript" :src "js/proj4.js"}]
+        [:script {:type "text/javascript"}
+         "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
+          proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
+       [:body {:data-anti-csrf-token random-avain}
+        [:div {:style "display: none;"}
+         inline-svg-18 inline-svg-24 inline-svg-36]
+        [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
+         [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
+         [:source {:src "video/keep_alive.webm" :type "video/webm"}]
+         [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
+        [:div#app]
+        [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]])))

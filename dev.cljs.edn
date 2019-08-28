@@ -7,7 +7,7 @@
 {:main harja.asiakas.main
  :optimizations :none
  :source-map true
- :output-to "dev-resources/js/harja.js"
+ :output-to "dev-resources/js/out/harja.js"
  :output-dir "dev-resources/js/out"
  :asset-path "js/out"
  :libs ["src/js/kuvataso.js"]
