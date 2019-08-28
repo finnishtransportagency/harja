@@ -109,45 +109,45 @@
                                :kuukausisuunnitelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"
                                :vuosisuunnittelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
         paarivi (fn [nimi ikoni-v ikoni-kk]
-                   (jana/->Rivi (keyword nimi)
-                                [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi) }})
-                                 (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat"))
-                                              {:ikoni (ikoni-v)}
-                                              {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                  (jana/->Rivi (keyword nimi)
+                               [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi)}})
+                                (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat"))
+                                             {:ikoni (ikoni-v)}
+                                             {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
 
-                                                        "keskita"}})
-                                 (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat"))
-                                              {:ikoni (ikoni-kk)}
-                                              {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                       "keskita"}})
+                                (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat"))
+                                             {:ikoni (ikoni-kk)}
+                                             {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
 
-                                                        "keskita"}})]
-                                #{}))
+                                                       "keskita"}})]
+                               #{}))
         paarivi-laajenna (fn [nimi]
-                            (jana/->Rivi (keyword nimi)
-                                         [(osa/->Laajenna (keyword (str nimi "-teksti"))
-                                                          (clj-str/capitalize nimi)
-                                                          #(e! (t/->LaajennaSoluaKlikattu [:suunnitelmien-tila-taulukko] (keyword nimi) %1 %2))
-                                                          {:class #{(sarakkeiden-leveys :nimi)
-                                                                    "ikoni-vasemmalle"}})
-                                          (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat")) {:ikoni ikonit/remove} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                                  "keskita"
-                                                                                                                                  }})
-                                          (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat")) {:ikoni ikonit/livicon-minus} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                                            "keskita"
-                                                                                                                                            }})]
-                                         #{}))
+                           (jana/->Rivi (keyword nimi)
+                                        [(osa/->Laajenna (keyword (str nimi "-teksti"))
+                                                         (clj-str/capitalize nimi)
+                                                         #(e! (t/->LaajennaSoluaKlikattu [:suunnitelmien-tila-taulukko] (keyword nimi) %1 %2))
+                                                         {:class #{(sarakkeiden-leveys :nimi)
+                                                                   "ikoni-vasemmalle"}})
+                                         (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat")) {:ikoni ikonit/remove} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                                 "keskita"
+                                                                                                                                 }})
+                                         (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat")) {:ikoni ikonit/livicon-minus} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                                           "keskita"
+                                                                                                                                           }})]
+                                        #{}))
         lapsirivi (fn [idn-alku teksti ikoni-v ikoni-kk]
-                     (jana/->Rivi (keyword idn-alku)
-                                  [(osa/->Teksti (keyword (str idn-alku "-nimi")) teksti {:class #{(sarakkeiden-leveys :nimi)
-                                                                                                   "solu-sisenna-1"
-                                                                                                   }})
-                                   (osa/->Ikoni (keyword (str idn-alku "-vuosisuunnitelmat")) {:ikoni (ikoni-v)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                           "keskita"
-                                                                                                                           }})
-                                   (osa/->Ikoni (keyword (str idn-alku "-kuukausisuunnitelmat")) {:ikoni (ikoni-kk)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                               "keskita"
-                                                                                                                               }})]
-                                  #{"piillotettu" }))
+                    (jana/->Rivi (keyword idn-alku)
+                                 [(osa/->Teksti (keyword (str idn-alku "-nimi")) teksti {:class #{(sarakkeiden-leveys :nimi)
+                                                                                                  "solu-sisenna-1"
+                                                                                                  }})
+                                  (osa/->Ikoni (keyword (str idn-alku "-vuosisuunnitelmat")) {:ikoni (ikoni-v)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
+                                                                                                                          "keskita"
+                                                                                                                          }})
+                                  (osa/->Ikoni (keyword (str idn-alku "-kuukausisuunnitelmat")) {:ikoni (ikoni-kk)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
+                                                                                                                              "keskita"
+                                                                                                                              }})]
+                                 #{"piillotettu"}))
         otsikkorivi (jana/->Rivi :otsikko-rivi
                                  [(osa/->Komponentti :otsikko-selite suunnitelman-selitteet #{(sarakkeiden-leveys :nimi)} nil)
                                   (osa/->Teksti :otsikko-vuosisuunnitelmat "Vuosisuunnitelmat" {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
@@ -156,10 +156,10 @@
                                                                                                          "suunnitelman-tila-otsikko"
                                                                                                          }})
                                   (osa/->Teksti :otsikko-kuukausisuunnitelmat "Kuukausisuunnitelmat*" {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                               "keskita"
+                                                                                                                "keskita"
                                                                                                                 "alas"
                                                                                                                 "suunnitelman-tila-otsikko"
-                                                                                                               }})]
+                                                                                                                }})]
                                  #{})
         taytettyja-hankintakustannuksia (count (keep :maara yhteenveto))
         hankintakustannukset-ikoni (fn []
@@ -184,7 +184,7 @@
                                                            :muut-rahavaraukset (with-meta (lapsirivi (str idn-osa "-mr") "Muut tilaajan rahavaraukset" ikoni-v ikoni-kk)
                                                                                           {:vanhempi toimenpide})
                                                            nil)))
-                                                    suunnitelmat)))
+                                                     suunnitelmat)))
                                      toimenpiteet)]
     (cons otsikkorivi
           (map-indexed #(update %2 :luokat conj (if (odd? %1) "pariton-jana" "parillinen-jana"))
@@ -278,8 +278,8 @@
                       (e! (t/->TaytaAlas this polku-taulukkoon)))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
-             :tab-index -1
-             :data-id (str (p/osan-id this))}
+                              :tab-index -1
+                              :data-id (str (p/osan-id this))}
        [napit/yleinen-ensisijainen "Kopioi allaoleviin" (r/partial tayta-alas! this)
         {:luokka (str "kopioi-nappi button-primary-default "
                       (when-not nappi-nakyvilla?
@@ -371,7 +371,7 @@
                                                                     (tyokalut/aseta-arvo osa
                                                                                          :id (keyword (str nimi "-nimi"))
                                                                                          :arvo (clj-str/capitalize nimi)
-                                                                                         :class #{(sarakkeiden-leveys :nimi)  "solu-sisenna-1"}))
+                                                                                         :class #{(sarakkeiden-leveys :nimi) "solu-sisenna-1"}))
                                                                   (fn [osa]
                                                                     (-> osa
                                                                         (tyokalut/aseta-arvo :id (keyword (str nimi "-maara"))
@@ -406,7 +406,7 @@
                                                                                                    :lapset (map (fn [hankinta]
                                                                                                                   (lapsirivi rivin-pohja (pvm/pvm (:pvm hankinta)) (:summa hankinta)))
                                                                                                                 hoitokauden-hankinnat)))))
-                                                                                             [] rivit))))
+                                                                                           [] rivit))))
                                                     (assoc :hoitokausi hoitokausi))))
                                             hankinnat-hoitokausittain))
         yhteensa-fn (fn [yhteensa-pohja]
@@ -549,14 +549,7 @@
 
 (defn johto-ja-hallintokorvaus-laskulla-taulukko
   [e! jh-laskulla on-oikeus?]
-  (let [sarakkeiden-leveys (fn [sarake]
-                             (case sarake
-                               :toimenkuva "col-xs-12 col-sm-12 col-md-5 col-lg-5"
-                               :tunnit-kk "col-xs-12 col-sm-3 col-md-2 col-lg-2"
-                               :tuntipalkka "col-xs-12 col-sm-3 col-md-2 col-lg-2"
-                               :yhteensa-kk "col-xs-12 col-sm-3 col-md-2 col-lg-2"
-                               :kk-v "col-xs-12 col-sm-3 col-md-1 col-lg-1"))
-        osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
+  (let [osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
                             (fn [osat]
                               (mapv (fn [osa]
                                       (let [otsikko (p/osan-id osa)]
@@ -573,91 +566,87 @@
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (tyokalut/aseta-arvo :id :otsikko-rivi
-                                              :class #{"table-default" "table-default-header"})
+                                              :class #{"table-default" "table-default-header"
+                                                       "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"})
                          (tyokalut/paivita-arvo :lapset
                                                 (osien-paivitys-fn (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
-                                                                                          :arvo "Toimenkuva"
-                                                                                          :class #{(sarakkeiden-leveys :toimenkuva)}))
+                                                                                          :arvo "Toimenkuva"))
                                                                    (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
-                                                                                          :arvo "Tunnit/kk, h"
-                                                                                          :class #{(sarakkeiden-leveys :tunnit-kk)}))
+                                                                                          :arvo "Tunnit/kk, h"))
                                                                    (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
-                                                                                          :arvo "Tuntipalkka, €"
-                                                                                          :class #{(sarakkeiden-leveys :tuntipalkka)}))
+                                                                                          :arvo "Tuntipalkka, €"))
                                                                    (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
-                                                                                          :arvo "Yhteensä/kk"
-                                                                                          :class #{(sarakkeiden-leveys :yhteensa-kk)}))
+                                                                                          :arvo "Yhteensä/kk"))
                                                                    (fn [osa]
                                                                      (tyokalut/aseta-arvo osa
-                                                                                          :arvo "kk/v"
-                                                                                          :class #{(sarakkeiden-leveys :kk-v)}))))))
+                                                                                          :arvo "kk/v"))))))
         syottorivi-fn (fn [syotto-pohja]
                         (mapv (fn [{:keys [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]}]
                                 (-> syotto-pohja
-                                    (tyokalut/aseta-arvo :class #{"table-default"}
+                                    (tyokalut/aseta-arvo :class #{"table-default"
+                                                                  "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
                                                          :id (keyword toimenkuva))
                                     (tyokalut/paivita-arvo :lapset
                                                            (osien-paivitys-fn (fn [osa]
                                                                                 (tyokalut/aseta-arvo osa
                                                                                                      :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                                     :arvo toimenkuva
-                                                                                                     :class #{(sarakkeiden-leveys :toimenkuva)}))
+                                                                                                     :arvo toimenkuva))
                                                                               (fn [osa]
-                                                                                (assoc (tyokalut/aseta-arvo osa
-                                                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                                            :arvo tunnit-kk
-                                                                                                            :class #{(sarakkeiden-leveys :tunnit-kk)
-                                                                                                                     "input-default"})
-                                                                                  :toiminnot {:on-change (fn [arvo]
-                                                                                                           (when arvo
-                                                                                                             (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
-                                                                                              :on-blur (fn [arvo]
+                                                                                (tyokalut/aseta-arvo
+                                                                                  (-> osa
+                                                                                      (assoc :toiminnot {:on-change (fn [arvo]
+                                                                                                                      (when arvo
+                                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                                         :on-blur (fn [arvo]
 
-                                                                                                         )
-                                                                                              :on-key-down (fn [event]
-                                                                                                             (when (= "Enter" (.. event -key))
-                                                                                                               (.. event -target blur)))}
-                                                                                  :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                   :on-blur [:str->number :positiivinen-numero :eventin-arvo]}))
+                                                                                                                    )
+                                                                                                         :on-key-down (fn [event]
+                                                                                                                        (when (= "Enter" (.. event -key))
+                                                                                                                          (.. event -target blur)))}
+                                                                                             :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
+                                                                                                              :on-blur [:str->number :positiivinen-numero :eventin-arvo]})
+                                                                                      (assoc-in [:parametrit :size] 2))
+                                                                                  :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                  :arvo tunnit-kk
+                                                                                  :class #{"input-default"}))
                                                                               (fn [osa]
-                                                                                (assoc (tyokalut/aseta-arvo osa
-                                                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                                            :arvo tuntipalkka
-                                                                                                            :class #{(sarakkeiden-leveys :tuntipalkka)
-                                                                                                                     "input-default"})
-                                                                                  :toiminnot {:on-change (fn [arvo]
-                                                                                                           (when arvo
-                                                                                                             (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
-                                                                                              :on-blur (fn [arvo]
+                                                                                (tyokalut/aseta-arvo
+                                                                                  (-> osa
+                                                                                      (assoc :toiminnot {:on-change (fn [arvo]
+                                                                                                                      (when arvo
+                                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                                         :on-blur (fn [arvo]
 
-                                                                                                         )
-                                                                                              :on-key-down (fn [event]
-                                                                                                             (when (= "Enter" (.. event -key))
-                                                                                                               (.. event -target blur)))}
-                                                                                  :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                   :on-blur [:str->number :positiivinen-numero :eventin-arvo]}))
+                                                                                                                    )
+                                                                                                         :on-key-down (fn [event]
+                                                                                                                        (when (= "Enter" (.. event -key))
+                                                                                                                          (.. event -target blur)))}
+                                                                                             :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
+                                                                                                              :on-blur [:str->number :positiivinen-numero :eventin-arvo]})
+                                                                                      (assoc-in [:parametrit :size] 2))
+                                                                                  :id (keyword (str toimenkuva "-" (p/osan-id osa)))
+                                                                                  :arvo tuntipalkka
+                                                                                  :class #{"input-default"}))
                                                                               (fn [osa]
                                                                                 (tyokalut/aseta-arvo osa
                                                                                                      :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                                     :arvo yhteensa-kk
-                                                                                                     :class #{(sarakkeiden-leveys :yhteensa-kk)}))
+                                                                                                     :arvo yhteensa-kk))
                                                                               (fn [osa]
                                                                                 (tyokalut/aseta-arvo osa
                                                                                                      :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                                     :arvo kk-v
-                                                                                                     :class #{(sarakkeiden-leveys :kk-v)}))))))
+                                                                                                     :arvo kk-v))))))
                               jh-laskulla))]
     (muodosta-taulukko :jh-laskulla
                        {:otsikko {:janan-tyyppi jana/Rivi
-                                   :osat [osa/Teksti
-                                          osa/Teksti
-                                          osa/Teksti
-                                          osa/Teksti
-                                          osa/Teksti]}
+                                  :osat [osa/Teksti
+                                         osa/Teksti
+                                         osa/Teksti
+                                         osa/Teksti
+                                         osa/Teksti]}
                         :syottorivi {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
                                             osa/Syote
@@ -825,9 +814,9 @@
                                                                                            :class #{(sarakkeiden-leveys :yhteensa)}))))))]
     (muodosta-taulukko (str rivin-nimi "-taulukko")
                        {:normaali {:janan-tyyppi jana/Rivi
-                                  :osat [osa/Teksti
-                                         osa/Teksti
-                                         osa/Teksti]}
+                                   :osat [osa/Teksti
+                                          osa/Teksti
+                                          osa/Teksti]}
                         :syottorivi {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
                                             osa/Syote
@@ -853,10 +842,10 @@
                                                                                                               "table-default-even")})))
                                                                                 merge {} nakyvat-rivit))])
                                         (:rivi :syottorivi) [(inc index) (merge rivien-luokat
-                                                                        {(p/janan-id rivi)
-                                                                         (if (odd? index)
-                                                                           "table-default-odd"
-                                                                           "table-default-even")})]
+                                                                                {(p/janan-id rivi)
+                                                                                 (if (odd? index)
+                                                                                   "table-default-odd"
+                                                                                   "table-default-even")})]
                                         [(inc index) rivien-luokat]))
                                     [0 {}] rivit))]
     (mapv (fn [rivi]
@@ -908,7 +897,7 @@
 
 (defn arvioidaanko-laskutukseen-perustuen [e! _ _]
   (let [laskutukseen-perustuen? (fn [laskutukseen-perustuen toimenpide]
-                                 (contains? laskutukseen-perustuen toimenpide))
+                                  (contains? laskutukseen-perustuen toimenpide))
         vaihda-fn (fn [nappi _]
                     (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat]
                                                    (fn [{:keys [toimenpide] :as valinnat}]
@@ -971,8 +960,10 @@
 
 (defn jh-toimenkuva-laskulla [e! jh-laskulla]
   (if jh-laskulla
-    [p/piirra-taulukko (tyokalut/paivita-arvo jh-laskulla :lapset (fn [rivit]
-                                                                    (aseta-rivien-luokat rivit jh-laskulla)))]
+    [p/piirra-taulukko (-> jh-laskulla
+                           (assoc-in [:parametrit :id] "jh-toimenkuva-laskulla")
+                           (tyokalut/paivita-arvo :lapset (fn [rivit]
+                                                            (aseta-rivien-luokat rivit jh-laskulla))))]
     [yleiset/ajax-loader]))
 
 (defn jh-toimenkuva-yhteenveto [e! jh-yhteenveto]
