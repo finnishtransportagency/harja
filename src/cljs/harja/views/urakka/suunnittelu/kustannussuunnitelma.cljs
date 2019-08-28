@@ -509,7 +509,7 @@
                                                                                                              (when (= "Enter" (.. event -key))
                                                                                                                (.. event -target blur)))}
                                                                                   :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                   :on-blur [:str->int :positiivinen-numero :eventin-arvo]}))
+                                                                                                   :on-blur [:str->number :positiivinen-numero :eventin-arvo]}))
                                                                               (fn [osa]
                                                                                 (tyokalut/aseta-arvo osa
                                                                                                      :id (keyword (str tyyppi "-" (p/osan-id osa)))
@@ -622,7 +622,7 @@
                                                                                                              (when (= "Enter" (.. event -key))
                                                                                                                (.. event -target blur)))}
                                                                                   :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                   :on-blur [:str->int :positiivinen-numero :eventin-arvo]}))
+                                                                                                   :on-blur [:str->number :positiivinen-numero :eventin-arvo]}))
                                                                               (fn [osa]
                                                                                 (assoc (tyokalut/aseta-arvo osa
                                                                                                             :id (keyword (str toimenkuva "-" (p/osan-id osa)))
@@ -639,7 +639,7 @@
                                                                                                              (when (= "Enter" (.. event -key))
                                                                                                                (.. event -target blur)))}
                                                                                   :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                   :on-blur [:str->int :positiivinen-numero :eventin-arvo]}))
+                                                                                                   :on-blur [:str->number :positiivinen-numero :eventin-arvo]}))
                                                                               (fn [osa]
                                                                                 (tyokalut/aseta-arvo osa
                                                                                                      :id (keyword (str toimenkuva "-" (p/osan-id osa)))
@@ -746,6 +746,94 @@
                                       osa/Teksti]}}
                        ["Toimenkuva" "kk/v" "1.vuosi/€" "2.vuosi/€" "3.vuosi/€" "4.vuosi/€" "5.vuosi/€"]
                        [:rivi rivi-fn]
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+
+(defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi
+                         {:keys [maara-kk yhteensa]} on-oikeus?]
+  (let [sarakkeiden-leveys (fn [sarake]
+                             (case sarake
+                               :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
+                               :maara-kk "col-xs-12 col-sm-2 col-md-2 col-lg-2"
+                               :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
+                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        otsikko-fn (fn [otsikko-pohja]
+                     (-> otsikko-pohja
+                         (tyokalut/aseta-arvo :id :otsikko-rivi
+                                              :class #{"table-default" "table-default-header"})
+                         (tyokalut/paivita-arvo :lapset
+                                                (osien-paivitys-fn (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo " "
+                                                                                          :class #{(sarakkeiden-leveys :nimi)}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Määrä €/kk"
+                                                                                          :class #{(sarakkeiden-leveys :maara-kk)}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo "Yhteensä"
+                                                                                          :class #{(sarakkeiden-leveys :yhteensa)}))))))
+        syottorivi-fn (fn [syotto-pohja]
+                        (-> syotto-pohja
+                            (tyokalut/aseta-arvo :class #{"table-default"}
+                                                 :id (str rivin-nimi "-rivi"))
+                            (tyokalut/paivita-arvo :lapset
+                                                   (osien-paivitys-fn (fn [osa]
+                                                                        (tyokalut/aseta-arvo osa
+                                                                                             :id (keyword (p/osan-id osa))
+                                                                                             :arvo rivin-nimi
+                                                                                             :class #{(sarakkeiden-leveys :nimi)}))
+                                                                      (fn [osa]
+                                                                        (assoc (tyokalut/aseta-arvo osa
+                                                                                                    :id (keyword (p/osan-id osa))
+                                                                                                    :arvo maara-kk
+                                                                                                    :class #{(sarakkeiden-leveys :maara-kk)
+                                                                                                             "input-default"})
+                                                                          :toiminnot {:on-change (fn [arvo]
+                                                                                                   (when arvo
+                                                                                                     (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                      :on-blur (fn [arvo]
+                                                                                                 (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (* 12 arvo))))
+                                                                                      :on-key-down (fn [event]
+                                                                                                     (when (= "Enter" (.. event -key))
+                                                                                                       (.. event -target blur)))}
+                                                                          :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
+                                                                                           :on-blur [:str->number :positiivinen-numero :eventin-arvo]}))
+                                                                      (fn [osa]
+                                                                        (tyokalut/aseta-arvo osa
+                                                                                             :id (keyword (p/osan-id osa))
+                                                                                             :arvo yhteensa
+                                                                                             :class #{(sarakkeiden-leveys :yhteensa)}))))))
+        yhteensa-fn (fn [yhteensa-pohja]
+                      (-> yhteensa-pohja
+                          (tyokalut/aseta-arvo :id :yhteensa
+                                               :class #{"table-default" "table-default-sum"})
+                          (tyokalut/paivita-arvo :lapset
+                                                 (osien-paivitys-fn (fn [osa]
+                                                                      (tyokalut/aseta-arvo osa
+                                                                                           :id :yhteensa-nimi
+                                                                                           :arvo "Yhteensä"
+                                                                                           :class #{(sarakkeiden-leveys :nimi)}))
+                                                                    (fn [osa]
+                                                                      (tyokalut/aseta-arvo osa
+                                                                                           :id :yhteensa-maara-kk
+                                                                                           :arvo ""
+                                                                                           :class #{(sarakkeiden-leveys :maara-kk)}))
+                                                                    (fn [osa]
+                                                                      (tyokalut/aseta-arvo osa :id :yhteensa-yhteensa
+                                                                                           :class #{(sarakkeiden-leveys :yhteensa)}))))))]
+    (muodosta-taulukko (str rivin-nimi "-taulukko")
+                       {:normaali {:janan-tyyppi jana/Rivi
+                                  :osat [osa/Teksti
+                                         osa/Teksti
+                                         osa/Teksti]}
+                        :syottorivi {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Syote
+                                            osa/Teksti]}}
+                       ["Nimi" "Määrä" "Yhteensä"]
+                       [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
 
 (defn aseta-rivien-luokat
@@ -895,22 +983,30 @@
                                                             (aseta-rivien-luokat rivit jh-yhteenveto))))]
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto]
+(defn maara-kk [taulukko]
+  (if taulukko
+    [p/piirra-taulukko (tyokalut/paivita-arvo taulukko :lapset (fn [rivit]
+                                                                 (aseta-rivien-luokat rivit taulukko)))]
+    [yleiset/ajax-loader]))
+
+(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto toimistokulut]
   [:div#johto-ja-hallintokorvaus
    [:span "---- TODO johto- ja hallintokorvaus  yhteenveto----"]
    [jh-toimenkuva-laskulla e! jh-laskulla]
-   [jh-toimenkuva-yhteenveto e! jh-yhteenveto]])
+   [jh-toimenkuva-yhteenveto e! jh-yhteenveto]
+   [maara-kk toimistokulut]])
 
 (defn hoidonjohtopalkkio []
   [:span "---- TODO hoidonjohtopalkkio ----"])
 
-(defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [yhteenveto johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto]}]
+(defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [yhteenveto johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
+                                                      toimistokulut]}]
   [:div
    [hintalaskuri {:otsikko "Yhteenveto"
                   :selite "Tykkään puurosta"
                   :hinnat yhteenveto}]
    [erillishankinnat]
-   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto]
+   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut]
    [hoidonjohtopalkkio]])
 
 (defn kustannussuunnitelma*
@@ -919,7 +1015,8 @@
     (komp/piirretty (fn [_]
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
-                                                       (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)))))
+                                                       (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto")))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet] :as app}]
       [:div.kustannussuunnitelma
        ;[debug/debug app]

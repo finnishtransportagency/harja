@@ -65,7 +65,7 @@
                                    (get (tyokalut/arvo kk-rivi :lapset) yhteensa-sarake-index)))
                             (map (fn [kk-solu]
                                    (let [arvo (tyokalut/arvo kk-solu :arvo)]
-                                     (if (integer? arvo)
+                                     (if (number? arvo)
                                        arvo 0)))))
                       + 0 (tyokalut/arvo taulukko :lapset))))
                 (concat (vals (get-in app [:hankintakustannukset :toimenpiteet]))
@@ -80,15 +80,17 @@
                                         (get (tyokalut/arvo syottorivi :lapset) yhteensa-sarake-index)))
                               (map (fn [yhteensa-solu]
                                      (let [arvo (tyokalut/arvo yhteensa-solu :arvo)]
-                                       (if (integer? arvo)
+                                       (if (number? arvo)
                                          arvo 0)))))
                         + 0 (tyokalut/arvo taulukko :lapset))))
                   (vals (get-in app [:hankintakustannukset :rahavaraukset]))))))
 
-(defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko])
+(defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
+                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
-(defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko])
+(defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko
+                                            johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
@@ -170,9 +172,28 @@
                                                (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
                                                                         (apply + (map (fn [osa]
                                                                                         (let [arvo (tyokalut/arvo osa :arvo)]
-                                                                                          (if (integer? arvo)
+                                                                                          (if (number? arvo)
                                                                                             arvo 0)))
                                                                                       (vals yhteenlasku-osat)))))))))))
+
+(defn paivita-maara-kk-taulukon-summat-automaattisesti [taulukko polku-taulukkoon app]
+  (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
+        yhteensa-rivin-index (-> taulukko (tyokalut/arvo :lapset) count dec)]
+    (tyokalut/paivita-asiat-taulukossa taulukko
+                                       [yhteensa-rivin-index yhteensa-otsikon-index]
+                                       (fn [taulukko taulukon-asioiden-polut]
+                                         (let [[rivit rivi osat osa] taulukon-asioiden-polut
+                                               rivit (get-in taulukko rivit)
+                                               osa (get-in taulukko osa)
+                                               polku-muokkausrivin-yhteensa-osaan (into [] (apply concat polku-taulukkoon
+                                                                                                  (p/osan-polku-taulukossa taulukko (nth (tyokalut/arvo (second rivit) :lapset) yhteensa-otsikon-index))))]
+                                           (-> osa
+                                               (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma [polku-muokkausrivin-yhteensa-osaan] app)
+                                               (p/lisaa-muodosta-arvo (fn [this {maara-kk-osat :uusi}]
+                                                                        (let [yhteensa-osan-arvo (-> maara-kk-osat vals first (tyokalut/arvo :arvo))]
+                                                                          (if (number? yhteensa-osan-arvo)
+                                                                            (* 5 yhteensa-osan-arvo)
+                                                                            0))))))))))
 
 (defn paivita-hankinta-summat-automaattisesti [taulukko polku-taulukkoon app]
   (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
@@ -196,7 +217,7 @@
                                                   (p/lisaa-muodosta-arvo (fn [this {summa-osat :uusi}]
                                                                            (apply + (map (fn [osa]
                                                                                            (let [arvo (tyokalut/arvo osa :arvo)]
-                                                                                             (if (integer? arvo)
+                                                                                             (if (number? arvo)
                                                                                                arvo 0)))
                                                                                          (vals summa-osat)))))))))
         (tyokalut/paivita-asiat-taulukossa [summa-rivin-index yhteensa-otsikon-index]
@@ -217,7 +238,7 @@
                                                   (p/lisaa-muodosta-arvo (fn [this {yhteenlasku-osat :uusi}]
                                                                            (apply + (map (fn [osa]
                                                                                            (let [arvo (tyokalut/arvo osa :arvo)]
-                                                                                             (if (integer? arvo)
+                                                                                             (if (number? arvo)
                                                                                                arvo 0)))
                                                                                          (vals yhteenlasku-osat))))))))))))
 
@@ -267,7 +288,7 @@
                          yhteenvedot (range 1 6)))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
-                          johto-ja-hallintokorvaus-yhteenveto-taulukko]} app]
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app
           (tuck-apurit/post! :budjettitavoite
@@ -278,7 +299,8 @@
           (tuck-apurit/post! :budjetoidut-tyot
                              {:urakka-id urakka-id}
                              {:onnistui ->HaeHankintakustannuksetOnnistui
-                              :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko]
+                              :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
+                                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
                               :paasta-virhe-lapi? true}))))
   HaeTavoiteJaKattohintaOnnistui
@@ -299,7 +321,7 @@
     app)
   HaeHankintakustannuksetOnnistui
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
-                          johto-ja-hallintokorvaus-yhteenveto-taulukko]}
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset :as app}]
     (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
@@ -372,6 +394,14 @@
                                                      :hoitokausi-4 ""
                                                      :hoitokausi-5 ""})
 
+          jh-toimistokulut [] ;; TODO tämä kannasta
+          jh-toimistokulut-pohjadata [{:nimi "Toimistokulut"}]
+          jh-toimistokulut (tyokalut/generoi-pohjadata identity
+                                                       jh-toimistokulut-pohjadata
+                                                       jh-toimistokulut
+                                                       {:maara ""
+                                                        :yhteensa ""})
+
           valinnat (assoc valinnat :laskutukseen-perustuen laskutukseen-perustuvat-toimenpiteet)
 
           app (-> app
@@ -381,7 +411,7 @@
                                                                                      {:hoitokausi (inc index)
                                                                                       :summa (+
                                                                                                ;; Hankintakustannukset
-                                                                                               (apply + (map #(if (integer? (:summa %))
+                                                                                               (apply + (map #(if (number? (:summa %))
                                                                                                                 (:summa %) 0)
                                                                                                              tiedot))
                                                                                                ;; Rahavaraukset
@@ -404,7 +434,8 @@
                                             [toimenpide-avain (rahavarausten-taulukko (get rahavarauket-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true)]))
                                        toimenpiteiden-avaimet)))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-laskut true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true)))]
+                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) true)))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       (-> app
           (update-in [:hankintakustannukset :toimenpiteet]
@@ -424,13 +455,18 @@
                                                                                                app)])
                                   toimenpiteet))))
           (update-in [:hankintakustannukset :rahavaraukset]
-                     (fn [toimenpiteet]
+                     (fn [rahavaraukset-toimenpiteittain]
                        (into {}
-                             (map (fn [[toimenpide-avain toimenpide]]
-                                    [toimenpide-avain (paivita-rahavaraus-summat-automaattisesti toimenpide
-                                                                                                 [:hankintakustannukset :rahavaraukset toimenpide-avain]
-                                                                                                 app)])
-                                  toimenpiteet)))))))
+                             (map (fn [[toimenpide rahavaraus]]
+                                    [toimenpide (paivita-rahavaraus-summat-automaattisesti rahavaraus
+                                                                                           [:hankintakustannukset :rahavaraukset toimenpide]
+                                                                                           app)])
+                                  rahavaraukset-toimenpiteittain))))
+          (update-in [:hallinnolliset-toimenpiteet :toimistokulut]
+                     (fn [toimistokulut]
+                       (paivita-maara-kk-taulukon-summat-automaattisesti toimistokulut
+                                                                         [:hallinnolliset-toimenpiteet :toimistokulut]
+                                                                         app))))))
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     ;; TODO

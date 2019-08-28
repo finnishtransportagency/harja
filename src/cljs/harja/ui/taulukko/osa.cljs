@@ -62,9 +62,14 @@
                                      (lopeta-seuranta)))}
         (fn [this]
           (let [{:keys [id class]} (:parametrit this)
+                muodostettu-arvo (when tilan-seuranta-lisatty?
+                                   (let [muodostettu-arvo (muodosta-arvo this @renderointi)]
+                                     (if (nil? muodostettu-arvo)
+                                       ""
+                                       muodostettu-arvo)))
                 teksti (if tilan-seuranta-lisatty?
                          ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
-                         (muodosta-arvo this @renderointi)
+                         muodostettu-arvo
                          (:teksti this))]
             [:div.osa.osa-teksti {:class (when class
                                            (apply str (interpose " " class)))

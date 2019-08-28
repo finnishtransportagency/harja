@@ -37,9 +37,10 @@
                      :class [:parametrit :class]}
         palautettava-arvo (get-in osa (muuta-avain avain))]
     (if (= avain :arvo)
-      (try (js/parseInt palautettava-arvo)
-           (catch :default e
-             palautettava-arvo))
+      (let [parsittu-arvo (js/Number palautettava-arvo)]
+        (if (js/isNaN parsittu-arvo)
+          palautettava-arvo
+          parsittu-arvo))
       palautettava-arvo)))
 
 (defmethod arvo osa/Ikoni
@@ -73,9 +74,10 @@
                             (muodosta-arvo osa @renderointi)
                             (get-in osa (muuta-avain avain)))]
     (if (= avain :arvo)
-      (try (js/parseInt palautettava-arvo)
-           (catch :default e
-             palautettava-arvo))
+      (let [parsittu-arvo (js/Number palautettava-arvo)]
+        (if (js/isNaN parsittu-arvo)
+          palautettava-arvo
+          parsittu-arvo))
       palautettava-arvo)))
 
 (defmethod arvo osa/Komponentti

@@ -43,6 +43,13 @@
           (when (re-matches (re-pattern (numero-re)) arvo)
             (js/parseInt arvo)))))
 
+(defmethod lisaa-kaytos :str->number
+  [_ toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (when (re-matches (re-pattern (numero-re)) arvo)
+            (js/Number arvo)))))
+
 (defmethod lisaa-kaytos :default
   [kaytos toiminto]
   (loki/warn "KAYTOSTÄ: " kaytos " EI OLE MÄÄRITETTY!")
