@@ -73,17 +73,17 @@
        sana
        sana))
 
-(defn kuluva-hoitovuosi []
-  (let [[kuluva-urakan-vuosi hoitovuoden-pvmt] (t/hoitokausi-nyt)]
-    (fn []
-      [:div#kuluva-hoitovuosi
-       [:span
-        (str "Kuluva hoitovuosi: " kuluva-urakan-vuosi
-             ". (" (pvm/pvm (first hoitovuoden-pvmt))
-             " - " (pvm/pvm (second hoitovuoden-pvmt)) ")")]
-       [:div.hoitovuosi-napit
-        [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
-        [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]])))
+(defn kuluva-hoitovuosi [{:keys [vuosi pvmt]}]
+  (if (and vuosi pvmt)
+    [:div#kuluva-hoitovuosi
+     [:span
+      (str "Kuluva hoitovuosi: " vuosi
+           ". (" (pvm/pvm (first pvmt))
+           " - " (pvm/pvm (second pvmt)) ")")]
+     [:div.hoitovuosi-napit
+      [napit/yleinen-ensisijainen "Laskutus" #(println "Painettiin Laskutus") {:ikoni [ikonit/euro] :disabled true}]
+      [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
+    [yleiset/ajax-loader]))
 
 (defn tavoite-ja-kattohinta [tavoitehinnat kattohinnat]
   (if (and tavoitehinnat kattohinnat)
@@ -1004,16 +1004,17 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
+                      (e! (t/->Hoitokausi))
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto")))))
-    (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet] :as app}]
+    (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
       [:div.kustannussuunnitelma
        ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
        [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
-       [kuluva-hoitovuosi]
+       [kuluva-hoitovuosi kuluva-hoitokausi]
        [haitari-laatikko
         "Tavoite- ja kattohinta lasketaan automaattisesti"
         {:alussa-auki? true

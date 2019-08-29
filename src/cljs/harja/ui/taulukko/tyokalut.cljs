@@ -61,8 +61,16 @@
   [osa avain]
   (let [muuta-avain {:arvo [:parametrit :value]
                      :id [:osan-id]
-                     :class [:parametrit :class]}]
-    (get-in osa (muuta-avain avain))))
+                     :class [:parametrit :class]}
+        palautettava-arvo (get-in osa (muuta-avain avain))
+        osan-tyyppi (get-in osa [:parametrit :type])]
+    (if (and (= avain :arvo) (or (= osan-tyyppi "text")
+                                 (nil? osan-tyyppi)))
+      (let [parsittu-arvo (js/Number palautettava-arvo)]
+        (if (js/isNaN parsittu-arvo)
+          palautettava-arvo
+          parsittu-arvo))
+      palautettava-arvo)))
 
 (defmethod arvo osa/Laajenna
   [osa avain]

@@ -42,12 +42,6 @@
              :talvi talvikausi
              :kaikki hoitokausi})
 
-(defn hoitokausi-nyt []
-  (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
-        urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
-        kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
-    [kuluva-urakan-vuosi hoitovuoden-pvmt]))
-
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]
   (+
     ;; Hankintakustannukset
@@ -85,6 +79,7 @@
                         + 0 (tyokalut/arvo taulukko :lapset))))
                   (vals (get-in app [:hankintakustannukset :rahavaraukset]))))))
 
+(defrecord Hoitokausi [])
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
@@ -244,6 +239,13 @@
                                                                                          (vals yhteenlasku-osat))))))))))))
 
 (extend-protocol tuck/Event
+  Hoitokausi
+  (process-event [_ app]
+    (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
+          urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
+          kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
+      (assoc app :kuluva-hoitokausi {:vuosi kuluva-urakan-vuosi
+                                     :pvmt hoitovuoden-pvmt})))
   PaivitaToimenpideTaulukko
   (process-event [{:keys [maara-solu polku-taulukkoon]} app]
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
@@ -582,17 +584,33 @@
     (let [laskulla-taulukon-polku [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
           yhteenveto-taulukon-polku [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
           laskulla-taulukko (get-in app laskulla-taulukon-polku)
+          yhteenveto-taulukko (get-in app yhteenveto-taulukon-polku)
           tunnit-sarakkeen-index (p/otsikon-index laskulla-taulukko "Tunnit/kk")
           tuntipalkka-sarakkeen-index (p/otsikon-index laskulla-taulukko "Tuntipalkka")
+          kk-v-sarakkeen-index (p/otsikon-index laskulla-taulukko "kk/v")
           [rivin-polku _] (p/osan-polku-taulukossa laskulla-taulukko paivitetty-osa)
           laskulla-taulukko (tyokalut/paivita-asiat-taulukossa laskulla-taulukko [(last rivin-polku) "Yhteensä/kk"]
                                                                (fn [taulukko polut]
                                                                  (let [[rivit rivi osat osa] polut
                                                                        osat (get-in taulukko osat)
                                                                        yhteensaosa (get-in taulukko osa)
-                                                                       tunnit (js/Number (tyokalut/arvo (nth osat tunnit-sarakkeen-index) :arvo))
+                                                                       tunnit (tyokalut/arvo (nth osat tunnit-sarakkeen-index) :arvo)
                                                                        tunnit (if (number? tunnit) tunnit 0)
-                                                                       tuntipalkka (js/Number (tyokalut/arvo (nth osat tuntipalkka-sarakkeen-index) :arvo))
+                                                                       tuntipalkka (tyokalut/arvo (nth osat tuntipalkka-sarakkeen-index) :arvo)
                                                                        tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)]
-                                                                   (tyokalut/aseta-arvo yhteensaosa :arvo (* tunnit tuntipalkka)))))]
-      (p/paivita-taulukko! laskulla-taulukko app))))
+                                                                   (tyokalut/aseta-arvo yhteensaosa :arvo (* tunnit tuntipalkka)))))
+          kuluva-hoitovuosi (get-in app [:kuluva-hoitokausi :vuosi])
+          yhteenveto-taulukko (tyokalut/paivita-asiat-taulukossa yhteenveto-taulukko [(last rivin-polku) (str kuluva-hoitovuosi ".vuosi/€")]
+                                                                 (fn [taulukko polut]
+                                                                   (let [[rivit rivi osat osa] polut
+                                                                         vuosi-yhteensa-osa (get-in taulukko osa)
+                                                                         laskulla-taulukon-rivin-osat (tyokalut/arvo (get-in laskulla-taulukko rivin-polku) :lapset)
+                                                                         tunnit (tyokalut/arvo (nth laskulla-taulukon-rivin-osat tunnit-sarakkeen-index) :arvo)
+                                                                         tunnit (if (number? tunnit) tunnit 0)
+                                                                         tuntipalkka (tyokalut/arvo (nth laskulla-taulukon-rivin-osat tuntipalkka-sarakkeen-index) :arvo)
+                                                                         tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)
+                                                                         kk-v (tyokalut/arvo (nth laskulla-taulukon-rivin-osat kk-v-sarakkeen-index) :arvo)]
+                                                                     (tyokalut/aseta-arvo vuosi-yhteensa-osa :arvo (* tunnit tuntipalkka kk-v)))))]
+      (->> app
+           (p/paivita-taulukko! laskulla-taulukko)
+           (p/paivita-taulukko! yhteenveto-taulukko)))))
