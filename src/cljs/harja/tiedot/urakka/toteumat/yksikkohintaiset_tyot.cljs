@@ -101,18 +101,29 @@
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
+(defn tiukin-aikavali
+  [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
+  (let [alkupvm (if (harja.pvm/jalkeen? alkupvm v-alkupvm)
+                  alkupvm
+                  v-alkupvm)
+        loppupvm (if (harja.pvm/ennen? loppupvm v-loppupvm)
+                   loppupvm
+                   v-loppupvm)]
+    [alkupvm loppupvm]))
+
 (defonce yksikkohintainen-toteuma-kartalla
   (reaction
    (let [urakka-id (:id @nav/valittu-urakka)
          sopimus-id (first @urakka/valittu-sopimusnumero)
          hoitokausi @urakka/valittu-hoitokausi
+         aikavali @u/valittu-aikavali
          toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
          tehtava (:id @u/valittu-yksikkohintainen-tehtava)
          taso-paalla? @karttataso-yksikkohintainen-toteuma
          summat @yks-hint-tehtavien-summat
          toteuma @valittu-yksikkohintainen-toteuma]
      (luo-yksikkohintaisten-toteumien-kuvataso
-      urakka-id sopimus-id taso-paalla? hoitokausi toimenpide
+      urakka-id sopimus-id taso-paalla? (tiukin-aikavali aikavali hoitokausi) toimenpide
       (if toteuma
         (let [tehtavat (into #{}
                              (map (comp :id :tehtava))
