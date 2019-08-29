@@ -328,6 +328,22 @@
   {:pre [(= (type riviryhma) jana/RiviLapsilla)]}
   (-> riviryhma (arvo :lapset) (nth rivin-index) (arvo :lapset) (nth otsikon-index)))
 
+(defn hae-asia-taulukosta
+  [taulukko polku]
+  (loop [asiat (arvo taulukko :lapset)
+         [polun-osa & polku] polku]
+    (if (nil? polun-osa)
+      asiat
+      (let [asia (cond
+                   (fn? polun-osa) (polun-osa asiat)
+                   (string? polun-osa) (nth asiat (p/otsikon-index taulukko polun-osa))
+                   (integer? polun-osa) (nth asiat polun-osa)
+                   :else nil)]
+        (recur (if (nil? asia)
+                 nil
+                 (arvo asia :lapset))
+               polku)))))
+
 (defn paivita-asia-taulukossa-predicate
   [taulukko index asia polun-osa]
   (cond

@@ -222,14 +222,21 @@
 .kustannussuunnitelma-filter {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   > * {
     &:nth-child(1) {
-      min-width: 400px;
+      max-width: 400px;
+      min-width: 250px;
+      flex: 1;
     }
     &:nth-child(2) {
-      min-width: 400px;
+      max-width: 400px;
+      flex: 1;
     }
   }
+}
+
+div, span {
+  word-break: normal;
 }

@@ -82,12 +82,12 @@
 (defrecord Hoitokausi [])
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko
-                                    johtopalkkio-taulukko])
+                                    johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
 (defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko
                                             johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko
-                                            johtopalkkio-taulukko])
+                                            johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
@@ -293,7 +293,8 @@
                          yhteenvedot (range 1 6)))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
-                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko johtopalkkio-taulukko]} app]
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko johtopalkkio-taulukko
+                          hallinnolliset-toimenpiteet-yhteensa-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app
           (tuck-apurit/post! :budjettitavoite
@@ -306,7 +307,7 @@
                              {:onnistui ->HaeHankintakustannuksetOnnistui
                               :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
                                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko
-                                                    johtopalkkio-taulukko]
+                                                    johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
                               :paasta-virhe-lapi? true}))))
   HaeTavoiteJaKattohintaOnnistui
@@ -327,7 +328,8 @@
     app)
   HaeHankintakustannuksetOnnistui
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
-                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko johtopalkkio-taulukko]}
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko johtopalkkio-taulukko
+                          hallinnolliset-toimenpiteet-yhteensa-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset :as app}]
     (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
@@ -405,7 +407,7 @@
           jh-toimistokulut (tyokalut/generoi-pohjadata identity
                                                        jh-toimistokulut-pohjadata
                                                        jh-toimistokulut
-                                                       {:maara ""
+                                                       {:maara-kk ""
                                                         :yhteensa ""})
 
           johtopalkkio [] ;; TODO tämä kannasta
@@ -413,7 +415,7 @@
           johtopalkkio (tyokalut/generoi-pohjadata identity
                                                    johtopalkkio-pohjadata
                                                    johtopalkkio
-                                                   {:maara ""
+                                                   {:maara-kk ""
                                                     :yhteensa ""})
 
           valinnat (assoc valinnat :laskutukseen-perustuen laskutukseen-perustuvat-toimenpiteet)
@@ -450,7 +452,8 @@
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-laskut true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true))
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) true)))]
+                  (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] (hallinnolliset-toimenpiteet-yhteensa-taulukko nil true)))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       (-> app
           (update-in [:hankintakustannukset :toimenpiteet]
@@ -612,17 +615,33 @@
                                                                        tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)]
                                                                    (tyokalut/aseta-arvo yhteensaosa :arvo (* tunnit tuntipalkka)))))
           kuluva-hoitovuosi (get-in app [:kuluva-hoitokausi :vuosi])
-          yhteenveto-taulukko (tyokalut/paivita-asiat-taulukossa yhteenveto-taulukko [(last rivin-polku) (str kuluva-hoitovuosi ".vuosi/€")]
-                                                                 (fn [taulukko polut]
-                                                                   (let [[rivit rivi osat osa] polut
-                                                                         vuosi-yhteensa-osa (get-in taulukko osa)
-                                                                         laskulla-taulukon-rivin-osat (tyokalut/arvo (get-in laskulla-taulukko rivin-polku) :lapset)
-                                                                         tunnit (tyokalut/arvo (nth laskulla-taulukon-rivin-osat tunnit-sarakkeen-index) :arvo)
-                                                                         tunnit (if (number? tunnit) tunnit 0)
-                                                                         tuntipalkka (tyokalut/arvo (nth laskulla-taulukon-rivin-osat tuntipalkka-sarakkeen-index) :arvo)
-                                                                         tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)
-                                                                         kk-v (tyokalut/arvo (nth laskulla-taulukon-rivin-osat kk-v-sarakkeen-index) :arvo)]
-                                                                     (tyokalut/aseta-arvo vuosi-yhteensa-osa :arvo (* tunnit tuntipalkka kk-v)))))]
+          kuluvan-hoitovuoden-otsikko (str kuluva-hoitovuosi ".vuosi/€")
+          kuluvan-hoitovuoden-index (p/otsikon-index yhteenveto-taulukko kuluvan-hoitovuoden-otsikko)
+          summa-rivin-index (dec (count (tyokalut/arvo yhteenveto-taulukko :lapset)))
+          yhteenveto-taulukko (-> yhteenveto-taulukko
+                                  (tyokalut/paivita-asiat-taulukossa [(last rivin-polku) kuluvan-hoitovuoden-index]
+                                                                     (fn [taulukko polut]
+                                                                       (let [[rivit rivi osat osa] polut
+                                                                             vuosi-yhteensa-osa (get-in taulukko osa)
+                                                                             laskulla-taulukon-rivin-osat (tyokalut/arvo (get-in laskulla-taulukko rivin-polku) :lapset)
+                                                                             tunnit (tyokalut/arvo (nth laskulla-taulukon-rivin-osat tunnit-sarakkeen-index) :arvo)
+                                                                             tunnit (if (number? tunnit) tunnit 0)
+                                                                             tuntipalkka (tyokalut/arvo (nth laskulla-taulukon-rivin-osat tuntipalkka-sarakkeen-index) :arvo)
+                                                                             tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)
+                                                                             kk-v (tyokalut/arvo (nth laskulla-taulukon-rivin-osat kk-v-sarakkeen-index) :arvo)]
+                                                                         (tyokalut/aseta-arvo vuosi-yhteensa-osa :arvo (* tunnit tuntipalkka kk-v)))))
+                                  (tyokalut/paivita-asiat-taulukossa [summa-rivin-index kuluvan-hoitovuoden-index]
+                                                                     (fn [taulukko polut]
+                                                                       (let [[rivit rivi osat osa] polut
+                                                                             vuosi-yhteensa-osa (get-in taulukko osa)
+                                                                             rivit (get-in taulukko rivit)
+                                                                             rivit-yhteensa-vuodelta (reduce (fn [summa rivi]
+                                                                                                               (+ summa (tyokalut/arvo
+                                                                                                                          (nth (tyokalut/arvo rivi :lapset)
+                                                                                                                               kuluvan-hoitovuoden-index)
+                                                                                                                          :arvo)))
+                                                                                                             0 (-> rivit rest butlast))]
+                                                                         (tyokalut/aseta-arvo vuosi-yhteensa-osa :arvo rivit-yhteensa-vuodelta)))))]
       (->> app
            (p/paivita-taulukko! laskulla-taulukko)
            (p/paivita-taulukko! yhteenveto-taulukko)))))
