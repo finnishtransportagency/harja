@@ -201,3 +201,35 @@
     }
   }
 }
+
+.maksu-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  > div {
+    display: flex;
+    flex-direction: column;
+    &:nth-child(1) {
+      flex: 1;
+      margin-right: 10px;
+    }
+    &:nth-child(2) {
+      flex: 1;
+    }
+  }
+}
+
+.kustannussuunnitelma-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  > * {
+    &:nth-child(1) {
+      min-width: 400px;
+    }
+    &:nth-child(2) {
+      min-width: 400px;
+    }
+  }
+}

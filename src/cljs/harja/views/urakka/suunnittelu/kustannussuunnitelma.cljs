@@ -201,6 +201,26 @@
         [taulukko/taulukko suunnitelmien-tila-taulukko #{"suunnitelma-ikonien-varit"}]
         [yleiset/ajax-loader]))))
 
+(defn lahetyspaiva-ja-maksetaan [_ _]
+  (let [kausi-tekstiksi (fn [kausi]
+                          (case kausi
+                            :kesakausi "Kesäkaudella"
+                            :talvikausi "Talvikaudella"
+                            :molemmat "Kesä- ja talvikaudella"))]
+    (fn [valitse-kausi maksetaan]
+      [:div.maksu-filter
+       [:div
+        [:span "Lähetyspäivä"]
+        [:div.input-default-nakoinen
+         [:span "Kuukauden 15."]]]
+       [:div
+        [:span "Maksetaan"]
+        [yleiset/livi-pudotusvalikko {:valinta maksetaan
+                                      :valitse-fn valitse-kausi
+                                      :format-fn kausi-tekstiksi
+                                      :vayla-tyyli? true}
+         [:kesakausi :talvikausi :molemmat]]]])))
+
 (defn hankintojen-filter [e! _]
   (let [toimenpide-tekstiksi (fn [toimenpide]
                                (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/upper-case))
@@ -208,30 +228,44 @@
                              (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :toimenpide] toimenpide)))
         valitse-kausi (fn [kausi]
                         (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi)))
-        kausi-tekstiksi (fn [kausi]
-                          (-> kausi name aakkosta clj-str/capitalize))
         vaihda-fn (fn [event]
                     (.preventDefault event)
-                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))]
+                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))
+        toimenpiteiden-jarjestys (fn [toimenpide]
+                                   (case toimenpide
+                                     :talvihoito 0
+                                     :liikenneympariston-hoito 1
+                                     :sorateiden-hoito 2
+                                     :paallystepaikkaukset 3
+                                     :mhu-yllapito 4
+                                     :mhu-korvausinvestointi 5))]
     (fn [_ {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
         [:div
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Toimenpide"]
-          [yleiset/livi-pudotusvalikko {:valinta toimenpide
-                                        :valitse-fn valitse-toimenpide
-                                        :format-fn toimenpide-tekstiksi}
-           (sort t/toimenpiteet)]]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Maksetaan"]
-          [yleiset/livi-pudotusvalikko {:valinta maksetaan
-                                        :valitse-fn valitse-kausi
-                                        :format-fn kausi-tekstiksi}
-           [:kesakausi :talvikausi]]]
+         [:div.kustannussuunnitelma-filter
+          [:div
+           [:span.alasvedon-otsikko "Toimenpide"]
+           [yleiset/livi-pudotusvalikko {:valinta toimenpide
+                                         :valitse-fn valitse-toimenpide
+                                         :format-fn toimenpide-tekstiksi
+                                         :vayla-tyyli? true}
+            (sort-by toimenpiteiden-jarjestys t/toimenpiteet)]]
+          [lahetyspaiva-ja-maksetaan valitse-kausi maksetaan]]
          [:label#kopioi-tuleville-vuosille
           [:input {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
                    :on-change (r/partial vaihda-fn)}]
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
+
+(defn hoidonjohtopalkkio-filter [e! _]
+  (let [valitse-kausi (fn [kausi]
+                        (e! (tuck-apurit/->MuutaTila [:hallinnolliset-toimenpiteet :valinnat :maksetaan] kausi)))]
+    (fn [_ maksetaan]
+      [:div.kustannussuunnitelma-filter
+       [:div
+        [:span "Toimenpide"]
+        [:div.input-default-nakoinen
+         [:span "HALLINNOLLISET TOIMENPITEET"]]]
+       [lahetyspaiva-ja-maksetaan valitse-kausi maksetaan]])))
 
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
@@ -958,7 +992,7 @@
 (defn erillishankinnat []
   [:span "---- TODO erillishankinnat ----"])
 
-(defn jh-toimenkuva-laskulla [e! jh-laskulla]
+(defn jh-toimenkuva-laskulla [jh-laskulla]
   (if jh-laskulla
     [p/piirra-taulukko (-> jh-laskulla
                            (assoc-in [:parametrit :id] "jh-toimenkuva-laskulla")
@@ -966,7 +1000,7 @@
                                                             (aseta-rivien-luokat rivit jh-laskulla))))]
     [yleiset/ajax-loader]))
 
-(defn jh-toimenkuva-yhteenveto [e! jh-yhteenveto]
+(defn jh-toimenkuva-yhteenveto [jh-yhteenveto]
   (if jh-yhteenveto
     [p/piirra-taulukko (-> jh-yhteenveto
                            (assoc-in [:parametrit :id] "jh-toimenkuva-yhteenveto")
@@ -980,25 +1014,30 @@
                                                                  (aseta-rivien-luokat rivit taulukko)))]
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto toimistokulut]
+(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut]
   [:div#johto-ja-hallintokorvaus
    [:span "---- TODO johto- ja hallintokorvaus  yhteenveto----"]
-   [jh-toimenkuva-laskulla e! jh-laskulla]
-   [jh-toimenkuva-yhteenveto e! jh-yhteenveto]
+   [jh-toimenkuva-laskulla jh-laskulla]
+   [jh-toimenkuva-yhteenveto jh-yhteenveto]
    [maara-kk toimistokulut]])
 
-(defn hoidonjohtopalkkio []
-  [:span "---- TODO hoidonjohtopalkkio ----"])
+(defn hoidonjohtopalkkio [johtopalkkio]
+  [maara-kk johtopalkkio])
+
+(defn hallinnolliset-yhteenveto [e! {:keys [valinnat] :as hallinnolliset-toimenpiteet}]
+  [:div
+   [hoidonjohtopalkkio-filter e! (:maksetaan valinnat)]])
 
 (defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [yhteenveto johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
-                                                      toimistokulut]}]
+                                                      toimistokulut johtopalkkio] :as hallinnolliset-toimenpiteet}]
   [:div
    [hintalaskuri {:otsikko "Yhteenveto"
                   :selite "Tykkään puurosta"
                   :hinnat yhteenveto}]
    [erillishankinnat]
-   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut]
-   [hoidonjohtopalkkio]])
+   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut]
+   [hoidonjohtopalkkio johtopalkkio]
+   [hallinnolliset-yhteenveto e! hallinnolliset-toimenpiteet]])
 
 (defn kustannussuunnitelma*
   [e! app]
@@ -1008,7 +1047,8 @@
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!) (partial rahavarausten-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto")))))
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto")
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio")))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
       [:div.kustannussuunnitelma
        ;[debug/debug app]

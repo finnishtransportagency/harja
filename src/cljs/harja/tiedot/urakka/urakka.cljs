@@ -26,14 +26,8 @@
                                                                          {:id "rivin-id-8" :nimi "Teksti 1" :tehtavaryhmatyyppi "alitaso" :maara 20 :vanhempi "rivin-id-7" :piillotettu? true}]}
                                    :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
                                                                                             :maksetaan :talvikausi
-                                                                                            :laskutukseen-perustuen #{}
                                                                                             :kopioidaan-tuleville-vuosille? true}}
-                                                          :hallinnolliset-toimenpiteet {:yhteenveto [{:hoitokausi 1 :summa 4000} {:hoitokausi 2 :summa 4000} {:hoitokausi 3 :summa 4000} {:hoitokausi 4 :summa 4000} {:hoitokausi 5 :summa 4000}]
-                                                                                        :erillishankinnat [{:hoitokausi 1 :maara-kk 300} {:hoitokausi 2 :maara-kk 300} {:hoitokausi 3 :maara-kk 300} {:hoitokausi 4 :maara-kk 300} {:hoitokausi 5 :maara-kk 300}]
-                                                                                        :hoidonjohtopalkkio []
-                                                                                        :johto-ja-hallintokorvaus []}
-
-                                                          :suunnitellut-hankinnat {}}}}))
+                                                          :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}}}}))
 
 (defonce yleiset (cursor tila [:yleiset]))
 
