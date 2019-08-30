@@ -13,11 +13,17 @@
 
 (def listaus (atom :kaikki))
 
+(defn- on-tarkastettu-hoitokautena?
+  [silta]
+  (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (harja.pvm/paivamaaran-hoitokausi (harja.pvm/nyt))]
+    (true? (harja.pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
+
 (defn- varita-silta [silta]
-  ;; PENDING: tämä ehkä korjausstatuksen mukaan?
-  ;; Nyt sillat ovat punaisia
+  ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
+
   (-> silta
-      (assoc-in [:alue :fill] "red")))
+      (assoc-in [:alue :fill] true)
+      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta) "green" "red"))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat
