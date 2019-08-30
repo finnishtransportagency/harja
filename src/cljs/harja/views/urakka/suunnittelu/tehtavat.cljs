@@ -20,7 +20,7 @@
     :tehtava "col-xs-12 col-sm-8 col-md-8 col-lg-8"
     :maara "col-xs-12 col-sm-4 col-md-4 col-lg-4"))
 
-(defn luo-taulukon-tehtavat
+#_(defn luo-taulukon-tehtavat
   [e! tehtavat on-oikeus?]
   (let [tehtava-solu (fn [tehtavaryhmatyyppi id nimi]
                        (with-meta
@@ -72,7 +72,6 @@
     (log "Osat " osat)
     (mapv
       (fn [osa]
-        (log "Osa " osa)
         (case (p/osan-id osa)
           "Tehtävä" (tehtava osa)
           "Määrä" (maara osa)
@@ -90,34 +89,17 @@
 (defn tehtava-mankeli [tehtava]
   tehtava)
 
-(defn tehtavien-syote
-  [this {:keys [e! id]} arvot]
-  (log "yote" id this)
-  (let [on-change-fn (fn [arvo]
-                       (log "Päivitetään " id " ja " (keyword (str (name id) "-maara")) " arvo " arvo)
-                       (when arvo
-                         (e! (t/->PaivitaMaara id (keyword (str (name id) "-maara")) arvo))))
-        osa (osa/->Syote
-              (str id "-maara")
-              {:on-change on-change-fn
-               :on-blur #()
-               :on-focus #()
-               :on-key-down #()}
-              {:on-change [:eventin-arvo]}
-              {:type "text"})]
-    (fn [this _ _]
-      [:div
-       [p/piirra-osa (-> osa
-                         (tyokalu/aseta-arvo :arvo "jotai")
-                         (assoc ::tama-komponentti this))]])))
-
-(defn taul-teht
+(defn luo-taul-teht
   [e! tehtavat-ja-maaraluettelo]
-  (let [rivit (mapv
+  (let [polku-taulukkoon [:tehtavat-taulukko]
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
+                                (log "TAULUKKO" paivitetty-taulukko app polku-taulukkoon)
+                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        rivit (mapv
                 tehtava-mankeli
                 tehtavat-ja-maaraluettelo)
-        tekstiteksti (fn [tekst] (log "Teksti teksti" tekst)
-                       (-> tekst
+        otsikkorivi (fn [rivi]
+                       (-> rivi
                            (tyokalu/aseta-arvo :id :tehtava)
                            (tyokalu/paivita-arvo :lapset
                                                  (osien-paivitys-fn #(tyokalu/aseta-arvo %
@@ -133,65 +115,93 @@
                                                                                          :arvo "Yksikkö"
                                                                                          :class #{(sarakkeiden-leveys :maara)})))
                            ))
-        syottosyotto (fn [tekst] (log "Teksti teksti" tekst)
-                       (mapv (fn [{:keys [nimi maara id tehtavaryhmatyyppi] :as tehtava}]
+        syottorivi (fn [rivi]
+                       (mapv (fn [{:keys [nimi maara id piillotettu? tehtavaryhmatyyppi] :as tehtava}]
                                (log "Tehtttttt " tehtava)
-                               (-> tekst
-                                  (tyokalu/aseta-arvo :id (keyword id))
+                               (-> rivi
+                                  (tyokalu/aseta-arvo :id (keyword id)
+                                                      :piillotettu? piillotettu?)
                                   (tyokalu/paivita-arvo :lapset
                                                         (osien-paivitys-fn #(tyokalu/aseta-arvo %
                                                                                                 :id :tehtava-nimi
                                                                                                 :arvo nimi
                                                                                                 :class #{(sarakkeiden-leveys :maara)})
-                                                                           #(-> %
-                                                                                (tyokalu/aseta-arvo
-                                                                                                 :id (keyword (str id "-maara"))
-                                                                                                 :arvo maara
-                                                                                                 :class #{(sarakkeiden-leveys :maara)})
-                                                                                (assoc :komponentti tehtavien-syote
-                                                                                       :komponentin-argumentit {:e! e!
-                                                                                                                :id (keyword id)}))
+                                                                           #(tyokalu/aseta-arvo %
+                                                                                               :id (keyword (str id "-maara"))
+                                                                                               :arvo maara
+                                                                                               :class #{(sarakkeiden-leveys :maara)}
+                                                                                               :on-change (fn [arvo]
+                                                                                                            (e!
+                                                                                                              (t/->PaivitaMaara osa/*this*
+                                                                                                                                (-> arvo (.. -target -value))))))
                                                                            #(tyokalu/aseta-arvo %
                                                                                                 :id :tehtava-yksikko
                                                                                                 :arvo "Yksikkö"
                                                                                                 :class #{(sarakkeiden-leveys :maara)})))
                                   ))
-                             (filter #(= "alitaso" (:tehtavaryhmatyyppi %)) rivit)))]
+                             (filter #(= "tehtava" (:tehtavaryhmatyyppi %)) rivit)))]
     (muodosta-taulukko :tehtavat
                        {:teksti {:janan-tyyppi jana/Rivi
                                  :osat [osa/Teksti osa/Teksti osa/Teksti]}
                         :syotto {:janan-tyyppi jana/Rivi
-                                 :osat [osa/Teksti osa/Komponentti osa/Teksti]}}
+                                 :osat [osa/Teksti osa/Syote osa/Teksti]}}
                        ["Tehtävä" "Määrä" "Yksikkö"]
-                       [:teksti tekstiteksti
-                        :syotto syottosyotto]
+                       [:teksti otsikkorivi
+                        :syotto syottorivi]
                        {:class "tehthhht"
-                        :taulukon-paivitys-fn! tekstiteksti})
+                        :taulukon-paivitys-fn! taulukon-paivitys-fn!})
     ))
+
+(defn valitaso-filtteri
+  [_ app]
+  (let [a :a]
+    (fn [e! {:keys [tehtava-ja-maaraluettelo valinnat] :as app}]
+      (log tehtava-ja-maaraluettelo)
+     (let [valitasot (filter #(and
+                               (= (get-in valinnat [:toimenpide :id]) (:vanhempi %))
+                               (= "otsikko" (:tehtavaryhmatyyppi %))) tehtava-ja-maaraluettelo)
+           ylatasot (filter #(= "ylataso" (:tehtavaryhmatyyppi %)) tehtava-ja-maaraluettelo)]
+       
+       [:div
+        [:div.label-ja-alasveto
+         [:span.alasvedon-otsikko "Toimenpide"]
+         [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
+                                       :valitse-fn #(e! (t/->ValitseYlataso %))
+                                       :format-fn  #(:nimi %)}
+          ylatasot]]
+        [:div.label-ja-alasveto
+         [:span.alasvedon-otsikko "Välitaso"]
+         [yleiset/livi-pudotusvalikko {:valinta    (:valitaso valinnat)
+                                       :valitse-fn #(e! (t/->ValitseValitaso %))
+                                       :format-fn #(:nimi %)}
+          valitasot]]
+        #_[:div.label-ja-alasveto
+         [:span.alasvedon-otsikko "Hoitokausi"]
+         [yleiset/livi-pudotusvalikko {:valinta    {}
+                                       :valitse-fn #()
+                                       :format-fn  #()}
+          [:kesakausi :talvikausi]]]
+        [:label.kopioi-tuleville-vuosille
+         [:input {:type      "checkbox" :checked false
+                  :on-change (r/partial #() :ei)}]
+         "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
 
 (defn tehtavat*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (let [taulukon-tehtavat (luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo) true)
-                            taul-teht (taul-teht e! (get app :tehtava-ja-maaraluettelo))]
-                        (e! (tuck-apurit/->MuutaTila [:tehtavat-taulukko] taulukon-tehtavat)))))
+                      (let [#_taulukon-tehtavat #_(luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo) true)
+                            taul-teht (luo-taul-teht e! (get app :tehtava-ja-maaraluettelo))]
+                        (e! (tuck-apurit/->MuutaTila [:tehtavat-taulukko] taul-teht)))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app]
         [:div
          [debug/debug app]
          (if taulukon-tehtavat
-           (do
-             (log "Taulukon tehtavat " taulukon-tehtavat)
-             ;(for [tehtava taulukon-tehtavat]
-             ;  (do
-             ;    (log "Tehtävä " (keys tehtava) tehtava)
-             ;    ;[p/piirra-taulukko tehtava]
-             ;    [:div "Moi"]))
-             ;[p/piirra-taulukko taulukon-tehtavat]
-             [taulukko/taulukko taulukon-tehtavat]
-             )
-
+           [:div
+            [valitaso-filtteri e! app]
+            [p/piirra-taulukko taulukon-tehtavat]]
+           ;[taulukko/taulukko taulukon-tehtavat]
            [yleiset/ajax-loader])]))))
 
 (defn tehtavat []

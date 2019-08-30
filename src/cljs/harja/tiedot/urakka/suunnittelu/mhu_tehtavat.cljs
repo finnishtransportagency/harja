@@ -3,12 +3,22 @@
             [clojure.string :as clj-str]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.tyokalut :as tyokalut]))
+            [harja.ui.taulukko.tyokalut :as tyokalut]
+            [harja.loki :as loki]))
 
-(defrecord PaivitaMaara [janan-id solun-id arvo])
+(defrecord PaivitaMaara [solu arvo])
 (defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
 (defrecord JarjestaTehtavienMukaan [])
 (defrecord JarjestaMaaranMukaan [])
+(defrecord ValitseValitaso [valitaso])
+(defrecord ValitseYlataso [ylataso])
+
+(def toimenpiteet #{:talvihoito
+                    :liikenneympariston-hoito
+                    :sorateiden-hoito
+                    :paallystepaikkaukset
+                    :mhu-yllapito
+                    :mhu-korvausinvestointi})
 
 (defn ylempi-taso?
   [ylempi-taso alempi-taso]
@@ -72,12 +82,47 @@
                    tehtavat))))
 
 (extend-protocol tuck/Event
+  ValitseYlataso
+  (process-event
+    [{:keys [ylataso]} app]
+    (let [toimenpide (assoc-in app [:valinnat :toimenpide] ylataso)]
+      toimenpide))
+  ValitseValitaso
+  (process-event [{:keys [valitaso]} {:keys [tehtavat-taulukko tehtava-ja-maaraluettelo] :as app}]
+    (let [otsikot-ja-tehtavat (reduce (fn [acc {:keys [id tehtavaryhmatyyppi vanhempi]}]
+                                        (case tehtavaryhmatyyppi
+                                          "otsikko"
+                                          acc
+                                          "ylataso"
+                                          acc
+                                          "tehtava"
+                                          (assoc acc (keyword id) (keyword vanhempi)))) {} tehtava-ja-maaraluettelo)]
+      (loki/log "OT " otsikot-ja-tehtavat)
+      (let [taul (update tehtavat-taulukko :rivit
+                         (fn [rivit]
+                           (mapv (fn [rivi]
+                                   (loki/log "rivi " rivi " - " (p/janan-id rivi) " - " (:id valitaso) " - " (get otsikot-ja-tehtavat (p/janan-id rivi)))
+                                   (if (= (keyword (:id valitaso)) (get otsikot-ja-tehtavat (p/janan-id rivi)))
+                                     (tyokalut/aseta-arvo rivi :piillotettu? false)
+                                     (tyokalut/aseta-arvo rivi :piillotettu? true)))
+                                 rivit)))]
+        (loki/log "taul taul" taul)
+        (p/paivita-taulukko! taul (assoc-in app [:valinnat :valitaso] valitaso)))))
   PaivitaMaara
-  (process-event [{:keys [janan-id solun-id arvo]} app]
-    (let [janan-index (tyokalut/janan-index (:tehtavat-taulukko app) janan-id)
+  (process-event [{:keys [solu arvo]} app]
+    (p/paivita-solu! (:tehtavat-taulukko app) (tyokalut/aseta-arvo solu :arvo arvo) app)
+    #_(let [jana (let [janat (tyokalut/jana (:tehtavat-taulukko app) janan-id)]
+                 (if (= 1 (count janat))
+                   (first janat)
+                   janat))
+          a (loki/log "janan index" (p/janan-osat jana) (tyokalut/janan-index (:tehtavat-taulukko app) jana))
+          janan-index (tyokalut/janan-index (:tehtavat-taulukko app) jana)
+          b (loki/log "janan indeksillä " (get-in app [:tehtavat-taulukko :rivit janan-index]))
           ;; TODO vissiin väärä nimi solun-id:llä
-          [solun-index & _] (p/osan-polku (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
-      (update-in app [:tehtavat-taulukko janan-index :solut solun-index :parametrit]
+          [solun-index & _] (p/osan-polku (get-in app [:tehtavat-taulukko :rivit janan-index]) solun-id)]
+      (loki/log "solun index " (get-in app [:tehtavat-taulukko :rivit janan-index]) solun-index (p/osan-polku (get-in app [:tehtavat-taulukko :rivit janan-index]) solun-id)
+                [:tehtavat-taulukko :rivit janan-index :solut solun-index :parametrit])
+      (update-in app [:tehtavat-taulukko :rivit janan-index :solut solun-index :parametrit]
                        (fn [parametrit]
                          (assoc parametrit :value arvo)))))
 
