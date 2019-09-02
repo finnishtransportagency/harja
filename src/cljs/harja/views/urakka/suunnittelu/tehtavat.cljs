@@ -100,7 +100,8 @@
                 tehtavat-ja-maaraluettelo)
         otsikkorivi (fn [rivi]
                        (-> rivi
-                           (tyokalu/aseta-arvo :id :tehtava)
+                           (tyokalu/aseta-arvo :id :tehtava
+                                               :class #{"table-default" "table-default-header"})
                            (tyokalu/paivita-arvo :lapset
                                                  (osien-paivitys-fn #(tyokalu/aseta-arvo %
                                                                                          :id :tehtava-nimi
@@ -117,9 +118,9 @@
                            ))
         syottorivi (fn [rivi]
                        (mapv (fn [{:keys [nimi maara id piillotettu? tehtavaryhmatyyppi] :as tehtava}]
-                               (log "Tehtttttt " tehtava)
                                (-> rivi
                                   (tyokalu/aseta-arvo :id (keyword id)
+                                                      :class #{"table-default-odd"}
                                                       :piillotettu? piillotettu?)
                                   (tyokalu/paivita-arvo :lapset
                                                         (osien-paivitys-fn #(tyokalu/aseta-arvo %
@@ -129,7 +130,7 @@
                                                                            #(tyokalu/aseta-arvo %
                                                                                                :id (keyword (str id "-maara"))
                                                                                                :arvo maara
-                                                                                               :class #{(sarakkeiden-leveys :maara)}
+                                                                                               :class #{(sarakkeiden-leveys :maara) "input-default"}
                                                                                                :on-change (fn [arvo]
                                                                                                             (e!
                                                                                                               (t/->PaivitaMaara osa/*this*
@@ -148,7 +149,7 @@
                        ["Tehtävä" "Määrä" "Yksikkö"]
                        [:teksti otsikkorivi
                         :syotto syottorivi]
-                       {:class "tehthhht"
+                       {:class #{}
                         :taulukon-paivitys-fn! taulukon-paivitys-fn!})
     ))
 
@@ -166,25 +167,25 @@
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Toimenpide"]
          [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
-                                       :valitse-fn #(e! (t/->ValitseYlataso %))
+                                       :valitse-fn #(e! (t/->ValitseTaso % :ylataso))
                                        :format-fn  #(:nimi %)}
           ylatasot]]
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Välitaso"]
          [yleiset/livi-pudotusvalikko {:valinta    (:valitaso valinnat)
-                                       :valitse-fn #(e! (t/->ValitseValitaso %))
+                                       :valitse-fn #(e! (t/->ValitseTaso % :valitaso))
                                        :format-fn #(:nimi %)}
           valitasot]]
-        #_[:div.label-ja-alasveto
+        [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Hoitokausi"]
-         [yleiset/livi-pudotusvalikko {:valinta    {}
-                                       :valitse-fn #()
+         [yleiset/livi-pudotusvalikko {:valinta    (:hoitokausi valinnat)
+                                       :valitse-fn #(e! (t/->ValitseTaso % :hoitokausi))
                                        :format-fn  #()}
           [:kesakausi :talvikausi]]]
         [:label.kopioi-tuleville-vuosille
          [:input {:type      "checkbox" :checked false
                   :on-change (r/partial #() :ei)}]
-         "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
+         "Samat suunnitellut määrät kaikille hoitokausille"]]))))
 
 (defn tehtavat*
   [e! app]
@@ -199,9 +200,10 @@
          [debug/debug app]
          (if taulukon-tehtavat
            [:div
+            [:h1 "Tehtävät ja määrät"]
+            [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
             [valitaso-filtteri e! app]
             [p/piirra-taulukko taulukon-tehtavat]]
-           ;[taulukko/taulukko taulukon-tehtavat]
            [yleiset/ajax-loader])]))))
 
 (defn tehtavat []

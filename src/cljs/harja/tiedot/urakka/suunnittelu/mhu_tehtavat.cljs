@@ -12,6 +12,7 @@
 (defrecord JarjestaMaaranMukaan [])
 (defrecord ValitseValitaso [valitaso])
 (defrecord ValitseYlataso [ylataso])
+(defrecord ValitseTaso [arvo taso])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -82,32 +83,39 @@
                    tehtavat))))
 
 (extend-protocol tuck/Event
-  ValitseYlataso
+  ValitseTaso
   (process-event
-    [{:keys [ylataso]} app]
-    (let [toimenpide (assoc-in app [:valinnat :toimenpide] ylataso)]
-      toimenpide))
+    [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtava-ja-maaraluettelo] :as app}]
+    (case taso
+      :hoitokausi
+      (assoc-in app [:valinnat :hoitokausi] arvo)
+      :ylataso
+      (let [toimenpide (assoc-in app [:valinnat :toimenpide] arvo)]
+        toimenpide)
+      :valitaso
+      (let [nayta-aina #{:tehtava}
+            otsikot-ja-tehtavat (reduce (fn [acc {:keys [id tehtavaryhmatyyppi vanhempi]}]
+                                          (case tehtavaryhmatyyppi
+                                            "otsikko"
+                                            acc
+                                            "ylataso"
+                                            acc
+                                            "tehtava"
+                                            (assoc acc (keyword id) (keyword vanhempi)))) {} tehtava-ja-maaraluettelo)]
+        (let [taul (update tehtavat-taulukko :rivit
+                           (fn [rivit]
+                             (mapv (fn [rivi]
+                                     (loki/log "Rivi " (p/janan-id rivi) (not (get nayta-aina (p/janan-id rivi))))
+                                     (if (or
+                                           (= (keyword (:id arvo)) (get otsikot-ja-tehtavat (p/janan-id rivi)))
+                                           (get nayta-aina (p/janan-id rivi)))
+                                       (tyokalut/aseta-arvo rivi :piillotettu? false)
+                                       (tyokalut/aseta-arvo rivi :piillotettu? true)))
+                                   rivit)))]
+          (p/paivita-taulukko! taul (assoc-in app [:valinnat :valitaso] arvo))))))
   ValitseValitaso
   (process-event [{:keys [valitaso]} {:keys [tehtavat-taulukko tehtava-ja-maaraluettelo] :as app}]
-    (let [otsikot-ja-tehtavat (reduce (fn [acc {:keys [id tehtavaryhmatyyppi vanhempi]}]
-                                        (case tehtavaryhmatyyppi
-                                          "otsikko"
-                                          acc
-                                          "ylataso"
-                                          acc
-                                          "tehtava"
-                                          (assoc acc (keyword id) (keyword vanhempi)))) {} tehtava-ja-maaraluettelo)]
-      (loki/log "OT " otsikot-ja-tehtavat)
-      (let [taul (update tehtavat-taulukko :rivit
-                         (fn [rivit]
-                           (mapv (fn [rivi]
-                                   (loki/log "rivi " rivi " - " (p/janan-id rivi) " - " (:id valitaso) " - " (get otsikot-ja-tehtavat (p/janan-id rivi)))
-                                   (if (= (keyword (:id valitaso)) (get otsikot-ja-tehtavat (p/janan-id rivi)))
-                                     (tyokalut/aseta-arvo rivi :piillotettu? false)
-                                     (tyokalut/aseta-arvo rivi :piillotettu? true)))
-                                 rivit)))]
-        (loki/log "taul taul" taul)
-        (p/paivita-taulukko! taul (assoc-in app [:valinnat :valitaso] valitaso)))))
+    )
   PaivitaMaara
   (process-event [{:keys [solu arvo]} app]
     (p/paivita-solu! (:tehtavat-taulukko app) (tyokalut/aseta-arvo solu :arvo arvo) app)
