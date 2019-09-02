@@ -81,12 +81,14 @@
 
 (defrecord Hoitokausi [])
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
-                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko
+                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
+                                    erillishankinnat-taulukko toimistokulut-taulukko
                                     johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
 (defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko
-                                            johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko
+                                            johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
+                                            erillishankinnat-taulukko toimistokulut-taulukko
                                             johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
@@ -293,8 +295,8 @@
                          yhteenvedot (range 1 6)))))
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
-                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko johtopalkkio-taulukko
-                          hallinnolliset-toimenpiteet-yhteensa-taulukko]} app]
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
+                          johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app
           (tuck-apurit/post! :budjettitavoite
@@ -306,7 +308,8 @@
                              {:urakka-id urakka-id}
                              {:onnistui ->HaeHankintakustannuksetOnnistui
                               :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
-                                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko
+                                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
+                                                    erillishankinnat-taulukko toimistokulut-taulukko
                                                     johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
                               :paasta-virhe-lapi? true}))))
@@ -328,8 +331,8 @@
     app)
   HaeHankintakustannuksetOnnistui
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
-                          johto-ja-hallintokorvaus-yhteenveto-taulukko toimistokulut-taulukko johtopalkkio-taulukko
-                          hallinnolliset-toimenpiteet-yhteensa-taulukko]}
+                          johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
+                          johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset :as app}]
     (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
@@ -402,6 +405,14 @@
                                                      :hoitokausi-4 ""
                                                      :hoitokausi-5 ""})
 
+          erillishankinnat [] ;; TODO tämä kannasta
+          erillishankinnat-pohjadata [{:nimi "Erillishankinnat"}]
+          erillishankinnat (tyokalut/generoi-pohjadata identity
+                                                       erillishankinnat-pohjadata
+                                                       erillishankinnat
+                                                       {:maara-kk ""
+                                                        :yhteensa ""})
+
           jh-toimistokulut [] ;; TODO tämä kannasta
           jh-toimistokulut-pohjadata [{:nimi "Toimistokulut"}]
           jh-toimistokulut (tyokalut/generoi-pohjadata identity
@@ -451,6 +462,7 @@
                                        toimenpiteiden-avaimet)))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-laskut true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] (hallinnolliset-toimenpiteet-yhteensa-taulukko nil true)))]
@@ -480,10 +492,20 @@
                                                                                            [:hankintakustannukset :rahavaraukset toimenpide]
                                                                                            app)])
                                   rahavaraukset-toimenpiteittain))))
+          (update-in [:hallinnolliset-toimenpiteet :erillishankinnat]
+                     (fn [erillishankinnat]
+                       (paivita-maara-kk-taulukon-summat-automaattisesti erillishankinnat
+                                                                         [:hallinnolliset-toimenpiteet :erillishankinnat]
+                                                                         app)))
           (update-in [:hallinnolliset-toimenpiteet :toimistokulut]
                      (fn [toimistokulut]
                        (paivita-maara-kk-taulukon-summat-automaattisesti toimistokulut
                                                                          [:hallinnolliset-toimenpiteet :toimistokulut]
+                                                                         app)))
+          (update-in [:hallinnolliset-toimenpiteet :johtopalkkio]
+                     (fn [johtopalkkio]
+                       (paivita-maara-kk-taulukon-summat-automaattisesti johtopalkkio
+                                                                         [:hallinnolliset-toimenpiteet :johtopalkkio]
                                                                          app))))))
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]

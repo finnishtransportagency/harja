@@ -330,18 +330,19 @@
 
 (defn hae-asia-taulukosta
   [taulukko polku]
-  (loop [asiat (arvo taulukko :lapset)
+  (loop [asia taulukko
          [polun-osa & polku] polku]
     (if (nil? polun-osa)
-      asiat
-      (let [asia (cond
+      asia
+      (let [asiat (arvo asia :lapset)
+            asia (cond
                    (fn? polun-osa) (polun-osa asiat)
                    (string? polun-osa) (nth asiat (p/otsikon-index taulukko polun-osa))
                    (integer? polun-osa) (nth asiat polun-osa)
                    :else nil)]
         (recur (if (nil? asia)
                  nil
-                 (arvo asia :lapset))
+                 asia)
                polku)))))
 
 (defn paivita-asia-taulukossa-predicate

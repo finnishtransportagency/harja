@@ -52,7 +52,8 @@
   p/Osa
   (piirra-osa [this]
     (let [{renderointi :atom muodosta-arvo :muodosta-arvo} (:tilan-seuranta this)
-          tilan-seuranta-lisatty? (not (nil? renderointi))]
+          tilan-seuranta-lisatty? (not (nil? renderointi))
+          fmt-fn (or (get-in this [:parametrit :fmt]) identity)]
       (komp/luo
         {:component-did-mount (fn [this-react]
                                 (when-let [aloita-seuranta (get-in this [:tilan-seuranta :seurannan-aloitus])]
@@ -75,7 +76,7 @@
                                            (apply str (interpose " " class)))
                                   :id id
                                   :data-cy (:osan-id this)}
-             teksti])))))
+             (fmt-fn teksti)])))))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
