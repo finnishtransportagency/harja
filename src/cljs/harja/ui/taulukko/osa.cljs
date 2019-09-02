@@ -114,7 +114,9 @@
                 (f this renderointi))))
   p/Fmt
   (lisaa-fmt [this f]
-    (assoc this ::fmt f)))
+    (assoc this ::fmt f))
+  (lisaa-fmt-aktiiviselle [this f]
+    this))
 
 (defrecord Ikoni [osan-id ikoni-ja-teksti parametrit]
   p/Osa
@@ -155,7 +157,9 @@
   (osan-tila [this])
   p/Fmt
   (lisaa-fmt [this f]
-    (assoc this ::fmt f)))
+    (assoc this ::fmt f))
+  (lisaa-fmt-aktiiviselle [this f]
+    this))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
 ;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
@@ -177,7 +181,8 @@
                                                                         (reset! aktiivinen? true)
                                                                         e)})
                                                (:kayttaytymiset this))
-          fmt-fn (or (::fmt this) identity)]
+          fmt-fn (or (::fmt this) identity)
+          fmt-aktiivinen-fn (or (::fmt-aktiivinen this) identity)]
       (fn [this]
         (let [{:keys [id class type value name readonly? required? tabindex disabled?
                       checked? default-checked? indeterminate?
@@ -192,8 +197,10 @@
                                         :data-cy (:osan-id this)
                                         :id id
                                         :type type
-                                        :value (if (and fmt-fn (not @aktiivinen?))
-                                                 (fmt-fn value)
+                                        :value (if fmt-fn
+                                                 (if @aktiivinen?
+                                                   (fmt-aktiivinen-fn value)
+                                                   (fmt-fn value))
                                                  value)
                                         :name name
                                         :read-only readonly?
@@ -243,7 +250,9 @@
   (osan-tila [this])
   p/Fmt
   (lisaa-fmt [this f]
-    (assoc this ::fmt f)))
+    (assoc this ::fmt f))
+  (lisaa-fmt-aktiiviselle [this f]
+    (assoc this ::fmt-aktiivinen f)))
 
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
   p/Tila
@@ -334,7 +343,9 @@
                 (f this renderointi))))
   p/Fmt
   (lisaa-fmt [this f]
-    (assoc this ::fmt f)))
+    (assoc this ::fmt f))
+  (lisaa-fmt-aktiiviselle [this f]
+    this))
 
 (defrecord Komponentti [osan-id komponentti komponentin-argumentit komponentin-tila]
   p/Osa

@@ -37,4 +37,5 @@
   (lisaa-muodosta-arvo [this f] "Muodostaa asian arvon tämän funktion perusteella."))
 
 (defprotocol Fmt
-  (lisaa-fmt [this f] "Lisää asiaan formatointi funktion"))
+  (lisaa-fmt [this f] "Lisää asiaan formatointi funktion")
+  (lisaa-fmt-aktiiviselle [this f] "Jos osa on aktiivinen, minkälainen formatointi?"))

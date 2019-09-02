@@ -24,16 +24,21 @@
               :else nil)))
 
 (defmethod lisaa-kaytos :eventin-arvo
-  [_ toiminto]
+  [{{:keys [f]} :eventin-arvo} toiminto]
   (comp toiminto
         (fn [event]
-          (.. event -target -value))))
+          (let [arvo (.. event -target -value)]
+            (if f
+              (f arvo)
+              arvo)))))
 
 (defmethod lisaa-kaytos :positiivinen-numero
-  [_ toiminto]
+  [{{:keys [kokonaisosan-maara desimaalien-maara]} :positiivinen-numero} toiminto]
   (comp toiminto
         (fn [arvo]
-          (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re)) arvo)]
+          (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
+                                                                                    :desimaalien-maara desimaalien-maara}))
+                                               arvo)]
             (when (or (= "" arvo) positiivinen-arvo?)
               arvo)))))
 

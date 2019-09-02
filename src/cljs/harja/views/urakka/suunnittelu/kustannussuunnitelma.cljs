@@ -28,6 +28,13 @@
       "0,00"
       (fmt/desimaaliluku teksti 2 true))))
 
+(defn summa-formatointi-aktiivinen [teksti]
+  (let [teksti-ilman-pilkkua (clj-str/replace (str teksti) "," ".")]
+    (cond
+      (or (nil? teksti) (= "" teksti)) ""
+      (re-matches #".*\.$" teksti-ilman-pilkkua) (str (fmt/desimaaliluku teksti-ilman-pilkkua nil true) (last teksti))
+      :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
+
 (defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
   (let [auki? (atom alussa-auki?)
         otsikko-elementti (or otsikko-elementti :span)
@@ -301,18 +308,23 @@
         on-key-down (fn [event]
                       (when (= "Enter" (.. event -key))
                         (.. event -target blur)))
-        input-osa (p/lisaa-fmt
-                    (osa/->Syote (keyword (str nimi "-maara-kk"))
-                                 {:on-change on-change
-                                  :on-blur on-blur
-                                  :on-focus on-focus
-                                  :on-key-down on-key-down}
-                                 {:on-change [:positiivinen-numero :eventin-arvo]}
-                                 {:class input-luokat
-                                  :type "text"
-                                  :disabled (not on-oikeus?)
-                                  :value value})
-                    summa-formatointi)
+        poista-tyhjat (fn [arvo]
+                        (clj-str/replace arvo #"\s" ""))
+        input-osa (p/lisaa-fmt-aktiiviselle
+                    (p/lisaa-fmt
+                      (osa/->Syote (keyword (str nimi "-maara-kk"))
+                                   {:on-change on-change
+                                    :on-blur on-blur
+                                    :on-focus on-focus
+                                    :on-key-down on-key-down}
+                                   {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                {:eventin-arvo {:f poista-tyhjat}}]}
+                                   {:class input-luokat
+                                    :type "text"
+                                    :disabled (not on-oikeus?)
+                                    :value value})
+                      summa-formatointi)
+                    summa-formatointi-aktiivinen)
         tayta-alas! (fn [this _]
                       (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
                                                   (fn [komponentin-tila]
@@ -555,7 +567,7 @@
                                                                                                        :on-key-down (fn [event]
                                                                                                                       (when (= "Enter" (.. event -key))
                                                                                                                         (.. event -target blur)))}
-                                                                                           :kayttaytymiset {:on-change [:numero-pisteella :positiivinen-numero :eventin-arvo]
+                                                                                           :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
                                                                                                             :on-blur [:str->number :numero-pisteella :positiivinen-numero :eventin-arvo]})))
                                                                               (fn [osa]
                                                                                 (-> osa

@@ -454,6 +454,13 @@
                            (.setMaximumFractionDigits %))
                         (range 1 4))))))
 
+#?(:cljs
+   (def desimaali-fmt-ilman-tarkkuutta
+     (doto (goog.i18n.NumberFormat.
+              (.-DECIMAL goog.i18n.NumberFormat/Format))
+        (.setShowTrailingZeros false)
+        (.setMaximumFractionDigits 10))))
+
 #?(:clj (def desimaali-symbolit
           (doto (java.text.DecimalFormatSymbols.)
             (.setGroupingSeparator \ ))))
@@ -466,7 +473,10 @@
        ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
        (if (= tarkkuus 0)
          (.toFixed luku 0)
-         (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+         (let [formatoitu (.format (if (nil? tarkkuus)
+                                     desimaali-fmt-ilman-tarkkuutta
+                                     (desimaali-fmt tarkkuus))
+                                   luku)]
            (cond
              (or
                (or (nil? luku) (and (string? luku) (empty? luku)))
