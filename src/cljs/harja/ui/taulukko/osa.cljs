@@ -134,24 +134,28 @@
 
 (defrecord Otsikko [osan-id otsikko jarjesta-fn! parametrit]
   p/Osa
-  (piirra-osa [_]
+  (piirra-osa [this]
     (let [otsikon-jarjestys-fn! (fn [jarjesta-fn! e]
                                   (.preventDefault e)
-                                  (jarjesta-fn!))]
-      (fn [this]
-        (let [{:keys [id class]} (:parametrit this)]
+                                  (jarjesta-fn!))
+          fmt-fn (or (::fmt this) identity)]
+      (fn [{:keys [otsikko parametrit osan-id]}]
+        (let [{:keys [id class]} parametrit]
           [:div.osa.osa-otsikko {:class (when class
                                            (apply str (interpose " " class)))
                                   :id id
-                                  :data-cy (:osan-id this)}
-           (:otsikko this)
+                                  :data-cy osan-id}
+           (fmt-fn otsikko)
            [:span.klikattava.otsikon-jarjestys {:on-click (r/partial otsikon-jarjestys-fn! (:jarjesta-fn! this))}
             [ikonit/sort]]]))))
   (osan-id? [this id]
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  p/Fmt
+  (lisaa-fmt [this f]
+    (assoc this ::fmt f)))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
 ;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
@@ -160,8 +164,20 @@
 (defrecord Syote [osan-id toiminnot kayttaytymiset parametrit]
   p/Osa
   (piirra-osa [this]
-    (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
-                  on-key-up]} (lisaa-kaytokset (:toiminnot this) (:kayttaytymiset this))]
+    (let [aktiivinen? (atom false)
+          {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
+                  on-key-up]} (lisaa-kaytokset (merge-with (fn [kayttajan-lisaama tassa-lisatty]
+                                                                       (comp kayttajan-lisaama
+                                                                             tassa-lisatty))
+                                                           (:toiminnot this)
+                                                           {:on-blur (fn [e]
+                                                                       (reset! aktiivinen? false)
+                                                                       e)
+                                                            :on-focus (fn [e]
+                                                                        (reset! aktiivinen? true)
+                                                                        e)})
+                                               (:kayttaytymiset this))
+          fmt-fn (or (::fmt this) identity)]
       (fn [this]
         (let [{:keys [id class type value name readonly? required? tabindex disabled?
                       checked? default-checked? indeterminate?
@@ -176,7 +192,9 @@
                                         :data-cy (:osan-id this)
                                         :id id
                                         :type type
-                                        :value value
+                                        :value (if (and fmt-fn (not @aktiivinen?))
+                                                 (fmt-fn value)
+                                                 value)
                                         :name name
                                         :read-only readonly?
                                         :required required?
@@ -222,7 +240,10 @@
     (= (:osan-id this) id))
   (osan-id [this]
     (:osan-id this))
-  (osan-tila [this]))
+  (osan-tila [this])
+  p/Fmt
+  (lisaa-fmt [this f]
+    (assoc this ::fmt f)))
 
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
   p/Tila
@@ -236,7 +257,8 @@
                     (atom false))
 
           {renderointi :atom muodosta-arvo :muodosta-arvo} (:tilan-seuranta this)
-          tilan-seuranta-lisatty? (not (nil? renderointi))]
+          tilan-seuranta-lisatty? (not (nil? renderointi))
+          fmt-fn (or (::fmt this) identity)]
       (komp/luo
         {:component-did-mount (fn [this-react]
                                 (when-let [aloita-seuranta (get-in this [:tilan-seuranta :seurannan-aloitus])]
@@ -266,7 +288,7 @@
               #(do (.preventDefault %)
                    (swap! auki? not)
                    (aukaise-fn this @auki?))}
-             [:span.laajenna-teksti teksti]
+             [:span.laajenna-teksti (fmt-fn teksti)]
              (if @auki?
                ^{:key "laajenna-auki"}
                [ikoni-auki]
@@ -309,7 +331,10 @@
   (lisaa-muodosta-arvo [this f]
     (assoc-in this [:tilan-seuranta :muodosta-arvo]
               (fn [this renderointi]
-                (f this renderointi)))))
+                (f this renderointi))))
+  p/Fmt
+  (lisaa-fmt [this f]
+    (assoc this ::fmt f)))
 
 (defrecord Komponentti [osan-id komponentti komponentin-argumentit komponentin-tila]
   p/Osa

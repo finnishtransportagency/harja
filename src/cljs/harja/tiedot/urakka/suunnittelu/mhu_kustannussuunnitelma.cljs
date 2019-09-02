@@ -254,7 +254,7 @@
   (process-event [{:keys [maara-solu polku-taulukkoon]} app]
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
           taulukko (get-in app polku-taulukkoon)
-          arvo (:value (tyokalut/arvo maara-solu :arvo))
+          arvo (-> maara-solu (tyokalut/arvo :arvo) :value (clj-str/replace #"," "."))
           [polku-container-riviin polku-riviin polku-soluun] (p/osan-polku-taulukossa taulukko maara-solu)
           muokattu-hoitokausi (:hoitokausi (get-in taulukko polku-container-riviin))
           tulevien-vuosien-rivien-indexit (when kopioidaan-tuleville-vuosille?
@@ -590,7 +590,7 @@
                                                                                                                                             (fn [index osa]
                                                                                                                                               (cond
                                                                                                                                                 (= index maara-otsikon-index) (tyokalut/paivita-arvo osa :arvo assoc :value value)
-                                                                                                                                                (= index yhteensa-otsikon-index) (tyokalut/aseta-arvo osa :arvo value)
+                                                                                                                                                (= index yhteensa-otsikon-index) (tyokalut/aseta-arvo osa :arvo (clj-str/replace value #"," "."))
                                                                                                                                                 :else osa))
                                                                                                                                             osat))))
                                                                                                                rivit)))

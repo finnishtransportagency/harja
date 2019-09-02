@@ -1,5 +1,6 @@
 (ns harja.ui.taulukko.kaytokset
-  (:require [harja.loki :as loki]))
+  (:require [harja.loki :as loki]
+            [clojure.string :as clj-str]))
 
 (defn numero-re
   ([] (numero-re {}))
@@ -35,6 +36,13 @@
           (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re)) arvo)]
             (when (or (= "" arvo) positiivinen-arvo?)
               arvo)))))
+
+(defmethod lisaa-kaytos :numero-pisteella
+  [_ toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (when (string? arvo)
+            (clj-str/replace arvo #"," ".")))))
 
 (defmethod lisaa-kaytos :str->int
   [_ toiminto]
