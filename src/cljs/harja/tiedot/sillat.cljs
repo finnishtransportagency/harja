@@ -5,7 +5,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -15,8 +16,8 @@
 
 (defn- on-tarkastettu-hoitokautena?
   [silta]
-  (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (harja.pvm/paivamaaran-hoitokausi (harja.pvm/nyt))]
-    (true? (harja.pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
+  (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))]
+    (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
 
 (defn- varita-silta [silta]
   ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
