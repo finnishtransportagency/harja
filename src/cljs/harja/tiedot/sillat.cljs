@@ -31,10 +31,13 @@
            {:urakka-id (:id urakka)
             :listaus listaus}))
 
+(defonce paivita-kartta! (atom false))
+
 (def haetut-sillat
   (reaction<! [paalla? @karttataso-sillat
                urakka @nav/valittu-urakka
-               listaus @listaus]
+               listaus @listaus
+               _ @paivita-kartta!]
               {:nil-kun-haku-kaynnissa? true}
               (when (and paalla? urakka)
                 (log "Siltataso päällä, haetaan sillat urakalle: "
@@ -61,6 +64,7 @@
 
 
 (defn paivita-silta! [id funktio & args]
+  (swap! paivita-kartta! not)
   (swap! sillat-kartalla (fn [sillat]
                   (mapv (fn [silta]
                           (if (= id (:id silta))
