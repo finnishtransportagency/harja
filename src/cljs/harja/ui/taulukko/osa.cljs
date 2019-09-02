@@ -53,7 +53,7 @@
   (piirra-osa [this]
     (let [{renderointi :atom muodosta-arvo :muodosta-arvo} (:tilan-seuranta this)
           tilan-seuranta-lisatty? (not (nil? renderointi))
-          fmt-fn (or (get-in this [:parametrit :fmt]) identity)]
+          fmt-fn (or (::fmt this) identity)]
       (komp/luo
         {:component-did-mount (fn [this-react]
                                 (when-let [aloita-seuranta (get-in this [:tilan-seuranta :seurannan-aloitus])]
@@ -111,7 +111,10 @@
   (lisaa-muodosta-arvo [this f]
     (assoc-in this [:tilan-seuranta :muodosta-arvo]
               (fn [this renderointi]
-                (f this renderointi)))))
+                (f this renderointi))))
+  p/Fmt
+  (lisaa-fmt [this f]
+    (assoc this ::fmt f)))
 
 (defrecord Ikoni [osan-id ikoni-ja-teksti parametrit]
   p/Osa

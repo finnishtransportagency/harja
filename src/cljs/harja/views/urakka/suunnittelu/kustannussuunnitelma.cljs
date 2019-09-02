@@ -878,12 +878,12 @@
                                                                       (tyokalut/aseta-arvo :id :yhteensa-maara-kk
                                                                                            :arvo ""
                                                                                            :class #{(sarakkeiden-leveys :maara-kk)})
-                                                                      (assoc-in [:parametrit :fmt] tekstin-formatointi)))
+                                                                      (p/lisaa-fmt tekstin-formatointi)))
                                                                 (fn [osa]
                                                                   (-> osa
                                                                       (tyokalut/aseta-arvo :id :yhteensa-yhteensa
                                                                                            :class #{(sarakkeiden-leveys :yhteensa)})
-                                                                      (assoc-in [:parametrit :fmt] tekstin-formatointi)))))))
+                                                                      (p/lisaa-fmt tekstin-formatointi)))))))
         yhteensa-fn (fn [yhteensa-pohja]
                       (-> yhteensa-pohja
                           (tyokalut/aseta-arvo :id :yhteensa
@@ -1148,12 +1148,14 @@
                                                                                                                                               [last (str kuluva-hoitovuosi ".vuosi/€")])
                                                                                                                 :arvo)
                                                                                               maara-kk (+ 1)]
-                                                                                          (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                   (cond
-                                                                                                                     (= maara-sarakkeen-index index) (tyokalut/aseta-arvo osa maara-kk)
-                                                                                                                     (= yhteensa-sarakkeen-index index) (tyokalut/aseta-arvo osa (* 12 maara-kk))
-                                                                                                                     :else osa))
-                                                                                                                 ht-rivi))))
+                                                                                          (tyokalut/paivita-arvo ht-rivi :lapset
+                                                                                                                 (fn [lapset]
+                                                                                                                   (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                            (cond
+                                                                                                                                              (= maara-sarakkeen-index index) (tyokalut/aseta-arvo osa maara-kk)
+                                                                                                                                              (= yhteensa-sarakkeen-index index) (tyokalut/aseta-arvo osa (* 12 maara-kk))
+                                                                                                                                              :else osa))
+                                                                                                                                          lapset))))))
                                                    (tyokalut/paivita-asiat-taulukossa [2]
                                                                                       (fn [taulukko polut]
                                                                                         (let [[rivit summarivi] polut

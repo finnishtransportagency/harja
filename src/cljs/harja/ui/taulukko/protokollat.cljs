@@ -35,3 +35,6 @@
    Esim. 'summa'/'yhteensä' osat ovat riippuvaisia muista arvoista."
   (lisaa-renderointi-derefable! [this tila polut] [this tila polut alkutila] "Palauttaa tämän muutettuna siten, että jokainen muutos poluissa aiheuttaa tämän re-renderöinnin.")
   (lisaa-muodosta-arvo [this f] "Muodostaa asian arvon tämän funktion perusteella."))
+
+(defprotocol Fmt
+  (lisaa-fmt [this f] "Lisää asiaan formatointi funktion"))
