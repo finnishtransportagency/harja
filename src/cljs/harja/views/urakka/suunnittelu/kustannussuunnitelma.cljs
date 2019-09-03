@@ -32,8 +32,12 @@
   (let [teksti-ilman-pilkkua (clj-str/replace (str teksti) "," ".")]
     (cond
       (or (nil? teksti) (= "" teksti)) ""
-      (re-matches #".*\.$" teksti-ilman-pilkkua) (str (fmt/desimaaliluku teksti-ilman-pilkkua nil true) (last teksti))
+      (re-matches #".*\.0*$" teksti-ilman-pilkkua) (apply str (fmt/desimaaliluku teksti-ilman-pilkkua nil true)
+                                                          (drop 1 (re-find #".*(\.|,)(0*)" teksti)))
       :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
+
+(defn poista-tyhjat [arvo]
+  (clj-str/replace arvo #"\s" ""))
 
 (defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
   (let [auki? (atom alussa-auki?)
@@ -308,11 +312,7 @@
         on-key-down (fn [event]
                       (when (= "Enter" (.. event -key))
                         (.. event -target blur)))
-        poista-tyhjat (fn [arvo]
-                        (clj-str/replace arvo #"\s" ""))
-        input-osa (p/lisaa-fmt-aktiiviselle
-                    (p/lisaa-fmt
-                      (osa/->Syote (keyword (str nimi "-maara-kk"))
+        input-osa (-> (osa/->Syote (keyword (str nimi "-maara-kk"))
                                    {:on-change on-change
                                     :on-blur on-blur
                                     :on-focus on-focus
@@ -323,8 +323,8 @@
                                     :type "text"
                                     :disabled (not on-oikeus?)
                                     :value value})
-                      summa-formatointi)
-                    summa-formatointi-aktiivinen)
+                      (p/lisaa-fmt summa-formatointi)
+                      (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen))
         tayta-alas! (fn [this _]
                       (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
                                                   (fn [komponentin-tila]
@@ -558,6 +558,7 @@
                                                                                                          :class #{(sarakkeiden-leveys :maara-kk)
                                                                                                                   "input-default"})
                                                                                     (p/lisaa-fmt summa-formatointi)
+                                                                                    (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                     (assoc :toiminnot {:on-change (fn [arvo]
                                                                                                                     (when arvo
                                                                                                                       (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
@@ -567,8 +568,9 @@
                                                                                                        :on-key-down (fn [event]
                                                                                                                       (when (= "Enter" (.. event -key))
                                                                                                                         (.. event -target blur)))}
-                                                                                           :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                            :on-blur [:str->number :numero-pisteella :positiivinen-numero :eventin-arvo]})))
+                                                                                           :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                        {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                            :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})))
                                                                               (fn [osa]
                                                                                 (-> osa
                                                                                     (tyokalut/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
@@ -670,9 +672,11 @@
                                                                                                          :on-key-down (fn [event]
                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                           (.. event -target blur)))}
-                                                                                             :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                              :on-blur [:str->number :numero-pisteella :positiivinen-numero :eventin-arvo]})
+                                                                                             :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                          {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                              :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
                                                                                       (p/lisaa-fmt summa-formatointi)
+                                                                                      (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                       (assoc-in [:parametrit :size] 2))
                                                                                   :id (keyword (str toimenkuva "-" (p/osan-id osa)))
                                                                                   :arvo tunnit-kk
@@ -690,9 +694,11 @@
                                                                                                          :on-key-down (fn [event]
                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                           (.. event -target blur)))}
-                                                                                             :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                              :on-blur [:str->number :numero-pisteella :positiivinen-numero :eventin-arvo]})
+                                                                                             :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                          {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                              :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
                                                                                       (p/lisaa-fmt summa-formatointi)
+                                                                                      (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                       (assoc-in [:parametrit :size] 2))
                                                                                   :id (keyword (str toimenkuva "-" (p/osan-id osa)))
                                                                                   :arvo tuntipalkka
@@ -898,6 +904,7 @@
                                                                                                  :class #{(sarakkeiden-leveys :maara-kk)
                                                                                                           "input-default"})
                                                                             (p/lisaa-fmt summa-formatointi)
+                                                                            (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                             (assoc :toiminnot {:on-change (fn [arvo]
                                                                                                             (when arvo
                                                                                                               (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
@@ -906,8 +913,9 @@
                                                                                                :on-key-down (fn [event]
                                                                                                               (when (= "Enter" (.. event -key))
                                                                                                                 (.. event -target blur)))}
-                                                                                   :kayttaytymiset {:on-change [:positiivinen-numero :eventin-arvo]
-                                                                                                    :on-blur [:str->number :numero-pisteella :positiivinen-numero :eventin-arvo]})))
+                                                                                   :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                    :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})))
                                                                       (fn [osa]
                                                                         (-> osa
                                                                             (tyokalut/aseta-arvo :id (keyword (p/osan-id osa))

@@ -458,7 +458,6 @@
    (def desimaali-fmt-ilman-tarkkuutta
      (doto (goog.i18n.NumberFormat.
               (.-DECIMAL goog.i18n.NumberFormat/Format))
-        (.setShowTrailingZeros false)
         (.setMaximumFractionDigits 10))))
 
 #?(:clj (def desimaali-symbolit
