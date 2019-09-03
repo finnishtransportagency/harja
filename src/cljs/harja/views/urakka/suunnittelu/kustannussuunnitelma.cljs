@@ -270,9 +270,10 @@
                                          :vayla-tyyli? true}
             (sort-by toimenpiteiden-jarjestys t/toimenpiteet)]]
           [lahetyspaiva-ja-maksetaan valitse-kausi maksetaan]]
-         [:label#kopioi-tuleville-vuosille
-          [:input {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
-                   :on-change (r/partial vaihda-fn)}]
+         [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
+          {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
+           :on-change (r/partial vaihda-fn)}]
+         [:label {:for "kopioi-tuleville-hoitovuosille"}
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
 
 (defn hoidonjohtopalkkio-filter [e! _]
