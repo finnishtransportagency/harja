@@ -1,6 +1,14 @@
 @import "../vayla/colors.less";
 @import "../styles.less";
 
+.intro() {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: @gray25;
+}
+
 #kustannussuunnitelma {
   display:flex;
   flex-direction: column;
@@ -124,6 +132,10 @@
   }
 }
 
+#tavoite-ja-kattohinta {
+  .intro();
+}
+
 .haitari-laatikko {
   &#tavoite-ja-kattohinta {
     background-color: @gray245;
@@ -135,10 +147,8 @@
       padding-left: 15px;
       padding-right: 15px;
       &:first-child {
-        padding-top: 17px;
-      }
-      &:last-child {
-        padding: 0px;
+        padding-top: 15px;
+        padding-bottom: 15px;
       }
       .hintalaskuri {
         padding: 15px 0px 0px 0px;
@@ -146,13 +156,19 @@
     }
 
     .hintalaskuri:first-child {
+      padding-top: 0px;
       border-bottom: 1px solid @gray200;
     }
+  }
+  .livicon-chevron {
+    color: @blue;
+    font-size: 1.5em;
   }
 }
 
 #tavoite-ja-kattohinta-huomio {
   background-color: @gray250;
+  padding: 0px;
   display: block;
 }
 
