@@ -59,6 +59,7 @@ resources/public/laadunseuranta/css/
 testi.pdf
 checkouts/
 package-lock.json
+package.json
 src/cljs-dev/harja/repl.cljs
 .rebel_readline_history
 *.log
