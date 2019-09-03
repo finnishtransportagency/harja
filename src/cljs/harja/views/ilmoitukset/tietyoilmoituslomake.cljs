@@ -17,6 +17,7 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
                                                   kuvaus-ja-avainarvopareja vihje]]
+            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.ui.kentat :as kentat]
@@ -45,59 +46,70 @@
 (defn tienpinnat-komponentti-grid [e! avain tienpinnat-tiedot]
   (let [tp-valinnat [["paallystetty" "Päällystetty"]
                      ["jyrsitty" "Jyrsitty"]
-                     ["murske" "Murske"]]]
+                     ["murske" "Murske"]]
+        tienpinnat-tiedot-atom (atom (into {}
+                                           (map-indexed (fn [i ta]
+                                                          [i ta]))
+                                           tienpinnat-tiedot))
+        muutos-fn (fn [g]
+                    (let [taulukon-tila (grid-protokollat/hae-muokkaustila g)]
+                      (e! (tiedot/->PaivitaTienPinnat (vals taulukon-tila) avain))))
+        ]
 
-    [muokkaus-grid {:otsikko ""
-                    :voi-muokata? (constantly true)
-                    :voi-poistaa? (constantly true)
-                    :piilota-toiminnot? false
-                    :tyhja "Ei tienpintatietoja"
-                    :jarjesta :jarjestysnro
-                    :tunniste :jarjestysnro
-                    :uusi-rivi (fn [rivi]
-                                 (if (::t/materiaali rivi)
-                                   rivi
-                                   (assoc rivi ::t/materiaali (ffirst tp-valinnat))))}
-     [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
-       :valinnat tp-valinnat
-       :valinta-arvo first
-       :valinta-nayta second
-       :pakollinen? true
-       :validoi [[:ei-tyhja "Valitse materiaali"]]
-       :leveys 1}
-      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
-       :leveys 1}]
-     (r/wrap (into {}
-                   (map-indexed (fn [i ta]
-                                  [i ta]))
-                   tienpinnat-tiedot)
-             #(e! (tiedot/->PaivitaTienPinnat (vals %) avain)))]))
+    (fn []
+      [muokkaus-grid {:otsikko ""
+                      :voi-muokata? (constantly true)
+                      :voi-poistaa? (constantly true)
+                      :piilota-toiminnot? false
+                      :tyhja "Ei tienpintatietoja"
+                      :jarjesta :jarjestysnro
+                      :tunniste :jarjestysnro
+                      :muutos muutos-fn
+                      :uusi-rivi (fn [rivi]
+                                   (if (::t/materiaali rivi)
+                                     rivi
+                                     (assoc rivi ::t/materiaali (ffirst tp-valinnat))))}
+       [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
+         :valinnat tp-valinnat
+         :valinta-arvo first
+         :valinta-nayta second
+         :pakollinen? true
+         :validoi [[:ei-tyhja "Valitse materiaali"]]
+         :leveys 1}
+        {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+         :leveys 1}]
+       tienpinnat-tiedot-atom])))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  [muokkaus-grid {:otsikko ""
-                  :voi-muokata? (constantly true)
-                  :voi-poistaa? (constantly true)
-                  :piilota-toiminnot? false
-                  :tyhja "Ei nopeusrajoituksia"
-                  :jarjesta :jarjestysnro
-                  :tunniste :jarjestysnro
-                  :uusi-rivi (fn [rivi]
-                               (if (::t/rajoitus rivi)
-                                 rivi
-                                 (assoc rivi ::t/rajoitus (first t/nopeusrajoitukset))))}
-   [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus
-     :tyyppi :valinta
-     :valinnat t/nopeusrajoitukset
-     :pakollinen? true
-     :validoi [[:ei-tyhja "Valitse rajoitus"]]
-     :leveys 1}
-    {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
-     :leveys 1}]
-   (r/wrap
-     (into {}
-           (map-indexed (fn [i na] [i na]))
-           nr-tiedot)
-     #(e! (tiedot/->PaivitaNopeusrajoitukset (vals %))))])
+  (let [nr-tiedot-atom (atom (into {}
+                                   (map-indexed (fn [i na] [i na]))
+                                   nr-tiedot))
+        muutos-fn (fn [g]
+                    (let [taulukon-tilat (grid-protokollat/hae-muokkaustila g)]
+                      (e! (tiedot/->PaivitaNopeusrajoitukset (vals taulukon-tilat)))))]
+
+    (fn []
+      [muokkaus-grid {:otsikko ""
+                      :voi-muokata? (constantly true)
+                      :voi-poistaa? (constantly true)
+                      :piilota-toiminnot? false
+                      :muutos muutos-fn
+                      :tyhja "Ei nopeusrajoituksia"
+                      :jarjesta :jarjestysnro
+                      :tunniste :jarjestysnro
+                      :uusi-rivi (fn [rivi]
+                                   (if (::t/rajoitus rivi)
+                                     rivi
+                                     (assoc rivi ::t/rajoitus (first t/nopeusrajoitukset))))}
+       [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus
+         :tyyppi :valinta
+         :valinnat t/nopeusrajoitukset
+         :pakollinen? true
+         :validoi [[:ei-tyhja "Valitse rajoitus"]]
+         :leveys 1}
+        {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+         :leveys 1}]
+       nr-tiedot-atom])))
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
@@ -172,19 +184,23 @@
                             :tyhja "Ei työaikoja"
                             :virheet-dataan? true
                             :jarjesta-avaimen-mukaan identity})
-
 (defn tyoajat-komponentti-grid [e! tyoajat]
-  [muokkaus-grid
-   (assoc aikataulu-grid-optiot :uusi-id (count tyoajat))
-   aikataulu-grid-kentat
-   (r/wrap (into {}
-                 (map-indexed (fn [i ta]
-                                [i (update ta ::t/paivat
-                                           #(into #{} %))]))
-                 tyoajat)
-           #(do
-              (e! (tiedot/->PaivitaTyoajat (sort-by :id (vals %))
-                                           (grid-virheita? %)))))])
+  (let [tyoajat-atom (atom (into {}
+                                 (map-indexed (fn [i ta]
+                                                [i (update ta ::t/paivat
+                                                           #(into #{} %))]))
+                                 tyoajat))
+        muutos-fn (fn [g]
+                    (let [taulukon-tila (grid-protokollat/hae-muokkaustila g)]
+                      (e! (tiedot/->PaivitaTyoajat (sort-by :id (vals taulukon-tila))
+                                                   (grid-virheita? taulukon-tila)))))]
+    (fn [_ tyoajat]
+      [muokkaus-grid
+       (assoc aikataulu-grid-optiot
+         :uusi-id (count tyoajat)
+         :muutos muutos-fn)
+       aikataulu-grid-kentat
+       tyoajat-atom])))
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
