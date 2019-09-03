@@ -1065,25 +1065,22 @@
 (defn arvioidaanko-laskutukseen-perustuen [e! _ _]
   (let [laskutukseen-perustuen? (fn [laskutukseen-perustuen toimenpide]
                                   (contains? laskutukseen-perustuen toimenpide))
-        vaihda-fn (fn [nappi _]
-                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat]
-                                                   (fn [{:keys [toimenpide] :as valinnat}]
-                                                     (if (= nappi :kylla)
-                                                       (update valinnat :laskutukseen-perustuen conj toimenpide)
-                                                       (update valinnat :laskutukseen-perustuen disj toimenpide)))))
-                    (e! (t/->ToggleHankintakustannuksetOtsikko (= nappi :kylla))))]
+        vaihda-fn (fn [toimenpide event]
+                    (let [valittu? (.. event -target -checked)]
+                      (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat]
+                                                     (fn [valinnat]
+                                                       (if valittu?
+                                                         (update valinnat :laskutukseen-perustuen conj toimenpide)
+                                                         (update valinnat :laskutukseen-perustuen disj toimenpide)))))
+                      (e! (t/->ToggleHankintakustannuksetOtsikko valittu?))))]
     (fn [e! {:keys [laskutukseen-perustuen toimenpide]} on-oikeus?]
       [:div#laskutukseen-perustuen-filter
-       [:input#lakutukseen-perustuen-kylla.vayla-radio
-        {:type "radio" :disabled (not on-oikeus?) :checked (false? (laskutukseen-perustuen? laskutukseen-perustuen toimenpide))
-         :on-change (r/partial vaihda-fn :ei)}]
-       [:label {:for "lakutukseen-perustuen-kylla"}
-        "Ei"]
-       [:input#lakutukseen-perustuen-ei.vayla-radio
-        {:type "radio" :disabled (not on-oikeus?) :checked (laskutukseen-perustuen? laskutukseen-perustuen toimenpide)
-         :on-change (r/partial vaihda-fn :kylla)}]
-       [:label {:for "lakutukseen-perustuen-ei"}
-        "Kyllä"]])))
+       [:input#lakutukseen-perustuen.vayla-checkbox
+        {:type "checkbox" :checked (laskutukseen-perustuen? laskutukseen-perustuen toimenpide)
+         :on-change (r/partial vaihda-fn toimenpide)}]
+       [:label {:for "lakutukseen-perustuen"}
+        "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle: "
+        [:b (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]])))
 
 (defn suunnitellut-rahavaraukset [e! rahavaraukset valinnat]
   (if rahavaraukset
@@ -1118,8 +1115,6 @@
    [:h3 "Suunnitellut hankinnat"]
    [hankintojen-filter e! valinnat]
    [suunnitellut-hankinnat e! toimenpiteet valinnat]
-   [:span "Arivoidaanko urakassa laskutukseen perustuvia kustannuksia toimenpiteelle: "
-    [:b (-> valinnat :toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]
    ;; TODO: Korjaa oikeus
    [arvioidaanko-laskutukseen-perustuen e! valinnat true]
    [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
