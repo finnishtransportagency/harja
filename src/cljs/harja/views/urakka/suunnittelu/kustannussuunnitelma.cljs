@@ -71,14 +71,14 @@
     [:div ala]]))
 
 (defn hintalaskuri
-  [{:keys [otsikko selite hinnat]}]
+  [{:keys [otsikko selite hinnat]} {:keys [vuosi]}]
   [:div.hintalaskuri
    [:h5 otsikko]
    [:div selite]
    [:div.hintalaskuri-vuodet
     (for [{:keys [summa hoitokausi teksti]} hinnat]
       ^{:key hoitokausi}
-      [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa)])
+      [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa) (when (= hoitokausi vuosi) "aktiivinen-vuosi")])
     [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
     [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]])
 
@@ -102,15 +102,17 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta [tavoitehinnat kattohinnat]
+(defn tavoite-ja-kattohinta [tavoitehinnat kattohinnat kuluva-hoitokausi]
   (if (and tavoitehinnat kattohinnat)
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
                     :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                    :hinnat (update (vec tavoitehinnat) 0 assoc :teksti "1. vuosi*")}]
+                    :hinnat (update (vec tavoitehinnat) 0 assoc :teksti "1. vuosi*")}
+      kuluva-hoitokausi]
      [hintalaskuri {:otsikko "Kattohinta"
                     :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
-                    :hinnat kattohinnat}]]
+                    :hinnat kattohinnat}
+      kuluva-hoitokausi]]
     [yleiset/ajax-loader]))
 
 (defn suunnitelman-selitteet [this luokat _]
@@ -261,7 +263,7 @@
         [:div
          [:div.kustannussuunnitelma-filter
           [:div
-           [:span.alasvedon-otsikko "Toimenpide"]
+           [:span "Toimenpide"]
            [yleiset/livi-pudotusvalikko {:valinta toimenpide
                                          :valitse-fn valitse-toimenpide
                                          :format-fn toimenpide-tekstiksi
@@ -1098,14 +1100,16 @@
                                                                  rivit))))])]
     [yleiset/ajax-loader]))
 
-(defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}]
+(defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
+                                     kuluva-hoitokausi]
   [:div
    [:h2 "Hankintakustannukset"]
    (if yhteenveto
      ^{:key "hankintakustannusten-yhteenveto"}
      [hintalaskuri {:otsikko "Yhteenveto"
                     :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
-                    :hinnat yhteenveto}]
+                    :hinnat yhteenveto}
+      kuluva-hoitokausi]
      ^{:key "hankintakustannusten-loader"}
      [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
    [:h3 "Suunnitellut hankinnat"]
@@ -1142,7 +1146,7 @@
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
-  [erillishankinnat {:keys [vuosi]}]
+  [erillishankinnat {:keys [vuosi] :as kuluva-hoitokausi}]
   (if erillishankinnat
     (let [summarivin-index 1
           vuosi-summa (tyokalut/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
@@ -1156,7 +1160,8 @@
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
                      :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                     :hinnat hinnat}])
+                     :hinnat hinnat}
+       kuluva-hoitokausi])
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat [erillishankinnat]
@@ -1170,7 +1175,7 @@
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
 
 (defn johto-ja-hallintokorvaus-yhteenveto
-  [jh-yhteenveto {:keys [vuosi]}]
+  [jh-yhteenveto {:keys [vuosi] :as kuluva-hoitokausi}]
   (if jh-yhteenveto
     (let [hinnat (map (fn [hoitokausi]
                         {:summa (tyokalut/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
@@ -1179,11 +1184,12 @@
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
                      :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                     :hinnat hinnat}])
+                     :hinnat hinnat}
+       kuluva-hoitokausi])
     [yleiset/ajax-loader]))
 
 (defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut kuluva-hoitokausi]
-  [:div#johto-ja-hallintokorvaus
+  [:<>
    [:h3 "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto kuluva-hoitokausi]
    [jh-toimenkuva-laskulla jh-laskulla]
@@ -1234,7 +1240,7 @@
    [ht-yhteensa hallinnolliset-toimenpiteet kuluva-hoitokausi]])
 
 (defn hoidonjohtopalkkio-yhteenveto
-  [johtopalkkio {:keys [vuosi]}]
+  [johtopalkkio {:keys [vuosi] :as kuluva-hoitokausi}]
   (if johtopalkkio
     (let [summarivin-index 1
           vuosi-summa (tyokalut/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
@@ -1248,7 +1254,8 @@
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
                      :selite nil
-                     :hinnat hinnat}])
+                     :hinnat hinnat}
+       kuluva-hoitokausi])
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio [johtopalkkio]
@@ -1260,7 +1267,7 @@
    [hoidonjohtopalkkio-yhteenveto johtopalkkio kuluva-hoitokausi]
    [hoidonjohtopalkkio johtopalkkio]])
 
-(defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio]
+(defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi]
   (if (and erillishankinnat jh-yhteenveto johtopalkkio)
     (let [hinnat (map (fn [hoitokausi]
                         (let [eh (tyokalut/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [1 "Yhteensä"])
@@ -1274,7 +1281,8 @@
                       (range 1 6))]
       [hintalaskuri {:otsikko "Yhteenveto"
                      :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
-                     :hinnat hinnat}])
+                     :hinnat hinnat}
+       kuluva-hoitokausi])
     [yleiset/ajax-loader]))
 
 (defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
@@ -1282,7 +1290,7 @@
                                            kuluva-hoitokausi]
   [:<>
    [:h2 "Hallinnolliset toimenpiteet"]
-   [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio]
+   [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
    [erillishankinnat-sisalto erillishankinnat kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut kuluva-hoitokausi]
    [hoidonjohtopalkkio-sisalto johtopalkkio kuluva-hoitokausi]
@@ -1302,7 +1310,7 @@
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true)
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] "Hallinnolliset toimenpiteet" false)))))
     (fn [e! {:keys [tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
-      [:div.kustannussuunnitelma
+      [:div#kustannussuunnitelma
        ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
        [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
@@ -1311,15 +1319,18 @@
         "Tavoite- ja kattohinta lasketaan automaattisesti"
         {:alussa-auki? true
          :id "tavoite-ja-kattohinta"}
-        [tavoite-ja-kattohinta tavoitehinnat kattohinnat]
+        [tavoite-ja-kattohinta tavoitehinnat kattohinnat kuluva-hoitokausi]
         [:span#tavoite-ja-kattohinta-huomio
          "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
+       [:span.viiva-alas]
        [haitari-laatikko
         "Suunnitelmien tila"
         {:alussa-auki? true
          :otsikko-elementti :h2}
         [suunnitelmien-tila e! app]]
-       [hankintakustannukset-taulukot e! hankintakustannukset]
+       [:span.viiva-alas]
+       [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi]
+       [:span.viiva-alas]
        [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-toimenpiteet kuluva-hoitokausi]])))
 
 (defn kustannussuunnitelma []

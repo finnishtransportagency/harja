@@ -1,17 +1,70 @@
 @import "../vayla/colors.less";
+@import "../styles.less";
 
-.kustannussuunnitelma {
+#kustannussuunnitelma {
   display:flex;
   flex-direction: column;
 
   > * {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 
     &:last-child {
       margin-bottom: inherit;
     }
   }
+
+  div, span {
+    word-break: normal;
+  }
+  // Väylän typography hommat. Nämä voi ottaa pois sitten, kun väylän tyylit on otettu kaikkialla käyttöön.
+  h1 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 300;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h2 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h3 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.3125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h4 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h5 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: @gray25;
+  }
 }
+
+.aktiivinen-vuosi {
+  font-weight: bold;
+}
+
+.viiva-alas {
+  border-bottom: 1px solid @gray200;
+  position: relative;
+  left: -(@valilehti-sivu-padding * 2);
+  width: calc(~"100% + " @valilehti-sivu-padding ~" * 4");
+}
+
 .suunnitelman-tila-otsikko {
   font-size: 14px;
 }
@@ -235,8 +288,4 @@
       flex: 1;
     }
   }
-}
-
-div, span {
-  word-break: normal;
 }
