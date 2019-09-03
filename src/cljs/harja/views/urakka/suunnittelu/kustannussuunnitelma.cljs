@@ -1074,13 +1074,15 @@
                     (e! (t/->ToggleHankintakustannuksetOtsikko (= nappi :kylla))))]
     (fn [e! {:keys [laskutukseen-perustuen toimenpide]} on-oikeus?]
       [:div#laskutukseen-perustuen-filter
-       [:label
-        [:input {:type "radio" :disabled (not on-oikeus?) :checked (false? (laskutukseen-perustuen? laskutukseen-perustuen toimenpide))
-                 :on-change (r/partial vaihda-fn :ei)}]
+       [:input#lakutukseen-perustuen-kylla.vayla-radio
+        {:type "radio" :disabled (not on-oikeus?) :checked (false? (laskutukseen-perustuen? laskutukseen-perustuen toimenpide))
+         :on-change (r/partial vaihda-fn :ei)}]
+       [:label {:for "lakutukseen-perustuen-kylla"}
         "Ei"]
-       [:label
-        [:input {:type "radio" :disabled (not on-oikeus?) :checked (laskutukseen-perustuen? laskutukseen-perustuen toimenpide)
-                 :on-change (r/partial vaihda-fn :kylla)}]
+       [:input#lakutukseen-perustuen-ei.vayla-radio
+        {:type "radio" :disabled (not on-oikeus?) :checked (laskutukseen-perustuen? laskutukseen-perustuen toimenpide)
+         :on-change (r/partial vaihda-fn :kylla)}]
+       [:label {:for "lakutukseen-perustuen-ei"}
         "Kyllä"]])))
 
 (defn suunnitellut-rahavaraukset [e! rahavaraukset valinnat]
