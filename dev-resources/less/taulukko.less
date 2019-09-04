@@ -1,4 +1,6 @@
 @import "vayla/tables.less";
+@import "vayla/colors.less";
+@import "vayla/buttons-navigation-and-links.less";
 @chevron-suunnat: up, right, down, left;
 @triangle-suunnat: top, right, bottom, left;
 @solu-padding: 5px;
@@ -87,6 +89,27 @@
   .osa-teksti {
   }
   .osa-ikoni {
+  }
+  .osa-nappi {
+    &.linkki {
+      background: transparent;
+      border: none;
+      color: blue;
+      text-align: left;
+      .a-link();
+      &:visited {
+        .a-visited();
+      }
+      &:hover {
+        .a-hover();
+      }
+      &:focus {
+        .a-focus();
+      }
+      &:active {
+        .a-active();
+      }
+    }
   }
   /* YLEISTÄ */
   .solu-sisenna-1 {

@@ -43,6 +43,13 @@
           parsittu-arvo))
       palautettava-arvo)))
 
+(defmethod arvo osa/Linkki
+  [osa avain]
+  (let [muuta-avain {:arvo [:linkki]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
+
 (defmethod arvo osa/Ikoni
   [osa avain]
   (let [muuta-avain {:arvo [:ikoni-ja-teksti]
@@ -71,6 +78,13 @@
           palautettava-arvo
           parsittu-arvo))
       palautettava-arvo)))
+
+(defmethod arvo osa/Nappi
+  [osa avain]
+  (let [muuta-avain {:arvo [:sisalto]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (get-in osa (muuta-avain avain))))
 
 (defmethod arvo osa/Laajenna
   [osa avain]
@@ -139,6 +153,13 @@
                      :class [:parametrit :class]}]
     (aseta-asian-arvo osa avain-arvo muuta-avain)))
 
+(defmethod aseta-arvo osa/Linkki
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:linkki]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
 (defmethod aseta-arvo osa/Ikoni
   [osa & avain-arvo]
   (let [muuta-avain {:arvo [:ikoni-ja-teksti]
@@ -156,6 +177,13 @@
 (defmethod aseta-arvo osa/Syote
   [osa & avain-arvo]
   (let [muuta-avain {:arvo [:parametrit :value]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (aseta-asian-arvo osa avain-arvo muuta-avain)))
+
+(defmethod aseta-arvo osa/Nappi
+  [osa & avain-arvo]
+  (let [muuta-avain {:arvo [:sisalto]
                      :id [:osan-id]
                      :class [:parametrit :class]}]
     (aseta-asian-arvo osa avain-arvo muuta-avain)))
@@ -210,6 +238,13 @@
                      :class [:parametrit :class]}]
     (apply update-in osa (muuta-avain avain) f args)))
 
+(defmethod paivita-arvo osa/Linkki
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:linkki]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
 (defmethod paivita-arvo osa/Ikoni
   [osa avain f & args]
   (let [muuta-avain {:arvo [:ikoni-ja-teksti]
@@ -227,6 +262,13 @@
 (defmethod paivita-arvo osa/Syote
   [osa avain f & args]
   (let [muuta-avain {:arvo [:parametrit :value]
+                     :id [:osan-id]
+                     :class [:parametrit :class]}]
+    (apply update-in osa (muuta-avain avain) f args)))
+
+(defmethod paivita-arvo osa/Nappi
+  [osa avain f & args]
+  (let [muuta-avain {:arvo [:sisalto]
                      :id [:osan-id]
                      :class [:parametrit :class]}]
     (apply update-in osa (muuta-avain avain) f args)))

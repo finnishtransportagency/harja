@@ -19,7 +19,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [goog.dom :as dom])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn summa-formatointi [teksti]
@@ -153,6 +154,9 @@
                                :jakso "col-xs-12 col-sm-1 col-md-1 col-lg-1"))
         kuluva-hoitokausi (t/kuluva-hoitokausi)
         viimeinen-vuosi? (= 5 (:vuosi kuluva-hoitokausi))
+        mene-idlle (fn [id]
+                     (println "MENNÄÄN IDLLE: " id)
+                     (.scrollIntoView (dom/getElement id)))
         otsikko-fn (fn [otsikkopohja]
                      (-> otsikkopohja
                          (tyokalut/aseta-arvo :id :otsikko-rivi)
@@ -184,6 +188,31 @@
                                                                      (tyokalut/aseta-arvo osa
                                                                                           :arvo ""
                                                                                           :class #{(sarakkeiden-leveys :jakso)}))))))
+        linkkiotsikko-fn (fn [rivin-pohja teksti jakso linkki]
+                           (-> rivin-pohja
+                               (tyokalut/aseta-arvo :id (keyword teksti))
+                               (tyokalut/paivita-arvo :lapset
+                                                      (osien-paivitys-fn (fn [osa]
+                                                                           (-> osa
+                                                                               (tyokalut/aseta-arvo :arvo teksti
+                                                                                                    :class #{(sarakkeiden-leveys :teksti)
+                                                                                                             "linkki"})
+                                                                               (assoc :teksti teksti)
+                                                                               (assoc :toiminnot {:on-click (fn [_] (mene-idlle linkki))})))
+                                                                         (fn [osa]
+                                                                           (tyokalut/aseta-arvo osa
+                                                                                                :arvo {:ikoni ikonit/remove}
+                                                                                                :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                         "keskita"}))
+                                                                         (fn [osa]
+                                                                           (tyokalut/aseta-arvo osa
+                                                                                                :arvo {:ikoni ikonit/remove}
+                                                                                                :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                         "keskita"}))
+                                                                         (fn [osa]
+                                                                           (tyokalut/aseta-arvo osa
+                                                                                                :arvo jakso
+                                                                                                :class #{(sarakkeiden-leveys :jakso)}))))))
         sisaotsikko-fn (fn [rivin-pohja teksti jakso]
                          (-> rivin-pohja
                              (tyokalut/aseta-arvo :id (keyword teksti))
@@ -245,7 +274,7 @@
                                   "Äkilliset hoitotyöt"
                                   "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
                                   "Rahavaraus lupaukseen 1"]
-                                 ["/kk*" "/kk" "/kk" "/kk"]))
+                                 ["/kk**" "/kk" "/kk" "/kk"]))
         toimenpide-fn (fn [toimenpide-pohja]
                         (map (fn [toimenpideteksti jakso]
                                (-> toimenpide-pohja
@@ -275,12 +304,12 @@
                                                                                  (concat
                                                                                    rivit
                                                                                    (case rivin-tyyppi
-                                                                                     :sisaotsikko [(sisaotsikko-fn rivin-pohja "Hankintakustannukset" "/vuosi*")]
+                                                                                     :linkkiotsikko [(linkkiotsikko-fn rivin-pohja "Hankintakustannukset" "/vuosi*" "hankintakustannukset")]
                                                                                      :toimenpide (toimenpide-fn rivin-pohja)))))
                                                                              [] rivit))))))
         hallinnollinen-toimenpide-fn (fn [hallinnollinen-toimenpide-pohja]
-                                       (map (fn [teksti jakso]
-                                              (-> (sisaotsikko-fn hallinnollinen-toimenpide-pohja teksti jakso)
+                                       (map (fn [teksti id jakso]
+                                              (-> (linkkiotsikko-fn hallinnollinen-toimenpide-pohja teksti jakso id)
                                                   (tyokalut/aseta-arvo :id (keyword (str teksti)))
                                                   (tyokalut/paivita-arvo :lapset
                                                                          (fn [osat]
@@ -290,6 +319,10 @@
                                              "Johto- ja hallintokorvaus"
                                              "Hoidonjohtopalkkio"
                                              "Hallinnolliset toimenpiteet"]
+                                            ["erillishankinnat"
+                                             "johto-ja-hallintokorvaus"
+                                             "hoidonjohtopalkkio"
+                                             "hallinnolliset-toimenpiteet-yhteensa"]
                                             (repeat 4 "/kk")))
         hallinnollisetkustannukset-fn (fn [hallinnollisetkustannukset-pohja]
                                         (-> hallinnollisetkustannukset-pohja
@@ -302,7 +335,7 @@
                                                                                        (concat
                                                                                          rivit
                                                                                          (case rivin-tyyppi
-                                                                                           :sisaotsikko [(sisaotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi")]
+                                                                                           :linkkiotsikko [(linkkiotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi" "hallinnolliset-toimenpiteet")]
                                                                                            :hallinnollinen-toimenpide (hallinnollinen-toimenpide-fn rivin-pohja)))))
                                                                                    [] rivit))))))]
     (muodosta-taulukko :suunnitelmien-taulukko
@@ -311,11 +344,11 @@
                                          osa/Teksti
                                          osa/Teksti
                                          osa/Teksti]}
-                        :sisaotsikko {:janan-tyyppi jana/Rivi
-                                      :osat [osa/Teksti
-                                             osa/Ikoni
-                                             osa/Ikoni
-                                             osa/Teksti]}
+                        :linkkiotsikko {:janan-tyyppi jana/Rivi
+                                        :osat [osa/Nappi
+                                               osa/Ikoni
+                                               osa/Ikoni
+                                               osa/Teksti]}
                         :laajenna-toimenpide {:janan-tyyppi jana/Rivi
                                               :osat [osa/Laajenna
                                                      osa/Ikoni
@@ -329,17 +362,18 @@
                         :toimenpide {:janan-tyyppi jana/RiviLapsilla
                                      :janat [:laajenna-toimenpide :toimenpide-osa]}
                         :hankintakustannukset {:janan-tyyppi jana/RiviLapsilla
-                                               :janat [:sisaotsikko :toimenpide]}
+                                               :janat [:linkkiotsikko :toimenpide]}
                         :hallinnollinen-toimenpide {:janan-tyyppi jana/Rivi
-                                                    :osat [osa/Teksti
+                                                    :osat [osa/Nappi
                                                            osa/Ikoni
                                                            osa/Ikoni
                                                            osa/Teksti]}
                         :hallinnollisetkustannukset {:janan-tyyppi jana/RiviLapsilla
-                                                     :janat [:sisaotsikko :hallinnollinen-toimenpide]}}
+                                                     :janat [:linkkiotsikko :hallinnollinen-toimenpide]}}
                        ["Teksti" "Kuluva vuosi" "Tuleva vuosi" "Jakso"]
                        [:otsikko otsikko-fn :hankintakustannukset hankintakustannukset-fn :hallinnollisetkustannukset hallinnollisetkustannukset-fn]
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                        :id "suunnitelmien-taulukko"
                         :class #{"suunnitelma-ikonien-varit"}})))
 
 (defn suunnitelmien-tila
@@ -1233,7 +1267,7 @@
 (defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
                                      kuluva-hoitokausi]
   [:div
-   [:h2 "Hankintakustannukset"]
+   [:h2#hankintakustannukset "Hankintakustannukset"]
    (if yhteenveto
      ^{:key "hankintakustannusten-yhteenveto"}
      [hintalaskuri {:otsikko "Yhteenveto"
@@ -1297,7 +1331,7 @@
 
 (defn erillishankinnat-sisalto [erillishankinnat-taulukko kuluva-hoitokausi]
   [:<>
-   [:h3 "Erillishankinnat"]
+   [:h3#erillishankinnat "Erillishankinnat"]
    [erillishankinnat-yhteenveto erillishankinnat-taulukko kuluva-hoitokausi]
    [erillishankinnat erillishankinnat-taulukko]
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
@@ -1318,7 +1352,7 @@
 
 (defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut kuluva-hoitokausi]
   [:<>
-   [:h3 "Johto- ja hallintokorvaus"]
+   [:h3#johto-ja-hallintokorvaus "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto kuluva-hoitokausi]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
@@ -1361,7 +1395,7 @@
 
 (defn hallinnolliset-yhteenveto [e! {:keys [valinnat] :as hallinnolliset-toimenpiteet}
                                  kuluva-hoitokausi]
-  [:div
+  [:div#hallinnolliset-toimenpiteet-yhteensa
    [hoidonjohtopalkkio-filter e! (:maksetaan valinnat)]
    [:span
     "Määrä lasketaan yllä syötetyiden tietojen perusteella. Hallinnolliset toimenteet muodostavat yhtenäisen maksuerän, joka lähetään Sampoon."]
@@ -1391,7 +1425,7 @@
 
 (defn hoidonjohtopalkkio-sisalto [johtopalkkio kuluva-hoitokausi]
   [:<>
-   [:h3 "Hoidonjohtopalkkio"]
+   [:h3#hoidonjohtopalkkio "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto johtopalkkio kuluva-hoitokausi]
    [hoidonjohtopalkkio johtopalkkio]])
 
@@ -1417,7 +1451,7 @@
                                                       toimistokulut johtopalkkio erillishankinnat] :as hallinnolliset-toimenpiteet}
                                            kuluva-hoitokausi]
   [:<>
-   [:h2 "Hallinnolliset toimenpiteet"]
+   [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
    [erillishankinnat-sisalto erillishankinnat kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut kuluva-hoitokausi]

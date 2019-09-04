@@ -48,7 +48,81 @@
                          kayttaytymiset
                          toiminnot))))
 
+(defn perus-lisaa-renderointi-derefable!
+  [this tila polut alkutila]
+  (let [renderointi (atom nil)
+        watch-id (keyword (str (gensym "watch")))
+        renderointi-atomin-muutos! (fn [uusi]
+                                     (swap! renderointi (fn [v]
+                                                          (assoc v :vanha (:uusi v)
+                                                                   :uusi (zipmap polut
+                                                                                 (map #(get-in uusi %) polut))))))
+        seurannan-aloitus (fn []
+                            (add-watch tila watch-id
+                                       (fn [_ _ vanha uusi]
+                                         (let [polkujen-tila-muuttunut? (not (every? true? (map (fn [polku]
+                                                                                                  (= (get-in vanha polku) (get-in uusi polku)))
+                                                                                                polut)))]
+                                           (when polkujen-tila-muuttunut?
+                                             (renderointi-atomin-muutos! uusi))))))
+        seurannan-lopetus (fn []
+                            (remove-watch tila watch-id))]
+    (renderointi-atomin-muutos! alkutila)
+    (assoc this :tilan-seuranta
+                {:atom renderointi
+                 :seurannan-aloitus seurannan-aloitus
+                 :seurannan-lopeuts seurannan-lopetus})))
+
 (defrecord Teksti [osan-id teksti parametrit]
+  p/Osa
+  (piirra-osa [this]
+    (let [{renderointi :atom muodosta-arvo :muodosta-arvo} (:tilan-seuranta this)
+          tilan-seuranta-lisatty? (not (nil? renderointi))
+          fmt-fn (or (::fmt this) identity)]
+      (komp/luo
+        {:component-did-mount (fn [this-react]
+                                (when-let [aloita-seuranta (get-in this [:tilan-seuranta :seurannan-aloitus])]
+                                  (aloita-seuranta)))}
+        {:component-will-unmount (fn [this-react]
+                                   (when-let [lopeta-seuranta (get-in this [:tilan-seuranta :seurannan-lopeuts])]
+                                     (lopeta-seuranta)))}
+        (fn [this]
+          (let [{:keys [id class]} (:parametrit this)
+                muodostettu-arvo (when tilan-seuranta-lisatty?
+                                   ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
+                                   (let [muodostettu-arvo (muodosta-arvo this @renderointi)]
+                                     (if (nil? muodostettu-arvo)
+                                       ""
+                                       muodostettu-arvo)))
+                teksti (if tilan-seuranta-lisatty?
+                         muodostettu-arvo
+                         (:teksti this))]
+            [:div.osa.osa-teksti {:class (when class
+                                           (apply str (interpose " " class)))
+                                  :id id
+                                  :data-cy (:osan-id this)}
+             (fmt-fn teksti)])))))
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-id [this]
+    (:osan-id this))
+  (osan-tila [this])
+  p/TilanSeuranta
+  (lisaa-renderointi-derefable!
+    [this tila polut alkutila]
+    (perus-lisaa-renderointi-derefable! this tila polut alkutila))
+  (lisaa-renderointi-derefable! [this tila polut] (p/lisaa-renderointi-derefable! this tila polut nil))
+  (lisaa-muodosta-arvo [this f]
+    (assoc-in this [:tilan-seuranta :muodosta-arvo]
+              (fn [this renderointi]
+                (f this renderointi))))
+  p/Fmt
+  (lisaa-fmt [this f]
+    (assoc this ::fmt f))
+  (lisaa-fmt-aktiiviselle [this f]
+    this))
+
+(defrecord Linkki [osan-id linkki teksti parametrit]
   p/Osa
   (piirra-osa [this]
     (let [{renderointi :atom muodosta-arvo :muodosta-arvo} (:tilan-seuranta this)
@@ -69,13 +143,13 @@
                                        ""
                                        muodostettu-arvo)))
                 teksti (if tilan-seuranta-lisatty?
-                         ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
                          muodostettu-arvo
                          (:teksti this))]
-            [:div.osa.osa-teksti {:class (when class
-                                           (apply str (interpose " " class)))
-                                  :id id
-                                  :data-cy (:osan-id this)}
+            [:a.osa.osa-linkki {:class (when class
+                                         (apply str (interpose " " class)))
+                                :href linkki
+                                :id id
+                                :data-cy (:osan-id this)}
              (fmt-fn teksti)])))))
   (osan-id? [this id]
     (= (:osan-id this) id))
@@ -85,28 +159,7 @@
   p/TilanSeuranta
   (lisaa-renderointi-derefable!
     [this tila polut alkutila]
-    (let [renderointi (atom nil)
-          watch-id (keyword (str (gensym "watch")))
-          renderointi-atomin-muutos! (fn [uusi]
-                                       (swap! renderointi (fn [v]
-                                                            (assoc v :vanha (:uusi v)
-                                                                     :uusi (zipmap polut
-                                                                                   (map #(get-in uusi %) polut))))))
-          seurannan-aloitus (fn []
-                              (add-watch tila watch-id
-                                         (fn [_ _ vanha uusi]
-                                           (let [polkujen-tila-muuttunut? (not (every? true? (map (fn [polku]
-                                                                                                    (= (get-in vanha polku) (get-in uusi polku)))
-                                                                                                  polut)))]
-                                             (when polkujen-tila-muuttunut?
-                                               (renderointi-atomin-muutos! uusi))))))
-          seurannan-lopetus (fn []
-                              (remove-watch tila watch-id))]
-      (renderointi-atomin-muutos! alkutila)
-      (assoc this :tilan-seuranta
-                  {:atom renderointi
-                   :seurannan-aloitus seurannan-aloitus
-                   :seurannan-lopeuts seurannan-lopetus})))
+    (perus-lisaa-renderointi-derefable! this tila polut alkutila))
   (lisaa-renderointi-derefable! [this tila polut] (p/lisaa-renderointi-derefable! this tila polut nil))
   (lisaa-muodosta-arvo [this f]
     (assoc-in this [:tilan-seuranta :muodosta-arvo]
@@ -254,6 +307,52 @@
   (lisaa-fmt-aktiiviselle [this f]
     (assoc this ::fmt-aktiivinen f)))
 
+(defrecord Nappi [osan-id toiminnot kayttaytymiset sisalto parametrit]
+  p/Osa
+  (piirra-osa [this]
+    (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
+                  on-key-up]} (lisaa-kaytokset (:toiminnot this)
+                                               (:kayttaytymiset this))]
+      (fn [this]
+        (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
+              parametrit (into {}
+                               (remove (fn [[_ arvo]]
+                                         (nil? arvo))
+                                       {;; Inputin parametrit
+                                        :class (when class
+                                                 (apply str (interpose " " class)))
+                                        :data-cy (:osan-id this)
+                                        :id id
+                                        :type type
+                                        :value value
+                                        :name name
+                                        :tab-index tabindex
+                                        :disabled disabled?
+                                        :size size
+                                        ;; GlobalEventHandlers
+                                        :on-blur (when on-blur
+                                                   (on-blur this))
+                                        :on-change (when on-change
+                                                     (on-change this))
+                                        :on-click (when on-click
+                                                    (on-click this))
+                                        :on-focus (when on-focus
+                                                    (on-focus this))
+                                        :on-input (when on-input
+                                                    (on-input this))
+                                        :on-key-down (when on-key-down
+                                                       (on-key-down this))
+                                        :on-key-press (when on-key-press
+                                                        (on-key-press this))
+                                        :on-key-up (when on-key-up
+                                                     (on-key-up this))}))]
+          [:button.osa.osa-nappi parametrit sisalto]))))
+  (osan-id? [this id]
+    (= (:osan-id this) id))
+  (osan-id [this]
+    (:osan-id this))
+  (osan-tila [this]))
+
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
   p/Tila
   (luo-tila! [this]
@@ -316,30 +415,7 @@
   p/TilanSeuranta
   (lisaa-renderointi-derefable!
     [this tila polut alkutila]
-    (let [renderointi (atom nil)
-          watch-id (keyword (str (gensym "watch")))
-          renderointi-atomin-muutos! (fn [uusi]
-                                       (swap! renderointi (fn [v]
-                                                            (assoc v :vanha (:uusi v)
-                                                                     :uusi (into {}
-                                                                                 (map (fn [polku]
-                                                                                        [polku (get-in uusi polku)])
-                                                                                      polut))))))
-          seurannan-aloitus (fn []
-                              (add-watch tila watch-id
-                                         (fn [_ _ vanha uusi]
-                                           (let [polkujen-tila-muuttunut? (not (every? true? (map (fn [polku]
-                                                                                                    (= (get-in vanha polku) (get-in uusi polku)))
-                                                                                                  polut)))]
-                                             (when polkujen-tila-muuttunut?
-                                               (renderointi-atomin-muutos! uusi))))))
-          seurannan-lopetus (fn []
-                              (remove-watch tila watch-id))]
-      (renderointi-atomin-muutos! alkutila)
-      (assoc this :tilan-seuranta
-                  {:atom renderointi
-                   :seurannan-aloitus seurannan-aloitus
-                   :seurannan-lopeuts seurannan-lopetus})))
+    (perus-lisaa-renderointi-derefable! this tila polut alkutila))
   (lisaa-renderointi-derefable! [this tila polut] (p/lisaa-renderointi-derefable! this tila polut nil))
   (lisaa-muodosta-arvo [this f]
     (assoc-in this [:tilan-seuranta :muodosta-arvo]
