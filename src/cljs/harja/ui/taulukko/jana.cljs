@@ -46,8 +46,13 @@
     (:janat this))
   (osan-polku [this jana]
     (cond
-      (satisfies? p/Jana jana) (first (keep-indexed #(when (= (p/janan-id %2) (p/janan-id jana))
-                                                       [[:janat %1]])
+      (satisfies? p/Jana jana) (first (keep-indexed (fn [index-jana taman-jana]
+                                                      (let [taman-janan-polku (p/osan-polku taman-jana jana)
+                                                            janan-polku [:janat index-jana]]
+                                                        (cond
+                                                          (= taman-jana jana) [janan-polku]
+                                                          taman-janan-polku (into [] (cons janan-polku taman-janan-polku))
+                                                          :else nil)))
                                                     (:janat this)))
       (satisfies? p/Osa jana) (first (keep-indexed (fn [index-jana taman-jana]
                                                      (when-let [taman-janan-polku (p/osan-polku taman-jana jana)]

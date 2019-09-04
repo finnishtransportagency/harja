@@ -256,10 +256,14 @@
 
 (defrecord Laajenna [osan-id teksti aukaise-fn parametrit]
   p/Tila
+  (luo-tila! [this]
+    (assoc this ::tila (atom false)))
   (hae-tila [this]
-    (:tila this))
-  (aseta-tila! [this]
-    (assoc this :tila (atom false)))
+    (::tila this))
+  (aseta-tila! [this tila]
+    (swap! (::tila this) (fn [_] tila)))
+  (paivita-tila! [this f]
+    (swap! (::tila this) f))
   p/Osa
   (piirra-osa [this]
     (let [auki? (or (p/hae-tila this)
@@ -356,6 +360,3 @@
   (osan-id [this]
     (:osan-id this))
   (osan-tila [this]))
-
-(defn luo-tilallinen-laajenna [osan-id teksti aukaise-fn parametrit]
-  (p/aseta-tila! (->Laajenna osan-id teksti aukaise-fn parametrit)))

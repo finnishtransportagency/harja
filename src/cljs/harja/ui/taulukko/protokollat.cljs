@@ -18,7 +18,9 @@
 
 (defprotocol Tila
   (hae-tila [this])
-  (aseta-tila! [this]))
+  (aseta-tila! [this tila])
+  (paivita-tila! [this tila])
+  (luo-tila! [this]))
 
 (defprotocol Taulukko
   (piirra-taulukko [this])

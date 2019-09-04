@@ -8,14 +8,29 @@
 (defonce tyhja-arvo (gensym))
 
 (defn taulukon-jana-validi?
-  [jana janan-skeema]
+  [taulukon-skeemat jana janan-skeema]
   (and (not (nil? janan-skeema))
        (= (type jana) (:janan-tyyppi janan-skeema))
-       (every? true?
-               (map (fn [osan-skeema osa]
-                      (= (type osa) osan-skeema))
-                    (:osat janan-skeema)
-                    (p/janan-osat jana)))))
+       (if (contains? janan-skeema :janat)
+         (loop [[jana & janat] (p/janan-osat jana)
+                [skeeman-nimi & _ :as skeemojen-nimet] (:janat janan-skeema)
+                validi-jana? true]
+           (if (or (false? validi-jana?)
+                   (nil? jana))
+             validi-jana?
+             (let [validi-jana? (taulukon-jana-validi? taulukon-skeemat jana (get taulukon-skeemat skeeman-nimi))
+                   [validi-jana? skeemojen-nimet] (if (false? validi-jana?)
+                                                    ;; Jos ei nykyisellä skeemalla ollut validi, kokeillaan seuraavaa
+                                                    [(taulukon-jana-validi? taulukon-skeemat jana (get taulukon-skeemat (second skeemojen-nimet))) (rest skeemojen-nimet)]
+                                                    [validi-jana? skeemojen-nimet])]
+               (recur janat
+                      skeemojen-nimet
+                      validi-jana?))))
+         (every? true?
+                 (map (fn [osan-skeema osa]
+                        (= (type osa) osan-skeema))
+                      (:osat janan-skeema)
+                      (p/janan-osat jana))))))
 
 (defn rivin-index
   "Palauttaa janan indeksin taulukossa"
@@ -44,7 +59,7 @@
                          (:skeema-sarake this))))
   (rivin-skeema [this rivi]
     (some (fn [[skeeman-nimi rivin-skeema]]
-            (when (taulukon-jana-validi? rivi rivin-skeema)
+            (when (taulukon-jana-validi? (:skeema-rivi this) rivi rivin-skeema)
               skeeman-nimi))
           (:skeema-rivi this)))
   (osan-polku-taulukossa [this osa]

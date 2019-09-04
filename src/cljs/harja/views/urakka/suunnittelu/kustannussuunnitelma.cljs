@@ -36,6 +36,16 @@
                                                           (drop 1 (re-find #".*(\.|,)(0*)" teksti)))
       :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
 
+(defn toimenpiteiden-jarjestys
+  [toimenpide]
+  (case toimenpide
+    :talvihoito 0
+    :liikenneympariston-hoito 1
+    :sorateiden-hoito 2
+    :paallystepaikkaukset 3
+    :mhu-yllapito 4
+    :mhu-korvausinvestointi 5))
+
 (defn poista-tyhjat [arvo]
   (clj-str/replace arvo #"\s" ""))
 
@@ -121,103 +131,229 @@
    [:span [ikonit/livicon-question] "Keskeneräinen"]
    [:span [ikonit/remove] "Suunnitelma puuttuu"]])
 
-(defn suunnitelmien-taulukko [e! {:keys [toimenpiteet yhteenveto]}]
-  (let [sarakkeiden-leveys (fn [sarake]
+(defn suunnitelmien-taulukko [e!]
+  (let [polku-taulukkoon [:suunnitelmien-tila-taulukko]
+        osien-paivitys-fn (fn [teksti kuluva-vuosi tuleva-vuosi jakso]
+                            (fn [osat]
+                              (mapv (fn [osa]
+                                      (let [otsikko (p/osan-id osa)]
+                                        (case otsikko
+                                          "Teksti" (teksti osa)
+                                          "Kuluva vuosi" (kuluva-vuosi osa)
+                                          "Tuleva vuosi" (tuleva-vuosi osa)
+                                          "Jakso" (jakso osa))))
+                                    osat)))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
+                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        sarakkeiden-leveys (fn [sarake]
                              (case sarake
-                               :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-                               :kuukausisuunnitelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"
-                               :vuosisuunnittelmat "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
-        paarivi (fn [nimi ikoni-v ikoni-kk]
-                  (jana/->Rivi (keyword nimi)
-                               [(osa/->Teksti (keyword (str nimi "-nimi")) (clj-str/capitalize nimi) {:class #{(sarakkeiden-leveys :nimi)}})
-                                (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat"))
-                                             {:ikoni (ikoni-v)}
-                                             {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-
-                                                       "keskita"}})
-                                (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat"))
-                                             {:ikoni (ikoni-kk)}
-                                             {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-
-                                                       "keskita"}})]
-                               #{}))
-        paarivi-laajenna (fn [nimi]
-                           (jana/->Rivi (keyword nimi)
-                                        [(osa/->Laajenna (keyword (str nimi "-teksti"))
-                                                         (clj-str/capitalize nimi)
-                                                         #(e! (t/->LaajennaSoluaKlikattu [:suunnitelmien-tila-taulukko] (keyword nimi) %1 %2))
-                                                         {:class #{(sarakkeiden-leveys :nimi)
-                                                                   "ikoni-vasemmalle"}})
-                                         (osa/->Ikoni (keyword (str nimi "-vuosisuunnitelmat")) {:ikoni ikonit/remove} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                                 "keskita"
-                                                                                                                                 }})
-                                         (osa/->Ikoni (keyword (str nimi "-kuukausisuunnitelmat")) {:ikoni ikonit/livicon-minus} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                                           "keskita"
-                                                                                                                                           }})]
-                                        #{}))
-        lapsirivi (fn [idn-alku teksti ikoni-v ikoni-kk]
-                    (jana/->Rivi (keyword idn-alku)
-                                 [(osa/->Teksti (keyword (str idn-alku "-nimi")) teksti {:class #{(sarakkeiden-leveys :nimi)
-                                                                                                  "solu-sisenna-1"
-                                                                                                  }})
-                                  (osa/->Ikoni (keyword (str idn-alku "-vuosisuunnitelmat")) {:ikoni (ikoni-v)} {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                                          "keskita"
-                                                                                                                          }})
-                                  (osa/->Ikoni (keyword (str idn-alku "-kuukausisuunnitelmat")) {:ikoni (ikoni-kk)} {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                              "keskita"
-                                                                                                                              }})]
-                                 #{"piillotettu"}))
-        otsikkorivi (jana/->Rivi :otsikko-rivi
-                                 [(osa/->Komponentti :otsikko-selite suunnitelman-selitteet #{(sarakkeiden-leveys :nimi)} nil)
-                                  (osa/->Teksti :otsikko-vuosisuunnitelmat "Vuosisuunnitelmat" {:class #{(sarakkeiden-leveys :vuosisuunnittelmat)
-                                                                                                         "keskita"
-                                                                                                         "alas"
-                                                                                                         "suunnitelman-tila-otsikko"
-                                                                                                         }})
-                                  (osa/->Teksti :otsikko-kuukausisuunnitelmat "Kuukausisuunnitelmat*" {:class #{(sarakkeiden-leveys :kuukausisuunnitelmat)
-                                                                                                                "keskita"
-                                                                                                                "alas"
-                                                                                                                "suunnitelman-tila-otsikko"
-                                                                                                                }})]
-                                 #{})
-        taytettyja-hankintakustannuksia (count (keep :maara yhteenveto))
-        hankintakustannukset-ikoni (fn []
-                                     (case taytettyja-hankintakustannuksia
-                                       0 ikonit/remove
-                                       5 ikonit/ok
-                                       ikonit/livicon-question))
-        hankintakustannukset [(paarivi "hankintakustannukset" hankintakustannukset-ikoni hankintakustannukset-ikoni)]
-        toimenpiteiden-rivit (mapcat (fn [[toimenpide suunnitelmat]]
-                                       (concat [(paarivi-laajenna (name toimenpide))]
-                                               (keep (fn [[suunnitelma maara]]
-                                                       (let [idn-osa (str (name toimenpide) "-" (name suunnitelma))
-                                                             ikoni-v #(if (nil? maara) ikonit/remove ikonit/ok)
-                                                             ikoni-kk #(if (nil? maara) ikonit/remove ikonit/ok)]
-                                                         (case suunnitelma
-                                                           :hankinnat (with-meta (lapsirivi (str idn-osa "-h") "Suunnitellut hankinnat" ikoni-v ikoni-kk)
-                                                                                 {:vanhempi toimenpide})
-                                                           :korjaukset (with-meta (lapsirivi (str idn-osa "-k") "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset" ikoni-v ikoni-kk)
-                                                                                  {:vanhempi toimenpide})
-                                                           :akilliset-hoitotyot (with-meta (lapsirivi (str idn-osa "-ah") "Äkilliset hoitotyöt" ikoni-v ikoni-kk)
-                                                                                           {:vanhempi toimenpide})
-                                                           :muut-rahavaraukset (with-meta (lapsirivi (str idn-osa "-mr") "Muut tilaajan rahavaraukset" ikoni-v ikoni-kk)
-                                                                                          {:vanhempi toimenpide})
-                                                           nil)))
-                                                     suunnitelmat)))
-                                     toimenpiteet)]
-    (cons otsikkorivi
-          (map-indexed #(update %2 :luokat conj (if (odd? %1) "pariton-jana" "parillinen-jana"))
-                       (concat hankintakustannukset toimenpiteiden-rivit)))))
+                               :teksti "col-xs-12 col-sm-9 col-md-9 col-lg-9"
+                               :kuluva-vuosi "col-xs-12 col-sm-1 col-md-1 col-lg-1"
+                               :tuleva-vuosi "col-xs-12 col-sm-1 col-md-1 col-lg-1"
+                               :jakso "col-xs-12 col-sm-1 col-md-1 col-lg-1"))
+        kuluva-hoitokausi (t/kuluva-hoitokausi)
+        viimeinen-vuosi? (= 5 (:vuosi kuluva-hoitokausi))
+        otsikko-fn (fn [otsikkopohja]
+                     (-> otsikkopohja
+                         (tyokalut/aseta-arvo :id :otsikko-rivi)
+                         (tyokalut/paivita-arvo :lapset
+                                                (osien-paivitys-fn (fn [osa]
+                                                                     (-> osa
+                                                                         (tyokalut/aseta-arvo :id :otsikko-selite)
+                                                                         (assoc :komponentti suunnitelman-selitteet
+                                                                                :komponentin-argumentit #{(sarakkeiden-leveys :teksti)})))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo (if viimeinen-vuosi?
+                                                                                                  ""
+                                                                                                  (str (:vuosi kuluva-hoitokausi) ".vuosi"))
+                                                                                          :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                   (when-not viimeinen-vuosi?
+                                                                                                     "aktiivinen-vuosi")
+                                                                                                   "keskita"
+                                                                                                   "alas"}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo (str (min 5 (inc (:vuosi kuluva-hoitokausi))) ".vuosi" )
+                                                                                          :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                   (when viimeinen-vuosi?
+                                                                                                     "aktiivinen-vuosi")
+                                                                                                   "keskita"
+                                                                                                   "alas"}))
+                                                                   (fn [osa]
+                                                                     (tyokalut/aseta-arvo osa
+                                                                                          :arvo ""
+                                                                                          :class #{(sarakkeiden-leveys :jakso)}))))))
+        sisaotsikko-fn (fn [rivin-pohja teksti jakso]
+                         (-> rivin-pohja
+                             (tyokalut/aseta-arvo :id (keyword teksti))
+                             (tyokalut/paivita-arvo :lapset
+                                                    (osien-paivitys-fn (fn [osa]
+                                                                         (tyokalut/aseta-arvo osa
+                                                                                              :arvo teksti
+                                                                                              :class #{(sarakkeiden-leveys :teksti)}))
+                                                                       (fn [osa]
+                                                                         (tyokalut/aseta-arvo osa
+                                                                                              :arvo {:ikoni ikonit/remove}
+                                                                                              :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                       "keskita"}))
+                                                                       (fn [osa]
+                                                                         (tyokalut/aseta-arvo osa
+                                                                                              :arvo {:ikoni ikonit/remove}
+                                                                                              :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                       "keskita"}))
+                                                                       (fn [osa]
+                                                                         (tyokalut/aseta-arvo osa
+                                                                                              :arvo jakso
+                                                                                              :class #{(sarakkeiden-leveys :jakso)}))))))
+        laajenna-toimenpide-fn (fn [laajenna-toimenpide-pohja teksti jakso]
+                                 (let [rivi-id (keyword (str teksti "-laajenna"))]
+                                   (-> (sisaotsikko-fn laajenna-toimenpide-pohja teksti jakso)
+                                       (tyokalut/aseta-arvo :id rivi-id)
+                                       (tyokalut/paivita-arvo :lapset
+                                                              (fn [osat]
+                                                                (update osat 0 (fn [laajenna-osa]
+                                                                                 (let [osa (-> laajenna-osa
+                                                                                               (tyokalut/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
+                                                                                               p/luo-tila!
+                                                                                               (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2))))]
+                                                                                   (p/aseta-tila! osa true)
+                                                                                   osa))))))))
+        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti]
+                            (map (fn [rahavarausteksti jakso]
+                                   (-> toimenpide-osa-pohja
+                                       (tyokalut/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
+                                                            :class #{})
+                                       (tyokalut/paivita-arvo :lapset
+                                                              (osien-paivitys-fn (fn [osa]
+                                                                                   (tyokalut/aseta-arvo osa
+                                                                                                        :arvo rahavarausteksti
+                                                                                                        :class #{(sarakkeiden-leveys :teksti)
+                                                                                                                 "solu-sisenna-2"}))
+                                                                                 (fn [osa]
+                                                                                   (tyokalut/aseta-arvo osa
+                                                                                                        :arvo {:ikoni ikonit/remove}
+                                                                                                        :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                                 "keskita"}))
+                                                                                 (fn [osa]
+                                                                                   (tyokalut/aseta-arvo osa
+                                                                                                        :arvo {:ikoni ikonit/remove}
+                                                                                                        :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                                 "keskita"}))
+                                                                                 (fn [osa]
+                                                                                   (tyokalut/aseta-arvo osa
+                                                                                                        :arvo jakso
+                                                                                                        :class #{(sarakkeiden-leveys :jakso)}))))))
+                                 ["Suunnitellut hankinnat"
+                                  "Äkilliset hoitotyöt"
+                                  "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
+                                  "Rahavaraus lupaukseen 1"]
+                                 ["/kk*" "/kk" "/kk" "/kk"]))
+        toimenpide-fn (fn [toimenpide-pohja]
+                        (map (fn [toimenpideteksti jakso]
+                               (-> toimenpide-pohja
+                                   (tyokalut/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi")))
+                                   (tyokalut/paivita-arvo :lapset
+                                                          (fn [rivit]
+                                                            (into []
+                                                                  (reduce (fn [rivit rivin-pohja]
+                                                                            (let [rivin-tyyppi (p/janan-id rivin-pohja)]
+                                                                              (concat
+                                                                                rivit
+                                                                                (case rivin-tyyppi
+                                                                                  :laajenna-toimenpide [(laajenna-toimenpide-fn rivin-pohja toimenpideteksti jakso)]
+                                                                                  :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti)))))
+                                                                          [] rivit))))))
+                             (map #(-> % name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
+                                  (sort-by toimenpiteiden-jarjestys t/toimenpiteet))
+                             (repeat (count t/toimenpiteet) "/vuosi")))
+        hankintakustannukset-fn (fn [hankintakustannukset-pohja]
+                                  (-> hankintakustannukset-pohja
+                                      (tyokalut/aseta-arvo :id (keyword (str "hankintakustannukset-vanhempi")))
+                                      (tyokalut/paivita-arvo :lapset
+                                                             (fn [rivit]
+                                                               (into []
+                                                                     (reduce (fn [rivit rivin-pohja]
+                                                                               (let [rivin-tyyppi (p/janan-id rivin-pohja)]
+                                                                                 (concat
+                                                                                   rivit
+                                                                                   (case rivin-tyyppi
+                                                                                     :sisaotsikko [(sisaotsikko-fn rivin-pohja "Hankintakustannukset" "/vuosi*")]
+                                                                                     :toimenpide (toimenpide-fn rivin-pohja)))))
+                                                                             [] rivit))))))
+        hallinnollinen-toimenpide-fn (fn [hallinnollinen-toimenpide-pohja]
+                                       (map (fn [teksti jakso]
+                                              (-> (sisaotsikko-fn hallinnollinen-toimenpide-pohja teksti jakso)
+                                                  (tyokalut/aseta-arvo :id (keyword (str teksti)))
+                                                  (tyokalut/paivita-arvo :lapset
+                                                                         (fn [osat]
+                                                                           (update osat 0 (fn [laajenna-osa]
+                                                                                            (tyokalut/paivita-arvo laajenna-osa :class conj "solu-sisenna-2")))))))
+                                            ["Erillishankinnat"
+                                             "Johto- ja hallintokorvaus"
+                                             "Hoidonjohtopalkkio"
+                                             "Hallinnolliset toimenpiteet"]
+                                            (repeat 4 "/kk")))
+        hallinnollisetkustannukset-fn (fn [hallinnollisetkustannukset-pohja]
+                                        (-> hallinnollisetkustannukset-pohja
+                                            (tyokalut/aseta-arvo :id (keyword (str "hallinnollisetkustannukset-vanhempi")))
+                                            (tyokalut/paivita-arvo :lapset
+                                                                   (fn [rivit]
+                                                                     (into []
+                                                                           (reduce (fn [rivit rivin-pohja]
+                                                                                     (let [rivin-tyyppi (p/janan-id rivin-pohja)]
+                                                                                       (concat
+                                                                                         rivit
+                                                                                         (case rivin-tyyppi
+                                                                                           :sisaotsikko [(sisaotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi")]
+                                                                                           :hallinnollinen-toimenpide (hallinnollinen-toimenpide-fn rivin-pohja)))))
+                                                                                   [] rivit))))))]
+    (muodosta-taulukko :suunnitelmien-taulukko
+                       {:otsikko {:janan-tyyppi jana/Rivi
+                                  :osat [osa/Komponentti
+                                         osa/Teksti
+                                         osa/Teksti
+                                         osa/Teksti]}
+                        :sisaotsikko {:janan-tyyppi jana/Rivi
+                                      :osat [osa/Teksti
+                                             osa/Ikoni
+                                             osa/Ikoni
+                                             osa/Teksti]}
+                        :laajenna-toimenpide {:janan-tyyppi jana/Rivi
+                                              :osat [osa/Laajenna
+                                                     osa/Ikoni
+                                                     osa/Ikoni
+                                                     osa/Teksti]}
+                        :toimenpide-osa {:janan-tyyppi jana/Rivi
+                                         :osat [osa/Teksti
+                                                osa/Ikoni
+                                                osa/Ikoni
+                                                osa/Teksti]}
+                        :toimenpide {:janan-tyyppi jana/RiviLapsilla
+                                     :janat [:laajenna-toimenpide :toimenpide-osa]}
+                        :hankintakustannukset {:janan-tyyppi jana/RiviLapsilla
+                                               :janat [:sisaotsikko :toimenpide]}
+                        :hallinnollinen-toimenpide {:janan-tyyppi jana/Rivi
+                                                    :osat [osa/Teksti
+                                                           osa/Ikoni
+                                                           osa/Ikoni
+                                                           osa/Teksti]}
+                        :hallinnollisetkustannukset {:janan-tyyppi jana/RiviLapsilla
+                                                     :janat [:sisaotsikko :hallinnollinen-toimenpide]}}
+                       ["Teksti" "Kuluva vuosi" "Tuleva vuosi" "Jakso"]
+                       [:otsikko otsikko-fn :hankintakustannukset hankintakustannukset-fn :hallinnollisetkustannukset hallinnollisetkustannukset-fn]
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                        :class #{"suunnitelma-ikonien-varit"}})))
 
 (defn suunnitelmien-tila
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e! (:hankintakustannukset app))]
+                      (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
                         (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko]}]
       (if suunnitelmien-tila-taulukko
-        [taulukko/taulukko suunnitelmien-tila-taulukko #{"suunnitelma-ikonien-varit"}]
+        [p/piirra-taulukko suunnitelmien-tila-taulukko]
         [yleiset/ajax-loader]))))
 
 (defn lahetyspaiva-ja-maksetaan [_ _]
@@ -249,15 +385,7 @@
                         (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi)))
         vaihda-fn (fn [event]
                     (.preventDefault event)
-                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))
-        toimenpiteiden-jarjestys (fn [toimenpide]
-                                   (case toimenpide
-                                     :talvihoito 0
-                                     :liikenneympariston-hoito 1
-                                     :sorateiden-hoito 2
-                                     :paallystepaikkaukset 3
-                                     :mhu-yllapito 4
-                                     :mhu-korvausinvestointi 5))]
+                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))]
     (fn [_ {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
         [:div
@@ -525,7 +653,7 @@
                        (case tyyppi
                          "vahinkojen-korjaukset" "Kolmansien osapuolien aih. vaurioiden korjaukset"
                          "akillinen-hoitotyo" "Äkilliset hoitotyöt"
-                         "muut-rahavaraukset" "Muut tilaajan rahavaraukset"))
+                         "muut-rahavaraukset" "Rahavaraus lupaukseen 1"))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (tyokalut/aseta-arvo :id :otsikko-rivi

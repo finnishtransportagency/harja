@@ -42,6 +42,13 @@
              :talvi talvikausi
              :kaikki hoitokausi})
 
+(defn kuluva-hoitokausi []
+  (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
+        urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
+        kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
+    {:vuosi kuluva-urakan-vuosi
+     :pvmt hoitovuoden-pvmt}))
+
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]
   (+
     ;; Hankintakustannukset
@@ -92,6 +99,7 @@
                                             johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
+(defrecord YhteenvetoLaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord MuutaTaulukonOsa [osa polku-taulukkoon arvo])
 (defrecord MuutaTaulukonOsanSisarta [osa sisaren-tunniste polku-taulukkoon arvo])
 (defrecord PaivitaTaulukonOsa [osa polku-taulukkoon paivitys-fn])
@@ -245,11 +253,7 @@
 (extend-protocol tuck/Event
   Hoitokausi
   (process-event [_ app]
-    (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
-          urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
-          kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
-      (assoc app :kuluva-hoitokausi {:vuosi kuluva-urakan-vuosi
-                                     :pvmt hoitovuoden-pvmt})))
+    (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))
   PaivitaToimenpideTaulukko
   (process-event [{:keys [maara-solu polku-taulukkoon]} app]
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
@@ -527,6 +531,23 @@
                                                                                  (map #(update % :luokat toggle-fn "piillotettu") lapset)))))
                                                rivi))
                                            rivit)))
+                           app)))
+  YhteenvetoLaajennaSoluaKlikattu
+  (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]
+    (let [taulukko (get-in app polku-taulukkoon)
+          toggle-fn (if auki? disj conj)]
+      (p/paivita-taulukko! (tyokalut/paivita-asiat-taulukossa taulukko [:hankintakustannukset :toimenpide]
+                                                              (fn [taulukko polut]
+                                                                (let [[_ _ _ toimenpide-sisalto] polut
+                                                                      toimenpide-sisalto (get-in taulukko toimenpide-sisalto)
+                                                                      laajenna-toimenpide (first (tyokalut/arvo toimenpide-sisalto :lapset))]
+                                                                  (if (= (p/janan-id laajenna-toimenpide) rivin-id)
+                                                                    (tyokalut/paivita-arvo toimenpide-sisalto :lapset
+                                                                                           (fn [rivit]
+                                                                                             (tyokalut/mapv-range 1 (fn [rivi]
+                                                                                                                      (tyokalut/paivita-arvo rivi :class toggle-fn "piillotettu"))
+                                                                                                                  rivit)))
+                                                                    toimenpide-sisalto))))
                            app)))
   MuutaTaulukonOsa
   (process-event [{:keys [osa arvo polku-taulukkoon]} app]
