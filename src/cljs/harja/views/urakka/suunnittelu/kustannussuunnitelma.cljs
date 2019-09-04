@@ -213,17 +213,14 @@
                                        (tyokalut/paivita-arvo :lapset
                                                               (fn [osat]
                                                                 (update osat 0 (fn [laajenna-osa]
-                                                                                 (let [osa (-> laajenna-osa
-                                                                                               (tyokalut/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
-                                                                                               p/luo-tila!
-                                                                                               (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2))))]
-                                                                                   (p/aseta-tila! osa true)
-                                                                                   osa))))))))
+                                                                                 (-> laajenna-osa
+                                                                                     (tyokalut/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
+                                                                                     (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2)))))))))))
         toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti]
                             (map (fn [rahavarausteksti jakso]
                                    (-> toimenpide-osa-pohja
                                        (tyokalut/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
-                                                            :class #{})
+                                                            :class #{"piillotettu"})
                                        (tyokalut/paivita-arvo :lapset
                                                               (osien-paivitys-fn (fn [osa]
                                                                                    (tyokalut/aseta-arvo osa
@@ -502,8 +499,7 @@
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
         laskutuksen-perusteella? (and (= toimenpide-avain valittu-toimenpide)
                                       (contains? laskutukseen-perustuen toimenpide-avain))
-
-
+        kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
         hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
                                             toimenpiteet)
         otsikko-fn (fn [otsikko-pohja]
@@ -542,16 +538,22 @@
                                                                                                 :arvo ""
                                                                                                 :class #{(sarakkeiden-leveys :maara-kk)}))
                                                                          (fn [osa]
-                                                                           (-> osa
-                                                                               (tyokalut/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
-                                                                                                    :arvo yhteensa
-                                                                                                    :class #{(sarakkeiden-leveys :yhteensa)})
-                                                                               (p/lisaa-fmt summa-formatointi)
-                                                                               (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2)))))))))
-        lapsirivi (fn [rivin-pohja nimi maara]
+                                                                           (let [osa (-> osa
+                                                                                         (tyokalut/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
+                                                                                                              :arvo yhteensa
+                                                                                                              :class #{(sarakkeiden-leveys :yhteensa)})
+                                                                                         p/luo-tila!
+                                                                                         (p/lisaa-fmt summa-formatointi)
+                                                                                         (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2))))]
+                                                                             (when (= hoitokausi kuluva-hoitovuosi)
+                                                                               (p/aseta-tila! osa true))
+                                                                             osa))))))
+        lapsirivi (fn [rivin-pohja nimi maara hoitokausi]
                     (-> rivin-pohja
                         (tyokalut/aseta-arvo :id (keyword nimi)
-                                             :class #{"table-default" "piillotettu"})
+                                             :class #{"table-default"
+                                                      (when-not (= hoitokausi kuluva-hoitovuosi)
+                                                        "piillotettu")})
                         (tyokalut/paivita-arvo :lapset
                                                (osien-paivitys-fn (fn [osa]
                                                                     (tyokalut/aseta-arvo osa
@@ -591,7 +593,7 @@
                                                                                                  (case rivin-tyyppi
                                                                                                    :laajenna [(paarivi-laajenna rivin-pohja (str laajenna-rivin-id "-paa") hoitokausi nil)]
                                                                                                    :lapset (map (fn [hankinta]
-                                                                                                                  (lapsirivi rivin-pohja (pvm/pvm (:pvm hankinta)) (:summa hankinta)))
+                                                                                                                  (lapsirivi rivin-pohja (pvm/pvm (:pvm hankinta)) (:summa hankinta) hoitokausi))
                                                                                                                 hoitokauden-hankinnat)))))
                                                                                            [] rivit))))
                                                     (assoc :hoitokausi hoitokausi))))
