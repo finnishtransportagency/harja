@@ -4,14 +4,14 @@
     "title": "Teiden hoito",
     "short": "",
     "body": "HARJA on ollut käytössä teiden hoidon urakoissa 1.10.2016 lähtien. Uusia ominaisuuksia toteutetaan HARJAan tarpeen mukaan. <a href=\"documents/harjan-esittely.pptx\">Harjan esittelyn PowerPoint muodossa löydät täältä.</a> Tietoa toteutusaikatauluista jaetaan tällä sivustolla.",
-    "images": ["images/hoidon-aikataulu-2016.png"]
+    "images": []
   },
   {
     "category": "maintenance",
     "title": "Teiden ylläpito",
     "short": "",
     "body": "Ylläpidon HARJA on otettu käyttöön huhtikuussa 2017 Päällystys- ja Tiemerkintäurakoissa. ",
-    "images": ["images/Yllapidon_aikataulu_3.png"]
+    "images": []
   },
   {
     "category": "faq",
@@ -25,7 +25,7 @@
     "title": "Vesiväylät",
     "short": "",
     "body": "Uutisia Harjan käytöstä vesiväylillä",
-    "images": ["images/Vesivaylien_aikataulu_1.png"]
+    "images": []
   },
   {
     "category": "problemsolving-process",
