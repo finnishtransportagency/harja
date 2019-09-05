@@ -16,6 +16,7 @@
             [clojure.string :as str]
             [reagent.core :refer [atom] :as r]
             [harja.ui.liitteet :as liitteet]
+            [harja.ui.kentat :as kentat]
             [harja.ui.debug :as debug]
             [harja.tiedot.istunto :as istunto]))
 
@@ -28,8 +29,9 @@
                              varusteiden-haun-tila :varusteiden-haun-tila
                              :as hakuehdot}
                          varusteita-haettu?]
-  (let [tr-ok? (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
-                 (and numero alkuosa alkuetaisyys loppuosa loppuetaisyys))]
+  (let [tr-ok? (fn [osoite]
+                 (and (kentat/onko-tr-osoite-kokonainen? osoite)
+                      (kentat/onko-tr-osoite-oikeinpain? osoite)))]
     [lomake/lomake
      {:otsikko "Hae varusteita Tierekisteristä"
       :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
@@ -75,6 +77,8 @@
          :otsikko "Tierekisteriosoite"
          :tyyppi :tierekisteriosoite
          :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
+         :vaadi-vali? true
+         :ala-nayta-virhetta-komponentissa? false
          :pakollinen? (= :sijainnilla varusteiden-haun-tila)})
       (when (= :tunnisteella varusteiden-haun-tila)
         {:nimi :tunniste

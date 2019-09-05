@@ -940,7 +940,16 @@
           (>! tr-osoite-ch :virhe)
           (reset! virheet "Reitille ei löydy tietä."))))))
 
-(defn- onko-tr-osoite-kokonainen? [osoite]
+(defn onko-tr-osoite-oikeinpain?
+  [{:keys [alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
+
+  (if (or (< alkuosa loppuosa)
+          (and (= alkuosa loppuosa)
+               (<= alkuetaisyys loppuetaisyys)))
+    true
+    false))
+
+(defn onko-tr-osoite-kokonainen? [osoite]
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
 
 (defn- onko-tr-osoite-pistemainen? [osoite]
@@ -1175,8 +1184,13 @@
                               tr (swap! data assoc kentta (when (and (not (= "" v))
                                                                      (re-matches #"\d*" v))
                                                             (js/parseInt (-> % .-target .-value))))]))
-              blur (when hae-sijainti
-                     #(tee-tr-haku osoite))
+              blur (fn []
+                     (if (and (onko-tr-osoite-kokonainen? osoite)
+                              (not (onko-tr-osoite-oikeinpain? osoite)))
+                       (reset! virheet "Tarkista tierekisteriosoite")
+                       (do (reset! virheet nil)
+                           (when hae-sijainti #(tee-tr-haku osoite)))))
+
               normalisoi (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
                            {numero-avain numero
                             alkuosa-avain alkuosa
@@ -1230,7 +1244,13 @@
                                   (reset! karttavalinta-kaynnissa? false))
                   :paivita #(swap! data merge (normalisoi %))
                   :kun-valmis #(do
+                                 (reset! virheet nil)
                                  (reset! data (normalisoi %))
+                                 (if-not (onko-tr-osoite-oikeinpain? @data)
+                                   (reset! data (s/rename-keys @data {:alkuosa :loppuosa
+                                                                      :loppuosa :alkuosa
+                                                                      :alkuetaisyys :loppuetaisyys
+                                                                      :loppuetaisyys :alkuetaisyys})))
                                  (reset! karttavalinta-kaynnissa? false)
                                  (log "Saatiin tr-osoite! " (pr-str %))
                                  (go (>! tr-osoite-ch %)))}]))
