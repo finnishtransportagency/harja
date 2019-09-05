@@ -209,6 +209,7 @@
                (let [avain (keyword (str "juurisyy" n))
                      selite-avain (keyword (str "juurisyy" n "-selite"))]
                  [{:tyyppi :valinta
+                   :pakollinen? (when (= n 1) true)
                    :uusi-rivi? true
                    :otsikko (str n ". juurisyy")
                    :valinnat (into [nil] turpodomain/juurisyyt)
@@ -216,6 +217,7 @@
                    :nimi avain}
                   (when (get turvallisuuspoikkeama avain)
                     {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
+                     :pakollinen? true
                      :pituus-max 200})]))
              (range 1 4)))))
 
