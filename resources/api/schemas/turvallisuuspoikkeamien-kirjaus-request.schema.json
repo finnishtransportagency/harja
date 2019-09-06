@@ -53,6 +53,7 @@
           },
           "luokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
+            "required": true,
             "type": "array",
             "items": {
               "enum": [
@@ -201,7 +202,8 @@
               }
             }
           },
-          "juurisyy1": {"$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json"},
+          "juurisyy1": {"$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json",
+                        "required":  true},
           "juurisyy2": {"$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json"},
           "juurisyy3": {"$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeama-juurisyy.schema.json"}
         }
