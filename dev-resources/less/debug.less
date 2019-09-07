@@ -17,3 +17,117 @@
   from {background-color: green;}
   to {background-color: white;}
 }
+
+.taulukko-debug {
+  .debug-nappi {
+
+  }
+}
+
+@debug-napin-korkeus: 40px;
+@debug-sisallon-padding: 10px;
+
+.taulukon-debug-sisalto {
+  overflow-x: scroll;
+  overflow-y: scroll;
+  position: fixed;
+  width: 100vw;
+  bottom: 0px;
+  left: 0px;
+  z-index: 99999;
+  padding: @debug-sisallon-padding;
+  word-break: keep-all;
+
+  &.debug-sisalto-ylhaalla {
+    background: white;
+   // height: 25vh;
+  }
+  &.debug-sisalto-alhaalla {
+    height: 0px;
+    .debug-toggle-nappi {
+      position: fixed;
+      bottom: @debug-sisallon-padding;
+      left: @debug-sisallon-padding;
+    }
+    .debug-sulje-nappi {
+      position: fixed;
+      bottom: @debug-sisallon-padding;
+      right: @debug-sisallon-padding;
+    }
+  }
+
+  .debug-nappiryhma {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    .debug-toggle-nappi {
+      height: @debug-napin-korkeus;
+    }
+    .debug-sulje-nappi {
+      float: right;
+      height: @debug-napin-korkeus;
+    }
+    .debug-korkeus-nappi {
+      align-self: flex-start;
+      text-align: center;
+      font-size: 1.5rem;
+      // Tehdään laatikosta mahdollisimman iso,
+      // jotta drag event pysyy hiiren liikkeissä mukana
+      position: absolute;
+      left: auto;
+      right: auto;
+      width: 100%;
+      height: 200vh;
+      top: -300px;
+      padding-top: 300px;
+    }
+  }
+  b, span {
+    display: inline-block;
+  }
+  .lista {
+    display: flex;
+  }
+  .listan-arvot {
+    display: flex;
+    > * {
+      padding: 0px 5px 0px 5px;
+      .viimeinen-arvo {
+        padding-right: 0px;
+        .sulku-merkki {
+          padding-left: 5px;
+        }
+      }
+    }
+  }
+  .mapin-arvot {
+    display: flex;
+    flex-direction: column;
+    .viimeinen-arvo {
+      display: flex;
+      flex-direction: row;
+      .sulku-merkki {
+        align-self: flex-end;
+      }
+    }
+  }
+
+  .avain-arvo {
+    display: flex;
+
+    .keyword {
+      align-self:flex-start;
+      padding-right: 10px;
+      color: darkviolet;
+    }
+  }
+
+  .string {
+    color: seagreen;
+  }
+
+  .funktio {
+    color: dodgerblue;
+  }
+
+}

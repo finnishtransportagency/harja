@@ -1,5 +1,38 @@
 (ns harja.ui.taulukko.protokollat)
 
+
+(defn aseta-asian-arvo [asia avain-arvo muuta-avain]
+  (let [asian-avain-arvo (map (fn [[avain arvo]]
+                                [(muuta-avain avain) arvo])
+                              (partition 2 avain-arvo))]
+    (reduce (fn [asia [polku arvo]]
+              (assoc-in asia polku arvo))
+            asia asian-avain-arvo)))
+
+(defprotocol Asia
+  "Taulukon asioille haku ja päivitys funktioita"
+  (arvo [this avain])
+  (aseta-arvo [this k1 a1]
+              [this k1 a1 k2 a2]
+              [this k1 a1 k2 a2 k3 a3]
+              [this k1 a1 k2 a2 k3 a3 k4 a4]
+              [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5]
+              [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6]
+              [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7]
+              [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8]
+              [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8 k9 a9])
+  (paivita-arvo [this avain f]
+                [this avain f a1]
+                [this avain f a1 a2]
+                [this avain f a1 a2 a3]
+                [this avain f a1 a2 a3 a4]
+                [this avain f a1 a2 a3 a4 a5]
+                [this avain f a1 a2 a3 a4 a5 a6]
+                [this avain f a1 a2 a3 a4 a5 a6 a7]
+                [this avain f a1 a2 a3 a4 a5 a6 a7 a8]
+                [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9]
+                [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10]))
+
 (defprotocol Jana
   (piirra-jana [this]
                "Tämän funktion pitäisi luoda html elementti, joka edustaa joko riviä tai saraketta.

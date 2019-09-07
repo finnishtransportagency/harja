@@ -2,6 +2,7 @@
   "Saman tyylinen kuin grid, mutta taulukolle annetaan näytettävä tila. Lisäksi ei määritellä miltä
    joku rivi näyttää vaan jätetään se käyttäjän vastuulle"
   (:require [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko-debug :as debug]
             [clojure.spec.alpha :as s]))
 
 
@@ -39,6 +40,11 @@
                           %1)
                        rivit)))
 
+(defonce muuta-avain
+         {:id [:taulukon-id]
+          :lapset [:rivit]
+          :class [:parametrit :class]})
+
 ; {:taulukon-id 1 :skeema-rivi .. :skeema-sarake :rivit [] :parametrit}
 (defrecord Taulukko [taulukon-id skeema-rivi skeema-sarake rivit parametrit]
   p/Taulukko
@@ -49,6 +55,8 @@
       [:div.taulukko {:data-cy "taulukko"
                       :id dom-id
                       :class (apply str (interpose " " luokat))}
+       (when debug/TAULUKKO_DEBUG
+         [debug/debug this])
        (for [rivi (:rivit this)]
          (with-meta [p/piirra-jana rivi]
                     {:key (p/janan-id rivi)}))]))
@@ -135,7 +143,52 @@
   (paivita-solu! [this paivitetty-solu a1]
     (p/paivita-solu! this paivitetty-solu a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-solu! [this paivitetty-solu]
-    (p/paivita-solu! this paivitetty-solu tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo)))
+    (p/paivita-solu! this paivitetty-solu tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+  p/Asia
+  (arvo [this avain]
+    (get-in this (muuta-avain avain)))
+
+  (aseta-arvo [this k1 a1]
+    (p/aseta-asian-arvo this [k1 a1] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3 k4 a4]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8] muuta-avain))
+  (aseta-arvo [this k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8 k9 a9]
+    (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8 k9 a9] muuta-avain))
+
+  (paivita-arvo [this avain f]
+    (update-in this (muuta-avain avain) f))
+  (paivita-arvo [this avain f a1]
+    (update-in this (muuta-avain avain) f a1))
+  (paivita-arvo [this avain f a1 a2]
+    (update-in this (muuta-avain avain) f a1 a2))
+  (paivita-arvo [this avain f a1 a2 a3]
+    (update-in this (muuta-avain avain) f a1 a2 a3))
+  (paivita-arvo [this avain f a1 a2 a3 a4]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4))
+  (paivita-arvo [this avain f a1 a2 a3 a4 a5]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4 a5))
+  (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4 a5 a6))
+  (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4 a5 a6 a7))
+  (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4 a5 a6 a7 a8))
+  (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4 a5 a6 a7 a8 a9))
+  (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10]
+    (update-in this (muuta-avain avain) f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)))
 
 (defn taulukko
   ([tila] [taulukko tila nil])
