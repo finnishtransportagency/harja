@@ -20,8 +20,27 @@
 
 .taulukko-debug {
   .debug-nappi {
-
+    display: none;
   }
+}
+
+.taulukko-debug-paalla {
+  &:hover {
+    box-shadow: 5px 5px 5px dodgerblue,
+      -5px -5px 5px dodgerblue;
+
+    .taulukko-debug {
+      text-align: center;
+      .debug-nappi {
+        display: inline;
+      }
+    }
+  }
+}
+
+.taulukko-debug-rivi {
+  box-shadow: 2px 2px 2px darkolivegreen,
+    -2px -2px 2px darkolivegreen;
 }
 
 @debug-napin-korkeus: 40px;
@@ -37,6 +56,7 @@
   z-index: 99999;
   padding: @debug-sisallon-padding;
   word-break: keep-all;
+  text-align: left;
 
   &.debug-sisalto-ylhaalla {
     background: white;
@@ -56,6 +76,19 @@
     }
   }
 
+  .asia {
+    display: flex;
+    flex-direction: column;
+  }
+  .asian-nappi {
+    background: transparent;
+    border: none;
+    text-align: left;
+  }
+  .asian-arvot {
+    padding-left: 40px;
+  }
+
   .debug-nappiryhma {
     display: flex;
     justify-content: space-between;
@@ -71,6 +104,7 @@
       align-self: flex-start;
       text-align: center;
       font-size: 1.5rem;
+      cursor: grab;
       // Tehdään laatikosta mahdollisimman iso,
       // jotta drag event pysyy hiiren liikkeissä mukana
       position: absolute;
@@ -87,29 +121,62 @@
   }
   .lista {
     display: flex;
+    &.vector-sulku {
+      &:before {
+        content: '[';
+      }
+      &:after {
+        content: ']';
+      }
+    }
+    &.map-sulku {
+      &:before {
+        content: '{';
+      }
+      &:after {
+        content: '}';
+      }
+    }
+    &.set-sulku {
+      &:before {
+        content: '#{';
+      }
+      &:after {
+        content: '}';
+      }
+    }
+    &.lazy-sulku {
+      &:before {
+        content: 'lazy(';
+      }
+      &:after {
+        content: ')';
+      }
+    }
+    &.list-sulku {
+      &:before {
+        content: '(';
+      }
+      &:after {
+        content: ')';
+      }
+    }
+    &.object-sulku {
+      &:before {
+        content: 'object{';
+      }
+      &:after {
+        content: '}';
+      }
+    }
   }
   .listan-arvot {
-    display: flex;
     > * {
       padding: 0px 5px 0px 5px;
-      .viimeinen-arvo {
-        padding-right: 0px;
-        .sulku-merkki {
-          padding-left: 5px;
-        }
-      }
     }
   }
   .mapin-arvot {
-    display: flex;
     flex-direction: column;
-    .viimeinen-arvo {
-      display: flex;
-      flex-direction: row;
-      .sulku-merkki {
-        align-self: flex-end;
-      }
-    }
   }
 
   .avain-arvo {

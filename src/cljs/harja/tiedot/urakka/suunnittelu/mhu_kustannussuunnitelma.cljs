@@ -288,7 +288,7 @@
                                                                                                               :else osa))
                                                                                                           osat)))
                                                                  rivi))))]
-      (p/paivita-taulukko! uusi-taulukko app)))
+      (assoc-in app polku-taulukkoon uusi-taulukko)))
 
   PaivitaKustannussuunnitelmanYhteenvedot
   (process-event [_ app]
@@ -520,52 +520,57 @@
   (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]
     (let [rivin-container (tyokalut/rivin-vanhempi (get-in app (conj polku-taulukkoon :rivit))
                                                    rivin-id)
-          toggle-fn (if auki? disj conj)]
-      (p/paivita-taulukko! (update (get-in app polku-taulukkoon) :rivit
-                                   (fn [rivit]
-                                     (mapv (fn [rivi]
-                                             (if (p/janan-id? rivi (p/janan-id rivin-container))
-                                               (update rivi :janat (fn [[paa & lapset]]
-                                                                     (into []
-                                                                           (cons paa
-                                                                                 (map #(update % :luokat toggle-fn "piillotettu") lapset)))))
-                                               rivi))
-                                           rivit)))
-                           app)))
+          toggle-fn (if auki? disj conj)
+          uusi-taulukko (update (get-in app polku-taulukkoon) :rivit
+                                (fn [rivit]
+                                  (mapv (fn [rivi]
+                                          (if (p/janan-id? rivi (p/janan-id rivin-container))
+                                            (update rivi :janat (fn [[paa & lapset]]
+                                                                  (into []
+                                                                        (cons paa
+                                                                              (map #(update % :luokat toggle-fn "piillotettu") lapset)))))
+                                            rivi))
+                                        rivit)))]
+      (assoc-in app polku-taulukkoon uusi-taulukko)))
   YhteenvetoLaajennaSoluaKlikattu
   (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]
     (let [taulukko (get-in app polku-taulukkoon)
-          toggle-fn (if auki? disj conj)]
-      (p/paivita-taulukko! (tyokalut/paivita-asiat-taulukossa taulukko [:hankintakustannukset :toimenpide]
-                                                              (fn [taulukko polut]
-                                                                (let [[_ _ _ toimenpide-sisalto] polut
-                                                                      toimenpide-sisalto (get-in taulukko toimenpide-sisalto)
-                                                                      laajenna-toimenpide (first (p/arvo toimenpide-sisalto :lapset))]
-                                                                  (if (= (p/janan-id laajenna-toimenpide) rivin-id)
-                                                                    (p/paivita-arvo toimenpide-sisalto :lapset
-                                                                                    (fn [rivit]
-                                                                                      (tyokalut/mapv-range 1 (fn [rivi]
-                                                                                                               (p/paivita-arvo rivi :class toggle-fn "piillotettu"))
-                                                                                                           rivit)))
-                                                                    toimenpide-sisalto))))
-                           app)))
+          toggle-fn (if auki? disj conj)
+          uusi-taulukko (tyokalut/paivita-asiat-taulukossa taulukko [:hankintakustannukset :toimenpide]
+                                                           (fn [taulukko polut]
+                                                             (let [[_ _ _ toimenpide-sisalto] polut
+                                                                   toimenpide-sisalto (get-in taulukko toimenpide-sisalto)
+                                                                   laajenna-toimenpide (first (p/arvo toimenpide-sisalto :lapset))]
+                                                               (if (= (p/janan-id laajenna-toimenpide) rivin-id)
+                                                                 (p/paivita-arvo toimenpide-sisalto :lapset
+                                                                                 (fn [rivit]
+                                                                                   (tyokalut/mapv-range 1 (fn [rivi]
+                                                                                                            (p/paivita-arvo rivi :class toggle-fn "piillotettu"))
+                                                                                                        rivit)))
+                                                                 toimenpide-sisalto))))]
+      (assoc-in app polku-taulukkoon uusi-taulukko)))
   MuutaTaulukonOsa
   (process-event [{:keys [osa arvo polku-taulukkoon]} app]
-    (p/paivita-solu! (get-in app polku-taulukkoon)
-                     (p/aseta-arvo osa :arvo arvo)
-                     app))
+    (let [taulukko (get-in app polku-taulukkoon)
+          paivitetty-osa (p/aseta-arvo osa :arvo arvo)
+          solun-polku (into [] (apply concat (p/osan-polku-taulukossa taulukko paivitetty-osa)))
+          uusi-taulukko (assoc-in taulukko solun-polku paivitetty-osa)]
+      (assoc-in app polku-taulukkoon uusi-taulukko)))
   MuutaTaulukonOsanSisarta
   (process-event [{:keys [osa sisaren-tunniste polku-taulukkoon arvo]} app]
     (let [taulukko (get-in app polku-taulukkoon)
-          sisar-osa (tyokalut/osan-sisar taulukko osa sisaren-tunniste)]
-      (p/paivita-solu! taulukko
-                       (p/aseta-arvo sisar-osa :arvo arvo)
-                       app)))
+          sisar-osa (tyokalut/osan-sisar taulukko osa sisaren-tunniste)
+          paivitetty-sisar-osa (p/aseta-arvo sisar-osa :arvo arvo)
+          solun-polku (into [] (apply concat (p/osan-polku-taulukossa taulukko paivitetty-sisar-osa)))
+          uusi-taulukko (assoc-in taulukko solun-polku paivitetty-sisar-osa)]
+      (assoc-in app polku-taulukkoon uusi-taulukko)))
   PaivitaTaulukonOsa
   (process-event [{:keys [osa polku-taulukkoon paivitys-fn]} app]
-    (p/paivita-solu! (get-in app polku-taulukkoon)
-                     (p/paivita-arvo osa :arvo paivitys-fn)
-                     app))
+    (let [taulukko (get-in app polku-taulukkoon)
+          paivitetty-osa (p/paivita-arvo osa :arvo paivitys-fn)
+          solun-polku (into [] (apply concat (p/osan-polku-taulukossa taulukko paivitetty-osa)))
+          uusi-taulukko (assoc-in taulukko solun-polku paivitetty-osa)]
+      (assoc-in app polku-taulukkoon uusi-taulukko)))
   TaytaAlas
   (process-event [{:keys [maara-solu polku-taulukkoon]} app]
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
@@ -615,26 +620,27 @@
                                                                                                                                   :else osa))
                                                                                                                               osat))))
                                                                                                         rivit)))
-                                                                 hoitokauden-container))))
-          app (p/paivita-taulukko! uusi-taulukko app)]
-      (update-in app [:hankintakustannukset :yhteenveto]
-                 (fn [yhteenvedot]
-                   (reduce (fn [yhteenvedot hoitokausi]
-                             (assoc-in yhteenvedot [(dec hoitokausi) :summa] (yhteensa-yhteenveto hoitokausi app)))
-                           yhteenvedot paivitettavien-yhteenvetojen-hoitokaudet)))))
+                                                                 hoitokauden-container))))]
+      (-> app
+          (assoc-in polku-taulukkoon uusi-taulukko)
+          (update-in [:hankintakustannukset :yhteenveto]
+                     (fn [yhteenvedot]
+                       (reduce (fn [yhteenvedot hoitokausi]
+                                 (assoc-in yhteenvedot [(dec hoitokausi) :summa] (yhteensa-yhteenveto hoitokausi app)))
+                               yhteenvedot paivitettavien-yhteenvetojen-hoitokaudet))))))
   ToggleHankintakustannuksetOtsikko
   (process-event [{:keys [kylla?]} app]
     (let [toimenpide-avain (get-in app [:hankintakustannukset :valinnat :toimenpide])
           polku [:hankintakustannukset :toimenpiteet toimenpide-avain]
-          taulukko (get-in app polku)]
-      (p/paivita-taulukko! (tyokalut/paivita-asiat-taulukossa taulukko [0 "Nimi"]
-                                                              (fn [taulukko taulukon-asioiden-polut]
-                                                                (let [[rivit rivi osat osa] taulukon-asioiden-polut
-                                                                      osa (get-in taulukko osa)]
-                                                                  (p/aseta-arvo osa :arvo
-                                                                                (if kylla?
-                                                                                  "Kiinteät" " ")))))
-                           app)))
+          taulukko (get-in app polku)
+          uusi-taulukko (tyokalut/paivita-asiat-taulukossa taulukko [0 "Nimi"]
+                                                           (fn [taulukko taulukon-asioiden-polut]
+                                                             (let [[rivit rivi osat osa] taulukon-asioiden-polut
+                                                                   osa (get-in taulukko osa)]
+                                                               (p/aseta-arvo osa :arvo
+                                                                             (if kylla?
+                                                                               "Kiinteät" " ")))))]
+      (assoc-in app polku uusi-taulukko)))
   PaivitaJHRivit
   (process-event [{:keys [paivitetty-osa]} app]
     ;; Nämä arvothan voisi päivittää automaattisesti Taulukon TilanSeuranta protokollan avulla, mutta se aiheuttaisi
@@ -685,6 +691,6 @@
                                                                                                                           :arvo)))
                                                                                                              0 (-> rivit rest butlast))]
                                                                          (p/aseta-arvo vuosi-yhteensa-osa :arvo rivit-yhteensa-vuodelta)))))]
-      (->> app
-           (p/paivita-taulukko! laskulla-taulukko)
-           (p/paivita-taulukko! yhteenveto-taulukko)))))
+      (-> app
+           (assoc-in laskulla-taulukon-polku laskulla-taulukko)
+           (assoc-in yhteenveto-taulukon-polku yhteenveto-taulukko)))))

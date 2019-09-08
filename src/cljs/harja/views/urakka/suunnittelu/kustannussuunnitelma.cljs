@@ -144,8 +144,8 @@
                                           "Tuleva vuosi" (tuleva-vuosi osa)
                                           "Jakso" (jakso osa))))
                                     osat)))
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko]
+                                (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :teksti "col-xs-12 col-sm-9 col-md-9 col-lg-9"
@@ -555,8 +555,8 @@
         polku-taulukkoon (if laskutuksen-perusteella-taulukko?
                            [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen toimenpide-avain]
                            [:hankintakustannukset :toimenpiteet toimenpide-avain])
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko]
+                                (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         laskutuksen-perusteella? (and (= toimenpide-avain valittu-toimenpide)
                                       (contains? laskutukseen-perustuen toimenpide-avain))
         kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
@@ -709,8 +709,8 @@
                                :maara-kk "col-xs-12 col-sm-2 col-md-2 col-lg-2"
                                :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
         polku-taulukkoon [:hankintakustannukset :rahavaraukset toimenpide-avain]
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko]
+                                (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         tyyppi->nimi (fn [tyyppi]
                        (case tyyppi
                          "vahinkojen-korjaukset" "Kolmansien osapuolien aih. vaurioiden korjaukset"
@@ -818,8 +818,8 @@
                                           "kk/v" (kk-v osa))))
                                     osat)))
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko]
+                                (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (p/aseta-arvo :id :otsikko-rivi
@@ -939,8 +939,8 @@
                                           "5.vuosi/€" (hoitokausi-5 osa))))
                                     osat)))
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko]
+                                (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         rivi-fn (fn [rivi-pohja]
                   (into []
                         (cons
@@ -1060,8 +1060,8 @@
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
                                :maara-kk "col-xs-12 col-sm-2 col-md-2 col-lg-2"
                                :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
-        taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (assoc-in app polku-taulukkoon paivitetty-taulukko))
+        taulukon-paivitys-fn! (fn [paivitetty-taulukko]
+                                (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (p/aseta-arvo :id :otsikko-rivi

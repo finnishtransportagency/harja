@@ -103,7 +103,8 @@
                                                       (let [taman-janan-polku (p/osan-polku taman-jana jana)
                                                             janan-polku [:janat index-jana]]
                                                         (cond
-                                                          (= taman-jana jana) [janan-polku]
+                                                          (p/janan-id? taman-jana
+                                                                       (p/janan-id jana)) [janan-polku]
                                                           taman-janan-polku (into [] (cons janan-polku taman-janan-polku))
                                                           :else nil)))
                                                     (:janat this)))

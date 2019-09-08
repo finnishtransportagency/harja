@@ -75,11 +75,16 @@
                            (let [solun-polku (p/osan-polku rivi osa)
                                  rivin-polku [:rivit rivin-index]]
                              (cond
-                               (= osa rivi) [rivin-polku]
+                               (and (satisfies? p/Jana osa)
+                                    (p/janan-id? osa (p/janan-id rivi))) [rivin-polku]
                                solun-polku (into []
                                                  (cons rivin-polku solun-polku))
                                :else nil)))
                          (:rivit this))))
+  (taulukon-id [this]
+    (:taulukon-id this))
+  (taulukon-id? [this id]
+    (= (:taulukon-id this) id))
   (paivita-taulukko! [this a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])]
@@ -102,8 +107,8 @@
     (p/paivita-taulukko! this tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
-          rivin-index (rivin-index (:rivit this) paivitetty-rivi)
-          paivitetty-taulukko (assoc-in this [:rivit rivin-index] paivitetty-rivi)
+          rivin-polku (into [] (apply concat (p/osan-polku-taulukossa this paivitetty-rivi)))
+          paivitetty-taulukko (assoc-in this rivin-polku paivitetty-rivi)
           args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])]
       (assert paivita-taulukkko! "Taulukolle ei ole määritetty :taulukon-paivitys-fn! parametria")
       ;taulukon-paivitys-fn ottaa taulukon uuden arvon ja päivittää tilan

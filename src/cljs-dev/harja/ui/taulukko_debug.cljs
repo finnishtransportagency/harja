@@ -28,31 +28,26 @@
             liian-pitka? (> pituus max-pituus)
             lista (if @nayta-kaikki?
                     lista
-                    (take max-pituus lista))]
-        [:span.lista
-         [:b alku-merkki]
-         [:span {:class (if avain-arvo?
-                          "mapin-arvot"
-                          "listan-arvot")}
-          (doall
-            (concat
-              (drop-last 1
-                         (map-indexed (fn [index arvo]
-                                        ^{:key index}
-                                        [piirra-asia arvo])
-                                      lista))
-              [(if (and liian-pitka? (not @nayta-kaikki?))
-                 ^{:key (str (count lista) "-truncated")}
-                 [:<>
-                  [piirra-asia (last lista)]
-                  [:span.viimeinen-arvo
-                   [:span {:on-click (r/partial nayta-kaikki-arvot nayta-kaikki?)} "..."]
-                   [:b.sulku-merkki loppu-merkki]]]
-                 ^{:key (str (count lista) "-kaikki")}
-                 [:<>
-                  [:span.viimeinen-arvo
-                   [piirra-asia (last lista)]
-                   [:b.sulku-merkki loppu-merkki]]])]))]]))))
+                    (take max-pituus lista))
+            sulku-luokka (case alku-merkki
+                           "[" "vector-sulku"
+                           "{" "map-sulku"
+                           "#{" "set-sulku"
+                           "lazy(" "lazy-sulku"
+                           "(" "list-sulku"
+                           "object{" "object-sulku")]
+        [:span.lista {:class (str sulku-luokka " "
+                                  (if avain-arvo?
+                                    "mapin-arvot"
+                                    "listan-arvot"))}
+         (doall
+           (concat
+             (map-indexed (fn [index arvo]
+                            ^{:key index}
+                            [piirra-asia arvo])
+                          lista)
+             (when (and liian-pitka? (not @nayta-kaikki?))
+               [:span {:on-click (r/partial nayta-kaikki-arvot nayta-kaikki?)} "..."])))]))))
 
 (extend-protocol AsianDebugArvo
   cljs.core/PersistentVector
@@ -106,22 +101,40 @@
 (declare vanhempi-komponentti asian-arvot)
 
 (defn nappi [asia auki? nappia-klikattu-fn]
-  [:button.asian-nappi {:on-click nappia-klikattu-fn}
-   [:div
-    (if auki?
-      ^{:key :asia-auki}
-      [ikonit/livicon-chevron-down]
-      ^{:key :asia-kiinni}
-      [ikonit/livicon-arrow-right])
-    [:span (print-str (type asia))]]])
+  (let [indikoi-asia (fn [e]
+                       (when (and (satisfies? p/Jana asia)
+                                  (satisfies? p/Asia asia))
+                         (p/paivita-rivi! @aktiivinen-taulukko-debug
+                                          (p/paivita-arvo asia :class
+                                                          (fn [luokat]
+                                                            (if (nil? luokat)
+                                                              #{"taulukko-debug-rivi"}
+                                                              (conj luokat "taulukko-debug-rivi")))))))
+        deindikoi-asia (fn [e]
+                         (when (and (satisfies? p/Jana asia)
+                                    (satisfies? p/Asia asia))
+                           (p/paivita-rivi! @aktiivinen-taulukko-debug
+                                            (p/paivita-arvo asia :class
+                                                            (fn [luokat]
+                                                              (disj luokat "taulukko-debug-rivi"))))))]
+    (fn [asia auki? nappia-klikattu-fn]
+      [:button.asian-nappi {:on-click nappia-klikattu-fn
+                            :on-mouse-over indikoi-asia
+                            :on-mouse-leave deindikoi-asia}
+       [:div
+        (if auki?
+          ^{:key :asia-auki}
+          [ikonit/livicon-chevron-down]
+          ^{:key :asia-kiinni}
+          [ikonit/livicon-chevron-right])
+        [:span (print-str (type asia))]]])))
 
 (defn piirra-lehti [asia sisennys vanhempi-auki?]
   (let [auki? (atom false)
         nappia-klikattu (fn [event]
-                          (println "NAPPIA KLIKATTU")
                           (swap! auki? not))]
     (fn [asia sisennys vanhempi-auki?]
-      [:span.lehti {:style {:padding-left sisennys}}
+      [:span.lehti {:style {:padding-left (str sisennys "px")}}
        [nappi asia (and @auki? vanhempi-auki?) nappia-klikattu]
        [:span.asian-arvot
         [piirra-asia asia]]])))
@@ -142,7 +155,6 @@
   ([asia sisennys vanhempi-auki?]
    (let [auki? (atom false)
          nappia-klikattu (fn [event]
-                           (println "NAPPIA KLIKATTU")
                            (swap! auki? not))]
      (fn [asia sisennys vanhempi-auki?]
        (let [pidentaan-auki? (and @auki? vanhempi-auki?)]
@@ -161,6 +173,12 @@
 (defn debug [taulukko]
   {:pre [#(or (nil? %)
               (satisfies? p/Taulukko %))]}
+  (p/paivita-taulukko! (p/paivita-arvo taulukko
+                                       :class
+                                       (fn [luokat]
+                                         (if (nil? luokat)
+                                           #{"taulukko-debug-paalla"}
+                                           (conj luokat "taulukko-debug-paalla")))))
   (let [perus-korkeus (js/parseInt (* 25 (/ (.-innerHeight js/window)
                                             100)))
         tila (atom {:alhaalla? false
@@ -184,17 +202,11 @@
                           (let [{:keys [drag-menossa? viime-y ikkunan-korkeus]} @tila]
                             (when drag-menossa?
                               (.preventDefault event)
-                              (println "ENTINEN KORKEUS " ikkunan-korkeus)
-                              (js/console.log event)
                               (let [y (.-screenY event)
-                                    _ (println "Y: " y)
                                     ikkunan-korkeus (if viime-y
-                                                      (do
-                                                        (println "KORKEUDEN MUUTOS: " (- y viime-y))
-                                                        (+ ikkunan-korkeus
-                                                           (- viime-y y)))
+                                                      (+ ikkunan-korkeus
+                                                         (- viime-y y))
                                                       ikkunan-korkeus)]
-                                (println "IKKUNAN KORKEUS" ikkunan-korkeus)
                                 (swap! tila assoc
                                        :ikkunan-korkeus ikkunan-korkeus
                                        :viime-y y)))))
@@ -206,16 +218,16 @@
                           .-dataTransfer
                           (.setData "text/plain" (.. event -target -innerText))))
         drag-lopeuts (fn [event]
-                       (println "DRAG LOPETUS")
                        (swap! tila assoc :drag-menossa? false))
         nappien-zindex "-3"]
     (fn [taulukko]
-      (println "RENDERING ")
-      (println "PERUS KORKEUS: " perus-korkeus)
       (let [{:keys [paalla? alhaalla? ikkunan-korkeus drag-menossa?]} @tila]
         [:div.taulukko-debug
          [:button.debug-nappi {:on-click (r/partial paalle taulukko)} "Taulukon debug"]
-         (when (and (= taulukko @aktiivinen-taulukko-debug)
+         (when (and taulukko
+                    @aktiivinen-taulukko-debug
+                    (p/taulukon-id? taulukko
+                                    (p/taulukon-id @aktiivinen-taulukko-debug))
                     paalla?)
            ^{:key :taulukko-debug-sisalto}
            [:div.taulukon-debug-sisalto

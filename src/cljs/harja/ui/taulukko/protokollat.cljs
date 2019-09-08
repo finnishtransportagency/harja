@@ -57,6 +57,8 @@
 
 (defprotocol Taulukko
   (piirra-taulukko [this])
+  (taulukon-id [this])
+  (taulukon-id? [this id])
   (rivin-skeema [this jana])
   (otsikon-index [this otsikko])
   (osan-polku-taulukossa [this osa] "Palauttaa vektorin, jossa ensimmäinen elementti on polku janaan ja toinen polku janasta osaan")
