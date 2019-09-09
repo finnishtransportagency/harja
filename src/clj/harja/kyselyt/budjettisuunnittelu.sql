@@ -15,5 +15,31 @@ urakka = :urakka AND hoitokausi = :hoitokausi;
 SELECT * from urakka_tavoite
 WHERE urakka = :urakka;
 
-
+-- name: hae-summat-kokonaishintaiseen-kustannussuunnitelmaan
+SELECT kt.toimenpideinstanssi as toimenpideinstanssi,
+       kt.vuosi               as vuosi,
+       kt.kuukausi            as kuukausi,
+       kt.summa               as summa
+FROM kokonaishintainen_tyo kt
+WHERE kt.toimenpideinstanssi = :toimenpideinstanssi
+  AND kt.vuosi = :vuosi
+  AND kt.kuukausi = :kuukausi
+UNION ALL
+SELECT at.toimenpideinstanssi as toimenpideinstanssi,
+       at.vuosi               as vuosi,
+       at.kuukausi            as kuukausi,
+       at.summa               as summa
+FROM kustannusarvioitu_tyo at
+WHERE at.toimenpideinstanssi = :toimenpideinstanssi
+  AND at.vuosi = :vuosi
+  AND at.kuukausi = :kuukausi
+UNION ALL
+SELECT yt.toimenpideinstanssi as toimenpideinstanssi,
+       yt.vuosi               as vuosi,
+       yt.kuukausi            as kuukausi,
+       yt.arvioitu_kustannus  as summa
+FROM yksikkohintainen_tyo yt
+WHERE yt.toimenpideinstanssi = :toimenpideinstanssi
+  AND yt.vuosi = :vuosi
+  AND yt.kuukausi = :kuukausi;
 

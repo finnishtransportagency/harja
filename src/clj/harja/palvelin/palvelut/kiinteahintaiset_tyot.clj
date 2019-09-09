@@ -18,6 +18,8 @@
 (defn tallenna-kiinteahintaiset-tyot
   "Funktio tallentaa urakan kiinteahintaiset tyot. Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
+  (println "TYÖT " (into #{} (map #(:toimenpideinstanssi %) tyot)))
+  (println "TYÖT " tyot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (let [nykyiset-arvot (hae-urakan-kiinteahintaiset-tyot db user urakka-id)

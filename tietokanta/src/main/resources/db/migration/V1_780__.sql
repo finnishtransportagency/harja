@@ -1,0 +1,2 @@
+ALTER TABLE yksikkohintainen_tyo
+ADD COLUMN toimenpideinstanssi INTEGER;
