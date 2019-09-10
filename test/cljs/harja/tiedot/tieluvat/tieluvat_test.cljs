@@ -49,8 +49,7 @@
   (is (= {:nakymassa? false} (e! (tiedot/->Nakymassa? false)))))
 
 (deftest valintojen-paivitys
-  ;; TODO: Päivitä PaivitaValinnat
-  #_(vaadi-async-kutsut
+  (vaadi-async-kutsut
     #{tiedot/->HaeTieluvat}
     (let [v (zipmap tiedot/valintojen-avaimet (repeat [1 1]))]
       (let [tulos (e! (tiedot/->PaivitaValinnat v))]
@@ -58,7 +57,7 @@
         (is (true? (:tielupien-haku-kaynnissa? tulos)))
         (is (some? (:nykyinen-haku tulos))))))
 
-  #_(vaadi-async-kutsut
+  (vaadi-async-kutsut
     #{tiedot/->HaeTieluvat}
     (let [u {}
           tila {:valinnat {:foo :bar}}]
@@ -67,7 +66,7 @@
         (is (true? (:tielupien-haku-kaynnissa? tulos)))
         (is (some? (:nykyinen-haku tulos))))))
 
-  #_(testing "Haku ei lähde, jos vain toinen osa aikaparametria on annettu"
+  (testing "Haku ei lähde, jos vain toinen osa aikaparametria on annettu"
     (vaadi-async-kutsut
      #{}
      (let [u {:myonnetty [1 nil]}]

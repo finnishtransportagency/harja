@@ -24,7 +24,7 @@
 
 (defrecord MuutaTila [polku arvo])
 (defrecord Nakymassa? [nakymassa?])
-(defrecord PaivitaValinnat [])
+(defrecord PaivitaValinnat [uudet])
 (defrecord HaeTieluvat [valinnat aikaleima])
 (defrecord TieluvatHaettu [tulos aikaleima])
 (defrecord TieluvatEiHaettu [virhe aikaleima])
@@ -120,19 +120,32 @@
 (extend-protocol tuck/Event
   MuutaTila
   (process-event [{:keys [polku arvo]} app]
-      (assoc-in app polku arvo))
-
+    (assoc-in app polku arvo))
   Nakymassa?
   (process-event [{n :nakymassa?} app]
     (assoc app :nakymassa? n))
 
   PaivitaValinnat
-  (process-event [{} app]
-    (let [aikaleima (pvm/nyt)
-          valinnat (:valinnat app)]
-      ((tuck/send-async! ->HaeTieluvat) valinnat aikaleima)
-      (assoc app :tielupien-haku-kaynnissa? true
-                 :nykyinen-haku aikaleima)))
+  (process-event [{u :uudet} app]
+    (let [uudet-valinnat (merge (:valinnat app)
+                                (select-keys u valintojen-avaimet))
+          aikaleima (pvm/nyt)]
+      (if-not (or
+                ;; Älä hae, jos myönnetystä tai voimassaolosta on annettu vain toinen
+                (and (:myonnetty u)
+                     (= 1 (count (filter nil? (:myonnetty u)))))
+                (and (:voimassaolo u)
+                     (= 1 (count (filter nil? (:voimassaolo u))))))
+        (do
+          ;; Testiapuri vaadi-async-kutsut seuraa send-async! käyttöä,
+          ;; ei varsinaisesti "käytetäänkö hakua oikeasti". Eli jos send-asyncin siirtää
+          ;; ylempään lettiin, testi failaa.
+          ((tuck/send-async! ->HaeTieluvat) uudet-valinnat aikaleima)
+            (assoc app :valinnat uudet-valinnat
+                       :tielupien-haku-kaynnissa? true
+                       :nykyinen-haku aikaleima))
+
+        (assoc app :valinnat uudet-valinnat))))
 
   HaeTieluvat
   (process-event [{valinnat :valinnat aikaleima :aikaleima} app]
