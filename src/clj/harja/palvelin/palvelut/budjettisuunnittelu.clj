@@ -105,14 +105,12 @@
                                 ;; Hae summatiedot
                                 (let [tyot {:toimenpideinstanssi (first ks)
                                             :vuosi               (second ks)
-                                            :kuukausi            (last ks)
-                                            :maksupvm            nil}
-                                      summat
-                                      (into [] (q/hae-summat-kokonaishintaiseen-kustannussuunnitelmaan c tyot))
+                                            :kuukausi            (last ks)}
+                                      summat (into [] (q/hae-summat-kokonaishintaiseen-kustannussuunnitelmaan c tyot))
                                   yhteissumma (transduce (map :summa) + 0 summat)]
-                                  (println "JEEJEE " (into [](assoc tyot :summa yhteissumma)))
+
                                   ;; TODO: rakenna tyot :summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja
-                                                                                                       (sampo-kustannussuunnitelmat/tallenna-kokonaishintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (conj [] (assoc tyot :summa yhteissumma))})
+                                  ;;(sampo-kustannussuunnitelmat/tallenna-kokonaishintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (conj [] (assoc tyot :summa yhteissumma))})
                                   )
 
                                 ;; Tallenna summatiedot kokonaishintaisiin

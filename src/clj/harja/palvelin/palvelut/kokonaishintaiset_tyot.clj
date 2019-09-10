@@ -51,8 +51,6 @@
 (defn tallenna-kokonaishintaiset-tyot
   "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (println "TYOT" tyot)
-  (println "sopimusnumero" sopimusnumero)
   ;(let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
   ;  (oikeudet/vaadi-kirjoitusoikeus
   ;    (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
@@ -88,7 +86,7 @@
           (assoc t :osuus-hoitokauden-summasta
                  (when-let [p (:prosentti t)]
                    (big/unwrap (big/div p (big/->big 100)))))
-          (assoc t :luoja (:id user))
+          (assoc t :kayttaja (:id user))
 
           (if (not (tyot-kannassa (tyo-avain t)))
             (q/lisaa-kokonaishintainen-tyo<! c t)

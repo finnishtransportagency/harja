@@ -49,16 +49,16 @@
                 (q/lisaa-urakan-yksikkohintainen-tyo<!
                  c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
                  urakka-id sopimusnumero (:tehtava tyo)
-                 (java.sql.Date. (.getTime (:alkupvm tyo)))
-                 (java.sql.Date. (.getTime (:loppupvm tyo)))
+                 (when-not (nil? (:alkupvm tyo)) (java.sql.Date. (.getTime (:alkupvm tyo))))
+                 (when-not (nil? (:loppupvm tyo)) (java.sql.Date. (.getTime (:loppupvm tyo))))
                  (:id user) (:arvioitu_kustannus tyo) (:kuukausi tyo) (:vuosi tyo)))
               ;;update
               (do (log/debug " --> päivitetään vanha")
                   (q/paivita-urakan-yksikkohintainen-tyo!
                    c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo) (:arvioitu_kustannus tyo) (:id user) (:kuukausi tyo) (:vuosi tyo)
                    urakka-id sopimusnumero (:tehtava tyo)
-                   (java.sql.Date. (.getTime (:alkupvm tyo)))
-                   (java.sql.Date. (.getTime (:loppupvm tyo)))))))
+                   (when-not (nil? (:alkupvm tyo)) (java.sql.Date. (.getTime (:alkupvm tyo))))
+                   (when-not (nil? (:loppupvm tyo)) (java.sql.Date. (.getTime (:loppupvm tyo))))))))
           (when-not (empty? uniikit-tehtavat)
             (log/debug "Merkitään kustannussuunnitelmat likaiseksi tehtäville: " uniikit-tehtavat)
             (q/merkitse-kustannussuunnitelmat-likaisiksi! c urakka-id uniikit-tehtavat)))

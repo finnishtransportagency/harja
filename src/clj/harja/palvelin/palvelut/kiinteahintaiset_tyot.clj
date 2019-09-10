@@ -18,14 +18,12 @@
 (defn tallenna-kiinteahintaiset-tyot
   "Funktio tallentaa urakan kiinteahintaiset tyot. Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (println "TYÖT " (into #{} (map #(:toimenpideinstanssi %) tyot)))
-  (println "TYÖT " tyot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (let [nykyiset-arvot (hae-urakan-kiinteahintaiset-tyot db user urakka-id)
         valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))
         tyo-avain (fn [rivi]
-                    [(:tyyppi rivi) (:tehtava rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
+                    [(:tehtava rivi) (:tehtavaryhma rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
         tyot-kannassa (into #{} (map tyo-avain
                                      (filter #(valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)])
                                              nykyiset-arvot)))
@@ -39,6 +37,9 @@
     (when-not (empty? (set/difference tallennettavat-toimenpideinstanssit
                                       urakan-toimenpideinstanssit))
       (throw (roolit/->EiOikeutta "virheellinen toimenpideinstanssi")))
+
+    (println "** Kiinteähintaiset työt kannassa " tyot-kannassa)
+    (println "** Avain " tyo-avain)
 
     (doseq [tyo tyot]
       (as-> tyo t
