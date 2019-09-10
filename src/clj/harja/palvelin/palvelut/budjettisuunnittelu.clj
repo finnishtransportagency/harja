@@ -112,7 +112,7 @@
                                   yhteissumma (transduce (map :summa) + 0 summat)]
                                   (println "JEEJEE " (into [](assoc tyot :summa yhteissumma)))
                                   ;; TODO: rakenna tyot :summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja
-                                  (sampo-kustannussuunnitelmat/tallenna-kokonaishintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (into [](assoc tyot :summa yhteissumma))})
+                                                                                                       (sampo-kustannussuunnitelmat/tallenna-kokonaishintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (conj [] (assoc tyot :summa yhteissumma))})
                                   )
 
                                 ;; Tallenna summatiedot kokonaishintaisiin

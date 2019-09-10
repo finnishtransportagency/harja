@@ -74,6 +74,8 @@
 
       ;; Varmistetaan ettei päivitystä voi tehdä toimenpideinstanssille, joka ei kuulu
       ;; tähän urakkaan.
+      (println "tallennettavat-toimenpideinstanssit " tallennettavat-toimenpideinstanssit)
+      (println urakka-id "urakan-toimenpideinstanssit " urakan-toimenpideinstanssit)
       (when-not (empty? (set/difference tallennettavat-toimenpideinstanssit
                                         urakan-toimenpideinstanssit))
         (throw (roolit/->EiOikeutta "virheellinen toimenpideinstanssi")))
