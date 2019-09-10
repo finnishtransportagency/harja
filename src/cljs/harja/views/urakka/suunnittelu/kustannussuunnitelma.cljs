@@ -166,27 +166,30 @@
                                                                   (assoc :komponentti suunnitelman-selitteet
                                                                          :komponentin-argumentit #{(sarakkeiden-leveys :teksti)})))
                                                             (fn [osa]
-                                                              (p/aseta-arvo osa
-                                                                            :arvo (if viimeinen-vuosi?
-                                                                                    ""
-                                                                                    (str (:vuosi kuluva-hoitokausi) ".vuosi"))
-                                                                            :class #{(sarakkeiden-leveys :kuluva-vuosi)
-                                                                                     (when-not viimeinen-vuosi?
-                                                                                       "aktiivinen-vuosi")
-                                                                                     "keskita"
-                                                                                     "alas"}))
+                                                              (-> osa
+                                                                  (p/aseta-arvo :arvo (if viimeinen-vuosi?
+                                                                                        ""
+                                                                                        (str (:vuosi kuluva-hoitokausi) ".vuosi"))
+                                                                                :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                         (when-not viimeinen-vuosi?
+                                                                                           "aktiivinen-vuosi")
+                                                                                         "keskita"
+                                                                                         "alas"})
+                                                                  (p/paivita-arvo :id str "-otsikko")))
                                                             (fn [osa]
-                                                              (p/aseta-arvo osa
-                                                                            :arvo (str (min 5 (inc (:vuosi kuluva-hoitokausi))) ".vuosi")
-                                                                            :class #{(sarakkeiden-leveys :tuleva-vuosi)
-                                                                                     (when viimeinen-vuosi?
-                                                                                       "aktiivinen-vuosi")
-                                                                                     "keskita"
-                                                                                     "alas"}))
+                                                              (-> osa
+                                                                  (p/aseta-arvo :arvo (str (min 5 (inc (:vuosi kuluva-hoitokausi))) ".vuosi")
+                                                                                :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                         (when viimeinen-vuosi?
+                                                                                           "aktiivinen-vuosi")
+                                                                                         "keskita"
+                                                                                         "alas"})
+                                                                  (p/paivita-arvo :id str "-otsikko")))
                                                             (fn [osa]
-                                                              (p/aseta-arvo osa
-                                                                            :arvo ""
-                                                                            :class #{(sarakkeiden-leveys :jakso)}))))))
+                                                              (-> osa
+                                                                  (p/aseta-arvo :arvo ""
+                                                                                :class #{(sarakkeiden-leveys :jakso)})
+                                                                  (p/paivita-arvo :id str "-otsikko")))))))
         linkkiotsikko-fn (fn [rivin-pohja teksti jakso linkki]
                            (-> rivin-pohja
                                (p/aseta-arvo :id (keyword teksti))
@@ -196,20 +199,24 @@
                                                                         (p/aseta-arvo :arvo teksti
                                                                                       :class #{(sarakkeiden-leveys :teksti)
                                                                                                "linkki"})
+                                                                        (p/paivita-arvo :id str "-" teksti "-linkkiotsikko")
                                                                         (assoc :teksti teksti)
                                                                         (assoc :toiminnot {:on-click (fn [_] (mene-idlle linkki))})))
                                                                   (fn [osa]
                                                                     (p/aseta-arvo osa
+                                                                                  :id (str (gensym "linkkiotsikko"))
                                                                                   :arvo {:ikoni ikonit/remove}
                                                                                   :class #{(sarakkeiden-leveys :kuluva-vuosi)
                                                                                            "keskita"}))
                                                                   (fn [osa]
                                                                     (p/aseta-arvo osa
+                                                                                  :id (str (gensym "linkkiotsikko"))
                                                                                   :arvo {:ikoni ikonit/remove}
                                                                                   :class #{(sarakkeiden-leveys :tuleva-vuosi)
                                                                                            "keskita"}))
                                                                   (fn [osa]
                                                                     (p/aseta-arvo osa
+                                                                                  :id (str (gensym "linkkiotsikko"))
                                                                                   :arvo jakso
                                                                                   :class #{(sarakkeiden-leveys :jakso)}))))))
         sisaotsikko-fn (fn [rivin-pohja teksti jakso]
@@ -218,20 +225,24 @@
                              (p/paivita-arvo :lapset
                                              (osien-paivitys-fn (fn [osa]
                                                                   (p/aseta-arvo osa
+                                                                                :id (str (gensym "sisaotsikko"))
                                                                                 :arvo teksti
                                                                                 :class #{(sarakkeiden-leveys :teksti)}))
                                                                 (fn [osa]
                                                                   (p/aseta-arvo osa
+                                                                                :id (str (gensym "sisaotsikko"))
                                                                                 :arvo {:ikoni ikonit/remove}
                                                                                 :class #{(sarakkeiden-leveys :kuluva-vuosi)
                                                                                          "keskita"}))
                                                                 (fn [osa]
                                                                   (p/aseta-arvo osa
+                                                                                :id (str (gensym "sisaotsikko"))
                                                                                 :arvo {:ikoni ikonit/remove}
                                                                                 :class #{(sarakkeiden-leveys :tuleva-vuosi)
                                                                                          "keskita"}))
                                                                 (fn [osa]
                                                                   (p/aseta-arvo osa
+                                                                                :id (str (gensym "sisaotsikko"))
                                                                                 :arvo jakso
                                                                                 :class #{(sarakkeiden-leveys :jakso)}))))))
         laajenna-toimenpide-fn (fn [laajenna-toimenpide-pohja teksti jakso]
@@ -242,6 +253,7 @@
                                                        (fn [osat]
                                                          (update osat 0 (fn [laajenna-osa]
                                                                           (-> laajenna-osa
+                                                                              (p/aseta-arvo :id (str (gensym "laajenna-toimenpide")))
                                                                               (p/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
                                                                               (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2)))))))))))
         toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti]
@@ -252,21 +264,25 @@
                                        (p/paivita-arvo :lapset
                                                        (osien-paivitys-fn (fn [osa]
                                                                             (p/aseta-arvo osa
+                                                                                          :id (str (gensym "toimenpide-osa"))
                                                                                           :arvo rahavarausteksti
                                                                                           :class #{(sarakkeiden-leveys :teksti)
                                                                                                    "solu-sisenna-2"}))
                                                                           (fn [osa]
                                                                             (p/aseta-arvo osa
+                                                                                          :id (str (gensym "toimenpide-osa"))
                                                                                           :arvo {:ikoni ikonit/remove}
                                                                                           :class #{(sarakkeiden-leveys :kuluva-vuosi)
                                                                                                    "keskita"}))
                                                                           (fn [osa]
                                                                             (p/aseta-arvo osa
+                                                                                          :id (str (gensym "toimenpide-osa"))
                                                                                           :arvo {:ikoni ikonit/remove}
                                                                                           :class #{(sarakkeiden-leveys :tuleva-vuosi)
                                                                                                    "keskita"}))
                                                                           (fn [osa]
                                                                             (p/aseta-arvo osa
+                                                                                          :id (str (gensym "toimenpide-osa"))
                                                                                           :arvo jakso
                                                                                           :class #{(sarakkeiden-leveys :jakso)}))))))
                                  ["Suunnitellut hankinnat"

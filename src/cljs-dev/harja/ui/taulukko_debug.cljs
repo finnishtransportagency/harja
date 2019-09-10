@@ -100,27 +100,45 @@
 
 (declare vanhempi-komponentti asian-arvot)
 
-(defn nappi [asia auki? nappia-klikattu-fn]
-  (let [indikoi-asia (fn [e]
-                       (when (and (satisfies? p/Jana asia)
-                                  (satisfies? p/Asia asia))
-                         (p/paivita-rivi! @aktiivinen-taulukko-debug
-                                          (p/paivita-arvo asia :class
-                                                          (fn [luokat]
-                                                            (if (nil? luokat)
-                                                              #{"taulukko-debug-rivi"}
-                                                              (conj luokat "taulukko-debug-rivi")))))))
-        deindikoi-asia (fn [e]
-                         (when (and (satisfies? p/Jana asia)
-                                    (satisfies? p/Asia asia))
-                           (p/paivita-rivi! @aktiivinen-taulukko-debug
-                                            (p/paivita-arvo asia :class
-                                                            (fn [luokat]
-                                                              (disj luokat "taulukko-debug-rivi"))))))]
-    (fn [asia auki? nappia-klikattu-fn]
+(defn nappi [taulukko asia auki? nappia-klikattu-fn]
+  (let [indikoi-asia! (fn indikoi-asia! [asia _]
+                       (when (satisfies? p/Asia asia)
+                         (cond
+                           ;; special käsittelyt:
+                           (= harja.ui.taulukko.jana/RiviLapsilla (type asia)) (indikoi-asia! (first (p/arvo asia :lapset)) nil)
+                           ;; peruskäsittely
+                           (satisfies? p/Jana asia) (p/paivita-rivi! taulukko
+                                                                     (p/paivita-arvo asia :class
+                                                                                     (fn [luokat]
+                                                                                       (if (nil? luokat)
+                                                                                         #{"taulukko-debug-rivi"}
+                                                                                         (conj luokat "taulukko-debug-rivi")))))
+                           (satisfies? p/Osa asia) (p/paivita-solu! taulukko
+                                                                    (p/paivita-arvo asia :class
+                                                                                    (fn [luokat]
+                                                                                      (if (nil? luokat)
+                                                                                        #{"taulukko-debug-osa"}
+                                                                                        (conj luokat "taulukko-debug-osa")))))
+                           :else nil)))
+        deindikoi-asia! (fn deindikoi-asia! [asia _]
+                         (when (satisfies? p/Asia asia)
+                           (cond
+                             ;; special käsittelyt:
+                             (= harja.ui.taulukko.jana/RiviLapsilla (type asia)) (deindikoi-asia! (first (p/arvo asia :lapset)) nil)
+                             ;; peruskäsittely
+                             (satisfies? p/Jana asia) (p/paivita-rivi! taulukko
+                                                                       (p/paivita-arvo asia :class
+                                                                                       (fn [luokat]
+                                                                                         (disj luokat "taulukko-debug-rivi"))))
+                             (satisfies? p/Osa asia) (p/paivita-rivi! taulukko
+                                                                      (p/paivita-arvo asia :class
+                                                                                      (fn [luokat]
+                                                                                        (disj luokat "taulukko-debug-osa"))))
+                             :else nil)))]
+    (fn [taulukko asia auki? nappia-klikattu-fn]
       [:button.asian-nappi {:on-click nappia-klikattu-fn
-                            :on-mouse-over indikoi-asia
-                            :on-mouse-leave deindikoi-asia}
+                            :on-mouse-over (r/partial indikoi-asia! asia)
+                            :on-mouse-leave (r/partial deindikoi-asia! asia)}
        [:div
         (if auki?
           ^{:key :asia-auki}
@@ -129,17 +147,17 @@
           [ikonit/livicon-chevron-right])
         [:span (print-str (type asia))]]])))
 
-(defn piirra-lehti [asia sisennys vanhempi-auki?]
+(defn piirra-lehti [taulukko asia sisennys vanhempi-auki?]
   (let [auki? (atom false)
         nappia-klikattu (fn [event]
                           (swap! auki? not))]
-    (fn [asia sisennys vanhempi-auki?]
+    (fn [taulukko asia sisennys vanhempi-auki?]
       [:span.lehti {:style {:padding-left (str sisennys "px")}}
-       [nappi asia (and @auki? vanhempi-auki?) nappia-klikattu]
+       [nappi taulukko asia (and @auki? vanhempi-auki?) nappia-klikattu]
        [:span.asian-arvot
         [piirra-asia asia]]])))
 
-(defn lapsi-komponentti [asia sisennys vanhempi-auki?]
+(defn lapsi-komponentti [taulukko asia sisennys vanhempi-auki?]
   [:<>
    (if-let [lapset (and (satisfies? p/Asia asia) (p/arvo asia :lapset))]
      (for [lapsi lapset
@@ -147,19 +165,19 @@
                       (satisfies? p/Jana lapsi) (p/janan-id lapsi)
                       (satisfies? p/Osa lapsi) (p/osan-id lapsi))]]
        ^{:key id}
-       [vanhempi-komponentti lapsi sisennys vanhempi-auki?])
-     [piirra-lehti asia sisennys vanhempi-auki?])])
+       [vanhempi-komponentti taulukko lapsi sisennys vanhempi-auki?])
+     [piirra-lehti taulukko asia sisennys vanhempi-auki?])])
 
 (defn vanhempi-komponentti
-  ([asia sisennys] [vanhempi-komponentti asia sisennys true])
-  ([asia sisennys vanhempi-auki?]
+  ([asia sisennys] [vanhempi-komponentti asia asia sisennys true])
+  ([taulukko asia sisennys vanhempi-auki?]
    (let [auki? (atom false)
          nappia-klikattu (fn [event]
                            (swap! auki? not))]
-     (fn [asia sisennys vanhempi-auki?]
+     (fn [taulukko asia sisennys vanhempi-auki?]
        (let [pidentaan-auki? (and @auki? vanhempi-auki?)]
          [:span.asia {:style {:padding-left (str sisennys "px")}}
-          [nappi asia pidentaan-auki? nappia-klikattu]
+          [nappi taulukko asia pidentaan-auki? nappia-klikattu]
           [:span.asian-arvot
            [piirra-asia (if (satisfies? p/Asia asia)
                           (p/paivita-arvo asia :lapset
@@ -168,7 +186,7 @@
                           asia)]
            (when pidentaan-auki?
              ^{:key :lapsi-komponentti}
-             [lapsi-komponentti asia (+ sisennys 10) @auki?])]])))))
+             [lapsi-komponentti taulukko asia (+ sisennys 10) @auki?])]])))))
 
 (defn debug [taulukko]
   {:pre [#(or (nil? %)

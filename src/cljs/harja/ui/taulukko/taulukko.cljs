@@ -105,6 +105,7 @@
     (p/paivita-taulukko! this a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-taulukko! [this]
     (p/paivita-taulukko! this tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+
   (paivita-rivi! [this paivitetty-rivi a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           rivin-polku (into [] (apply concat (p/osan-polku-taulukossa this paivitetty-rivi)))
@@ -127,6 +128,7 @@
     (p/paivita-rivi! this paivitetty-rivi a1 tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
   (paivita-rivi! [this paivitetty-rivi]
     (p/paivita-rivi! this paivitetty-rivi tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
+
   (paivita-solu! [this paivitetty-solu a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukkko! (:taulukon-paivitys-fn! parametrit)
           solun-polku (into [] (apply concat (p/osan-polku-taulukossa this paivitetty-solu)))

@@ -58,27 +58,49 @@
     (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8 k9 a9] muuta-avain-rivi))
 
   (paivita-arvo [this avain f]
-    (update-in this (muuta-avain-rivi avain) f))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f)
+      this))
   (paivita-arvo [this avain f a1]
-    (update-in this (muuta-avain-rivi avain) f a1))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1)
+      this))
   (paivita-arvo [this avain f a1 a2]
-    (update-in this (muuta-avain-rivi avain) f a1 a2))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2)
+      this))
   (paivita-arvo [this avain f a1 a2 a3]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4 a5))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4 a5)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4 a5 a6))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4 a5 a6 a7))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4 a5 a6 a7 a8))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7 a8)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4 a5 a6 a7 a8 a9))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7 a8 a9)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10]
-    (update-in this (muuta-avain-rivi avain) f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)))
+    (if-let [polku (muuta-avain-rivi avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)
+      this)))
 
 (defrecord RiviLapsilla [janan-id janat]
   p/Jana
@@ -136,27 +158,49 @@
     (p/aseta-asian-arvo this [k1 a1 k2 a2 k3 a3 k4 a4 k5 a5 k6 a6 k7 a7 k8 a8 k9 a9] muuta-avain-rivi-lapsilla))
 
   (paivita-arvo [this avain f]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f)
+      this))
   (paivita-arvo [this avain f a1]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1)
+      this))
   (paivita-arvo [this avain f a1 a2]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2)
+      this))
   (paivita-arvo [this avain f a1 a2 a3]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4 a5))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4 a5)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4 a5 a6))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4 a5 a6 a7))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4 a5 a6 a7 a8))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7 a8)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4 a5 a6 a7 a8 a9))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7 a8 a9)
+      this))
   (paivita-arvo [this avain f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10]
-    (update-in this (muuta-avain-rivi-lapsilla avain) f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)))
+    (if-let [polku (muuta-avain-rivi-lapsilla avain)]
+      (update-in this polku f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10)
+      this)))
 
 ;;;;; SPECS ;;;;;
 

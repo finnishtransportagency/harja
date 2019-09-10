@@ -18,6 +18,10 @@
   to {background-color: white;}
 }
 
+
+@debug-napin-korkeus: 40px;
+@debug-sisallon-padding: 10px;
+
 .taulukko-debug {
   .debug-nappi {
     display: none;
@@ -31,8 +35,12 @@
 
     .taulukko-debug {
       text-align: center;
+      position: relative;
       .debug-nappi {
         display: inline;
+        position: absolute;
+        height: @debug-napin-korkeus;
+        top: -@debug-napin-korkeus;
       }
     }
   }
@@ -43,8 +51,10 @@
     -2px -2px 2px darkolivegreen;
 }
 
-@debug-napin-korkeus: 40px;
-@debug-sisallon-padding: 10px;
+.taulukko-debug-osa {
+  box-shadow: 1px 1px 1px dodgerblue,
+    -1px -1px 1px dodgerblue;
+}
 
 .taulukon-debug-sisalto {
   overflow-x: scroll;
