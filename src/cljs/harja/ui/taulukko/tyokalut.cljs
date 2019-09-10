@@ -149,7 +149,8 @@
   (let [muuta-avain {:arvo [:parametrit :value]
                      :id [:osan-id]
                      :class [:parametrit :class]
-                     :on-change [:toiminnot :on-change]}]
+                     :on-change [:toiminnot :on-change]
+                     :on-blur [:toiminnot :on-blur]}]
     (aseta-asian-arvo osa avain-arvo muuta-avain)))
 
 (defmethod aseta-arvo osa/Laajenna

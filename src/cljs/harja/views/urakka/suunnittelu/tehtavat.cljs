@@ -12,13 +12,16 @@
             [harja.ui.taulukko.protokollat :as p]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.pvm :as pvm])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn sarakkeiden-leveys [sarake]
   (case sarake
     :tehtava "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-    :maara "col-xs-12 col-sm-4 col-md-4 col-lg-4"))
+    :maara "col-xs-12 col-sm-8 col-md-8 col-lg-8"
+    :maara-input "col-xs-12 col-sm-2 col-md-2 col-lg-2"
+    :maara-yksikko "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
 
 #_(defn luo-taulukon-tehtavat
   [e! tehtavat on-oikeus?]
@@ -86,10 +89,30 @@
 
 ;; TODO: Muodosta palautettavat tiedot. Vrt. println tulostukset.
 
+(defn- otsikkorivi
+  [rivi]
+  (-> rivi
+      (tyokalu/aseta-arvo :id :tehtava
+                          :class #{"table-default" "table-default-header"})
+      (tyokalu/paivita-arvo :lapset
+                            (osien-paivitys-fn #(tyokalu/aseta-arvo %
+                                                                    :id :tehtava-nimi
+                                                                    :arvo "Tehtävä"
+                                                                    :class #{(sarakkeiden-leveys :maara)})
+                                               #(tyokalu/aseta-arvo %
+                                                                    :id :tehtava-maara
+                                                                    :arvo "Määrä"
+                                                                    :class #{(sarakkeiden-leveys :maara)})
+                                               #(tyokalu/aseta-arvo %
+                                                                    :id :tehtava-yksikko
+                                                                    :arvo "Yksikkö"
+                                                                    :class #{(sarakkeiden-leveys :maara)})))
+      ))
+
 (defn tehtava-mankeli [tehtava]
   tehtava)
 
-(defn luo-taul-teht
+(defn luo-tehtava-taulukko
   [e! tehtavat-ja-maaraluettelo]
   (let [polku-taulukkoon [:tehtavat-taulukko]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
@@ -98,29 +121,12 @@
         rivit (mapv
                 tehtava-mankeli
                 tehtavat-ja-maaraluettelo)
-        otsikkorivi (fn [rivi]
-                       (-> rivi
-                           (tyokalu/aseta-arvo :id :tehtava
-                                               :class #{"table-default" "table-default-header"})
-                           (tyokalu/paivita-arvo :lapset
-                                                 (osien-paivitys-fn #(tyokalu/aseta-arvo %
-                                                                                         :id :tehtava-nimi
-                                                                                         :arvo "Tehtävä"
-                                                                                         :class #{(sarakkeiden-leveys :maara)})
-                                                                    #(tyokalu/aseta-arvo %
-                                                                                         :id :tehtava-maara
-                                                                                         :arvo "Määrä"
-                                                                                         :class #{(sarakkeiden-leveys :maara)})
-                                                                    #(tyokalu/aseta-arvo %
-                                                                                         :id :tehtava-yksikko
-                                                                                         :arvo "Yksikkö"
-                                                                                         :class #{(sarakkeiden-leveys :maara)})))
-                           ))
         syottorivi (fn [rivi]
-                       (mapv (fn [{:keys [nimi maara id piillotettu? tehtavaryhmatyyppi] :as tehtava}]
+                       (mapv (fn [{:keys [nimi maara id piillotettu? tehtava-id tehtavaryhmatyyppi yksikko] :as tehtava}]
+                               (log "My mission " tehtava)
                                (-> rivi
-                                  (tyokalu/aseta-arvo :id (keyword id)
-                                                      :class #{"table-default-odd"}
+                                  (tyokalu/aseta-arvo :id id
+                                                      :class #{(str "table-default-" (if (= 0 (rem id 2)) "even" "odd"))}
                                                       :piillotettu? piillotettu?)
                                   (tyokalu/paivita-arvo :lapset
                                                         (osien-paivitys-fn #(tyokalu/aseta-arvo %
@@ -130,15 +136,21 @@
                                                                            #(tyokalu/aseta-arvo %
                                                                                                :id (keyword (str id "-maara"))
                                                                                                :arvo maara
-                                                                                               :class #{(sarakkeiden-leveys :maara) "input-default"}
+                                                                                               :class #{(sarakkeiden-leveys :maara-input) "input-default"}
+                                                                                                :on-blur (fn [arvo]
+                                                                                                           (e! (t/->TallennaTehtavamaara
+                                                                                                                 {:hoitokausi
+                                                                                                                  :urakka-id (-> @tila/tila :yleiset :urakka)
+                                                                                                                  :tehtava-id tehtava-id
+                                                                                                                  :maara (-> arvo (.. -target -value))})))
                                                                                                :on-change (fn [arvo]
                                                                                                             (e!
                                                                                                               (t/->PaivitaMaara osa/*this*
                                                                                                                                 (-> arvo (.. -target -value))))))
                                                                            #(tyokalu/aseta-arvo %
                                                                                                 :id :tehtava-yksikko
-                                                                                                :arvo "Yksikkö"
-                                                                                                :class #{(sarakkeiden-leveys :maara)})))
+                                                                                                :arvo (or yksikko "")
+                                                                                                :class #{(sarakkeiden-leveys :maara-yksikko)})))
                                   ))
                              (filter #(= "tehtava" (:tehtavaryhmatyyppi %)) rivit)))]
     (muodosta-taulukko :tehtavat
@@ -150,61 +162,93 @@
                        [:teksti otsikkorivi
                         :syotto syottorivi]
                        {:class #{}
-                        :taulukon-paivitys-fn! taulukon-paivitys-fn!})
-    ))
+                        :taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+
+(defn noudetaan-taulukko
+  []
+  (let [datarivi (fn [rivi] (-> rivi
+                                (tyokalu/aseta-arvo :id :dummy-rivi
+                                                    :class #{"table-default-odd"})
+                                (tyokalu/paivita-arvo :lapset
+                                                      (osien-paivitys-fn #(tyokalu/aseta-arvo %
+                                                                                              :id :tehtava-nimi
+                                                                                              :class #{(sarakkeiden-leveys :maara)})
+                                                                         #(-> % (tyokalu/aseta-arvo
+                                                                                                  :id :tehtava-maara
+                                                                                                  :class #{(sarakkeiden-leveys :maara)})
+                                                                              (assoc :komponentti (fn [_ {:keys [teksti]} _] (yleiset/ajax-loader teksti))
+                                                                                     :komponentin-argumentit {:teksti "Haetaan tehtäviä"}))
+                                                                         #(tyokalu/aseta-arvo %
+                                                                                              :id :tehtava-yksikko
+                                                                                              :class #{(sarakkeiden-leveys :maara)})))))]
+    (muodosta-taulukko :noudetaan-tehtavat
+                      {:teksti    {:janan-tyyppi jana/Rivi
+                                   :osat         [osa/Teksti osa/Teksti osa/Teksti]}
+                       :datarivit {:janan-tyyppi jana/Rivi
+                                   :osat         [osa/Teksti osa/Komponentti osa/Teksti]}}
+                      ["Tehtävä" "Määrä" "Yksikkö"]
+                      [:teksti otsikkorivi
+                       :datarivit datarivi]
+                      {:class #{}})))
 
 (defn valitaso-filtteri
   [_ app]
-  (let [a :a]
+  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka )]
     (fn [e! {:keys [tehtava-ja-maaraluettelo valinnat] :as app}]
-      (log tehtava-ja-maaraluettelo)
-     (let [valitasot (filter #(and
-                               (= (get-in valinnat [:toimenpide :id]) (:vanhempi %))
+     (let [vuosi (pvm/vuosi alkupvm)
+           valitasot (filter #(and
+                               (= (get-in valinnat [:toimenpide :id]) (:toimenpide %))
                                (= "otsikko" (:tehtavaryhmatyyppi %))) tehtava-ja-maaraluettelo)
-           ylatasot (filter #(= "ylataso" (:tehtavaryhmatyyppi %)) tehtava-ja-maaraluettelo)]
+           ylatasot (filter #(= "toimenpide" (:tehtavaryhmatyyppi %)) tehtava-ja-maaraluettelo)
+           hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
+           disabloitu-alasveto? (fn [koll] (or (:noudetaan valinnat)
+                                               (= 0 (count koll))))]
        
        [:div
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Toimenpide"]
          [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
                                        :valitse-fn #(e! (t/->ValitseTaso % :ylataso))
-                                       :format-fn  #(:nimi %)}
+                                       :format-fn  #(:nimi %)
+                                       :disabled   (disabloitu-alasveto? ylatasot)}
           ylatasot]]
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Välitaso"]
          [yleiset/livi-pudotusvalikko {:valinta    (:valitaso valinnat)
                                        :valitse-fn #(e! (t/->ValitseTaso % :valitaso))
-                                       :format-fn #(:nimi %)}
+                                       :format-fn #(:nimi %)
+                                       :disabled (disabloitu-alasveto? valitasot)}
           valitasot]]
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Hoitokausi"]
          [yleiset/livi-pudotusvalikko {:valinta    (:hoitokausi valinnat)
                                        :valitse-fn #(e! (t/->ValitseTaso % :hoitokausi))
-                                       :format-fn  #()}
-          [:kesakausi :talvikausi]]]
+                                       :format-fn  #(str "1.10." % "-30.9." (inc %))
+                                       :disabled (disabloitu-alasveto? hoitokaudet)}
+          hoitokaudet]]
         [:label.kopioi-tuleville-vuosille
          [:input {:type      "checkbox" :checked false
-                  :on-change (r/partial #() :ei)}]
+                  :on-change (r/partial #() :ei)
+                  :disabled (:noudetaan valinnat)}]
          "Samat suunnitellut määrät kaikille hoitokausille"]]))))
 
 (defn tehtavat*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (let [#_taulukon-tehtavat #_(luo-taulukon-tehtavat e! (get app :tehtava-ja-maaraluettelo) true)
-                            taul-teht (luo-taul-teht e! (get app :tehtava-ja-maaraluettelo))]
-                        (e! (tuck-apurit/->MuutaTila [:tehtavat-taulukko] taul-teht)))))
+                      (e! (t/->HaeTehtavat (partial luo-tehtava-taulukko e!)))))
     (fn [e! app]
-      (let [{taulukon-tehtavat :tehtavat-taulukko} app]
+      (let [{taulukon-tehtavat :tehtavat-taulukko} app
+            {:keys [nimi]} (-> @tila/tila :yleiset :urakka )]
         [:div
          [debug/debug app]
-         (if taulukon-tehtavat
-           [:div
-            [:h1 "Tehtävät ja määrät"]
-            [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
-            [valitaso-filtteri e! app]
-            [p/piirra-taulukko taulukon-tehtavat]]
-           [yleiset/ajax-loader])]))))
+         [:h1 "Tehtävät ja määrät" nimi]
+         [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
+         [valitaso-filtteri e! app]
+         #_(if taulukon-tehtavat
+           [p/piirra-taulukko taulukon-tehtavat]
+           [p/piirra-taulukko (noudetaan-taulukko)])
+         #_[yleiset/ajax-loader]]))))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))

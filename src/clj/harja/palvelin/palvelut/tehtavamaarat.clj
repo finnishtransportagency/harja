@@ -26,7 +26,7 @@
                                                       :hoitokausi hoitokauden-alkuvuosi})))
 (defn hae-tehtavahierarkia
   "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
-  [db user urakka-id]
+  [db user]
   (into []
         (q/hae-tehtavahierarkia db)))
 
@@ -46,17 +46,46 @@
   ;; TODO: Muodosta palautettavat tiedot. Vrt. println tulostukset.
 
   (let [cnt (atom 1)
+        tulos (atom [])
+        toimenpiteet (atom #{})
         tehtavahierarkia (sort-by first (group-by :otsikko hierarkia))] ;; Ryhmitelty hierarkia sisältää otsikot (first) ja niiden alle kuuluvat tehtävärivit (second)
     (doseq [rivi tehtavahierarkia]
       (let [emo (Long/valueOf @cnt)
             otsikko (first rivi)
-            tehtavalista (second rivi)]
+            tehtavalista (second rivi)
+            toimenpide (-> otsikko
+                           (clojure.string/split #" " 2)
+                           (second)
+                           (clojure.string/replace " " "_")
+                           (clojure.string/replace "Ä" "A")
+                           (clojure.string/replace "Ö" "O")
+                           (keyword))]
         ;; TODO: Muodosta otsikkotyyppinen rivi
+        (swap! toimenpiteet conj {:id   toimenpide
+                                  :nimi (-> otsikko
+                                            (clojure.string/split #" " 2)
+                                            (second))})
+        (swap! tulos conj {:id @cnt
+                           :tehtavaryhmatyyppi "otsikko"
+                           :nimi otsikko
+                           :piillotettu? false
+                           :toimenpide toimenpide})
         (println "{:id" @cnt ":nimi" otsikko ":tehtavaryhmatyyppi otsikko :piillotettu? false}")
-        (doseq [tehtava tehtavalista]
+        (doseq [{:keys [tehtava-id tehtava maara yksikko] :as teht} tehtavalista]
+          #_(println "tehtava" teht)
           (swap! cnt + 1)
+          (swap! tulos conj {:id @cnt
+                             :tehtava-id tehtava-id
+                             :tehtavaryhmatyyppi "tehtava"
+                             :nimi tehtava
+                             :maara maara
+                             :yksikko yksikko
+                             :vanhempi emo
+                             :piillotettu? false})
           ;; TODO: Muodosta tehtävätyyppinen rivi
-          (println "{:id" @cnt ":tehtava-id" (:tehtava-id tehtava) ":nimi" (:tehtava tehtava) ":tehtavaryhmatyyppi tehtava :maara" (:maara tehtava) ":vanhempi" emo ":piillotettu? false}"))))))
+          #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false}"))))
+    (reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
+                                :piillotettu? false)) @tulos @toimenpiteet)))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
