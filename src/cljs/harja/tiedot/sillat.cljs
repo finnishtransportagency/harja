@@ -19,12 +19,21 @@
   (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))]
     (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
 
+(defn on-poistettu?
+  [silta]
+  (or (some? (:loppupvm silta))
+      (some? (:lakkautuspvm silta))))
+
 (defn- varita-silta [silta]
   ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
 
   (-> silta
       (assoc-in [:alue :fill] true)
-      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta) "green" "red"))))
+      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta)
+                                 "green"
+                                 (if (on-poistettu? silta)
+                                   "gainsboro"
+                                   "red")))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat

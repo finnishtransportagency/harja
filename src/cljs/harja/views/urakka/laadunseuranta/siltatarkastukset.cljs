@@ -98,13 +98,16 @@
     (sillat/paivita-silta! silta-id (constantly paivitetty-silta))))
 
 (defn sillan-perustiedot [silta]
-  [:div [:h3 (:siltanimi silta)]
-   [yleiset/tietoja {}
-    "Sillan tunnus: " (:siltatunnus silta)
-    "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
-    "Tieosoite: " [tieosoite
-                   (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
-                   (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]])
+  (let [on-poistettu? (sillat/on-poistettu? silta)]
+    [:div
+     [:h3 {:class (when on-poistettu? "poistettu") } (:siltanimi silta)]
+     [yleiset/tietoja {}
+      "Sillan tunnus: " (:siltatunnus silta)
+      "Poistettu: " (when on-poistettu? (pvm/pvm (or (:loppupvm silta) (:lakkautuspvm silta))))
+      "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
+      "Tieosoite: " [tieosoite
+                     (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
+                     (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]]))
 
 (defn kohdesarake [kohteet vika-korjattu]
   [:ul.puutekohdelista {:style {:padding-left "20px"}}
@@ -117,12 +120,13 @@
 
 (defn jarjesta-sillat [sillat]
   (sort-by
-    (fn [silta]
-      (let [siltatunnus (:siltatunnus silta)
-            siltatunnus-numerona (js/parseInt
-                                   (apply str
-                                          (filter #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9} %) siltatunnus)))]
-        siltatunnus-numerona))
+    (juxt #(if (sillat/on-poistettu? %) 1 0)
+          (fn [silta]
+            (let [siltatunnus (:siltatunnus silta)
+                  siltatunnus-numerona (js/parseInt
+                                         (apply str
+                                                (filter #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9} %) siltatunnus)))]
+              siltatunnus-numerona)))
     sillat))
 
 (defn sillat []
@@ -152,6 +156,7 @@
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
          [grid/grid
           {:otsikko       "Sillat"
+           :rivin-luokka  #(when (sillat/on-poistettu? %) "poistettu-silta")
            :tyhja         (if (nil? @urakan-sillat)
                             [ajax-loader "Siltoja haetaan..."]
                             "Ei siltoja annetuilla kriteereillä.")
