@@ -14,7 +14,7 @@
 (defrecord JarjestaTehtavienMukaan [])
 (defrecord JarjestaMaaranMukaan [])
 (defrecord ValitseTaso [arvo taso])
-(defrecord HaeTehtavat [prosessoi-tulokset])
+(defrecord HaeTehtavat [parametrit])
 (defrecord TehtavaHakuEpaonnistui [])
 (defrecord TehtavaHakuOnnistui [tehtavat prosessoi-tulokset])
 (defrecord TehtavaTallennusOnnistui [])
@@ -113,10 +113,10 @@
     [{:keys [tehtava]} {:keys [valinnat] :as app}]
     (let [{:keys [urakka-id tehtava-id maara]} tehtava]
       (tuck-apurit/post! :tallenna-tehtavamaarat
-                        {:urakka-id urakka-id
-                         :hoitokauden-alkuvuosi (:hoitokausi valinnat)
-                         :tehtavamaarat [{:tehtava-id tehtava-id
-                                          :maara maara}]}
+                         {:urakka-id             urakka-id
+                          :hoitokauden-alkuvuosi (:hoitokausi valinnat)
+                          :tehtavamaarat         [{:tehtava-id tehtava-id
+                                                   :maara      (js/parseInt maara)}]}
                          {:onnistui ->TehtavaTallennusOnnistui
                           :epaonnistui ->TehtavaTallennusEpaonnistui
                           :paasta-virhe-lapi? true})
@@ -154,19 +154,24 @@
                 :tehtavat-taulukko (update (prosessoi-tulokset tehtavat) :rivit (paivitys-fn valitaso hierarkia #{:tehtava}))))))
   HaeTehtavat
   (process-event
-    [{:keys [prosessoi-tulokset]} app]
-    (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)]
-      (-> app
-          (tuck-apurit/post! :tehtavamaarat-hierarkiassa
-                             {:urakka-id urakka-id
-                              :hoitokauden-alkuvuosi (harja.pvm/vuosi urakka-alkupvm)}
-                             {:onnistui ->TehtavaHakuOnnistui
-                              :onnistui-parametrit [prosessoi-tulokset]
-                              :epaonnistui ->TehtavaHakuEpaonnistui
-                              :paasta-virhe-lapi? true})
-          (update :valinnat #(assoc %
-                                 :virhe-noudettaessa false
-                                 :noudetaan true)))))
+    [{:keys [parametrit]} app]
+    (let [{:keys [hoitokausi prosessori tilan-paivitys-fn]} parametrit
+          {urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
+          uusi-tila (-> app
+                        (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+                                           {:urakka-id urakka-id
+                                            :hoitokauden-alkuvuosi (or hoitokausi
+                                                                       (harja.pvm/vuosi urakka-alkupvm))}
+                                           (merge
+                                             {:onnistui            ->TehtavaHakuOnnistui
+                                              :epaonnistui         ->TehtavaHakuEpaonnistui
+                                              :paasta-virhe-lapi?  true} (when prosessori {:onnistui-parametrit [prosessori]})))
+                        (update :valinnat #(assoc %
+                                             :virhe-noudettaessa false
+                                             :noudetaan true)))]
+      (if tilan-paivitys-fn
+        (tilan-paivitys-fn uusi-tila)
+        uusi-tila)))
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [tehtavat-taulukko hierarkia tehtava-ja-maaraluettelo] :as app}]

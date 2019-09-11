@@ -70,20 +70,19 @@
                            :nimi otsikko
                            :piillotettu? false
                            :toimenpide toimenpide})
-        (println "{:id" @cnt ":nimi" otsikko ":tehtavaryhmatyyppi otsikko :piillotettu? false}")
         (doseq [{:keys [tehtava-id tehtava maara yksikko] :as teht} tehtavalista]
           #_(println "tehtava" teht)
           (swap! cnt + 1)
-          (swap! tulos conj {:id @cnt
-                             :tehtava-id tehtava-id
+          (swap! tulos conj {:id                 @cnt
+                             :tehtava-id         tehtava-id
                              :tehtavaryhmatyyppi "tehtava"
-                             :nimi tehtava
-                             :maara maara
-                             :yksikko yksikko
-                             :vanhempi emo
-                             :piillotettu? false})
+                             :nimi               tehtava
+                             :maara              (if (nil? maara) 0 maara)
+                             :yksikko            yksikko
+                             :vanhempi           emo
+                             :piillotettu?       false})
           ;; TODO: Muodosta tehtävätyyppinen rivi
-          #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false}"))))
+          (println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false}"))))
     (reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
                                 :piillotettu? false)) @tulos @toimenpiteet)))
 
@@ -122,6 +121,9 @@
                                   (when (empty?
                                           (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
+
+                                  (println (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
+                                                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))))
 
                                   (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
                                                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))

@@ -139,8 +139,7 @@
                                                                                                :class #{(sarakkeiden-leveys :maara-input) "input-default"}
                                                                                                 :on-blur (fn [arvo]
                                                                                                            (e! (t/->TallennaTehtavamaara
-                                                                                                                 {:hoitokausi
-                                                                                                                  :urakka-id (-> @tila/tila :yleiset :urakka)
+                                                                                                                 {:urakka-id (-> @tila/tila :yleiset :urakka :id)
                                                                                                                   :tehtava-id tehtava-id
                                                                                                                   :maara (-> arvo (.. -target -value))})))
                                                                                                :on-change (fn [arvo]
@@ -222,7 +221,9 @@
         [:div.label-ja-alasveto
          [:span.alasvedon-otsikko "Hoitokausi"]
          [yleiset/livi-pudotusvalikko {:valinta    (:hoitokausi valinnat)
-                                       :valitse-fn #(e! (t/->ValitseTaso % :hoitokausi))
+                                       :valitse-fn #(e! (t/->HaeTehtavat {:hoitokausi %
+                                                                          :prosessori (partial luo-tehtava-taulukko e!)
+                                                                          :tilan-paivitys-fn (fn [tila] (assoc-in tila [:valinnat :hoitokausi] %))}))
                                        :format-fn  #(str "1.10." % "-30.9." (inc %))
                                        :disabled (disabloitu-alasveto? hoitokaudet)}
           hoitokaudet]]
@@ -236,19 +237,19 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (e! (t/->HaeTehtavat (partial luo-tehtava-taulukko e!)))))
+                      (e! (t/->HaeTehtavat {:hoitokausi (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
+                                            :prosessori (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app
             {:keys [nimi]} (-> @tila/tila :yleiset :urakka )]
         [:div
-         [debug/debug app]
+         ;[debug/debug app]
          [:h1 "Tehtävät ja määrät" nimi]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
          [valitaso-filtteri e! app]
-         #_(if taulukon-tehtavat
+         (if taulukon-tehtavat
            [p/piirra-taulukko taulukon-tehtavat]
-           [p/piirra-taulukko (noudetaan-taulukko)])
-         #_[yleiset/ajax-loader]]))))
+           [p/piirra-taulukko (noudetaan-taulukko)])]))))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))
