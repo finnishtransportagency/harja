@@ -817,7 +817,7 @@
         [valinnat/urakkavalinnat
          {}
          ^{:key "valinnat"}
-         [:<>
+         [:div
           [:div.row
            [:div.col-lg-4.col-md-3.col-xs-12
             [:div.row.sarake-1
