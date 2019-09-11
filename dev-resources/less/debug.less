@@ -44,6 +44,11 @@
       }
     }
   }
+  &.taulukko-debug-paalla-debug-sisalto {
+    &:hover {
+      box-shadow: none;
+    }
+  }
 }
 
 .taulukko-debug-rivi {
@@ -57,8 +62,7 @@
 }
 
 .taulukon-debug-sisalto {
-  overflow-x: scroll;
-  overflow-y: scroll;
+  overflow-y: visible;
   position: fixed;
   width: 100vw;
   bottom: 0px;
@@ -67,6 +71,11 @@
   padding: @debug-sisallon-padding;
   word-break: keep-all;
   text-align: left;
+
+  .taulukko-debug-taulukko {
+    overflow-x: scroll;
+    overflow-y: scroll;
+  }
 
   &.debug-sisalto-ylhaalla {
     background: white;
@@ -86,6 +95,16 @@
     }
   }
 
+  .taulukko-debug-log-sisalto {
+    position: fixed;
+    right: 0px;
+    width: 20vw;
+    background: white;
+    .taulukko-debug-log {
+
+    }
+  }
+
   .asia {
     display: flex;
     flex-direction: column;
@@ -97,35 +116,60 @@
   }
   .asian-arvot {
     padding-left: 40px;
+    display: flex;
+    flex-direction: column;
   }
 
   .debug-nappiryhma {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     position: relative;
-    .debug-toggle-nappi {
-      height: @debug-napin-korkeus;
+    .rivi {
+      position: relative;
+      .debug-toggle-nappi {
+        height: @debug-napin-korkeus;
+      }
+      .debug-sulje-nappi {
+        height: @debug-napin-korkeus;
+      }
+      .debug-log-nappi {
+        float: right;
+        height: @debug-napin-korkeus;
+      }
     }
-    .debug-sulje-nappi {
-      float: right;
-      height: @debug-napin-korkeus;
-    }
-    .debug-korkeus-nappi {
-      align-self: flex-start;
-      text-align: center;
-      font-size: 1.5rem;
-      cursor: grab;
-      // Tehdään laatikosta mahdollisimman iso,
-      // jotta drag event pysyy hiiren liikkeissä mukana
-      position: absolute;
-      left: auto;
-      right: auto;
+    .rivi-irti {
       width: 100%;
-      height: 200vh;
-      top: -300px;
-      padding-top: 300px;
+      position: absolute;
+    }
+    .rivi-tasaisin-valein {
+      display: flex;
+      justify-content: space-between;
     }
   }
+
+  .drag-napin-wrapper {
+    display: flex;
+    width: 100%;
+    position: relative;
+
+    .debug-korkeus-nappi {
+      align-self: flex-start;
+      font-size: 1.5rem;
+      // Tehdään laatikosta mahdollisimman iso,
+      // jotta drag event pysyy hiiren liikkeissä mukana
+      &.aktiivinen {
+        width: 200vw;
+        left: -100vw;
+        padding-left: 100vw;
+        position: absolute;
+        right: auto;
+        height: 200vh;
+        top: -300px;
+        padding-top: 300px;
+      }
+    }
+  }
+
   b, span {
     display: inline-block;
   }
