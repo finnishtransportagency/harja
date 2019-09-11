@@ -1,4 +1,4 @@
--- name: hae-teiden-hoidon-urakan-maksuerien-summat
+-- name: hae-hoitourakan-maksuerien-summat
 -- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
 -- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
 -- eri maksuerätyypeille.

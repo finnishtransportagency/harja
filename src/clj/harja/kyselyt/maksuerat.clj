@@ -10,4 +10,4 @@
     (case urakan-tyyppi
       "vesivayla-kanavien-hoito" (harja.kyselyt.maksuerat/hae-kanavaurakan-maksuerien-summat db urakka-id)
       "vesivayla-kanavien-korjaus" (harja.kyselyt.maksuerat/hae-kanavaurakan-maksuerien-summat db urakka-id)
-      (harja.kyselyt.maksuerat/hae-teiden-hoidon-urakan-maksuerien-summat db urakka-id))))
+      (harja.kyselyt.maksuerat/hae-hoitourakan-maksuerien-summat db urakka-id))))
