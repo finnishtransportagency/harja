@@ -40,7 +40,7 @@
 (def yhteyshenkilotyypit-paallystys
   (into [] (sort (concat yhteyshenkilotyypit-kaikille-urakoille
                          ["Aluevastaava" "Tiemerkintäurakan tilaaja" "Siltainsinööri"
-                          "Turvallisuuskoordinaattori"]))))
+                          "Turvallisuuskoordinaattori" "Työmaavalvoja" "Työmaavalvojan sijainen"]))))
 
 (def yhteyshenkilotyypit-tiemerkinta
   (into [] (sort (concat yhteyshenkilotyypit-kaikille-urakoille
