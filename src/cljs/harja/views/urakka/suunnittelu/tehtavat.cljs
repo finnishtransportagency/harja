@@ -23,56 +23,9 @@
     :maara-input "col-xs-12 col-sm-2 col-md-2 col-lg-2"
     :maara-yksikko "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
 
-#_(defn luo-taulukon-tehtavat
-  [e! tehtavat on-oikeus?]
-  (let [tehtava-solu (fn [tehtavaryhmatyyppi id nimi]
-                       (with-meta
-                         (case tehtavaryhmatyyppi
-                           "ylataso"
-                           (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class #{(sarakkeiden-leveys :tehtava)}})
-                           "valitaso"
-                           (osa/luo-tilallinen-laajenna (str id "-laajenna") nimi #(e! (t/->LaajennaSoluaKlikattu %1 %2)) {:class #{(sarakkeiden-leveys :tehtava) "solu-sisenna-1"}})
-                           "alitaso"
-                           (osa/->Teksti (str id "-tehtava") nimi {:class #{(sarakkeiden-leveys :tehtava)
-                                                                            "solu-sisenna-2"}}))
-                         {:sarake "Tehtävä"}))
-        maara-solu (fn [id maara]
-                     (with-meta
-                       (if maara
-                         (osa/->Syote (str id "-maara")
-                                      {:on-change (fn [arvo]
-                                                    ;; Arvo tulee :positiivinen? kaytos-wrapperiltä, joten jos se on nil, ei syötetty arvo ollut positiivinen.
-                                                    (when arvo
-                                                      (e! (t/->PaivitaMaara id (str id "-maara") arvo))))}
-                                      {:on-change [:positiivinen-numero :eventin-arvo]}
-                                      {:class #{(sarakkeiden-leveys :maara)}
-                                       :type "text"
-                                       :disabled (not on-oikeus?)
-                                       :value maara})
-                         (osa/->Teksti (str id "-maara")
-                                       ""
-                                       {:class #{(sarakkeiden-leveys :maara)}}))
-                       {:sarake "Määrä"}))
-        rivit (map (fn [{:keys [id tehtavaryhmatyyppi maara nimi piillotettu? vanhempi]}]
-                     (with-meta (jana/->Rivi id
-                                             [(tehtava-solu tehtavaryhmatyyppi id nimi)
-                                              (maara-solu id maara)]
-                                             (if piillotettu?
-                                               #{"piillotettu"}
-                                               #{}))
-                                {:vanhempi vanhempi
-                                 :tehtavaryhmatyyppi tehtavaryhmatyyppi}))
-                   tehtavat)
-        otsikot [(jana/->Rivi :tehtavataulukon-otsikko
-                              [(osa/->Otsikko "tehtava otsikko" "Tehtävä" #(e! (t/->JarjestaTehtavienMukaan)) {:class #{(sarakkeiden-leveys :tehtava)}})
-                               (osa/->Otsikko "maara otsikko" "Määrä" #(e! (t/->JarjestaMaaranMukaan)) {:class #{(sarakkeiden-leveys :maara)}})]
-                              nil)]]
-
-    (into [] (concat otsikot rivit))))
 
 (defn osien-paivitys-fn [tehtava maara yksikko]
   (fn [osat]
-    (log "Osat " osat)
     (mapv
       (fn [osa]
         (case (p/osan-id osa)
@@ -109,21 +62,14 @@
                                                                     :class #{(sarakkeiden-leveys :maara)})))
       ))
 
-(defn tehtava-mankeli [tehtava]
-  tehtava)
 
 (defn luo-tehtava-taulukko
   [e! tehtavat-ja-maaraluettelo]
   (let [polku-taulukkoon [:tehtavat-taulukko]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
-                                (log "TAULUKKO" paivitetty-taulukko app polku-taulukkoon)
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
-        rivit (mapv
-                tehtava-mankeli
-                tehtavat-ja-maaraluettelo)
         syottorivi (fn [rivi]
                        (mapv (fn [{:keys [nimi maara id piillotettu? tehtava-id tehtavaryhmatyyppi yksikko] :as tehtava}]
-                               (log "My mission " tehtava)
                                (-> rivi
                                   (tyokalu/aseta-arvo :id id
                                                       :class #{(str "table-default-" (if (= 0 (rem id 2)) "even" "odd"))}
@@ -151,7 +97,7 @@
                                                                                                 :arvo (or yksikko "")
                                                                                                 :class #{(sarakkeiden-leveys :maara-yksikko)})))
                                   ))
-                             (filter #(= "tehtava" (:tehtavaryhmatyyppi %)) rivit)))]
+                             (filter #(= "tehtava" (:tehtavaryhmatyyppi %)) tehtavat-ja-maaraluettelo)))]
     (muodosta-taulukko :tehtavat
                        {:teksti {:janan-tyyppi jana/Rivi
                                  :osat [osa/Teksti osa/Teksti osa/Teksti]}

@@ -195,21 +195,7 @@
          (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :valitaso] arvo))))))
   PaivitaMaara
   (process-event [{:keys [solu arvo]} app]
-    (p/paivita-solu! (:tehtavat-taulukko app) (tyokalut/aseta-arvo solu :arvo arvo) app)
-    #_(let [jana (let [janat (tyokalut/jana (:tehtavat-taulukko app) janan-id)]
-                 (if (= 1 (count janat))
-                   (first janat)
-                   janat))
-          a (loki/log "janan index" (p/janan-osat jana) (tyokalut/janan-index (:tehtavat-taulukko app) jana))
-          janan-index (tyokalut/janan-index (:tehtavat-taulukko app) jana)
-          b (loki/log "janan indeksillä " (get-in app [:tehtavat-taulukko :rivit janan-index]))
-          ;; TODO vissiin väärä nimi solun-id:llä
-          [solun-index & _] (p/osan-polku (get-in app [:tehtavat-taulukko :rivit janan-index]) solun-id)]
-      (loki/log "solun index " (get-in app [:tehtavat-taulukko :rivit janan-index]) solun-index (p/osan-polku (get-in app [:tehtavat-taulukko :rivit janan-index]) solun-id)
-                [:tehtavat-taulukko :rivit janan-index :solut solun-index :parametrit])
-      (update-in app [:tehtavat-taulukko :rivit janan-index :solut solun-index :parametrit]
-                       (fn [parametrit]
-                         (assoc parametrit :value arvo)))))
+    (p/paivita-solu! (:tehtavat-taulukko app) (tyokalut/aseta-arvo solu :arvo arvo) app))
 
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
