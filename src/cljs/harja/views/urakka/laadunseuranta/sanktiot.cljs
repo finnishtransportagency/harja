@@ -338,10 +338,10 @@
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
        {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
        {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
-        :hae #(or (when (:summa %)
-                    (if yllapito?
-                      (- (:summa %)) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
-                      (:summa %)))
+        :hae #(or (let [summa (:summa %)]
+                    (fmt/euro-opt false
+                                  (when summa
+                                    (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
                   "Muistutus")}]
       sanktiot]
      (when yllapito?

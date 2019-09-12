@@ -42,7 +42,7 @@
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (str tulos " \u20AC")))
+            (if nayta-euromerkki (str tulos " \u20AC") tulos)))
 
         :clj
         (s/replace (.format (doto
