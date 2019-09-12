@@ -189,7 +189,6 @@
         muuta-korkeutta (fn [event]
                           (.stopPropagation event)
                           (.preventDefault event)
-                          (println "Muuta korkeutta")
                           (let [{:keys [drag-menossa? viime-y ikkunan-korkeus]} @tila]
                             (when drag-menossa?
                               (let [y (.-screenY event)
@@ -278,10 +277,52 @@
                 ^{:key :lapsi-komponentti}
                 [lapsi-komponentti taulukko asia (+ sisennys 10) (:lapset @auki?)])]])])))))
 
+(defn kasittele-diff
+  ([vanha-taulukko uusi-taulukko] [(flatten (kasittele-diff vanha-taulukko uusi-taulukko []))
+                                   (flatten (kasittele-diff uusi-taulukko vanha-taulukko []))])
+  ([vanha uusi polku]
+   (let [muutoksia? (fn [x y]
+                      (let [[muutokset-x muutokset-y _] (data/diff x y)]
+                        (or (not (nil? muutokset-y))
+                            (not (nil? muutokset-x)))))
+         map-diff (fn [m1 m2]
+                    (keep (fn [[avain arvo]]
+                            (let [arvo-uudesta (get m2 avain)]
+                              (when (muutoksia? arvo arvo-uudesta)
+                                (kasittele-diff arvo arvo-uudesta (conj polku avain)))))
+                          m1))
+         vector-diff (fn [v1 v2]
+                       (let [v1-pituus (count v1)
+                             v2-pituus (count v2)]
+                         (into []
+                               (concat
+                                 (keep-indexed (fn [index a1]
+                                                 (let [a2 (when (> v2-pituus index)
+                                                            (get v2 index))]
+                                                   (when (and a2 (muutoksia? a1 a2))
+                                                     (kasittele-diff a1 a2 (conj polku index)))))
+                                               v1)
+                                 (if (< v2-pituus v1-pituus)
+                                   (map (fn [tiputettu-asia]
+                                          {:polku polku
+                                           :diff tiputettu-asia})
+                                        (drop v1 v2-pituus))
+                                   [])))))]
+     (cond
+       (and (map? vanha) (map? uusi)) (map-diff vanha uusi)
+       (and (vector? vanha) (vector? uusi)) (vector-diff vanha uusi)
+       :else {:polku polku
+              :diff (first (data/diff vanha uusi))}))))
+
+(defn taulukko-diff [vanha uusi]
+  (kasittele-diff vanha uusi))
+
 (defn taulukko-log-muutos! [tila vaha-taulukko uusi-taulukko]
-  (go (let [[poistot lisaykset _] (data/diff vaha-taulukko uusi-taulukko)]
-        (when (or (not (empty? poistot))
-                  (not (empty? lisaykset)))
+  (go (let [[poistot lisaykset] (taulukko-diff vaha-taulukko uusi-taulukko)
+            poistoissa-muutoksia? (not (empty? poistot))
+            lisayksissa-muutoksia? (not (empty? lisaykset))]
+        (when (or poistoissa-muutoksia?
+                  lisayksissa-muutoksia?)
           (swap! tila update :loki (fn [{:keys [jarjestys] :as vanha}]
                                      (-> vanha
                                          (update :jarjestys inc)
@@ -289,8 +330,10 @@
                                                           (into []
                                                                 (take 50
                                                                       (cons {:jarjestys jarjestys
-                                                                             :poistot poistot
-                                                                             :lisaykset lisaykset}
+                                                                             :poistot (when poistoissa-muutoksia?
+                                                                                        poistot)
+                                                                             :lisaykset (when lisayksissa-muutoksia?
+                                                                                          lisaykset)}
                                                                             lokit))))))))))))
 
 (defn taulukko-log [tila ikkunan-korkeus]
@@ -302,13 +345,25 @@
         (when-not alhaalla?
           [:div.taulukko-debug-log-sisalto {:style {:height (str korkeus "px")
                                                     :bottom (str ikkunan-korkeus "px")}}
-           [drag-nappi ikkunan-korkeus-fn! ikkunan-aloitus-korkeus]
-           [:div.taulukko-debug-log
-            (for [{:keys [jarjestys poistot lisaykset]} (sort-by :jarjestys lokit)]
-              ^{:key jarjestys}
-              [:div.loki
-               [:span.poistot (str poistot)]
-               [:span.lisaykset (str lisaykset)]])]])))))
+           [:span.veto-nappi
+            [drag-nappi ikkunan-korkeus-fn! ikkunan-aloitus-korkeus]]
+           [:div {:style {:overflow-y "scroll"}}
+            [:div.taulukko-debug-log
+             (for [{:keys [jarjestys poistot lisaykset]} (sort-by :jarjestys lokit)]
+               ^{:key jarjestys}
+               [:div.loki
+                [:<>
+                 (for [{:keys [polku diff]} poistot]
+                   ^{:key polku}
+                   [:span.poistot
+                    [:span (str polku)]
+                    [:span (str diff)]])]
+                [:<>
+                 (for [{:keys [polku diff]} lisaykset]
+                   ^{:key polku}
+                   [:span.lisaykset
+                    [:span (str polku)]
+                    [:span (str diff)]])]])]]])))))
 
 (defn debug [taulukko]
   {:pre [#(or (nil? %)
@@ -359,7 +414,6 @@
                                                                  :class
                                                                  (fn [luokat]
                                                                    (disj luokat "taulukko-debug-paalla-debug-sisalto")))))
-        #_#_nappien-zindex "-3"
         ikkunan-korkeus-fn! (fn [korkeus]
                              (swap! tila assoc :ikkunan-korkeus korkeus))]
     (r/create-class

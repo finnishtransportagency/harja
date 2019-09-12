@@ -5,8 +5,14 @@
   margin: 1em;
   overflow-y: scroll;
 
-  table { border-collapse: collapse; width: 100%; }
-  table, th, td { border: 1px solid black; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  table, th, td {
+    border: 1px solid black;
+  }
 
   .debug-animate {
     animation: debug-animation-keyframes 0.5s;
@@ -14,8 +20,12 @@
 }
 
 @keyframes debug-animation-keyframes {
-  from {background-color: green;}
-  to {background-color: white;}
+  from {
+    background-color: green;
+  }
+  to {
+    background-color: white;
+  }
 }
 
 
@@ -36,6 +46,7 @@
     .taulukko-debug {
       text-align: center;
       position: relative;
+
       .debug-nappi {
         display: inline;
         position: absolute;
@@ -44,6 +55,7 @@
       }
     }
   }
+
   &.taulukko-debug-paalla-debug-sisalto {
     &:hover {
       box-shadow: none;
@@ -79,15 +91,18 @@
 
   &.debug-sisalto-ylhaalla {
     background: white;
-   // height: 25vh;
+    // height: 25vh;
   }
+
   &.debug-sisalto-alhaalla {
     height: 0px;
+
     .debug-toggle-nappi {
       position: fixed;
       bottom: @debug-sisallon-padding;
       left: @debug-sisallon-padding;
     }
+
     .debug-sulje-nappi {
       position: fixed;
       bottom: @debug-sisallon-padding;
@@ -100,8 +115,41 @@
     right: 0px;
     width: 20vw;
     background: white;
-    .taulukko-debug-log {
+    display: flex;
+    flex-direction: column;
+    outline: 1px solid #ECECEC;
 
+    .veto-nappi {
+      align-self: center;
+    }
+
+    .taulukko-debug-log {
+      display: flex;
+      flex-direction: column;
+    }
+    .loki {
+      display: flex;
+      flex-direction: column;
+      .poistot {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        color: red;
+      }
+
+      .lisaykset {
+        display: flex;
+        flex:1;
+        flex-direction: column;
+        color: green;
+      }
+
+      &:after {
+        content: '';
+        display:inline-block;
+        width: 100%;
+        border-bottom: 1px solid #AAAAAA;
+      }
     }
   }
 
@@ -109,11 +157,13 @@
     display: flex;
     flex-direction: column;
   }
+
   .asian-nappi {
     background: transparent;
     border: none;
     text-align: left;
   }
+
   .asian-arvot {
     padding-left: 40px;
     display: flex;
@@ -124,23 +174,29 @@
     display: flex;
     flex-direction: column;
     position: relative;
+
     .rivi {
       position: relative;
+
       .debug-toggle-nappi {
         height: @debug-napin-korkeus;
       }
+
       .debug-sulje-nappi {
         height: @debug-napin-korkeus;
       }
+
       .debug-log-nappi {
         float: right;
         height: @debug-napin-korkeus;
       }
     }
+
     .rivi-irti {
       width: 100%;
       position: absolute;
     }
+
     .rivi-tasaisin-valein {
       display: flex;
       justify-content: space-between;
@@ -173,62 +229,77 @@
   b, span {
     display: inline-block;
   }
+
   .lista {
     display: flex;
+
     &.vector-sulku {
       &:before {
         content: '[';
       }
+
       &:after {
         content: ']';
       }
     }
+
     &.map-sulku {
       &:before {
         content: '{';
       }
+
       &:after {
         content: '}';
       }
     }
+
     &.set-sulku {
       &:before {
         content: '#{';
       }
+
       &:after {
         content: '}';
       }
     }
+
     &.lazy-sulku {
       &:before {
         content: 'lazy(';
       }
+
       &:after {
         content: ')';
       }
     }
+
     &.list-sulku {
       &:before {
         content: '(';
       }
+
       &:after {
         content: ')';
       }
     }
+
     &.object-sulku {
       &:before {
         content: 'object{';
       }
+
       &:after {
         content: '}';
       }
     }
   }
+
   .listan-arvot {
     > * {
       padding: 0px 5px 0px 5px;
     }
   }
+
   .mapin-arvot {
     flex-direction: column;
   }
@@ -237,7 +308,7 @@
     display: flex;
 
     .keyword {
-      align-self:flex-start;
+      align-self: flex-start;
       padding-right: 10px;
       color: darkviolet;
     }
