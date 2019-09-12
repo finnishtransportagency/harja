@@ -375,6 +375,12 @@
                                      :type
                                      :alue)
                              (update ::t/tyoajat
+                                     (partial remove :poistettu))
+                             (update ::t/nopeusrajoitukset
+                                     (partial remove :poistettu))
+                             (update ::t/tienpinnat
+                                     (partial remove :poistettu))
+                             (update ::t/kiertotienpinnat
                                      (partial remove :poistettu)))
                 vastaus-kanava (k/post! :tallenna-tietyoilmoitus {:ilmoitus ilmoitus
                                                                   :sahkopostitiedot sahkopostitiedot})
