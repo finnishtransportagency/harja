@@ -70,12 +70,6 @@
                                 (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         sopimusnumero (:id
                         (first (sopimus-q/hae-urakan-paasopimus db urakka-id))) ;; teiden hoidon urakoissa (MHU) on vain yksi sopimus
-        muuttuvat-kustannussuunnitelmat (into #{}
-                                              (distinct
-                                                (map (juxt :toimenpideinstanssi :vuosi :kuukausi)
-                                                     (filter #(not (or (= "akillinen-hoitotyo" (:tyyppi %))
-                                                                       (= "vahinkojen-korjaukset" (:tyyppi %))))
-                                                             (flatten (map second tyot))))))
         tallennettavat-toimenpideinstanssit (into #{}
                                                   (keep :toimenpideinstanssi (concat (:kiinteahintaiset-tyot tyot)
                                                                                      (:kustannusarvioidut-tyot tyot)
@@ -83,8 +77,6 @@
         tallennettavat-toimenpideinstanssit-urakassa (into #{}
                                                            (map :id)
                                                            (tpi-q/urakan-toimenpideinstanssit-idlla db urakka-id tallennettavat-toimenpideinstanssit))]
-
-    (println "MUUTTUVAT " muuttuvat-kustannussuunnitelmat)
 
     ;; Tarkistetaan oikeudet ja että kyseessä on maanteiden hoidon urakka (MHU) ja että käsitellyt toimenpideinstanssit kuuluvat urakkaan.
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -98,23 +90,6 @@
                               (kiinthint-tyot/tallenna-kiinteahintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
                               (kustarv-tyot/tallenna-kustannusarvioidut-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
                               (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
-
-                              ;; Päivitä Sampoon lähetettävien kokonaishintaisten kustannussuunntelmien tiedot.
-
-                              (doseq [ks muuttuvat-kustannussuunnitelmat]
-                                ;; Hae summatiedot
-                                (let [tyot {:toimenpideinstanssi (first ks)
-                                            :vuosi               (second ks)
-                                            :kuukausi            (last ks)}
-                                      summat (into [] (q/hae-summat-kokonaishintaiseen-kustannussuunnitelmaan c tyot))
-                                  yhteissumma (transduce (map :summa) + 0 summat)]
-
-                                  ;; TODO: rakenna tyot :summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja
-                                  ;;(sampo-kustannussuunnitelmat/tallenna-kokonaishintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (conj [] (assoc tyot :summa yhteissumma))})
-                                  )
-
-                                ;; Tallenna summatiedot kokonaishintaisiin
-                                )
 
                               ;; Merkitään likaiseksi tallennettujen toimenpideinstanssien kustannussuunnitelmat.
                               ;; Periaatteessa tässä voisi myös selvittää ovatko kaikki tiedot päivittyneet ja jättää tarvittaessa osa kustannussuunnitelmista päivittämättä.

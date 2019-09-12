@@ -38,9 +38,6 @@
                                       urakan-toimenpideinstanssit))
       (throw (roolit/->EiOikeutta "virheellinen toimenpideinstanssi")))
 
-    (println "** Kiinteähintaiset työt kannassa " tyot-kannassa)
-    (println "** Avain " tyo-avain)
-
     (doseq [tyo tyot]
       (as-> tyo t
             (update t :summa big/unwrap)
