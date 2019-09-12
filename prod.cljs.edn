@@ -1,0 +1,15 @@
+{:main harja.asiakas.main
+ :optimizations :advanced
+ ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
+ :recompile-dependents false
+ ;;:preamble ["reagent/react.min.js"]
+ :output-to "resources/public/js/harja.js"
+
+ ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
+ ;:source-map "resources/public/js/harja.js.map"
+ :output-dir "resources/public/js/"
+ :asset-path "js/"
+
+ ;:parallel-build false Failaa randomisti
+ :libs ["src/js/kuvataso.js"]
+ :closure-output-charset "US-ASCII"}

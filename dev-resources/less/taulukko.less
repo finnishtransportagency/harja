@@ -1,0 +1,102 @@
+@import "vayla/tables.less";
+@chevron-suunnat: up, right, down, left;
+@triangle-suunnat: top, right, bottom, left;
+@solu-padding: 5px;
+
+.suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
+  @suunta: extract(@suunnat, @i);
+  .@{ikoni}-@{suunta}{
+    color: @blue;
+  }
+  .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
+}
+
+.taulukko {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: none;
+  word-break: break-all;
+  .piillotettu, &.piillotettu {
+    display:none;
+  }
+
+  /* TAULUKON ELEMENTIT */
+
+  input {
+    border: none;
+  }
+
+/* JANAT */
+  .jana {
+    border: none;
+  }
+  .janan-rivi {
+    display: flex;
+    flex-direction: row;
+
+    &.piillotettu {
+      display: none;
+    }
+  }
+/* SOLUT */
+  .osa {
+    border-left: none;
+    padding-left: @solu-padding;
+    align-self: center;
+    &.keskita {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    &.alas {
+      display:flex;
+      align-items: flex-end;
+    }
+  }
+  .osa-laajenna {
+    display: flex;
+    justify-content: space-between;
+    span {
+      align-self: center;
+      &:first-child {
+        flex: 1;
+      }
+    }
+    &.ikoni-vasemmalle {
+      .laajenna-teksti {
+        order: 1;
+        padding-left: @solu-padding;
+      }
+    }
+    .suunta-ikoni-loop(@chevron-suunnat; livicon-chevron);
+    .suunta-ikoni-loop(@triangle-suunnat; glyphicon-triangle);
+  }
+  .osa-otsikko {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .otsikon-jarjestys {
+
+    }
+  }
+  .osa-syote {
+    width: 100%;
+  }
+
+  .osa-teksti {
+  }
+  .osa-ikoni {
+  }
+  /* YLEISTÄ */
+  .solu-sisenna-1 {
+    padding-left: (@solu-padding + 20px);
+  }
+  .solu-sisenna-2 {
+    padding-left: (@solu-padding + 40px);
+  }
+  .solu-sisenna-3 {
+    padding-left: (@solu-padding + 60px);
+  }
+}

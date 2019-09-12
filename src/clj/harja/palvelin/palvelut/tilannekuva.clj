@@ -691,6 +691,7 @@
   [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit
                           (comp (map tarkastus-domain/tarkastus-tiedolla-onko-ok)
+                                (map #(konv/array->set % :vakiohavainnot))
                                 (map #(konv/string->keyword % :tyyppi :tekija))
                                 (map #(assoc %
                                         :tyyppi-kartalla :tarkastus

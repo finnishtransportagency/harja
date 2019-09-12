@@ -241,13 +241,13 @@
                       ;; todo: katsotaan oikeustarkistuksesta näytetäänkö nappia
                       {:disabled false}])}]))
 
-(defn- ei-yksiloity-vihje []
+(defn ei-yksiloity-vihje []
   [yleiset/vihje-elementti [:span
                             [:span "Ei-yksilöidyt toimenpiderivit näytetään "]
                             [:span.bold "lihavoituna"]
                             [:span "."]]])
 
-(defn- lomake-toiminnot [{:keys [tallenna-lomake-fn poista-toimenpide-fn]}
+(defn lomake-toiminnot [{:keys [tallenna-lomake-fn poista-toimenpide-fn]}
                          {:keys [tallennus-kaynnissa?] :as app}
                          toimenpide]
   [:div

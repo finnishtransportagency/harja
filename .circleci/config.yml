@@ -2,7 +2,7 @@ version: 2
 jobs:
   front-testit:
     docker:
-      - image: solita/harja-testit:lein-2.7.1 # eka image = "primary container"
+      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
@@ -12,7 +12,7 @@ jobs:
 
   back-testit:
     docker:
-      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
@@ -22,7 +22,7 @@ jobs:
   # Tänne voisi alkaa siirtelemään integraatiotestejä
   integraatio-testit:
     docker:
-      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
       - image: solita/harjadb:latest
       - image: solita/harja-activemq:5.15.9
         environment:
@@ -39,7 +39,7 @@ jobs:
 
   prod-build:
     docker:
-      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
@@ -108,7 +108,9 @@ workflows:
       - back-testit
       - integraatio-testit
       - front-testit
-      - prod-build
+      - prod-build: # Ei sinänsä tarvi front-testejä valmiiksi, mutta jostain syystä tämä feilaa, jos front ajetaan yhtäaikaa. Tulee vain exit code 1 eikä muuta.
+          requires:
+           - front-testit
       - e2e-testit:
           requires:
            - prod-build

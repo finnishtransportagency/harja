@@ -2,7 +2,7 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
-                                                  alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
+                                                  alasveto-ei-loydoksia livi-pudotusvalikko vihje]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]

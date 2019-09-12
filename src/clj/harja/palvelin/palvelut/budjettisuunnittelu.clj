@@ -5,6 +5,7 @@
             [clojure.set :as set]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt
@@ -19,35 +20,8 @@
              [yksikkohintaiset-tyot :as ykshint-tyot]]
             [harja.domain.oikeudet :as oikeudet]))
 
-(declare hae-urakan-budjetoidut-tyot tallenna-budjetoidut-tyot hae-urakan-tavoite tallenna-urakan-tavoite)
-
-(defrecord Budjettisuunnittelu []
-  component/Lifecycle
-  (start [this]
-    (doto (:http-palvelin this)
-      (julkaise-palvelu
-        :budjetoidut-tyot (fn [user urakka-id]
-                            (hae-urakan-budjetoidut-tyot (:db this) user urakka-id)))
-      (julkaise-palvelu
-        :tallenna-budjetoidut-tyot (fn [user tiedot]
-                                     (tallenna-budjetoidut-tyot (:db this) user tiedot)))
-      (julkaise-palvelu
-        :budjettitavoite (fn [user urakka-id]
-                           (hae-urakan-tavoite (:db this) user urakka-id)))
-      (julkaise-palvelu
-        :tallenna-budjettitavoite (fn [user urakka-id tavoitteet]
-                                    (tallenna-urakan-tavoite (:db this) user urakka-id tavoitteet))))
-    this)
-
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :budjetoidut-tyot)
-    (poista-palvelu (:http-palvelin this) :tallenna-budjetoidut-tyot)
-    (poista-palvelu (:http-palvelin this) :budjettitavoite)
-    (poista-palvelu (:http-palvelin this) :tallenna-budjettitavoite)
-    this))
-
 (defn hae-urakan-tavoite
-  [db user urakka-id]
+  [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
@@ -55,7 +29,7 @@
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.
   Budjettitiedoissa: hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta.
   Budjettitavoitteet-vektorissa voi lähettää yhden tai useamman mäpin, jossa kussakin urakan yhden hoitokauden tiedot."
-  [db user urakka-id tavoitteet]
+  [db user {:keys [urakka-id tavoitteet]}]
 
   (let [urakkatyyppi (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
     (if-not (= urakkatyyppi :teiden-hoito)
@@ -80,7 +54,7 @@
 
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
-  [db user urakka-id]
+  [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   {:kiinteahintaiset-tyot   (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
@@ -122,6 +96,30 @@
                                               (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c tallennettavat-toimenpideinstanssit-urakassa))
 
                               ;; Palautetaan päivitetty tilanne
-                              (hae-urakan-budjetoidut-tyot c user urakka-id))))
+                              (hae-urakan-budjetoidut-tyot c user {:urakka-id urakka-id}))))
 
+(defrecord Budjettisuunnittelu []
+  component/Lifecycle
+  (start [this]
+    (when (ominaisuus-kaytossa? :mhu-urakka)
+      (doto (:http-palvelin this)
+        (julkaise-palvelu
+          :budjetoidut-tyot (fn [user tiedot]
+                              (hae-urakan-budjetoidut-tyot (:db this) user tiedot)))
+        (julkaise-palvelu
+          :tallenna-budjetoidut-tyot (fn [user tiedot]
+                                       (tallenna-budjetoidut-tyot (:db this) user tiedot)))
+        (julkaise-palvelu
+          :budjettitavoite (fn [user tiedot]
+                             (hae-urakan-tavoite (:db this) user tiedot)))
+        (julkaise-palvelu
+          :tallenna-budjettitavoite (fn [user tiedot]
+                                      (tallenna-urakan-tavoite (:db this) user tiedot)))))
+    this)
 
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :budjetoidut-tyot)
+    (poista-palvelu (:http-palvelin this) :tallenna-budjetoidut-tyot)
+    (poista-palvelu (:http-palvelin this) :budjettitavoite)
+    (poista-palvelu (:http-palvelin this) :tallenna-budjettitavoite)
+    this))

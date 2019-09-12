@@ -3,9 +3,9 @@
   (:require [cljs.test :as t :refer-macros [is]]
             [tuck.core :as tuck]
             [harja.loki :refer [log]]
-            [cljs.core.async :as async :refer [<! chan timeout]]
+            [cljs.core.async :as async :refer [<! >! chan timeout]]
             [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def palveukutsu-viive (atom {})) ;; Palvelukontekstin tunniste -> palvelukutsu-eventin id
 
@@ -83,3 +83,34 @@
   (let [ch (chan)]
     (e! (apply tapahtuma (conj (vec tapahtuma-args) ch)))
     ch))
+
+(defrecord MuutaTila [polku arvo])
+(defrecord PaivitaTila [polku f])
+(defrecord AloitaViivastettyjenEventtienKuuntelu [viive kanava])
+
+(extend-protocol tuck/Event
+  MuutaTila
+  (process-event [{:keys [polku arvo]} app]
+    (assoc-in app polku arvo))
+
+  PaivitaTila
+  (process-event [{:keys [polku f]} app]
+    (update-in app polku f))
+  AloitaViivastettyjenEventtienKuuntelu
+  (process-event [{:keys [viive kanava]} app]
+    (tuck/action! (fn [e!]
+                    (go-loop [viivastetyt-eventit {}
+                              [tunniste event] (<! kanava)]
+                             (let [{:keys [tunnisteen-kanava saije]} (get viivastetyt-eventit tunniste)
+                                   uusi-tunnisteen-kanava (chan)]
+                               (when (and saije (nil? (async/poll! saije)))
+                                 (>! tunnisteen-kanava true))
+                               (recur (assoc viivastetyt-eventit
+                                        tunniste {:tunnisteen-kanava uusi-tunnisteen-kanava
+                                                  :saije (go (<! (timeout viive))
+                                                             (if (async/poll! uusi-tunnisteen-kanava)
+                                                               false
+                                                               (do (e! event)
+                                                                   true)))})
+                                      (<! kanava))))))
+    app))

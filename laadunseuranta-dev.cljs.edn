@@ -1,0 +1,8 @@
+{:main harja-laadunseuranta.dev-core
+ :asset-path "js/compiled/dev_out"
+ :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
+ :output-dir "resources/public/laadunseuranta/js/compiled/dev_out"
+ :source-map-timestamp true
+ :optimizations :none
+ :source-map true
+ :closure-output-charset "US-ASCII"}

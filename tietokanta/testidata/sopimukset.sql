@@ -56,6 +56,12 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus)
 VALUES
   ('Espoon alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisaES6339/06', (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null));
+
+-- MHU sopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+  ('Rovaniemen MHU testiurakan sopimus','2018-10-01','2023-09-30','MHU-TESTI-LAP', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'));
+
 -- Aktiivinen oulu
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
