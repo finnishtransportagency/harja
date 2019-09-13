@@ -1,64 +1,9 @@
-CREATE TYPE laskutyyppi AS ENUM ('laskutettava', 'kiinteasti-hinnoiteltu');
-
-
-DROP TABLE lasku_kohdistus;
-DROP TABLE lasku_liite;
-DROP TABLE lasku;
-
-
-CREATE TABLE lasku (
-                     id serial primary key,    -- sisäinen ID
-                     tyyppi LASKUTYYPPI not null,
-                     viite text not null,      -- viite tai muu ulkoisen järjestelmän tunniste laskulle
-                     kokonaissumma numeric not null, -- summa voi olla nolla, mutta se ei voi olla tyhjä
-                     erapaiva date not null,
-                     urakka integer not null references urakka(id),
-                     luotu timestamp,
-                     luoja integer references kayttaja(id),
-                     muokattu timestamp,
-                     muokkaaja integer references kayttaja(id),
-                     poistettu boolean default false,
-                     unique (viite));
-
-COMMENT ON table lasku IS
-  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Laskun tiedot tallennetaan tähän tauluun. Laskuerittely ja kohdistus eri toimenpiteille, tehtäväryhmille ja tehtväille tallennetaan lasku_kohdistus-tauluun.
-    Laskut kasvattavat Sampoon lähetettäviä maksueriä, mutta laskennassa käytetään lasku_kohdistus-taulun summatietoja. Useimmiten laskutettava työ kasvattaa kokonaishintaista maksuerää. Äkilliset hoitotyöt ja kolmansien osapuolten aiheuttamat vahingot
-    ovat tehtäviä, jotka kasvattavat kumpikin omia maksueriään (Äkilliset hoitotyöt ja Muut).' ;
-
-
-CREATE TABLE lasku_kohdistus(
-                              id serial primary key,       -- sisäinen ID
-                              rivi integer not null,
-                              lasku integer references lasku(id),
-                              summa NUMERIC not null, -- summa voi olla nolla, mutta se ei voi olla tyhjä
-                              toimenpideinstanssi integer not null references toimenpideinstanssi(id),
-                              tehtavaryhma integer references tehtavaryhma(id),
-                              tehtava integer references toimenpidekoodi(id),
-                              suorittaja integer references aliurakoitsija(id),
-                              suoritus_alku timestamp,
-                              suoritus_loppu timestamp,
-                              luotu timestamp,
-                              luoja integer references kayttaja(id),
-                              muokattu timestamp,
-                              muokkaaja integer references kayttaja(id),
-                              poistettu boolean default false,
-                              unique (lasku, rivi));
-
-COMMENT ON table lasku_kohdistus IS
-  E'Lasku-tauluun tallennettu lasku voidaan kohdistaa useaan toimenpiteeseen,tehtäväryhmään ja/tai tehtävään.
-   Kohdistustiedot (käytännössä laskuerittely) tallennetaan tähän tauluun. Kohdistuksen voi tehdä eri tasoilla: toimenpide, tehtäväryhmä ja tehtävä. Vain toimenpideinstanssi-taso on aina pakollinen.' ;
-
-
-CREATE TABLE lasku_liite(
-                          id serial primary key,                -- sisäinen ID
-                          lasku integer not null references lasku(id),
-                          liite integer not null references liite(id),
-                          luotu timestamp,
-                          luoja integer references kayttaja(id),
-                          muokattu timestamp,
-                          muokkaaja integer references kayttaja(id),
-                          poistettu boolean,
-                          unique (lasku, liite));
-
-COMMENT ON table lasku_liite IS
-  E'Pääurakoitsija laskuttaa Väylää alihankintakustannuksistaan. Laskussa voi olla useita liitteitä. Lasku_liite-taulu linkkaa laskun ja liitteet toisiinsa.' ;
+UPDATE tehtavaryhma SET otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen' WHERE otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito' WHERE otsikko = '2.2 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito' WHERE otsikko = '2.3 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito' WHERE otsikko = '2.4 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.5 LIIKENNEYMPÄRISTÖN HOITO / Rumpujen kunnossapito ja uusiminen' WHERE otsikko = '2.5 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.6 LIIKENNEYMPÄRISTÖN HOITO / Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito' WHERE otsikko = '2.6 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällysteiden paikkaus paikkaukset siirretään lymp:sta korjaukseen / ASIAKIRJAMUUTOKSET' WHERE otsikko = '2.7 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.8 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito' WHERE otsikko = '2.8 LIIKENNEYMPÄRISTÖN HOITO';
+UPDATE tehtavaryhma SET otsikko = '2.9 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito' WHERE otsikko = '2.9 LIIKENNEYMPÄRISTÖN HOITO';

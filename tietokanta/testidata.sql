@@ -52,6 +52,7 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 
 -- Suunnitellut työt
 \i testidata/suunnitellut_tyot.sql
+\i testidata/tehtavamaarat.sql
 
 \i testidata/pohjavesialueet.sql
 

@@ -1,14 +1,32 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
             [clojure.string :as clj-str]
+            [harja.tiedot.urakka.urakka :as tiedot]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.osa :as osa]
-            [harja.ui.taulukko.tyokalut :as tyokalut]))
+            [harja.ui.taulukko.tyokalut :as tyokalut]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.loki :as loki]
+            [harja.pvm :as pvm]))
 
-(defrecord PaivitaMaara [janan-id solun-id arvo])
+(defrecord PaivitaMaara [solu arvo])
 (defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
 (defrecord JarjestaTehtavienMukaan [])
 (defrecord JarjestaMaaranMukaan [])
+(defrecord ValitseTaso [arvo taso])
+(defrecord HaeTehtavat [parametrit])
+(defrecord TehtavaHakuEpaonnistui [])
+(defrecord TehtavaHakuOnnistui [tehtavat prosessoi-tulokset])
+(defrecord TehtavaTallennusOnnistui [])
+(defrecord TehtavaTallennusEpaonnistui [])
+(defrecord TallennaTehtavamaara [tehtava])
+
+(def toimenpiteet #{:talvihoito
+                    :liikenneympariston-hoito
+                    :sorateiden-hoito
+                    :paallystepaikkaukset
+                    :mhu-yllapito
+                    :mhu-korvausinvestointi})
 
 (defn ylempi-taso?
   [ylempi-taso alempi-taso]
@@ -71,15 +89,113 @@
                                     (tehtavan-tunniste tehtava)])))
                    tehtavat))))
 
+(defn paivitys-fn [arvo hierarkia nayta-aina]
+  (fn [rivit]
+   (mapv (fn [rivi]
+           (if (or
+                 (= (:id arvo) (get hierarkia (p/janan-id rivi)))
+                 (get nayta-aina (p/janan-id rivi)))
+             (tyokalut/aseta-arvo rivi :piillotettu? false)
+             (tyokalut/aseta-arvo rivi :piillotettu? true)))
+         rivit)))
+
 (extend-protocol tuck/Event
+  TehtavaTallennusEpaonnistui
+  (process-event
+    [_ app]
+    app)
+  TehtavaTallennusOnnistui
+  (process-event
+    [_ app]
+    app)
+  TallennaTehtavamaara
+  (process-event
+    [{:keys [tehtava]} {:keys [valinnat] :as app}]
+    (let [{:keys [urakka-id tehtava-id maara]} tehtava]
+      (tuck-apurit/post! :tallenna-tehtavamaarat
+                         {:urakka-id             urakka-id
+                          :hoitokauden-alkuvuosi (:hoitokausi valinnat)
+                          :tehtavamaarat         [{:tehtava-id tehtava-id
+                                                   :maara      (js/parseInt maara)}]}
+                         {:onnistui ->TehtavaTallennusOnnistui
+                          :epaonnistui ->TehtavaTallennusEpaonnistui
+                          :paasta-virhe-lapi? true})
+      (update app :valinnat #(assoc %
+                               :virhe-tallennettaessa false
+                               :tallennetaan true))))
+  TehtavaHakuEpaonnistui
+  (process-event
+    [_ app]
+    (update app :valinnat #(assoc %
+                               :virhe-noudettaessa true
+                               :noudetaan false)))
+  TehtavaHakuOnnistui
+  (process-event
+    [{:keys [tehtavat prosessoi-tulokset]} app]
+    (let [hierarkia (reduce (fn [acc {:keys [id tehtavaryhmatyyppi vanhempi toimenpide]}]
+                              (case tehtavaryhmatyyppi
+                                "otsikko"
+                                (assoc acc id toimenpide)
+                                "toimenpide"
+                                acc
+                                "tehtava"
+                                (assoc acc id vanhempi))) {} tehtavat)
+          toimenpide (some (fn [t] (when (= "toimenpide" (:tehtavaryhmatyyppi t)) t)) tehtavat)
+          valitaso (some (fn [t] (when (and
+                                         (= (:id toimenpide) (:toimenpide t))
+                                         (= "otsikko" (:tehtavaryhmatyyppi t))) t)) tehtavat)]
+      (-> app
+         (update :valinnat #(assoc % :noudetaan false
+                                     :hoitokausi (pvm/vuosi (pvm/nyt))
+                                     :toimenpide toimenpide
+                                     :valitaso valitaso))
+         (assoc :tehtava-ja-maaraluettelo tehtavat
+                :hierarkia hierarkia
+                :tehtavat-taulukko (update (prosessoi-tulokset tehtavat) :rivit (paivitys-fn valitaso hierarkia #{:tehtava}))))))
+  HaeTehtavat
+  (process-event
+    [{:keys [parametrit]} app]
+    (let [{:keys [hoitokausi prosessori tilan-paivitys-fn]} parametrit
+          {urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
+          uusi-tila (-> app
+                        (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+                                           {:urakka-id urakka-id
+                                            :hoitokauden-alkuvuosi (or hoitokausi
+                                                                       (harja.pvm/vuosi urakka-alkupvm))}
+                                           (merge
+                                             {:onnistui            ->TehtavaHakuOnnistui
+                                              :epaonnistui         ->TehtavaHakuEpaonnistui
+                                              :paasta-virhe-lapi?  true} (when prosessori {:onnistui-parametrit [prosessori]})))
+                        (update :valinnat #(assoc %
+                                             :virhe-noudettaessa false
+                                             :noudetaan true)))]
+      (if tilan-paivitys-fn
+        (tilan-paivitys-fn uusi-tila)
+        uusi-tila)))
+  ValitseTaso
+  (process-event
+    [{:keys [arvo taso]} {:keys [tehtavat-taulukko hierarkia tehtava-ja-maaraluettelo] :as app}]
+    (let [nayta-aina #{:tehtava}]
+      (case taso
+       :hoitokausi
+       (assoc-in app [:valinnat :hoitokausi] arvo)
+       :ylataso
+       (let [valitaso (some #(when (and (= "otsikko" (:tehtavaryhmatyyppi %))
+                                        (= (:id arvo) (:toimenpide %))) %) tehtava-ja-maaraluettelo)
+             toimenpide-ja-valitaso (update app :valinnat (fn [valinnat]
+                                                            (assoc valinnat
+                                                              :toimenpide arvo
+                                                              :valitaso valitaso)))
+             taulukko (update tehtavat-taulukko :rivit
+                              (paivitys-fn valitaso hierarkia nayta-aina))]
+         (p/paivita-taulukko! taulukko toimenpide-ja-valitaso))
+       :valitaso
+       (let [taulukko (update tehtavat-taulukko :rivit
+                              (paivitys-fn arvo hierarkia nayta-aina))]
+         (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :valitaso] arvo))))))
   PaivitaMaara
-  (process-event [{:keys [janan-id solun-id arvo]} app]
-    (let [janan-index (tyokalut/janan-index (:tehtavat-taulukko app) janan-id)
-          ;; TODO vissiin väärä nimi solun-id:llä
-          [solun-index & _] (p/osan-polku (get-in app [:tehtavat-taulukko janan-index]) solun-id)]
-      (update-in app [:tehtavat-taulukko janan-index :solut solun-index :parametrit]
-                       (fn [parametrit]
-                         (assoc parametrit :value arvo)))))
+  (process-event [{:keys [solu arvo]} app]
+    (p/paivita-solu! (:tehtavat-taulukko app) (tyokalut/aseta-arvo solu :arvo arvo) app))
 
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
