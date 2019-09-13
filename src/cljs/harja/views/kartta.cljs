@@ -466,15 +466,14 @@
            :haetaan? true
            :asiat [])
 
-    (go
-      (let [in-ch (async/merge
-                   (map #(taso/hae-asiat-pisteessa % koordinaatti extent)
-                        (remove nil? (vals tasot))))]
-        (loop [asia (<! in-ch)]
-          (when asia
-            (swap! atomi update :asiat conj asia)
-            (recur (<! in-ch))))
-        (swap! atomi assoc :haetaan? false)))))
+    (go (let [in-ch (async/merge
+                      (map #(taso/hae-asiat-pisteessa % koordinaatti extent)
+                           (remove nil? (vals tasot))))]
+          (loop [[asia _] (async/alts! [in-ch (async/timeout 5000)])]
+            (when asia
+              (swap! atomi update :asiat conj asia)
+              (recur (<! in-ch))))
+          (swap! atomi assoc :haetaan? false)))))
 
 (defn- geometria-maarat [geometriat]
   (reduce-kv (fn [m k v]
