@@ -145,7 +145,11 @@
                      (pr-str (first pvm-vali)) (pr-str (second pvm-vali))))
   (validointi/tarkista-urakka db urakka-id)
   (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
-  (let [paivystajatiedot (yhteyshenkilot-q/hae-urakan-paivystajat db urakka-id (first pvm-vali) (second pvm-vali))
+  (let [paivystajatiedot (map (fn [paivystajatiedot]
+                                (if (= (:urakka_tyyppi paivystajatiedot) "teiden-hoito")
+                                  (assoc paivystajatiedot :urakka_tyyppi "hoito")
+                                  paivystajatiedot))
+                              (yhteyshenkilot-q/hae-urakan-paivystajat db urakka-id (first pvm-vali) (second pvm-vali)))
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
 
