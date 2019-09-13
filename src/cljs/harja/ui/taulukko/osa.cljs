@@ -28,7 +28,15 @@
 (defonce muuta-avain-syote
          {:arvo [:parametrit :value]
           :id [:osan-id]
-          :class [:parametrit :class]})
+          :class [:parametrit :class]
+          :on-change [:toiminnot :on-change]
+          :on-blur [:toiminnot :on-blur]
+          :on-click [:toiminnot :on-click]
+          :on-focus [:toiminnot :on-focus]
+          :on-input [:toiminnot :on-input]
+          :on-key-down [:toiminnot :on-key-down]
+          :on-key-press [:toiminnot :on-key-press]
+          :on-key-up [:toiminnot :on-key-up]})
 (defonce muuta-avain-nappi
          {:arvo [:sisalto]
           :id [:osan-id]
