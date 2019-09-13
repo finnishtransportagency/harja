@@ -675,6 +675,7 @@
                                                     (assoc :hoitokausi hoitokausi))))
                                             hankinnat-hoitokausittain))
         yhteensa-fn (fn [yhteensa-pohja]
+                      (log "Yhteensä yht " yhteensa-pohja)
                       (-> yhteensa-pohja
                           (p/aseta-arvo :id :yhteensa
                                         :class #{"table-default" "table-default-sum"})

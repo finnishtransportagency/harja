@@ -14,7 +14,7 @@
 (defn jana
   "Palauttaa jana(t) joiden id vastaa annettua"
   [taulukko id]
-  (filter #(p/janan-id? % id) taulukko))
+  (into [] (filter #(p/janan-id? % id) (:rivit taulukko))))
 
 (defn janan-osa
   "Palauttaa janan elementi(t) joiden id vastaa annettua"
@@ -24,7 +24,8 @@
 (defn janan-index
   "Palauttaa janan indeksin taulukossa"
   [taulukko jana]
-  (ominaisuus-predikaatilla taulukko (fn [index _] index) #(= (p/janan-id %1) (p/janan-id jana))))
+  (loki/log "sain janan " (p/janan-id jana) " ja oli tämmänenki " jana)
+  (ominaisuus-predikaatilla (:rivit taulukko) (fn [index _] index) #(= (p/janan-id %1) (p/janan-id jana))))
 
 (defn osan-polku-taulukossa
   [taulukko osa]

@@ -5,7 +5,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -13,21 +14,30 @@
 
 (def listaus (atom :kaikki))
 
+(defn- on-tarkastettu-hoitokautena?
+  [silta]
+  (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))]
+    (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
+
 (defn- varita-silta [silta]
-  ;; PENDING: tämä ehkä korjausstatuksen mukaan?
-  ;; Nyt sillat ovat punaisia
+  ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
+
   (-> silta
-      (assoc-in [:alue :fill] "red")))
+      (assoc-in [:alue :fill] true)
+      (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta) "green" "red"))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat
            {:urakka-id (:id urakka)
             :listaus listaus}))
 
+(defonce paivita-kartta! (atom false))
+
 (def haetut-sillat
   (reaction<! [paalla? @karttataso-sillat
                urakka @nav/valittu-urakka
-               listaus @listaus]
+               listaus @listaus
+               _ @paivita-kartta!]
               {:nil-kun-haku-kaynnissa? true}
               (when (and paalla? urakka)
                 (log "Siltataso päällä, haetaan sillat urakalle: "
@@ -54,6 +64,7 @@
 
 
 (defn paivita-silta! [id funktio & args]
+  (swap! paivita-kartta! not)
   (swap! sillat-kartalla (fn [sillat]
                   (mapv (fn [silta]
                           (if (= id (:id silta))

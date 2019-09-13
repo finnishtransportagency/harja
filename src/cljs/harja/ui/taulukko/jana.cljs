@@ -14,14 +14,15 @@
   p/Jana
   (piirra-jana [this]
     (assert (vector? (:solut this)) (str "RIVIN: " janan-id " SOLUT EI OLE VEKTORI"))
-    [:div.jana.janan-rivi.row {:class (when luokat
+    (when-not (:piilotettu? this)
+      [:div.jana.janan-rivi.row {:class (when luokat
                                         (apply str (interpose " " luokat)))
                                :data-cy janan-id}
      (for [solu (:solut this)
            :let [{:keys [osan-id]} solu]]
        (with-meta
          [p/piirra-osa solu]
-         {:key osan-id}))])
+         {:key osan-id}))]))
 
   (janan-id? [this id]
     (= (:janan-id this) id))
