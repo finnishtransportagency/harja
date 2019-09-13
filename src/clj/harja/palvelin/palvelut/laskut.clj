@@ -71,6 +71,14 @@
         laskun-kohdistukset (into [] (q/hae-laskun-kohdistukset db {:lasku (:id lasku)}))]
     (assoc lasku :kohdistukset laskun-kohdistukset)))
 
+(defn- laskuerittelyn-maksueratyyppi
+  "Selvittää laskuerittelyn maksueratyypin, jotta laskun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
+  Yleensä tyyppi on kokonaishintainen. Jos tehtävä on Äkillinen hoitotyö, maksuerätyyppi on akillinen-hoitotyö.
+  Jos tehtävä on "
+  [tehtavaryhma-id tehtava-id]
+      ;;TODO: lisää käsittely äkillisen hoitotyön ja vahinkojen korjauksen tunnistamiseski
+      "kokonaishintainen")
+
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
   [db user urakka-id lasku-id laskurivi]
@@ -82,6 +90,7 @@
                                             :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
                                             :tehtavaryhma        (:tehtavaryhma laskurivi)
                                             :tehtava             (:tehtava laskurivi)
+                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi (:tehtava laskurivi)(:tehtava laskurivi))
                                             :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
