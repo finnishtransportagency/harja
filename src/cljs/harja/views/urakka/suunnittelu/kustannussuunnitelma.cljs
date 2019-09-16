@@ -624,32 +624,34 @@
                                                                       (when (= hoitokausi kuluva-hoitovuosi)
                                                                         (p/aseta-tila! osa true))
                                                                       osa))))))
-        lapsirivi (fn [rivin-pohja nimi maara hoitokausi]
+        lapsirivi (fn [rivin-pohja paivamaara maara hoitokausi]
                     (-> rivin-pohja
-                        (p/aseta-arvo :id (keyword nimi)
+                        (p/aseta-arvo :id (keyword (pvm/pvm paivamaara))
                                       :class #{"table-default"
                                                (when-not (= hoitokausi kuluva-hoitovuosi)
                                                  "piillotettu")})
                         (p/paivita-arvo :lapset
                                         (osien-paivitys-fn (fn [osa]
-                                                             (p/aseta-arvo osa
-                                                                           :id (keyword (str nimi "-nimi"))
-                                                                           :arvo (clj-str/capitalize nimi)
-                                                                           :class #{(sarakkeiden-leveys :nimi) "solu-sisenna-1"}))
+                                                             (-> osa
+                                                                 (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-nimi"))
+                                                                               :arvo paivamaara
+                                                                               :class #{(sarakkeiden-leveys :nimi) "solu-sisenna-1"})
+                                                                 (p/lisaa-fmt (fn [paivamaara]
+                                                                                (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))))
                                                            (fn [osa]
                                                              (-> osa
-                                                                 (p/aseta-arvo :id (keyword (str nimi "-maara"))
+                                                                 (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-maara"))
                                                                                :arvo {:value maara})
                                                                  (assoc :komponentti hankintasuunnitelmien-syotto
                                                                         :komponentin-argumentit {:e! e!
-                                                                                                 :nimi nimi
+                                                                                                 :nimi (pvm/pvm paivamaara)
                                                                                                  :on-oikeus? on-oikeus?
                                                                                                  :polku-taulukkoon polku-taulukkoon
                                                                                                  :luokat #{(sarakkeiden-leveys :maara-kk)}
                                                                                                  :input-luokat #{"input-default" "komponentin-input"}})))
                                                            (fn [osa]
                                                              (-> osa
-                                                                 (p/aseta-arvo :id (keyword (str nimi "-yhteensa"))
+                                                                 (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-yhteensa"))
                                                                                :arvo maara
                                                                                :class #{(sarakkeiden-leveys :yhteensa)})
                                                                  (p/lisaa-fmt summa-formatointi)))))))
@@ -669,13 +671,12 @@
                                                                                           (case rivin-tyyppi
                                                                                             :laajenna [(paarivi-laajenna rivin-pohja (str laajenna-rivin-id "-paa") hoitokausi nil)]
                                                                                             :lapset (map (fn [hankinta]
-                                                                                                           (lapsirivi rivin-pohja (pvm/pvm (:pvm hankinta)) (:summa hankinta) hoitokausi))
+                                                                                                           (lapsirivi rivin-pohja (:pvm hankinta) (:summa hankinta) hoitokausi))
                                                                                                          hoitokauden-hankinnat)))))
                                                                                     [] rivit))))
                                                     (assoc :hoitokausi hoitokausi))))
                                             hankinnat-hoitokausittain))
         yhteensa-fn (fn [yhteensa-pohja]
-                      (log "Yhteensä yht " yhteensa-pohja)
                       (-> yhteensa-pohja
                           (p/aseta-arvo :id :yhteensa
                                         :class #{"table-default" "table-default-sum"})

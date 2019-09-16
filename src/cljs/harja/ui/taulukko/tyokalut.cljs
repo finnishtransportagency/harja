@@ -24,7 +24,6 @@
 (defn janan-index
   "Palauttaa janan indeksin taulukossa"
   [taulukko jana]
-  (loki/log "sain janan " (p/janan-id jana) " ja oli tämmänenki " jana)
   (ominaisuus-predikaatilla (:rivit taulukko) (fn [index _] index) #(= (p/janan-id %1) (p/janan-id jana))))
 
 (defn osan-polku-taulukossa
@@ -155,3 +154,55 @@
     (cond
       (integer? sisaren-tunniste) (nth (p/arvo osan-rivi :lapset) sisaren-tunniste)
       (string? sisaren-tunniste) (nth (p/arvo osan-rivi :lapset) (p/otsikon-index taulukko sisaren-tunniste)))))
+
+(defn rivi->map
+  "Muuttaa rivin mapiksi. Rivin lapset oletetaan olevan p/Osa. Mapin avaimina on joko solun id tai annetut avaimet ja
+   arvona on solun arvo"
+  ([rivi] (rivi->map rivi nil))
+  ([rivi avaimet]
+   {:pre [(satisfies? p/Jana rivi)
+          (or (nil? avaimet)
+              (vector? avaimet))]
+    :post [(or (map? %)
+               (nil? %))]}
+   (let [lapset (p/arvo rivi :lapset)]
+     ;; Jos joku lapsista ei ole osa, palautetaan nil
+     (when (every? #(satisfies? p/Osa %) lapset)
+       (let [avaimet (or avaimet (map #(p/osan-id %) lapset))]
+         (into {}
+               (map (fn [avain osa]
+                      [avain (p/arvo osa :arvo)])
+                    avaimet
+                    lapset)))))))
+
+(defn rivikontti->vector
+  "Muuttaa rivejä sisätävän rivin vektoriksi mappeja."
+  [taulukko rivikontti otsikot riviskeemat]
+  (loop [[rivi & rivit] (p/arvo rivikontti :lapset)
+         data []]
+    (if (nil? rivi)
+      data
+      (let [rividata (rivi->map rivi otsikot)]
+        (recur rivit
+               (if (nil? rividata)
+                 (into []
+                       (concat
+                         data
+                         (rivikontti->vector taulukko rivi otsikot riviskeemat)))
+                 (if (or (nil? riviskeemat)
+                         (some (fn [skeema]
+                                 (= skeema (p/rivin-skeema taulukko rivi)))
+                               riviskeemat))
+                   (conj data rividata)
+                   data)))))))
+
+(defn taulukko->data
+  "Muuttaa taulukon vektoriksi mappeja, joiden avaimina on otsikko-skeema ja arvoina solujen arvot. Voidaan myös antaa
+   setti rivien skeemoja, jolloinka vain ne otetaan mukaan."
+  ([taulukko] (taulukko->data taulukko nil))
+  ([taulukko riviskeemat]
+   {:pre [(or (nil? riviskeemat)
+              (set? riviskeemat))]}
+   (let [otsikot (:skeema-sarake taulukko)]
+     (into []
+           (rivikontti->vector taulukko taulukko otsikot riviskeemat)))))
