@@ -2,6 +2,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [clojure.string :as clj-str]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
+            [clojure.set :as clj-set]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tila]
@@ -426,25 +427,34 @@
                                                                                           (merge-with merge
                                                                                                       (into {}
                                                                                                             (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   [avain {:kokonaishintainen-ja-lisatyo (or (get-in hankinnat [avain :kokonaishintainen-ja-lisatyo])
-                                                                                                                                                             (not= uusi vanha))}])
+                                                                                                                   [avain {:kokonaishintainen (or (get-in hankinnat [avain :kokonaishintainen])
+                                                                                                                                                  (not= uusi vanha))}])
                                                                                                                  (:toimenpiteet uudet-hankintakustannukset)
                                                                                                                  (:toimenpiteet vanhat-hankintakustannukset)))
                                                                                                       (into {}
                                                                                                             (map (fn [[avain uusi] [_ vanha]]
+                                                                                                                   [avain {:lisatyo (or (get-in hankinnat [avain :lisatyo])
+                                                                                                                                        (not= uusi vanha))}])
+                                                                                                                 (:toimenpiteet-laskutukseen-perustuen uudet-hankintakustannukset)
+                                                                                                                 (:toimenpiteet-laskutukseen-perustuen vanhat-hankintakustannukset)))
+                                                                                                      (into {}
+                                                                                                            (map (fn [toimenpide]
+                                                                                                                   [toimenpide {:laskutukseen-perustuen-valinta (or (get-in hankinnat [toimenpide :laskutukseen-perustuen-valinta])
+                                                                                                                                                                    (and (not= (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
+                                                                                                                                                                               (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
+                                                                                                                                                                         (not (contains? (clj-set/intersection (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
+                                                                                                                                                                                                               (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
+                                                                                                                                                                                         toimenpide))))}])
+                                                                                                                 t/toimenpiteet))
+                                                                                                      (into {}
+                                                                                                            (map (fn [[avain uusi] [_ vanha]]
                                                                                                                    (let [rahavaraukset-muuttunut? (not= uusi vanha)]
-                                                                                                                     [avain {:akillinen-hoitotyo (or (get-in hankinnat [avain :akillinen-hoitotyo])
-                                                                                                                                                     rahavaraukset-muuttunut?)
-                                                                                                                             :vahinkojen-korjaukset (or (get-in hankinnat [avain :vahinkojen-korjaukset])
-                                                                                                                                                        rahavaraukset-muuttunut?)
-                                                                                                                             :muut-rahavaraukset (or (get-in hankinnat [avain :muut-rahavaraukset])
-                                                                                                                                                     rahavaraukset-muuttunut?)}]))
+                                                                                                                     [avain {:rahavaraukset (or (get-in hankinnat [avain :rahavaraukset])
+                                                                                                                                                rahavaraukset-muuttunut?)}]))
                                                                                                                  (:rahavaraukset uudet-hankintakustannukset)
                                                                                                                  (:rahavaraukset vanhat-hankintakustannukset))))))))))
                                   (not= old-argv new-argv))}
       (fn [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
-        (println "RENDERÖIDÄÄN")
-        (println (get-in @paivitetyt-taulukot [:hankinnat :talvihoito :kokonaishintainen-ja-lisatyo]))
         (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)]))
         (if suunnitelmien-tila-taulukko
           [p/piirra-taulukko suunnitelmien-tila-taulukko]

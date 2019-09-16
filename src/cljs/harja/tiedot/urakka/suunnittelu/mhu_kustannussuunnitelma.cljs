@@ -795,62 +795,66 @@
           paivita-hankintakustannusten-suunnitelmien-tila (fn [suunnitelmien-tila-taulukko
                                                                {:keys [valinnat toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
                                                                toimenpide suunnitelma]
-                                                            (tyokalut/paivita-asiat-taulukossa suunnitelmien-tila-taulukko [:hankintakustannukset]
-                                                                                               (fn [taulukko polut]
-                                                                                                 (let [[_ hankintakustannukset] polut
-                                                                                                       hankintakustannukset (get-in taulukko hankintakustannukset)]
-                                                                                                   (p/paivita-arvo hankintakustannukset :lapset
-                                                                                                                   (fn [rivit]
-                                                                                                                     (mapv (fn [toimenpiderivi-lapsilla]
-                                                                                                                             (cond
-                                                                                                                               (= (:toimenpide toimenpiderivi-lapsilla) toimenpide)
-                                                                                                                               (p/paivita-arvo toimenpiderivi-lapsilla :lapset
-                                                                                                                                               (fn [rivit]
-                                                                                                                                                 (mapv (fn [suunnitelmarivi]
-                                                                                                                                                         (cond
-                                                                                                                                                           (= (:suunnitelma suunnitelmarivi) suunnitelma)
-                                                                                                                                                           (p/paivita-arvo suunnitelmarivi :lapset
-                                                                                                                                                                           (fn [osat]
-                                                                                                                                                                             (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                                                                                      (cond
-                                                                                                                                                                                                        (= taman-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
-                                                                                                                                                                                                                                                             (fn [ikoni-ja-teksti]
-                                                                                                                                                                                                                                                               (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [toimenpide suunnitelma :kuluva-vuosi])))))
-                                                                                                                                                                                                        (= seuraavan-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
-                                                                                                                                                                                                                                                                 (fn [ikoni-ja-teksti]
-                                                                                                                                                                                                                                                                   (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [toimenpide suunnitelma :tuleva-vuosi])))))
-                                                                                                                                                                                                        :else osa))
-                                                                                                                                                                                                    osat)))
-                                                                                                                                                           ;; Tämä on aggregaattirivi
-                                                                                                                                                           (= :laajenna-toimenpide (p/rivin-skeema suunnitelmien-tila-taulukko suunnitelmarivi))
-                                                                                                                                                           (p/paivita-arvo suunnitelmarivi :lapset
-                                                                                                                                                                           (fn [osat]
-                                                                                                                                                                             (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                                                                                      (cond
-                                                                                                                                                                                                        (= taman-vuoden-otsikon-index index) (paivita-vetotoimenpiderivi osa tilat toimenpide :kuluva-vuosi)
-                                                                                                                                                                                                        (= seuraavan-vuoden-otsikon-index index) (paivita-vetotoimenpiderivi osa tilat toimenpide :tuleva-vuosi)
-                                                                                                                                                                                                        :else osa))
-                                                                                                                                                                                                    osat)))
-                                                                                                                                                           :else suunnitelmarivi))
-                                                                                                                                                       rivit)))
-                                                                                                                               ;; Tämä on aggregaatti
-                                                                                                                               (= :linkkiotsikko (p/rivin-skeema suunnitelmien-tila-taulukko toimenpiderivi-lapsilla))
-                                                                                                                               (p/paivita-arvo toimenpiderivi-lapsilla :lapset
-                                                                                                                                               (fn [osat]
-                                                                                                                                                 (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                                                          (cond
-                                                                                                                                                                            (= taman-vuoden-otsikon-index index) (paivita-linkkitoimenpiderivi osa tilat toimenpide :kuluva-vuosi)
-                                                                                                                                                                            (= seuraavan-vuoden-otsikon-index index) (paivita-linkkitoimenpiderivi osa tilat toimenpide :tuleva-vuosi)
-                                                                                                                                                                            :else osa))
-                                                                                                                                                                        osat)))
-                                                                                                                               :else toimenpiderivi-lapsilla))
-                                                                                                                           rivit)))))))
+                                                            (p/paivita-arvo suunnitelmien-tila-taulukko :lapset
+                                                                            (fn [rivit]
+                                                                              (mapv (fn [rivi]
+                                                                                      (if (p/janan-id? rivi :hankintakustannukset-vanhempi)
+                                                                                        (p/paivita-arvo rivi :lapset
+                                                                                                        (fn [rivit]
+                                                                                                          (mapv (fn [toimenpiderivi-lapsilla]
+                                                                                                                  (cond
+                                                                                                                    (= (:toimenpide toimenpiderivi-lapsilla) toimenpide)
+                                                                                                                    (p/paivita-arvo toimenpiderivi-lapsilla :lapset
+                                                                                                                                    (fn [rivit]
+                                                                                                                                      (mapv (fn [suunnitelmarivi]
+                                                                                                                                              (cond
+                                                                                                                                                (= (:suunnitelma suunnitelmarivi) suunnitelma)
+                                                                                                                                                (p/paivita-arvo suunnitelmarivi :lapset
+                                                                                                                                                                (fn [osat]
+                                                                                                                                                                  (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                                                                           (cond
+                                                                                                                                                                                             (= taman-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
+                                                                                                                                                                                                                                                  (fn [ikoni-ja-teksti]
+                                                                                                                                                                                                                                                    (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [toimenpide suunnitelma :kuluva-vuosi])))))
+                                                                                                                                                                                             (= seuraavan-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
+                                                                                                                                                                                                                                                      (fn [ikoni-ja-teksti]
+                                                                                                                                                                                                                                                        (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [toimenpide suunnitelma :tuleva-vuosi])))))
+                                                                                                                                                                                             :else osa))
+                                                                                                                                                                                         osat)))
+                                                                                                                                                ;; Tämä on aggregaattirivi
+                                                                                                                                                (= :laajenna-toimenpide (p/rivin-skeema suunnitelmien-tila-taulukko suunnitelmarivi))
+                                                                                                                                                (p/paivita-arvo suunnitelmarivi :lapset
+                                                                                                                                                                (fn [osat]
+                                                                                                                                                                  (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                                                                           (cond
+                                                                                                                                                                                             (= taman-vuoden-otsikon-index index) (paivita-vetotoimenpiderivi osa tilat toimenpide :kuluva-vuosi)
+                                                                                                                                                                                             (= seuraavan-vuoden-otsikon-index index) (paivita-vetotoimenpiderivi osa tilat toimenpide :tuleva-vuosi)
+                                                                                                                                                                                             :else osa))
+                                                                                                                                                                                         osat)))
+                                                                                                                                                :else suunnitelmarivi))
+                                                                                                                                            rivit)))
+                                                                                                                    ;; Tämä on aggregaatti
+                                                                                                                    (= :linkkiotsikko (p/rivin-skeema suunnitelmien-tila-taulukko toimenpiderivi-lapsilla))
+                                                                                                                    (p/paivita-arvo toimenpiderivi-lapsilla :lapset
+                                                                                                                                    (fn [osat]
+                                                                                                                                      (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                                               (cond
+                                                                                                                                                                 (= taman-vuoden-otsikon-index index) (paivita-linkkitoimenpiderivi osa tilat toimenpide :kuluva-vuosi)
+                                                                                                                                                                 (= seuraavan-vuoden-otsikon-index index) (paivita-linkkitoimenpiderivi osa tilat toimenpide :tuleva-vuosi)
+                                                                                                                                                                 :else osa))
+                                                                                                                                                             osat)))
+                                                                                                                    :else toimenpiderivi-lapsilla))
+                                                                                                                rivit)))
+                                                                                        rivi))
+                                                                                    rivit))))
           suunnitelmien-tila-taulukko (reduce (fn [taulukko [toimenpide suunnitelmat]]
                                                 (cond-> taulukko
-                                                        (get suunnitelmat :kokonaishintainen-ja-lisatyo) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :kokonaishintainen-ja-lisatyo)
-                                                        (get suunnitelmat :akillinen-hoitotyo) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :akillinen-hoitotyo)
-                                                        (get suunnitelmat :vahinkojen-korjaukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :vahinkojen-korjaukset)
-                                                        (get suunnitelmat :muut-rahavaraukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :muut-rahavaraukset)))
+                                                        (or (get suunnitelmat :kokonaishintainen)
+                                                            (get suunnitelmat :lisatyo)
+                                                            (get suunnitelmat :laskutukseen-perustuen-valinta)) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :kokonaishintainen-ja-lisatyo)
+                                                        (get suunnitelmat :rahavaraukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :akillinen-hoitotyo)
+                                                        (get suunnitelmat :rahavaraukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :vahinkojen-korjaukset)
+                                                        (get suunnitelmat :rahavaraukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :muut-rahavaraukset)))
                                               suunnitelmien-tila-taulukko (:hankinnat @paivitetyt-taulukot))]
       (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
                                    (-> edelliset-taulukot

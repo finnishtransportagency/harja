@@ -20,7 +20,8 @@
                                                          :valitaso nil}}
                                    :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
                                                                                             :maksetaan :talvikausi
-                                                                                            :kopioidaan-tuleville-vuosille? true}}
+                                                                                            :kopioidaan-tuleville-vuosille? true
+                                                                                            :laskutukseen-perustuen-valinta #{}}}
                                                           :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}}}}))
 
 (defonce yleiset (cursor tila [:yleiset]))
