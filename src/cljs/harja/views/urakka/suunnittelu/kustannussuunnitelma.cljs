@@ -256,42 +256,50 @@
                                                                               (p/aseta-arvo :id (str (gensym "laajenna-toimenpide")))
                                                                               (p/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
                                                                               (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2)))))))))))
-        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti]
-                            (map (fn [rahavarausteksti jakso]
-                                   (-> toimenpide-osa-pohja
-                                       (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
-                                                     :class #{"piillotettu"})
-                                       (p/paivita-arvo :lapset
-                                                       (osien-paivitys-fn (fn [osa]
-                                                                            (p/aseta-arvo osa
-                                                                                          :id (str (gensym "toimenpide-osa"))
-                                                                                          :arvo rahavarausteksti
-                                                                                          :class #{(sarakkeiden-leveys :teksti)
-                                                                                                   "solu-sisenna-2"}))
-                                                                          (fn [osa]
-                                                                            (p/aseta-arvo osa
-                                                                                          :id (str (gensym "toimenpide-osa"))
-                                                                                          :arvo {:ikoni ikonit/remove}
-                                                                                          :class #{(sarakkeiden-leveys :kuluva-vuosi)
-                                                                                                   "keskita"}))
-                                                                          (fn [osa]
-                                                                            (p/aseta-arvo osa
-                                                                                          :id (str (gensym "toimenpide-osa"))
-                                                                                          :arvo {:ikoni ikonit/remove}
-                                                                                          :class #{(sarakkeiden-leveys :tuleva-vuosi)
-                                                                                                   "keskita"}))
-                                                                          (fn [osa]
-                                                                            (p/aseta-arvo osa
-                                                                                          :id (str (gensym "toimenpide-osa"))
-                                                                                          :arvo jakso
-                                                                                          :class #{(sarakkeiden-leveys :jakso)}))))
-                                       ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
-                                       (assoc :suunnitelma rahavarausteksti)))
-                                 ["Suunnitellut hankinnat"
-                                  "Äkilliset hoitotyöt"
-                                  "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
-                                  "Rahavaraus lupaukseen 1"]
-                                 ["/kk**" "/kk" "/kk" "/kk"]))
+        tyyppi->nimi (fn [tyyppi]
+                       (case tyyppi
+                         :kokonaishintainen-ja-lisatyo "Suunnitellut hankinnat"
+                         :vahinkojen-korjaukset "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
+                         :akillinen-hoitotyo "Äkilliset hoitotyöt"
+                         :muut-rahavaraukset "Rahavaraus lupaukseen 1"))
+        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti rahavarausrivit?]
+                            (map (fn [tyyppi jakso]
+                                   (let [rahavarausteksti (tyyppi->nimi tyyppi)]
+                                     (-> toimenpide-osa-pohja
+                                         (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
+                                                       :class #{"piillotettu"})
+                                         (p/paivita-arvo :lapset
+                                                         (osien-paivitys-fn (fn [osa]
+                                                                              (p/aseta-arvo osa
+                                                                                            :id (str (gensym "toimenpide-osa"))
+                                                                                            :arvo rahavarausteksti
+                                                                                            :class #{(sarakkeiden-leveys :teksti)
+                                                                                                     "solu-sisenna-2"}))
+                                                                            (fn [osa]
+                                                                              (p/aseta-arvo osa
+                                                                                            :id (str (gensym "toimenpide-osa"))
+                                                                                            :arvo {:ikoni ikonit/remove}
+                                                                                            :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                     "keskita"}))
+                                                                            (fn [osa]
+                                                                              (p/aseta-arvo osa
+                                                                                            :id (str (gensym "toimenpide-osa"))
+                                                                                            :arvo {:ikoni ikonit/remove}
+                                                                                            :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                     "keskita"}))
+                                                                            (fn [osa]
+                                                                              (p/aseta-arvo osa
+                                                                                            :id (str (gensym "toimenpide-osa"))
+                                                                                            :arvo jakso
+                                                                                            :class #{(sarakkeiden-leveys :jakso)}))))
+                                         ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
+                                         (assoc :suunnitelma tyyppi))))
+                                 (if rahavarausrivit?
+                                   [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset :muut-rahavaraukset]
+                                   [:kokonaishintainen-ja-lisatyo])
+                                 (if rahavarausrivit?
+                                   ["/kk**" "/kk" "/kk" "/kk"]
+                                   ["/kk**"])))
         toimenpide-fn (fn [toimenpide-pohja]
                         (map (fn [toimenpide jakso]
                                (let [toimenpideteksti (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]
@@ -306,7 +314,7 @@
                                                                            rivit
                                                                            (case rivin-tyyppi
                                                                              :laajenna-toimenpide [(laajenna-toimenpide-fn rivin-pohja toimenpideteksti jakso)]
-                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti)))))
+                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti (t/toimenpiteet-rahavarauksilla toimenpide))))))
                                                                      [] rivit))))
                                      ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
                                      (assoc :toimenpide toimenpide))))
@@ -412,18 +420,31 @@
                                   (let [vanhat-hankintakustannukset (last (butlast old-argv))
                                         uudet-hankintakustannukset (last (butlast new-argv))]
                                     (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
+                                                                 ;{:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
                                                                  (-> edelliset-taulukot
                                                                      (update :hankinnat (fn [hankinnat]
-                                                                                          (into {}
-                                                                                                (map (fn [[avain uusi] [_ vanha]]
-                                                                                                       [avain {"Suunnitellut hankinnat" (or (get-in hankinnat [avain "Suunnitellut hankinnat"])
-                                                                                                                                            (not= uusi vanha))}])
-                                                                                                     (:toimenpiteet uudet-hankintakustannukset)
-                                                                                                     (:toimenpiteet vanhat-hankintakustannukset)))))))))
+                                                                                          (merge-with merge
+                                                                                                      (into {}
+                                                                                                            (map (fn [[avain uusi] [_ vanha]]
+                                                                                                                   [avain {:kokonaishintainen-ja-lisatyo (or (get-in hankinnat [avain :kokonaishintainen-ja-lisatyo])
+                                                                                                                                                             (not= uusi vanha))}])
+                                                                                                                 (:toimenpiteet uudet-hankintakustannukset)
+                                                                                                                 (:toimenpiteet vanhat-hankintakustannukset)))
+                                                                                                      (into {}
+                                                                                                            (map (fn [[avain uusi] [_ vanha]]
+                                                                                                                   (let [rahavaraukset-muuttunut? (not= uusi vanha)]
+                                                                                                                     [avain {:akillinen-hoitotyo (or (get-in hankinnat [avain :akillinen-hoitotyo])
+                                                                                                                                                     rahavaraukset-muuttunut?)
+                                                                                                                             :vahinkojen-korjaukset (or (get-in hankinnat [avain :vahinkojen-korjaukset])
+                                                                                                                                                        rahavaraukset-muuttunut?)
+                                                                                                                             :muut-rahavaraukset (or (get-in hankinnat [avain :muut-rahavaraukset])
+                                                                                                                                                     rahavaraukset-muuttunut?)}]))
+                                                                                                                 (:rahavaraukset uudet-hankintakustannukset)
+                                                                                                                 (:rahavaraukset vanhat-hankintakustannukset))))))))))
                                   (not= old-argv new-argv))}
       (fn [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
         (println "RENDERÖIDÄÄN")
-        (println (get-in @paivitetyt-taulukot [:hankinnat :talvihoito "Suunnitellut hankinnat"]))
+        (println (get-in @paivitetyt-taulukot [:hankinnat :talvihoito :kokonaishintainen-ja-lisatyo]))
         (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)]))
         (if suunnitelmien-tila-taulukko
           [p/piirra-taulukko suunnitelmien-tila-taulukko]
@@ -757,6 +778,8 @@
                                 (-> syotto-pohja
                                     (p/aseta-arvo :class #{"table-default"}
                                                   :id (keyword tyyppi))
+                                    ;; Laitetaan tämä info, jotta voidaan päivittää suunnitelma yhteenveto pelkästään tarvittaessa render funktiossa
+                                    (assoc :suunnitelma (keyword tyyppi))
                                     (p/paivita-arvo :lapset
                                                     (osien-paivitys-fn (fn [osa]
                                                                          (p/aseta-arvo osa
@@ -1332,7 +1355,9 @@
    ;; TODO: Korjaa oikeus
    [arvioidaanko-laskutukseen-perustuen e! valinnat true]
    [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
-   [:h3 "Rahavarukset"]
+   (when (t/toimenpiteet-rahavarauksilla (:toimenpide valinnat))
+     ^{:key "rahavaraukset-otsikko"}
+     [:h3 "Rahavarukset"])
    [suunnitellut-rahavaraukset e! rahavaraukset valinnat]])
 
 (defn jh-toimenkuva-laskulla [jh-laskulla]

@@ -704,27 +704,43 @@
                                            2 nil)
           seuraava-hoitokausi (if (not= 5 (:vuosi kuluva-hoitokausi))
                                 (pvm/paivamaaran-hoitokausi (pvm/lisaa-vuosia (pvm/nyt) 1)) nil)
-          paivita-ikoni (fn [osa toimenpide toimenpiteet hoitokausi]
-                          (p/paivita-arvo osa :arvo
-                                          (fn [ikoni-ja-teksti]
-                                            (let [taytetyt-rivit (tyokalut/taulukko->data (get toimenpiteet toimenpide)
-                                                                                          #{:lapset})
-                                                  taytetty?-hoitokauden-rivit (keep (fn [data]
-                                                                                      (when (pvm/valissa? (get data "Nimi")
-                                                                                                          (first hoitokausi)
-                                                                                                          (second hoitokausi))
-                                                                                        (let [maara (get data "Yhteensä")]
-                                                                                          (and (not= 0 maara)
-                                                                                               (not (nil? maara))))))
-                                                                                    taytetyt-rivit)
-                                                  tila (cond
-                                                         (every? true? taytetty?-hoitokauden-rivit) :valmis
-                                                         (some true? taytetty?-hoitokauden-rivit) :kesken
-                                                         :else :ei-tehty)]
-                                              (assoc ikoni-ja-teksti :ikoni (case tila
-                                                                              :valmis ikonit/ok
-                                                                              :kesken ikonit/livicon-question
-                                                                              :ei-tehty ikonit/remove))))))
+          paivita-toimenpiteet-ikoni (fn [osa toimenpide toimenpiteet hoitokausi]
+                                       (p/paivita-arvo osa :arvo
+                                                       (fn [ikoni-ja-teksti]
+                                                         (let [taytetyt-rivit (tyokalut/taulukko->data (get toimenpiteet toimenpide)
+                                                                                                       #{:lapset})
+                                                               taytetty?-hoitokauden-rivit (keep (fn [data]
+                                                                                                   (when (pvm/valissa? (get data "Nimi")
+                                                                                                                       (first hoitokausi)
+                                                                                                                       (second hoitokausi))
+                                                                                                     (let [maara (get data "Yhteensä")]
+                                                                                                       (and (not= 0 maara)
+                                                                                                            (not (nil? maara))))))
+                                                                                                 taytetyt-rivit)
+                                                               tila (cond
+                                                                      (every? true? taytetty?-hoitokauden-rivit) :valmis
+                                                                      (some true? taytetty?-hoitokauden-rivit) :kesken
+                                                                      :else :ei-tehty)]
+                                                           (assoc ikoni-ja-teksti :ikoni (case tila
+                                                                                           :valmis ikonit/ok
+                                                                                           :kesken ikonit/livicon-question
+                                                                                           :ei-tehty ikonit/remove))))))
+          paivita-rahavaraukset-ikoni (fn [osa toimenpide rahavaraukset suunnitelma]
+                                        (p/paivita-arvo osa :arvo
+                                                        (fn [ikoni-ja-teksti]
+                                                          (let [rivi-taytetty? (first (keep (fn [rivi]
+                                                                                              (when (= (:suunnitelma rivi) suunnitelma)
+                                                                                                (let [yhteensa (p/arvo (last (p/arvo rivi :lapset)) :arvo)]
+                                                                                                  (println toimenpide " " suunnitelma)
+                                                                                                  (println "YHTEENSÄ: " yhteensa)
+                                                                                                  (println (and (not= 0 yhteensa)
+                                                                                                                (not (nil? yhteensa))))
+                                                                                                  (and (not= 0 yhteensa)
+                                                                                                       (not (nil? yhteensa))))))
+                                                                                            (p/arvo (get rahavaraukset toimenpide) :lapset)))]
+                                                            (assoc ikoni-ja-teksti :ikoni (if rivi-taytetty?
+                                                                                            ikonit/ok
+                                                                                            ikonit/remove))))))
           paivita-hankintakustannusten-suunnitelmien-tila (fn [suunnitelmien-tila-taulukko
                                                                {:keys [valinnat toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
                                                                toimenpide suunnitelma]
@@ -742,26 +758,31 @@
                                                                                                                                                          (if (= (:suunnitelma suunnitelmarivi) suunnitelma)
                                                                                                                                                            (p/paivita-arvo suunnitelmarivi :lapset
                                                                                                                                                                            (fn [osat]
+                                                                                                                                                                             (println "JAYSS")
+                                                                                                                                                                             (println suunnitelma)
                                                                                                                                                                              (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                                                                                      (cond
-                                                                                                                                                                                                        (= taman-vuoden-otsikon-index index) (paivita-ikoni osa toimenpide toimenpiteet (:pvmt kuluva-hoitokausi))
-                                                                                                                                                                                                        (= seuraavan-vuoden-otsikon-index index) (paivita-ikoni osa toimenpide toimenpiteet seuraava-hoitokausi)
-                                                                                                                                                                                                        :else osa))
+                                                                                                                                                                                                      (if (= :kokonaishintainen-ja-lisatyo suunnitelma)
+                                                                                                                                                                                                        (cond
+                                                                                                                                                                                                          (= taman-vuoden-otsikon-index index) (paivita-toimenpiteet-ikoni osa toimenpide toimenpiteet (:pvmt kuluva-hoitokausi))
+                                                                                                                                                                                                          (= seuraavan-vuoden-otsikon-index index) (paivita-toimenpiteet-ikoni osa toimenpide toimenpiteet seuraava-hoitokausi)
+                                                                                                                                                                                                          :else osa)
+                                                                                                                                                                                                        (cond
+                                                                                                                                                                                                          (= taman-vuoden-otsikon-index index) (paivita-rahavaraukset-ikoni osa toimenpide rahavaraukset suunnitelma)
+                                                                                                                                                                                                          (= seuraavan-vuoden-otsikon-index index) (paivita-rahavaraukset-ikoni osa toimenpide rahavaraukset suunnitelma)
+                                                                                                                                                                                                          :else osa)))
                                                                                                                                                                                                     osat)))
                                                                                                                                                            suunnitelmarivi))
                                                                                                                                                        rivit)))
                                                                                                                                toimenpiderivi-lapsilla))
                                                                                                                            rivit)))))))
           suunnitelmien-tila-taulukko (reduce (fn [taulukko [toimenpide suunnitelmat]]
-                                                (if (get suunnitelmat "Suunnitellut hankinnat")
-                                                  (paivita-hankintakustannusten-suunnitelmien-tila taulukko hankintakustannukset toimenpide "Suunnitellut hankinnat")
-                                                  taulukko))
+                                                (cond-> taulukko
+                                                        (get suunnitelmat :kokonaishintainen-ja-lisatyo) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :kokonaishintainen-ja-lisatyo)
+                                                        (get suunnitelmat :akillinen-hoitotyo) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :akillinen-hoitotyo)
+                                                        (get suunnitelmat :vahinkojen-korjaukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :vahinkojen-korjaukset)
+                                                        (get suunnitelmat :muut-rahavaraukset) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset toimenpide :muut-rahavaraukset)))
                                               suunnitelmien-tila-taulukko (:hankinnat @paivitetyt-taulukot))]
       (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
                                    (-> edelliset-taulukot
-                                       (update :hankinnat (fn [hankinnat]
-                                                            (into {}
-                                                                  (map (fn [[toimenpide suunnitelmat]]
-                                                                         [toimenpide (assoc suunnitelmat "Suunnitellut hankinnat" false)])
-                                                                       hankinnat))) ))))
+                                       (assoc :hankinnat nil ))))
       (assoc app :suunnitelmien-tila-taulukko suunnitelmien-tila-taulukko))))
