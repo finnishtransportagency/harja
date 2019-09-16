@@ -1,0 +1,2 @@
+-- Palauttaa maksuerien kokonaissummat
+-- Tallentaa laskutusyhteenvetoon päivittyneen tilanteen

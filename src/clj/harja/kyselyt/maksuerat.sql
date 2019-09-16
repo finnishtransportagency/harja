@@ -1,4 +1,4 @@
--- name: hae-teiden-hoidon-urakan-maksuerien-summat
+-- name: hae-hoitourakan-maksuerien-summat
 -- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
 -- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
 -- eri maksuerätyypeille.
@@ -61,6 +61,20 @@ FROM (SELECT
            ) AS lyht
       GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
 GROUP BY tpi_id;
+
+-- name: hae-teiden-hoidon-urakan-maksuerien-summat
+SELECT m.numero                       as "maksueranumero",
+       m.tyyppi                       as "maksueratyyppi",
+       tpi.id                         as "toimenpideinstanssi",
+       lk.summa                       as "summa",
+       EXTRACT(month from l.erapaiva) as "kuukausi"
+FROM lasku_kohdistus lk
+       JOIN lasku l ON l.id = lk.lasku
+       JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.urakka = :urakka
+       left JOIN toimenpidekoodi tpk ON lk.tehtava = tpk.id
+       JOIN maksuera m ON lk.toimenpideinstanssi = m.toimenpideinstanssi AND lk.maksueratyyppi = m.tyyppi AND
+                          tpi.id = m.toimenpideinstanssi AND m.likainen IS TRUE
+ORDER BY m.numero;
 
 -- name: hae-urakan-maksuerat
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
