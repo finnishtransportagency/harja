@@ -426,12 +426,15 @@ UPDATE toimenpidekoodi SET tehtavaryhma = (select id from tehtavaryhma where nim
 UPDATE toimenpidekoodi SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Alataso Muut liik.ymp.hoitosasiat'),	jarjestys = 156, ensisijainen = TRUE, muokattu = current_timestamp, muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') WHERE taso = 4 and nimi = 'Nopeusnäyttötaulujen ylläpito, käyttö ja siirto'	AND emo = (select id from toimenpidekoodi where koodi = '23116');-- AND yksikko = 'kpl'; yksikkö on erä eikä kappal AND poistettu is not true AND piilota is not truee
 
 
-
-
 -- Päivitä vielä nimet
 UPDATE toimenpidekoodi set nimi = 'Muut talvihoitotyöt' WHERE emo = (select id from toimenpidekoodi where koodi = '23104') and nimi = 'Ei yksilöity';
 UPDATE toimenpidekoodi set nimi = 'Muut sorateiden hoitoon liittyvät tehtävät' WHERE emo = (select id from toimenpidekoodi where koodi = '23124') and nimi = 'Ei yksilöity';
 
+-- Päivitetään api-tunnus tehtävähierarkian tehtäville, joilla sitä ei entuudestaan ole. Sama tunnus kaikkiin ympäristöihin (prod, stg, test, local). Huom. osa tehtävistä puuttuu kehitysympäristöstä.
+-- Api-tunnuksen olemassa olo ei tarkoita sitä, että tehtävälle kirjataan apin kautta toteumia. Api-käyttöä määrittää seurataan-apin-kautta-sarake.
+UPDATE toimenpidekoodi
+set api_tunnus = (115 * jarjestys)
+where tehtavaryhma is not null and api_tunnus is null;
 
 
 
