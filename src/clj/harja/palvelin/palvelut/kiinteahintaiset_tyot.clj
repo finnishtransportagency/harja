@@ -39,19 +39,14 @@
       (throw (roolit/->EiOikeutta "virheellinen toimenpideinstanssi")))
 
     (doseq [tyo tyot]
-      (println "TYÖT " tyot)
-      (println "TYL " tyo)
       (as-> tyo t
             (update t :summa big/unwrap)
             (assoc t :sopimus sopimusnumero)
             (assoc t :kayttaja (:id user))
-            (if-not (contains? t :tehtava )(assoc t :tehtava nil) t)
-            (if-not (contains? t :tehtavaryhma)(assoc t :tehtavaryhma nil) t)
+            (if-not (contains? t :tehtava) (assoc t :tehtava nil) t)
+            (if-not (contains? t :tehtavaryhma) (assoc t :tehtavaryhma nil) t)
             (if (not (tyot-kannassa (tyo-avain t)))
-              (do                 (println "INSERT x" t)
-              (q/lisaa-kiinteahintainen-tyo<! db t))
-              (do                 (println "UPDATE x" t)
-
-                                  (q/paivita-kiinteahintainen-tyo! db t)))))
+              (q/lisaa-kiinteahintainen-tyo<! db t)
+              (q/paivita-kiinteahintainen-tyo! db t))))
 
     (hae-urakan-kiinteahintaiset-tyot db user urakka-id)))

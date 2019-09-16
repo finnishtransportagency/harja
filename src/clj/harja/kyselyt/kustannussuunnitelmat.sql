@@ -123,7 +123,8 @@ FROM maksuera m
                                    AND
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
-GROUP BY Extract(YEAR FROM yht.alkupvm);
+GROUP BY Extract(YEAR FROM yht.alkupvm)
+ORDER BY vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
