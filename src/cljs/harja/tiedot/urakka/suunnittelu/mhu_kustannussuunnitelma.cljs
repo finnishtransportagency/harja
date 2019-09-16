@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.loki :refer [log]]
             [harja.ui.viesti :as viesti]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.taulukko.osa :as osa]
@@ -108,6 +109,7 @@
 (defrecord TaytaAlas [maara-solu polku-taulukkoon])
 (defrecord ToggleHankintakustannuksetOtsikko [kylla?])
 (defrecord PaivitaJHRivit [paivitetty-osa])
+(defrecord PaivitaSuunnitelmienTila [paivitetyt-taulukot])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -693,4 +695,55 @@
                                                                          (p/aseta-arvo vuosi-yhteensa-osa :arvo rivit-yhteensa-vuodelta)))))]
       (-> app
            (assoc-in laskulla-taulukon-polku laskulla-taulukko)
-           (assoc-in yhteenveto-taulukon-polku yhteenveto-taulukko)))))
+           (assoc-in yhteenveto-taulukon-polku yhteenveto-taulukko))))
+  PaivitaSuunnitelmienTila
+  (process-event [{:keys [paivitetyt-taulukot]} {:keys [kuluva-hoitokausi suunnitelmien-tila-taulukko hankintakustannukset] :as app}]
+    (let [taman-vuoden-otsikon-index (if (not= 5 (:vuosi kuluva-hoitokausi))
+                                       1 2)
+          paivita-hankintakustannusten-suunnitelmien-tila (fn [suunnitelmien-tila-taulukko
+                                                               {:keys [valinnat toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
+                                                               toimenpide suunnitelma]
+                                                            (tyokalut/paivita-asiat-taulukossa suunnitelmien-tila-taulukko [:hankintakustannukset]
+                                                                                               (fn [taulukko polut]
+                                                                                                 (let [[_ hankintakustannukset] polut
+                                                                                                       hankintakustannukset (get-in taulukko hankintakustannukset)]
+                                                                                                   (p/paivita-arvo hankintakustannukset :lapset
+                                                                                                                   (fn [rivit]
+                                                                                                                     (mapv (fn [toimenpiderivi-lapsilla]
+                                                                                                                             (if (= (:toimenpide toimenpiderivi-lapsilla) toimenpide)
+                                                                                                                               (p/paivita-arvo toimenpiderivi-lapsilla :lapset
+                                                                                                                                               (fn [rivit]
+                                                                                                                                                 (mapv (fn [suunnitelmarivi]
+                                                                                                                                                         (if (= (:suunnitelma suunnitelmarivi) suunnitelma)
+                                                                                                                                                           (p/paivita-arvo suunnitelmarivi :lapset
+                                                                                                                                                                           (fn [osat]
+                                                                                                                                                                             (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                                                                                      (if (= taman-vuoden-otsikon-index index)
+                                                                                                                                                                                                        (p/paivita-arvo osa :arvo
+                                                                                                                                                                                                                        (fn [ikoni-ja-teksti]
+                                                                                                                                                                                                                          (let [taytetyt-rivit (tyokalut/taulukko->data (get toimenpiteet toimenpide)
+                                                                                                                                                                                                                                                                        #{:lapset})
+                                                                                                                                                                                                                                taytetty?-rivit (map (fn [data]
+                                                                                                                                                                                                                                                       (let [maara (get-in data ["Määrä" :value])]
+                                                                                                                                                                                                                                                         (not= "" maara)))
+                                                                                                                                                                                                                                                     taytetyt-rivit)
+                                                                                                                                                                                                                                tila (cond
+                                                                                                                                                                                                                                       (every? true? taytetty?-rivit) :valmis
+                                                                                                                                                                                                                                       (some true? taytetty?-rivit) :kesken
+                                                                                                                                                                                                                                       :else :ei-tehty)]
+                                                                                                                                                                                                                            (assoc ikoni-ja-teksti :ikoni (case tila
+                                                                                                                                                                                                                                                            :valmis ikonit/ok
+                                                                                                                                                                                                                                                            :kesken ikonit/livicon-question
+                                                                                                                                                                                                                                                            :ei-tehty ikonit/remove)))))
+                                                                                                                                                                                                        osa))
+                                                                                                                                                                                                    osat)))
+                                                                                                                                                           suunnitelmarivi))
+                                                                                                                                                       rivit)))
+                                                                                                                               toimenpiderivi-lapsilla))
+                                                                                                                           rivit)))))))
+          suunnitelmien-tila-taulukko (cond-> suunnitelmien-tila-taulukko
+                                              (get-in @paivitetyt-taulukot [:hankinnat :talvihoito "Suunnitellut hankinnat"]) (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset :talvihoito "Suunnitellut hankinnat"))]
+      (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
+                                   (-> edelliset-taulukot
+                                       (assoc-in [:hankinnat :talvihoito "Suunnitellut hankinnat"] false))))
+      (assoc app :suunnitelmien-tila-taulukko suunnitelmien-tila-taulukko))))

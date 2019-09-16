@@ -1,5 +1,4 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma
-  (:refer-clojure :exclude [atom])
   (:require [reagent.core :as r :refer [atom]]
             [clojure.string :as clj-str]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
@@ -21,7 +20,8 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [goog.dom :as dom])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
+  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn summa-formatointi [teksti]
   (let [teksti (clj-str/replace (str teksti) "," ".")]
@@ -284,29 +284,33 @@
                                                                             (p/aseta-arvo osa
                                                                                           :id (str (gensym "toimenpide-osa"))
                                                                                           :arvo jakso
-                                                                                          :class #{(sarakkeiden-leveys :jakso)}))))))
+                                                                                          :class #{(sarakkeiden-leveys :jakso)}))))
+                                       ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
+                                       (assoc :suunnitelma rahavarausteksti)))
                                  ["Suunnitellut hankinnat"
                                   "Äkilliset hoitotyöt"
                                   "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
                                   "Rahavaraus lupaukseen 1"]
                                  ["/kk**" "/kk" "/kk" "/kk"]))
         toimenpide-fn (fn [toimenpide-pohja]
-                        (map (fn [toimenpideteksti jakso]
-                               (-> toimenpide-pohja
-                                   (p/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi")))
-                                   (p/paivita-arvo :lapset
-                                                   (fn [rivit]
-                                                     (into []
-                                                           (reduce (fn [rivit rivin-pohja]
-                                                                     (let [rivin-tyyppi (p/janan-id rivin-pohja)]
-                                                                       (concat
-                                                                         rivit
-                                                                         (case rivin-tyyppi
-                                                                           :laajenna-toimenpide [(laajenna-toimenpide-fn rivin-pohja toimenpideteksti jakso)]
-                                                                           :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti)))))
-                                                                   [] rivit))))))
-                             (map #(-> % name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
-                                  (sort-by toimenpiteiden-jarjestys t/toimenpiteet))
+                        (map (fn [toimenpide jakso]
+                               (let [toimenpideteksti (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]
+                                 (-> toimenpide-pohja
+                                     (p/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi")))
+                                     (p/paivita-arvo :lapset
+                                                     (fn [rivit]
+                                                       (into []
+                                                             (reduce (fn [rivit rivin-pohja]
+                                                                       (let [rivin-tyyppi (p/janan-id rivin-pohja)]
+                                                                         (concat
+                                                                           rivit
+                                                                           (case rivin-tyyppi
+                                                                             :laajenna-toimenpide [(laajenna-toimenpide-fn rivin-pohja toimenpideteksti jakso)]
+                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti)))))
+                                                                     [] rivit))))
+                                     ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
+                                     (assoc :toimenpide toimenpide))))
+                             (sort-by toimenpiteiden-jarjestys t/toimenpiteet)
                              (repeat (count t/toimenpiteet) "/vuosi")))
         hankintakustannukset-fn (fn [hankintakustannukset-pohja]
                                   (-> hankintakustannukset-pohja
@@ -393,40 +397,36 @@
 
 (defn suunnitelmien-tila
   [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
-  (let [taman-vuoden-otsikon-index (if (not= 5 (:vuosi (t/kuluva-hoitokausi)))
-                                     1 2)
-        paivita-hankintakustannusten-suunnitelmien-tila (fn [suunnitelmien-tila-taulukko {:keys [valinnat toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}]
-                                                          (tyokalut/paivita-asiat-taulukossa suunnitelmien-tila-taulukko [:hankintakustannukset]
-                                                                                             (fn [taulukko polut]
-                                                                                               (let [[_ hankintakustannukset] polut
-                                                                                                     hankintakustannukset (get-in taulukko hankintakustannukset)]
-                                                                                                 (tyokalut/paivita-riviryhman-lapsirivet hankintakustannukset
-                                                                                                                                         (fn [toimenpiderivi-lapsilla]
-                                                                                                                                           (tyokalut/paivita-riviryhman-lapsirivet toimenpiderivi-lapsilla
-                                                                                                                                                                                   (fn [rivi]
-                                                                                                                                                                                     (p/paivita-arvo rivi :lapset
-                                                                                                                                                                                                     (fn [osat]
-                                                                                                                                                                                                       (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                                                                                                                (if (= taman-vuoden-otsikon-index index)
-                                                                                                                                                                                                                                  osa
-                                                                                                                                                                                                                                  osa))
-                                                                                                                                                                                                                              osat)))))))))))]
+  (let [paivitetyt-taulukot (cljs.core/atom {})
+        kaskytys-kanava (chan)]
+    (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 kaskytys-kanava))
     (komp/luo
       (komp/piirretty (fn [this]
                         (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
                           (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
-      #_{:should-component-update (fn [this old-argv new-argv]
+      {:should-component-update (fn [this old-argv new-argv]
                                   ;; Tätä argumenttien tarkkailua ei tulisi tehdä tässä, mutta nykyinen reagentin versio tukee vain
                                   ;; :component-will-receive-props metodia, joka olisi toki sopivampi tähän tarkoitukseen,
                                   ;; mutta React on deprecoinut tuon ja se tulee hajottamaan tulevan koodin.
-                                  (println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
-                                  true)}
+                                  #_(println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
+                                  (let [vanhat-hankintakustannukset (last (butlast old-argv))
+                                        uudet-hankintakustannukset (last (butlast new-argv))]
+                                    (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
+                                                                 (-> edelliset-taulukot
+                                                                     (update :hankinnat (fn [hankinnat]
+                                                                                          (into {}
+                                                                                                (map (fn [[avain uusi] [_ vanha]]
+                                                                                                       [avain {"Suunnitellut hankinnat" (or (get-in hankinnat [avain "Suunnitellut hankinnat"])
+                                                                                                                                            (not= uusi vanha))}])
+                                                                                                     (:toimenpiteet uudet-hankintakustannukset)
+                                                                                                     (:toimenpiteet vanhat-hankintakustannukset)))))))))
+                                  (not= old-argv new-argv))}
       (fn [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
+        (println "RENDERÖIDÄÄN")
+        (println (get-in @paivitetyt-taulukot [:hankinnat :talvihoito "Suunnitellut hankinnat"]))
+        (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)]))
         (if suunnitelmien-tila-taulukko
           [p/piirra-taulukko suunnitelmien-tila-taulukko]
-          #_(let [suunnitelmien-tila-taulukko (cond-> suunnitelmien-tila-taulukko
-                                                    true (paivita-hankintakustannusten-suunnitelmien-tila hankintakustannukset))]
-            [p/piirra-taulukko suunnitelmien-tila-taulukko])
           [yleiset/ajax-loader])))))
 
 (defn lahetyspaiva-ja-maksetaan [_ _]
@@ -641,7 +641,7 @@
                                                            (fn [osa]
                                                              (-> osa
                                                                  (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-maara"))
-                                                                               :arvo {:value maara})
+                                                                               :arvo {:value (str maara)})
                                                                  (assoc :komponentti hankintasuunnitelmien-syotto
                                                                         :komponentin-argumentit {:e! e!
                                                                                                  :nimi (pvm/pvm paivamaara)
