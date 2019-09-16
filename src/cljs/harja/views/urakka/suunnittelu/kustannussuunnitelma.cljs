@@ -715,7 +715,8 @@
                                             :janat [:laajenna :lapset]}}
                        ["Nimi" "Määrä" "Yhteensä"]
                        [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                        :class #{}})))
 
 (defn rahavarausten-taulukko [e! toimenpiteet
                               {valittu-toimenpide :toimenpide}
@@ -820,7 +821,8 @@
                                             osa/Teksti]}}
                        ["Nimi" "Määrä" "Yhteensä"]
                        [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                        :class #{}})))
 
 (defn johto-ja-hallintokorvaus-laskulla-taulukko
   [e! jh-laskulla on-oikeus?]
@@ -939,7 +941,8 @@
                                             osa/Teksti]}}
                        ["Toimenkuva" "Tunnit/kk" "Tuntipalkka" "Yhteensä/kk" "kk/v"]
                        [:otsikko otsikko-fn :syottorivi syottorivi-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                        :class #{}})))
 
 (defn johto-ja-hallintokorvaus-yhteenveto-taulukko
   [e! jh-yhteenveto on-oikeus?]
@@ -1069,7 +1072,8 @@
                                       osa/Teksti]}}
                        ["Toimenkuva" "kk/v" "1.vuosi/€" "2.vuosi/€" "3.vuosi/€" "4.vuosi/€" "5.vuosi/€"]
                        [:rivi rivi-fn :rivi yhteensa-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!})))
+                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                        :class #{}})))
 
 (defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi voi-muokata?
                          {:keys [maara-kk yhteensa]} on-oikeus?]
@@ -1186,7 +1190,8 @@
                                               osa/Teksti]}}
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
-                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!})
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}})
       (muodosta-taulukko (str rivin-nimi "-taulukko")
                          {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
@@ -1198,7 +1203,8 @@
                                         osa/Teksti]}}
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :rivi rivi-fn :normaali yhteensa-fn]
-                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!}))))
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}}))))
 
 (defn aseta-rivien-luokat
   "Tämä tekee taulukkoon seeprakuvioinnin"

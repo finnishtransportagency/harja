@@ -164,7 +164,7 @@
   p/Asia
   (arvo [this avain]
     (let [palautettava-arvo (get-in this (muuta-avain-teksti avain))]
-      (if (= avain :arvo)
+      (if (and (= avain :arvo) (string? palautettava-arvo))
         (let [parsittu-arvo (js/Number palautettava-arvo)]
           (if (js/isNaN parsittu-arvo)
             palautettava-arvo
@@ -624,8 +624,10 @@
   (arvo [this avain]
     (let [palautettava-arvo (get-in this (muuta-avain-syote avain))
           osan-tyyppi (get-in this [:parametrit :type])]
-      (if (and (= avain :arvo) (or (= osan-tyyppi "text")
-                                   (nil? osan-tyyppi)))
+      (if (and (= avain :arvo)
+               (or (= osan-tyyppi "text")
+                   (nil? osan-tyyppi))
+               (string? palautettava-arvo))
         (let [parsittu-arvo (js/Number palautettava-arvo)]
           (if (js/isNaN parsittu-arvo)
             palautettava-arvo
@@ -888,7 +890,7 @@
           palautettava-arvo (if (and renderointi (= avain :arvo))
                               (muodosta-arvo this @renderointi)
                               (get-in this (muuta-avain-laajenna avain)))]
-      (if (= avain :arvo)
+      (if (and (= avain :arvo) (string? palautettava-arvo))
         (let [parsittu-arvo (js/Number palautettava-arvo)]
           (if (js/isNaN parsittu-arvo)
             palautettava-arvo
