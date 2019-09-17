@@ -5,18 +5,18 @@
     `(-> (~(symbol (namespace janan-tyyppi)
                    (str "map->" (name janan-tyyppi)))
            nil)
-         (harja.ui.taulukko.tyokalut/aseta-arvo :lapset
+         (harja.ui.taulukko.protokollat/aseta-arvo :lapset
                                                 ~(if janat
                                                    (mapv (fn [jana]
                                                            (let [uusi-jana-pohja (muodosta-rivi-skeemasta riviskeema sarakeskeema [jana `identity])]
                                                              `(-> ~uusi-jana-pohja
-                                                                  (harja.ui.taulukko.tyokalut/aseta-arvo :id ~jana))))
+                                                                  (harja.ui.taulukko.protokollat/aseta-arvo :id ~jana))))
                                                          janat)
                                                    (mapv (fn [osa-skeema sarake]
                                                            `(-> (~(symbol (namespace osa-skeema)
                                                                           (str "map->" (name osa-skeema)))
                                                                   nil)
-                                                                (harja.ui.taulukko.tyokalut/aseta-arvo :id ~sarake)))
+                                                                (harja.ui.taulukko.protokollat/aseta-arvo :id ~sarake)))
                                                          osat
                                                          sarakeskeema)))
          ~rivin-taydennys-fn)))

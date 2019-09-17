@@ -70,8 +70,7 @@
                            :nimi otsikko
                            :piillotettu? false
                            :toimenpide toimenpide})
-        (doseq [{:keys [tehtava-id tehtava maara yksikko] :as teht} tehtavalista]
-          #_(println "tehtava" teht)
+        (doseq [{:keys [tehtava-id tehtava maara yksikko hoitokauden-alkuvuosi urakka] :as teht} tehtavalista]
           (swap! cnt + 1)
           (swap! tulos conj {:id                 @cnt
                              :tehtava-id         tehtava-id
@@ -80,9 +79,11 @@
                              :maara              (if (nil? maara) 0 maara)
                              :yksikko            yksikko
                              :vanhempi           emo
+                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                             :urakka             urakka
                              :piillotettu?       false})
           ;; TODO: Muodosta tehtävätyyppinen rivi
-          (println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false}"))))
+         #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false :urakka}" urakka " :hoitikausi " hoitokauden-alkuvuosi))))
     (reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
                                 :piillotettu? false)) @tulos @toimenpiteet)))
 
@@ -98,7 +99,6 @@
   "Luo tai päivittää urakan hoitokauden tehtävämäärät."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi tehtavamaarat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
 
@@ -122,7 +122,7 @@
                                           (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
 
-                                  (println (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
+                                  #_(println (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
                                                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))))
 
                                   (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
@@ -134,8 +134,8 @@
                                     (do
                                       (apply q/paivita-tehtavamaara! parametrit)))))))
 
-  (hae-tehtavahierarkia-maarineen db user {:urakka     urakka-id
-                                           :hoitokausi hoitokauden-alkuvuosi}))
+  (hae-tehtavahierarkia-maarineen db user {:urakka-id     urakka-id
+                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
 (defrecord Tehtavamaarat []
   component/Lifecycle
