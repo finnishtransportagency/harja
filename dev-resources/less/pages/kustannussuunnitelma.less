@@ -1,22 +1,80 @@
-@import "../livi_tyylit";
+@import "../vayla/colors.less";
+@import "../styles.less";
 
-.kustannussuunnitelma {
+.intro() {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: @gray25;
+}
+
+#kustannussuunnitelma {
   display:flex;
   flex-direction: column;
 
   > * {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 
     &:last-child {
       margin-bottom: inherit;
     }
   }
+
+  div, span {
+    word-break: normal;
+  }
+  // Väylän typography hommat. Nämä voi ottaa pois sitten, kun väylän tyylit on otettu kaikkialla käyttöön.
+  h1 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 300;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h2 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h3 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.3125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h4 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h5 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: @gray25;
+  }
 }
-.suunnitelman-tila-otsikko {
-  font-size: 14px;
+
+.aktiivinen-vuosi {
+  font-weight: bold;
 }
+
+.viiva-alas {
+  border-bottom: 1px solid @gray200;
+  position: relative;
+  left: -(@valilehti-sivu-padding * 2);
+  width: calc(~"100% + " @valilehti-sivu-padding ~" * 4");
+}
+
 .hintalaskuri {
-  background-color: @harmaa13;
+  background-color: @gray245;
   padding: 15px;
   > *:first-child {
     margin-top: 0;
@@ -34,7 +92,7 @@
     > div {
       flex: 1;
       &:last-child {
-        color: @harmaa8;
+        color: @gray200;
       }
     }
     &.hintalaskuri-yhtakuin {
@@ -51,6 +109,9 @@
   }
 }
 
+.komponentin-input {
+  width: 100%;
+}
 
 #kuluva-hoitovuosi {
   display:flex;
@@ -68,9 +129,13 @@
   }
 }
 
+#tavoite-ja-kattohinta {
+  .intro();
+}
+
 .haitari-laatikko {
   &#tavoite-ja-kattohinta {
-    background-color: @harmaa13;
+    background-color: @gray245;
 
     // Tässä tehdään omat paddingit, hintalaskurin defaultin sijasta,
     // jotta tuon hintalaskurin alareuna ei ulottuisi haitari-laatikon
@@ -79,10 +144,8 @@
       padding-left: 15px;
       padding-right: 15px;
       &:first-child {
-        padding-top: 17px;
-      }
-      &:last-child {
-        padding: 0px;
+        padding-top: 15px;
+        padding-bottom: 15px;
       }
       .hintalaskuri {
         padding: 15px 0px 0px 0px;
@@ -90,13 +153,19 @@
     }
 
     .hintalaskuri:first-child {
-      border-bottom: 1px solid @harmaa8;
+      padding-top: 0px;
+      border-bottom: 1px solid @gray200;
     }
+  }
+  .livicon-chevron {
+    color: @blue;
+    font-size: 20px;
   }
 }
 
 #tavoite-ja-kattohinta-huomio {
-  background-color: @harjan-taustavari;
+  background-color: @gray250;
+  padding: 0px;
   display: block;
 }
 
@@ -110,6 +179,18 @@
   }
 }
 
+.suunnitelma-ikonien-varit {
+  .glyphicon-ok {
+    color: @green;
+  }
+  .livicon-question {
+    color: @blue;
+  }
+  .glyphicon-remove {
+    color: @red;
+  }
+}
+
 .kustannus-syotto {
   position: relative;
   padding: 0px;
@@ -120,6 +201,94 @@
     margin: 0px;
   }
 }
-.kopioi-tuleville-vuosille {
-  display: block;
+
+#laskutukseen-perustuen-filter {
+  padding-top: 10px;
+}
+
+#jh-toimenkuva-laskulla {
+  padding-top: 10px;
+  .jana {
+    display: flex;
+    .osa:nth-child(1) {
+      flex: 4 4 0;
+    }
+    .osa:nth-child(2) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(3) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(4) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(5) {
+      flex: 1 1 0;
+    }
+  }
+}
+
+#jh-toimenkuva-yhteenveto {
+  padding-top: 10px;
+  .jana {
+    display: flex;
+    .osa:nth-child(1) {
+      flex: 6 6 0;
+    }
+    .osa:nth-child(2) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(3) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(4) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(5) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(6) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(7) {
+      flex: 2 2 0;
+    }
+  }
+}
+
+.maksu-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  > div {
+    display: flex;
+    flex-direction: column;
+    &:nth-child(1) {
+      flex: 1;
+    }
+  }
+}
+
+#suunnitelmien-taulukko {
+  button {
+    text-decoration: none;
+  }
+}
+
+.kustannussuunnitelma-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  > * {
+    &:nth-child(1) {
+      max-width: 400px;
+      min-width: 250px;
+      flex: 1;
+    }
+    &:nth-child(2) {
+      max-width: 400px;
+      flex: 1;
+    }
+  }
 }

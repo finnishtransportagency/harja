@@ -43,11 +43,13 @@ jobs:
       - image: solita/harjadb:latest
 
     steps:
-      - run: |
-          cd /tmp
-          bash sisus.bash uberjar $CIRCLE_BRANCH
-          cd /tmp/harja
-          tar cf testidata.tar cypress cypress.json tietokanta
+      - run:
+          no_output_timeout: 60m
+          command: |
+              cd /tmp
+              bash sisus.bash uberjar $CIRCLE_BRANCH
+              cd /tmp/harja
+              tar cf testidata.tar cypress cypress.json tietokanta
 
       - persist_to_workspace:
           root: /tmp/harja
@@ -105,12 +107,16 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - back-testit
-      - integraatio-testit
-      - front-testit
-      - prod-build: # Ei sinänsä tarvi front-testejä valmiiksi, mutta jostain syystä tämä feilaa, jos front ajetaan yhtäaikaa. Tulee vain exit code 1 eikä muuta.
+      - prod-build
+      - back-testit:
           requires:
-           - front-testit
+            - prod-build
+      - integraatio-testit:
+          requires:
+            - prod-build
+      - front-testit:
+          requires:
+            - prod-build
       - e2e-testit:
           requires:
-           - prod-build
+            - prod-build

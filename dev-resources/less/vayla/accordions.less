@@ -1,6 +1,7 @@
 .accordion-yhteiset() {
   color: @gray25;
   height: 40px;
+  padding: 0px 10px 0px 10px;
 
   font-family: "Open Sans", sans-serif;
   font-style: normal;
@@ -15,19 +16,20 @@
       text-transform: uppercase;
       background-color: @gray220;
       border-top: 1px solid @gray200;
-    }
-    &hover {
-      .accordion-yhteiset();
-      text-transform: uppercase;
-      background-color: @gray210;
-      border-top: 1px solid @gray200;
-    }
-    &focus {
-      .accordion-yhteiset();
-      text-transform: uppercase;
-      background-color: @gray210;
-      outline: 2px dashed @white;
-      outline-offset: -2px;
+
+      &:hover {
+        .accordion-yhteiset();
+        text-transform: uppercase;
+        background-color: @gray210;
+        border-top: 1px solid @gray200;
+      }
+      &:focus {
+        .accordion-yhteiset();
+        text-transform: uppercase;
+        background-color: @gray210;
+        outline: 2px dashed @white;
+        outline-offset: -2px;
+      }
     }
     &active {
       .accordion-yhteiset();
@@ -48,17 +50,17 @@
       .accordion-yhteiset();
       background-color: @gray230;
       border-top: 1px solid @gray210;
-    }
-    &hover {
-      .accordion-yhteiset();
-      background-color: @gray220;
-      border-top: 1px solid @gray210;
-    }
-    &focus {
-      .accordion-yhteiset();
-      background-color: @gray220;
-      outline: 2px dashed @white;
-      outline-offset: -2px;
+      &:hover {
+        .accordion-yhteiset();
+        background-color: @gray220;
+        border-top: 1px solid @gray210;
+      }
+      &:focus {
+        .accordion-yhteiset();
+        background-color: @gray220;
+        outline: 2px dashed @white;
+        outline-offset: -2px;
+      }
     }
     &active {
       .accordion-yhteiset();
@@ -75,19 +77,20 @@
   &-3- {
     &default {
       .accordion-yhteiset();
+      font-weight: normal;
       background-color: @gray240;
       border-top: 1px solid @gray220;
-    }
-    &hover {
-      .accordion-yhteiset();
-      background-color: @gray230;
-      border-top: 1px solid @gray220;
-    }
-    &focus {
-      .accordion-yhteiset();
-      background-color: @gray230;
-      outline: 2px dashed @white;
-      outline-offset: -2px;
+      &:hover {
+        .accordion-yhteiset();
+        background-color: @gray230;
+        border-top: 1px solid @gray220;
+      }
+      &:focus {
+        .accordion-yhteiset();
+        background-color: @gray230;
+        outline: 2px dashed @white;
+        outline-offset: -2px;
+      }
     }
     &active {
       .accordion-yhteiset();

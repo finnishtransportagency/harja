@@ -47,7 +47,7 @@
          :should-component-update (fn [this old-argv new-argv]
                                     (if-not (empty? should-component-update)
                                       (every? true?
-                                              (map (fn [f should-component-update]
+                                              (map (fn [f]
                                                      (f this old-argv new-argv))
                                                    should-component-update))
                                       true))
