@@ -19,7 +19,7 @@
                      :suunnittelu {:tehtavat {:valinnat {:toimenpide nil
                                                          :valitaso nil}}
                                    :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
-                                                                                            :maksetaan :talvikausi
+                                                                                            :maksetaan :molemmat
                                                                                             :kopioidaan-tuleville-vuosille? true
                                                                                             :laskutukseen-perustuen-valinta #{}}}
                                                           :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}}}}))

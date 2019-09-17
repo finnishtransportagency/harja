@@ -345,12 +345,10 @@
                                                                                      (p/paivita-arvo laajenna-osa :class conj "solu-sisenna-2")))))))
                                             ["Erillishankinnat"
                                              "Johto- ja hallintokorvaus"
-                                             "Hoidonjohtopalkkio"
-                                             "Hallinnolliset toimenpiteet"]
+                                             "Hoidonjohtopalkkio"]
                                             ["erillishankinnat"
                                              "johto-ja-hallintokorvaus"
-                                             "hoidonjohtopalkkio"
-                                             "hallinnolliset-toimenpiteet-yhteensa"]
+                                             "hoidonjohtopalkkio"]
                                             (repeat 4 "/kk")))
         hallinnollisetkustannukset-fn (fn [hallinnollisetkustannukset-pohja]
                                         (-> hallinnollisetkustannukset-pohja
@@ -460,7 +458,7 @@
           [p/piirra-taulukko suunnitelmien-tila-taulukko]
           [yleiset/ajax-loader])))))
 
-(defn lahetyspaiva-ja-maksetaan [_ _]
+(defn maksetaan-filter [_ _]
   (let [kausi-tekstiksi (fn [kausi]
                           (case kausi
                             :kesakausi "Kesäkaudella"
@@ -468,10 +466,6 @@
                             :molemmat "Kesä- ja talvikaudella"))]
     (fn [valitse-kausi maksetaan]
       [:div.maksu-filter
-       [:div
-        [:span "Lähetyspäivä"]
-        [:div.input-default-nakoinen
-         [:span "Kuukauden 15."]]]
        [:div
         [:span "Maksetaan"]
         [yleiset/livi-pudotusvalikko {:valinta maksetaan
@@ -486,7 +480,8 @@
         valitse-toimenpide (fn [toimenpide]
                              (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :toimenpide] toimenpide)))
         valitse-kausi (fn [kausi]
-                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi)))
+                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi))
+                        (e! (t/->MaksukausiValittu)))
         vaihda-fn (fn [event]
                     (.preventDefault event)
                     (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))]
@@ -501,23 +496,12 @@
                                          :format-fn toimenpide-tekstiksi
                                          :vayla-tyyli? true}
             (sort-by toimenpiteiden-jarjestys t/toimenpiteet)]]
-          [lahetyspaiva-ja-maksetaan valitse-kausi maksetaan]]
+          [maksetaan-filter valitse-kausi maksetaan]]
          [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
           {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
            :on-change (r/partial vaihda-fn)}]
          [:label {:for "kopioi-tuleville-hoitovuosille"}
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
-
-(defn hoidonjohtopalkkio-filter [e! _]
-  (let [valitse-kausi (fn [kausi]
-                        (e! (tuck-apurit/->MuutaTila [:hallinnolliset-toimenpiteet :valinnat :maksetaan] kausi)))]
-    (fn [_ maksetaan]
-      [:div.kustannussuunnitelma-filter
-       [:div
-        [:span "Toimenpide"]
-        [:div.input-default-nakoinen
-         [:span "HALLINNOLLISET TOIMENPITEET"]]]
-       [lahetyspaiva-ja-maksetaan valitse-kausi maksetaan]])))
 
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
@@ -658,9 +642,9 @@
         lapsirivi (fn [rivin-pohja paivamaara maara hoitokausi]
                     (-> rivin-pohja
                         (p/aseta-arvo :id (keyword (pvm/pvm paivamaara))
-                                      :class #{"table-default"
-                                               (when-not (= hoitokausi kuluva-hoitovuosi)
-                                                 "piillotettu")})
+                                      :class #{"table-default"})
+                        (assoc ::t/piillotettu (if (= hoitokausi kuluva-hoitovuosi)
+                                                 #{} #{:laajenna-kiinni}))
                         (p/paivita-arvo :lapset
                                         (osien-paivitys-fn (fn [osa]
                                                              (-> osa
@@ -1242,37 +1226,50 @@
 (defn aseta-rivien-luokat
   "Tämä tekee taulukkoon seeprakuvioinnin"
   [rivit taulukko]
-  (let [rivien-luokat (last (reduce (fn [[index rivien-luokat] rivi]
-                                      (case (p/rivin-skeema taulukko rivi)
-                                        :laajenna-lapsilla (let [nakyvat-rivit (remove #(contains? (p/arvo % :class) "piillotettu") (p/janan-osat rivi))]
-                                                             [(+ index (count nakyvat-rivit))
-                                                              (merge rivien-luokat
-                                                                     (transduce (comp
-                                                                                  (map-indexed (fn [i rivi]
-                                                                                                 [(+ i index) rivi]))
-                                                                                  (map (fn [[i rivi]]
-                                                                                         {(p/janan-id rivi) (if (odd? i)
-                                                                                                              "table-default-odd"
-                                                                                                              "table-default-even")})))
-                                                                                merge {} nakyvat-rivit))])
-                                        (:rivi :syottorivi) [(inc index) (merge rivien-luokat
-                                                                                {(p/janan-id rivi)
-                                                                                 (if (odd? index)
-                                                                                   "table-default-odd"
-                                                                                   "table-default-even")})]
-                                        [(inc index) rivien-luokat]))
-                                    [0 {}] rivit))]
-    (mapv (fn [rivi]
-            (case (p/rivin-skeema taulukko rivi)
-              :laajenna-lapsilla (p/paivita-arvo rivi :lapset
-                                                 (fn [rivit]
-                                                   (mapv (fn [rivi]
-                                                           (if-let [rivin-luokka (get rivien-luokat (p/janan-id rivi))]
-                                                             (p/paivita-arvo rivi :class conj rivin-luokka)
-                                                             rivi))
-                                                         rivit)))
-              (p/paivita-arvo rivi :class conj (get rivien-luokat (p/janan-id rivi)))))
-          rivit)))
+  (let [rivit (mapv (fn [rivi]
+                      (case (p/rivin-skeema taulukko rivi)
+                        :laajenna-lapsilla (p/paivita-arvo rivi :lapset
+                                                           (fn [rivit]
+                                                             (mapv (fn [rivi]
+                                                                     (if (empty? (::t/piillotettu rivi))
+                                                                       (p/paivita-arvo rivi :class disj "piillotettu")
+                                                                       (p/paivita-arvo rivi :class conj "piillotettu")))
+                                                                   rivit)))
+                        (if (empty? (::t/piillotettu rivi))
+                          (p/paivita-arvo rivi :class disj "piillotettu")
+                          (p/paivita-arvo rivi :class conj "piillotettu"))))
+                    rivit)
+        rivien-luokat (fn rivien-luokat [rivit i]
+                        (loop [[rivi & rivit] rivit
+                               lopputulos []
+                               i i]
+                          (if (nil? rivi)
+                            [i lopputulos]
+                            (let [konttirivi? (satisfies? p/Jana (first (p/arvo rivi :lapset)))
+                                  piillotettu-rivi? (contains? (p/arvo rivi :class) "piillotettu")
+                                  rivii (if konttirivi?
+                                         (rivien-luokat (p/arvo rivi :lapset) i)
+                                         rivi)]
+                              (recur rivit
+                                     (if konttirivi?
+                                       (conj lopputulos
+                                             (p/aseta-arvo rivi :lapset (second rivii)))
+                                       (conj lopputulos
+                                             (if piillotettu-rivi?
+                                               rivi
+                                               (-> rivi
+                                                   (p/paivita-arvo :class conj (if (odd? i)
+                                                                                 "table-default-odd"
+                                                                                 "table-default-even"))
+                                                   (p/paivita-arvo :class disj (if (odd? i)
+                                                                                 "table-default-even"
+                                                                                 "table-default-odd"))))))
+                                     (cond
+                                       piillotettu-rivi? i
+                                       konttirivi? (if (odd? (first rivii))
+                                                     1 0)
+                                       :else (inc i)))))))]
+    (second (rivien-luokat rivit 0))))
 
 (defn suunnitellut-hankinnat [e! toimenpiteet valinnat]
   (if toimenpiteet
@@ -1478,14 +1475,6 @@
       [maara-kk hallinnolliset-toimenpiteet-yhteensa])
     [yleiset/ajax-loader]))
 
-(defn hallinnolliset-yhteenveto [e! {:keys [valinnat] :as hallinnolliset-toimenpiteet}
-                                 kuluva-hoitokausi]
-  [:div#hallinnolliset-toimenpiteet-yhteensa
-   [hoidonjohtopalkkio-filter e! (:maksetaan valinnat)]
-   [:span
-    "Määrä lasketaan yllä syötetyiden tietojen perusteella. Hallinnolliset toimenteet muodostavat yhtenäisen maksuerän, joka lähetään Sampoon."]
-   [ht-yhteensa hallinnolliset-toimenpiteet kuluva-hoitokausi]])
-
 (defn hoidonjohtopalkkio-yhteenveto
   [johtopalkkio {:keys [vuosi] :as kuluva-hoitokausi}]
   (if johtopalkkio
@@ -1540,8 +1529,7 @@
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
    [erillishankinnat-sisalto erillishankinnat kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut kuluva-hoitokausi]
-   [hoidonjohtopalkkio-sisalto johtopalkkio kuluva-hoitokausi]
-   [hallinnolliset-yhteenveto e! hallinnolliset-toimenpiteet kuluva-hoitokausi]])
+   [hoidonjohtopalkkio-sisalto johtopalkkio kuluva-hoitokausi]])
 
 (defn kustannussuunnitelma*
   [e! app]

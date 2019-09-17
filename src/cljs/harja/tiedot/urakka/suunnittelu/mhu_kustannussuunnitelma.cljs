@@ -110,6 +110,7 @@
 (defrecord ToggleHankintakustannuksetOtsikko [kylla?])
 (defrecord PaivitaJHRivit [paivitetty-osa])
 (defrecord PaivitaSuunnitelmienTila [paivitetyt-taulukot])
+(defrecord MaksukausiValittu [])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -530,7 +531,7 @@
                                             (update rivi :janat (fn [[paa & lapset]]
                                                                   (into []
                                                                         (cons paa
-                                                                              (map #(update % :luokat toggle-fn "piillotettu") lapset)))))
+                                                                              (map #(update % ::piillotettu toggle-fn :laajenna-kiinni) lapset)))))
                                             rivi))
                                         rivit)))]
       (assoc-in app polku-taulukkoon uusi-taulukko)))
@@ -859,4 +860,49 @@
       (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
                                    (-> edelliset-taulukot
                                        (assoc :hankinnat nil ))))
-      (assoc app :suunnitelmien-tila-taulukko suunnitelmien-tila-taulukko))))
+      (assoc app :suunnitelmien-tila-taulukko suunnitelmien-tila-taulukko)))
+  MaksukausiValittu
+  (process-event [_ app]
+    (let [maksetaan (get-in app [:hankintakustannukset :valinnat :maksetaan])
+          maksu-kk (case maksetaan
+                      :kesakausi [5 9]
+                      :talvikausi [10 4]
+                      :molemmat [1 12])
+          piillotetaan? (fn [kk]
+                          (case maksetaan
+                            :kesakausi (or (< kk (first maksu-kk))
+                                            (> kk (second maksu-kk)))
+                            :talvikausi (and (< kk (first maksu-kk))
+                                             (> kk (second maksu-kk)))
+                            :molemmat false))]
+      (update app :hankintakustannukset
+              (fn [kustannukset]
+                (-> kustannukset
+                    (update :toimenpiteet (fn [taulukot]
+                                            (into {}
+                                                  (map (fn [[toimenpide taulukko]]
+                                                         (let [pvm-sarakkeen-index (p/otsikon-index taulukko "Nimi")]
+                                                           [toimenpide (tyokalut/paivita-asiat-taulukossa taulukko [:laajenna-lapsilla :lapset]
+                                                                                                          (fn [taulukko polut]
+                                                                                                            (let [[_ _ _ lapsirivi] polut
+                                                                                                                  lapsirivi (get-in taulukko lapsirivi)
+                                                                                                                  pvm-solu (get (p/arvo lapsirivi :lapset) pvm-sarakkeen-index)
+                                                                                                                  solun-kk (pvm/kuukausi (p/arvo pvm-solu :arvo))]
+                                                                                                              (if (piillotetaan? solun-kk)
+                                                                                                                (update lapsirivi ::piillotettu conj :maksetaan)
+                                                                                                                (update lapsirivi ::piillotettu disj :maksetaan)))))]))
+                                                       taulukot))))
+                    (update :toimenpiteet-laskutukseen-perustuen (fn [taulukot]
+                                                                   (into {}
+                                                                         (map (fn [[toimenpide taulukko]]
+                                                                                (let [pvm-sarakkeen-index (p/otsikon-index taulukko "Nimi")]
+                                                                                  [toimenpide (tyokalut/paivita-asiat-taulukossa taulukko [:laajenna-lapsilla :lapset]
+                                                                                                                                 (fn [taulukko polut]
+                                                                                                                                   (let [[_ _ _ lapsirivi] polut
+                                                                                                                                         lapsirivi (get-in taulukko lapsirivi)
+                                                                                                                                         pvm-solu (get (p/arvo lapsirivi :lapset) pvm-sarakkeen-index)
+                                                                                                                                         solun-kk (pvm/kuukausi (p/arvo pvm-solu :arvo))]
+                                                                                                                                     (if (piillotetaan? solun-kk)
+                                                                                                                                       (update lapsirivi ::piillotettu conj :maksetaan)
+                                                                                                                                       (update lapsirivi ::piillotettu disj :maksetaan)))))]))
+                                                                              taulukot))))))))))
