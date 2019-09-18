@@ -194,7 +194,8 @@ WHERE hallintayksikko = :hallintayksikko
 SELECT
   id,
   nimi,
-  indeksi
+  indeksi,
+  tyyppi
 FROM urakka u
 WHERE :urakkaid :: INTEGER IS NULL AND
       u.hallintayksikko = :hallintayksikkoid AND
