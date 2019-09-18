@@ -56,11 +56,11 @@
   :tyyppi :activemq}
 
 
- :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
-         :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
-         :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
-         :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
-         :paivittainen-lahetysaika nil}
+ ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
+ ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
+ ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
+ ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
+ ;        :paivittainen-lahetysaika nil}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
  ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
@@ -73,7 +73,7 @@
         :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
         :kayttajatunnus "Harja"
         :salasana #=(slurp "../.harja/turi-salasana")
-        :paivittainen-lahetysaika [10 40 00]}
+        :paivittainen-lahetysaika [0 0 0 ]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true

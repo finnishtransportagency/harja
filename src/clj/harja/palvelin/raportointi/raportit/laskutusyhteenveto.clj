@@ -219,10 +219,10 @@
 
 (defn- kustannuslajin-kaikki-kentat [kentan-kantanimi]
   [(keyword (str kentan-kantanimi "_laskutettu"))
-      (keyword (str kentan-kantanimi "_laskutettu_ind_korotus"))
-      (keyword (str kentan-kantanimi "_laskutettu_ind_korotettuna"))
-      (keyword (str kentan-kantanimi "_laskutetaan"))
-      (keyword (str kentan-kantanimi "_laskutetaan_ind_korotus"))
+   (keyword (str kentan-kantanimi "_laskutettu_ind_korotus"))
+   (keyword (str kentan-kantanimi "_laskutettu_ind_korotettuna"))
+   (keyword (str kentan-kantanimi "_laskutetaan"))
+   (keyword (str kentan-kantanimi "_laskutetaan_ind_korotus"))
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotettuna"))])
 
 (defn- laskettavat-kentat [rivi konteksti ]
