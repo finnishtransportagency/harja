@@ -37,86 +37,10 @@ jobs:
           cd /tmp
           bash sisus.bash integraatio $CIRCLE_BRANCH
 
-  prod-build:
-    docker:
-      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
-      - image: solita/harjadb:latest
-
-    steps:
-      - run:
-          no_output_timeout: 60m
-          command: |
-              cd /tmp
-              bash sisus.bash uberjar $CIRCLE_BRANCH
-              cd /tmp/harja
-              tar cf testidata.tar cypress cypress.json tietokanta
-
-      - persist_to_workspace:
-          root: /tmp/harja
-          paths:
-            - target/harja-0.0.1-SNAPSHOT-standalone.jar
-            - testidata.tar
-            - asetukset.edn
-
-  e2e-testit:
-    docker:
-      - image: solita/harja-cypress
-      - image: solita/harjadb:latest
-    parallelism: 1
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/harja
-
-      - deploy:
-          command: |
-            cd /tmp/cypress-run
-            tar xf /tmp/harja/testidata.tar
-
-            npm install transit-js
-
-            cd tietokanta
-            mvn flyway:migrate
-            psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
-            psql -h localhost -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"
-            psql -h localhost -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"
-            cd ..
-            cp /tmp/harja/asetukset.edn .
-            sed -i -e 's/:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
-            sed -i -e 's/:kehitysmoodi true/:kehitysmoodi false/g' asetukset.edn
-            mkdir -p ../.harja
-            echo aaaa > ../.harja/anti-csrf-token
-            touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
-            java -jar /tmp/harja/target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
-            for i in $(seq 10); do
-              curl localhost:3000 > /dev/null 2>&1 && break
-              echo "appis ei käynnissä, odotellaan..."
-              sleep 10
-            done
-            echo "pätkä appiksen logia:"
-            echo +++++++++++++++++++
-            tail -50 harja.out
-            echo +++++++++++++++++++
-            echo
-
-            cd /tmp/cypress-run && $(npm bin)/cypress run
-      - store_artifacts:
-          path: /tmp/cypress-run/cypress/screenshots
-
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - prod-build
-      - back-testit:
-          requires:
-            - prod-build
-      - integraatio-testit:
-          requires:
-            - prod-build
-      - front-testit:
-          requires:
-            - prod-build
-      - e2e-testit:
-          requires:
-            - prod-build
+      - back-testit
+      - integraatio-testit
+      - front-testit
