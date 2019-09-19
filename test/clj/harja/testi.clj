@@ -33,9 +33,6 @@
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
-(defn travis? []
-  (= "true" (System/getenv "TRAVIS")))
-
 (defn circleci? []
   (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
 
@@ -47,7 +44,6 @@
     {:min-level
      (cond
        (or (ollaanko-jenkinsissa?)
-           (travis?)
            (circleci?)
            (= "true" (System/getenv "NOLOG")))
        :fatal
@@ -55,8 +51,7 @@
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (if (or (ollaanko-jenkinsissa?)
-                                        (circleci?))
+(def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "possu"
                                   "localhost")
                       :portti 5432
@@ -66,8 +61,7 @@
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (if (or (ollaanko-jenkinsissa?)
-                                         (circleci?))
+(def temppitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                    "possu"
                                    "localhost")
                        :portti 5432

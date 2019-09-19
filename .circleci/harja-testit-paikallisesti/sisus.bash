@@ -60,6 +60,7 @@ sed -i -e 's/:tietokanta {:palvelin "localhost"/:tietokanta {:palvelin "possu"/g
 sed -i -e 's/:tietokanta-replica {:palvelin "localhost"/:tietokanta-replica {:palvelin "possu"/g' asetukset.edn
 sed -i -e 's/localhost/possu/g' tietokanta/pom.xml
 sed -i -e 's/localhost/possu/g' src/clj/harja/kyselyt/specql_db.clj
+sed -i -e 's/"localhost"/"possu"/g' test/clj/harja/testi.clj
 
 mkdir -p ../.harja
 echo aaaa > ../.harja/anti-csrf-token

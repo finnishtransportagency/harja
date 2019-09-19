@@ -71,14 +71,5 @@
                 <databaseUser>harjatest</databaseUser>
             </properties>
         </profile>
-
-        <!-- Travis CI -->
-        <profile>
-            <id>travis</id>
-            <properties>
-                <databaseUrl>jdbc:postgresql://localhost/harjatest_template</databaseUrl>
-                <databaseUser>postgres</databaseUser>
-            </properties>
-        </profile>
     </profiles>
 </project>
