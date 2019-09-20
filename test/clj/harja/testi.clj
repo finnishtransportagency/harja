@@ -913,12 +913,10 @@
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (luo-kannat-uudelleen)
   (testit))
 
 (defn urakkatieto-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
