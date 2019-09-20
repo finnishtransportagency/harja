@@ -39,7 +39,7 @@ jobs:
 
   prod-build:
     docker:
-      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
+      - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
