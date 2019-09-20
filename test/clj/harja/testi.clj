@@ -33,9 +33,6 @@
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
-(defn travis? []
-  (= "true" (System/getenv "TRAVIS")))
-
 (defn circleci? []
   (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
 
@@ -47,7 +44,6 @@
     {:min-level
      (cond
        (or (ollaanko-jenkinsissa?)
-           (travis?)
            (circleci?)
            (= "true" (System/getenv "NOLOG")))
        :fatal
@@ -917,12 +913,10 @@
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (luo-kannat-uudelleen)
   (testit))
 
 (defn urakkatieto-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
