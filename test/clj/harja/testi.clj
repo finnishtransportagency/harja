@@ -52,7 +52,7 @@
        :debug)}}})
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                  "possu"
+                                  "172.17.238.100"
                                   "localhost")
                       :portti 5432
                       :tietokanta "harjatest"
@@ -62,7 +62,7 @@
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
 (def temppitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                   "possu"
+                                   "172.17.238.100"
                                    "localhost")
                        :portti 5432
                        :tietokanta "temp"
