@@ -56,6 +56,9 @@ pwd
 rm -vf asetukset.edn
 git checkout -b "t_$BRANCH" "origin/$BRANCH"
 git checkout asetukset.edn
+
+sed -i -e 's/:jvm-opts \^:replace \["-Xms256m" "-Xmx2g"\]/:jvm-opts \^:replace \["-Xms256m" "-Xmx1g"\]/g' project.clj
+
 sed -i -e 's/:tietokanta {:palvelin "localhost"/:tietokanta {:palvelin "possu"/g' asetukset.edn
 sed -i -e 's/:tietokanta-replica {:palvelin "localhost"/:tietokanta-replica {:palvelin "possu"/g' asetukset.edn
 sed -i -e 's/localhost/possu/g' tietokanta/pom.xml
