@@ -2,7 +2,7 @@ version: 2
 jobs:
   front-testit:
     docker:
-      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
+      - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
@@ -12,7 +12,7 @@ jobs:
 
   back-testit:
     docker:
-      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
+      - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
@@ -22,7 +22,7 @@ jobs:
   # Tänne voisi alkaa siirtelemään integraatiotestejä
   integraatio-testit:
     docker:
-      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
+      - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
       - image: solita/harja-activemq:5.15.9
         environment:
@@ -39,18 +39,17 @@ jobs:
 
   prod-build:
     docker:
-      - image: solita/harja-testit:jdk11-VHAR-322 # eka image = "primary container"
+      - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
 
     steps:
       - run:
           no_output_timeout: 60m
           command: |
-              cd /tmp
-              bash sisus.bash uberjar $CIRCLE_BRANCH
-              cd /tmp/harja
-              tar cf testidata.tar cypress cypress.json tietokanta
-
+            cd /tmp
+            bash sisus.bash uberjar $CIRCLE_BRANCH
+            cd /tmp/harja
+            tar cf testidata.tar cypress cypress.json tietokanta
       - persist_to_workspace:
           root: /tmp/harja
           paths:
@@ -72,9 +71,7 @@ jobs:
           command: |
             cd /tmp/cypress-run
             tar xf /tmp/harja/testidata.tar
-
             npm install transit-js
-
             cd tietokanta
             mvn flyway:migrate
             psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
@@ -98,7 +95,6 @@ jobs:
             tail -50 harja.out
             echo +++++++++++++++++++
             echo
-
             cd /tmp/cypress-run && $(npm bin)/cypress run
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
@@ -108,15 +104,9 @@ workflows:
   build_and_test:
     jobs:
       - prod-build
-      - back-testit:
-          requires:
-            - prod-build
-      - integraatio-testit:
-          requires:
-            - prod-build
-      - front-testit:
-          requires:
-            - prod-build
+      - back-testit
+      - integraatio-testit
+      - front-testit
       - e2e-testit:
           requires:
             - prod-build
