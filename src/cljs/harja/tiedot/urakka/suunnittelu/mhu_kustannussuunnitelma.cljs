@@ -131,17 +131,28 @@
    {:tyyppi "muut-rahavaraukset"}])
 
 (defn jh-laskulla-pohjadata []
-  [{:toimenkuva "Sopimusvastaava" :kk-v 12}
-   {:toimenkuva "Vastuunalainen työnjohtaja" :kk-v 12}
-   {:toimenkuva "Päätoiminen apulainen (talvikausi)" :kk-v 7}
-   {:toimenkuva "Päätoiminen apulainen (kesäkausi)" :kk-v 5}
-   {:toimenkuva "Apulainen/työnjohtaja (talvikausi)" :kk-v 7}
-   {:toimenkuva "Apulainen/työnjohtaja (kesäkausi)" :kk-v 5}
-   {:toimenkuva "Viherhoidosta vastaava henkilö" :kk-v 5}
-   {:toimenkuva "Hankintavastaava  (ennen urakkaa)" :kk-v 4.5}
-   {:toimenkuva "Hankintavastaava (1. sopimisvuosi)" :kk-v 12}
-   {:toimenkuva "Hankintavastaava (2.-5. sopimusvuosi)" :kk-v 12}
-   {:toimenkuva "Harjoittelija" :kk-v 4}])
+  [(with-meta {:toimenkuva "Sopimusvastaava" :kk-v 12}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Vastuunalainen työnjohtaja" :kk-v 12}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Päätoiminen apulainen (talvikausi)" :kk-v 7}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Päätoiminen apulainen (kesäkausi)" :kk-v 5}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Apulainen/työnjohtaja (talvikausi)" :kk-v 7}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Apulainen/työnjohtaja (kesäkausi)" :kk-v 5}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Viherhoidosta vastaava henkilö" :kk-v 5}
+              {:vuodet (into #{} (range 1 6))})
+   (with-meta {:toimenkuva "Hankintavastaava  (ennen urakkaa)" :kk-v 4.5}
+              {:vuodet #{1}})
+   (with-meta {:toimenkuva "Hankintavastaava (1. sopimisvuosi)" :kk-v 12}
+              {:vuodet #{1}})
+   (with-meta {:toimenkuva "Hankintavastaava (2.-5. sopimusvuosi)" :kk-v 12}
+              {:vuodet (into #{} (range 2 6))})
+   (with-meta {:toimenkuva "Harjoittelija" :kk-v 4}
+              {:vuodet (into #{} (range 1 6))})])
 
 (defn tarkista-datan-validius! [hankinnat hankinnat-laskutukseen-perustuen]
   (let [[nil-pvm-hankinnat hankinnat] (reduce (fn [[nil-pvmt pvmt] {:keys [vuosi kuukausi] :as hankinta}]
@@ -347,12 +358,11 @@
                                      (sequence
                                        (comp
                                          (mapcat (fn [toimenpide]
-                                                   (tyokalut/generoi-pohjadata identity
-                                                                               hankintojen-pohjadata
-                                                                               (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
+                                                   (tyokalut/generoi-pohjadata (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
                                                                                        hankinnat)
                                                                                {:summa ""
-                                                                                :toimenpide (get toimenpiteiden-avaimet toimenpide)})))
+                                                                                :toimenpide (get toimenpiteiden-avaimet toimenpide)}
+                                                                               hankintojen-pohjadata)))
                                          (map (fn [{:keys [vuosi kuukausi] :as data}]
                                                 (assoc data :pvm (pvm/luo-pvm vuosi (dec kuukausi) 15)))))
                                        toimenpiteet))
@@ -372,16 +382,14 @@
           hankinnat-laskutukseen-perustuen-toimenpiteittain (group-by :toimenpide hankinnat-laskutukseen-perustuen-hoitokausille)
           hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
                                               (concat hankinnat-laskutukseen-perustuen-hoitokausille hankinnat-hoitokausille))
-
           rahavarausten-pohjadata (rahavarauket-pohjadata)
           rahavarausten-taydennys-fn (fn [rahavaraukset]
                                        (mapcat (fn [toimenpide]
-                                                 (tyokalut/generoi-pohjadata identity
-                                                                             rahavarausten-pohjadata
-                                                                             (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
+                                                 (tyokalut/generoi-pohjadata (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
                                                                                      rahavaraukset)
                                                                              {:summa ""
-                                                                              :toimenpide (get toimenpiteiden-avaimet toimenpide)}))
+                                                                              :toimenpide (get toimenpiteiden-avaimet toimenpide)}
+                                                                             rahavarausten-pohjadata))
                                                toimenpiteet-rahavarauksilla))
           ;; Kantaan ollaan tallennettu kk-tasolla, koska integroituvat järjestelmät näin haluaa. Kumminkin frontilla
           ;; näytetään vain yksi rivi, joka on sama jokaiselle kk ja vuodelle
@@ -391,50 +399,48 @@
                                         (:kustannusarvioidut-tyot vastaus)))
           rahavaraukset-hoitokausile (rahavarausten-taydennys-fn rahavaraukset)
           rahavarauket-toimenpiteittain (group-by :toimenpide rahavaraukset-hoitokausile)
-
+          jh-laskut-vuosille (fn [[data {:keys [vuodet]} kannasta?]]
+                               (assoc data :vuodet vuodet))
           jh-laskulla []                                    ;; TODO tämä kannasta
           jh-laskut-pohjadata (jh-laskulla-pohjadata)
-          jh-laskut (tyokalut/generoi-pohjadata identity
-                                                jh-laskut-pohjadata
-                                                jh-laskulla
-                                                {:tunnit-kk ""
-                                                 :tuntipalkka ""
-                                                 :yhteensa-kk ""})
+          jh-laskut (eduction (tyokalut/generoi-pohjadata jh-laskulla
+                                                          {:tunnit-kk ""
+                                                           :tuntipalkka ""
+                                                           :yhteensa-kk ""})
+                              (map jh-laskut-vuosille)
+                              jh-laskut-pohjadata)
 
           jh-yhteenvedot []                                 ;; TODO tämä kannasta
           jh-yhteenvedot-pohjadata (jh-laskulla-pohjadata)  ;; sama pohjadata kuin laskulla
-          jh-yhteenveto (tyokalut/generoi-pohjadata identity
-                                                    jh-yhteenvedot-pohjadata
-                                                    jh-yhteenvedot
-                                                    {:hoitokausi-1 ""
-                                                     :hoitokausi-2 ""
-                                                     :hoitokausi-3 ""
-                                                     :hoitokausi-4 ""
-                                                     :hoitokausi-5 ""})
+          jh-yhteenveto (eduction (tyokalut/generoi-pohjadata jh-yhteenvedot
+                                                              {:hoitokausi-1 ""
+                                                               :hoitokausi-2 ""
+                                                               :hoitokausi-3 ""
+                                                               :hoitokausi-4 ""
+                                                               :hoitokausi-5 ""})
+                                  (map jh-laskut-vuosille)
+                                  jh-yhteenvedot-pohjadata)
 
           erillishankinnat []                               ;; TODO tämä kannasta
           erillishankinnat-pohjadata [{:nimi "Erillishankinnat"}]
-          erillishankinnat (tyokalut/generoi-pohjadata identity
-                                                       erillishankinnat-pohjadata
-                                                       erillishankinnat
+          erillishankinnat (tyokalut/generoi-pohjadata erillishankinnat
                                                        {:maara-kk ""
-                                                        :yhteensa ""})
+                                                        :yhteensa ""}
+                                                       erillishankinnat-pohjadata)
 
           jh-toimistokulut []                               ;; TODO tämä kannasta
           jh-toimistokulut-pohjadata [{:nimi "Toimistokulut"}]
-          jh-toimistokulut (tyokalut/generoi-pohjadata identity
-                                                       jh-toimistokulut-pohjadata
-                                                       jh-toimistokulut
+          jh-toimistokulut (tyokalut/generoi-pohjadata jh-toimistokulut
                                                        {:maara-kk ""
-                                                        :yhteensa ""})
+                                                        :yhteensa ""}
+                                                       jh-toimistokulut-pohjadata)
 
           johtopalkkio []                                   ;; TODO tämä kannasta
           johtopalkkio-pohjadata [{:nimi "Hoidonjohtopalkkio"}]
-          johtopalkkio (tyokalut/generoi-pohjadata identity
-                                                   johtopalkkio-pohjadata
-                                                   johtopalkkio
+          johtopalkkio (tyokalut/generoi-pohjadata johtopalkkio
                                                    {:maara-kk ""
-                                                    :yhteensa ""})
+                                                    :yhteensa ""}
+                                                   johtopalkkio-pohjadata)
 
           valinnat (assoc valinnat :laskutukseen-perustuen laskutukseen-perustuvat-toimenpiteet)
 

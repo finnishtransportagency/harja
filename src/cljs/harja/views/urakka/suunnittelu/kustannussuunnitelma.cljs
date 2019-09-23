@@ -854,6 +854,7 @@
                                           "Yhteensä/kk" (yhteensa-kk osa)
                                           "kk/v" (kk-v osa))))
                                     osat)))
+        {kuluva-hoitovuosi :vuosi} (t/kuluva-hoitokausi)
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
@@ -879,7 +880,7 @@
                                                               (p/aseta-arvo osa
                                                                             :arvo "kk/v"))))))
         syottorivi-fn (fn [syotto-pohja]
-                        (mapv (fn [{:keys [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]}]
+                        (mapv (fn [{:keys [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v vuodet]}]
                                 (-> syotto-pohja
                                     (p/aseta-arvo :class #{"table-default"
                                                            "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
@@ -907,7 +908,9 @@
                                                                                                        :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
                                                                                (p/lisaa-fmt summa-formatointi)
                                                                                (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
-                                                                               (assoc-in [:parametrit :size] 2))
+                                                                               (update :parametrit (fn [parametrit]
+                                                                                                     (assoc parametrit :size 2
+                                                                                                                       :disabled? (not (vuodet kuluva-hoitovuosi))))))
                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
                                                                            :arvo tunnit-kk
                                                                            :class #{"input-default"}))
@@ -929,7 +932,9 @@
                                                                                                        :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
                                                                                (p/lisaa-fmt summa-formatointi)
                                                                                (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
-                                                                               (assoc-in [:parametrit :size] 2))
+                                                                               (update :parametrit (fn [parametrit]
+                                                                                                     (assoc parametrit :size 2
+                                                                                                                       :disabled? (not (vuodet kuluva-hoitovuosi))))))
                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
                                                                            :arvo tuntipalkka
                                                                            :class #{"input-default"}))
@@ -1008,7 +1013,7 @@
                                                                  (fn [osa]
                                                                    (p/aseta-arvo osa
                                                                                  :arvo "5.vuosi/€")))))
-                          (map (fn [{:keys [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]}]
+                          (map (fn [{:keys [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5 vuodet]}]
                                  (-> rivi-pohja
                                      (p/aseta-arvo :id (keyword toimenkuva)
                                                    :class #{"table-default"})
@@ -1018,25 +1023,25 @@
                                                                         (fn [osa]
                                                                           (p/aseta-arvo osa :arvo kk-v))
                                                                         (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-1)
-                                                                              (p/lisaa-fmt summa-formatointi)))
+                                                                          (cond-> osa
+                                                                              true (p/aseta-arvo :arvo hoitokausi-1)
+                                                                              (vuodet 1) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-2)
-                                                                              (p/lisaa-fmt summa-formatointi)))
+                                                                          (cond-> osa
+                                                                              true (p/aseta-arvo :arvo hoitokausi-2)
+                                                                              (vuodet 2) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-3)
-                                                                              (p/lisaa-fmt summa-formatointi)))
+                                                                          (cond-> osa
+                                                                              true (p/aseta-arvo :arvo hoitokausi-3)
+                                                                              (vuodet 3) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-4)
-                                                                              (p/lisaa-fmt summa-formatointi)))
+                                                                          (cond-> osa
+                                                                              true (p/aseta-arvo :arvo hoitokausi-4)
+                                                                              (vuodet 4) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-5)
-                                                                              (p/lisaa-fmt summa-formatointi)))))))
+                                                                          (cond-> osa
+                                                                              true (p/aseta-arvo :arvo hoitokausi-5)
+                                                                              (vuodet 5) (p/lisaa-fmt summa-formatointi)))))))
                                jh-yhteenveto))))
         yhteensa-fn (fn [yhteensa-pohja]
                       (let [{:keys [hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]}

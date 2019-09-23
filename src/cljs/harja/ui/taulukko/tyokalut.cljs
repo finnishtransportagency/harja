@@ -43,21 +43,29 @@
                                 (some #(p/janan-id? % lapsen-id)
                                       (p/janan-osat rivi))))))
 
+(defn- generoi-pohjadata-f
+  [olemassa-olevat default-arvoja oleellinen-data]
+  (let [oleellisten-meta (meta oleellinen-data)]
+    (if-let [loytynyt-olemassa-oleva-data (some (fn [olemassa-oleva-data]
+                                                  (when (every? true?
+                                                                (vals (reduce-kv (fn [m k v]
+                                                                                   (if-let [loytynyt-arvo (m k)]
+                                                                                     (assoc m k (= loytynyt-arvo v))
+                                                                                     m))
+                                                                                 oleellinen-data olemassa-oleva-data)))
+                                                    olemassa-oleva-data))
+                                                olemassa-olevat)]
+      [loytynyt-olemassa-oleva-data oleellisten-meta true]
+      [(merge oleellinen-data default-arvoja) oleellisten-meta false])))
+
 (defn generoi-pohjadata
-  ([f oleelliset-datat olemassa-olevat] (generoi-pohjadata f oleelliset-datat olemassa-olevat nil))
-  ([f oleelliset-datat olemassa-olevat default-arvoja]
-   (for [data oleelliset-datat]
-     (if-let [loytynyt-olemassa-oleva-data (some (fn [olemassa-oleva-data]
-                                                   (when (every? true?
-                                                                 (vals (reduce-kv (fn [m k v]
-                                                                                    (if-let [loytynyt-arvo (m k)]
-                                                                                      (assoc m k (= loytynyt-arvo v))
-                                                                                      m))
-                                                                                  data olemassa-oleva-data)))
-                                                     olemassa-oleva-data))
-                                                 olemassa-olevat)]
-       loytynyt-olemassa-oleva-data
-       (f (merge data default-arvoja))))))
+  ([olemassa-olevat] (generoi-pohjadata olemassa-olevat nil))
+  ([olemassa-olevat default-arvoja]
+   (map (partial generoi-pohjadata-f olemassa-olevat default-arvoja)))
+  ([olemassa-olevat default-arvoja oleelliset-datat]
+   (eduction (map (partial generoi-pohjadata-f olemassa-olevat default-arvoja))
+             (map first)
+             oleelliset-datat)))
 
 (defn mapv-indexed [f coll]
   (into []
