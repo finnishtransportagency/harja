@@ -35,13 +35,17 @@
 (defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain db
-                                                                       (when urakkatyyppi (name urakkatyyppi))
-                                                                       alkupvm loppupvm
-                                                                       (not (nil? toimenpide-id)) toimenpide-id)
+                                                                       {:urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                        :alkupvm alkupvm
+                                                                        :loppupvm loppupvm
+                                                                        :rajaa_tpi (not (nil? toimenpide-id))
+                                                                        :tpi toimenpide-id})
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle db
-                                                           (when urakkatyyppi (name urakkatyyppi))
-                                                           alkupvm loppupvm
-                                                           (not (nil? toimenpide-id)) toimenpide-id)))
+                                                           {:urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                            :alkupvm alkupvm
+                                                            :loppupvm loppupvm
+                                                            :rajaa_tpi (not (nil? toimenpide-id))
+                                                            :tpi toimenpide-id})))
 
 (defn muodosta-raportin-rivit [kuukausittaiset-summat urakoittain?]
   (let [yhdista-tehtavat (fn [tehtavat]
