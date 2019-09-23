@@ -38,7 +38,7 @@
 (defn hae-urakan-kokonaishintaiset-tyot
   "Palvelu, joka palauttaa urakan kokonaishintaiset työt."
   [db user urakka-id]
- ;; (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
         (comp
          (map #(assoc %
