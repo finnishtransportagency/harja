@@ -3,6 +3,9 @@
  ;;:preamble ["reagent/react.min.js"]
  :output-to "resources/public/js/harja.js"
 
+ :closure-warnings {:non-standard-jsdoc :off}
+ :recompile-dependents true
+
  ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
  ;:source-map "resources/public/js/harja.js.map"
  :output-dir "resources/public/js/"
