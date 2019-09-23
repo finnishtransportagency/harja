@@ -225,8 +225,8 @@
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotus"))
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotettuna"))])
 
-(defn- laskettavat-kentat [rivi konteksti ]
-  (let [urakkatyyppi :teiden-hoito ;; TOOD
+(defn- laskettavat-kentat [rivi konteksti]
+  (let [urakkatyyppi (:urakkatyyppi rivi)
         kustannusten-kentat (if (= :teiden-hoito urakkatyyppi)
                               (into []
                                     (apply concat [(kustannuslajin-kaikki-kentat "kht")
