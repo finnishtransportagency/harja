@@ -679,6 +679,12 @@
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
+
+(def +pvm-2-regex+ #"^((0?[1-9])|([1-2][0-9])|(3[0-1]))\.((0?[1-9])|(1[0-2]))\.\d{4}$")
+(def +pvm-2-lyhyt-vuosi-regex+ #"^((0?[1-9])|([1-2][0-9])|(3[0-1]))\.((0?[1-9])|(1[0-2]))\.\d{2}$")
+(def +pvm-2-ilman-erotinta-regex+ #"^((0[1-9])|([1-2][0-9])|(3[0-1]))((0[1-9])|(1[0-2]))\d{4}$")
+(def +pvm-2-ilman-erotinta-lyhyt-vuosi-regex+ #"^((0[1-9])|([1-2][0-9])|(3[0-1]))((0[1-9])|(1[0-2]))\d{2}$")
+
 (def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
 ;; Kellonajan tuntiosa on joko:
 ;; numero 0-9 väliltä
@@ -689,10 +695,110 @@
 ;; HUOM: 0:0 ei siis ole validi kellonaika. Esim 0:00 on.
 (def +validi-aika-regex+ #"^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")
 
+;; Päivitetty versio päivämääräkentästä
+;; Ei toteuta kaikkia ominaisuuksia, lisätään tarvittaessa
+(defmethod tee-kentta :pvm-2 [{:keys [callback!]} pvm]
+  (let [sisainen-tila (clojure.core/atom {:tarkista-blur? false
+                                          :kenttaa-muutettu? false
+                                          :edellinen-pvm pvm
+                                          :avain (gensym "pvm-kentta")})
+        tila (atom {:on-invalid? false
+                    :valitsin-auki? false
+                    :kentan-arvo (if pvm (pvm/pvm-lyhyt pvm) "")})
+        aseta-invalid! #(swap! tila assoc :on-invalid? %)
+        aseta-blur! #(swap! sisainen-tila assoc :tarkista-blur? %)
+        aseta-kentan-muutos! #(swap! sisainen-tila assoc :kenttaa-muutettu? %)
+        aseta-kentan-arvo! #(swap! tila assoc :kentan-arvo %)
+        aseta-pvm-valitsin! #(swap! tila assoc :valitsin-auki? %)
+        aseta-edellinen-pvm! #(swap! sisainen-tila assoc :edellinen-pvm %)
+        jaa-kahteen #(map (partial apply str) (partition-all 2 %))
+        callback! (fn [pvm]
+                    (aseta-edellinen-pvm! pvm)
+                    (when callback! (callback! pvm)))
+        on-valid? (fn [validointi pvm]
+                    (cond
+                      (nil? validointi) true
+                      (fn? validointi) (validointi pvm)
+                      (nil? pvm) false
+                      (= :korkeintaan-kuluva-paiva validointi) (pvm/sama-tai-ennen? pvm (pvm/nyt) true)
+                      :else true))
+        valitse-pvm! (fn [pvm]
+                       (aseta-pvm-valitsin! false)
+                       (aseta-invalid! false)
+                       (aseta-kentan-arvo! (pvm/pvm-lyhyt pvm))
+                       (callback! pvm))
+        aseta-tyhja-pvm! (fn []
+                           (aseta-invalid! false)
+                           (aseta-kentan-arvo! "")
+                           (callback! nil))]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(aseta-pvm-valitsin! false))
+      (fn [{:keys [placeholder validointi]} pvm]
+        (let [{:keys [valitsin-auki? kentan-arvo on-invalid? pakota-suunta]} @tila
+              {:keys [avain tarkista-blur? kenttaa-muutettu? edellinen-pvm]} @sisainen-tila
+              validoi (partial on-valid? validointi)
+              aseta-pvm! (fn [pvm]
+                           (aseta-invalid! true)
+                           (let [pvm (pvm/->pvm pvm)]
+                             (if (nil? pvm)
+                               (callback! nil)
+                               (do (aseta-kentan-arvo! (pvm/pvm-lyhyt pvm))
+                                   (if (validoi pvm)
+                                     (do (aseta-invalid! false)
+                                         (callback! pvm))
+                                     (callback! nil))))))
+              aseta-lyhyt-pvm! #(let [vuosi (+ 2000 (js/parseInt (last %)))
+                                      pvm-teksti (str/join "." (conj (pop %) vuosi))]
+                                  (aseta-pvm! pvm-teksti))]
+          (when-not (or (or (pvm/sama-pvm? edellinen-pvm pvm)
+                            (= edellinen-pvm pvm))
+                        kenttaa-muutettu?)
+            (aseta-invalid! false)
+            (aseta-edellinen-pvm! pvm)
+            (aseta-kentan-arvo! (if pvm (pvm/pvm-lyhyt pvm) "")))
+          (aseta-kentan-muutos! false)
+          [:span.pvm-kentta {:style {:display "inline-block"}}
+           [:input.pvm {:style (when on-invalid? {:color "red"})
+                        :on-focus #(aseta-pvm-valitsin! true)
+                        :placeholder (or placeholder "pp.kk.vvvv")
+                        :value kentan-arvo
+                        :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+                                        (aseta-pvm-valitsin! false))
+                        :on-change #(let [kentan-arvo (-> % .-target .-value)]
+                                      (aseta-invalid! false)
+                                      (aseta-blur! true)
+                                      (aseta-kentan-muutos! true)
+                                      (aseta-kentan-arvo! kentan-arvo))
+                        :on-blur (fn [event]
+                                   (when tarkista-blur?
+                                     (aseta-blur! false)
+                                     (let [kentan-arvo (-> event .-target .-value)]
+                                       (cond
+                                         (empty? kentan-arvo)
+                                         (aseta-tyhja-pvm!)
+                                         (re-matches +pvm-2-regex+ kentan-arvo)
+                                         (aseta-pvm! kentan-arvo)
+                                         (re-matches +pvm-2-lyhyt-vuosi-regex+ kentan-arvo)
+                                         (aseta-lyhyt-pvm! (str/split kentan-arvo #"\."))
+                                         (re-matches +pvm-2-ilman-erotinta-regex+ kentan-arvo)
+                                         (let [arvot (jaa-kahteen kentan-arvo)
+                                               vuosi (str/join (take-last 2 arvot))
+                                               pvm-teksti (str/join "." [(first arvot) (second arvot) vuosi])]
+                                           (aseta-pvm! pvm-teksti))
+                                         (re-matches +pvm-2-ilman-erotinta-lyhyt-vuosi-regex+ kentan-arvo)
+                                         (aseta-lyhyt-pvm! (vec (jaa-kahteen kentan-arvo)))
+                                         :else (do (aseta-invalid! true)
+                                                   (callback! nil))))))}]
+           (when valitsin-auki?
+             ^{:key avain}
+             [pvm-valinta/pvm-valintakalenteri {:valitse valitse-pvm!
+                                                :pvm pvm
+                                                :pakota-suunta pakota-suunta
+                                                :valittava?-fn validoi}])])))))
+
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi]} data]
-
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
         teksti (atom (if p

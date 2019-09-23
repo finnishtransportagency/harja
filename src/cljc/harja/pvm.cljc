@@ -342,6 +342,11 @@
   [pvm]
   (formatoi fi-pvm-aika-sek pvm))
 
+(defn pvm-lyhyt
+  "Formatoi päivämäärän suomalaisessa muodossa ilman nollia"
+  [paivamaara]
+  (formatoi fi-pvm-parse paivamaara))
+
 (defn pvm
   "Formatoi päivämäärän suomalaisessa muodossa.
 

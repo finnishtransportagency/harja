@@ -79,7 +79,7 @@
    [:span.valinnat
     [urakka-valinnat/aikavali-nykypvm-taakse urakka
      tiedot/valittu-aikavali
-     {:aikavalin-rajoitus [12 :kuukausi]}]
+     {:aikavalin-rajoitus [6 :kuukausi]}]
     [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
                                      :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)
@@ -190,7 +190,7 @@
        [:div
         [urakka-valinnat/aikavali-nykypvm-taakse urakka
          tiedot/valittu-aikavali
-         {:aikavalin-rajoitus [12 :kuukausi]}]
+         {:aikavalin-rajoitus [6 :kuukausi]}]
         [grid/grid {:otsikko "Urakan pohjavesialueet"
                     :tunniste :tunnus
                     :mahdollista-rivin-valinta? true
