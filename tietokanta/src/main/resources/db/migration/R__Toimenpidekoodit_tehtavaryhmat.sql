@@ -1,9 +1,6 @@
--- ÄLÄ AJA TEHTÄVÄRYHMIÄ enää R-migraatiossa.
--- RYHMIIN JA TOIMENPITEISIIN TEHDÄÄN MUUTOKSIA TAVALLISISSA MIGRAATIOISSA.
--- Jos tehtäväryhmät ja niihin liittyvät tiedot täytyy joskus palauttaa skripteistä, aja nämä lauseet ja sen jälkeen migraatiot, jotka
-
-
-
+-- Tehtäväryhmät täytyy ajaa R-migraatiossa, koska toimenpidekoodit, joihin ne kiinteästi liittyvät, ajetaan R-migraatiossa.
+-- Osa lauseista päivittää tehtäväryhmän toimenpidekoodiriveille.
+-- Kun tehtäväryhmistä tulee uusi versio. Huomioi että tämän skriptin lopussa päivitetään versioksi 1. Uusi versio on sitten 2. Tehtäväryhmien ja hierarkian käsittely täytynee silloin miettiä muutenkin vähän uusiksi.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- TEHTÄVÄRYHMÄT raportointia ja laskutusta varten. Ryhmittelee tehtävät ja lajittelee tehtäväryhmät. Käyttöliittymäjärjestystä vasten ui-taso ------------------------------------
@@ -101,7 +98,6 @@ INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, n
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Erillishankinnat erillishinnoin',	NULL,	'valitaso',	165, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Erillishankinnat erillishinnoin',	(select id from tehtavaryhma where nimi =  'Erillishankinnat erillishinnoin'),	'valitaso',	165, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE) ON CONFLICT DO NOTHING;
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Alataso Erillishankinnat erillishinnoin',	(select id from tehtavaryhma where nimi =  'Välitaso Erillishankinnat erillishinnoin'),	'alataso',	165, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE) ON CONFLICT DO NOTHING;
-
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -855,5 +851,5 @@ UPDATE tehtavaryhma SET jarjestys = 129 WHERE nimi = 'KESÄSUOLA (MATERIAALI)';
 UPDATE tehtavaryhma SET jarjestys = 159 WHERE nimi = 'TILAAJAN RAHAVARAUS';
 
 
-
+UPDATE tehtavaryhma SET versio = 1 WHERE nimi NOT LIKE ('%VOID%');
 
