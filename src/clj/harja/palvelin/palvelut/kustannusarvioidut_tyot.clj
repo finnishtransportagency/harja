@@ -17,7 +17,7 @@
 (defn tallenna-kustannusarvioidut-tyot
   "Funktio tallentaa ja palautaa urakan kustannusarvioidut tyot. Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (let [nykyiset-arvot (hae-urakan-kustannusarvioidut-tyot db user urakka-id)
         valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))

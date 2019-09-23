@@ -88,7 +88,7 @@ describe('Luo uusi tietyöilmoitus', () => {
                 validoiIlmoitusRivi(6, muotoilePvm(tanaan, true), false);
 
                 // Avaa ilmoitus
-                cy.get('td.klikattava').click();
+                cy.get('td.vetolaatikon-tila.klikattava').click();
             });
         });
 
