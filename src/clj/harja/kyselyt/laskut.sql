@@ -87,15 +87,16 @@ ON CONFLICT (viite) DO UPDATE
 
 -- name: luo-tai-paivita-laskun-kohdistus<!
 INSERT
-INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, tehtava, suorittaja, suoritus_alku,
+INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, suorittaja, suoritus_alku,
                       suoritus_loppu, luotu, luoja)
-VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :tehtava, :suorittaja, :alkupvm, :loppupvm,
+VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :tehtava, :maksueratyyppi ::MAKSUERATYYPPI, :suorittaja, :alkupvm, :loppupvm,
         current_timestamp, :kayttaja)
 ON CONFLICT (lasku, rivi) DO UPDATE
   SET summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
     tehtava = :tehtava,
+    maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
     suorittaja = :suorittaja,
     suoritus_alku = :alkupvm,
     suoritus_loppu = :loppupvm,
@@ -124,6 +125,14 @@ SET poistettu = TRUE,
     muokkaaja = :kayttaja
 WHERE lasku = (select id from lasku where viite = :viite and urakka = :urakka)
   AND rivi = :rivi;
+
+-- name: hae-tehtavan-nimi
+SELECT nimi FROM toimenpidekoodi
+WHERE id = :id AND poistettu IS NOT TRUE;
+
+-- name: hae-tehtavaryhman-nimi
+SELECT nimi FROM tehtavaryhma
+WHERE id = :id AND poistettu IS NOT TRUE;
 
 
 

@@ -75,9 +75,16 @@
   "Selvittää laskuerittelyn maksueratyypin, jotta laskun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
   Yleensä tyyppi on kokonaishintainen. Jos tehtävä on Äkillinen hoitotyö, maksuerätyyppi on akillinen-hoitotyö.
   Jos tehtävä on "
-  [tehtavaryhma-id tehtava-id]
-      ;;TODO: lisää käsittely äkillisen hoitotyön ja vahinkojen korjauksen tunnistamiseski
-      "kokonaishintainen")
+  [db tehtavaryhma-id tehtava-id]
+  ;;TODO: tarkista ehdot, korjaa
+  (cond (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "Äkilliset hoitotytöt")
+            (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "ÄKILLISET HOITOTYÖT"))
+        "akilliset-hoitotyot"
+        (or (.contains (or (:nimi (first (q/hae-tehtavan-nimi db {:id tehtava-id}))) "") "vahinkojen korja")
+            (.contains (or (:nimi (first (q/hae-tehtavaryhman-nimi db {:id tehtavaryhma-id}))) "") "VAHINKOJEN KORJAAMINEN"))
+        "muu"                                               ;; vahinkojen korjaukset
+        :default
+        "kokonaishintainen"))
 
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
@@ -90,7 +97,7 @@
                                             :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
                                             :tehtavaryhma        (:tehtavaryhma laskurivi)
                                             :tehtava             (:tehtava laskurivi)
-                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi (:tehtava laskurivi)(:tehtava laskurivi))
+                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtava laskurivi) (:tehtava laskurivi))
                                             :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
