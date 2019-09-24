@@ -110,7 +110,7 @@
     "20143" "43020000" ;; Soratien rakenne (urakkatyyppi: hoito)
     "20179" "43020000" ;; Varuste ja laite korjaus (urakkatyyppi: hoito)
     "20191" "43020000" ;; MHU Ylläpito (urakkatyyppi: teiden-hoito)
-    "23151" "43020000" ;; Hallinnolliset toimenpiteet (urakkatyyppi: teiden-hoito, urakkatyypissä hoito HJU-urakat)
+    "23151" "43020000" ;; MHU ja HJU Hoidon johto (urakkatyyppi: teiden-hoito, urakkatyypissä hoito HJU-urakat)
     "27105" "43020000" ;; Vesiliikenteen käyttöpalvelut (urakkatyyppi: kanava)
     "20106" "12980010" ;; Päällyste (urakkatyyppi: paallystys). Kustannussuunnitelmia tai maksueriä ei lähetetä.
     "20135" "12980010" ;; Tiesilta (urakkatyyppi: tiemerkinta). Kustannussuunnitelmia tai maksueriä ei lähetetä.

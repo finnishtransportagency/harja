@@ -5,6 +5,12 @@ SELECT * FROM laskutusyhteenveto(
     :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
     :urakka::INTEGER);
 
+-- name: hae-laskutusyhteenvedon-tiedot-teiden-hoito
+-- Hakee laskutusyhteenvetoon tarvittavat tiedot teiden hoidon urakassa (MHU)
+SELECT * FROM laskutusyhteenveto_teiden_hoito(
+                  :hk_alkupvm::DATE, :hk_loppupvm::DATE,
+                  :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
+                  :urakka::INTEGER);
 
 -- name: laske-asiakastyytyvaisyysbonus
 -- Laskee hoitourakoissa käytettävän asiakastyytyväisyysbonuksen indeksitarkistuksen
@@ -31,7 +37,7 @@ DELETE FROM laskutusyhteenveto_cache WHERE urakka = :urakka
 -- name: hae-urakat-joille-laskutusyhteenveto-voidaan-tehda
 -- Hakee käynnissä olevat urakat, joille voidaan laskea valmiiksi laskutyshteenveto
 -- annetulle aikavälille.
-SELECT u.id, u.nimi
+SELECT u.id, u.nimi, u.tyyppi
   FROM urakka u
  WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
        u.alkupvm < NOW() AND
