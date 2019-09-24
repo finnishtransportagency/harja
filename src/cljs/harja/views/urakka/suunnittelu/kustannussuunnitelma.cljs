@@ -342,28 +342,27 @@
                                                   (p/paivita-arvo :lapset
                                                                   (fn [osat]
                                                                     (update osat 0 (fn [laajenna-osa]
-                                                                                     (p/paivita-arvo laajenna-osa :class conj "solu-sisenna-2")))))))
+                                                                                     (p/paivita-arvo laajenna-osa :class conj "solu-sisenna-2")))))
+                                                  (assoc :halllinto-id id)))
                                             ["Erillishankinnat"
                                              "Johto- ja hallintokorvaus"
+                                             "Toimistokulut"
                                              "Hoidonjohtopalkkio"]
-                                            ["erillishankinnat"
-                                             "johto-ja-hallintokorvaus"
-                                             "hoidonjohtopalkkio"]
+                                            [(:erillishankinnat t/hallinnollisten-idt)
+                                             (:johto-ja-hallintokorvaus t/hallinnollisten-idt)
+                                             (:toimistokulut-taulukko t/hallinnollisten-idt)
+                                             (:hoidonjohtopalkkio t/hallinnollisten-idt)]
                                             (repeat 4 "/kk")))
         hallinnollisetkustannukset-fn (fn [hallinnollisetkustannukset-pohja]
                                         (-> hallinnollisetkustannukset-pohja
                                             (p/aseta-arvo :id (keyword (str "hallinnollisetkustannukset-vanhempi")))
                                             (p/paivita-arvo :lapset
                                                             (fn [rivit]
-                                                              (into []
-                                                                    (reduce (fn [rivit rivin-pohja]
-                                                                              (let [rivin-tyyppi (p/janan-id rivin-pohja)]
-                                                                                (concat
-                                                                                  rivit
-                                                                                  (case rivin-tyyppi
-                                                                                    :linkkiotsikko [(linkkiotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi" "hallinnolliset-toimenpiteet")]
-                                                                                    :hallinnollinen-toimenpide (hallinnollinen-toimenpide-fn rivin-pohja)))))
-                                                                            [] rivit))))))]
+                                                              (let [rivin-pohja (first rivit)]
+                                                                (into []
+                                                                      (concat
+                                                                        [(linkkiotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi" "hallinnolliset-toimenpiteet")]
+                                                                        (hallinnollinen-toimenpide-fn rivin-pohja))))))))]
     (muodosta-taulukko :suunnitelmien-taulukko
                        {:otsikko {:janan-tyyppi jana/Rivi
                                   :osat [osa/Komponentti
@@ -389,18 +388,68 @@
                                      :janat [:laajenna-toimenpide :toimenpide-osa]}
                         :hankintakustannukset {:janan-tyyppi jana/RiviLapsilla
                                                :janat [:linkkiotsikko :toimenpide]}
-                        :hallinnollinen-toimenpide {:janan-tyyppi jana/Rivi
-                                                    :osat [osa/Nappi
-                                                           osa/Ikoni
-                                                           osa/Ikoni
-                                                           osa/Teksti]}
                         :hallinnollisetkustannukset {:janan-tyyppi jana/RiviLapsilla
-                                                     :janat [:linkkiotsikko :hallinnollinen-toimenpide]}}
+                                                     :janat [:linkkiotsikko]}}
                        ["Teksti" "Kuluva vuosi" "Tuleva vuosi" "Jakso"]
                        [:otsikko otsikko-fn :hankintakustannukset hankintakustannukset-fn :hallinnollisetkustannukset hallinnollisetkustannukset-fn]
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                         :id "suunnitelmien-taulukko"
                         :class #{"suunnitelma-ikonien-varit"}})))
+
+(defn suunnitelman-paivitettavat-osat
+  [edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
+   vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet]
+  (let [toimenpide-muutokset (fn [hankinnat uudet-toimenpiteet vanhat-toimenpiteet muutoksen-avain]
+                               (into {}
+                                     (map (fn [[avain uusi] [_ vanha]]
+                                            [avain {muutoksen-avain (or (get-in hankinnat [avain muutoksen-avain])
+                                                                        (not= uusi vanha))}])
+                                          uudet-toimenpiteet
+                                          vanhat-toimenpiteet)))
+        hallinnolliset-muutokset (fn [hallinnolliset uudet-hallinnolliset vanhat-hallinnolliset muutoksen-avain]
+                                   (or (get hallinnolliset muutoksen-avain)
+                                       (not= uudet-hallinnolliset vanhat-hallinnolliset)))]
+    (-> edelliset-taulukot
+        (update :hankinnat (fn [hankinnat]
+                             (merge-with merge
+                                         (toimenpide-muutokset hankinnat
+                                                               (:toimenpiteet uudet-hankintakustannukset)
+                                                               (:toimenpiteet vanhat-hankintakustannukset)
+                                                               :kokonaishintainen)
+                                         (toimenpide-muutokset hankinnat
+                                                               (:toimenpiteet-laskutukseen-perustuen uudet-hankintakustannukset)
+                                                               (:toimenpiteet-laskutukseen-perustuen vanhat-hankintakustannukset)
+                                                               :lisatyo)
+                                         (toimenpide-muutokset hankinnat
+                                                               (:rahavaraukset uudet-hankintakustannukset)
+                                                               (:rahavaraukset vanhat-hankintakustannukset)
+                                                               :rahavaraukset)
+                                         (into {}
+                                               (map (fn [toimenpide]
+                                                      [toimenpide {:laskutukseen-perustuen-valinta (or (get-in hankinnat [toimenpide :laskutukseen-perustuen-valinta])
+                                                                                                       (and (not= (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
+                                                                                                                  (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
+                                                                                                            (not (contains? (clj-set/intersection (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
+                                                                                                                                                  (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
+                                                                                                                            toimenpide))))}])
+                                                    t/toimenpiteet)))))
+        (update :hallinnolliset (fn [hallinnolliset]
+                                  {(:erillishankinnat t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                       (:erillishankinnat uudet-hallinnolliset-toimenpiteet)
+                                                                                                       (:erillishankinnat vanhat-hallinnolliset-toimenpiteet)
+                                                                                                       :erillishankinnat)
+                                   (:johto-ja-hallintokorvaus t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                               (:johto-ja-hallintokorvaus-yhteenveto uudet-hallinnolliset-toimenpiteet)
+                                                                                                               (:johto-ja-hallintokorvaus-yhteenveto vanhat-hallinnolliset-toimenpiteet)
+                                                                                                               :johto-ja-hallintokorvaus-yhteenveto)
+                                   (:toimistokulut-taulukko t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                             (:toimistokulut uudet-hallinnolliset-toimenpiteet)
+                                                                                                             (:toimistokulut vanhat-hallinnolliset-toimenpiteet)
+                                                                                                             :toimistokulut)
+                                   (:hoidonjohtopalkkio t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                         (:johtopalkkio uudet-hallinnolliset-toimenpiteet)
+                                                                                                         (:johtopalkkio vanhat-hallinnolliset-toimenpiteet)
+                                                                                                         :johtopalkkio)})))))
 
 (defn suunnitelmien-tila
   [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
@@ -417,40 +466,12 @@
                                   ;; mutta React on deprecoinut tuon ja se tulee hajottamaan tulevan koodin.
                                   #_(println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
                                   (let [vanhat-hankintakustannukset (last (butlast old-argv))
-                                        uudet-hankintakustannukset (last (butlast new-argv))]
+                                        uudet-hankintakustannukset (last (butlast new-argv))
+                                        vanhat-hallinnolliset-toimenpiteet (last old-argv)
+                                        uudet-hallinnolliset-toimenpiteet (last new-argv)]
                                     (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
-                                                                 ;{:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
-                                                                 (-> edelliset-taulukot
-                                                                     (update :hankinnat (fn [hankinnat]
-                                                                                          (merge-with merge
-                                                                                                      (into {}
-                                                                                                            (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   [avain {:kokonaishintainen (or (get-in hankinnat [avain :kokonaishintainen])
-                                                                                                                                                  (not= uusi vanha))}])
-                                                                                                                 (:toimenpiteet uudet-hankintakustannukset)
-                                                                                                                 (:toimenpiteet vanhat-hankintakustannukset)))
-                                                                                                      (into {}
-                                                                                                            (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   [avain {:lisatyo (or (get-in hankinnat [avain :lisatyo])
-                                                                                                                                        (not= uusi vanha))}])
-                                                                                                                 (:toimenpiteet-laskutukseen-perustuen uudet-hankintakustannukset)
-                                                                                                                 (:toimenpiteet-laskutukseen-perustuen vanhat-hankintakustannukset)))
-                                                                                                      (into {}
-                                                                                                            (map (fn [toimenpide]
-                                                                                                                   [toimenpide {:laskutukseen-perustuen-valinta (or (get-in hankinnat [toimenpide :laskutukseen-perustuen-valinta])
-                                                                                                                                                                    (and (not= (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
-                                                                                                                                                                               (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
-                                                                                                                                                                         (not (contains? (clj-set/intersection (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
-                                                                                                                                                                                                               (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
-                                                                                                                                                                                         toimenpide))))}])
-                                                                                                                 t/toimenpiteet))
-                                                                                                      (into {}
-                                                                                                            (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   (let [rahavaraukset-muuttunut? (not= uusi vanha)]
-                                                                                                                     [avain {:rahavaraukset (or (get-in hankinnat [avain :rahavaraukset])
-                                                                                                                                                rahavaraukset-muuttunut?)}]))
-                                                                                                                 (:rahavaraukset uudet-hankintakustannukset)
-                                                                                                                 (:rahavaraukset vanhat-hankintakustannukset))))))))))
+                                                                 (suunnitelman-paivitettavat-osat edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
+                                                                                                  vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet))))
                                   (not= old-argv new-argv))}
       (fn [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
         (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)]))
@@ -1097,7 +1118,7 @@
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                         :class #{}})))
 
-(defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi voi-muokata?
+(defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi voi-muokata? taulukko-elementin-id
                          {:keys [maara-kk yhteensa]} on-oikeus?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
@@ -1213,7 +1234,8 @@
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                          :class #{}})
+                          :class #{}
+                          :id taulukko-elementin-id})
       (muodosta-taulukko (str rivin-nimi "-taulukko")
                          {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
@@ -1226,7 +1248,8 @@
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :rivi rivi-fn :normaali yhteensa-fn]
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                          :class #{}}))))
+                          :class #{}
+                          :id taulukko-elementin-id}))))
 
 (defn aseta-rivien-luokat
   "Tämä tekee taulukkoon seeprakuvioinnin"
@@ -1418,7 +1441,7 @@
 
 (defn erillishankinnat-sisalto [erillishankinnat-taulukko kuluva-hoitokausi]
   [:<>
-   [:h3#erillishankinnat "Erillishankinnat"]
+   [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
    [erillishankinnat-yhteenveto erillishankinnat-taulukko kuluva-hoitokausi]
    [erillishankinnat erillishankinnat-taulukko]
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
@@ -1439,46 +1462,13 @@
 
 (defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut kuluva-hoitokausi]
   [:<>
-   [:h3#johto-ja-hallintokorvaus "Johto- ja hallintokorvaus"]
+   [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto kuluva-hoitokausi]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
    [maara-kk toimistokulut]
    [:span
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
-
-(defn ht-yhteensa [{:keys [erillishankinnat johto-ja-hallintokorvaus-laskulla
-                           toimistokulut johtopalkkio hallinnolliset-toimenpiteet-yhteensa] :as hallinnolliset-toimenpiteet}
-                   {kuluva-hoitovuosi :vuosi}]
-  ;; TODO Kysy miten tuo johto-ja-hallintokorvaus kk pitäs laskea yhteen, kun kk määrä vaihtelee
-  (if (and erillishankinnat johto-ja-hallintokorvaus-laskulla johtopalkkio toimistokulut)
-    (let [maara-sarakkeen-index (p/otsikon-index hallinnolliset-toimenpiteet-yhteensa "Määrä")
-          yhteensa-sarakkeen-index (p/otsikon-index hallinnolliset-toimenpiteet-yhteensa "Yhteensä")
-          hallinnolliset-toimenpiteet-yhteensa (-> hallinnolliset-toimenpiteet-yhteensa
-                                                   (tyokalut/paivita-asiat-taulukossa [1]
-                                                                                      (fn [taulukko polut]
-                                                                                        (let [[rivit ht-rivi] polut
-                                                                                              ht-rivi (get-in taulukko ht-rivi)
-                                                                                              #_#_henkilostokulut (p/arvo
-                                                                                                                    (tyokalut/hae-asia-taulukosta johto-ja-hallintokorvaus-laskulla
-                                                                                                                                                  [last (str kuluva-hoitovuosi ".vuosi/€")])
-                                                                                                                    :arvo)
-                                                                                              maara-kk (+ 1)]
-                                                                                          (p/paivita-arvo ht-rivi :lapset
-                                                                                                          (fn [lapset]
-                                                                                                            (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                     (cond
-                                                                                                                                       (= maara-sarakkeen-index index) (p/aseta-arvo osa :arvo maara-kk)
-                                                                                                                                       (= yhteensa-sarakkeen-index index) (p/aseta-arvo osa :arvo (* 12 maara-kk))
-                                                                                                                                       :else osa))
-                                                                                                                                   lapset))))))
-                                                   (tyokalut/paivita-asiat-taulukossa [2]
-                                                                                      (fn [taulukko polut]
-                                                                                        (let [[rivit summarivi] polut
-                                                                                              summarivi (get-in taulukko summarivi)]
-                                                                                          summarivi))))]
-      [maara-kk hallinnolliset-toimenpiteet-yhteensa])
-    [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio-yhteenveto
   [johtopalkkio {:keys [vuosi] :as kuluva-hoitokausi}]
@@ -1504,7 +1494,7 @@
 
 (defn hoidonjohtopalkkio-sisalto [johtopalkkio kuluva-hoitokausi]
   [:<>
-   [:h3#hoidonjohtopalkkio "Hoidonjohtopalkkio"]
+   [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto johtopalkkio kuluva-hoitokausi]
    [hoidonjohtopalkkio johtopalkkio]])
 
@@ -1545,10 +1535,10 @@
                                                        (partial rahavarausten-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" true)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" true)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] "Hallinnolliset toimenpiteet" false)))))
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" true "erillishankinnat-taulukko")
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" true (:toimistokulut-taulukko t/hallinnollisten-idt))
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true "hoidonjohtopalkkio-taulukko")
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] "Hallinnolliset toimenpiteet" false "hallinnolliset-toimenpiteet-taulukko")))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
       [:div#kustannussuunnitelma
        ;[debug/debug app]
