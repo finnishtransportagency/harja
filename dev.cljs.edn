@@ -7,8 +7,11 @@
 {:main harja.asiakas.main
  :optimizations :none
  :source-map true
- :output-to "dev-resources/js/out/harja.js"
+ :output-to "dev-resources/js/harja.js"
  :output-dir "dev-resources/js/out"
  :asset-path "js/out"
  :libs ["src/js/kuvataso.js"]
- :closure-output-charset "US-ASCII"}
+ :closure-output-charset "US-ASCII"
+ ;Ota tämä kommentista pois, jos eta halua nähdä taulukon debuggia
+ ;:closure-defines {harja.ui.taulukko-debug/TAULUKKO_DEBUG false}
+ }
