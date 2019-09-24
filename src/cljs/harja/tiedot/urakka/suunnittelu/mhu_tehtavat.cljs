@@ -95,8 +95,8 @@
            (if (or
                  (= (:id arvo) (get hierarkia (p/janan-id rivi)))
                  (get nayta-aina (p/janan-id rivi)))
-             (tyokalut/aseta-arvo rivi :piillotettu? false)
-             (tyokalut/aseta-arvo rivi :piillotettu? true)))
+             (p/aseta-arvo rivi :piillotettu? false)
+             (p/aseta-arvo rivi :piillotettu? true)))
          rivit)))
 
 (extend-protocol tuck/Event
@@ -195,7 +195,7 @@
          (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :valitaso] arvo))))))
   PaivitaMaara
   (process-event [{:keys [solu arvo]} app]
-    (p/paivita-solu! (:tehtavat-taulukko app) (tyokalut/aseta-arvo solu :arvo arvo) app))
+    (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo) app))
 
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
