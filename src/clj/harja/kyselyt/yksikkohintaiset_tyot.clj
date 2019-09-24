@@ -2,4 +2,4 @@
   (:require [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/kyselyt/yksikkohintaiset_tyot.sql"
-  {:positional? true})
+  {:positional? false})

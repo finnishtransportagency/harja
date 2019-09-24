@@ -15,6 +15,7 @@
              [kokonaishintaiset-tyot :as kok-q]
              [toimenpideinstanssit :as tpi-q]]
             [harja.palvelin.palvelut
+             [kokonaishintaiset-tyot :as sampo-kustannussuunnitelmat]
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]
              [yksikkohintaiset-tyot :as ykshint-tyot]]

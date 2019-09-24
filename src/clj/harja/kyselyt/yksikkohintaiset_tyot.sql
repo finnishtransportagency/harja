@@ -39,11 +39,17 @@ ORDER BY tpk.nimi;
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot
 UPDATE yksikkohintainen_tyo
-SET maara = :maara, yksikko = :yksikko, yksikkohinta = :yksikkohinta,
-    arvioitu_kustannus = :arvioitu_kustannus, muokkaaja = :id, muokattu = current_timestamp,
-    kuukausi = :kuukausi, vuosi = :vuosi
-WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
-      AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
+SET maara              = :maara,
+    yksikko            = :yksikko,
+    yksikkohinta       = :yksikkohinta,
+    arvioitu_kustannus = :arvioitu_kustannus,
+    muokkaaja          = :kayttaja,
+    muokattu           = current_timestamp
+WHERE urakka = :urakka
+  AND sopimus = :sopimus
+  AND tehtava = :tehtava
+  AND (((:alkupvm::DATE IS NULL AND alkupvm IS NULL) OR alkupvm = :alkupvm) AND ((:loppupvm::DATE IS NULL AND loppupvm IS NULL) OR loppupvm = :loppupvm))
+  AND (((:kuukausi::INTEGER IS NULL AND kuukausi IS NULL) OR kuukausi = :kuukausi) AND ((:vuosi::INTEGER IS NULL AND vuosi IS NULL) OR vuosi = :vuosi));
 
 -- name: lisaa-urakan-yksikkohintainen-tyo<!
 INSERT INTO yksikkohintainen_tyo
@@ -52,7 +58,7 @@ INSERT INTO yksikkohintainen_tyo
  alkupvm, loppupvm, luoja, arvioitu_kustannus, luotu, kuukausi, vuosi)
 VALUES (:maara, :yksikko, :yksikkohinta,
         :urakka, :sopimus, :tehtava,
-        :alkupvm, :loppupvm, :luoja, :arvioitu_kustannus, current_timestamp, :kuukausi, :vuosi );
+        :alkupvm, :loppupvm, :kayttaja, :arvioitu_kustannus, current_timestamp, :kuukausi, :vuosi);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
