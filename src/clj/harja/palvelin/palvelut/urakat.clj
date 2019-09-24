@@ -413,7 +413,7 @@
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
-    ;(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (let [urakat (konv/sarakkeet-vektoriin
                    (into []
                          (comp

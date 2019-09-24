@@ -63,6 +63,52 @@ FROM maksuera m
 WHERE m.numero = :maksuera
 GROUP BY vuosi;
 
+-- name: hae-teiden-hoidon-kustannussuunnitelman-kokonaishintaiset-summat
+-- Teiden hoidon urakoissa (MHU) kokonaishintainen Sampoon lähetettävä kustannussuunnitelma koostuu
+-- kiinteähintaisten, kustannusarvioitujen ja yksikköhintaisten töiden suunnittelutiedoista.
+-- Tieto äkillisiin hoitotöihin ja vahinkojen korjauksiin varatuista rahavaroista lähetetään omissa kustannussuunnitelmissaan.
+SELECT
+  kt.vuosi as vuosi,
+  Sum(COALESCE(kt.summa, 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+       JOIN kiinteahintainen_tyo kt on tpi.id = kt.toimenpideinstanssi
+WHERE m.numero = :maksuera GROUP BY kt.vuosi
+UNION ALL
+SELECT
+  ka.vuosi as vuosi,
+  Sum(COALESCE(ka.summa, 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi AND ka.tyyppi NOT IN ('akillinen-hoitotyo', 'vahinkojen-korjaukset')
+WHERE m.numero = :maksuera GROUP BY ka.vuosi
+UNION ALL
+SELECT
+  yt.vuosi as vuosi,
+  Sum(COALESCE(yt.arvioitu_kustannus, 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+       JOIN yksikkohintainen_tyo yt on tpi.id = yt.toimenpideinstanssi
+WHERE m.numero = :maksuera GROUP BY yt.vuosi;
+
+-- name: hae-teiden-hoidon-kustannussuunnitelman-akillisten-hoitotoiden-summat
+SELECT
+  ka.vuosi as vuosi,
+  Sum(COALESCE(ka.summa, 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi AND ka.tyyppi = 'akillinen-hoitotyo'
+WHERE m.numero = :maksuera GROUP BY ka.vuosi;
+
+-- name: hae-teiden-hoidon-kustannussuunnitelman-vahinkojen-korjausten-summat
+SELECT
+  ka.vuosi as vuosi,
+  Sum(COALESCE(ka.summa, 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi AND ka.tyyppi = 'vahinkojen-korjaukset'
+WHERE m.numero = :maksuera GROUP BY ka.vuosi;
+
 -- name: hae-teiden-hoidon-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
   Extract(YEAR FROM yht.alkupvm)                              AS vuosi,
@@ -77,7 +123,8 @@ FROM maksuera m
                                    AND
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
-GROUP BY Extract(YEAR FROM yht.alkupvm);
+GROUP BY Extract(YEAR FROM yht.alkupvm)
+ORDER BY vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
