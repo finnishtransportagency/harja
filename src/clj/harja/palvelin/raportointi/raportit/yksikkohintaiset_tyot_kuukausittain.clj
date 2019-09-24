@@ -13,24 +13,30 @@
             [clj-time.coerce :as c]))
 
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id suunnittelutiedot]}]
-  (let [toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
-                                                                     urakka-id alkupvm loppupvm
-                                                                     (not (nil? toimenpide-id)) toimenpide-id)
+  (let [toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db {:urakka urakka-id
+                                                                         :alkupvm alkupvm
+                                                                         :loppupvm loppupvm
+                                                                         :rajaa_tpi (not (nil? toimenpide-id))
+                                                                         :tpi toimenpide-id})
         toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat-suunnittelutiedoilla))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain db
-                                                                             hallintayksikko-id
-                                                                             (when urakkatyyppi (name urakkatyyppi))
-                                                                             alkupvm loppupvm
-                                                                             (not (nil? toimenpide-id)) toimenpide-id)
+                                                                             {:hallintayksikko hallintayksikko-id
+                                                                              :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                              :alkupvm alkupvm
+                                                                              :loppupvm loppupvm
+                                                                              :rajaa_tpi (not (nil? toimenpide-id))
+                                                                              :tpi toimenpide-id})
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
-                                                                 hallintayksikko-id
-                                                                 (when urakkatyyppi (name urakkatyyppi))
-                                                                 alkupvm loppupvm
-                                                                 (not (nil? toimenpide-id)) toimenpide-id)))
+                                                                 {:hallintayksikko hallintayksikko-id
+                                                                  :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm
+                                                                  :rajaa_tpi (not (nil? toimenpide-id))
+                                                                  :tpi toimenpide-id})))
 
 (defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
