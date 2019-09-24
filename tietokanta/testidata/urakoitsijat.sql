@@ -18,3 +18,9 @@ INSERT INTO organisaatio (tyyppi, ytunnus, nimi) VALUES ('urakoitsija', '2234567
 
 -- Urakoitsijoita, testi
 INSERT INTO organisaatio (tyyppi, ytunnus, nimi, sampoid) VALUES ('urakoitsija', '6458856-1', 'Testi Oy', 'TESTIORGANISAATI');
+
+
+-- Aliurakoitsijoita (MHU)
+INSERT INTO aliurakoitsija (nimi) VALUES ('Kaarinan Kadunkiillotus Oy');
+INSERT INTO aliurakoitsija (nimi) VALUES ('Tiinan Tietyö');
+INSERT INTO aliurakoitsija (nimi) VALUES ('Alin Urakka Ky');

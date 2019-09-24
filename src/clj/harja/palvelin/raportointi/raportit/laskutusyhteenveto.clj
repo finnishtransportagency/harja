@@ -173,44 +173,44 @@
     yhteenveto-teksti kyseessa-kk-vali?
     tiedot summa-fmt kentat-joiden-laskennan-indeksipuute-sotki
     tyypin-maksuerat]
-  (let [laskutettu-kentat (map laskutettu-kentta tiedot)
-        laskutetaan-kentat (map laskutetaan-kentta tiedot)
-        kaikkien-toimenpiteiden-summa (fn [kentat]
-                                        (reduce + (keep identity kentat)))
-        laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
-        laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
-        yhteenveto (rivi "Toimenpiteet yhteensä"
-                         (when kyseessa-kk-vali?
+   (let [laskutettu-kentat (map laskutettu-kentta tiedot)
+         laskutetaan-kentat (map laskutetaan-kentta tiedot)
+         kaikkien-toimenpiteiden-summa (fn [kentat]
+                                         (reduce + (keep identity kentat)))
+         laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
+         laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
+         yhteenveto (rivi "Toimenpiteet yhteensä"
+                          (when kyseessa-kk-vali?
                            [:varillinen-teksti {:arvo laskutettu-yht
                                                 :fmt :raha
-                                                :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta) :virhe)}])
-                         (when kyseessa-kk-vali?
+                                                 :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta) :virhe)}])
+                          (when kyseessa-kk-vali?
                            [:varillinen-teksti {:arvo laskutetaan-yht
                                                 :fmt :raha
-                                                :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta) :virhe)}])
-                         (if (and laskutettu-yht laskutetaan-yht)
+                                                 :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta) :virhe)}])
+                          (if (and laskutettu-yht laskutetaan-yht)
                            [:varillinen-teksti {:arvo (+ laskutettu-yht laskutetaan-yht)
                                                 :fmt :raha
-                                                :tyyli (when (or (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)
-                                                                 (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)) :virhe)}]
-                           nil))
-        taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
-                                  (not (and (= 0.0M (:tulos laskutettu))
-                                            (= 0.0M (:tulos laskutetaan)))))
-                                (map (juxt :nimi
-                                           (fn [rivi]
+                                                 :tyyli (when (or (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)
+                                                                  (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)) :virhe)}]
+                            nil))
+         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
+                                   (not (and (= 0.0M (:tulos laskutettu))
+                                             (= 0.0M (:tulos laskutetaan)))))
+                                 (map (juxt :nimi
+                                            (fn [rivi]
                                              {:tulos (laskutettu-kentta rivi)
-                                              :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)})
-                                           (fn [rivi]
+                                               :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)})
+                                            (fn [rivi]
                                              {:tulos (laskutetaan-kentta rivi)
-                                              :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)})
-                                           :tpi)
-                                     tiedot))]
-    (when-not (empty? taulukon-tiedot)
-      (taulukko-elementti otsikko taulukon-tiedot kyseessa-kk-vali?
-                          laskutettu-teksti laskutetaan-teksti
-                          yhteenveto yhteenveto-teksti summa-fmt
-                          tyypin-maksuerat)))))
+                                               :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)})
+                                            :tpi)
+                                      tiedot))]
+     (when-not (empty? taulukon-tiedot)
+       (taulukko-elementti otsikko taulukon-tiedot kyseessa-kk-vali?
+                           laskutettu-teksti laskutetaan-teksti
+                           yhteenveto yhteenveto-teksti summa-fmt
+                           tyypin-maksuerat)))))
 
 (defn- aseta-sheet-nimi [[ensimmainen & muut]]
   (when ensimmainen
@@ -226,18 +226,27 @@
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotettuna"))])
 
 (defn- laskettavat-kentat [rivi konteksti]
-  (let [kustannusten-kentat (into []
-                                  (apply concat [(kustannuslajin-kaikki-kentat "kht")
-                                                 (kustannuslajin-kaikki-kentat "yht")
-                                                 (kustannuslajin-kaikki-kentat "sakot")
-                                                 (kustannuslajin-kaikki-kentat "muutostyot")
-                                                 (kustannuslajin-kaikki-kentat "akilliset_hoitotyot")
-                                                 (kustannuslajin-kaikki-kentat "vahinkojen_korjaukset")
-                                                 (kustannuslajin-kaikki-kentat "bonukset")
-                                                 (kustannuslajin-kaikki-kentat "erilliskustannukset")
-                                                 (kustannuslajin-kaikki-kentat "kaikki_paitsi_kht")
-                                                 (kustannuslajin-kaikki-kentat "kaikki")
-                                                 (when (= :urakka konteksti) [:tpi])]))]
+  (let [urakkatyyppi (:urakkatyyppi rivi)
+        kustannusten-kentat (if (= :teiden-hoito urakkatyyppi)
+                              (into []
+                                    (apply concat [(kustannuslajin-kaikki-kentat "kht")
+                                                   (kustannuslajin-kaikki-kentat "akilliset_hoitotyot")
+                                                   (kustannuslajin-kaikki-kentat "vahinkojen_korjaukset")
+                                                   (kustannuslajin-kaikki-kentat "kaikki_paitsi_kht")
+                                                   (kustannuslajin-kaikki-kentat "kaikki")
+                                                   (when (= :urakka konteksti) [:tpi])]))
+                              (into []
+                                    (apply concat [(kustannuslajin-kaikki-kentat "kht")
+                                                   (kustannuslajin-kaikki-kentat "yht")
+                                                   (kustannuslajin-kaikki-kentat "sakot")
+                                                   (kustannuslajin-kaikki-kentat "muutostyot")
+                                                   (kustannuslajin-kaikki-kentat "akilliset_hoitotyot")
+                                                   (kustannuslajin-kaikki-kentat "vahinkojen_korjaukset")
+                                                   (kustannuslajin-kaikki-kentat "bonukset")
+                                                   (kustannuslajin-kaikki-kentat "erilliskustannukset")
+                                                   (kustannuslajin-kaikki-kentat "kaikki_paitsi_kht")
+                                                   (kustannuslajin-kaikki-kentat "kaikki")
+                                                   (when (= :urakka konteksti) [:tpi])])))]
     (if (and (some? (:suolasakot_laskutettu rivi))
              (some?(:suolasakot_laskutetaan rivi)))
       (into []
@@ -253,7 +262,7 @@
             (let [talvihoidon-rivi (first (filter #(= "Talvihoito" (:nimi %)) urakan-laskutusyhteenveto))]
               {(:urakka-id talvihoidon-rivi)
                (select-keys talvihoidon-rivi
-                            [:urakka-id :urakka-nimi
+                            [:urakka-id :urakka-nimi :urakkatyyppi
                              :indeksi :perusluku
                              :suolasakko_kaytossa :lampotila_puuttuu
                              :suolasakot_laskutetaan :suolasakot_laskutettu])}))
@@ -362,12 +371,14 @@
                      :urakkatyyppi (name (:urakkatyyppi parametrit))})
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                                       :urakka-nimi (:nimi %)
-                                                      :indeksi (:indeksi %)) urakat)
+                                                      :indeksi (:indeksi %)
+                                                      :urakkatyyppi (:tyyppi %)) urakat)
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
                                     (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
                                                     :urakka-nimi (:urakka-nimi urakan-parametrit)
-                                                    :indeksi (:indeksi urakan-parametrit))
+                                                    :indeksi (:indeksi urakan-parametrit)
+                                                    :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                           (hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
 
