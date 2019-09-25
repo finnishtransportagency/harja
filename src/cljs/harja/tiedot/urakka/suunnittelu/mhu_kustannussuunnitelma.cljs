@@ -939,34 +939,48 @@
                                                                        tuntipalkka (p/arvo (nth osat tuntipalkka-sarakkeen-index) :arvo)
                                                                        tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)]
                                                                    (p/aseta-arvo yhteensaosa :arvo (* tunnit tuntipalkka)))))
-          kuluva-hoitovuosi (get-in app [:kuluva-hoitokausi :vuosi])
-          kuluvan-hoitovuoden-otsikko (str kuluva-hoitovuosi ".vuosi/€")
-          kuluvan-hoitovuoden-index (p/otsikon-index yhteenveto-taulukko kuluvan-hoitovuoden-otsikko)
           summa-rivin-index (dec (count (p/arvo yhteenveto-taulukko :lapset)))
+
           yhteenveto-taulukko (-> yhteenveto-taulukko
-                                  (tyokalut/paivita-asiat-taulukossa [(last rivin-polku) kuluvan-hoitovuoden-index]
+                                  (tyokalut/paivita-asiat-taulukossa [(last rivin-polku)]
                                                                      (fn [taulukko polut]
-                                                                       (let [[rivit rivi osat osa] polut
-                                                                             vuosi-yhteensa-osa (get-in taulukko osa)
-                                                                             laskulla-taulukon-rivin-osat (p/arvo (get-in laskulla-taulukko rivin-polku) :lapset)
-                                                                             tunnit (p/arvo (nth laskulla-taulukon-rivin-osat tunnit-sarakkeen-index) :arvo)
-                                                                             tunnit (if (number? tunnit) tunnit 0)
-                                                                             tuntipalkka (p/arvo (nth laskulla-taulukon-rivin-osat tuntipalkka-sarakkeen-index) :arvo)
-                                                                             tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)
-                                                                             kk-v (p/arvo (nth laskulla-taulukon-rivin-osat kk-v-sarakkeen-index) :arvo)]
-                                                                         (p/aseta-arvo vuosi-yhteensa-osa :arvo (* tunnit tuntipalkka kk-v)))))
-                                  (tyokalut/paivita-asiat-taulukossa [summa-rivin-index kuluvan-hoitovuoden-index]
+                                                                       (let [[rivit rivi] polut
+                                                                             rivi (get-in taulukko rivi)
+                                                                             rivin-vuodet (:vuodet rivi)
+                                                                             [aloitus-vuosi lopetus-vuosi] [(apply min rivin-vuodet) (apply max rivin-vuodet)]]
+                                                                         (p/paivita-arvo rivi :lapset
+                                                                                         (fn [osat]
+                                                                                           (tyokalut/mapv-range (inc aloitus-vuosi)
+                                                                                                                (+ 2 lopetus-vuosi)
+                                                                                                                (fn [vuosi-yhteensa-osa]
+                                                                                                                  (let [laskulla-taulukon-rivin-osat (p/arvo (get-in laskulla-taulukko rivin-polku) :lapset)
+                                                                                                                        tunnit (p/arvo (nth laskulla-taulukon-rivin-osat tunnit-sarakkeen-index) :arvo)
+                                                                                                                        tunnit (if (number? tunnit) tunnit 0)
+                                                                                                                        tuntipalkka (p/arvo (nth laskulla-taulukon-rivin-osat tuntipalkka-sarakkeen-index) :arvo)
+                                                                                                                        tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)
+                                                                                                                        kk-v (p/arvo (nth laskulla-taulukon-rivin-osat kk-v-sarakkeen-index) :arvo)]
+                                                                                                                    (p/aseta-arvo vuosi-yhteensa-osa :arvo (* tunnit tuntipalkka kk-v))))
+                                                                                                                osat))))))
+                                  (tyokalut/paivita-asiat-taulukossa [summa-rivin-index]
                                                                      (fn [taulukko polut]
-                                                                       (let [[rivit rivi osat osa] polut
-                                                                             vuosi-yhteensa-osa (get-in taulukko osa)
+                                                                       (let [[rivit rivi] polut
                                                                              rivit (get-in taulukko rivit)
-                                                                             rivit-yhteensa-vuodelta (reduce (fn [summa rivi]
-                                                                                                               (+ summa (p/arvo
-                                                                                                                          (nth (p/arvo rivi :lapset)
-                                                                                                                               kuluvan-hoitovuoden-index)
-                                                                                                                          :arvo)))
-                                                                                                             0 (-> rivit rest butlast))]
-                                                                         (p/aseta-arvo vuosi-yhteensa-osa :arvo rivit-yhteensa-vuodelta)))))]
+                                                                             yhteensarivi (get-in taulukko rivi)
+                                                                             summarivit (-> rivit rest butlast)]
+                                                                         (p/paivita-arvo yhteensarivi :lapset
+                                                                                         (fn [osat]
+                                                                                           (into []
+                                                                                                 (map-indexed (fn [index osa]
+                                                                                                                (if (> index 1)
+                                                                                                                  (let [rivit-yhteensa-vuodelta (reduce (fn [summa rivi]
+                                                                                                                                                          (+ summa (p/arvo
+                                                                                                                                                                     (nth (p/arvo rivi :lapset)
+                                                                                                                                                                          index)
+                                                                                                                                                                     :arvo)))
+                                                                                                                                                        0 summarivit)]
+                                                                                                                    (p/aseta-arvo osa :arvo rivit-yhteensa-vuodelta))
+                                                                                                                  osa))
+                                                                                                   osat))))))))]
       (-> app
            (assoc-in laskulla-taulukon-polku laskulla-taulukko)
            (assoc-in yhteenveto-taulukon-polku yhteenveto-taulukko))))

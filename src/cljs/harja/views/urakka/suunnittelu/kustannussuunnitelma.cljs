@@ -930,8 +930,7 @@
                                                                                (p/lisaa-fmt summa-formatointi)
                                                                                (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                (update :parametrit (fn [parametrit]
-                                                                                                     (assoc parametrit :size 2
-                                                                                                                       :disabled? (not (vuodet kuluva-hoitovuosi))))))
+                                                                                                     (assoc parametrit :size 2))))
                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
                                                                            :arvo tunnit-kk
                                                                            :class #{"input-default"}))
@@ -954,8 +953,7 @@
                                                                                (p/lisaa-fmt summa-formatointi)
                                                                                (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                (update :parametrit (fn [parametrit]
-                                                                                                     (assoc parametrit :size 2
-                                                                                                                       :disabled? (not (vuodet kuluva-hoitovuosi))))))
+                                                                                                     (assoc parametrit :size 2))))
                                                                            :id (keyword (str toimenkuva "-" (p/osan-id osa)))
                                                                            :arvo tuntipalkka
                                                                            :class #{"input-default"}))
@@ -1038,6 +1036,7 @@
                                  (-> rivi-pohja
                                      (p/aseta-arvo :id (keyword toimenkuva)
                                                    :class #{"table-default"})
+                                     (assoc :vuodet vuodet)
                                      (p/paivita-arvo :lapset
                                                      (osien-paivitys-fn (fn [osa]
                                                                           (p/aseta-arvo osa :arvo toimenkuva))
