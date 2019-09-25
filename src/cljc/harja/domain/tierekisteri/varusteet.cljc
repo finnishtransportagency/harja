@@ -56,6 +56,18 @@
    "Hiekkalaatikot" "tl516"
    "Viherkuviot" "tl524"
    "Tekninen piste" "tl523"})
+(def puolet
+  {0 "Määrittämätön"
+   1 "Oik."
+   2 "Vas."
+   3 "Ajoratojen välissä"
+   7 "Tien päässä"
+   8 "Tien/ajoradan keskellä"
+   9 "Tien päällä"})
+
+(defn puoli->selitys
+  [puoli]
+  (get puolet puoli))
 
 (defn tien-puolet [tietolaji]
   (case tietolaji
@@ -221,6 +233,19 @@
     (and (not (#{"x" "y" "z" "urakka"} tunniste))
          (not (re-matches #".*tunn" tunniste)))))
 
+(defn varusteen-liikennemerkki-skeema
+  [tietolaji]
+  (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
+        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "lmnumero") ominaisuudet)))
+        lmnumero->teksti (fn [numero]
+                           (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
+    {:otsikko "Liikennemerkki"
+     :tyyppi :string
+     :hae (fn [rivi]
+            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "lmnumero"])]
+              (str numero " - " (lmnumero->teksti numero))))
+     :leveys 2}))
+
 (def varusteen-perustiedot-skeema
   [{:otsikko "Tietolaji"
     :tyyppi :tunniste
@@ -235,7 +260,12 @@
     :tyyppi :tierekisteriosoite
     :hae (comp :tie :sijainti :tietue :varuste)
     :fmt tr/tierekisteriosoite-tekstina
-    :leveys 2}])
+    :leveys 1}
+   {:otsikko "Puoli"
+    :tyyppi :string
+    :hae #(let [puoli (get-in % [:varuste :tietue :sijainti :tie :puoli])]
+            (str puoli " - " (puoli->selitys puoli)))
+    :leveys 1}])
 
 (defn parsi-luku [s]
   #?(:cljs (js/parseInt s)
