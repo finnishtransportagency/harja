@@ -318,14 +318,20 @@
                                                 {:kuluva-vuosi tila})))
         johto-ja-hallintokorvausten-tila (fn [taulukko]
                                            (let [arvorivit (-> taulukko tyokalut/taulukko->data rest butlast)
+                                                 vuodet (->> (p/arvo taulukko :lapset) (map :vuodet) rest butlast)
+                                                 data (map (fn [arvot vuodet]
+                                                             (assoc arvot :vuodet vuodet))
+                                                           arvorivit vuodet)
                                                  kuluva-hoitovuosi (:vuosi kuluva-hoitokausi)
                                                  taman-vuoden-otsikko (str kuluva-hoitovuosi ".vuosi/€")
                                                  tulevan-vuoden-otsikko (when-not (= 5 kuluva-hoitovuosi)
                                                                           (str (inc kuluva-hoitovuosi) ".vuosi/€"))
-                                                 kuluvan-vuoden-arvot (map #(get % taman-vuoden-otsikko) arvorivit)
-                                                 tulevan-vuoden-arvot (keep #(when tulevan-vuoden-otsikko
+                                                 kuluvan-vuoden-arvot (keep #(when (contains? (:vuodet %) kuluva-hoitovuosi)
+                                                                               (get % taman-vuoden-otsikko))
+                                                                            data)
+                                                 tulevan-vuoden-arvot (keep #(when (and tulevan-vuoden-otsikko (contains? (:vuodet %) (inc kuluva-hoitovuosi)))
                                                                                (get % tulevan-vuoden-otsikko))
-                                                                            arvorivit)
+                                                                            data)
                                                  arvo-loytyy? (fn [arvo]
                                                                 (and (not= 0 arvo)
                                                                      (not (nil? arvo))))
