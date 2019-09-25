@@ -39,7 +39,7 @@
 
 (defn suunnitellut-tehtavat [db urakka-id]
   (yhdista-suunnittelurivit-hoitokausiksi
-    (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
+    (q/listaa-urakan-yksikkohintaiset-tyot db {:urakka urakka-id})))
 
 (defn liita-toteumiin-suunnittelutiedot
   "Ottaa aikavälin, urakan toteumat ja suunnittelutiedot.

@@ -1,7 +1,5 @@
 # Väylän Harja-järjestelmä #
 
-[![Build Status](https://travis-ci.org/finnishtransportagency/harja.svg?branch=develop)](https://travis-ci.org/finnishtransportagency/harja)
-
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
 
