@@ -22,11 +22,9 @@
   (let [nykyiset-arvot (hae-urakan-kustannusarvioidut-tyot db user urakka-id)
         valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))
         tyo-avain (fn [rivi]
-                    [(:tyyppi rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
+                    [(:tyyppi rivi) (:tehtava rivi) (:tehtavaryhma rivi) (:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
         tyot-kannassa (into #{} (map tyo-avain
-                                     (filter #(and
-                                                (= (:sopimus %) sopimusnumero)
-                                                (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
+                                     (filter #(valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)])
                                              nykyiset-arvot)))
         urakan-toimenpideinstanssit (into #{}
                                           (map :id)
@@ -43,6 +41,8 @@
             (update t :summa big/unwrap)
             (assoc t :sopimus sopimusnumero)
             (assoc t :kayttaja (:id user))
+            (if-not (contains? t :tehtava) (assoc t :tehtava nil) t)
+            (if-not (contains? t :tehtavaryhma) (assoc t :tehtavaryhma nil) t)
             (if (not (tyot-kannassa (tyo-avain t)))
               (q/lisaa-kustannusarvioitu-tyo<! db t)
               (q/paivita-kustannusarvioitu-tyo! db t)))))
