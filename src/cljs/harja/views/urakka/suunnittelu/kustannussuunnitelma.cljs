@@ -452,7 +452,7 @@
                                                                                                          :johtopalkkio)})))))
 
 (defn suunnitelmien-tila
-  [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
+  [e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? hankintakustannukset hallinnolliset-toimenpiteet]
   (let [paivitetyt-taulukot (cljs.core/atom {})
         kaskytys-kanava (chan)]
     (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 kaskytys-kanava))
@@ -464,7 +464,7 @@
                                   ;; Tätä argumenttien tarkkailua ei tulisi tehdä tässä, mutta nykyinen reagentin versio tukee vain
                                   ;; :component-will-receive-props metodia, joka olisi toki sopivampi tähän tarkoitukseen,
                                   ;; mutta React on deprecoinut tuon ja se tulee hajottamaan tulevan koodin.
-                                  #_(println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
+                                   (println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
                                   (let [vanhat-hankintakustannukset (last (butlast old-argv))
                                         uudet-hankintakustannukset (last (butlast new-argv))
                                         vanhat-hallinnolliset-toimenpiteet (last old-argv)
@@ -473,9 +473,9 @@
                                                                  (suunnitelman-paivitettavat-osat edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
                                                                                                   vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet))))
                                   (not= old-argv new-argv))}
-      (fn [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
+      (fn [e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? hankintakustannukset hallinnolliset-toimenpiteet]
         (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)]))
-        (if suunnitelmien-tila-taulukko
+        (if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
           [p/piirra-taulukko suunnitelmien-tila-taulukko]
           [yleiset/ajax-loader])))))
 
@@ -1539,7 +1539,7 @@
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" true (:toimistokulut-taulukko t/hallinnollisten-idt))
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true "hoidonjohtopalkkio-taulukko")
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] "Hallinnolliset toimenpiteet" false "hallinnolliset-toimenpiteet-taulukko")))))
-    (fn [e! {:keys [suunnitelmien-tila-taulukko tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
+    (fn [e! {:keys [suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
       [:div#kustannussuunnitelma
        ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
@@ -1557,7 +1557,7 @@
         "Suunnitelmien tila"
         {:alussa-auki? true
          :otsikko-elementti :h2}
-        [suunnitelmien-tila e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]]
+        [suunnitelmien-tila e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? hankintakustannukset hallinnolliset-toimenpiteet]]
        [:span.viiva-alas]
        [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi]
        [:span.viiva-alas]
