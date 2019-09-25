@@ -1447,11 +1447,13 @@
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
 
 (defn johto-ja-hallintokorvaus-yhteenveto
-  [jh-yhteenveto {:keys [vuosi] :as kuluva-hoitokausi}]
-  (if jh-yhteenveto
+  [jh-yhteenveto toimistokulut {:keys [vuosi] :as kuluva-hoitokausi}]
+  (if (and jh-yhteenveto toimistokulut)
     (let [hinnat (map (fn [hoitokausi]
-                        {:summa (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
-                                        :arvo)
+                        {:summa (+ (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
+                                           :arvo)
+                                   (p/arvo (tyokalut/hae-asia-taulukosta toimistokulut [1 "Yhteensä"])
+                                           :arvo))
                          :hoitokausi hoitokausi})
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1463,7 +1465,7 @@
 (defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut kuluva-hoitokausi]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
-   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto kuluva-hoitokausi]
+   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut kuluva-hoitokausi]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
    [maara-kk toimistokulut]
