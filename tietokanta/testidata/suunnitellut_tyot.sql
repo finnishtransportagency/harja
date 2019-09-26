@@ -885,7 +885,7 @@ BEGIN
                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                  --  Muut tilaajan rahavaraukset
-                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
                 'muut-rahavaraukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
@@ -952,7 +952,7 @@ BEGIN
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 --  Muut tilaajan rahavaraukset
-                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
                 'muut-rahavaraukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
@@ -1201,7 +1201,7 @@ BEGIN
                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                  --  Muut tilaajan rahavaraukset
-                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
                 'muut-rahavaraukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
@@ -1268,7 +1268,7 @@ BEGIN
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 --  Muut tilaajan rahavaraukset
-                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
                 'muut-rahavaraukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi

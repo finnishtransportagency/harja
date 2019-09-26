@@ -701,6 +701,8 @@
                                         (:kustannusarvioidut-tyot vastaus)))
           rahavaraukset-hoitokausile (rahavarausten-taydennys-fn rahavaraukset)
           rahavarauket-toimenpiteittain (group-by :toimenpide rahavaraukset-hoitokausile)
+
+          yksikkohintaiset-tyot (:yksikkohintaiset-tyot vastaus)
           jh-laskut-vuosille (fn [[data {:keys [vuodet]} kannasta?]]
                                (assoc data :vuodet vuodet))
           jh-laskulla []                                    ;; TODO tämä kannasta
@@ -737,7 +739,9 @@
                                                         :yhteensa ""}
                                                        jh-toimistokulut-pohjadata)
 
-          johtopalkkio-kannasta []                                   ;; TODO tämä kannasta
+          johtopalkkio-kannasta (filterv (fn [{:keys [tehtava]}]
+                                           (= (:nimi tehtava) "Hoitourakan työnjohto"))
+                                         yksikkohintaiset-tyot)
           johtopalkkio-kannasta (into []
                                       (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
                                                 (let [vuoden-maara (some (fn [{:keys [vuosi maara]}]
