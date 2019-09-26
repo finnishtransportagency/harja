@@ -434,22 +434,25 @@
                                                                                                                             toimenpide))))}])
                                                     t/toimenpiteet)))))
         (update :hallinnolliset (fn [hallinnolliset]
-                                  {(:erillishankinnat t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
-                                                                                                       (:erillishankinnat uudet-hallinnolliset-toimenpiteet)
-                                                                                                       (:erillishankinnat vanhat-hallinnolliset-toimenpiteet)
-                                                                                                       :erillishankinnat)
-                                   (:johto-ja-hallintokorvaus t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
-                                                                                                               (:johto-ja-hallintokorvaus-yhteenveto uudet-hallinnolliset-toimenpiteet)
-                                                                                                               (:johto-ja-hallintokorvaus-yhteenveto vanhat-hallinnolliset-toimenpiteet)
-                                                                                                               :johto-ja-hallintokorvaus-yhteenveto)
-                                   (:toimistokulut-taulukko t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
-                                                                                                             (:toimistokulut uudet-hallinnolliset-toimenpiteet)
-                                                                                                             (:toimistokulut vanhat-hallinnolliset-toimenpiteet)
-                                                                                                             :toimistokulut)
-                                   (:hoidonjohtopalkkio t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
-                                                                                                         (:johtopalkkio uudet-hallinnolliset-toimenpiteet)
-                                                                                                         (:johtopalkkio vanhat-hallinnolliset-toimenpiteet)
-                                                                                                         :johtopalkkio)})))))
+                                  (merge-with (fn [vanha-muuttunut? uusi-muuttunut?]
+                                                (or vanha-muuttunut? uusi-muuttunut?))
+                                              hallinnolliset
+                                              {(:erillishankinnat t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                   (:erillishankinnat uudet-hallinnolliset-toimenpiteet)
+                                                                                                                   (:erillishankinnat vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                   :erillishankinnat)
+                                               (:johto-ja-hallintokorvaus t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                           (:johto-ja-hallintokorvaus-yhteenveto uudet-hallinnolliset-toimenpiteet)
+                                                                                                                           (:johto-ja-hallintokorvaus-yhteenveto vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                           :johto-ja-hallintokorvaus-yhteenveto)
+                                               (:toimistokulut-taulukko t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                         (:toimistokulut uudet-hallinnolliset-toimenpiteet)
+                                                                                                                         (:toimistokulut vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                         :toimistokulut)
+                                               (:hoidonjohtopalkkio t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                     (:johtopalkkio uudet-hallinnolliset-toimenpiteet)
+                                                                                                                     (:johtopalkkio vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                     :johtopalkkio)}))))))
 
 (defn suunnitelmien-tila
   [e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? hankintakustannukset hallinnolliset-toimenpiteet]
