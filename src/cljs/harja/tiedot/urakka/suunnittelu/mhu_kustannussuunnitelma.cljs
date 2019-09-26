@@ -496,6 +496,18 @@
                                                                                                               rivit)))
                                                                                       rivi))
                                                                                   rivit))))
+        paivita-hallinnollisten-aggregaattirivi (fn [osa tilat ajan-jakso]
+                                                  (let [tilat (eduction
+                                                                (map val)
+                                                                (map ajan-jakso)
+                                                                tilat)
+                                                        tila (cond
+                                                               (every? #(= :valmis %) tilat) :valmis
+                                                               (every? #(= :ei-tehty %) tilat) :ei-tehty
+                                                               :else :kesken)]
+                                                    (p/paivita-arvo osa :arvo
+                                                                    (fn [ikoni-ja-teksti]
+                                                                      (assoc ikoni-ja-teksti :ikoni (tilan-ikoni tila))))))
         paivita-hallintokustannusten-suunnitelmien-tila (fn [taulukko taulukko-avain]
                                                           (p/paivita-arvo taulukko :lapset
                                                                           (fn [rivit]
@@ -503,23 +515,34 @@
                                                                                     (if (p/janan-id? rivi :hallinnollisetkustannukset-vanhempi)
                                                                                       (p/paivita-arvo rivi :lapset
                                                                                                       (fn [rivit]
-                                                                                                        (tyokalut/mapv-range 1
-                                                                                                                             (fn [hallinnollinen-toimenpiderivi]
-                                                                                                                               (if (= (:halllinto-id hallinnollinen-toimenpiderivi) taulukko-avain)
-                                                                                                                                 (p/paivita-arvo hallinnollinen-toimenpiderivi :lapset
-                                                                                                                                                 (fn [osat]
-                                                                                                                                                   (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                                                            (cond
-                                                                                                                                                                              (= taman-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
-                                                                                                                                                                                                                                   (fn [ikoni-ja-teksti]
-                                                                                                                                                                                                                                     (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [:hallinnolliset taulukko-avain :kuluva-vuosi])))))
-                                                                                                                                                                              (= seuraavan-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
-                                                                                                                                                                                                                                       (fn [ikoni-ja-teksti]
-                                                                                                                                                                                                                                         (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [:hallinnolliset taulukko-avain :tuleva-vuosi])))))
-                                                                                                                                                                              :else osa))
-                                                                                                                                                                          osat)))
-                                                                                                                                 hallinnollinen-toimenpiderivi))
-                                                                                                                             rivit)))
+                                                                                                        (into []
+                                                                                                              (cons
+                                                                                                                ;; aggregaatti
+                                                                                                                (p/paivita-arvo (first rivit) :lapset
+                                                                                                                                (fn [osat]
+                                                                                                                                  (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                                           (cond
+                                                                                                                                                             (= taman-vuoden-otsikon-index index) (paivita-hallinnollisten-aggregaattirivi osa (:hallinnolliset tilat) :kuluva-vuosi)
+                                                                                                                                                             (= seuraavan-vuoden-otsikon-index index) (paivita-hallinnollisten-aggregaattirivi osa (:hallinnolliset tilat) :tuleva-vuosi)
+                                                                                                                                                             :else osa))
+                                                                                                                                                         osat)))
+                                                                                                                ;; loput
+                                                                                                                (map (fn [hallinnollinen-toimenpiderivi]
+                                                                                                                       (if (= (:halllinto-id hallinnollinen-toimenpiderivi) taulukko-avain)
+                                                                                                                         (p/paivita-arvo hallinnollinen-toimenpiderivi :lapset
+                                                                                                                                         (fn [osat]
+                                                                                                                                           (tyokalut/mapv-indexed (fn [index osa]
+                                                                                                                                                                    (cond
+                                                                                                                                                                      (= taman-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
+                                                                                                                                                                                                                           (fn [ikoni-ja-teksti]
+                                                                                                                                                                                                                             (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [:hallinnolliset taulukko-avain :kuluva-vuosi])))))
+                                                                                                                                                                      (= seuraavan-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
+                                                                                                                                                                                                                               (fn [ikoni-ja-teksti]
+                                                                                                                                                                                                                                 (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [:hallinnolliset taulukko-avain :tuleva-vuosi])))))
+                                                                                                                                                                      :else osa))
+                                                                                                                                                                  osat)))
+                                                                                                                         hallinnollinen-toimenpiderivi))
+                                                                                                                     (rest rivit))))))
                                                                                       rivi))
                                                                                   rivit))))
         suunnitelmien-tila-taulukko (reduce (fn [taulukko [toimenpide suunnitelmat]]
