@@ -58,9 +58,24 @@ VALUES
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null));
 
 -- MHU sopimus
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
-VALUES
-  ('Rovaniemen MHU testiurakan sopimus','2018-10-01','2023-09-30','MHU-TESTI-LAP', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka'));
+DO $$
+DECLARE
+  urakan_aloitus_pvm TIMESTAMP;
+  urakan_paattymis_pvm TIMESTAMP;
+BEGIN
+  IF ((SELECT date_part('month', now())) >= 10)
+  THEN
+      urakan_aloitus_pvm = make_date((SELECT date_part('year', now()))::INT, 10, 1);
+  ELSE
+      urakan_aloitus_pvm = make_date((SELECT date_part('year', now())::INT - 1), 10, 1);
+  END IF;
+  urakan_paattymis_pvm = urakan_aloitus_pvm + interval '5 years';
+  INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+  VALUES
+    ('Rovaniemen MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-ROV', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka')),
+    ('Pellon MHU testiurakan sopimus',urakan_aloitus_pvm - interval '2 years',urakan_paattymis_pvm - interval '2 years','MHU-TESTI-LAP-PEL', (SELECT id FROM urakka WHERE nimi='Pellon MHU testiurakka')),
+    ('Kemin MHU testiurakan sopimus',urakan_aloitus_pvm - interval '5 years', urakan_paattymis_pvm - interval '5 years','MHU-TESTI-LAP-KEM', (SELECT id FROM urakka WHERE nimi='Kemin MHU testiurakka'));
+END $$;
 
 -- Aktiivinen oulu
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)

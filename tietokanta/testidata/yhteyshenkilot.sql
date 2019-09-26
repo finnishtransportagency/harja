@@ -227,6 +227,45 @@ VALUES ((SELECT id
          WHERE
            etunimi = 'Vihtori' AND
            sukunimi = 'Ollila'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Pellon MHU testiurakka'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Åsa' AND
+           sukunimi = 'Linnasalo'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Pellon MHU testiurakka'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1)),((SELECT id
+         FROM urakka
+         WHERE nimi = 'Kemin MHU testiurakka'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Åsa' AND
+           sukunimi = 'Linnasalo'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Kemin MHU testiurakka'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
          LIMIT 1));
 
 -- Yhteyshenkilöiden organisaatio

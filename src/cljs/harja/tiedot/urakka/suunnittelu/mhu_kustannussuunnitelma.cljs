@@ -49,9 +49,13 @@
 (defn kuluva-hoitokausi []
   (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
         urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
-        kuluva-urakan-vuosi (inc (- urakan-aloitusvuosi (pvm/vuosi (first hoitovuoden-pvmt))))]
-    {:vuosi kuluva-urakan-vuosi
-     :pvmt hoitovuoden-pvmt}))
+        kuluva-urakan-vuosi (- (pvm/vuosi (second hoitovuoden-pvmt)) urakan-aloitusvuosi)]
+    (if (> kuluva-urakan-vuosi 5)
+      ;; Mikäli on jo loppunut projekti, näytetään viimeisen vuoden tietoja
+      {:vuosi 5
+       :pvmt (pvm/paivamaaran-hoitokausi (-> @tiedot/yleiset :urakka :loppupvm))}
+      {:vuosi kuluva-urakan-vuosi
+       :pvmt hoitovuoden-pvmt})))
 
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]
   (+
@@ -647,9 +651,11 @@
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
                           johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]}
-                  {{valinnat :valinnat} :hankintakustannukset :as app}]
+                  {{valinnat :valinnat} :hankintakustannukset
+                   {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
     (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
+          {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm} (-> @tiedot/tila :yleiset :urakka)
           hankintojen-taydennys-fn (fn [hankinnat]
                                      (sequence
                                        (comp
@@ -731,9 +737,17 @@
                                                         :yhteensa ""}
                                                        jh-toimistokulut-pohjadata)
 
-          johtopalkkio []                                   ;; TODO tämä kannasta
+          johtopalkkio-kannasta []                                   ;; TODO tämä kannasta
+          johtopalkkio-kannasta (into []
+                                      (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
+                                                (let [vuoden-maara (some (fn [{:keys [vuosi maara]}]
+                                                                           (when (= vuosi hoitokauden-aloitus-vuosi)
+                                                                             maara))
+                                                                         johtopalkkio-kannasta)]
+                                                  (conj palkkiot {:maara-kk (or vuoden-maara 0)})))
+                                              [] (range (pvm/vuosi urakan-aloituspvm) (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))
           johtopalkkio-pohjadata [{:nimi "Hoidonjohtopalkkio"}]
-          johtopalkkio (tyokalut/generoi-pohjadata johtopalkkio
+          johtopalkkio (tyokalut/generoi-pohjadata [(last johtopalkkio-kannasta)]
                                                    {:maara-kk ""
                                                     :yhteensa ""}
                                                    johtopalkkio-pohjadata)
@@ -774,7 +788,9 @@
                   (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] (hallinnolliset-toimenpiteet-yhteensa-taulukko nil true)))]
+                  (assoc-in [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] (hallinnolliset-toimenpiteet-yhteensa-taulukko nil true))
+                  ;; Edellisten vuosien data, jota ei voi muokata
+                  (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :johtopalkkio] (into [] (butlast johtopalkkio-kannasta))))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       (-> app
           (update-in [:hankintakustannukset :toimenpiteet]

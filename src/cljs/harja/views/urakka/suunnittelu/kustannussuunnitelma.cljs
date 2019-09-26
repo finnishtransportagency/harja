@@ -467,7 +467,6 @@
                                   ;; Tätä argumenttien tarkkailua ei tulisi tehdä tässä, mutta nykyinen reagentin versio tukee vain
                                   ;; :component-will-receive-props metodia, joka olisi toki sopivampi tähän tarkoitukseen,
                                   ;; mutta React on deprecoinut tuon ja se tulee hajottamaan tulevan koodin.
-                                   (println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
                                   (let [vanhat-hankintakustannukset (last (butlast old-argv))
                                         uudet-hankintakustannukset (last (butlast new-argv))
                                         vanhat-hallinnolliset-toimenpiteet (last old-argv)
@@ -1475,16 +1474,16 @@
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
 (defn hoidonjohtopalkkio-yhteenveto
-  [johtopalkkio {:keys [vuosi] :as kuluva-hoitokausi}]
+  [johtopalkkio menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi}]
   (if johtopalkkio
     (let [summarivin-index 1
-          vuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
-                              :arvo)
+          tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
+                                  :arvo)
           hinnat (map (fn [hoitokausi]
-                        (if (= hoitokausi vuosi)
-                          {:summa vuosi-summa
+                        (if (>= hoitokausi vuosi)
+                          {:summa tamavuosi-summa
                            :hoitokausi hoitokausi}
-                          {:summa 0
+                          {:summa (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk])
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1496,10 +1495,10 @@
 (defn hoidonjohtopalkkio [johtopalkkio]
   [maara-kk johtopalkkio])
 
-(defn hoidonjohtopalkkio-sisalto [johtopalkkio kuluva-hoitokausi]
+(defn hoidonjohtopalkkio-sisalto [johtopalkkio menneet-suunnitelmat kuluva-hoitokausi]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
-   [hoidonjohtopalkkio-yhteenveto johtopalkkio kuluva-hoitokausi]
+   [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi]
    [hoidonjohtopalkkio johtopalkkio]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi]
@@ -1521,14 +1520,14 @@
     [yleiset/ajax-loader]))
 
 (defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
-                                                      toimistokulut johtopalkkio erillishankinnat] :as hallinnolliset-toimenpiteet}
+                                                      toimistokulut johtopalkkio erillishankinnat menneet-vuodet] :as hallinnolliset-toimenpiteet}
                                            kuluva-hoitokausi]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
    [erillishankinnat-sisalto erillishankinnat kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut kuluva-hoitokausi]
-   [hoidonjohtopalkkio-sisalto johtopalkkio kuluva-hoitokausi]])
+   [hoidonjohtopalkkio-sisalto johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi]])
 
 (defn kustannussuunnitelma*
   [e! app]
