@@ -1549,8 +1549,7 @@
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" true "erillishankinnat-taulukko")
                                                        (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" true (:toimistokulut-taulukko t/hallinnollisten-idt))
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true "hoidonjohtopalkkio-taulukko")
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] "Hallinnolliset toimenpiteet" false "hallinnolliset-toimenpiteet-taulukko")))))
+                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true "hoidonjohtopalkkio-taulukko")))))
     (fn [e! {:keys [suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
       [:div#kustannussuunnitelma
        ;[debug/debug app]

@@ -98,13 +98,13 @@
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
                                     erillishankinnat-taulukko toimistokulut-taulukko
-                                    johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
+                                    johtopalkkio-taulukko])
 (defrecord HaeTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord HaeTavoiteJaKattohintaEpaonnistui [vastaus])
 (defrecord HaeHankintakustannuksetOnnistui [vastaus hankintojen-taulukko rahavarausten-taulukko
                                             johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
                                             erillishankinnat-taulukko toimistokulut-taulukko
-                                            johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko])
+                                            johtopalkkio-taulukko])
 (defrecord HaeHankintakustannuksetEpaonnistui [vastaus])
 (defrecord LaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
 (defrecord YhteenvetoLaajennaSoluaKlikattu [polku-taulukkoon rivin-id this auki?])
@@ -616,7 +616,7 @@
   HaeKustannussuunnitelma
   (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
-                          johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]} app]
+                          johtopalkkio-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
       (-> app
           (tuck-apurit/post! :budjettitavoite
@@ -630,7 +630,7 @@
                               :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
                                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
                                                     erillishankinnat-taulukko toimistokulut-taulukko
-                                                    johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]
+                                                    johtopalkkio-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
                               :paasta-virhe-lapi? true}))))
   HaeTavoiteJaKattohintaOnnistui
@@ -661,7 +661,7 @@
   HaeHankintakustannuksetOnnistui
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
-                          johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]}
+                          johtopalkkio-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset
                    {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
@@ -803,7 +803,6 @@
                   (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] (hallinnolliset-toimenpiteet-yhteensa-taulukko nil true))
                   ;; Edellisten vuosien data, jota ei voi muokata
                   (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :johtopalkkio] (into [] (butlast johtopalkkio-kannasta))))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
