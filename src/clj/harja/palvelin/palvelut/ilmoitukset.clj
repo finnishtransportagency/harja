@@ -119,7 +119,7 @@
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                     kuittaustyypit hakuehto selite
-                    aloituskuittauksen-ajankohta tr-numero tunniste
+                    aloituskuittauksen-ajankohta tr-osoite tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
     max-maara]
    (let [ilmoitettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :ilmoitettu-vakioaikavali :ilmoitettu-alkuaika :ilmoitettu-loppuaika))
@@ -166,7 +166,7 @@
                            (viesti selite "selitteellä:" "ilman selitettä")
                            (viesti tunniste "tunnisteella:" "ilman tunnistetta")
                            (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
-                           (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
+                           (viesti tr-osoite "tienumerolla:" "ilman tienumeroa")
                            (cond
                              (:avoimet tilat) ", mutta vain avoimet."
                              (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
@@ -200,7 +200,11 @@
                                        :tunniste_annettu (hakuehto-annettu? tunniste)
                                        :tunniste (when-not (str/blank? tunniste)
                                                    (str "%" tunniste "%"))
-                                       :tr-numero tr-numero
+                                       :tr_numero (:numero tr-osoite)
+                                       :tr_aosa (:alkuosa tr-osoite)
+                                       :tr_aet (:alkuetaisyys tr-osoite)
+                                       :tr_losa (:loppuosa tr-osoite)
+                                       :tr_let (:loppuetaisyys tr-osoite)
                                        :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
                                                           (str "%" ilmoittaja-nimi "%"))
                                        :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)

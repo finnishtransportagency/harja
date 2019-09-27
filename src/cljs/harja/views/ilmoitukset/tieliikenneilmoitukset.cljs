@@ -145,11 +145,9 @@
      :hae-kun-yli-n-merkkia 0
      :nayta second :fmt second
      :lahde selitehaku}
-    {:nimi :tr-numero
+    {:nimi :tr-osoite
      :palstoja 1
-     :otsikko "Tienumero"
-     :placeholder "Rajaa tienumerolla"
-     :tyyppi :positiivinen-numero :kokonaisluku? true}
+     :tyyppi :tierekisteriosoite}
     {:nimi :tunniste
      :palstoja 1
      :otsikko "Tunniste"

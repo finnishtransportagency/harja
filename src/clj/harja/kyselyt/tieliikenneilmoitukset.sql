@@ -66,8 +66,12 @@ WHERE ulompi_i.id IN
       -- Tarkasta selitehakuehto
       (:selite_annettu IS FALSE OR (sisempi_i.selitteet @> ARRAY [:selite :: TEXT])) AND
 
-      -- Rajaa tienumerolla
-      (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
+      -- Rajaa tr-osoitteella
+      (:tr_numero::INTEGER IS NULL OR (tr_numero = :tr_numero AND
+        (:tr_aosa::INTEGER IS NULL OR (tr_alkuosa >= :tr_aosa AND
+            (:tr_aet::INTEGER IS NULL OR tr_alkuetaisyys >= :tr_aet))) AND
+        (:tr_losa::INTEGER IS NULL OR (tr_loppuosa <= :tr_losa AND
+            (:tr_let::INTEGER IS NULL OR tr_loppuetaisyys <= :tr_let))))) AND
 
       -- Rajaa tunnisteella
       (:tunniste_annettu IS FALSE OR (sisempi_i.tunniste ILIKE :tunniste)) AND
