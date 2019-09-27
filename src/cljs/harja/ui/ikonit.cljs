@@ -195,6 +195,8 @@
   [:span.glyphicon.glyphicon-leaf])
 (defn fire []
   [:span.glyphicon.glyphicon-fire])
+(defn warning []
+  [:span.glyphicon.glyphicon-warning-sign])
 (defn eye-open []
   [:span.glyphicon.glyphicon-eye-open])
 (defn eye-close []

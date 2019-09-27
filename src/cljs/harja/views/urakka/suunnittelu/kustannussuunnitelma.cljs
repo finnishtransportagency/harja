@@ -38,6 +38,13 @@
                                                           (drop 1 (re-find #".*(\.|,)(0*)" teksti)))
       :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
 
+(defn virhe-datassa
+  [data]
+  (log "Virheellinen data:\n" (with-out-str (cljs.pprint/pprint data)))
+  [:span
+   [ikonit/warning]
+   " Osaa ei voida näyttää.."])
+
 (defn toimenpiteiden-jarjestys
   [toimenpide]
   (case toimenpide
@@ -84,15 +91,17 @@
 
 (defn hintalaskuri
   [{:keys [otsikko selite hinnat]} {:keys [vuosi]}]
-  [:div.hintalaskuri
-   [:h5 otsikko]
-   [:div selite]
-   [:div.hintalaskuri-vuodet
-    (for [{:keys [summa hoitokausi teksti]} hinnat]
-      ^{:key hoitokausi}
-      [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa) (when (= hoitokausi vuosi) "aktiivinen-vuosi")])
-    [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
-    [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]])
+  (if (some #(nil? (:summa %)) hinnat)
+    [virhe-datassa hinnat]
+    [:div.hintalaskuri
+     [:h5 otsikko]
+     [:div selite]
+     [:div.hintalaskuri-vuodet
+      (for [{:keys [summa hoitokausi teksti]} hinnat]
+        ^{:key hoitokausi}
+        [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa) (when (= hoitokausi vuosi) "aktiivinen-vuosi")])
+      [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
+      [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
 
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"

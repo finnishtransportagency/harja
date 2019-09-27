@@ -170,8 +170,10 @@
         hankintojen-vuodet (sort (map pvm/vuosi (flatten (keys (group-by #(pvm/paivamaaran-hoitokausi (:pvm %)) hankinnat)))))
         [urakan-aloitus-vuosi urakan-lopetus-vuosi] [(pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
                                                      (pvm/vuosi (-> @tiedot/yleiset :urakka :loppupvm))]
-        hankintoja-urakan-hoitokausien-ulkopuolella? (not= [urakan-aloitus-vuosi urakan-lopetus-vuosi]
-                                                           [(first hankintojen-vuodet) (last hankintojen-vuodet)])
+        hankintoja-urakan-hoitokausien-ulkopuolella? (or (and (first hankintojen-vuodet)
+                                                              (< (first hankintojen-vuodet) urakan-aloitus-vuosi))
+                                                         (and (second hankintojen-vuodet)
+                                                              (> (second hankintojen-vuodet) urakan-lopetus-vuosi)))
         nil-pvm-hankintoja? (> (count nil-pvm-hankinnat) 0)
         hoitokausien-ulkopuolella-teksti (str "Urakalle on merkattu vuodet " urakan-aloitus-vuosi " - " urakan-lopetus-vuosi
                                               ", mutta urakalle on merkattu hankintoja vuosille " (first hankintojen-vuodet) " - " (last hankintojen-vuodet) ".")
@@ -633,19 +635,28 @@
                               :paasta-virhe-lapi? true}))))
   HaeTavoiteJaKattohintaOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "HAE TAVOITE JA KATTOHINTA ONNISTUI")
-    (assoc app :tavoitehinnat (mapv (fn [{:keys [tavoitehinta hoitokausi]}]
-                                      {:summa tavoitehinta
+    (log "HAE TAVOITE JA KATTOHINTA ONNISTUI")
+    (let [tavoite-ja-kattohintapohjadata (mapv (fn [hoitokausi]
+                                                 {:tavoitehinta 0
+                                                  :kattohinta 0
+                                                  :hoitokausi hoitokausi})
+                                               (range 1 6))
+          tavoite-ja-kattohinnat (tyokalut/generoi-pohjadata vastaus
+                                                             nil
+                                                             tavoite-ja-kattohintapohjadata)]
+
+      (assoc app :tavoitehinnat (mapv (fn [{:keys [tavoitehinta hoitokausi]}]
+                                        {:summa tavoitehinta
+                                         :hoitokausi hoitokausi})
+                                      tavoite-ja-kattohinnat)
+                 :kattohinnat (mapv (fn [{:keys [kattohinta hoitokausi]}]
+                                      {:summa kattohinta
                                        :hoitokausi hoitokausi})
-                                    vastaus)
-               :kattohinnat (mapv (fn [{:keys [kattohinta hoitokausi]}]
-                                    {:summa kattohinta
-                                     :hoitokausi hoitokausi})
-                                  vastaus)))
+                                    tavoite-ja-kattohinnat))))
   HaeTavoiteJaKattohintaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     ;;TODO
-    (println "HAE TAVOITE JA KATTOHINTA EPÄONNISTUI")
+    (log "HAE TAVOITE JA KATTOHINTA EPÄONNISTUI")
     app)
   HaeHankintakustannuksetOnnistui
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
@@ -653,7 +664,7 @@
                           johtopalkkio-taulukko hallinnolliset-toimenpiteet-yhteensa-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset
                    {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
-    (println "HAE HANKINTAKUSTANNUKSET ONNISTUI")
+    (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
           {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm} (-> @tiedot/tila :yleiset :urakka)
           hankintojen-taydennys-fn (fn [hankinnat]
@@ -839,7 +850,7 @@
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     ;; TODO
-    (println "HAE HANKINTAKUSTANNUKSET EPÄONNISTUI")
+    (log "HAE HANKINTAKUSTANNUKSET EPÄONNISTUI")
     app)
   LaajennaSoluaKlikattu
   (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]

@@ -74,7 +74,8 @@ BEGIN
   VALUES
     ('Rovaniemen MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-ROV', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka')),
     ('Pellon MHU testiurakan sopimus',urakan_aloitus_pvm - interval '2 years',urakan_paattymis_pvm - interval '2 years','MHU-TESTI-LAP-PEL', (SELECT id FROM urakka WHERE nimi='Pellon MHU testiurakka')),
-    ('Kemin MHU testiurakan sopimus',urakan_aloitus_pvm - interval '5 years', urakan_paattymis_pvm - interval '5 years','MHU-TESTI-LAP-KEM', (SELECT id FROM urakka WHERE nimi='Kemin MHU testiurakka'));
+    ('Kemin MHU testiurakan sopimus',urakan_aloitus_pvm - interval '5 years', urakan_paattymis_pvm - interval '5 years','MHU-TESTI-LAP-KEM', (SELECT id FROM urakka WHERE nimi='Kemin MHU testiurakka')),
+    ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka'));
 END $$;
 
 -- Aktiivinen oulu
