@@ -534,6 +534,10 @@ BEGIN
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   END LOOP;
+  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
   FOREACH toimenpidenimi IN ARRAY toimenpidenimet LOOP
     IF toimenpidenimi = 'Soratien hoito TP' THEN
@@ -1369,4 +1373,31 @@ BEGIN
 
   ALTER TABLE yksikkohintainen_tyo ADD CONSTRAINT yksikkohintainen_tyo_vuosi_check CHECK (2015 < vuosi AND vuosi < 2100) NOT VALID;
 
+END $$;
+
+-- Ivalon MHU-urakka
+--'Hallinnolliset toimenpiteet TP'
+DO $$
+DECLARE
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
+  hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
+  urakan_nimi TEXT := 'Ivalon MHU testiurakka';
+  toimenpideinstanssin_nimi TEXT;
+  toimenpidenimi TEXT;
+  urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Ivalon MHU testiurakan sopimus');
+  i INTEGER;
+  vuosi_ INTEGER;
+BEGIN
+  -- URAKAN TOIMENPIDEINSTANSSIT
+  FOR i IN 1..6 LOOP
+    INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
+  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 END $$;

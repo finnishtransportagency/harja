@@ -118,6 +118,9 @@
 (defrecord PaivitaJHRivit [paivitetty-osa])
 (defrecord PaivitaSuunnitelmienTila [paivitetyt-taulukot])
 (defrecord MaksukausiValittu [])
+(defrecord TallennaYksikkohintainentyo [osa polku-taulukkoon tehtava arvo])
+(defrecord TallennaYksikkohintainentyoOnnistui [vastaus lahetetyn-datan-hash tehtava polku-riviin])
+(defrecord TallennaYksikkohintainentyoEpaonnistui [vastaus lahetetyn-datan-hash tehtava])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -753,15 +756,19 @@
           johtopalkkio-kannasta (filterv (fn [{:keys [tehtava]}]
                                            (= (:nimi tehtava) "Hoitourakan työnjohto"))
                                          yksikkohintaiset-tyot)
+          johtopalkkio-nimi-frontilla "Hoidonjohtopalkkio"
           johtopalkkio-kannasta (into []
                                       (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
-                                                (let [vuoden-maara (some (fn [{:keys [vuosi maara]}]
+                                                (let [vuoden-maara (some (fn [{:keys [vuosi yksikkohinta]}]
                                                                            (when (= vuosi hoitokauden-aloitus-vuosi)
-                                                                             maara))
-                                                                         johtopalkkio-kannasta)]
-                                                  (conj palkkiot {:maara-kk (or vuoden-maara 0)})))
+                                                                             yksikkohinta))
+                                                                         johtopalkkio-kannasta)
+                                                      maara-kk (or vuoden-maara 0)]
+                                                  (conj palkkiot {:maara-kk maara-kk
+                                                                  :nimi johtopalkkio-nimi-frontilla
+                                                                  :yhteensa (* 12 maara-kk)})))
                                               [] (range (pvm/vuosi urakan-aloituspvm) (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))
-          johtopalkkio-pohjadata [{:nimi "Hoidonjohtopalkkio"}]
+          johtopalkkio-pohjadata [{:nimi johtopalkkio-nimi-frontilla}]
           johtopalkkio (tyokalut/generoi-pohjadata [(last johtopalkkio-kannasta)]
                                                    {:maara-kk ""
                                                     :yhteensa ""}
@@ -800,9 +807,9 @@
                                         toimenpiteiden-avaimet)))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-laskut true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) "Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen" true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) "Hoitourakan työnjohto" true))
                   ;; Edellisten vuosien data, jota ei voi muokata
                   (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :johtopalkkio] (into [] (butlast johtopalkkio-kannasta))))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
@@ -1104,4 +1111,47 @@
                                                                                                                                      (if (piillotetaan? solun-kk)
                                                                                                                                        (update lapsirivi ::piillotettu conj :maksetaan)
                                                                                                                                        (update lapsirivi ::piillotettu disj :maksetaan)))))]))
-                                                                              taulukot))))))))))
+                                                                              taulukot)))))))))
+  TallennaYksikkohintainentyo
+  (process-event [{:keys [osa polku-taulukkoon tehtava arvo]}
+                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
+    (let [taulukko (get-in app polku-taulukkoon)
+          polku-osaan (p/osan-polku-taulukossa taulukko osa)
+          polku-riviin (butlast polku-osaan)
+          rivi (get-in taulukko polku-riviin)
+          {:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
+          lahetettava-data {:urakka-id urakka-id
+                            :tehtava tehtava
+                            :tyot (mapv (fn [vuosi]
+                                          {:vuosi vuosi
+                                           :yksikkohinta arvo
+                                           :tehtava tehtava})
+                                        (range (-> kuluvan-hoitovuoden-pvmt first pvm/vuosi)
+                                               (inc (pvm/vuosi loppupvm))))}
+          lahetettavan-datan-hash (hash lahetettava-data)
+          app (assoc-in app [:lahetettavat-viestit-jonossa :yksikkohintainen tehtava] {:data lahetettava-data
+                                                                                       :hash lahetettavan-datan-hash})]
+      (tuck-apurit/post! app :tallenna-yksikkohintainen-tyo
+                         lahetettava-data
+                         {:onnistui ->TallennaYksikkohintainentyoOnnistui
+                          :epaonnistui ->TallennaYksikkohintainentyoEpaonnistui
+                          :onnistui-parametrit [lahetettavan-datan-hash tehtava polku-riviin]
+                          :epäonnistui-parametrit [lahetettavan-datan-hash tehtava]
+                          :paasta-virhe-lapi? true})))
+  TallennaYksikkohintainentyoOnnistui
+  (process-event [{:keys [vastaus lahetetyn-datan-hash tehtava polku-riviin]}
+                  app]
+    (let [viesti-jonossa (get-in app [:lahetettavat-viestit-jonossa :yksikkohintainen tehtava])]
+      (if (= (:hash viesti-jonossa) lahetetyn-datan-hash)
+        (assoc-in app [:lahetettavat-viestit-jonossa :yksikkohintainen tehtava] nil)
+        (tuck-apurit/post! app :tallenna-yksikkohintainen-tyo
+                           (:data viesti-jonossa)
+                           {:onnistui ->TallennaYksikkohintainentyoOnnistui
+                            :epaonnistui ->TallennaYksikkohintainentyoEpaonnistui
+                            :onnistui-parametrit [(:hash viesti-jonossa) tehtava polku-riviin]
+                            :epäonnistui-parametrit [(:hash viesti-jonossa) tehtava]
+                            :paasta-virhe-lapi? true}))))
+  TallennaYksikkohintainentyoEpaonnistui
+  (process-event [{:keys [vastaus lahetetyn-datan-hash tehtava]}
+                  app]
+    app))

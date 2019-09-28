@@ -1129,7 +1129,7 @@
                         :class #{}})))
 
 (defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi voi-muokata? taulukko-elementin-id
-                         {:keys [maara-kk yhteensa]} on-oikeus?]
+                         {:keys [maara-kk yhteensa]} tehtava on-oikeus?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
@@ -1177,7 +1177,8 @@
                                                                                                      (when arvo
                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                         :on-blur (fn [arvo]
-                                                                                                   (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo)))))
+                                                                                                   (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                   (e! (t/->TallennaYksikkohintainentyo osa/*this* polku-taulukkoon tehtava arvo)))
                                                                                         :on-key-down (fn [event]
                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                          (.. event -target blur)))}
