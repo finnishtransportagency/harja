@@ -682,6 +682,27 @@
                                          (map (fn [{:keys [vuosi kuukausi] :as data}]
                                                 (assoc data :pvm (pvm/luo-pvm vuosi (dec kuukausi) 15)))))
                                        toimenpiteet))
+          maara-kk-taulukon-data (fn [yksikkohintaiset-tyot tehtavan-nimi asia-nimi-frontilla]
+                                   (let [asia-kannasta (filter (fn [{:keys [tehtava]}]
+                                                                  (= (:nimi tehtava) tehtavan-nimi))
+                                                                yksikkohintaiset-tyot)
+                                         asia-kannasta (into []
+                                                             (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
+                                                                       (let [vuoden-maara (some (fn [{:keys [vuosi yksikkohinta]}]
+                                                                                                  (when (= vuosi hoitokauden-aloitus-vuosi)
+                                                                                                    yksikkohinta))
+                                                                                                asia-kannasta)
+                                                                             maara-kk (or vuoden-maara 0)]
+                                                                         (conj palkkiot {:maara-kk maara-kk
+                                                                                         :nimi asia-nimi-frontilla
+                                                                                         :yhteensa (* 12 maara-kk)})))
+                                                                     [] (range (pvm/vuosi urakan-aloituspvm) (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))
+                                         asia-pohjadata [{:nimi asia-nimi-frontilla}]]
+                                     [(tyokalut/generoi-pohjadata [(last asia-kannasta)]
+                                                                  {:maara-kk ""
+                                                                   :yhteensa ""}
+                                                                  asia-pohjadata)
+                                      asia-kannasta]))
           hankinnat (:kiinteahintaiset-tyot vastaus)
           hankinnat-laskutukseen-perustuen (filter #(= (:tyyppi % "laskutettava-tyo"))
                                                    (:kustannusarvioidut-tyot vastaus))
@@ -739,40 +760,9 @@
                                   (map jh-laskut-vuosille)
                                   jh-yhteenvedot-pohjadata)
 
-          erillishankinnat []                               ;; TODO tämä kannasta
-          erillishankinnat-pohjadata [{:nimi "Erillishankinnat"}]
-          erillishankinnat (tyokalut/generoi-pohjadata erillishankinnat
-                                                       {:maara-kk ""
-                                                        :yhteensa ""}
-                                                       erillishankinnat-pohjadata)
-
-          jh-toimistokulut []                               ;; TODO tämä kannasta
-          jh-toimistokulut-pohjadata [{:nimi "Toimistokulut"}]
-          jh-toimistokulut (tyokalut/generoi-pohjadata jh-toimistokulut
-                                                       {:maara-kk ""
-                                                        :yhteensa ""}
-                                                       jh-toimistokulut-pohjadata)
-
-          johtopalkkio-kannasta (filterv (fn [{:keys [tehtava]}]
-                                           (= (:nimi tehtava) "Hoitourakan työnjohto"))
-                                         yksikkohintaiset-tyot)
-          johtopalkkio-nimi-frontilla "Hoidonjohtopalkkio"
-          johtopalkkio-kannasta (into []
-                                      (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
-                                                (let [vuoden-maara (some (fn [{:keys [vuosi yksikkohinta]}]
-                                                                           (when (= vuosi hoitokauden-aloitus-vuosi)
-                                                                             yksikkohinta))
-                                                                         johtopalkkio-kannasta)
-                                                      maara-kk (or vuoden-maara 0)]
-                                                  (conj palkkiot {:maara-kk maara-kk
-                                                                  :nimi johtopalkkio-nimi-frontilla
-                                                                  :yhteensa (* 12 maara-kk)})))
-                                              [] (range (pvm/vuosi urakan-aloituspvm) (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))
-          johtopalkkio-pohjadata [{:nimi johtopalkkio-nimi-frontilla}]
-          johtopalkkio (tyokalut/generoi-pohjadata [(last johtopalkkio-kannasta)]
-                                                   {:maara-kk ""
-                                                    :yhteensa ""}
-                                                   johtopalkkio-pohjadata)
+          [erillishankinnat erillishankinnat-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen" "Erillishankinnat")
+          [jh-toimistokulut jh-toimistokulut-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." "Toimistokulut")
+          [johtopalkkio johtopalkkio-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Hoitourakan työnjohto" "Hoidonjohtopalkkio")
 
           valinnat (assoc valinnat :laskutukseen-perustuen laskutukseen-perustuvat-toimenpiteet)
 
@@ -811,6 +801,8 @@
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) "Hoitourakan työnjohto" true))
                   ;; Edellisten vuosien data, jota ei voi muokata
+                  (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :erillishankinnat] (into [] (butlast erillishankinnat-kannasta)))
+                  (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :toimistokulut] (into [] (butlast jh-toimistokulut-kannasta)))
                   (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :johtopalkkio] (into [] (butlast johtopalkkio-kannasta))))]
       (tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       (-> app

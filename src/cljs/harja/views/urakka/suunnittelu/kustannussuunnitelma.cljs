@@ -1429,16 +1429,16 @@
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
-  [erillishankinnat {:keys [vuosi] :as kuluva-hoitokausi}]
+  [erillishankinnat menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi}]
   (if erillishankinnat
     (let [summarivin-index 1
-          vuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
+          tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
                               :arvo)
           hinnat (map (fn [hoitokausi]
-                        (if (= hoitokausi vuosi)
-                          {:summa vuosi-summa
+                        (if (>= hoitokausi vuosi)
+                          {:summa tamavuosi-summa
                            :hoitokausi hoitokausi}
-                          {:summa 0
+                          {:summa (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk])
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1450,21 +1450,24 @@
 (defn erillishankinnat [erillishankinnat]
   [maara-kk erillishankinnat])
 
-(defn erillishankinnat-sisalto [erillishankinnat-taulukko kuluva-hoitokausi]
+(defn erillishankinnat-sisalto [erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi]
   [:<>
    [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
-   [erillishankinnat-yhteenveto erillishankinnat-taulukko kuluva-hoitokausi]
+   [erillishankinnat-yhteenveto erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi]
    [erillishankinnat erillishankinnat-taulukko]
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
 
 (defn johto-ja-hallintokorvaus-yhteenveto
-  [jh-yhteenveto toimistokulut {:keys [vuosi] :as kuluva-hoitokausi}]
+  [jh-yhteenveto toimistokulut menneet-toimistokulut {:keys [vuosi] :as kuluva-hoitokausi}]
   (if (and jh-yhteenveto toimistokulut)
-    (let [hinnat (map (fn [hoitokausi]
+    (let [tamavuosi-toimistokulutsumma (p/arvo (tyokalut/hae-asia-taulukosta toimistokulut [1 "Yhteensä"])
+                                               :arvo)
+          hinnat (map (fn [hoitokausi]
                         {:summa (+ (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
                                            :arvo)
-                                   (p/arvo (tyokalut/hae-asia-taulukosta toimistokulut [1 "Yhteensä"])
-                                           :arvo))
+                                   (if (>= hoitokausi vuosi)
+                                     tamavuosi-toimistokulutsumma
+                                     (get-in menneet-toimistokulut [(dec hoitokausi) :maara-kk]) ))
                          :hoitokausi hoitokausi})
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1473,10 +1476,10 @@
        kuluva-hoitokausi])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut kuluva-hoitokausi]
+(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
-   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut kuluva-hoitokausi]
+   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
    [maara-kk toimistokulut]
@@ -1535,8 +1538,8 @@
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
-   [erillishankinnat-sisalto erillishankinnat kuluva-hoitokausi]
-   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut kuluva-hoitokausi]
+   [erillishankinnat-sisalto erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi]
+   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi]
    [hoidonjohtopalkkio-sisalto johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi]])
 
 (defn kustannussuunnitelma*
