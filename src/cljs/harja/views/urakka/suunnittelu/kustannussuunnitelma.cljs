@@ -1438,7 +1438,7 @@
                         (if (>= hoitokausi vuosi)
                           {:summa tamavuosi-summa
                            :hoitokausi hoitokausi}
-                          {:summa (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk])
+                          {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1467,7 +1467,7 @@
                                            :arvo)
                                    (if (>= hoitokausi vuosi)
                                      tamavuosi-toimistokulutsumma
-                                     (get-in menneet-toimistokulut [(dec hoitokausi) :maara-kk]) ))
+                                     (* (get-in menneet-toimistokulut [(dec hoitokausi) :maara-kk]) 12)))
                          :hoitokausi hoitokausi})
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1496,7 +1496,7 @@
                         (if (>= hoitokausi vuosi)
                           {:summa tamavuosi-summa
                            :hoitokausi hoitokausi}
-                          {:summa (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk])
+                          {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
