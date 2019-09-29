@@ -826,6 +826,7 @@
                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                                 :on-blur (fn [arvo]
                                                                                                            (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                           (e! (t/->TallennaRahavaraukset tyyppi arvo toimenpide-avain))
                                                                                                            (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))
                                                                                                 :on-key-down (fn [event]
                                                                                                                (when (= "Enter" (.. event -key))

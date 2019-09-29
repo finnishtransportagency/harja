@@ -26,6 +26,7 @@
             [harja.domain
              [oikeudet :as oikeudet]
              [budjettisuunnittelu :as bs]
+             [toimenpidekoodi :as tpk]
              [toimenpideinstanssi :as tpi]
              [roolit :as roolit]]))
 
@@ -197,6 +198,59 @@
                                             ::bs/luoja (:id user)})))
                               {:onnistui? true})))
 
+(defn tallenna-rahavaraus
+  [db user {:keys [urakka-id tyyppi toimenpide summa vuodet]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (jdbc/with-db-transaction [db db]
+                            (let [tehtava (case tyyppi
+                                            "vahinkojen-korjaukset" "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen"
+                                            "akillinen-hoitotyo" "Äkillinen hoitotyö"
+                                            "muut-rahavaraukset" "Tilaajan rahavaraus lupaukseen 1")
+
+                                  {tehtava-id ::tpk/id
+                                   {toimenpide-id ::tpk/id} ::tpk/toimenpidekoodi} (first (fetch db ::tpk/toimenpidekoodi
+                                                                                                 #{::tpk/id ::tpk/nimi
+                                                                                                   [::tpk/toimenpidekoodi #{::tpk/id ::tpk/nimi}]}
+                                                                                                 {::tpk/nimi tehtava
+                                                                                                  ::tpk/toimenpidekoodi {::tpk/nimi toimenpide}}))
+                                  {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
+                                  tyyppi (keyword tyyppi)
+                                  olemassa-olevat-rahavaraukset (fetch db ::bs/kustannusarvioitu-tyo
+                                                                       #{::bs/id ::bs/smallint-v}
+                                                                       {::bs/smallint-v (op/in (into #{} vuodet))
+                                                                        ::bs/tehtava tehtava-id
+                                                                        ::bs/tyyppi tyyppi
+                                                                        ::bs/toimenpideinstanssi toimenpideinstanssi-id})
+                                  paivitetaan? (not (empty? olemassa-olevat-rahavaraukset))]
+                              (if paivitetaan?
+                                (doseq [vuosi vuodet
+                                        olemassa-oleva-tyo (filter #(= vuosi (::bs/vuosi %)) olemassa-olevat-rahavaraukset)]
+                                  (update! db ::bs/kustannusarvioitu-tyo
+                                           {::bs/summa summa}
+                                           {::bs/id (::bs/id olemassa-oleva-tyo)}))
+                                (let [{:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
+                                      paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)
+                                      alkuvuosi (pvm/vuosi alkupvm)
+                                      loppuvuosi (pvm/vuosi loppupvm)]
+                                  (doseq [vuosi vuodet
+                                          :let [kuukaudet (cond
+                                                            (= alkuvuosi vuosi) [10 12]
+                                                            (= loppuvuosi vuosi) [1 9]
+                                                            :else [1 12])]
+                                          kk (range (first kuukaudet) (inc (second kuukaudet)))]
+                                    (insert! db ::bs/kustannusarvioitu-tyo
+                                             {::bs/smallint-v vuosi
+                                              ::bs/smallint-kk kk
+                                              ::bs/summa summa
+                                              ::bs/tyyppi tyyppi
+                                              ::bs/tehtava tehtava-id
+                                              ::bs/toimenpideinstanssi toimenpideinstanssi-id
+                                              ::bs/sopimus paasopimus
+                                              ::bs/luotu (pvm/nyt)
+                                              ::bs/luoja (:id user)}))))
+                              {:onnistui? true})))
+
+
 (s/def ::vuosi integer?)
 (s/def ::yksikkohinta integer?)
 (s/def ::urakka-id integer?)
@@ -207,6 +261,9 @@
 (s/def ::tunnit number?)
 (s/def ::tuntipalkka number?)
 (s/def ::kk-v number?)
+(s/def ::summa number?)
+(s/def ::tyyppi string?)
+(s/def ::toimenpide string?)
 
 (s/def ::yksikkohintainen-tyo (s/keys :req-un [::vuosi ::yksikkohinta]))
 (s/def ::tyot (s/coll-of ::yksikkohintainen-tyo))
@@ -214,11 +271,16 @@
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
 
+(s/def ::vuodet (s/coll-of ::vuosi))
+
 (s/def ::tallenna-yksikkohintainen-tyo-kysely (s/keys :req-un [::urakka-id ::tehtava ::tyot]))
 (s/def ::tallenna-yksikkohintainen-tyo-vastaus any?)
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
+
+(s/def ::tallenna-rahavaraus-kysely (s/keys :req-un [::urakka-id ::tyyppi ::toimenpide ::summa ::vuodet]))
+(s/def ::tallenna-rahavaraus-vastaus any?)
 
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
@@ -249,7 +311,13 @@
             (fn [user tiedot]
               (tallenna-johto-ja-hallintokorvaukset db user tiedot))
             {:kysely-spec ::tallenna-johto-ja-hallintokorvaukset-kysely
-             :vastaus-spec ::tallenna-johto-ja-hallintokorvaukset-vastaus}))))
+             :vastaus-spec ::tallenna-johto-ja-hallintokorvaukset-vastaus})
+          (julkaise-palvelu
+            :tallenna-rahavaraus
+            (fn [user tiedot]
+              (tallenna-rahavaraus db user tiedot))
+            {:kysely-spec ::tallenna-rahavaraus-kysely
+             :vastaus-spec ::tallenna-rahavaraus-vastaus}))))
     this)
 
   (stop [this]

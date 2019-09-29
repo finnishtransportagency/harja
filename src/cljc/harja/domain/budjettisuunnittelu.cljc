@@ -20,10 +20,12 @@
     ::tyyppi (specql.transform/transform (specql.transform/to-keyword))
     ::tpi-id (specql.rel/has-one ::toimenpideinstanssi
                                  ::tpi/toimenpideinstanssi
-                                 ::tpi/id)}]
+                                 ::tpi/id)}
+   #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["kiinteahintainen_tyo" ::kiinteahintainen-tyo
    {"kuukausi" ::smallint-kk
-    "vuosi" ::smallint-v}]
+    "vuosi" ::smallint-v}
+   #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["johto_ja_hallintokorvaus_toimenkuva" ::johto-ja-hallintokorvaus-toimenkuva]
   ["johto_ja_hallintokorvaus" ::johto-ja-hallintokorvaus
    {::maksukausi (specql.transform/transform (specql.transform/to-keyword))

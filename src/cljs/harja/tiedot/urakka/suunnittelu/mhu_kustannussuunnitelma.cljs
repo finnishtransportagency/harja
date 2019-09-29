@@ -125,6 +125,9 @@
 (defrecord TallennaJohtoJaHallintokorvaukset [osa polku-taulukkoon])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
 (defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
+(defrecord TallennaRahavaraukset [tyyppi arvo toimenpide-avain])
+(defrecord TallennaRahavarauksetOnnistui [vastaus])
+(defrecord TallennaRahavarauksetEpaonnistui [vastaus])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -653,7 +656,8 @@
   HaeTavoiteJaKattohintaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     ;;TODO
-    (log "HAE TAVOITE JA KATTOHINTA EPÄONNISTUI")
+    (viesti/nayta! "Tavoite- ja kattohinnan haku epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
     app)
   HaeHankintakustannuksetOnnistui
   (process-event [{:keys [vastaus hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
@@ -872,7 +876,8 @@
   HaeHankintakustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     ;; TODO
-    (log "HAE HANKINTAKUSTANNUKSET EPÄONNISTUI")
+    (viesti/nayta! "Hankintakustannusten haku epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
     app)
   LaajennaSoluaKlikattu
   (process-event [{:keys [polku-taulukkoon rivin-id auki?]} app]
@@ -1155,6 +1160,8 @@
     app)
   TallennaYksikkohintainentyoEpaonnistui
   (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
     app)
   TallennaJohtoJaHallintokorvaukset
   (process-event [{:keys [osa polku-taulukkoon]}
@@ -1193,4 +1200,31 @@
     app)
   TallennaJohtoJaHallintokorvauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  TallennaRahavaraukset
+  (process-event [{:keys [tyyppi arvo toimenpide-avain]}
+                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
+    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+          lahetettava-data {:urakka-id urakka-id
+                            :tyyppi tyyppi
+                            :toimenpide (get toimenpiteiden-avaimet toimenpide-avain)
+                            :summa arvo
+                            :vuodet (range kuluva-hoitovuosi 6)}]
+      (tuck-apurit/post! app :tallenna-rahavaraus
+                         lahetettava-data
+                         {:onnistui ->TallennaRahavarauksetOnnistui
+                          :epaonnistui ->TallennaRahavarauksetEpaonnistui
+                          :viive 1000
+                          :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
+                                             (str "tallenna-rahavaraus " tyyppi " " toimenpide-avain))
+                          :paasta-virhe-lapi? true})))
+  TallennaRahavarauksetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    app)
+  TallennaRahavarauksetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
     app))
