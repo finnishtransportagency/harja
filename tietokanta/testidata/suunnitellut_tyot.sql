@@ -1034,12 +1034,12 @@ BEGIN
   END LOOP;
   FOR hoitokausi_ IN 0..5 LOOP
       IF hoitokausi_ = 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus (urakka, tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, toimenkuva)
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 40, 4.5, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
       END IF;
       IF hoitokausi_ > 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus (urakka, tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, toimenkuva)
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 7, 'talvi'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
@@ -1353,12 +1353,12 @@ BEGIN
   END LOOP;
   FOR hoitokausi_ IN 0..5 LOOP
       IF hoitokausi_ = 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus (urakka, tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, toimenkuva)
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 40, 4.5, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
       END IF;
       IF hoitokausi_ > 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus (urakka, tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, toimenkuva)
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 7, 'talvi'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),

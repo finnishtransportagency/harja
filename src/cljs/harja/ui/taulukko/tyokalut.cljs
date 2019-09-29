@@ -45,12 +45,13 @@
 
 (defn- generoi-pohjadata-f
   [olemassa-olevat default-arvoja oleellinen-data]
-  (let [oleellisten-meta (meta oleellinen-data)]
+  (let [oleellisten-meta (meta oleellinen-data)
+        loytyi-arvo (gensym "loytyi")]
     (if-let [loytynyt-olemassa-oleva-data (some (fn [olemassa-oleva-data]
-                                                  (when (every? true?
+                                                  (when (every? #(= % loytyi-arvo)
                                                                 (vals (reduce-kv (fn [m k v]
-                                                                                   (if-let [loytynyt-arvo (m k)]
-                                                                                     (assoc m k (= loytynyt-arvo v))
+                                                                                   (if-let [oleellinen-arvo (m k)]
+                                                                                     (assoc m k (when (= oleellinen-arvo v) loytyi-arvo))
                                                                                      m))
                                                                                  oleellinen-data olemassa-oleva-data)))
                                                     olemassa-oleva-data))
@@ -104,6 +105,14 @@
                                 (fn [rivi]
                                   (apply f rivi args))
                                 rivit))))
+
+(defn rivin-arvot-otsikoilla
+  [taulukko rivi & otsikot]
+  (let [rivin-arvot (map #(p/arvo % :arvo) (p/arvo rivi :lapset))]
+    (mapv (fn [otsikko]
+            (nth rivin-arvot
+                 (p/otsikon-index taulukko otsikko)))
+          otsikot)))
 
 (defn hae-asia-taulukosta
   [taulukko polku]

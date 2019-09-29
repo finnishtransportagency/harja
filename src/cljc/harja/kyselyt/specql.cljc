@@ -54,3 +54,13 @@
   (transform-spec [_ input-spec]
     ;; Ei osata specata geometriatyyppejä, joten spec olkoon any?
     any?))
+
+(defrecord NumberTransform []
+  tx/Transform
+  (from-sql [_ num]
+    (long num))
+  (to-sql [_ num]
+    #?(:clj (bigdec num)
+       :cljs num))
+  (transform-spec [_ input-spec]
+    number?))

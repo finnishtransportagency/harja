@@ -7,8 +7,8 @@ CREATE TABLE johto_ja_hallintokorvaus_toimenkuva (
 
 CREATE TABLE johto_ja_hallintokorvaus (
   id SERIAL PRIMARY KEY,
-  urakka INTEGER NOT NULL REFERENCES urakka(id),
-  toimenkuva INTEGER NOT NULL REFERENCES johto_ja_hallintokorvaus_toimenkuva(id),
+  "urakka-id" INTEGER NOT NULL REFERENCES urakka(id),
+  "toimenkuva-id" INTEGER NOT NULL REFERENCES johto_ja_hallintokorvaus_toimenkuva(id),
   tunnit INTEGER,
   tuntipalkka INTEGER,
   kk_v INTEGER,
@@ -18,5 +18,5 @@ CREATE TABLE johto_ja_hallintokorvaus (
   luoja INTEGER REFERENCES kayttaja(id),
   muokattu TIMESTAMP,
   muokkaaja INTEGER REFERENCES kayttaja(id),
-  UNIQUE(urakka, toimenkuva, maksukausi, hoitokausi)
+  UNIQUE("urakka-id", "toimenkuva-id", maksukausi, hoitokausi)
 );

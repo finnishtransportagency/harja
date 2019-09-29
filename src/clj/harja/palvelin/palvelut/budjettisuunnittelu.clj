@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
+            [clojure.string :as clj-str]
             [specql.core :refer [fetch update! insert!]]
             [specql.op :as op]
             [taoensso.timbre :as log]
@@ -64,10 +65,20 @@
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  {:kiinteahintaiset-tyot   (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
+  {:kiinteahintaiset-tyot (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
-   :yksikkohintaiset-tyot   (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)})
-
+   :yksikkohintaiset-tyot (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)
+   :johto-ja-hallintokorvaukset (map (fn [jhk]
+                                       (into {}
+                                             (map (fn [[k v]]
+                                                    [(keyword (clj-str/replace (name k) #"_" "-")) v])
+                                                  (update jhk ::bs/toimenkuva (fn [{::bs/keys [toimenkuva]}]
+                                                                                toimenkuva)))))
+                                     (fetch db ::bs/johto-ja-hallintokorvaus
+                                            #{::bs/tunnit ::bs/tuntipalkka ::bs/kk_v ::bs/maksukausi
+                                              ::bs/hoitokausi
+                                              [::bs/toimenkuva #{::bs/toimenkuva}]}
+                                            {::bs/urakka-id urakka-id}))})
 
 (defn tallenna-budjetoidut-tyot
   "Palvelu joka tallentaa urakan kustannusarvioidut tyot."
@@ -105,17 +116,6 @@
 
                               ;; Palautetaan päivitetty tilanne
                               (hae-urakan-budjetoidut-tyot c user {:urakka-id urakka-id}))))
-#_(defn tarkasta-toiden-urakka!
-  [db tyot urakka-id user]
-  (let [paivitettavien-toiden-urakat (fetch db ::bs/yksikkohintainen-tyo
-                                            #{[::bs/toimenpideinstanssi #{::tpi/urakka}]}
-                                            {::bs/id (op/in (into #{} (mapcat :idt tyot)))})]
-    (when-not (every? #(= urakka-id (get-in % [::bs/toimenpideinstanssi ::tpi/urakka]))
-                      paivitettavien-toiden-urakat)
-      (log/error "YRITETTIIN PÄIVITTÄÄ TOISEN URAKAN TYÖTÄ: " (:id user)
-                 "TYÖT: " tyot
-                 "URAKKA-ID: " urakka-id)
-      (throw (Exception. "virheellinen urakka työlle")))))
 
 (defn tallenna-yksikkohintainen-tyo
   [db user {:keys [urakka-id tehtava tyot]}]
@@ -128,54 +128,101 @@
                                                               {::bs/urakka urakka-id
                                                                ::bs/vuosi (op/in (into #{} (map :vuosi tyot)))
                                                                ::bs/tehtava tehtava-id})
-                                  paivitetaan? (not (empty? olemassa-olevat-tyot))
-                                  idt (if paivitetaan?
-                                        (for [{:keys [yksikkohinta vuosi]} tyot
-                                              olemassa-oleva-tyo (filter #(= vuosi (::bs/vuosi %)) olemassa-olevat-tyot)]
-                                          (let [id (::bs/id olemassa-oleva-tyo)]
-                                            (update! db ::bs/yksikkohintainen-tyo
-                                                     {::bs/yksikkohinta yksikkohinta}
-                                                     {::bs/id id})
-                                            id))
-                                        (let [{:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
-                                              paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)
-                                              alkuvuosi (pvm/vuosi alkupvm)
-                                              loppuvuosi (pvm/vuosi loppupvm)]
-                                          (map ::bs/id
-                                               (for [{:keys [yksikkohinta vuosi]} tyot
-                                                     :let [kuukaudet (cond
-                                                                       (= alkuvuosi vuosi) [10 12]
-                                                                       (= loppuvuosi vuosi) [1 9]
-                                                                       :else [1 12])]
-                                                     kk (range (first kuukaudet) (inc (second kuukaudet)))]
-                                                 (insert! db ::bs/yksikkohintainen-tyo
-                                                          {::bs/maara 1
-                                                           ::bs/yksikko "kk"
-                                                           ::bs/yksikkohinta yksikkohinta
-                                                           ::bs/urakka urakka-id
-                                                           ::bs/sopimus paasopimus
-                                                           ::bs/tehtava tehtava-id
-                                                           ::bs/kuukausi kk
-                                                           ::bs/vuosi vuosi
-                                                           ::bs/luoja (:id user)
-                                                           ::bs/luotu (pvm/nyt)})))))]
-                              ;; Otetetaan namespacetettu osa pois
-                              (map (fn [{::bs/keys [id vuosi]}]
-                                     {:id id :vuosi vuosi})
-                                   (fetch db ::bs/yksikkohintainen-tyo
-                                          #{::bs/id ::bs/vuosi}
-                                          {::bs/id (op/in (into #{} idt))})))))
+                                  paivitetaan? (not (empty? olemassa-olevat-tyot))]
+                              (if paivitetaan?
+                                (doseq [{:keys [yksikkohinta vuosi]} tyot
+                                        olemassa-oleva-tyo (filter #(= vuosi (::bs/vuosi %)) olemassa-olevat-tyot)]
+                                  (update! db ::bs/yksikkohintainen-tyo
+                                           {::bs/yksikkohinta yksikkohinta}
+                                           {::bs/id (::bs/id olemassa-oleva-tyo)}))
+                                (let [{:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
+                                      paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)
+                                      alkuvuosi (pvm/vuosi alkupvm)
+                                      loppuvuosi (pvm/vuosi loppupvm)]
+                                  (doseq [{:keys [yksikkohinta vuosi]} tyot
+                                          :let [kuukaudet (cond
+                                                            (= alkuvuosi vuosi) [10 12]
+                                                            (= loppuvuosi vuosi) [1 9]
+                                                            :else [1 12])]
+                                          kk (range (first kuukaudet) (inc (second kuukaudet)))]
+                                    (insert! db ::bs/yksikkohintainen-tyo
+                                             {::bs/maara 1
+                                              ::bs/yksikko "kk"
+                                              ::bs/yksikkohinta yksikkohinta
+                                              ::bs/urakka urakka-id
+                                              ::bs/sopimus paasopimus
+                                              ::bs/tehtava tehtava-id
+                                              ::bs/kuukausi kk
+                                              ::bs/vuosi vuosi
+                                              ::bs/luoja (:id user)
+                                              ::bs/luotu (pvm/nyt)}))))
+                              {:onnistui? true})))
 
-(s/def ::vuosi number?)
-(s/def ::yksikkohinta number?)
-(s/def ::urakka-id number?)
+(defn tallenna-johto-ja-hallintokorvaukset
+  [db user {:keys [urakka-id jhkt]}]
+  ;"urakka-id", "toimenkuva-id", maksukausi, hoitokausi, tunnit, tuntipalkka
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (jdbc/with-db-transaction [db db]
+                            (let [olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
+                                                              #{::bs/id ::bs/toimenkuva-id ::bs/maksukausi ::bs/hoitokausi}
+                                                              {::bs/urakka-id urakka-id
+                                                               ::bs/hoitokausi (op/in (into #{} (map :hoitokausi jhkt)))})
+                                  paivitetaan? (not (empty? olemassa-olevat-jhkt))
+                                  toimenkuvat (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                     #{::bs/id ::bs/toimenkuva}
+                                                     {::bs/toimenkuva (op/in (map :toimenkuva jhkt))})]
+                              (if paivitetaan?
+                                (doseq [{:keys [toimenkuva maksukausi hoitokausi tunnit tuntipalkka]} jhkt]
+                                  (let [toimenkuva-id (some #(when (= (::bs/toimenkuva %) toimenkuva)
+                                                               (::bs/id %))
+                                                            toimenkuvat)
+                                        id (some #(when (and (= hoitokausi (::bs/hoitokausi %))
+                                                             (= toimenkuva-id (::bs/toimenkuva-id %))
+                                                             (= maksukausi (::bs/maksukausi %)))
+                                                    (::bs/id %))
+                                                 olemassa-olevat-jhkt)]
+                                    (update! db ::bs/johto-ja-hallintokorvaus
+                                             {::bs/tunnit tunnit
+                                              ::bs/tuntipalkka tuntipalkka}
+                                             {::bs/id id})))
+                                (doseq [{:keys [toimenkuva maksukausi hoitokausi tunnit tuntipalkka kk-v]} jhkt]
+                                  (let [toimenkuva-id (some #(when (= (::bs/toimenkuva %) toimenkuva)
+                                                               (::bs/id %))
+                                                            toimenkuvat)]
+                                    (insert! db ::bs/johto-ja-hallintokorvaus
+                                             {::bs/urakka-id urakka-id
+                                              ::bs/toimenkuva-id toimenkuva-id
+                                              ::bs/tunnit tunnit
+                                              ::bs/tuntipalkka tuntipalkka
+                                              ::bs/kk-v kk-v
+                                              ::bs/maksukausi maksukausi
+                                              ::bs/hoitokausi hoitokausi
+                                              ::bs/luotu (pvm/nyt)
+                                              ::bs/luoja (:id user)}))))
+                              {:onnistui? true})))
+
+(s/def ::vuosi integer?)
+(s/def ::yksikkohinta integer?)
+(s/def ::urakka-id integer?)
 (s/def ::tehtava string?)
+(s/def ::toimenkuva string?)
+(s/def ::maksukausi keyword?)
+(s/def ::hoitokausi integer?)
+(s/def ::tunnit integer?)
+(s/def ::tuntipalkka integer?)
+(s/def ::kk-v integer?)
 
 (s/def ::yksikkohintainen-tyo (s/keys :req-un [::vuosi ::yksikkohinta]))
 (s/def ::tyot (s/coll-of ::yksikkohintainen-tyo))
 
+(s/def ::jhk (s/keys :req-un [::toimenkuva ::maksukausi ::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
+(s/def ::jhkt (s/coll-of ::jhk))
+
 (s/def ::tallenna-yksikkohintainen-tyo-kysely (s/keys :req-un [::urakka-id ::tehtava ::tyot]))
 (s/def ::tallenna-yksikkohintainen-tyo-vastaus any?)
+
+(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::jhkt]))
+(s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
@@ -200,7 +247,13 @@
             (fn [user tiedot]
               (tallenna-yksikkohintainen-tyo db user tiedot))
             {:kysely-spec ::tallenna-yksikkohintainen-tyo-kysely
-             :vastaus-spec ::tallenna-yksikkohintainen-tyo-vastaus}))))
+             :vastaus-spec ::tallenna-yksikkohintainen-tyo-vastaus})
+          (julkaise-palvelu
+            :tallenna-johto-ja-hallintokorvaukset
+            (fn [user tiedot]
+              (tallenna-johto-ja-hallintokorvaukset db user tiedot))
+            {:kysely-spec ::tallenna-johto-ja-hallintokorvaukset-kysely
+             :vastaus-spec ::tallenna-johto-ja-hallintokorvaukset-vastaus}))))
     this)
 
   (stop [this]

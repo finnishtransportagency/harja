@@ -874,7 +874,7 @@
                         :class #{}})))
 
 (defn johto-ja-hallintokorvaus-laskulla-taulukko
-  [e! jh-laskulla on-oikeus?]
+  [e! jh-korvaukset on-oikeus?]
   (let [osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
                             (fn [osat]
                               (mapv (fn [osa]
@@ -911,73 +911,105 @@
                                                             (fn [osa]
                                                               (p/aseta-arvo osa
                                                                             :arvo "kk/v"))))))
+        jh-korvauksen-rivit (fn [{:keys [toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+                              ;; Tässä voi rikastaa kannasta tulevaa tietoa tai lisätä rivejä datan perusteella
+                              (let [hoitokausikohtaiset-rivit (cond
+                                                                ;; Hankintavastaavalla mahdollisesti eri tiedot ensimmäisenä vuonna kuin 2-5
+                                                                (and (= toimenkuva "Hankintavastaava") (= kk-v 12)) [(assoc jh-korvaus :hoitokaudet #{1}) (update jh-korvaus :hoitokaudet disj 1)]
+                                                                :else [jh-korvaus])
+                                    toimenkuvan-maksukausiteksti-suluissa (case maksukausi
+                                                                            :kesa "kesäkausi"
+                                                                            :talvi "talvikausi"
+                                                                            nil)
+                                    toimenkuvan-hoitokausiteksti-suluissa (cond
+                                                                            (> (count hoitokausikohtaiset-rivit) 1) (mapv (fn [{:keys [hoitokaudet]}]
+                                                                                                                            (if (= 1 (count hoitokaudet))
+                                                                                                                              (str (first hoitokaudet) ". sopimusvuosi")
+                                                                                                                              (str (apply min hoitokaudet) ".-" (apply max hoitokaudet) ". sopimusvuosi")))
+                                                                                                                          hoitokausikohtaiset-rivit)
+                                                                            (= hoitokaudet #{0}) ["ennen urakkaa"]
+                                                                            :else nil)
+                                    sulkutekstit (map (fn [index]
+                                                        (remove nil? [toimenkuvan-maksukausiteksti-suluissa (get toimenkuvan-hoitokausiteksti-suluissa index)]))
+                                                      (range (count hoitokausikohtaiset-rivit)))]
+                                (map-indexed (fn [index jh-korvaus]
+                                               (assoc jh-korvaus :muokattu-toimenkuva (if (empty? (nth sulkutekstit index))
+                                                                                        toimenkuva
+                                                                                        (str toimenkuva " (" (apply str (interpose ", " (nth sulkutekstit index))) ")"))))
+                                             hoitokausikohtaiset-rivit)))
         syottorivi-fn (fn [syotto-pohja]
-                        (mapv (fn [{:keys [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v vuodet]}]
-                                (-> syotto-pohja
-                                    (p/aseta-arvo :class #{"table-default"
-                                                           "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
-                                                  :id (keyword toimenkuva))
-                                    (p/paivita-arvo :lapset
-                                                    (osien-paivitys-fn (fn [osa]
-                                                                         (p/aseta-arvo osa
-                                                                                       :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                       :arvo toimenkuva))
-                                                                       (fn [osa]
-                                                                         (p/aseta-arvo
-                                                                           (-> osa
-                                                                               (assoc :toiminnot {:on-change (fn [arvo]
-                                                                                                               (when arvo
-                                                                                                                 (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
-                                                                                                  :on-blur (fn [arvo]
-                                                                                                             (when arvo
-                                                                                                               (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
-                                                                                                               (e! (t/->PaivitaJHRivit osa/*this*))))
-                                                                                                  :on-key-down (fn [event]
-                                                                                                                 (when (= "Enter" (.. event -key))
-                                                                                                                   (.. event -target blur)))}
-                                                                                      :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                   {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                       :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
-                                                                               (p/lisaa-fmt summa-formatointi)
-                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
-                                                                               (update :parametrit (fn [parametrit]
-                                                                                                     (assoc parametrit :size 2))))
-                                                                           :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                           :arvo tunnit-kk
-                                                                           :class #{"input-default"}))
-                                                                       (fn [osa]
-                                                                         (p/aseta-arvo
-                                                                           (-> osa
-                                                                               (assoc :toiminnot {:on-change (fn [arvo]
-                                                                                                               (when arvo
-                                                                                                                 (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
-                                                                                                  :on-blur (fn [arvo]
-                                                                                                             (when arvo
-                                                                                                               (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
-                                                                                                               (e! (t/->PaivitaJHRivit osa/*this*))))
-                                                                                                  :on-key-down (fn [event]
-                                                                                                                 (when (= "Enter" (.. event -key))
-                                                                                                                   (.. event -target blur)))}
-                                                                                      :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                   {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                       :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
-                                                                               (p/lisaa-fmt summa-formatointi)
-                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
-                                                                               (update :parametrit (fn [parametrit]
-                                                                                                     (assoc parametrit :size 2))))
-                                                                           :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                           :arvo tuntipalkka
-                                                                           :class #{"input-default"}))
-                                                                       (fn [osa]
-                                                                         (-> osa
-                                                                             (p/aseta-arvo :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                           :arvo yhteensa-kk)
-                                                                             (p/lisaa-fmt summa-formatointi)))
-                                                                       (fn [osa]
-                                                                         (p/aseta-arvo osa
-                                                                                       :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                       :arvo kk-v))))))
-                              jh-laskulla))]
+                        (into []
+                              (mapcat (fn [jh-korvaus]
+                                        (map (fn [{:keys [toimenkuva muokattu-toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+                                               (-> syotto-pohja
+                                                   (p/aseta-arvo :class #{"table-default"
+                                                                          "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
+                                                                 :id (keyword muokattu-toimenkuva))
+                                                   (assoc ::p/lisatty-data {:toimenkuva toimenkuva
+                                                                            :maksukausi maksukausi})
+                                                   (p/paivita-arvo :lapset
+                                                                   (osien-paivitys-fn (fn [osa]
+                                                                                        (p/aseta-arvo osa
+                                                                                                      :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                      :arvo muokattu-toimenkuva))
+                                                                                      (fn [osa]
+                                                                                        (p/aseta-arvo
+                                                                                          (-> osa
+                                                                                              (assoc :toiminnot {:on-change (fn [arvo]
+                                                                                                                              (when arvo
+                                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                                                 :on-blur (fn [arvo]
+                                                                                                                            (when arvo
+                                                                                                                              (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
+                                                                                                                              (e! (t/->TallennaJohtoJaHallintokorvaukset osa/*this* polku-taulukkoon))
+                                                                                                                              (e! (t/->PaivitaJHRivit osa/*this*))))
+                                                                                                                 :on-key-down (fn [event]
+                                                                                                                                (when (= "Enter" (.. event -key))
+                                                                                                                                  (.. event -target blur)))}
+                                                                                                     :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                                  {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                                      :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
+                                                                                              (p/lisaa-fmt summa-formatointi)
+                                                                                              (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
+                                                                                              (update :parametrit (fn [parametrit]
+                                                                                                                    (assoc parametrit :size 2))))
+                                                                                          :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                          :arvo tunnit-kk
+                                                                                          :class #{"input-default"}))
+                                                                                      (fn [osa]
+                                                                                        (p/aseta-arvo
+                                                                                          (-> osa
+                                                                                              (assoc :toiminnot {:on-change (fn [arvo]
+                                                                                                                              (when arvo
+                                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                                                 :on-blur (fn [arvo]
+                                                                                                                            (when arvo
+                                                                                                                              (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
+                                                                                                                              (e! (t/->PaivitaJHRivit osa/*this*))))
+                                                                                                                 :on-key-down (fn [event]
+                                                                                                                                (when (= "Enter" (.. event -key))
+                                                                                                                                  (.. event -target blur)))}
+                                                                                                     :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                                  {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                                      :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
+                                                                                              (p/lisaa-fmt summa-formatointi)
+                                                                                              (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
+                                                                                              (update :parametrit (fn [parametrit]
+                                                                                                                    (assoc parametrit :size 2))))
+                                                                                          :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                          :arvo tuntipalkka
+                                                                                          :class #{"input-default"}))
+                                                                                      (fn [osa]
+                                                                                        (-> osa
+                                                                                            (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                          :arvo yhteensa-kk)
+                                                                                            (p/lisaa-fmt summa-formatointi)))
+                                                                                      (fn [osa]
+                                                                                        (p/aseta-arvo osa
+                                                                                                      :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                      :arvo kk-v))))))
+                                             (jh-korvauksen-rivit jh-korvaus)))
+                                    jh-korvaukset)))]
     (muodosta-taulukko :jh-laskulla
                        {:otsikko {:janan-tyyppi jana/Rivi
                                   :osat [osa/Teksti
@@ -1056,23 +1088,23 @@
                                                                         (fn [osa]
                                                                           (cond-> osa
                                                                               true (p/aseta-arvo :arvo hoitokausi-1)
-                                                                              (vuodet 1) (p/lisaa-fmt summa-formatointi)))
+                                                                              (contains? vuodet 1) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
                                                                           (cond-> osa
                                                                               true (p/aseta-arvo :arvo hoitokausi-2)
-                                                                              (vuodet 2) (p/lisaa-fmt summa-formatointi)))
+                                                                              (contains? vuodet 2) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
                                                                           (cond-> osa
                                                                               true (p/aseta-arvo :arvo hoitokausi-3)
-                                                                              (vuodet 3) (p/lisaa-fmt summa-formatointi)))
+                                                                              (contains? vuodet 3) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
                                                                           (cond-> osa
                                                                               true (p/aseta-arvo :arvo hoitokausi-4)
-                                                                              (vuodet 4) (p/lisaa-fmt summa-formatointi)))
+                                                                              (contains? vuodet 4) (p/lisaa-fmt summa-formatointi)))
                                                                         (fn [osa]
                                                                           (cond-> osa
                                                                               true (p/aseta-arvo :arvo hoitokausi-5)
-                                                                              (vuodet 5) (p/lisaa-fmt summa-formatointi)))))))
+                                                                              (contains? vuodet 5) (p/lisaa-fmt summa-formatointi)))))))
                                jh-yhteenveto))))
         yhteensa-fn (fn [yhteensa-pohja]
                       (let [{:keys [hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]}
@@ -1178,7 +1210,7 @@
                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                         :on-blur (fn [arvo]
                                                                                                    (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                   (e! (t/->TallennaYksikkohintainentyo osa/*this* polku-taulukkoon tehtava arvo)))
+                                                                                                   (e! (t/->TallennaYksikkohintainentyo tehtava arvo)))
                                                                                         :on-key-down (fn [event]
                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                          (.. event -target blur)))}
