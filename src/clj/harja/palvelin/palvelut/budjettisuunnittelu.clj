@@ -75,7 +75,7 @@
                                                   (update jhk ::bs/toimenkuva (fn [{::bs/keys [toimenkuva]}]
                                                                                 toimenkuva)))))
                                      (fetch db ::bs/johto-ja-hallintokorvaus
-                                            #{::bs/tunnit ::bs/tuntipalkka ::bs/kk_v ::bs/maksukausi
+                                            #{::bs/tunnit ::bs/tuntipalkka ::bs/kk-v ::bs/maksukausi
                                               ::bs/hoitokausi
                                               [::bs/toimenkuva #{::bs/toimenkuva}]}
                                             {::bs/urakka-id urakka-id}))})
@@ -159,24 +159,23 @@
                               {:onnistui? true})))
 
 (defn tallenna-johto-ja-hallintokorvaukset
-  [db user {:keys [urakka-id jhkt]}]
+  [db user {:keys [urakka-id toimenkuva maksukausi jhkt]}]
   ;"urakka-id", "toimenkuva-id", maksukausi, hoitokausi, tunnit, tuntipalkka
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
+                            (let [toimenkuva-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                              #{::bs/id ::bs/toimenkuva}
+                                                              {::bs/toimenkuva toimenkuva}))
+                                  olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
                                                               #{::bs/id ::bs/toimenkuva-id ::bs/maksukausi ::bs/hoitokausi}
                                                               {::bs/urakka-id urakka-id
-                                                               ::bs/hoitokausi (op/in (into #{} (map :hoitokausi jhkt)))})
-                                  paivitetaan? (not (empty? olemassa-olevat-jhkt))
-                                  toimenkuvat (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                     #{::bs/id ::bs/toimenkuva}
-                                                     {::bs/toimenkuva (op/in (map :toimenkuva jhkt))})]
+                                                               ::bs/hoitokausi (op/in (into #{} (map :hoitokausi jhkt)))
+                                                               ::bs/toimenkuva-id toimenkuva-id
+                                                               ::bs/maksukausi maksukausi})
+                                  paivitetaan? (not (empty? olemassa-olevat-jhkt))]
                               (if paivitetaan?
-                                (doseq [{:keys [toimenkuva maksukausi hoitokausi tunnit tuntipalkka]} jhkt]
-                                  (let [toimenkuva-id (some #(when (= (::bs/toimenkuva %) toimenkuva)
-                                                               (::bs/id %))
-                                                            toimenkuvat)
-                                        id (some #(when (and (= hoitokausi (::bs/hoitokausi %))
+                                (doseq [{:keys [hoitokausi tunnit tuntipalkka]} jhkt]
+                                  (let [id (some #(when (and (= hoitokausi (::bs/hoitokausi %))
                                                              (= toimenkuva-id (::bs/toimenkuva-id %))
                                                              (= maksukausi (::bs/maksukausi %)))
                                                     (::bs/id %))
@@ -185,20 +184,17 @@
                                              {::bs/tunnit tunnit
                                               ::bs/tuntipalkka tuntipalkka}
                                              {::bs/id id})))
-                                (doseq [{:keys [toimenkuva maksukausi hoitokausi tunnit tuntipalkka kk-v]} jhkt]
-                                  (let [toimenkuva-id (some #(when (= (::bs/toimenkuva %) toimenkuva)
-                                                               (::bs/id %))
-                                                            toimenkuvat)]
-                                    (insert! db ::bs/johto-ja-hallintokorvaus
-                                             {::bs/urakka-id urakka-id
-                                              ::bs/toimenkuva-id toimenkuva-id
-                                              ::bs/tunnit tunnit
-                                              ::bs/tuntipalkka tuntipalkka
-                                              ::bs/kk-v kk-v
-                                              ::bs/maksukausi maksukausi
-                                              ::bs/hoitokausi hoitokausi
-                                              ::bs/luotu (pvm/nyt)
-                                              ::bs/luoja (:id user)}))))
+                                (doseq [{:keys [hoitokausi tunnit tuntipalkka kk-v]} jhkt]
+                                  (insert! db ::bs/johto-ja-hallintokorvaus
+                                           {::bs/urakka-id urakka-id
+                                            ::bs/toimenkuva-id toimenkuva-id
+                                            ::bs/tunnit tunnit
+                                            ::bs/tuntipalkka tuntipalkka
+                                            ::bs/kk-v kk-v
+                                            ::bs/maksukausi maksukausi
+                                            ::bs/hoitokausi hoitokausi
+                                            ::bs/luotu (pvm/nyt)
+                                            ::bs/luoja (:id user)})))
                               {:onnistui? true})))
 
 (s/def ::vuosi integer?)
@@ -208,20 +204,20 @@
 (s/def ::toimenkuva string?)
 (s/def ::maksukausi keyword?)
 (s/def ::hoitokausi integer?)
-(s/def ::tunnit integer?)
-(s/def ::tuntipalkka integer?)
-(s/def ::kk-v integer?)
+(s/def ::tunnit number?)
+(s/def ::tuntipalkka number?)
+(s/def ::kk-v number?)
 
 (s/def ::yksikkohintainen-tyo (s/keys :req-un [::vuosi ::yksikkohinta]))
 (s/def ::tyot (s/coll-of ::yksikkohintainen-tyo))
 
-(s/def ::jhk (s/keys :req-un [::toimenkuva ::maksukausi ::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
+(s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
 
 (s/def ::tallenna-yksikkohintainen-tyo-kysely (s/keys :req-un [::urakka-id ::tehtava ::tyot]))
 (s/def ::tallenna-yksikkohintainen-tyo-vastaus any?)
 
-(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::jhkt]))
+(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
 (defrecord Budjettisuunnittelu []

@@ -541,8 +541,6 @@
                                                                                                                                                                                                                              (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [:hallinnolliset taulukko-avain :kuluva-vuosi])))))
                                                                                                                                                                       (= seuraavan-vuoden-otsikon-index index) (p/paivita-arvo osa :arvo
                                                                                                                                                                                                                                (fn [ikoni-ja-teksti]
-                                                                                                                                                                                                                                 (println " ---------- " taulukko-avain " --------- ")
-                                                                                                                                                                                                                                 (println (get-in tilat [:hallinnolliset taulukko-avain]))
                                                                                                                                                                                                                                  (assoc ikoni-ja-teksti :ikoni (tilan-ikoni (get-in tilat [:hallinnolliset taulukko-avain :tuleva-vuosi])))))
                                                                                                                                                                       :else osa))
                                                                                                                                                                   osat)))
@@ -724,7 +722,6 @@
                                                                               :toimenpide (get toimenpiteiden-avaimet toimenpide)}
                                                                              rahavarausten-pohjadata))
                                                toimenpiteet-rahavarauksilla))
-          _ (println "JOHTO JA HALLINTOKORVAUKSET " (:johto-ja-hallintokorvaukset vastaus))
           ;; Kantaan ollaan tallennettu kk-tasolla, koska integroituvat järjestelmät näin haluaa. Kumminkin frontilla
           ;; näytetään vain yksi rivi, joka on sama jokaiselle kk ja vuodelle
           ;; TODO Muut tilaajan rahavaraukset tuohon settiin
@@ -737,45 +734,44 @@
           rahavarauket-toimenpiteittain (group-by :toimenpide rahavaraukset-hoitokausile)
 
           yksikkohintaiset-tyot (:yksikkohintaiset-tyot vastaus)
-          jh-laskut-vuosille (fn [[data {:keys [vuodet]} kannasta?]]
-                               (assoc data :vuodet vuodet))
 
 
 
           johto-ja-hallintokorvaukset (:johto-ja-hallintokorvaukset vastaus)
-          jh-toimenkuva-jarjestys {"Sopimusvastaava" 0
-                                   "Vastuunalainen työnjohtaja" 1
-                                   "Päätoiminen apulainen" 2
-                                   "Apulainen/työnjohtaja" 3
-                                   "Viherhoidosta vastaava henkilö" 4
-                                   "Hankintavastaava" 5
-                                   "Harjoittelija" 6}
+          jh-toimenkuva-jarjestys {"sopimusvastaava" 0
+                                   "vastuunalainen työnjohtaja" 1
+                                   "päätoiminen apulainen" 2
+                                   "apulainen/työnjohtaja" 3
+                                   "viherhoidosta vastaava henkilö" 4
+                                   "hankintavastaava" 5
+                                   "harjoittelija" 6}
           jh-maksukausi-jarjestys {:molemmat 0
                                    :kesa 1
                                    :talvi 2}
-          jh-jarjestys (fn [{:keys [toimenkuva maksukausi]}]
+          jh-jarjestys (fn [{:keys [toimenkuva maksukausi hoitokaudet]}]
                          [(get jh-toimenkuva-jarjestys toimenkuva)
-                          (get jh-maksukausi-jarjestys maksukausi)])
+                          (get jh-maksukausi-jarjestys maksukausi)
+                          (apply min hoitokaudet)])
           jh-korvaukset (if (empty? johto-ja-hallintokorvaukset)
-                          [{:toimenkuva "Sopimusvastaava" :kk-v 12 :maksukausi :molemmat
+                          [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat
+                           {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Päätoiminen apulainen" :kk-v 7 :maksukausi :talvi
+                           {:toimenkuva "päätoiminen apulainen" :kk-v 7 :maksukausi :talvi
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Päätoiminen apulainen" :kk-v 5 :maksukausi :kesa
+                           {:toimenkuva "päätoiminen apulainen" :kk-v 5 :maksukausi :kesa
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi
+                           {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa
+                           {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat
+                           {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Hankintavastaava" :kk-v 4.5 :maksukausi :molemmat
+                           {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi :molemmat
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet #{0}}
-                           {:toimenkuva "Hankintavastaava" :kk-v 12 :maksukausi :molemmat
+                           {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
-                           {:toimenkuva "Harjoittelija" :kk-v 4 :maksukausi :molemmat
+                           {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat
                             :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}]
                           (into []
                                 (sort-by jh-jarjestys
@@ -787,28 +783,6 @@
                                               (group-by (fn [m]
                                                           (select-keys m #{:toimenkuva :kk-v :maksukausi :tunnit :tuntipalkka}))
                                                         johto-ja-hallintokorvaukset)))))
-
-
-
-
-          ;jh-laskut-pohjadata (jh-laskulla-pohjadata)
-          #_#_jh-laskut (eduction (tyokalut/generoi-pohjadata johto-ja-hallintokorvaukset
-                                                          {:tunnit-kk ""
-                                                           :tuntipalkka ""
-                                                           :yhteensa-kk ""})
-                              (map jh-laskut-vuosille)
-                              jh-laskut-pohjadata)
-
-          jh-yhteenvedot []                                 ;; TODO tämä kannasta
-          jh-yhteenvedot-pohjadata (jh-laskulla-pohjadata)  ;; sama pohjadata kuin laskulla
-          jh-yhteenveto (eduction (tyokalut/generoi-pohjadata jh-yhteenvedot
-                                                              {:hoitokausi-1 ""
-                                                               :hoitokausi-2 ""
-                                                               :hoitokausi-3 ""
-                                                               :hoitokausi-4 ""
-                                                               :hoitokausi-5 ""})
-                                  (map jh-laskut-vuosille)
-                                  jh-yhteenvedot-pohjadata)
 
           [erillishankinnat erillishankinnat-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen" "Erillishankinnat")
           [jh-toimistokulut jh-toimistokulut-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." "Toimistokulut")
@@ -846,7 +820,7 @@
                                             [toimenpide-avain (rahavarausten-taulukko (get rahavarauket-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true)]))
                                         toimenpiteiden-avaimet)))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-korvaukset true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-yhteenveto true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-korvaukset true))
                   (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) "Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen" true))
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) "Hoitourakan työnjohto" true))
@@ -1055,7 +1029,9 @@
                                                                        (let [[rivit rivi] polut
                                                                              rivi (get-in taulukko rivi)
                                                                              rivin-vuodet (:vuodet rivi)
-                                                                             [aloitus-vuosi lopetus-vuosi] [(apply min rivin-vuodet) (apply max rivin-vuodet)]]
+                                                                             [aloitus-vuosi lopetus-vuosi] [(apply min rivin-vuodet) (apply max rivin-vuodet)]
+                                                                             [aloitus-vuosi lopetus-vuosi] [(if (= aloitus-vuosi 0) 1 aloitus-vuosi)
+                                                                                                            (if (= lopetus-vuosi 0) 1 lopetus-vuosi)]]
                                                                          (p/paivita-arvo rivi :lapset
                                                                                          (fn [osat]
                                                                                            (tyokalut/mapv-range (inc aloitus-vuosi)
@@ -1184,27 +1160,33 @@
   (process-event [{:keys [osa polku-taulukkoon]}
                   {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
     (let [taulukko (get-in app polku-taulukkoon)
-          polku-osaan (p/osan-polku-taulukossa taulukko osa)
-          polku-riviin (butlast polku-osaan)
+          [polku-riviin polku-osaan] (p/osan-polku-taulukossa taulukko osa)
           rivi (get-in taulukko polku-riviin)
           rivin-lisatty-data (::p/lisatty-data rivi)
           rivin-oleelliset-arvot (tyokalut/rivin-arvot-otsikoilla taulukko rivi "Tunnit/kk" "Tuntipalkka" "kk/v")
           {:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
+          tallennettavat-hoitokaudet (clj-set/intersection (into #{}
+                                                                 (range (if (= kuluva-hoitovuosi 1) 0 kuluva-hoitovuosi)
+                                                                        (inc (- (pvm/vuosi loppupvm) (-> kuluvan-hoitovuoden-pvmt first pvm/vuosi)))))
+                                                           (-> rivi ::p/lisatty-data :hoitokaudet))
+          toimenkuva (:toimenkuva rivin-lisatty-data)
+          maksukausi (:maksukausi rivin-lisatty-data)
           lahetettava-data {:urakka-id urakka-id
+                            :toimenkuva toimenkuva
+                            :maksukausi maksukausi
                             :jhkt (mapv (fn [hoitokausi]
                                           (assoc (zipmap [:tunnit :tuntipalkka :kk-v]
                                                          rivin-oleelliset-arvot)
-                                                 :toimenkuva (:toimenkuva rivin-lisatty-data)
-                                                 :maksukausi (:maksukausi rivin-lisatty-data)
                                                  :hoitokausi hoitokausi))
-                                        (range kuluva-hoitovuosi
-                                               (- (pvm/vuosi loppupvm) (-> kuluvan-hoitovuoden-pvmt first pvm/vuosi))))}]
+                                        (sort tallennettavat-hoitokaudet))}]
       (tuck-apurit/post! app :tallenna-johto-ja-hallintokorvaukset
                          lahetettava-data
                          {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
                           :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
                           :viive 1000
-                          :tunniste ::tallenna-johto-ja-hallintokorvaukset
+                          :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
+                                             (str "tallenna-johto-ja-hallintokorvaukset "
+                                                  toimenkuva " " maksukausi " " tallennettavat-hoitokaudet))
                           :paasta-virhe-lapi? true})))
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]

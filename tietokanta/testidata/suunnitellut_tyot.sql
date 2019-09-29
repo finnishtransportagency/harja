@@ -503,16 +503,6 @@ INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta,
 INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, toimenpideinstanssi, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (SELECT id from toimenpideinstanssi where urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi='23151')), (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
 
 
--- JOHTO JA HALLINTOKORVAUKSET
-INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva)
-VALUES ('sopimusvastaava'),
-       ('vastuunalainen työnjohtaja'),
-       ('päätoiminen apulainen'),
-       ('apulainen/työnjohtaja'),
-       ('viherhoidosta vastaava henkilö'),
-       ('hankintavastaava'),
-       ('harjoittelija');
-
 -- Rovaniemen MHU-urakka
 --'Hallinnolliset toimenpiteet TP'
 DO $$
@@ -1034,18 +1024,18 @@ BEGIN
   END LOOP;
   FOR hoitokausi_ IN 0..5 LOOP
       IF hoitokausi_ = 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, "kk-v", maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 40, 4.5, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
       END IF;
       IF hoitokausi_ > 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, "kk-v", maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 7, 'talvi'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesä'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesa'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 7, 'talvi'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesä'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesa'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 4, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
@@ -1353,18 +1343,18 @@ BEGIN
   END LOOP;
   FOR hoitokausi_ IN 0..5 LOOP
       IF hoitokausi_ = 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, "kk-v", maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 40, 4.5, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
       END IF;
       IF hoitokausi_ > 0 THEN
-      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, kk_v, maksukausi, hoitokausi, luotu, "toimenkuva-id")
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, "kk-v", maksukausi, hoitokausi, luotu, "toimenkuva-id")
         VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 7, 'talvi'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesä'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesa'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 7, 'talvi'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesä'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+               ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'kesa'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 5, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 12, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava')),
                ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, 4, 'molemmat'::maksukausi, hoitokausi_, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));

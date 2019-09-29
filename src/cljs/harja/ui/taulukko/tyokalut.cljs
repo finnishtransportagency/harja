@@ -108,7 +108,11 @@
 
 (defn rivin-arvot-otsikoilla
   [taulukko rivi & otsikot]
-  (let [rivin-arvot (map #(p/arvo % :arvo) (p/arvo rivi :lapset))]
+  {:pre [(satisfies? p/Taulukko taulukko)
+         (satisfies? p/Jana rivi)
+         (every? string? otsikot)]}
+  (let [rivin-arvot (map #(p/arvo % :arvo)
+                         (p/arvo rivi :lapset))]
     (mapv (fn [otsikko]
             (nth rivin-arvot
                  (p/otsikon-index taulukko otsikko)))

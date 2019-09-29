@@ -29,5 +29,8 @@
    {::maksukausi (specql.transform/transform (specql.transform/to-keyword))
     ::toimenkuva (specql.rel/has-one ::toimenkuva-id
                                      ::johto-ja-hallintokorvaus-toimenkuva
-                                     ::id)}])
+                                     ::id)}
+   #?(:clj {::kk-v (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::tunnit (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
 
