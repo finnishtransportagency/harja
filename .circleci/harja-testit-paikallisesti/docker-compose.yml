@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  harja-kontti:
+    image: circleci-testi:latest
+    stdin_open: true
+    tty: true
+    links:
+      - possu
+  possu:
+    image: solita/harjadb:latest
+    stdin_open: true
+    tty: true
+    ports:
+      - "5432:5432"

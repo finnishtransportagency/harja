@@ -1,4 +1,4 @@
--- name: hae-teiden-hoidon-urakan-maksuerien-summat
+-- name: hae-hoitourakan-maksuerien-summat
 -- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
 -- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
 -- eri maksuerätyypeille.
@@ -61,6 +61,66 @@ FROM (SELECT
            ) AS lyht
       GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
 GROUP BY tpi_id;
+
+-- name: hae-teiden-hoidon-urakan-maksuerien-summat
+-- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
+-- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
+-- eri maksuerätyypeille.
+-- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain kolme.
+SELECT
+  tpi_id,
+  :urakka_id as urakka_id,
+  SUM(kokonaishintaisten_summa)  AS kokonaishintainen,
+  SUM(akilliset_hoitotyot_summa) AS "akillinen-hoitotyo",
+  SUM(muut_summa)                AS muu
+FROM (SELECT
+        SUM((laskutusyhteenveto_teiden_hoito).kht_laskutettu +
+            (laskutusyhteenveto_teiden_hoito).kht_laskutetaan)                 AS kokonaishintaisten_summa,
+        SUM((laskutusyhteenveto_teiden_hoito).yht_laskutettu +
+            (laskutusyhteenveto_teiden_hoito).akilliset_hoitotyot_laskutetaan) AS akilliset_hoitotyot_summa,
+        SUM((laskutusyhteenveto_teiden_hoito).vahinkojen_korjaukset_laskutettu +
+            (laskutusyhteenveto_teiden_hoito).vahinkojen_korjaukset_laskutetaan) AS muut_summa,
+        (laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id,
+        lyht.alkupvm,
+        lyht.loppupvm
+      FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+             SELECT
+               hk.alkupvm,
+               hk.loppupvm,
+               laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                  date_trunc('month', hk.loppupvm) :: DATE,
+                                  (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
+                                  :urakka_id :: INTEGER)
+             FROM (SELECT *
+                   FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
+                   WHERE loppupvm < now()) AS hk
+             UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+             SELECT
+               hk.alkupvm,
+               hk.loppupvm,
+               laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                  date_trunc('month', now()) :: DATE,
+                                  (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id :: INTEGER)
+             FROM (SELECT *
+                   FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
+                   WHERE alkupvm < now() AND loppupvm > now()) AS hk
+           ) AS lyht
+      GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
+GROUP BY tpi_id;
+
+-- name: hae-teiden-hoidon-urakan-maksuerien-summat-vanha
+SELECT m.numero                       as "maksueranumero",
+       m.tyyppi                       as "maksueratyyppi",
+       tpi.id                         as "toimenpideinstanssi",
+       lk.summa                       as "summa",
+       EXTRACT(month from l.erapaiva) as "kuukausi"
+FROM lasku_kohdistus lk
+       JOIN lasku l ON l.id = lk.lasku
+       JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.urakka = :urakka
+       left JOIN toimenpidekoodi tpk ON lk.tehtava = tpk.id
+       JOIN maksuera m ON lk.toimenpideinstanssi = m.toimenpideinstanssi AND lk.maksueratyyppi = m.tyyppi AND
+                          tpi.id = m.toimenpideinstanssi AND m.likainen IS TRUE
+ORDER BY m.numero;
 
 -- name: hae-urakan-maksuerat
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
@@ -220,13 +280,13 @@ WHERE numero = :numero AND (lukko IS NULL OR
 -- name: merkitse-maksuera-odottamaan-vastausta!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE maksuera
-SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE, lahetetty = CURRENT_TIMESTAMP
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta', likainen = FALSE, lahetetty = CURRENT_TIMESTAMP
 WHERE numero = :numero;
 
 -- name: merkitse-maksuera-lahetetyksi!
 -- Merkitsee maksuerän lähetetyksi
 UPDATE maksuera
-SET tila = 'lahetetty'
+SET lukko = NULL, tila = 'lahetetty'
 WHERE numero = :numero;
 
 -- name: merkitse-maksueralle-lahetysvirhe!

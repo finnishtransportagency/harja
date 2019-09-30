@@ -315,33 +315,34 @@
 // niin otetaan käyttöön vasta, kun
 // on aikaa tehdä kunnollinen Harjan kattava
 // tyyli muutos
-/*
-a:link {
-  color: #0068B3;
+
+.a-link() {
+  color: @focus-color;
   text-decoration: underline;
   text-decoration-style: solid;
   text-decoration-skip-ink: auto;
 }
-a:hover {
-  color: #00538F;
+.a-hover() {
+  color: @blue-dark;
   text-decoration: underline;
   text-decoration-style: dotted;
   text-decoration-skip-ink: auto;
 }
-a:focus {
-  color: #FFFFFF;
-  background-color: #00538F;
-  outline: 2px dashed #00538F;
+.a-focus() {
+  color: @white;
+  background-color: @blue-dark;
+  outline: 2px dashed @blue-dark;
+  text-decoration: none;
 }
-a:active {
-  color: #003E6B;
+.a-active() {
+  color: @blue-darker;
   text-decoration: underline;
   text-decoration-style: dashed;
   text-decoration-skip-ink: auto;
 }
-a:visited {
-  color: #0068B3;
+.a-visited() {
+  color: @focus-color;
   text-decoration: underline;
   text-decoration-style: solid;
   text-decoration-skip-ink: auto;
-}*/
+}

@@ -225,10 +225,10 @@
                                                                '(reify progress.message.jclient.RejectionListener
                                                                   (onRejectedMessage [this msg e]
                                                                     (try
-                                                                      (log/error
+                                                                      (taoensso.timbre/error
                                                                         (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
                                                                              " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
-                                                                      (log/error
+                                                                      (taoensso.timbre/error
                                                                         (str "Sonjalta tullut virhe msg: " msg
                                                                              " Virhekoodi: " (.getErrorCode e)))
                                                                       ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
@@ -236,8 +236,8 @@
 
                                                                       ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
                                                                       (catch Throwable t
-                                                                        (log/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
-                                                                                        (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
+                                                                        (taoensso.timbre/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
+                                                                                                    (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
         (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
     (catch JMSException e

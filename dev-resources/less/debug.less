@@ -5,8 +5,14 @@
   margin: 1em;
   overflow-y: scroll;
 
-  table { border-collapse: collapse; width: 100%; }
-  table, th, td { border: 1px solid black; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  table, th, td {
+    border: 1px solid black;
+  }
 
   .debug-animate {
     animation: debug-animation-keyframes 0.5s;
@@ -14,6 +20,306 @@
 }
 
 @keyframes debug-animation-keyframes {
-  from {background-color: green;}
-  to {background-color: white;}
+  from {
+    background-color: green;
+  }
+  to {
+    background-color: white;
+  }
+}
+
+
+@debug-napin-korkeus: 40px;
+@debug-sisallon-padding: 10px;
+
+.taulukko-debug {
+  .debug-nappi {
+    display: none;
+  }
+}
+
+.taulukko-debug-paalla {
+  &:hover {
+    box-shadow: 5px 5px 5px dodgerblue,
+      -5px -5px 5px dodgerblue;
+
+    .taulukko-debug {
+      text-align: center;
+      position: relative;
+
+      .debug-nappi {
+        display: inline;
+        position: absolute;
+        height: @debug-napin-korkeus;
+        top: -@debug-napin-korkeus;
+      }
+    }
+  }
+
+  &.taulukko-debug-paalla-debug-sisalto {
+    &:hover {
+      box-shadow: none;
+    }
+  }
+}
+
+.taulukko-debug-rivi {
+  box-shadow: 2px 2px 2px darkolivegreen,
+    -2px -2px 2px darkolivegreen;
+}
+
+.taulukko-debug-osa {
+  box-shadow: 1px 1px 1px dodgerblue,
+    -1px -1px 1px dodgerblue;
+}
+
+.taulukon-debug-sisalto {
+  overflow-y: visible;
+  position: fixed;
+  width: 100vw;
+  bottom: 0px;
+  left: 0px;
+  z-index: 99999;
+  padding: @debug-sisallon-padding;
+  word-break: keep-all;
+  text-align: left;
+
+  .taulukko-debug-taulukko {
+    overflow-x: scroll;
+    overflow-y: scroll;
+  }
+
+  &.debug-sisalto-ylhaalla {
+    background: white;
+    // height: 25vh;
+  }
+
+  &.debug-sisalto-alhaalla {
+    height: 0px;
+
+    .debug-toggle-nappi {
+      position: fixed;
+      bottom: @debug-sisallon-padding;
+      left: @debug-sisallon-padding;
+    }
+
+    .debug-sulje-nappi {
+      position: fixed;
+      bottom: @debug-sisallon-padding;
+      right: @debug-sisallon-padding;
+    }
+  }
+
+  .taulukko-debug-log-sisalto {
+    position: fixed;
+    right: 0px;
+    width: 20vw;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    outline: 1px solid #ECECEC;
+
+    .veto-nappi {
+      align-self: center;
+    }
+
+    .taulukko-debug-log {
+      display: flex;
+      flex-direction: column;
+    }
+    .loki {
+      display: flex;
+      flex-direction: column;
+      .poistot {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        color: red;
+      }
+
+      .lisaykset {
+        display: flex;
+        flex:1;
+        flex-direction: column;
+        color: green;
+      }
+
+      &:after {
+        content: '';
+        display:inline-block;
+        width: 100%;
+        border-bottom: 1px solid #AAAAAA;
+      }
+    }
+  }
+
+  .asia {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .asian-nappi {
+    background: transparent;
+    border: none;
+    text-align: left;
+  }
+
+  .asian-arvot {
+    padding-left: 40px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .debug-nappiryhma {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    .rivi {
+      position: relative;
+
+      .debug-toggle-nappi {
+        height: @debug-napin-korkeus;
+      }
+
+      .debug-sulje-nappi {
+        height: @debug-napin-korkeus;
+      }
+
+      .debug-log-nappi {
+        float: right;
+        height: @debug-napin-korkeus;
+      }
+    }
+
+    .rivi-irti {
+      width: 100%;
+      position: absolute;
+    }
+
+    .rivi-tasaisin-valein {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+  .drag-napin-wrapper {
+    display: flex;
+    width: 100%;
+    position: relative;
+
+    .debug-korkeus-nappi {
+      align-self: flex-start;
+      font-size: 1.5rem;
+      // Tehdään laatikosta mahdollisimman iso,
+      // jotta drag event pysyy hiiren liikkeissä mukana
+      &.aktiivinen {
+        width: 200vw;
+        left: -100vw;
+        padding-left: 100vw;
+        position: absolute;
+        right: auto;
+        height: 200vh;
+        top: -300px;
+        padding-top: 300px;
+      }
+    }
+  }
+
+  b, span {
+    display: inline-block;
+  }
+
+  .lista {
+    display: flex;
+
+    &.vector-sulku {
+      &:before {
+        content: '[';
+      }
+
+      &:after {
+        content: ']';
+      }
+    }
+
+    &.map-sulku {
+      &:before {
+        content: '{';
+      }
+
+      &:after {
+        content: '}';
+      }
+    }
+
+    &.set-sulku {
+      &:before {
+        content: '#{';
+      }
+
+      &:after {
+        content: '}';
+      }
+    }
+
+    &.lazy-sulku {
+      &:before {
+        content: 'lazy(';
+      }
+
+      &:after {
+        content: ')';
+      }
+    }
+
+    &.list-sulku {
+      &:before {
+        content: '(';
+      }
+
+      &:after {
+        content: ')';
+      }
+    }
+
+    &.object-sulku {
+      &:before {
+        content: 'object{';
+      }
+
+      &:after {
+        content: '}';
+      }
+    }
+  }
+
+  .listan-arvot {
+    > * {
+      padding: 0px 5px 0px 5px;
+    }
+  }
+
+  .mapin-arvot {
+    flex-direction: column;
+  }
+
+  .avain-arvo {
+    display: flex;
+
+    .keyword {
+      align-self: flex-start;
+      padding-right: 10px;
+      color: darkviolet;
+    }
+  }
+
+  .string {
+    color: seagreen;
+  }
+
+  .funktio {
+    color: dodgerblue;
+  }
+
 }
