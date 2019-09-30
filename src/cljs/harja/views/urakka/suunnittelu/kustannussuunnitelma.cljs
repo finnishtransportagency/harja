@@ -26,7 +26,7 @@
 
 (defn summa-formatointi [teksti]
   (let [teksti (clj-str/replace (str teksti) "," ".")]
-    (if (or (nil? teksti) (= "" teksti))
+    (if (or (nil? teksti) (= "" teksti) (js/isNaN teksti))
       "0,00"
       (fmt/desimaaliluku teksti 2 true))))
 
@@ -91,7 +91,9 @@
 
 (defn hintalaskuri
   [{:keys [otsikko selite hinnat]} {:keys [vuosi]}]
-  (if (some #(nil? (:summa %)) hinnat)
+  (if (some #(or (nil? (:summa %))
+                 (js/isNaN (:summa %)))
+            hinnat)
     [virhe-datassa hinnat]
     [:div.hintalaskuri
      [:h5 otsikko]
@@ -878,9 +880,27 @@
 (defn jh-korvauksen-rivit
   [{:keys [toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
   ;; Tässä voi rikastaa kannasta tulevaa tietoa tai lisätä rivejä datan perusteella
-  (let [hoitokausikohtaiset-rivit (cond
+  (let [arvot-nolliksi (fn [arvot alku-nollia? n]
+                         (into []
+                               (concat
+                                 (if alku-nollia?
+                                   (repeat 0 n)
+                                   (take n arvot))
+                                 (if alku-nollia?
+                                   (drop n arvot)
+                                   (repeat 0 (- (count arvot) n))))))
+        hoitokausikohtaiset-rivit (cond
                                     ;; Hankintavastaavalla mahdollisesti eri tiedot ensimmäisenä vuonna kuin 2-5
-                                    (and (= toimenkuva "hankintavastaava") (= kk-v 12)) [(assoc jh-korvaus :hoitokaudet #{1}) (update jh-korvaus :hoitokaudet disj 1)]
+                                    (and (= toimenkuva "hankintavastaava") (= kk-v 12)) [(-> jh-korvaus
+                                                                                             (assoc :hoitokaudet #{1})
+                                                                                             (update :tunnit-kk arvot-nolliksi false 1)
+                                                                                             (update :tuntipalkka arvot-nolliksi false 1)
+                                                                                             (update :yhteensa-kk arvot-nolliksi false 1))
+                                                                                         (-> jh-korvaus
+                                                                                             (update :hoitokaudet disj 1)
+                                                                                             (update :tunnit-kk arvot-nolliksi true 1)
+                                                                                             (update :tuntipalkka arvot-nolliksi true 1)
+                                                                                             (update :yhteensa-kk arvot-nolliksi true 1))]
                                     :else [jh-korvaus])
         toimenkuvan-maksukausiteksti-suluissa (case maksukausi
                                                 :kesa "kesäkausi"
@@ -978,9 +998,10 @@
                                                                                               (p/lisaa-fmt summa-formatointi)
                                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                               (update :parametrit (fn [parametrit]
-                                                                                                                    (assoc parametrit :size 2))))
+                                                                                                                    (assoc parametrit :size 2
+                                                                                                                                      :disabled? (not (contains? hoitokaudet kuluva-hoitovuosi))))))
                                                                                           :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
-                                                                                          :arvo tunnit-kk
+                                                                                          :arvo (get tunnit-kk (dec kuluva-hoitovuosi))
                                                                                           :class #{"input-default"}))
                                                                                       (fn [osa]
                                                                                         (p/aseta-arvo
@@ -1002,14 +1023,15 @@
                                                                                               (p/lisaa-fmt summa-formatointi)
                                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                               (update :parametrit (fn [parametrit]
-                                                                                                                    (assoc parametrit :size 2))))
+                                                                                                                    (assoc parametrit :size 2
+                                                                                                                                      :disabled? (not (contains? hoitokaudet kuluva-hoitovuosi))))))
                                                                                           :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
-                                                                                          :arvo tuntipalkka
+                                                                                          :arvo (get tuntipalkka (dec kuluva-hoitovuosi))
                                                                                           :class #{"input-default"}))
                                                                                       (fn [osa]
                                                                                         (-> osa
                                                                                             (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
-                                                                                                          :arvo yhteensa-kk)
+                                                                                                          :arvo (get yhteensa-kk (dec kuluva-hoitovuosi)))
                                                                                             (p/lisaa-fmt summa-formatointi)))
                                                                                       (fn [osa]
                                                                                         (p/aseta-arvo osa
@@ -1050,6 +1072,7 @@
                                           "4.vuosi/€" (hoitokausi-4 osa)
                                           "5.vuosi/€" (hoitokausi-5 osa))))
                                     osat)))
+        {kuluva-hoitovuosi :vuosi} (t/kuluva-hoitokausi)
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
@@ -1088,7 +1111,7 @@
                                                                     (if (or (contains? hoitokaudet hoitokausi)
                                                                             (and (= 1 hoitokausi)
                                                                                  (contains? hoitokaudet 0)))
-                                                                      (* tunnit-kk tuntipalkka kk-v)
+                                                                      (* (get yhteensa-kk (dec hoitokausi)) kk-v)
                                                                       ""))]
                                              (-> rivi-pohja
                                                  (p/aseta-arvo :id (keyword muokattu-toimenkuva)
@@ -1132,9 +1155,12 @@
                                       (map (fn [{:keys [toimenkuva muokattu-toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
                                              (into {}
                                                    (map (fn [hoitokausi]
-                                                          [(if (= 0 hoitokausi) 1 hoitokausi) (* tunnit-kk tuntipalkka kk-v)])
+                                                          (let [hoitokauden-index (if (= 0 hoitokausi)
+                                                                                    0 (dec hoitokausi))]
+                                                            [(if (= 0 hoitokausi) 1 hoitokausi)
+                                                             (* (get tunnit-kk hoitokauden-index) (get tuntipalkka hoitokauden-index) kk-v)]))
                                                         hoitokaudet)))))
-                                merge {} jh-korvaukset)
+                                (partial merge-with +) {} jh-korvaukset)
                               {1 :hoitokausi-1
                                2 :hoitokausi-2
                                3 :hoitokausi-3

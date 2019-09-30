@@ -756,36 +756,60 @@
                          [(get jh-toimenkuva-jarjestys toimenkuva)
                           (get jh-maksukausi-jarjestys maksukausi)
                           (apply min hoitokaudet)])
+          hoitokauden-arvot (fn [jhk-hoitokaudet f]
+                              (reduce (fn [arvot-hoitokausittain hoitokausi]
+                                        (let [hoitokauden-arvot (some #(when (or (= (:hoitokausi %) hoitokausi)
+                                                                                 (and (= hoitokausi 1)
+                                                                                      (= (:hoitokausi %) 0)))
+                                                                         %)
+                                                                      jhk-hoitokaudet)]
+                                          (conj arvot-hoitokausittain
+                                                (if hoitokauden-arvot
+                                                  (f hoitokauden-arvot)
+                                                  0))))
+                                      [] (range 1 6)))
           jh-korvaukset (if (empty? johto-ja-hallintokorvaukset)
                           [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "päätoiminen apulainen" :kk-v 7 :maksukausi :talvi
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "päätoiminen apulainen" :kk-v 5 :maksukausi :kesa
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi :molemmat
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet #{0}}
+                            :tunnit-kk [""] :tuntipalkka [""]
+                            :yhteensa-kk [""] :hoitokaudet #{0}}
                            {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat
-                            :tunnit-kk "" :tuntipalkka "" :yhteensa-kk "" :hoitokaudet (into #{} (range 1 6))}]
+                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
+                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}]
                           (into []
                                 (sort-by jh-jarjestys
                                          (map (fn [[jhk jhk-hoitokaudet]]
-                                                (-> jhk
-                                                    (clj-set/rename-keys {:tunnit :tunnit-kk})
-                                                    (assoc :yhteensa-kk (* (:tunnit jhk) (:tuntipalkka jhk))
-                                                           :hoitokaudet (into #{} (map :hoitokausi jhk-hoitokaudet)))))
+                                                (let []
+                                                  (assoc jhk :yhteensa-kk (hoitokauden-arvot jhk-hoitokaudet (fn [{:keys [tunnit tuntipalkka]}]
+                                                                                                               (* tunnit tuntipalkka)))
+                                                             :hoitokaudet (into #{} (map :hoitokausi jhk-hoitokaudet))
+                                                             :tunnit-kk (hoitokauden-arvot jhk-hoitokaudet :tunnit)
+                                                             :tuntipalkka (hoitokauden-arvot jhk-hoitokaudet :tuntipalkka))))
                                               (group-by (fn [m]
-                                                          (select-keys m #{:toimenkuva :kk-v :maksukausi :tunnit :tuntipalkka}))
+                                                          (select-keys m #{:toimenkuva :kk-v :maksukausi}))
                                                         johto-ja-hallintokorvaukset)))))
 
           [erillishankinnat erillishankinnat-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen" "Erillishankinnat")
@@ -1005,7 +1029,8 @@
                                                                                "Kiinteät" " ")))))]
       (assoc-in app polku uusi-taulukko)))
   PaivitaJHRivit
-  (process-event [{:keys [paivitetty-osa]} app]
+  (process-event [{:keys [paivitetty-osa]}
+                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
     ;; Nämä arvothan voisi päivittää automaattisesti Taulukon TilanSeuranta protokollan avulla, mutta se aiheuttaisi
     ;; saman agregoinnin useaan kertaan. Lasketaan tässä kerralla kaikki tarvittava.
     (let [laskulla-taulukon-polku [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
@@ -1035,7 +1060,10 @@
                                                                              rivi (get-in taulukko rivi)
                                                                              rivin-vuodet (:vuodet rivi)
                                                                              [aloitus-vuosi lopetus-vuosi] [(apply min rivin-vuodet) (apply max rivin-vuodet)]
-                                                                             [aloitus-vuosi lopetus-vuosi] [(if (= aloitus-vuosi 0) 1 aloitus-vuosi)
+                                                                             [aloitus-vuosi lopetus-vuosi] [(cond
+                                                                                                              (= aloitus-vuosi 0) 1
+                                                                                                              (< aloitus-vuosi kuluva-hoitovuosi) kuluva-hoitovuosi
+                                                                                                              :else aloitus-vuosi)
                                                                                                             (if (= lopetus-vuosi 0) 1 lopetus-vuosi)]]
                                                                          (p/paivita-arvo rivi :lapset
                                                                                          (fn [osat]
@@ -1174,7 +1202,7 @@
           {:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
           tallennettavat-hoitokaudet (clj-set/intersection (into #{}
                                                                  (range (if (= kuluva-hoitovuosi 1) 0 kuluva-hoitovuosi)
-                                                                        (inc (- (pvm/vuosi loppupvm) (-> kuluvan-hoitovuoden-pvmt first pvm/vuosi)))))
+                                                                        6))
                                                            (-> rivi ::p/lisatty-data :hoitokaudet))
           toimenkuva (:toimenkuva rivin-lisatty-data)
           maksukausi (:maksukausi rivin-lisatty-data)

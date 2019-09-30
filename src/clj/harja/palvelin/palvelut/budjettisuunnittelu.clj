@@ -164,9 +164,9 @@
   ;"urakka-id", "toimenkuva-id", maksukausi, hoitokausi, tunnit, tuntipalkka
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [toimenkuva-id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
-                                                              #{::bs/id ::bs/toimenkuva}
-                                                              {::bs/toimenkuva toimenkuva}))
+                            (let [toimenkuva-id (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
+                                                                       #{::bs/id}
+                                                                       {::bs/toimenkuva toimenkuva})))
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
                                                               #{::bs/id ::bs/toimenkuva-id ::bs/maksukausi ::bs/hoitokausi}
                                                               {::bs/urakka-id urakka-id
