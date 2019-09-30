@@ -51,9 +51,9 @@
 (defn tallenna-kokonaishintaiset-tyot
   "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-    (oikeudet/vaadi-kirjoitusoikeus
-      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
+  ;(let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
+  ;  (oikeudet/vaadi-kirjoitusoikeus
+  ;    (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user urakka-id))
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
     (let [nykyiset-arvot (hae-urakan-kokonaishintaiset-tyot c user urakka-id)
@@ -84,7 +84,7 @@
           (assoc t :osuus-hoitokauden-summasta
                  (when-let [p (:prosentti t)]
                    (big/unwrap (big/div p (big/->big 100)))))
-          (assoc t :luoja (:id user))
+          (assoc t :kayttaja (:id user))
 
           (if (not (tyot-kannassa (tyo-avain t)))
             (q/lisaa-kokonaishintainen-tyo<! c t)

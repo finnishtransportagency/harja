@@ -1,9 +1,10 @@
 {:main harja.asiakas.main
  :optimizations :advanced
- ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
- :recompile-dependents false
  ;;:preamble ["reagent/react.min.js"]
  :output-to "resources/public/js/harja.js"
+
+ :closure-warnings {:non-standard-jsdoc :off}
+ :recompile-dependents true
 
  ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
  ;:source-map "resources/public/js/harja.js.map"
