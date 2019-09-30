@@ -261,9 +261,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                    (reset! auki? false)))) nil)))
         alasvetolista (fn [{:keys [ryhmissa? nayta-ryhmat ryhman-otsikko ryhmitellyt-itemit
                                    li-luokka-fn itemit-komponentteja? format-fn valitse-fn
-                                   vaihtoehdot disabled-vaihtoehdot]}]
-                        [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
-                                                                        @max-korkeus @avautumissuunta)}
+                                   vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki?]}]
+                        [:ul (if vayla-tyyli?
+                               {:style {:display (if auki?
+                                                   "block"
+                                                   "none")}}
+                               {:class "dropdown-menu livi-alasvetolista"
+                                :style (avautumissuunta-ja-korkeus-tyylit
+                                         @max-korkeus @avautumissuunta)})
                          (doall
                            (if ryhmissa?
                              (for [ryhma nayta-ryhmat]
@@ -286,16 +291,20 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
-          [:div.dropdown.livi-alasveto (merge
-                                         {:class (str class " " (when @auki? "open"))}
-                                         (when data-cy
-                                           {:data-cy data-cy}))
+          [:div (merge
+                  {:class (str (if vayla-tyyli?
+                                 "select-default"
+                                 "dropdown livi-alasveto")
+                               (when class (str " " class))
+                               (when @auki? " open"))}
+                  (when data-cy
+                    {:data-cy data-cy}))
            [:button.nappi-alasveto
             {:class (when disabled "disabled")
              :type "button"
@@ -309,11 +318,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                       :valitse-fn valitse-fn
                                       :format-fn format-fn})}
             [:div.valittu (or naytettava-arvo (format-fn valinta))]
-            [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
+            (if (and @auki? vayla-tyyli?)
+              ^{:key :auki}
+              [:span.livicon-chevron-up {:class (when disabled "disabled")}]
+              ^{:key :kiinni}
+              [:span.livicon-chevron-down {:class (when disabled "disabled")}])]
            [alasvetolista (merge (select-keys asetukset #{:nayta-ryhmat :ryhman-otsikko :li-luokka-fn :itemit-komponentteja?
-                                                          :disabled-vaihtoehdot})
+                                                          :disabled-vaihtoehdot :vayla-tyyli?})
                                  {:ryhmissa? ryhmissa? :ryhmitellyt-itemit ryhmitellyt-itemit
-                                  :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot})]])))))
+                                  :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
+                                  :auki? @auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto

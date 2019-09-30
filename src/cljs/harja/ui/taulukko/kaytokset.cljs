@@ -1,5 +1,6 @@
 (ns harja.ui.taulukko.kaytokset
-  (:require [harja.loki :as loki]))
+  (:require [harja.loki :as loki]
+            [clojure.string :as clj-str]))
 
 (defn numero-re
   ([] (numero-re {}))
@@ -23,18 +24,44 @@
               :else nil)))
 
 (defmethod lisaa-kaytos :eventin-arvo
-  [_ toiminto]
+  [{{:keys [f]} :eventin-arvo} toiminto]
   (comp toiminto
         (fn [event]
-          (.. event -target -value))))
+          (let [arvo (.. event -target -value)]
+            (if f
+              (f arvo)
+              arvo)))))
 
 (defmethod lisaa-kaytos :positiivinen-numero
+  [{{:keys [kokonaisosan-maara desimaalien-maara]} :positiivinen-numero} toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
+                                                                                    :desimaalien-maara desimaalien-maara}))
+                                               arvo)]
+            (when (or (= "" arvo) positiivinen-arvo?)
+              arvo)))))
+
+(defmethod lisaa-kaytos :numero-pisteella
   [_ toiminto]
   (comp toiminto
         (fn [arvo]
-          (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re)) arvo)]
-            (when (or (= "" arvo) positiivinen-arvo?)
-              arvo)))))
+          (when (string? arvo)
+            (clj-str/replace arvo #"," ".")))))
+
+(defmethod lisaa-kaytos :str->int
+  [_ toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (when (re-matches (re-pattern (numero-re)) arvo)
+            (js/parseInt arvo)))))
+
+(defmethod lisaa-kaytos :str->number
+  [_ toiminto]
+  (comp toiminto
+        (fn [arvo]
+          (when (re-matches (re-pattern (numero-re)) arvo)
+            (js/Number arvo)))))
 
 (defmethod lisaa-kaytos :default
   [kaytos toiminto]

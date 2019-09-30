@@ -43,7 +43,9 @@ ORDER BY id;
 UPDATE kokonaishintainen_tyo
 SET summa = :summa,
     "osuus-hoitokauden-summasta" = :osuus-hoitokauden-summasta,
-    maksupvm = :maksupvm
+    maksupvm = :maksupvm,
+    muokkaaja = :kayttaja,
+    muokattu = current_timestamp
 WHERE toimenpideinstanssi = :toimenpideinstanssi AND sopimus = :sopimus
       AND vuosi = :vuosi AND kuukausi = :kuukausi;
 
@@ -51,8 +53,8 @@ WHERE toimenpideinstanssi = :toimenpideinstanssi AND sopimus = :sopimus
 -- name: lisaa-kokonaishintainen-tyo<!
 -- Lisää kokonaishintaisen tyon
 INSERT INTO kokonaishintainen_tyo
-(summa, "osuus-hoitokauden-summasta", maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi, luoja)
-VALUES (:summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja);
+(summa, "osuus-hoitokauden-summasta", maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi, luoja, luotu)
+VALUES (:summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :kayttaja, current_timestamp);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee kokonaishintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
