@@ -961,6 +961,10 @@
                                                             (fn [osa]
                                                               (p/aseta-arvo osa
                                                                             :arvo "kk/v"))))))
+        disabloidaanko-rivi? (fn [hoitokaudet]
+                               (and (every? false? (map #(>= % kuluva-hoitovuosi) hoitokaudet))
+                                    (not (and (= 1 kuluva-hoitovuosi)
+                                              (contains? hoitokaudet 0)))))
         syottorivi-fn (fn [syotto-pohja]
                         (into []
                               (mapcat (fn [jh-korvaus]
@@ -999,7 +1003,7 @@
                                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                               (update :parametrit (fn [parametrit]
                                                                                                                     (assoc parametrit :size 2
-                                                                                                                                      :disabled? (not (contains? hoitokaudet kuluva-hoitovuosi))))))
+                                                                                                                                      :disabled? (disabloidaanko-rivi? hoitokaudet)))))
                                                                                           :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
                                                                                           :arvo (get tunnit-kk (dec kuluva-hoitovuosi))
                                                                                           :class #{"input-default"}))
@@ -1024,7 +1028,7 @@
                                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
                                                                                               (update :parametrit (fn [parametrit]
                                                                                                                     (assoc parametrit :size 2
-                                                                                                                                      :disabled? (not (contains? hoitokaudet kuluva-hoitovuosi))))))
+                                                                                                                                      :disabled? (disabloidaanko-rivi? hoitokaudet)))))
                                                                                           :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
                                                                                           :arvo (get tuntipalkka (dec kuluva-hoitovuosi))
                                                                                           :class #{"input-default"}))

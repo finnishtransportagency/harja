@@ -667,7 +667,7 @@
                    {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
-          {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm} (-> @tiedot/tila :yleiset :urakka)
+          {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
           hankintojen-taydennys-fn (fn [hankinnat]
                                      (sequence
                                        (comp
@@ -770,35 +770,35 @@
                                       [] (range 1 6)))
           jh-korvaukset (if (empty? johto-ja-hallintokorvaukset)
                           [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "päätoiminen apulainen" :kk-v 7 :maksukausi :talvi
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "päätoiminen apulainen" :kk-v 5 :maksukausi :kesa
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi :molemmat
-                            :tunnit-kk [""] :tuntipalkka [""]
-                            :yhteensa-kk [""] :hoitokaudet #{0}}
+                            :tunnit-kk [0] :tuntipalkka [0]
+                            :yhteensa-kk [0] :hoitokaudet #{0}}
                            {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}
                            {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat
-                            :tunnit-kk (into [] (repeat 5 "")) :tuntipalkka (into [] (repeat 5 ""))
-                            :yhteensa-kk (into [] (repeat 5 "")) :hoitokaudet (into #{} (range 1 6))}]
+                            :tunnit-kk (into [] (repeat 5 0)) :tuntipalkka (into [] (repeat 5 0))
+                            :yhteensa-kk (into [] (repeat 5 0)) :hoitokaudet (into #{} (range 1 6))}]
                           (into []
                                 (sort-by jh-jarjestys
                                          (map (fn [[jhk jhk-hoitokaudet]]
@@ -811,6 +811,23 @@
                                               (group-by (fn [m]
                                                           (select-keys m #{:toimenkuva :kk-v :maksukausi}))
                                                         johto-ja-hallintokorvaukset)))))
+          ;; TODO tähän parempi ratkaisu
+          _ (when (empty? johto-ja-hallintokorvaukset)
+              (doseq [{:keys [toimenkuva kk-v maksukausi tunnit-kk tuntipalkka hoitokaudet]} jh-korvaukset]
+                (let [lahetettava-data {:urakka-id urakka-id
+                                        :toimenkuva toimenkuva
+                                        :maksukausi maksukausi
+                                        :jhkt (mapv (fn [hoitokausi]
+                                                      {:hoitokausi hoitokausi
+                                                       :tunnit 0
+                                                       :tuntipalkka 0
+                                                       :kk-v kk-v})
+                                                    (sort hoitokaudet))}]
+                  (tuck-apurit/post! app :tallenna-johto-ja-hallintokorvaukset
+                                     lahetettava-data
+                                     {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
+                                      :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
+                                      :paasta-virhe-lapi? true}))))
 
           [erillishankinnat erillishankinnat-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen" "Erillishankinnat")
           [jh-toimistokulut jh-toimistokulut-kannasta] (maara-kk-taulukon-data yksikkohintaiset-tyot "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." "Toimistokulut")
