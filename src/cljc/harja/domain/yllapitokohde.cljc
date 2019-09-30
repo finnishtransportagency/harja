@@ -806,10 +806,11 @@ taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
   ;; oudolla tavalla tuon :pred avaimen alta, niinkuin muoto-vaarin funktiossa tehdään.
   (let [tyhja-fn (fn [avain]
                    (ongelma? validoitu-muoto (fn [virhe-map]
-                                               (= #?(:clj (try (-> virhe-map :pred last last)
-                                                               ;; last funktion kutsuminen symbolille aiheuttaa virheen
-                                                               (catch Exception e
-                                                                 nil))
+                                               (= #?(:clj  (or (try (-> virhe-map :pred last last)
+                                                                    ;; last funktion kutsuminen symbolille aiheuttaa virheen
+                                                                    (catch Exception e
+                                                                      nil))
+                                                               (-> virhe-map :path first))
                                                      :cljs (and (symbol? (:pred virhe-map))
                                                                 (-> virhe-map :path first)))
                                                   avain))))

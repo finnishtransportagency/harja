@@ -73,7 +73,7 @@
         :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
         :kayttajatunnus "Harja"
         :salasana #=(slurp "../.harja/turi-salasana")
-        :paivittainen-lahetysaika [12 50 00]}
+        :paivittainen-lahetysaika [0 0 0 ]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true

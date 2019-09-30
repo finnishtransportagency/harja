@@ -59,14 +59,14 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Soratietarkastusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.soratietarkastus/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :laskutusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :laaduntarkastusraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -75,14 +75,14 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Laaduntarkastusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.laaduntarkastus/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :sanktioraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Sanktioiden yhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.sanktio/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :kelitarkastusraportti
     :parametrit [{:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}
@@ -90,7 +90,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Kelitarkastusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.kelitarkastus/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :tiestotarkastusraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -98,7 +98,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Tiestötarkastusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.tiestotarkastus/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :ymparistoraportti
     :parametrit [{:tyyppi "urakoittain", :konteksti nil, :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -106,7 +106,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Ympäristöraportti"
     :suorita #'harja.palvelin.raportointi.raportit.ymparisto/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :turvallisuus
     :parametrit [{:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -116,7 +116,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Turvallisuusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat/suorita
-    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
+    :urakkatyyppi (set/union #{:hoito :teiden-hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-kuukausiraportti
     :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -127,14 +127,14 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Yksikköhintaiset työt kuukausittain"
     :suorita #'harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :materiaaliraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Materiaaliraportti"
     :suorita #'harja.palvelin.raportointi.raportit.materiaali/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :laatupoikkeamaraportti
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -142,7 +142,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Laatupoikkeamaraportti"
     :suorita #'harja.palvelin.raportointi.raportit.laatupoikkeama/suorita
-    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
+    :urakkatyyppi (set/union #{:hoito :teiden-hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-tehtavien-summat
     :parametrit [{:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -153,7 +153,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Yksikköhintaiset työt tehtävittäin"
     :suorita #'harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :tyomaakokous
     :parametrit [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Materiaaliraportti"}
@@ -177,7 +177,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Työmaakokousraportti"
     :suorita #'harja.palvelin.raportointi.raportit.tyomaakokous/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :toimenpidepaivat
     :parametrit [{:tyyppi "hoitoluokat", :konteksti nil, :pakollinen true, :nimi "Hoitoluokat"}
@@ -185,21 +185,21 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Toimenpidepäivät"
     :suorita #'harja.palvelin.raportointi.raportit.toimenpidepaivat/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :suolasakko
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Suolasakkoraportti"
     :suorita #'harja.palvelin.raportointi.raportit.suolasakko/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :indeksitarkistus
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Indeksitarkistusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.indeksitarkistus/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :tiemerkinnan-kustannusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
@@ -216,7 +216,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Ilmoitusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.ilmoitus/suorita
-    :urakkatyyppi #{:hoito :paallystys :tiemerkinta :kaikki}}
+    :urakkatyyppi #{:hoito :teiden-hoito :paallystys :tiemerkinta :kaikki}}
 
    {:nimi :siltatarkastus
     :parametrit [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}
@@ -224,7 +224,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Siltatarkastusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.siltatarkastus/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :muutos-ja-lisatyot
     :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -236,7 +236,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Muutos- ja lisätyöt"
     :suorita #'harja.palvelin.raportointi.raportit.muutos-ja-lisatyot/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :toimenpidekilometrit
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -244,7 +244,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Toimenpidekilometrit"
     :suorita #'harja.palvelin.raportointi.raportit.toimenpidekilometrit/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :toimenpideajat
     :parametrit [{:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -255,7 +255,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Toimenpiteiden ajoittuminen"
     :suorita #'harja.palvelin.raportointi.raportit.toimenpideajat/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :erilliskustannukset
     :parametrit [{:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
@@ -263,14 +263,14 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Erilliskustannukset"
     :suorita #'harja.palvelin.raportointi.raportit.erilliskustannukset/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :valitavoiteraportti
     :parametrit [{:tyyppi nil, :konteksti nil, :pakollinen nil, :nimi nil}]
     :konteksti #{"urakka"}
     :kuvaus "Välitavoiteraportti"
     :suorita #'harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita
-    :urakkatyyppi (set/union #{:hoito} urakka-domain/vesivayla-urakkatyypit)}
+    :urakkatyyppi (set/union #{:hoito :teiden-hoito} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-tyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -278,7 +278,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Yksikköhintaiset työt päivittäin"
     :suorita #'harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi :yllapidon-aikataulu
     :parametrit [{:tyyppi :valinta
@@ -335,7 +335,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Pohjavesialueiden suolatoteumat"
     :suorita #'harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat/suorita
-    :urakkatyyppi #{:hoito}}])
+    :urakkatyyppi #{:hoito :teiden-hoito}}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

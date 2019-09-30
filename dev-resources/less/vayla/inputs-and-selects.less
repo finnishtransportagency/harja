@@ -6,6 +6,23 @@
   height: 40px;
   outline-style: solid;
 }
+.select-button-yhteiset-arvot() {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  border: none;
+}
+.select-ul-yhteiset-arvot() {
+  list-style: none;
+  padding-left: 0px;
+  background-color: @white;
+}
+.select-li-yhteiset-arvot () {
+  height: 40px;
+}
 .font-yhteiset-arvot() {
   font-family: "Open Sans", sans-serif;
   font-style: normal;
@@ -41,6 +58,20 @@ label {
     outline-color: @gray200;
     outline-width: 1px;
     outline-offset: -1px;
+
+    &-nakoinen {
+      .font-yhteiset-arvot();
+      .input-yhteiset-arvot();
+      outline-color: @gray200;
+      outline-width: 1px;
+      outline-offset: -1px;
+
+      display: flex;
+      > * {
+        align-self: center;
+        padding-left: 5px;
+      }
+    }
 
     &:hover {
       outline-color: @gray200;
@@ -82,10 +113,43 @@ label {
   }
 }
 
-.select- {
-  &default {
+.select {
+  &-default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
+    > button {
+      .select-button-yhteiset-arvot();
+    }
+    > ul {
+      .select-ul-yhteiset-arvot();
+
+      > li {
+        .select-li-yhteiset-arvot();
+        display: flex;
+        > * {
+          align-self: center;
+          padding-left: 10px;
+          flex: 1;
+          line-height: 40px;
+        }
+        a {
+          color: inherit;
+          &:hover {
+            color:inherit;
+            text-decoration: none;
+          }
+        }
+        &:hover {
+          background-color: @gray245;
+        }
+
+        &:focus {
+          background-color: @gray235;
+        }
+      }
+    }
+    position: relative;
+    z-index: 100;
     outline-color: @gray200;
     outline-width: 1px;
     outline-offset: -1px;
@@ -108,10 +172,43 @@ label {
     }
   }
 
-  &error- {
+  &-error- {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
+      > button {
+        .select-button-yhteiset-arvot();
+      }
+      > ul {
+        .select-ul-yhteiset-arvot();
+
+        > li {
+          .select-li-yhteiset-arvot();
+          display: flex;
+          > * {
+            align-self: center;
+            padding-left: 10px;
+            flex: 1;
+            line-height: 40px;
+          }
+          a {
+            color: inherit;
+            &:hover {
+              color:inherit;
+              text-decoration: none;
+            }
+          }
+          &:hover {
+            background-color: @gray245;
+          }
+
+          &:focus {
+            background-color: @gray235;
+          }
+        }
+      }
+      position: relative;
+      z-index: 100;
       outline-color: @red;
       outline-width: 1px;
       outline-offset: -1px;

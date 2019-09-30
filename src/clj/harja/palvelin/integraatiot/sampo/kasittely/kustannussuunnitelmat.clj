@@ -48,23 +48,12 @@
         loppu (Calendar/getInstance)]
     (aseta-pvm alku (:alkupvm vuosi) Calendar/JANUARY 1)
     (aseta-pvm loppu (:loppupvm vuosi) Calendar/DECEMBER 31)
-    {:alkupvm (pvm/aika-iso8601 (.getTime alku))
+    {:alkupvm  (pvm/aika-iso8601 (.getTime alku))
      :loppupvm (pvm/aika-iso8601 (.getTime loppu))
-     :summa summa}))
-
-
-(defn laske-kustannussuunnitelman-vuosisummat
-  "Käytetään maanteiden hoidon urakoissa (MHU). Laskee yhteen relevantit budjettisuunnitelmat
-  (kiinteahintaiset_tyot, kustannusarvioidut_tyot (tyypiltään laskutettava-tyo) ja yksikkohintaiset_tyot [sic].
-  Palauttaa vuodet ja yhteenlasketut summat, joita tee-vuosisummat-funktio voi hyödyntää."
-  [db tyyppi]
-  true ;;TODO
-
-  )
+     :summa    summa}))
 
 (defn tee-oletus-vuosisummat [vuodet]
   (map (fn [vuosi] (rakenna-vuosi vuosi 1)) vuodet))
-
 
 ;; Jos summa on 0 euroa, summaksi asetetaan 1 euro. Sampo-järjestelmän vaatimus.
 ;; Vaatimus koskee kokonaishintaisten ja yksikköhintaisten toimenpiteiden lisäksi lisä-ja muutostöitä.
@@ -75,28 +64,40 @@
               (rakenna-vuosi vuosi summa)))
           vuodet)))
 
+(defn tee-vuosisummat-teiden-hoidolle
+  "Käytetään maanteiden hoidon urakoissa (MHU). Laskee yhteen relevantit budjettisuunnitelmat
+(kiinteahintaiset_tyot, kustannusarvioidut_tyot (tyypiltään laskutettava-tyo) ja yksikkohintaiset_tyot [sic].
+Palauttaa vuodet ja yhteenlasketut summat."
+  [vuodet luvut]
+
+  (tee-vuosisummat vuodet
+                   (map (fn [x] {:vuosi (first x) :summa (apply + (map
+                                                                    (fn [y] (:summa (konv/decimal->double y :summa))) (second x)))})
+                        (group-by :vuosi luvut))))
+
 (defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
   (let [vuodet (mapv (fn [vuosi]
-                       {:alkupvm (first vuosi)
+                       {:alkupvm  (first vuosi)
                         :loppupvm (second vuosi)})
                      (pvm/urakan-vuodet (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
                                         (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))
         maksueratyyppi (:tyyppi (:maksuera maksueran-tiedot))
         urakkatyyppi (get-in maksueran-tiedot [:urakka :tyyppi])]
+
     (case maksueratyyppi
       "kokonaishintainen" (if (= "teiden-hoito" urakkatyyppi)
-                            (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)) ;;TODO
+                            (tee-vuosisummat-teiden-hoidolle vuodet (kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-kokonaishintaiset-summat db numero))
                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
       "lisatyo" (if (contains? #{"vesivayla-kanavien-hoito" "vesivayla-kanavien-korjaus"} urakkatyyppi)
                   (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
                   (tee-oletus-vuosisummat vuodet))
       "akillinen-hoitotyo" (if (= "teiden-hoito" urakkatyyppi)
-                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
-                             (tee-oletus-vuosisummat vuodet)) ;;TODO
+                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-akillisten-hoitotoiden-summat db numero))
+                             (tee-oletus-vuosisummat vuodet))
       "muu" (if (= "teiden-hoito" urakkatyyppi)
-              (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
-              (tee-oletus-vuosisummat vuodet)) ;;TODO
+              (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-vahinkojen-korjausten-summat db numero))
+              (tee-oletus-vuosisummat vuodet))
       (tee-oletus-vuosisummat vuodet))))
 
 (defn valitse-lpk-tilinumero
@@ -110,7 +111,7 @@
     "20143" "43020000" ;; Soratien rakenne (urakkatyyppi: hoito)
     "20179" "43020000" ;; Varuste ja laite korjaus (urakkatyyppi: hoito)
     "20191" "43020000" ;; MHU Ylläpito (urakkatyyppi: teiden-hoito)
-    "23151" "43020000" ;; Hallinnolliset toimenpiteet (urakkatyyppi: teiden-hoito, urakkatyypissä hoito HJU-urakat)
+    "23151" "43020000" ;; MHU ja HJU Hoidon johto (nk. hallinnolliset toimenpiteet, urakkatyyppi: teiden-hoito, urakkatyypissä hoito HJU-urakat)
     "27105" "43020000" ;; Vesiliikenteen käyttöpalvelut (urakkatyyppi: kanava)
     "20106" "12980010" ;; Päällyste (urakkatyyppi: paallystys). Kustannussuunnitelmia tai maksueriä ei lähetetä.
     "20135" "12980010" ;; Tiesilta (urakkatyyppi: tiemerkinta). Kustannussuunnitelmia tai maksueriä ei lähetetä.
@@ -120,12 +121,12 @@
     "141217" "12980010" ;; Varuste ja laite (urakkatyyppi: hoito)
     :else 0
     (let [viesti
-            (format "Toimenpidekoodilla '%1$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle (numero: %s)."
-                    toimenpidekoodi numero)]
-        (log/warn viesti)
-        (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
-                 :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
-                            :viesti viesti}]}))))
+          (format "Toimenpidekoodilla '%1$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle (numero: %s)."
+                  toimenpidekoodi numero)]
+      (log/warn viesti)
+      (throw+ {:type    :virhe-sampo-kustannussuunnitelman-lahetyksessa
+               :virheet [{:koodi  :lpk-tilinnumeroa-ei-voi-paatella
+                          :viesti viesti}]}))))
 
 (defn hae-maksueran-tiedot [db numero]
   (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (maksuerat/hae-lahetettava-maksuera db numero)))
@@ -161,7 +162,7 @@
           (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
-      (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+
+      (throw+ {:type    virheet/+tuntematon-kustannussuunnitelma+
                :virheet [{:koodi :tuntematon-kustannussuunnitelma :viesti virheviesti}]}))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
