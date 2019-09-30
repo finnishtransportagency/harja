@@ -785,6 +785,11 @@
                          "vahinkojen-korjaukset" "Kolmansien osapuolien aih. vaurioiden korjaukset"
                          "akillinen-hoitotyo" "Äkilliset hoitotyöt"
                          "muut-rahavaraukset" "Rahavaraus lupaukseen 1"))
+        tyyppi->tallennettava-asia (fn [tyyppi]
+                                     (case tyyppi
+                                       "vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot
+                                       "akillinen-hoitotyo" :akilliset-hoitotyot
+                                       "muut-rahavaraukset" :rahavaraus-lupaukseen-1))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (p/aseta-arvo :id :otsikko-rivi
@@ -828,7 +833,7 @@
                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                                 :on-blur (fn [arvo]
                                                                                                            (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                           (e! (t/->TallennaRahavaraukset tyyppi arvo toimenpide-avain))
+                                                                                                           (e! (t/->TallennaKustannusarvoituTyo (tyyppi->tallennettava-asia tyyppi) toimenpide-avain arvo nil))
                                                                                                            (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))
                                                                                                 :on-key-down (fn [event]
                                                                                                                (when (= "Enter" (.. event -key))
@@ -1213,7 +1218,7 @@
                         :class #{}})))
 
 (defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi voi-muokata? taulukko-elementin-id
-                         {:keys [maara-kk yhteensa]} tehtava on-oikeus?]
+                         {:keys [maara-kk yhteensa]} tallennettava-asia on-oikeus?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
@@ -1262,7 +1267,7 @@
                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                         :on-blur (fn [arvo]
                                                                                                    (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                   (e! (t/->TallennaYksikkohintainentyo tehtava arvo)))
+                                                                                                   (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil)))
                                                                                         :on-key-down (fn [event]
                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                          (.. event -target blur)))}

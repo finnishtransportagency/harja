@@ -29,3 +29,6 @@ VALUES ('sopimusvastaava'),
        ('viherhoidosta vastaava henkilö'),
        ('hankintavastaava'),
        ('harjoittelija');
+
+ALTER TABLE tehtavaryhma DROP COLUMN emo;
+ALTER TABLE tehtavaryhma ADD COLUMN emo INTEGER REFERENCES tehtavaryhma (id);

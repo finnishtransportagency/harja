@@ -27,6 +27,7 @@
              [oikeudet :as oikeudet]
              [budjettisuunnittelu :as bs]
              [toimenpidekoodi :as tpk]
+             [tehtavaryhma :as tr]
              [toimenpideinstanssi :as tpi]
              [roolit :as roolit]]))
 
@@ -68,7 +69,6 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   {:kiinteahintaiset-tyot (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot (kustarv-tyot/hae-urakan-kustannusarvioidut-tyot db user urakka-id)
-   :yksikkohintaiset-tyot (ykshint-tyot/hae-urakan-yksikkohintaiset-tyot db user urakka-id)
    :johto-ja-hallintokorvaukset (map (fn [jhk]
                                        (into {}
                                              (map (fn [[k v]]
@@ -118,12 +118,20 @@
                               ;; Palautetaan päivitetty tilanne
                               (hae-urakan-budjetoidut-tyot c user {:urakka-id urakka-id}))))
 
-(defn tallenna-yksikkohintainen-tyo
+#_(defn tallenna-yksikkohintainen-tyo
   [db user {:keys [urakka-id tehtava tyot]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [{tehtava-id :id} (first (tpik-q/hae-tehtavan-id db {:nimi tehtava
-                                                                                      :urakkaid urakka-id}))
+                            (let [tehtavataso (if (= "ERILLISHANKINNAT" tehtava)
+                                                  :tehtavaryhma
+                                                  :tehtava)
+                                  {tehtava-id :id} (if (= tehtavataso :tehtava)
+                                                     (first (tpik-q/hae-tehtavan-id db {:nimi tehtava
+                                                                                        :urakkaid urakka-id}))
+                                                     (first (fetch db ::tr/tehtavaryhma
+                                                                   #{::tr/id}
+                                                                   {::tr/nimi tehtava
+                                                                    ::tr/tyyppi :alataso})))
                                   olemassa-olevat-tyot (fetch db ::bs/yksikkohintainen-tyo
                                                               #{::bs/id ::bs/vuosi}
                                                               {::bs/urakka urakka-id
@@ -198,63 +206,149 @@
                                             ::bs/luoja (:id user)})))
                               {:onnistui? true})))
 
-(defn tallenna-rahavaraus
-  [db user {:keys [urakka-id tyyppi toimenpide summa vuodet]}]
+(defn tallenna-kustannusarvioitu-tyo!
+  [db user {:keys [tyyppi tehtava tehtavaryhma toimenpide urakka-id ajat summa]}]
+  {:pre [(string? tyyppi)
+         (string? toimenpide)
+         (integer? urakka-id)
+         (sequential? ajat)]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [tehtava (case tyyppi
-                                            "vahinkojen-korjaukset" "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen"
-                                            "akillinen-hoitotyo" "Äkillinen hoitotyö"
-                                            "muut-rahavaraukset" "Tilaajan rahavaraus lupaukseen 1")
+    (let [{tehtava-id ::tpk/id} (when tehtava
+                                  (first (fetch db ::tpk/toimenpidekoodi
+                                                #{::tpk/id}
+                                                {::tpk/nimi tehtava
+                                                 ::tpk/toimenpidekoodi {::tpk/nimi toimenpide}})))
+          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
+                                                 #{::tpk/id}
+                                                 {::tpk/taso 3
+                                                  ::tpk/nimi toimenpide}))
+          {tehtavaryhma-id ::tr/id} (when tehtavaryhma
+                                      (fetch db ::tr/tehtavaryhma
+                                             #{::tr/id}
+                                             {::tr/nimi tehtava}))
+          {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
+          _ (when (nil? toimenpideinstanssi-id)
+              (throw (Exception. "Toimenpideinstanssia ei löydetty")))
+          tyyppi (keyword tyyppi)
 
-                                  {tehtava-id ::tpk/id
-                                   {toimenpide-id ::tpk/id} ::tpk/toimenpidekoodi} (first (fetch db ::tpk/toimenpidekoodi
-                                                                                                 #{::tpk/id ::tpk/nimi
-                                                                                                   [::tpk/toimenpidekoodi #{::tpk/id ::tpk/nimi}]}
-                                                                                                 {::tpk/nimi tehtava
-                                                                                                  ::tpk/toimenpidekoodi {::tpk/nimi toimenpide}}))
-                                  {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
-                                  tyyppi (keyword tyyppi)
-                                  olemassa-olevat-rahavaraukset (fetch db ::bs/kustannusarvioitu-tyo
-                                                                       #{::bs/id ::bs/smallint-v}
-                                                                       {::bs/smallint-v (op/in (into #{} vuodet))
-                                                                        ::bs/tehtava tehtava-id
-                                                                        ::bs/tyyppi tyyppi
-                                                                        ::bs/toimenpideinstanssi toimenpideinstanssi-id})
-                                  paivitetaan? (not (empty? olemassa-olevat-rahavaraukset))]
-                              (if paivitetaan?
-                                (doseq [vuosi vuodet
-                                        olemassa-oleva-tyo (filter #(= vuosi (::bs/vuosi %)) olemassa-olevat-rahavaraukset)]
-                                  (update! db ::bs/kustannusarvioitu-tyo
-                                           {::bs/summa summa}
-                                           {::bs/id (::bs/id olemassa-oleva-tyo)}))
-                                (let [{:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
-                                      paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)
-                                      alkuvuosi (pvm/vuosi alkupvm)
-                                      loppuvuosi (pvm/vuosi loppupvm)]
-                                  (doseq [vuosi vuodet
-                                          :let [kuukaudet (cond
-                                                            (= alkuvuosi vuosi) [10 12]
-                                                            (= loppuvuosi vuosi) [1 9]
-                                                            :else [1 12])]
-                                          kk (range (first kuukaudet) (inc (second kuukaudet)))]
-                                    (insert! db ::bs/kustannusarvioitu-tyo
-                                             {::bs/smallint-v vuosi
-                                              ::bs/smallint-kk kk
-                                              ::bs/summa summa
-                                              ::bs/tyyppi tyyppi
-                                              ::bs/tehtava tehtava-id
-                                              ::bs/toimenpideinstanssi toimenpideinstanssi-id
-                                              ::bs/sopimus paasopimus
-                                              ::bs/luotu (pvm/nyt)
-                                              ::bs/luoja (:id user)}))))
-                              {:onnistui? true})))
+
+          {:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
+          alkuvuosi (pvm/vuosi alkupvm)
+          loppuvuosi (pvm/vuosi loppupvm)
+          ajat (reduce (fn [ajat {:keys [vuosi kuukausi]}]
+                         (if kuukausi
+                           (conj ajat {:vuosi vuosi
+                                       :kuukausi kuukausi})
+                           (let [kuukaudet (cond
+                                             (= alkuvuosi vuosi) [10 12]
+                                             (= loppuvuosi vuosi) [1 9]
+                                             :else [1 12])]
+                             (into []
+                                   (concat ajat
+                                           (map (fn [kk]
+                                                  {:vuosi vuosi
+                                                   :kuukausi kk})
+                                                (range (first kuukaudet) (inc (second kuukaudet)))))))))
+                       [] ajat)
+
+          olemassa-olevat-kustannusarvioidut-tyot-vuosille (fetch db ::bs/kustannusarvioitu-tyo
+                                                                  #{::bs/id ::bs/smallint-v ::bs/smallint-kk}
+                                                                  {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
+                                                                   ::bs/tehtava tehtava-id
+                                                                   ::bs/tehtavaryhma tehtavaryhma-id
+                                                                   ::bs/tyyppi tyyppi
+                                                                   ::bs/toimenpideinstanssi toimenpideinstanssi-id})
+          olemassa-olevat-kustannusarvioidut-tyot (filter (fn [{::bs/keys [smallint-v slmallint-kk]}]
+                                                            (some #(and (= (:vuosi %) smallint-v)
+                                                                        (= (:kuukausi %) slmallint-kk))
+                                                                  ajat))
+                                                          olemassa-olevat-kustannusarvioidut-tyot-vuosille)
+          paivitetaan? (not (empty? olemassa-olevat-kustannusarvioidut-tyot))]
+      (if paivitetaan?
+        (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
+          (update! db ::bs/kustannusarvioitu-tyo
+                   {::bs/summa summa}
+                   {::bs/id (::bs/id olemassa-oleva-tyo)}))
+        (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
+          (doseq [{:keys [vuosi kuukausi]} ajat]
+            (insert! db ::bs/kustannusarvioitu-tyo
+                     {::bs/smallint-v vuosi
+                      ::bs/smallint-kk kuukausi
+                      ::bs/summa summa
+                      ::bs/tyyppi tyyppi
+                      ::bs/tehtava tehtava-id
+                      ::bs/tehtavaryhma tehtavaryhma-id
+                      ::bs/toimenpideinstanssi toimenpideinstanssi-id
+                      ::bs/sopimus paasopimus
+                      ::bs/luotu (pvm/nyt)
+                      ::bs/luoja (:id user)}))))
+      {:onnistui? true})))
+
+(def toimenpide-avaimet [:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto])
+(def tallennettava-asia #{:hoidonjohtopalkkio
+                          :toimistokulut
+                          :erillishankinnat
+                          :rahavaraus-lupaukseen-1
+                          :kolmansien-osapuolten-aiheuttamat-vahingot
+                          :akilliset-hoitotyot
+                          :toimenpiteen-maaramitattavat-tyot})
+
+(defn tallenna-kustannusarvioitu-tyo
+  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa vuodet]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (jdbc/with-db-transaction [db db]
+                            (let [tyyppi (case tallennettava-asia
+                                           :hoidonjohtopalkkio "laskutettava-tyo"
+                                           :toimistokulut "laskutettava-tyo"
+                                           :erillishankinnat "laskutettava-tyo"
+                                           :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+                                           :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
+                                           :akilliset-hoitotyot "akillinen-hoitotyo"
+                                           :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo")
+                                  tehtava (case tallennettava-asia
+                                            :hoidonjohtopalkkio "Hoitourakan työnjohto"
+                                            :toimistokulut "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
+                                            :erillishankinnat nil
+                                            :rahavaraus-lupaukseen-1 "Tilaajan rahavaraus lupaukseen 1"
+                                            :kolmansien-osapuolten-aiheuttamat-vahingot "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen"
+                                            :akilliset-hoitotyot "Äkillinen hoitotyö"
+                                            :toimenpiteen-maaramitattavat-tyot nil)
+                                  tehtavaryhma (cond
+                                                 #_#_(and (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} tallennettava-asia)
+                                                      (= toimenpide-avain :talvihoito)) "Alataso Muut talvihoitotyöt"
+                                                 #_#_(and (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} tallennettava-asia)
+                                                      (= toimenpide-avain :liikenneympariston-hoito)) "Muut liik.ymp.hoitosasiat"
+                                                 #_#_(and (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} tallennettava-asia)
+                                                      (= toimenpide-avain :sorateiden-hoito)) "Alataso Sorateiden hoito"
+                                                 (= :erillishankinnat tallennettava-asia) "ERILLISHANKINNAT"
+                                                 (= :rahavaraus-lupaukseen-1 tallennettava-asia) "TILAAJAN RAHAVARAUS"
+                                                 #_#_(:toimenpiteen-maaramitattavat-tyot :toimistokulut :hoidonjohtopalkkio) nil
+                                                 :else nil)
+                                  toimenpiteet (zipmap toimenpide-avaimet
+                                                       ["Päällysteiden paikkaus (hoidon ylläpito)"
+                                                        "MHU Ylläpito"
+                                                        "Talvihoito laaja TPI"
+                                                        "Liikenneympäristön hoito laaja TPI"
+                                                        "Soratien hoito laaja TPI"
+                                                        "MHU Korvausinvestointi"
+                                                        "MHU ja HJU Hoidon johto"])
+                                  toimenpide (get toimenpiteet
+                                                  toimenpide-avain)]
+                              (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
+                                                                       :tehtava tehtava
+                                                                       :tehtavaryhma tehtavaryhma
+                                                                       :toimenpide toimenpide
+                                                                       :urakka-id urakka-id
+                                                                       :vuodet vuodet
+                                                                       :summa summa}))))
 
 
 (s/def ::vuosi integer?)
-(s/def ::yksikkohinta integer?)
+(s/def ::kuukausi integer?)
+;(s/def ::yksikkohinta integer?)
 (s/def ::urakka-id integer?)
-(s/def ::tehtava string?)
+;(s/def ::tehtava string?)
 (s/def ::toimenkuva string?)
 (s/def ::maksukausi keyword?)
 (s/def ::hoitokausi integer?)
@@ -262,25 +356,29 @@
 (s/def ::tuntipalkka number?)
 (s/def ::kk-v number?)
 (s/def ::summa number?)
-(s/def ::tyyppi string?)
-(s/def ::toimenpide string?)
+(s/def ::toimenpide-avain (s/and keyword?
+                                 (fn [k]
+                                   (some #(= k %)
+                                         toimenpide-avaimet))))
+(s/def ::tallennettava-asia tallennettava-asia)
 
-(s/def ::yksikkohintainen-tyo (s/keys :req-un [::vuosi ::yksikkohinta]))
-(s/def ::tyot (s/coll-of ::yksikkohintainen-tyo))
+#_(s/def ::yksikkohintainen-tyo (s/keys :req-un [::vuosi ::yksikkohinta]))
+#_(s/def ::tyot (s/coll-of ::yksikkohintainen-tyo))
 
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
 
-(s/def ::vuodet (s/coll-of ::vuosi))
+(s/def ::ajat (s/coll-of (s/keys :req-un [::vuosi]
+                                 :opt-un [::kuukausi])))
 
-(s/def ::tallenna-yksikkohintainen-tyo-kysely (s/keys :req-un [::urakka-id ::tehtava ::tyot]))
-(s/def ::tallenna-yksikkohintainen-tyo-vastaus any?)
+#_(s/def ::tallenna-yksikkohintainen-tyo-kysely (s/keys :req-un [::urakka-id ::tehtava ::tyot]))
+#_(s/def ::tallenna-yksikkohintainen-tyo-vastaus any?)
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
-(s/def ::tallenna-rahavaraus-kysely (s/keys :req-un [::urakka-id ::tyyppi ::toimenpide ::summa ::vuodet]))
-(s/def ::tallenna-rahavaraus-vastaus any?)
+(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::summa ::ajat]))
+(s/def ::tallenna-kustannusarvioitu-tyo-vastaus any?)
 
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
@@ -300,7 +398,7 @@
           (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
                                         (tallenna-urakan-tavoite db user tiedot)))
-          (julkaise-palvelu
+          #_(julkaise-palvelu
             :tallenna-yksikkohintainen-tyo
             (fn [user tiedot]
               (tallenna-yksikkohintainen-tyo db user tiedot))
@@ -313,11 +411,11 @@
             {:kysely-spec ::tallenna-johto-ja-hallintokorvaukset-kysely
              :vastaus-spec ::tallenna-johto-ja-hallintokorvaukset-vastaus})
           (julkaise-palvelu
-            :tallenna-rahavaraus
+            :tallenna-kustannusarvioitu-tyo
             (fn [user tiedot]
-              (tallenna-rahavaraus db user tiedot))
-            {:kysely-spec ::tallenna-rahavaraus-kysely
-             :vastaus-spec ::tallenna-rahavaraus-vastaus}))))
+              (tallenna-kustannusarvioitu-tyo db user tiedot))
+            {:kysely-spec ::tallenna-kustannusarvioitu-tyo-kysely
+             :vastaus-spec ::tallenna-kustannusarvioitu-tyo-vastaus}))))
     this)
 
   (stop [this]
