@@ -545,7 +545,7 @@
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
    'Täytä alas' nappi päälle."
-  [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon toimenpide-avain]} value]
+  [this {:keys [input-luokat nimi e! on-oikeus? laskutuksen-perusteella-taulukko? polku-taulukkoon toimenpide-avain]} value]
   (let [on-change (fn [arvo]
                     (when arvo
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
@@ -561,7 +561,7 @@
                     (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
                     ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
                     (when-not klikattu-nappia?
-                      (e! (t/->TallennaKiinteahintainenTyo toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon false))
+                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon false laskutuksen-perusteella-taulukko?))
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false)))))))
@@ -590,7 +590,7 @@
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false))))
                       (e! (t/->TaytaAlas this polku-taulukkoon))
-                      (e! (t/->TallennaKiinteahintainenTyo toimenpide-avain this polku-taulukkoon true)))]
+                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain this polku-taulukkoon true laskutuksen-perusteella-taulukko?)))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
                               :tab-index -1
@@ -702,6 +702,7 @@
                                                                  (assoc :komponentti hankintasuunnitelmien-syotto
                                                                         :komponentin-argumentit {:e! e!
                                                                                                  :nimi (pvm/pvm paivamaara)
+                                                                                                 :laskutuksen-perusteella-taulukko? laskutuksen-perusteella-taulukko?
                                                                                                  :toimenpide-avain toimenpide-avain
                                                                                                  :on-oikeus? on-oikeus?
                                                                                                  :polku-taulukkoon polku-taulukkoon
