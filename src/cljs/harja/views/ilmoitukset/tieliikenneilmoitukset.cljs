@@ -63,11 +63,23 @@
     [:span.selite-virkaapu "punaisella"]
     [:span " selitelaatikossa."]]])
 
-(defn ilmoituksen-tiedot [e! ilmoitus]
-  [:div
-   [:span
-    [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]
-    [it/ilmoitus e! ilmoitus]]])
+(defn ilmoituksen-tiedot [e! ilmoitus ilmoitukset]
+  (let [edellinen-ilmoitus (loop [i 0
+                                  edellinen nil]
+                             (let [ilmo (nth ilmoitukset i)]
+                               (when ilmo
+                                 (if (= (:id ilmo) (:id ilmoitus))
+                                   edellinen
+                                   (recur (inc i) ilmo)))))]
+
+
+    [:div
+     [:span
+      [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]
+      [napit/yleinen-ensisijainen "Seuraava"
+       #(e! (v/->ValitseIlmoitus edellinen-ilmoitus))
+       {:disabled (nil? edellinen-ilmoitus)}]
+      [it/ilmoitus e! ilmoitus]]]))
 
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
   (let [selite (kuittaustyypin-selite (or kuittaustyyppi napin-kuittaustyypi))]
@@ -329,7 +341,7 @@
       [:span
        [kartta/kartan-paikka]
        (if valittu-ilmoitus
-         [ilmoituksen-tiedot e! valittu-ilmoitus]
+         [ilmoituksen-tiedot e! valittu-ilmoitus (:ilmoitukset ilmoitukset)]
          [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []
