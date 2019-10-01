@@ -307,7 +307,8 @@
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
-    (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji nykyinen-toteuma))
+    (let [nykyinen-tietolaji (:tietolaji tiedot)
+          tietolaji-muuttui? (not= nykyinen-tietolaji (:tietolaji nykyinen-toteuma))
           tiedot (if tietolaji-muuttui?
                    (assoc tiedot :tietolajin-kuvaus nil)
                    tiedot)
@@ -319,7 +320,12 @@
                                                 :y (Math/round (second koordinaattiarvot))})
           arvot (if (and (not (nil? nykyinen-toteuma))
                          (or tietolaji-muuttui? (nil? (:arvot tiedot))))
-                  {}
+                  (if (= nykyinen-tietolaji "tl506")
+                    {:kuntoluokitus "5"
+                     :lmkiinnit "1"
+                     :lmmater "1"
+                     :lmtyyppi "1"}
+                    {})
                   (:arvot tiedot))
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
                               :arvot (merge arvot koordinaatit))]
