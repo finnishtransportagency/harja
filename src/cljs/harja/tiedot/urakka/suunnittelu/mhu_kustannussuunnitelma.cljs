@@ -973,6 +973,11 @@
   TaytaAlas
   (process-event [{:keys [maara-solu polku-taulukkoon]} app]
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
+          maksetaan (get-in app [:hankintakustannukset :valinnat :maksetaan])
+          kauden-viimeinen-rivi-index (case maksetaan
+                                        :kesakausi 13
+                                        :talvikausi 8
+                                        :molemmat 13)
           taulukko (get-in app polku-taulukkoon)
           [polku-container-riviin polku-riviin polku-soluun] (p/osan-polku-taulukossa taulukko maara-solu)
           muokattu-hoitokausi (:hoitokausi (get-in taulukko polku-container-riviin))
@@ -1007,6 +1012,7 @@
                                                                  (p/paivita-arvo hoitokauden-container :lapset
                                                                                  (fn [rivit]
                                                                                    (tyokalut/mapv-range tayta-rivista-eteenpain
+                                                                                                        kauden-viimeinen-rivi-index
                                                                                                         (fn [maara-rivi]
                                                                                                           (p/paivita-arvo maara-rivi
                                                                                                                           :lapset

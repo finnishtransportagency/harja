@@ -274,44 +274,48 @@
                          :vahinkojen-korjaukset "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
                          :akillinen-hoitotyo "Äkilliset hoitotyöt"
                          :muut-rahavaraukset "Rahavaraus lupaukseen 1"))
-        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti rahavarausrivit?]
-                            (map (fn [tyyppi jakso]
-                                   (let [rahavarausteksti (tyyppi->nimi tyyppi)]
-                                     (-> toimenpide-osa-pohja
-                                         (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
-                                                       :class #{"piillotettu"})
-                                         (p/paivita-arvo :lapset
-                                                         (osien-paivitys-fn (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo rahavarausteksti
-                                                                                            :class #{(sarakkeiden-leveys :teksti)
-                                                                                                     "solu-sisenna-2"}))
-                                                                            (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo {:ikoni ikonit/remove}
-                                                                                            :class #{(sarakkeiden-leveys :kuluva-vuosi)
-                                                                                                     "keskita"}))
-                                                                            (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo {:ikoni ikonit/remove}
-                                                                                            :class #{(sarakkeiden-leveys :tuleva-vuosi)
-                                                                                                     "keskita"}))
-                                                                            (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo jakso
-                                                                                            :class #{(sarakkeiden-leveys :jakso)}))))
-                                         ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
-                                         (assoc :suunnitelma tyyppi))))
-                                 (if rahavarausrivit?
-                                   [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset :muut-rahavaraukset]
-                                   [:kokonaishintainen-ja-lisatyo])
-                                 (if rahavarausrivit?
-                                   ["/kk**" "/kk" "/kk" "/kk"]
-                                   ["/kk**"])))
+        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti toimenpide]
+                            (let [rahavarausrivit (case toimenpide
+                                                    (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset]
+                                                    :mhu-yllapito [:kokonaishintainen-ja-lisatyo :muut-rahavaraukset]
+                                                    [:kokonaishintainen-ja-lisatyo])
+                                  jaksot (case toimenpide
+                                           (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) ["/kk**" "/kk" "/kk"]
+                                           :mhu-yllapito ["/kk**" "/kk"]
+                                           ["/kk**"])]
+                              (map (fn [tyyppi jakso]
+                                     (let [rahavarausteksti (tyyppi->nimi tyyppi)]
+                                       (-> toimenpide-osa-pohja
+                                           (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
+                                                         :class #{"piillotettu"})
+                                           (p/paivita-arvo :lapset
+                                                           (osien-paivitys-fn (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo rahavarausteksti
+                                                                                              :class #{(sarakkeiden-leveys :teksti)
+                                                                                                       "solu-sisenna-2"}))
+                                                                              (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo {:ikoni ikonit/remove}
+                                                                                              :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                       "keskita"}))
+                                                                              (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo {:ikoni ikonit/remove}
+                                                                                              :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                       "keskita"}))
+                                                                              (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo jakso
+                                                                                              :class #{(sarakkeiden-leveys :jakso)}))))
+                                           ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
+                                           (assoc :suunnitelma tyyppi))))
+                                   rahavarausrivit
+                                   jaksot)))
         toimenpide-fn (fn [toimenpide-pohja]
                         (map (fn [toimenpide jakso]
                                (let [toimenpideteksti (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]
@@ -326,7 +330,7 @@
                                                                            rivit
                                                                            (case rivin-tyyppi
                                                                              :laajenna-toimenpide [(laajenna-toimenpide-fn rivin-pohja toimenpideteksti jakso)]
-                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti (t/toimenpiteet-rahavarauksilla toimenpide))))))
+                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti toimenpide)))))
                                                                      [] rivit))))
                                      ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
                                      (assoc :toimenpide toimenpide))))
