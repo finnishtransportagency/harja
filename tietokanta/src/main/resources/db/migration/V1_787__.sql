@@ -32,3 +32,7 @@ VALUES ('sopimusvastaava'),
 
 ALTER TABLE tehtavaryhma DROP COLUMN emo;
 ALTER TABLE tehtavaryhma ADD COLUMN emo INTEGER REFERENCES tehtavaryhma (id);
+
+UPDATE toimenpidekoodi
+  SET nimi = 'MHU ja HJU Hoidon johto'
+  WHERE koodi = '23151';

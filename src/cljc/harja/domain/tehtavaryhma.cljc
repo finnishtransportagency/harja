@@ -1,6 +1,7 @@
 (ns harja.domain.tehtavaryhma
   (:require [clojure.spec.alpha :as s]
             [specql.rel]
+            [specql.transform]
             #?(:clj [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))

@@ -663,22 +663,26 @@
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
           {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
-          hankintojen-taydennys-fn (fn [hankinnat]
+          hankintojen-taydennys-fn (fn [hankinnat kustannusarvoitu?]
                                      (sequence
                                        (comp
                                          (mapcat (fn [toimenpide]
-                                                   (tyokalut/generoi-pohjadata (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
-                                                                                       hankinnat)
+                                                   (tyokalut/generoi-pohjadata (if kustannusarvoitu?
+                                                                                 (eduction
+                                                                                   (filter #(= (:toimenpide-avain %) toimenpide))
+                                                                                   (map #(assoc % :toimenpide (get toimenpiteiden-avaimet toimenpide)))
+                                                                                   hankinnat)
+                                                                                 (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
+                                                                                         hankinnat))
                                                                                {:summa ""
                                                                                 :toimenpide (get toimenpiteiden-avaimet toimenpide)}
                                                                                hankintojen-pohjadata)))
                                          (map (fn [{:keys [vuosi kuukausi] :as data}]
                                                 (assoc data :pvm (pvm/luo-pvm vuosi (dec kuukausi) 15)))))
                                        toimenpiteet))
-          maara-kk-taulukon-data (fn [kustannusarvioidut-tyot tehtavan-nimi tehtavaryhman-nimi asia-nimi-frontilla]
-                                   (let [asia-kannasta (filter (fn [{:keys [tehtava tehtavaryhma]}]
-                                                                 (or (and tehtavan-nimi (= tehtava tehtavan-nimi))
-                                                                     (and tehtavaryhman-nimi (= tehtavaryhma tehtavaryhman-nimi))))
+          maara-kk-taulukon-data (fn [kustannusarvioidut-tyot haettu-asia asia-nimi-frontilla]
+                                   (let [asia-kannasta (filter (fn [tyo]
+                                                                 (= haettu-asia (:haettu-asia tyo)))
                                                                 kustannusarvioidut-tyot)
                                          asia-kannasta (into []
                                                              (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
@@ -699,10 +703,10 @@
                                       asia-kannasta]))
           hankinnat (:kiinteahintaiset-tyot vastaus)
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
-                                                         (nil? (:tehtava %)))
+                                                         (nil? (:haettu-asia %)))
                                                    (:kustannusarvioidut-tyot vastaus))
-          hankinnat-hoitokausille (hankintojen-taydennys-fn hankinnat)
-          hankinnat-laskutukseen-perustuen-hoitokausille (hankintojen-taydennys-fn hankinnat-laskutukseen-perustuen)
+          hankinnat-hoitokausille (hankintojen-taydennys-fn hankinnat false)
+          hankinnat-laskutukseen-perustuen-hoitokausille (hankintojen-taydennys-fn hankinnat-laskutukseen-perustuen true)
           laskutukseen-perustuvat-toimenpiteet (reduce (fn [toimenpide-avaimet toimenpide]
                                                          (conj toimenpide-avaimet
                                                                (some #(when (= (second %) toimenpide)
@@ -716,8 +720,10 @@
                                               (concat hankinnat-laskutukseen-perustuen-hoitokausille hankinnat-hoitokausille))
           rahavarausten-taydennys-fn (fn [rahavaraukset]
                                        (mapcat (fn [toimenpide]
-                                                 (tyokalut/generoi-pohjadata (filter #(= (:toimenpide %) (get toimenpiteiden-avaimet toimenpide))
-                                                                                     rahavaraukset)
+                                                 (tyokalut/generoi-pohjadata (eduction
+                                                                               (filter #(= (:toimenpide-avain %) toimenpide))
+                                                                               (map #(assoc % :toimenpide (get toimenpiteiden-avaimet toimenpide)))
+                                                                               rahavaraukset)
                                                                              {:summa ""
                                                                               :toimenpide (get toimenpiteiden-avaimet toimenpide)}
                                                                              (if (= :mhu-yllapito toimenpide)
@@ -730,9 +736,10 @@
           ;; TODO Muut tilaajan rahavaraukset tuohon settiin
 
           ;; {:hoitokausi 0, :kk_v 5, :maksukausi :molemmat, :tunnit 1000, :tuntipalkka 40, :toimenkuva hankintavastaava}
-          rahavaraukset (distinct (keep #(when (#{"vahinkojen-korjaukset" "akillinen-hoitotyo" "muut-rahavaraukset"} (:tyyppi %))
-                                           (select-keys % #{:tyyppi :summa :toimenpide}))
+          rahavaraukset (distinct (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} (:haettu-asia %))
+                                           (select-keys % #{:tyyppi :summa :toimenpide-avain}))
                                         (:kustannusarvioidut-tyot vastaus)))
+
           rahavaraukset-hoitokausile (rahavarausten-taydennys-fn rahavaraukset)
           rahavarauket-toimenpiteittain (group-by :toimenpide rahavaraukset-hoitokausile)
 
@@ -824,12 +831,12 @@
                                       :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
                                       :paasta-virhe-lapi? true}))))
 
-          hoidon-johto-kustannukset (filter #(= (:toimenpide %) "MHU ja HJU Hoidon johto")
+          hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                             (:kustannusarvioidut-tyot vastaus))
 
-          [erillishankinnat erillishankinnat-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset nil "ERILLISHANKINNAT" "Erillishankinnat")
-          [jh-toimistokulut jh-toimistokulut-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne." nil "Toimistokulut")
-          [johtopalkkio johtopalkkio-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset "Hoitourakan työnjohto" nil "Hoidonjohtopalkkio")
+          [erillishankinnat erillishankinnat-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset :erillishankinnat "Erillishankinnat")
+          [jh-toimistokulut jh-toimistokulut-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut "Toimistokulut")
+          [johtopalkkio johtopalkkio-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio "Hoidonjohtopalkkio")
 
           valinnat (assoc valinnat :laskutukseen-perustuen laskutukseen-perustuvat-toimenpiteet)
 
@@ -864,7 +871,7 @@
                                         toimenpiteiden-avaimet)))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-korvaukset true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-korvaukset true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) :erillishankinnat  true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) :erillishankinnat true))
                   (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) :toimistokulut true))
                   (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) :hoidonjohtopalkkio true))
                   ;; Edellisten vuosien data, jota ei voi muokata
@@ -1225,22 +1232,14 @@
                                  (concat ajat
                                          (keep (fn [[kuun-ensimmainen-pvm _]]
                                                  (let [kuukausi (pvm/kuukausi kuun-ensimmainen-pvm)]
-                                                   (when (or (< urakan-aloitus-v vuosi urakan-lopetus-v)
-                                                             (and (= urakan-aloitus-v vuosi)
-                                                                  (> kuukausi 9))
-                                                             (and (= urakan-lopetus-v vuosi)
-                                                                  (< kuukausi 10)))
+                                                   (if (> kuukausi 9)
                                                      {:vuosi vuosi
+                                                      :kuukausi kuukausi}
+                                                     {:vuosi (inc vuosi)
                                                       :kuukausi kuukausi})))
                                               (pvm/aikavalin-kuukausivalit [aika kauden-viimeinen-aika]))))
                            (conj ajat v-kk)))
-                       [] (if (and tayta-alas? kopioidaan-tuleville-vuosille? (not= (last muokatun-summan-ajat-vuosittain) urakan-lopetus-v))
-                            ;; Tämä on sellainen pieni hax, että jos on täytetty urakan
-                            ;; ensimmäisen vuoden tietoja (loka, marras, joulu), niin tuossa
-                            ;; muokatun-summan-ajat-vuosittain ei ole viimeistä urakan vuotta
-                            ;; ollenkaan mukana
-                            (conj muokatun-summan-ajat-vuosittain {:vuosi urakan-lopetus-v})
-                            muokatun-summan-ajat-vuosittain))
+                       [] muokatun-summan-ajat-vuosittain)
 
 
 
