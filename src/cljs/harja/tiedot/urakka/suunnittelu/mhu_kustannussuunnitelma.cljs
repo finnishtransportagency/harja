@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
   (:require [clojure.string :as clj-str]
+            [clojure.set :as clj-set]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
@@ -12,7 +13,7 @@
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.jana :as jana]
-            [clojure.set :as clj-set]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -137,6 +138,7 @@
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
+(defrecord Oikeudet [])
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
                                     erillishankinnat-taulukko toimistokulut-taulukko
@@ -381,7 +383,6 @@
                                      (when (= (p/rivin-skeema suunnitelmien-tila-taulukko rivi) :hankintakustannukset)
                                        rivi))
                                    (p/arvo suunnitelmien-tila-taulukko :lapset))
-        #_#_hankintojen-tehtavat #{:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset :muut-rahavaraukset}
         hankintakustannusten-tila (reduce (fn [tilat toimenpiderivi-lapsilla]
                                             (let [toimenpide (:toimenpide toimenpiderivi-lapsilla)
                                                   muuttunut-tehtava (some (fn [[tehtava muuttunut?]]
@@ -594,6 +595,11 @@
   Hoitokausi
   (process-event [_ app]
     (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))
+  Oikeudet
+  (process-event [_ app]
+    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)
+          kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-kustannussuunnittelu urakka-id)]
+      (assoc app :kirjoitusoikeus? kirjoitusoikeus?)))
   PaivitaToimenpideTaulukko
   (process-event [{:keys [maara-solu polku-taulukkoon]} app]
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
@@ -688,7 +694,8 @@
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
                           johtopalkkio-taulukko]}
                   {{valinnat :valinnat} :hankintakustannukset
-                   {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
+                   {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi
+                   kirjoitusoikeus? :kirjoitusoikeus? :as app}]
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [hankintojen-pohjadata (hankinnat-pohjadata)
           {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
@@ -885,24 +892,24 @@
                   (assoc-in [:hankintakustannukset :toimenpiteet]
                             (into {}
                                   (map (fn [[toimenpide-avain toimenpide-nimi]]
-                                         [toimenpide-avain (hankintojen-taulukko (get hankinnat-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true false)])
+                                         [toimenpide-avain (hankintojen-taulukko (get hankinnat-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain kirjoitusoikeus? false)])
                                        toimenpiteiden-avaimet)))
                   (assoc-in [:hankintakustannukset :toimenpiteet-laskutukseen-perustuen]
                             (into {}
                                   (map (fn [[toimenpide-avain toimenpide-nimi]]
-                                         [toimenpide-avain (hankintojen-taulukko (get hankinnat-laskutukseen-perustuen-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true true)])
+                                         [toimenpide-avain (hankintojen-taulukko (get hankinnat-laskutukseen-perustuen-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain kirjoitusoikeus? true)])
                                        toimenpiteiden-avaimet)))
                   (assoc-in [:hankintakustannukset :rahavaraukset]
                             (into {}
                                   (keep (fn [[toimenpide-avain toimenpide-nimi]]
                                           (when (toimenpiteet-rahavarauksilla toimenpide-avain)
-                                            [toimenpide-avain (rahavarausten-taulukko (get rahavarauket-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain true)]))
+                                            [toimenpide-avain (rahavarausten-taulukko (get rahavarauket-toimenpiteittain toimenpide-nimi) valinnat toimenpide-avain kirjoitusoikeus?)]))
                                         toimenpiteiden-avaimet)))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-korvaukset true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-korvaukset true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) :erillishankinnat true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) :toimistokulut true))
-                  (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) :hoidonjohtopalkkio true))
+                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla] (johto-ja-hallintokorvaus-laskulla-taulukko jh-korvaukset kirjoitusoikeus?))
+                  (assoc-in [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto] (johto-ja-hallintokorvaus-yhteenveto-taulukko jh-korvaukset))
+                  (assoc-in [:hallinnolliset-toimenpiteet :erillishankinnat] (erillishankinnat-taulukko (first erillishankinnat) :erillishankinnat kirjoitusoikeus?))
+                  (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) :toimistokulut kirjoitusoikeus?))
+                  (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) :hoidonjohtopalkkio kirjoitusoikeus?))
                   ;; Edellisten vuosien data, jota ei voi muokata
                   (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :erillishankinnat] (into [] (butlast erillishankinnat-kannasta)))
                   (assoc-in [:hallinnolliset-toimenpiteet :menneet-vuodet :toimistokulut] (into [] (butlast jh-toimistokulut-kannasta)))
