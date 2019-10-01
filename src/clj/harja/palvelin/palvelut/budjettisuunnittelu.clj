@@ -216,9 +216,11 @@
   (jdbc/with-db-transaction [db db]
     (let [{tehtava-id ::tpk/id} (when tehtava
                                   (first (fetch db ::tpk/toimenpidekoodi
-                                                #{::tpk/id}
+                                                #{::tpk/id
+                                                  ;; Tämä join pitää hakea, jotta tuo where claussin join toimii
+                                                  [::tpk/toimenpidekoodi-join #{::tpk/nimi}]}
                                                 {::tpk/nimi tehtava
-                                                 ::tpk/toimenpidekoodi {::tpk/nimi toimenpide}})))
+                                                 ::tpk/toimenpidekoodi-join {::tpk/nimi toimenpide}})))
           {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                                  #{::tpk/id}
                                                  {::tpk/taso 3
@@ -295,53 +297,46 @@
                           :toimenpiteen-maaramitattavat-tyot})
 
 (defn tallenna-kustannusarvioitu-tyo
-  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa vuodet]}]
+  [db user {:keys [urakka-id tallennettava-asia toimenpide-avain summa ajat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [tyyppi (case tallennettava-asia
-                                           :hoidonjohtopalkkio "laskutettava-tyo"
-                                           :toimistokulut "laskutettava-tyo"
-                                           :erillishankinnat "laskutettava-tyo"
-                                           :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
-                                           :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
-                                           :akilliset-hoitotyot "akillinen-hoitotyo"
-                                           :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo")
-                                  tehtava (case tallennettava-asia
-                                            :hoidonjohtopalkkio "Hoitourakan työnjohto"
-                                            :toimistokulut "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-                                            :erillishankinnat nil
-                                            :rahavaraus-lupaukseen-1 "Tilaajan rahavaraus lupaukseen 1"
-                                            :kolmansien-osapuolten-aiheuttamat-vahingot "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen"
-                                            :akilliset-hoitotyot "Äkillinen hoitotyö"
-                                            :toimenpiteen-maaramitattavat-tyot nil)
-                                  tehtavaryhma (cond
-                                                 #_#_(and (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} tallennettava-asia)
-                                                      (= toimenpide-avain :talvihoito)) "Alataso Muut talvihoitotyöt"
-                                                 #_#_(and (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} tallennettava-asia)
-                                                      (= toimenpide-avain :liikenneympariston-hoito)) "Muut liik.ymp.hoitosasiat"
-                                                 #_#_(and (#{:kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} tallennettava-asia)
-                                                      (= toimenpide-avain :sorateiden-hoito)) "Alataso Sorateiden hoito"
-                                                 (= :erillishankinnat tallennettava-asia) "ERILLISHANKINNAT"
-                                                 (= :rahavaraus-lupaukseen-1 tallennettava-asia) "TILAAJAN RAHAVARAUS"
-                                                 #_#_(:toimenpiteen-maaramitattavat-tyot :toimistokulut :hoidonjohtopalkkio) nil
-                                                 :else nil)
-                                  toimenpiteet (zipmap toimenpide-avaimet
-                                                       ["Päällysteiden paikkaus (hoidon ylläpito)"
-                                                        "MHU Ylläpito"
-                                                        "Talvihoito laaja TPI"
-                                                        "Liikenneympäristön hoito laaja TPI"
-                                                        "Soratien hoito laaja TPI"
-                                                        "MHU Korvausinvestointi"
-                                                        "MHU ja HJU Hoidon johto"])
-                                  toimenpide (get toimenpiteet
-                                                  toimenpide-avain)]
-                              (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
-                                                                       :tehtava tehtava
-                                                                       :tehtavaryhma tehtavaryhma
-                                                                       :toimenpide toimenpide
-                                                                       :urakka-id urakka-id
-                                                                       :vuodet vuodet
-                                                                       :summa summa}))))
+    (let [tyyppi (case tallennettava-asia
+                   :hoidonjohtopalkkio "laskutettava-tyo"
+                   :toimistokulut "laskutettava-tyo"
+                   :erillishankinnat "laskutettava-tyo"
+                   :rahavaraus-lupaukseen-1 "muut-rahavaraukset"
+                   :kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"
+                   :akilliset-hoitotyot "akillinen-hoitotyo"
+                   :toimenpiteen-maaramitattavat-tyot "laskutettava-tyo")
+          tehtava (case tallennettava-asia
+                    :hoidonjohtopalkkio "Hoitourakan työnjohto"
+                    :toimistokulut "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
+                    :erillishankinnat nil
+                    :rahavaraus-lupaukseen-1 "Tilaajan rahavaraus lupaukseen 1"
+                    :kolmansien-osapuolten-aiheuttamat-vahingot "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen"
+                    :akilliset-hoitotyot "Äkillinen hoitotyö"
+                    :toimenpiteen-maaramitattavat-tyot nil)
+          tehtavaryhma (cond
+                         (= :erillishankinnat tallennettava-asia) "ERILLISHANKINNAT"
+                         (= :rahavaraus-lupaukseen-1 tallennettava-asia) "TILAAJAN RAHAVARAUS"
+                         :else nil)
+          toimenpiteet (zipmap toimenpide-avaimet
+                               ["Päällysteiden paikkaus (hoidon ylläpito)"
+                                "MHU Ylläpito"
+                                "Talvihoito laaja TPI"
+                                "Liikenneympäristön hoito laaja TPI"
+                                "Soratien hoito laaja TPI"
+                                "MHU Korvausinvestointi"
+                                "MHU ja HJU Hoidon johto"])
+          toimenpide (get toimenpiteet
+                          toimenpide-avain)]
+      (tallenna-kustannusarvioitu-tyo! db user {:tyyppi tyyppi
+                                                :tehtava tehtava
+                                                :tehtavaryhma tehtavaryhma
+                                                :toimenpide toimenpide
+                                                :urakka-id urakka-id
+                                                :ajat ajat
+                                                :summa summa}))))
 
 
 (s/def ::vuosi integer?)

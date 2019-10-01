@@ -1192,7 +1192,7 @@
                    (map (fn [vuosi]
                           {:vuosi vuosi})
                         (range (-> kuluvan-hoitovuoden-pvmt first pvm/vuosi)
-                               (inc (pvm/vuosi loppupvm)))))
+                               (pvm/vuosi loppupvm))))
           lahetettava-data {:urakka-id urakka-id
                             :toimenpide-avain toimenpide-avain
                             :tallennettava-asia tallennettava-asia
