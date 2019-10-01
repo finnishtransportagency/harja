@@ -545,7 +545,7 @@
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
    'Täytä alas' nappi päälle."
-  [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon]} value]
+  [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon toimenpide-avain]} value]
   (let [on-change (fn [arvo]
                     (when arvo
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
@@ -554,6 +554,7 @@
         on-blur (fn [event]
                   (let [klikattu-elementti (.-relatedTarget event)]
                     (e! (t/->PaivitaToimenpideTaulukko (::tama-komponentti osa/*this*) polku-taulukkoon))
+                    (e! (t/->TallennaKiinteahintainenTyo toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon))
                     (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
                     ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
                     (when-not (and (not (nil? klikattu-elementti))
@@ -699,6 +700,7 @@
                                                                  (assoc :komponentti hankintasuunnitelmien-syotto
                                                                         :komponentin-argumentit {:e! e!
                                                                                                  :nimi (pvm/pvm paivamaara)
+                                                                                                 :toimenpide-avain toimenpide-avain
                                                                                                  :on-oikeus? on-oikeus?
                                                                                                  :polku-taulukkoon polku-taulukkoon
                                                                                                  :luokat #{(sarakkeiden-leveys :maara-kk)}

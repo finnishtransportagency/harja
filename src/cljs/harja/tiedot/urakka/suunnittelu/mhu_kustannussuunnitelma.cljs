@@ -120,6 +120,9 @@
 (defrecord PaivitaJHRivit [paivitetty-osa])
 (defrecord PaivitaSuunnitelmienTila [paivitetyt-taulukot])
 (defrecord MaksukausiValittu [])
+(defrecord TallennaKiinteahintainenTyo [toimenpide-avain osa polku-taulukkoon])
+(defrecord TallennaKiinteahintainenTyoOnnistui [vastaus])
+(defrecord TallennaKiinteahintainenTyoEpaonnistui [vastaus])
 (defrecord TallennaKustannusarvoituTyo [tallennettava-asia toimenpide-avain arvo ajat])
 (defrecord TallennaKustannusarvoituTyoOnnistui [vastaus])
 (defrecord TallennaKustannusarvoituTyoEpaonnistui [vastaus])
@@ -1181,13 +1184,58 @@
                                                                                                                                        (update lapsirivi ::piillotettu conj :maksetaan)
                                                                                                                                        (update lapsirivi ::piillotettu disj :maksetaan)))))]))
                                                                               taulukot)))))))))
+  TallennaKiinteahintainenTyo
+  (process-event [{:keys [toimenpide-avain osa polku-taulukkoon]}
+                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
+    (let [{:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
+          taulukko (get-in app polku-taulukkoon)
+          arvo (p/arvo osa :arvo)
+          [polku-container-riviin polku-riviin _] (p/osan-polku-taulukossa taulukko osa)
+          polku-taulukosta-riviin (into [] (concat polku-container-riviin polku-riviin))
+
+          aika-sarakkeen-index (p/otsikon-index taulukko "Nimi")
+          identity-pritn (fn [x] (println x) x)
+          #_(-> maara-solu (p/arvo :arvo) :value (clj-str/replace #"," "."))
+          aika (-> taulukko (get-in polku-taulukosta-riviin) identity-pritn (p/arvo :lapset) (get aika-sarakkeen-index) identity-pritn (p/arvo :arvo))
+          _ (println "AIKA: " aika)
+          aika {:vuosi (pvm/vuosi aika) :kuukausi (pvm/kuukausi aika)}
+
+          kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
+          muokattu-hoitokausi (:hoitokausi (get-in taulukko polku-container-riviin))
+          tulevien-vuosien-ajat (when kopioidaan-tuleville-vuosille?
+                                  (keep-indexed (fn [index rivi]
+                                                  (when (> (:hoitokausi rivi) muokattu-hoitokausi)
+                                                    {:vuosi (+ (:vuosi aika) (- (:hoitokausi rivi) muokattu-hoitokausi))
+                                                     :kuukausi (:kuukausi aika)}))
+                                                (p/arvo taulukko :lapset)))
+          ajat (if tulevien-vuosien-ajat
+                 (cons aika tulevien-vuosien-ajat)
+                 [aika])
+          lahetettava-data {:urakka-id urakka-id
+                            :toimenpide-avain toimenpide-avain
+                            :summa (-> arvo :value js/Number)
+                            :ajat ajat}]
+      (println "LÄHETETTÄVÄ DATA: " lahetettava-data)
+      (tuck-apurit/post! app :tallenna-kiinteahintaiset-tyot
+                         lahetettava-data
+                         {:onnistui ->TallennaKiinteahintainenTyoOnnistui
+                          :epaonnistui ->TallennaKiinteahintainenTyoEpaonnistui
+                          :viive 1000
+                          :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
+                                             (str "tallenna-kustannusarvioitutyo " toimenpide-avain " " (p/arvo osa :id)))
+                          :paasta-virhe-lapi? true})))
+  TallennaKiinteahintainenTyoOnnistui
+  (process-event [{:keys [vastaus]} app]
+    app)
+  TallennaKiinteahintainenTyoEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
   TallennaKustannusarvoituTyo
   (process-event [{:keys [tallennettava-asia toimenpide-avain arvo ajat]}
                   {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
-    ;[::urakka-id ::tyyppi ::toimenpide ::summa ::vuodet]
-    ;[::tehtava ::tehtavaryhma]
     (let [{:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
-          {urakka-id :id} (:urakka @tiedot/yleiset)
           ajat (or ajat
                    (map (fn [vuosi]
                           {:vuosi vuosi})
