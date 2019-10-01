@@ -172,22 +172,27 @@
           ajat (mudosta-ajat ajat alkuvuosi loppuvuosi)
 
           olemassa-olevat-kiinteahintaiset-tyot-vuosille (fetch db ::bs/kiinteahintainen-tyo
-                                                                  #{::bs/id ::bs/smallint-v ::bs/smallint-kk}
-                                                                  {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
-                                                                   ::bs/toimenpideinstanssi toimenpideinstanssi-id})
-          olemassa-olevat-kiinteahintaiset-tyot (filter (fn [{::bs/keys [smallint-v slmallint-kk]}]
-                                                            (some #(and (= (:vuosi %) smallint-v)
-                                                                        (= (:kuukausi %) slmallint-kk))
-                                                                  ajat))
+                                                                #{::bs/id ::bs/smallint-v ::bs/smallint-kk}
+                                                                {::bs/smallint-v (op/in (into #{} (distinct (map :vuosi ajat))))
+                                                                 ::bs/toimenpideinstanssi toimenpideinstanssi-id})
+          olemassa-olevat-kiinteahintaiset-tyot (filter (fn [{::bs/keys [smallint-v smallint-kk]}]
+                                                          (some #(and (= (:vuosi %) smallint-v)
+                                                                      (= (:kuukausi %) smallint-kk))
+                                                                ajat))
                                                         olemassa-olevat-kiinteahintaiset-tyot-vuosille)
-          paivitetaan? (not (empty? olemassa-olevat-kiinteahintaiset-tyot))]
-      (if paivitetaan?
+          uudet-kiinteahintaiset-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
+                                                     (some #(and (= vuosi (::bs/smallint-v %))
+                                                                 (= kuukausi (::bs/smallint-kk %)))
+                                                           olemassa-olevat-kiinteahintaiset-tyot))
+                                                   ajat)]
+      (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
         (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
           (update! db ::bs/kiinteahintainen-tyo
                    {::bs/summa summa}
-                   {::bs/id (::bs/id olemassa-oleva-tyo)}))
+                   {::bs/id (::bs/id olemassa-oleva-tyo)})))
+      (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
         (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
-          (doseq [{:keys [vuosi kuukausi]} ajat]
+          (doseq [{:keys [vuosi kuukausi]} uudet-kiinteahintaiset-tyot-ajat]
             (insert! db ::bs/kiinteahintainen-tyo
                      {::bs/smallint-v vuosi
                       ::bs/smallint-kk kuukausi

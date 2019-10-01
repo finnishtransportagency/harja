@@ -120,7 +120,7 @@
 (defrecord PaivitaJHRivit [paivitetty-osa])
 (defrecord PaivitaSuunnitelmienTila [paivitetyt-taulukot])
 (defrecord MaksukausiValittu [])
-(defrecord TallennaKiinteahintainenTyo [toimenpide-avain osa polku-taulukkoon])
+(defrecord TallennaKiinteahintainenTyo [toimenpide-avain osa polku-taulukkoon tayta-alas?])
 (defrecord TallennaKiinteahintainenTyoOnnistui [vastaus])
 (defrecord TallennaKiinteahintainenTyoEpaonnistui [vastaus])
 (defrecord TallennaKustannusarvoituTyo [tallennettava-asia toimenpide-avain arvo ajat])
@@ -978,9 +978,9 @@
     (let [kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
           maksetaan (get-in app [:hankintakustannukset :valinnat :maksetaan])
           kauden-viimeinen-rivi-index (case maksetaan
-                                        :kesakausi 13
-                                        :talvikausi 8
-                                        :molemmat 13)
+                                        :kesakausi 12
+                                        :talvikausi 7
+                                        :molemmat 12)
           taulukko (get-in app polku-taulukkoon)
           [polku-container-riviin polku-riviin polku-soluun] (p/osan-polku-taulukossa taulukko maara-solu)
           muokattu-hoitokausi (:hoitokausi (get-in taulukko polku-container-riviin))
@@ -1015,7 +1015,7 @@
                                                                  (p/paivita-arvo hoitokauden-container :lapset
                                                                                  (fn [rivit]
                                                                                    (tyokalut/mapv-range tayta-rivista-eteenpain
-                                                                                                        kauden-viimeinen-rivi-index
+                                                                                                        (inc kauden-viimeinen-rivi-index)
                                                                                                         (fn [maara-rivi]
                                                                                                           (p/paivita-arvo maara-rivi
                                                                                                                           :lapset
@@ -1185,44 +1185,76 @@
                                                                                                                                        (update lapsirivi ::piillotettu disj :maksetaan)))))]))
                                                                               taulukot)))))))))
   TallennaKiinteahintainenTyo
-  (process-event [{:keys [toimenpide-avain osa polku-taulukkoon]}
-                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
-    (let [{:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
-          taulukko (get-in app polku-taulukkoon)
+  (process-event [{:keys [toimenpide-avain osa polku-taulukkoon tayta-alas?]} app]
+    (let [{urakan-alkupvm :alkupvm urakan-loppupvm :loppupvm urakka-id :id} (:urakka @tiedot/yleiset)
+          urakan-aloitus-v (pvm/vuosi urakan-alkupvm)
+          urakan-lopetus-v (pvm/vuosi urakan-loppupvm)
+
           arvo (p/arvo osa :arvo)
+          summa (-> arvo :value (clj-str/replace #"," ".") js/Number)
+
+          taulukko (get-in app polku-taulukkoon)
           [polku-container-riviin polku-riviin _] (p/osan-polku-taulukossa taulukko osa)
           polku-taulukosta-riviin (into [] (concat polku-container-riviin polku-riviin))
-
           aika-sarakkeen-index (p/otsikon-index taulukko "Nimi")
-          identity-pritn (fn [x] (println x) x)
-          #_(-> maara-solu (p/arvo :arvo) :value (clj-str/replace #"," "."))
-          aika (-> taulukko (get-in polku-taulukosta-riviin) identity-pritn (p/arvo :lapset) (get aika-sarakkeen-index) identity-pritn (p/arvo :arvo))
-          _ (println "AIKA: " aika)
-          aika {:vuosi (pvm/vuosi aika) :kuukausi (pvm/kuukausi aika)}
+
+          aika (-> taulukko (get-in polku-taulukosta-riviin) (p/arvo :lapset) (get aika-sarakkeen-index) (p/arvo :arvo))
+          v-kk {:vuosi (pvm/vuosi aika) :kuukausi (pvm/kuukausi aika)}
 
           kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
           muokattu-hoitokausi (:hoitokausi (get-in taulukko polku-container-riviin))
           tulevien-vuosien-ajat (when kopioidaan-tuleville-vuosille?
                                   (keep-indexed (fn [index rivi]
                                                   (when (> (:hoitokausi rivi) muokattu-hoitokausi)
-                                                    {:vuosi (+ (:vuosi aika) (- (:hoitokausi rivi) muokattu-hoitokausi))
-                                                     :kuukausi (:kuukausi aika)}))
+                                                    {:vuosi (+ (:vuosi v-kk) (- (:hoitokausi rivi) muokattu-hoitokausi))
+                                                     :kuukausi (:kuukausi v-kk)}))
                                                 (p/arvo taulukko :lapset)))
-          ajat (if tulevien-vuosien-ajat
-                 (cons aika tulevien-vuosien-ajat)
-                 [aika])
+          muokatun-summan-ajat-vuosittain (if tulevien-vuosien-ajat
+                                            (into [] (cons v-kk tulevien-vuosien-ajat))
+                                            [v-kk])
+
+          maksetaan (get-in app [:hankintakustannukset :valinnat :maksetaan])
+          muokatun-hoitokauden-paattymisvuosi (pvm/vuosi (second (pvm/paivamaaran-hoitokausi aika)))
+          kauden-viimeinen-aika (case maksetaan
+                                  :kesakausi (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 8 30)
+                                  :talvikausi (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 3 30)
+                                  :molemmat (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 8 30))
+          ajat (reduce (fn [ajat {:keys [vuosi] :as v-kk}]
+                         (if tayta-alas?
+                           (into []
+                                 (concat ajat
+                                         (keep (fn [[kuun-ensimmainen-pvm _]]
+                                                 (let [kuukausi (pvm/kuukausi kuun-ensimmainen-pvm)]
+                                                   (when (or (< urakan-aloitus-v vuosi urakan-lopetus-v)
+                                                             (and (= urakan-aloitus-v vuosi)
+                                                                  (> kuukausi 9))
+                                                             (and (= urakan-lopetus-v vuosi)
+                                                                  (< kuukausi 10)))
+                                                     {:vuosi vuosi
+                                                      :kuukausi kuukausi})))
+                                              (pvm/aikavalin-kuukausivalit [aika kauden-viimeinen-aika]))))
+                           (conj ajat v-kk)))
+                       [] (if (and tayta-alas? kopioidaan-tuleville-vuosille? (not= (last muokatun-summan-ajat-vuosittain) urakan-lopetus-v))
+                            ;; Tämä on sellainen pieni hax, että jos on täytetty urakan
+                            ;; ensimmäisen vuoden tietoja (loka, marras, joulu), niin tuossa
+                            ;; muokatun-summan-ajat-vuosittain ei ole viimeistä urakan vuotta
+                            ;; ollenkaan mukana
+                            (conj muokatun-summan-ajat-vuosittain {:vuosi urakan-lopetus-v})
+                            muokatun-summan-ajat-vuosittain))
+
+
+
           lahetettava-data {:urakka-id urakka-id
                             :toimenpide-avain toimenpide-avain
-                            :summa (-> arvo :value js/Number)
+                            :summa summa
                             :ajat ajat}]
-      (println "LÄHETETTÄVÄ DATA: " lahetettava-data)
       (tuck-apurit/post! app :tallenna-kiinteahintaiset-tyot
                          lahetettava-data
                          {:onnistui ->TallennaKiinteahintainenTyoOnnistui
                           :epaonnistui ->TallennaKiinteahintainenTyoEpaonnistui
                           :viive 1000
                           :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
-                                             (str "tallenna-kustannusarvioitutyo " toimenpide-avain " " (p/arvo osa :id)))
+                                             (str "tallenna-kustannusarvioitutyo " toimenpide-avain " " (p/arvo osa :id) " " tayta-alas?))
                           :paasta-virhe-lapi? true})))
   TallennaKiinteahintainenTyoOnnistui
   (process-event [{:keys [vastaus]} app]

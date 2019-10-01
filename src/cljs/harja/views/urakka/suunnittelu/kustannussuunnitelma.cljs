@@ -552,15 +552,16 @@
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :value arvo))))))
         on-blur (fn [event]
-                  (let [klikattu-elementti (.-relatedTarget event)]
+                  (let [klikattu-elementti (.-relatedTarget event)
+                        klikattu-nappia? (and (not (nil? klikattu-elementti))
+                                              (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
+                                                  (= (str (.getAttribute klikattu-elementti "data-id"))
+                                                     (str (p/osan-id this)))))]
                     (e! (t/->PaivitaToimenpideTaulukko (::tama-komponentti osa/*this*) polku-taulukkoon))
-                    (e! (t/->TallennaKiinteahintainenTyo toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon))
                     (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
                     ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
-                    (when-not (and (not (nil? klikattu-elementti))
-                                   (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
-                                       (= (str (.getAttribute klikattu-elementti "data-id"))
-                                          (str (p/osan-id this)))))
+                    (when-not klikattu-nappia?
+                      (e! (t/->TallennaKiinteahintainenTyo toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon false))
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false)))))))
@@ -588,7 +589,8 @@
                       (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false))))
-                      (e! (t/->TaytaAlas this polku-taulukkoon)))]
+                      (e! (t/->TaytaAlas this polku-taulukkoon))
+                      (e! (t/->TallennaKiinteahintainenTyo toimenpide-avain this polku-taulukkoon true)))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
                               :tab-index -1
