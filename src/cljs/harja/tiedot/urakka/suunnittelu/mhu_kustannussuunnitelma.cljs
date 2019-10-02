@@ -174,6 +174,9 @@
 (defrecord TallennaJohtoJaHallintokorvaukset [osa polku-taulukkoon])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
 (defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
+(defrecord TallennaJaPaivitaTavoiteSekaKattohinta [])
+(defrecord TallennaJaPaivitaTavoiteSekaKattohintaOnnistui [vastaus])
+(defrecord TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui [vastaus])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -675,14 +678,14 @@
                                                              nil
                                                              tavoite-ja-kattohintapohjadata)]
 
-      (assoc app :tavoitehinnat (mapv (fn [{:keys [tavoitehinta hoitokausi]}]
-                                        {:summa tavoitehinta
-                                         :hoitokausi hoitokausi})
-                                      tavoite-ja-kattohinnat)
-                 :kattohinnat (mapv (fn [{:keys [kattohinta hoitokausi]}]
-                                      {:summa kattohinta
-                                       :hoitokausi hoitokausi})
-                                    tavoite-ja-kattohinnat))))
+      (assoc app :tavoite-ja-kattohinta {:tavoitehinnat (mapv (fn [{:keys [tavoitehinta hoitokausi]}]
+                                                                {:summa tavoitehinta
+                                                                 :hoitokausi hoitokausi})
+                                                              tavoite-ja-kattohinnat)
+                                         :kattohinnat (mapv (fn [{:keys [kattohinta hoitokausi]}]
+                                                              {:summa kattohinta
+                                                               :hoitokausi hoitokausi})
+                                                            tavoite-ja-kattohinnat)})))
   HaeTavoiteJaKattohintaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     ;;TODO
@@ -749,7 +752,11 @@
                                                                         (first %))
                                                                      toimenpiteiden-avaimet)))
                                                        #{} (distinct
-                                                             (map :toimenpide hankinnat-laskutukseen-perustuen-hoitokausille)))
+                                                             (eduction
+                                                               (remove #(or (= (:summa %) 0)
+                                                                            (= (:summa %) "")))
+                                                               (map :toimenpide)
+                                                               hankinnat-laskutukseen-perustuen-hoitokausille)))
           hankinnat-toimenpiteittain (group-by :toimenpide hankinnat-hoitokausille)
           hankinnat-laskutukseen-perustuen-toimenpiteittain (group-by :toimenpide hankinnat-laskutukseen-perustuen-hoitokausille)
           hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
@@ -1343,6 +1350,72 @@
   (process-event [{:keys [vastaus]} app]
     app)
   TallennaJohtoJaHallintokorvauksetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  TallennaJaPaivitaTavoiteSekaKattohinta
+  (process-event [_ {:keys [hankintakustannukset hallinnolliset-toimenpiteet tavoite-ja-kattohinta]
+                     {kuluva-hoitovuosi :vuosi} :kuluva-hoitokausi :as app}]
+    (let [{:keys [toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset]} hankintakustannukset
+          {:keys [erillishankinnat johto-ja-hallintokorvaus-yhteenveto toimistokulut johtopalkkio]} hallinnolliset-toimenpiteet
+          vuosia-eteenpain (- 6 kuluva-hoitovuosi)
+          maara-taulukko-summa (fn [taulukko]
+                                 (repeat vuosia-eteenpain
+                                         (-> taulukko tyokalut/taulukko->data second (get "Yhteensä"))))
+          toimenpiteet-summat (reduce-kv (fn [hoitokausien-summat toimenpide-avain taulukko]
+                                           (let [toimenpiteen-laajenna-rivien-data (->> taulukko tyokalut/taulukko->data rest butlast (take-nth 13))
+                                                 toimenpiteen-summat (map #(get % "Yhteensä") toimenpiteen-laajenna-rivien-data)]
+                                             (map + hoitokausien-summat toimenpiteen-summat)))
+                                         (repeat 5 0) toimenpiteet)
+          toimenpiteet-laskutukseen-perustuen-summat (reduce-kv (fn [hoitokausien-summat toimenpide-avain taulukko]
+                                                                  (let [toimenpiteen-laajenna-rivien-data (->> taulukko tyokalut/taulukko->data rest butlast (take-nth 13))
+                                                                        toimenpiteen-summat (map #(get % "Yhteensä") toimenpiteen-laajenna-rivien-data)]
+                                                                    (map + hoitokausien-summat toimenpiteen-summat)))
+                                                                (repeat 5 0) toimenpiteet-laskutukseen-perustuen)
+
+          johto-ja-hallintokorvaus-yhteenveto-data (-> johto-ja-hallintokorvaus-yhteenveto tyokalut/taulukko->data rest butlast)
+          johto-ja-hallintokorvaus-yhteensa-summat (map (fn [hoitokausi]
+                                                          (let [vuoden-otsikko (str hoitokausi ".vuosi/€")]
+                                                            (apply + (map #(get % vuoden-otsikko) johto-ja-hallintokorvaus-yhteenveto-data))))
+                                                        (range 1 6))
+
+          ;; rahavaraukset ja vastaavat laskee summan kuluvalle vuodelle ja siitä eteenpäin.
+          ;; hankinnat taas kaikki vuodet
+          rahavaraukset-summat (reduce-kv (fn [hoitokausien-summat toimenpide-avain taulukko]
+                                            (let [toimenpiteen-laajenna-rivien-data (-> taulukko tyokalut/taulukko->data rest)
+                                                  toimenpiteen-vuoden-summa (apply + (map #(get % "Yhteensä") toimenpiteen-laajenna-rivien-data))]
+                                              (+ hoitokausien-summat toimenpiteen-vuoden-summa)))
+                                          0 rahavaraukset)
+          rahavaraukset-summat (repeat vuosia-eteenpain rahavaraukset-summat)
+          erillishankinnat-summat (maara-taulukko-summa erillishankinnat)
+          toimistokulut-summat (maara-taulukko-summa toimistokulut)
+          johtopalkkio-summat (maara-taulukko-summa johtopalkkio)
+
+          summatut-arvot (map +
+                              (drop (dec kuluva-hoitovuosi) toimenpiteet-summat)
+                              (drop (dec kuluva-hoitovuosi) toimenpiteet-laskutukseen-perustuen-summat)
+                              (drop (dec kuluva-hoitovuosi) johto-ja-hallintokorvaus-yhteensa-summat)
+                              rahavaraukset-summat
+                              erillishankinnat-summat
+                              toimistokulut-summat
+                              johtopalkkio-summat)
+          paivitetyt-tavoitehinnat (map (fn [{:keys [summa hoitokausi] :as yhteensa}]
+                                          (if (< hoitokausi kuluva-hoitovuosi)
+                                            yhteensa
+                                            (assoc yhteensa :summa (+ summa (nth summatut-arvot (dec hoitokausi))))))
+                                        (:tavoitehinnat tavoite-ja-kattohinta))]
+      (update app :tavoite-ja-kattohinta (fn [tavoite-ja-kattohinta]
+                                           (-> tavoite-ja-kattohinta
+                                               (assoc :tavoitehinnat (into [] paivitetyt-tavoitehinnat))
+                                               (assoc :kattohinnat (mapv (fn [tavoitehinta]
+                                                                           (update tavoitehinta :summa * 1.1))
+                                                                         paivitetyt-tavoitehinnat)))))))
+  TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    app)
+  TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)

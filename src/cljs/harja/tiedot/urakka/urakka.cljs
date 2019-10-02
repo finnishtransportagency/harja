@@ -2,6 +2,7 @@
   "MHU-urakoiden tila täällä. Hyvä olisi joskus saada muutkin tänne, yhden atomin alle."
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom cursor]]
+            [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]))
 
 (def suunnittelu-default-arvot {:tehtavat {:valinnat {:toimenpide nil
@@ -10,7 +11,8 @@
                                                                                          :maksetaan :molemmat
                                                                                          :kopioidaan-tuleville-vuosille? true
                                                                                          :laskutukseen-perustuen-valinta #{}}}
-                                                       :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}}})
+                                                       :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}
+                                                       :kaskytyskanava (chan)}})
 
 (defonce tila (atom {:yleiset {:urakka {}}
                      :suunnittelu suunnittelu-default-arvot}))

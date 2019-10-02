@@ -125,7 +125,7 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta [tavoitehinnat kattohinnat kuluva-hoitokausi]
+(defn tavoite-ja-kattohinta-sisalto [{:keys [tavoitehinnat kattohinnat]} kuluva-hoitokausi]
   (if (and tavoitehinnat kattohinnat)
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
@@ -470,10 +470,8 @@
                                                                                                                      :johtopalkkio)}))))))
 
 (defn suunnitelmien-tila
-  [e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
-  (let [paivitetyt-taulukot (cljs.core/atom {})
-        kaskytys-kanava (chan)]
-    (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 kaskytys-kanava))
+  [e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
+  (let [paivitetyt-taulukot (cljs.core/atom {})]
     (komp/luo
       (komp/piirretty (fn [this]
                         (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
@@ -490,9 +488,9 @@
                                                                  (suunnitelman-paivitettavat-osat edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
                                                                                                   vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet))))
                                   (not= old-argv new-argv))}
-      (fn [e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
+      (fn [e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
         (when (and (:toimenpiteet hankintakustannukset) (:johtopalkkio hallinnolliset-toimenpiteet))
-          (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)])))
+          (go (>! kaskytyskanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)])))
         (if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
           [p/piirra-taulukko suunnitelmien-tila-taulukko]
           [yleiset/ajax-loader])))))
@@ -545,7 +543,7 @@
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
    'Täytä alas' nappi päälle."
-  [this {:keys [input-luokat nimi e! laskutuksen-perusteella-taulukko? polku-taulukkoon toimenpide-avain]} value]
+  [this {:keys [input-luokat kaskytyskanava nimi e! laskutuksen-perusteella-taulukko? polku-taulukkoon toimenpide-avain]} value]
   (let [on-change (fn [arvo]
                     (when arvo
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
@@ -564,7 +562,8 @@
                       (e! (t/->TallennaHankintasuunnitelma toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon false laskutuksen-perusteella-taulukko?))
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                   (fn [komponentin-tila]
-                                                    (assoc komponentin-tila :nappi-nakyvilla? false)))))))
+                                                    (assoc komponentin-tila :nappi-nakyvilla? false))))
+                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))))
         on-focus (fn [_]
                    (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                (fn [komponentin-tila]
@@ -589,7 +588,8 @@
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false))))
                       (e! (t/->TaytaAlas this polku-taulukkoon))
-                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain this polku-taulukkoon true laskutuksen-perusteella-taulukko?)))]
+                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain this polku-taulukkoon true laskutuksen-perusteella-taulukko?))
+                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
                               :tab-index -1
@@ -614,7 +614,7 @@
                 "Yhteensä" (yhteensa osa))))
           osat)))
 
-(defn hankintojen-taulukko [e! toimenpiteet
+(defn hankintojen-taulukko [e! kaskytyskanava toimenpiteet
                             {laskutukseen-perustuen :laskutukseen-perustuen
                              valittu-toimenpide :toimenpide}
                             toimenpide-avain
@@ -706,6 +706,7 @@
                                                                                                    :toimenpide-avain toimenpide-avain
                                                                                                    :on-oikeus? on-oikeus?
                                                                                                    :polku-taulukkoon polku-taulukkoon
+                                                                                                   :kaskytyskanava kaskytyskanava
                                                                                                    :luokat #{(sarakkeiden-leveys :maara-kk)}
                                                                                                    :input-luokat #{"input-default" "komponentin-input"}}))
                                                                (-> osa
@@ -804,7 +805,7 @@
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                           :class #{}}))))
 
-(defn rahavarausten-taulukko [e! toimenpiteet
+(defn rahavarausten-taulukko [e! kaskytyskanava toimenpiteet
                               {valittu-toimenpide :toimenpide}
                               toimenpide-avain
                               on-oikeus?]
@@ -870,7 +871,8 @@
                                                                                                 :on-blur (fn [arvo]
                                                                                                            (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
                                                                                                            (e! (t/->TallennaKustannusarvoituTyo (tyyppi->tallennettava-asia tyyppi) toimenpide-avain arvo nil))
-                                                                                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))
+                                                                                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
+                                                                                                           (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))
                                                                                                 :on-key-down (fn [event]
                                                                                                                (when (= "Enter" (.. event -key))
                                                                                                                  (.. event -target blur)))}
@@ -1005,7 +1007,7 @@
                  hoitokausikohtaiset-rivit)))
 
 (defn johto-ja-hallintokorvaus-laskulla-taulukko
-  [e! jh-korvaukset on-oikeus?]
+  [e! kaskytyskanava jh-korvaukset on-oikeus?]
   (let [osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
                             (fn [osat]
                               (mapv (fn [osa]
@@ -1073,7 +1075,8 @@
                                                                                                                             (when arvo
                                                                                                                               (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
                                                                                                                               (e! (t/->TallennaJohtoJaHallintokorvaukset osa/*this* polku-taulukkoon))
-                                                                                                                              (e! (t/->PaivitaJHRivit osa/*this*))))
+                                                                                                                              (e! (t/->PaivitaJHRivit osa/*this*))
+                                                                                                                              (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                                                  :on-key-down (fn [event]
                                                                                                                                 (when (= "Enter" (.. event -key))
                                                                                                                                   (.. event -target blur)))}
@@ -1349,7 +1352,7 @@
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                         :class #{}})))
 
-(defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi taulukko-elementin-id
+(defn maara-kk-taulukko [e! kaskytyskanava polku-taulukkoon rivin-nimi taulukko-elementin-id
                          {:keys [maara-kk yhteensa]} tallennettava-asia on-oikeus?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
@@ -1399,7 +1402,8 @@
                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                         :on-blur (fn [arvo]
                                                                                                    (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                   (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil)))
+                                                                                                   (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                                   (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))
                                                                                         :on-key-down (fn [event]
                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                          (.. event -target blur)))}
@@ -1770,15 +1774,16 @@
     (komp/piirretty (fn [_]
                       (e! (t/->Hoitokausi))
                       (e! (t/->Oikeudet))
-                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!)
-                                                       (partial rahavarausten-taulukko e!)
-                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
+                      (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
+                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
+                                                       (partial rahavarausten-taulukko e! (:kaskytyskanava app))
+                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko (:kaskytyskanava app) e!)
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
-    (fn [e! {:keys [suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? tavoitehinnat
-                    kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
+    (fn [e! {:keys [suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? tavoite-ja-kattohinta
+                    hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi kaskytyskanava
                     kirjoitusoikeus?] :as app}]
       [:div#kustannussuunnitelma
        ;[debug/debug app]
@@ -1789,7 +1794,7 @@
         "Tavoite- ja kattohinta lasketaan automaattisesti"
         {:alussa-auki? true
          :id "tavoite-ja-kattohinta"}
-        [tavoite-ja-kattohinta tavoitehinnat kattohinnat kuluva-hoitokausi]
+        [tavoite-ja-kattohinta-sisalto tavoite-ja-kattohinta kuluva-hoitokausi]
         [:span#tavoite-ja-kattohinta-huomio
          "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
        [:span.viiva-alas]
@@ -1797,7 +1802,7 @@
         "Suunnitelmien tila"
         {:alussa-auki? true
          :otsikko-elementti :h2}
-        [suunnitelmien-tila e! suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]]
+        [suunnitelmien-tila e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]]
        [:span.viiva-alas]
        [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi kirjoitusoikeus?]
        [:span.viiva-alas]
