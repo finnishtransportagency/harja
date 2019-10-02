@@ -164,7 +164,7 @@
                              {:urakka-id urakka-id
                               :valitavoitteet valitavoitteet})))))
 
-(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
+#_(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                            (hae-oulun-alueurakan-2014-2019-id))
@@ -192,7 +192,7 @@
     (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
 
 
-(deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
+#_(deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                            (hae-oulun-alueurakan-2014-2019-id))
