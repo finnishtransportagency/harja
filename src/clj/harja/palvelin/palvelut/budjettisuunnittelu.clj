@@ -92,11 +92,11 @@
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.
-  Budjettitiedoissa: hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta.
+  Budjettitiedoissa: hoitokausi, tavoitehinta, kattohinta.
   Budjettitavoitteet-vektorissa voi lähettää yhden tai useamman mäpin, jossa kussakin urakan yhden hoitokauden tiedot."
   [db user {:keys [urakka-id tavoitteet]}]
 
-  (let [urakkatyyppi (keyword (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))]
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä " urakkatyyppi ". Tavoite kirjataan vain teiden hoidon urakoille."))))
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))
@@ -258,7 +258,6 @@
   {:pre [(integer? urakka-id)
          (string? toimenkuva)
          (keyword? maksukausi)]}
-  ;"urakka-id", "toimenkuva-id", maksukausi, hoitokausi, tunnit, tuntipalkka
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [toimenkuva-id (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
@@ -388,9 +387,7 @@
 
 (s/def ::vuosi integer?)
 (s/def ::kuukausi integer?)
-;(s/def ::yksikkohinta integer?)
 (s/def ::urakka-id integer?)
-;(s/def ::tehtava string?)
 (s/def ::toimenkuva string?)
 (s/def ::maksukausi keyword?)
 (s/def ::hoitokausi integer?)
@@ -404,17 +401,11 @@
                                          (keys toimenpide-avain->toimenpide)))))
 (s/def ::tallennettava-asia tallennettava-asia)
 
-#_(s/def ::yksikkohintainen-tyo (s/keys :req-un [::vuosi ::yksikkohinta]))
-#_(s/def ::tyot (s/coll-of ::yksikkohintainen-tyo))
-
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
 
 (s/def ::ajat (s/coll-of (s/keys :req-un [::vuosi]
                                  :opt-un [::kuukausi])))
-
-#_(s/def ::tallenna-yksikkohintainen-tyo-kysely (s/keys :req-un [::urakka-id ::tehtava ::tyot]))
-#_(s/def ::tallenna-yksikkohintainen-tyo-vastaus any?)
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
@@ -443,12 +434,6 @@
           (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
                                         (tallenna-urakan-tavoite db user tiedot)))
-          #_(julkaise-palvelu
-            :tallenna-yksikkohintainen-tyo
-            (fn [user tiedot]
-              (tallenna-yksikkohintainen-tyo db user tiedot))
-            {:kysely-spec ::tallenna-yksikkohintainen-tyo-kysely
-             :vastaus-spec ::tallenna-yksikkohintainen-tyo-vastaus})
 
           (julkaise-palvelu
             :tallenna-kiinteahintaiset-tyot

@@ -670,14 +670,12 @@
   (process-event [{vastaus :vastaus} app]
     (log "HAE TAVOITE JA KATTOHINTA ONNISTUI")
     (let [tavoite-ja-kattohintapohjadata (mapv (fn [hoitokausi]
-                                                 {:tavoitehinta 0
-                                                  :kattohinta 0
-                                                  :hoitokausi hoitokausi})
+                                                 {:hoitokausi hoitokausi})
                                                (range 1 6))
           tavoite-ja-kattohinnat (tyokalut/generoi-pohjadata vastaus
-                                                             nil
+                                                             {:tavoitehinta 0
+                                                              :kattohinta 0}
                                                              tavoite-ja-kattohintapohjadata)]
-
       (assoc app :tavoite-ja-kattohinta {:tavoitehinnat (mapv (fn [{:keys [tavoitehinta hoitokausi]}]
                                                                 {:summa tavoitehinta
                                                                  :hoitokausi hoitokausi})
@@ -1361,6 +1359,8 @@
     (let [{:keys [toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset]} hankintakustannukset
           {:keys [erillishankinnat johto-ja-hallintokorvaus-yhteenveto toimistokulut johtopalkkio]} hallinnolliset-toimenpiteet
           vuosia-eteenpain (- 6 kuluva-hoitovuosi)
+          kattohinnan-kerroin 1.1
+
           maara-taulukko-summa (fn [taulukko]
                                  (repeat vuosia-eteenpain
                                          (-> taulukko tyokalut/taulukko->data second (get "Yhteensä"))))
@@ -1405,13 +1405,27 @@
                                           (if (< hoitokausi kuluva-hoitovuosi)
                                             yhteensa
                                             (assoc yhteensa :summa (nth summatut-arvot (dec hoitokausi)))))
-                                        (:tavoitehinnat tavoite-ja-kattohinta))]
-      (update app :tavoite-ja-kattohinta (fn [tavoite-ja-kattohinta]
-                                           (-> tavoite-ja-kattohinta
-                                               (assoc :tavoitehinnat (into [] paivitetyt-tavoitehinnat))
-                                               (assoc :kattohinnat (mapv (fn [tavoitehinta]
-                                                                           (update tavoitehinta :summa * 1.1))
-                                                                         paivitetyt-tavoitehinnat)))))))
+                                        (:tavoitehinnat tavoite-ja-kattohinta))
+          ;; Kantaan lähtevä data
+          {urakka-id :id} (:urakka @tiedot/yleiset)
+
+          lahetettava-data {:urakka-id urakka-id
+                            :tavoitteet (mapv (fn [{:keys [summa hoitokausi]}]
+                                                {:hoitokausi hoitokausi
+                                                 :tavoitehinta summa
+                                                 :kattohinta (* summa kattohinnan-kerroin)})
+                                              paivitetyt-tavoitehinnat)}
+          app (update app :tavoite-ja-kattohinta (fn [tavoite-ja-kattohinta]
+                                                   (-> tavoite-ja-kattohinta
+                                                       (assoc :tavoitehinnat (into [] paivitetyt-tavoitehinnat))
+                                                       (assoc :kattohinnat (mapv (fn [tavoitehinta]
+                                                                                   (update tavoitehinta :summa * kattohinnan-kerroin))
+                                                                                 paivitetyt-tavoitehinnat)))))]
+      (tuck-apurit/post! app :tallenna-budjettitavoite
+                         lahetettava-data
+                         {:onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+                          :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
+                          :paasta-virhe-lapi? true})))
   TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
   (process-event [{:keys [vastaus]} app]
     app)
