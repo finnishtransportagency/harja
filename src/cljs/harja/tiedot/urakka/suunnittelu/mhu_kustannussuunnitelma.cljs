@@ -1404,7 +1404,7 @@
           paivitetyt-tavoitehinnat (map (fn [{:keys [summa hoitokausi] :as yhteensa}]
                                           (if (< hoitokausi kuluva-hoitovuosi)
                                             yhteensa
-                                            (assoc yhteensa :summa (+ summa (nth summatut-arvot (dec hoitokausi))))))
+                                            (assoc yhteensa :summa (nth summatut-arvot (dec hoitokausi)))))
                                         (:tavoitehinnat tavoite-ja-kattohinta))]
       (update app :tavoite-ja-kattohinta (fn [tavoite-ja-kattohinta]
                                            (-> tavoite-ja-kattohinta

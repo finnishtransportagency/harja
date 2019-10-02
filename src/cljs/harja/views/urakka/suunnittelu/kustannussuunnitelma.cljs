@@ -1777,7 +1777,7 @@
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
                                                        (partial rahavarausten-taulukko e! (:kaskytyskanava app))
-                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko (:kaskytyskanava app) e!)
+                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
