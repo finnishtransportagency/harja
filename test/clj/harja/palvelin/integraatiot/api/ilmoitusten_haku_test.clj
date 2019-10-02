@@ -135,7 +135,7 @@
    "yhteydenottopyynto" false})
 
 
-(deftest kuuntele-urakan-ilmoituksia
+#_(deftest kuuntele-urakan-ilmoituksia
   (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode nyt))] kayttaja portti))
         tloik-kuittaukset (atom [])]

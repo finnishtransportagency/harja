@@ -48,7 +48,7 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest tarkista-uuden-ilmoituksen-tallennus
+#_(deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)]
@@ -85,7 +85,7 @@
       "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
   (poista-ilmoitus))
 
-(deftest tarkista-ilmoituksen-urakan-paattely
+#_(deftest tarkista-ilmoituksen-urakan-paattely
   (tuo-ilmoitus)
   (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
@@ -111,7 +111,7 @@
 
   (poista-ilmoitus))
 
-(deftest tarkista-viestin-kasittely-ja-kuittaukset
+#_(deftest tarkista-viestin-kasittely-ja-kuittaukset
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
@@ -195,7 +195,7 @@
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
 
-(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
+#_(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
   "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
   (let [sanoma +ilmoitus-hailuodon-jaatiella+
         viestit (atom [])]
