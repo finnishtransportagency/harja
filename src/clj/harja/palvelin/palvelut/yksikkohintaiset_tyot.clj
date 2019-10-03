@@ -3,15 +3,13 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [clojure.set :refer [intersection difference]]
-            [clojure.string :as clj-str]
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
 
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.urakat :as u-q]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 
 (defn hae-urakan-yksikkohintaiset-tyot
@@ -21,11 +19,9 @@
       (oikeudet/voi-lukea? oikeudet/urakat-toteumat-yksikkohintaisettyot urakka-id user))
   (oikeudet/ei-oikeustarkistusta!)
   (into []
-        (comp
-          (map konv/alaviiva->rakenne)
-          (map #(assoc %
-                  :maara (if (:maara %) (double (:maara %)))
-                  :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %))))))
+        (map #(assoc %
+                :maara (if (:maara %) (double (:maara %)))
+                :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %)))))
         (q/listaa-urakan-yksikkohintaiset-tyot db {:urakka urakka-id})))
 
 (defn tallenna-urakan-yksikkohintaiset-tyot
