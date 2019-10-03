@@ -3,7 +3,6 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [clojure.set :refer [intersection difference]]
-            [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as t]
             [clj-time.coerce :as c]

@@ -195,6 +195,8 @@
   [:span.glyphicon.glyphicon-leaf])
 (defn fire []
   [:span.glyphicon.glyphicon-fire])
+(defn warning []
+  [:span.glyphicon.glyphicon-warning-sign])
 (defn eye-open []
   [:span.glyphicon.glyphicon-eye-open])
 (defn eye-close []
@@ -493,6 +495,17 @@
   [:span.glyphicon.glyphicon-menu-down])
 (defn menu-up []
   [:span.glyphicon.glyphicon-menu-up])
+
+;; Open iconi
+
+(defn oi-caret-bottom []
+  [:img {:src "/open-iconic/svg/caret-bottom.svg" :alt "caret-bottom"}])
+(defn oi-caret-left []
+  [:img {:src "/open-iconic/svg/caret-left.svg" :alt "caret-left"}])
+(defn oi-caret-right []
+  [:img {:src "/open-iconic/svg/caret-right.svg" :alt "caret-right"}])
+(defn oi-caret-top []
+  [:img {:src "/open-iconic/svg/caret-top.svg" :alt "caret-top"}])
 
 ;; Livin ikonit
 
