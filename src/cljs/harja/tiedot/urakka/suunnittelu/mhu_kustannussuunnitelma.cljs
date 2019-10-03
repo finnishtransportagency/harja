@@ -115,26 +115,24 @@
                                               (p/arvo taulukko :lapset)))
         muokatun-summan-ajat-vuosittain (if tulevien-vuosien-ajat
                                           (into [] (cons v-kk tulevien-vuosien-ajat))
-                                          [v-kk])
-
-        muokatun-hoitokauden-paattymisvuosi (pvm/vuosi (second (pvm/paivamaaran-hoitokausi aika)))
-        kauden-viimeinen-aika (case maksetaan
-                                :kesakausi (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 8 30)
-                                :talvikausi (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 3 30)
-                                :molemmat (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 8 30))]
-    (reduce (fn [ajat {:keys [vuosi] :as v-kk}]
-              (if tayta-alas?
-                (into []
-                      (concat ajat
-                              (keep (fn [[kuun-ensimmainen-pvm _]]
-                                      (let [kuukausi (pvm/kuukausi kuun-ensimmainen-pvm)]
-                                        (if (> kuukausi 9)
+                                          [v-kk])]
+    (reduce (fn [ajat {:keys [vuosi]}]
+              (let [muokattavan-rivin-aika (pvm/luo-pvm vuosi (dec (:kuukausi v-kk)) 15)
+                    muokatun-hoitokauden-paattymisvuosi (pvm/vuosi (second (pvm/paivamaaran-hoitokausi muokattavan-rivin-aika)))
+                    kauden-viimeinen-aika (case maksetaan
+                                            :kesakausi (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 8 30)
+                                            :talvikausi (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 3 30)
+                                            :molemmat (pvm/luo-pvm muokatun-hoitokauden-paattymisvuosi 8 30))]
+                (if tayta-alas?
+                  (into []
+                        (concat ajat
+                                (keep (fn [[kuun-ensimmainen-pvm _]]
+                                        (let [kuukausi (pvm/kuukausi kuun-ensimmainen-pvm)
+                                              vuosi (pvm/vuosi kuun-ensimmainen-pvm)]
                                           {:vuosi vuosi
-                                           :kuukausi kuukausi}
-                                          {:vuosi (inc vuosi)
-                                           :kuukausi kuukausi})))
-                                    (pvm/aikavalin-kuukausivalit [aika kauden-viimeinen-aika]))))
-                (conj ajat v-kk)))
+                                           :kuukausi kuukausi}))
+                                      (pvm/aikavalin-kuukausivalit [muokattavan-rivin-aika kauden-viimeinen-aika]))))
+                  (conj ajat v-kk))))
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
