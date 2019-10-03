@@ -195,6 +195,12 @@
                                                                         @tiedot/valittu-integraatio))
                                                 (reset! tiedot/valittu-integraatio nil)))}
           (vec (concat [nil] (sort-by :jarjestelma @tiedot/jarjestelmien-integraatiot)))]]
+        [harja.ui.yleiset/pudotusvalikko
+         "Automaattinen päivitys"
+         {:valinta @tiedot/hae-automaattisesti?
+          :format-fn #(if % "Päällä" "Pois päältä")
+          :valitse-fn #(reset! tiedot/hae-automaattisesti? %)}
+         [true false]]
 
         (when @tiedot/valittu-jarjestelma
           [:div.label-ja-alasveto
@@ -257,7 +263,7 @@
            @tiedot/hakuehdot])
 
         [grid
-         {:otsikko (if @tiedot/nayta-uusimmat-tilassa? "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
+         {:otsikko (if @tiedot/nayta-uusimmat-tilassa? "Uusimmat tapahtumat" "Tapahtumat")
           :tyhja (if @tiedot/haetut-tapahtumat "Ei tapahtumia" [ajax-loader "Haetaan tapahtumia"])
           :vetolaatikot (into {}
                               (map (juxt :id (fn [tapahtuma]
@@ -308,7 +314,6 @@
          @tiedot/haetut-tapahtumat]]])))
 
 (defn aloita-tapahtumien-paivitys! []
-
   (let [paivita? (atom true)]
     (go
       (when @tiedot/nayta-uusimmat-tilassa?
@@ -317,11 +322,10 @@
       (loop []
         (<! (timeout 20000))
         (when @paivita?
-          (when @tiedot/nayta-uusimmat-tilassa?
+          (when (and @tiedot/hae-automaattisesti? @tiedot/nayta-uusimmat-tilassa?)
             (tiedot/hae-tapahtumat!))
           (recur))))
-    #(reset! paivita? false)                                ;; palautetaan pysäytysfunktio jota komp/ulos kutsuu
-    ))
+    #(reset! paivita? false)))                                ;; palautetaan pysäytysfunktio jota komp/ulos kutsuu
 
 (defn integraatioloki []
   (komp/luo
