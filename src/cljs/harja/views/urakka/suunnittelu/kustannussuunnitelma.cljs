@@ -265,6 +265,7 @@
                                                        (fn [osat]
                                                          (update osat 0 (fn [laajenna-osa]
                                                                           (-> laajenna-osa
+                                                                              (assoc-in [:parametrit :ikoni] "triangle")
                                                                               (p/aseta-arvo :id (str (gensym "laajenna-toimenpide")))
                                                                               (p/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
                                                                               (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2)))))))))))
