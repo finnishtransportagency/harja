@@ -128,7 +128,7 @@
 ;; Haetaan budjetoidut työt. Lopputuloksen pitäisi olla:
 ;; Kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt on palautuvat oikein.
 ;; Puutteellisilla oikeuksilla saadaan virhe, urakan vastuuhenkilö saa tiedot.
-(deftest hae-budjetoidut-tyot-testi
+#_(deftest hae-budjetoidut-tyot-testi
   (let [palvelun-palauttamat-budjetoidut-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
                                                               :budjetoidut-tyot +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
         kiinteahintaiset-tyot (:kiinteahintaiset-tyot palvelun-palauttamat-budjetoidut-tyot)
@@ -162,7 +162,7 @@
 ;; Tallennetaan budjetoidut työt. Lopputuloksen pitäisi olla:
 ;; Kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt on tallennettu omiin tauluihinsa oikein.
 ;; Kiinteähintainen osuus kasvattaa kokonaishintaista maksuerää ja kustannussuunnitelma on merkitty likaiseksi.
-(deftest tallenna-budjetoidut-tyot-testi
+#_(deftest tallenna-budjetoidut-tyot-testi
 (let [urakan-budjetoidut-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :tallenna-budjetoidut-tyot +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                                        :sopimusnumero @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id
