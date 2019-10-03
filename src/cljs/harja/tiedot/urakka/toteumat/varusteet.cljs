@@ -80,8 +80,7 @@
   (assoc app
     :toteumahaku-id (.setTimeout js/window
                                  (t/send-async! v/->HaeVarusteToteumat)
-                                 timeout)
-    :toteumat nil))
+                                 timeout)))
 
 (defn- tooltip [{:keys [toimenpide tietolaji alkupvm]}]
   (str
@@ -188,12 +187,20 @@
       :sijainti (:sijainti varuste)
       :tunniste (:tunniste varuste)})))
 
-(defn naytettavat-toteumat [valittu-toimenpide toteumat]
+(defn- palauta-tilan-arvo [virheelliset-ainoastaan?]
+  (if virheelliset-ainoastaan? "virhe" nil))
+
+(defn naytettavat-toteumat [suodatukset toteumat]
   (reverse
     (sort-by :luotu
-             (if valittu-toimenpide
-               (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
-               toteumat))))
+             (filter (fn [toteuma]
+                       (every? true? (map #(let [k (first %)
+                                                 v (last %)]
+                                             (if (nil? v)
+                                               true
+                                               (= (get toteuma k) v)))
+                                          suodatukset)))
+                     toteumat))))
 
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
                     {uusi-tr :tierekisteriosoite}
@@ -220,7 +227,8 @@
 (defn haetut-toteumat [app toteumat]
   (assoc app
     :toteumat toteumat
-    :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
+    :naytettavat-toteumat (naytettavat-toteumat {:tila (palauta-tilan-arvo (get-in app [:valinnat :virheelliset-ainoastaan?]))
+                                                 :toimenpide (first (get-in app [:valinnat :tyyppi]))} toteumat)))
 
 (defn kartalle [app]
   (assoc app :karttataso (varustetoteumat-karttataso (:naytettavat-toteumat app)
@@ -264,14 +272,15 @@
                   {valittu-toimenpide :valittu-toimenpide
                    valittu-toteumaid :valittu-toteumaid
                    varustetoteuma :varustetoteuma
+                   valinnat :valinnat
                    :as app}]
-
     (hae
       taustahaun-viive-ms
       (kartalle
         (assoc app
           :toteumat toteumat
-          :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
+          :naytettavat-toteumat (naytettavat-toteumat {:tila (palauta-tilan-arvo (:virheelliset-ainoastaan? valinnat))
+                                                       :toimenpide valittu-toimenpide} toteumat)
           :varustetoteuma (if valittu-toteumaid
                             ;; Jos katsotaan vanhaa, päivitä tiedot palvelimelta
                             (some #(when (= (:toteumaid %) valittu-toteumaid) %)
@@ -281,10 +290,21 @@
                             varustetoteuma)
           :valittu-toteumaid nil))))
 
+  v/ValitseVarusteNaytetaanVirheelliset
+  (process-event [{virheelliset-ainoastaan? :virheelliset-ainoastaan?} {:keys [valinnat toteumat] :as app}]
+    (kartalle
+      (assoc app
+        :valinnat (assoc valinnat :virheelliset-ainoastaan? virheelliset-ainoastaan?)
+        :naytettavat-toteumat (naytettavat-toteumat {:tila (palauta-tilan-arvo virheelliset-ainoastaan?)
+                                                     :toimenpide (first (get-in app [:valinnat :tyyppi]))}
+                                                    toteumat))))
+
   v/ValitseVarusteToteumanTyyppi
-  (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
+  (process-event [{tyyppi :tyyppi} {:keys [valinnat toteumat] :as app}]
     (let [valittu-toimenpide (first tyyppi)
-          naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)]
+          valittu-tila (palauta-tilan-arvo (:virheelliset-ainoastaan? valinnat))
+          naytettavat-toteumat (naytettavat-toteumat {:tila valittu-tila
+                                                      :toimenpide valittu-toimenpide} toteumat)]
       (kartalle
         (assoc app
           :valinnat (assoc valinnat :tyyppi tyyppi)
