@@ -25,7 +25,7 @@ SELECT kat.id,
        kat.tyyppi ::TOTEUMATYYPPI,
        tpik_t.nimi AS "tehtava-nimi",
        tr.nimi AS "tehtavaryhman-nimi",
-       tpik_tpi.nimi AS "toimenpiteen-nimi",
+       tpik_tpi.koodi AS "toimenpiteen-koodi",
        kat.sopimus
 FROM kustannusarvioitu_tyo kat
        LEFT JOIN toimenpideinstanssi tpi ON kat.toimenpideinstanssi = tpi.id

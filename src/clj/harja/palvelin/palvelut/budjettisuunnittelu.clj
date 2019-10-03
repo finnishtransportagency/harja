@@ -45,7 +45,7 @@
             k))
         m))
 
-(def ^{:private true} toimenpide-avain->toimenpide
+#_(def ^{:private true} toimenpide-avain->toimenpide-nimi
   {:paallystepaikkaukset "Päällysteiden paikkaus (hoidon ylläpito)"
    :mhu-yllapito "MHU Ylläpito"
    :talvihoito "Talvihoito laaja TPI"
@@ -53,6 +53,15 @@
    :sorateiden-hoito "Soratien hoito laaja TPI"
    :mhu-korvausinvestointi "MHU Korvausinvestointi"
    :mhu-johto "MHU ja HJU Hoidon johto"})
+
+(def ^{:private true} toimenpide-avain->toimenpide
+  {:paallystepaikkaukset "20107"
+   :mhu-yllapito "20191"
+   :talvihoito "23104"
+   :liikenneympariston-hoito "23116"
+   :sorateiden-hoito "23124"
+   :mhu-korvausinvestointi "14301"
+   :mhu-johto "23151"})
 
 (defn- toimenpide->toimenpide-avain [v]
   (key-from-val toimenpide-avain->toimenpide v))
@@ -122,10 +131,10 @@
   (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)]
     (map (fn [tyo]
            (-> tyo
-               (assoc :toimenpide-avain (toimenpide->toimenpide-avain (:toimenpiteen-nimi tyo)))
+               (assoc :toimenpide-avain (toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
                (assoc :haettu-asia (or (tehtava->tallennettava-asia (:tehtava-nimi tyo))
                                        (tehtavaryhma->tallennettava-asia (:tehtavaryhman-nimi tyo))))
-               (dissoc :toimenpiteen-nimi :tehtavan-nimi :tehtavaryhman-nimi)))
+               (dissoc :toimenpiteen-koodi :tehtavan-nimi :tehtavaryhman-nimi)))
          kustannusarvoidut-tyot)))
 
 (defn hae-urakan-budjetoidut-tyot
@@ -211,7 +220,7 @@
           {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                                  #{::tpk/id}
                                                  {::tpk/taso 3
-                                                  ::tpk/nimi toimenpide}))
+                                                  ::tpk/koodi toimenpide}))
           {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
           _ (when (nil? toimenpideinstanssi-id)
               (throw (Exception. "Toimenpideinstanssia ei löydetty")))
@@ -308,11 +317,11 @@
                                                   ;; Tämä join pitää hakea, jotta tuo where claussin join toimii
                                                   [::tpk/toimenpidekoodi-join #{::tpk/nimi}]}
                                                 {::tpk/nimi tehtava
-                                                 ::tpk/toimenpidekoodi-join {::tpk/nimi toimenpide}})))
+                                                 ::tpk/toimenpidekoodi-join {::tpk/koodi toimenpide}})))
           {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                                  #{::tpk/id}
                                                  {::tpk/taso 3
-                                                  ::tpk/nimi toimenpide}))
+                                                  ::tpk/koodi toimenpide}))
           {tehtavaryhma-id ::tr/id} (when tehtavaryhma
                                       (first (fetch db ::tr/tehtavaryhma
                                                     #{::tr/id}
