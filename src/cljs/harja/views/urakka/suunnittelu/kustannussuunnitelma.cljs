@@ -82,6 +82,63 @@
                                  {:key index}))
                              sisalto)))])))
 
+(defn aseta-rivien-nakyvyys
+  [taulukko]
+  (p/paivita-arvo taulukko :lapset
+                  (fn [rivit]
+                    (mapv (fn [rivi]
+                            (case (p/rivin-skeema taulukko rivi)
+                              :laajenna-lapsilla (p/paivita-arvo rivi :lapset
+                                                                 (fn [rivit]
+                                                                   (mapv (fn [rivi]
+                                                                           (if (empty? (::t/piillotettu rivi))
+                                                                             (p/paivita-arvo rivi :class disj "piillotettu")
+                                                                             (p/paivita-arvo rivi :class conj "piillotettu")))
+                                                                         rivit)))
+                              (if (empty? (::t/piillotettu rivi))
+                                (p/paivita-arvo rivi :class disj "piillotettu")
+                                (p/paivita-arvo rivi :class conj "piillotettu"))))
+                          rivit))))
+
+(defn aseta-rivien-taustavari
+  ([taulukko] (aseta-rivien-taustavari taulukko 0))
+  ([taulukko rivista-eteenpain]
+   (p/paivita-arvo taulukko :lapset
+                   (fn [rivit]
+                     (let [rivien-luokat (fn rivien-luokat [rivit i]
+                                           (loop [[rivi & rivit] rivit
+                                                  lopputulos []
+                                                  i i]
+                                             (if (nil? rivi)
+                                               [i lopputulos]
+                                               (let [konttirivi? (satisfies? p/Jana (first (p/arvo rivi :lapset)))
+                                                     piillotettu-rivi? (contains? (p/arvo rivi :class) "piillotettu")
+                                                     rivii (if konttirivi?
+                                                             (rivien-luokat (p/arvo rivi :lapset) i)
+                                                             rivi)]
+                                                 (recur rivit
+                                                        (if konttirivi?
+                                                          (conj lopputulos
+                                                                (p/aseta-arvo rivi :lapset (second rivii)))
+                                                          (conj lopputulos
+                                                                (if piillotettu-rivi?
+                                                                  rivi
+                                                                  (-> rivi
+                                                                      (p/paivita-arvo :class conj (if (odd? i)
+                                                                                                    "table-default-odd"
+                                                                                                    "table-default-even"))
+                                                                      (p/paivita-arvo :class disj (if (odd? i)
+                                                                                                    "table-default-even"
+                                                                                                    "table-default-odd"))))))
+                                                        (cond
+                                                          piillotettu-rivi? i
+                                                          konttirivi? (if (odd? (first rivii))
+                                                                        1 0)
+                                                          :else (inc i)))))))]
+                       (into []
+                             (concat (take rivista-eteenpain rivit)
+                                     (second (rivien-luokat (drop rivista-eteenpain rivit) 0)))))))))
+
 (defn hintalaskuri-sarake
   ([yla ala] (hintalaskuri-sarake yla ala nil))
   ([yla ala luokat]
@@ -170,7 +227,8 @@
                      (.scrollIntoView (dom/getElement id)))
         otsikko-fn (fn [otsikkopohja]
                      (-> otsikkopohja
-                         (p/aseta-arvo :id :otsikko-rivi)
+                         (p/aseta-arvo :id :otsikko-rivi
+                                       :class #{})
                          (p/paivita-arvo :lapset
                                          (osien-paivitys-fn (fn [osa]
                                                               (-> osa
@@ -204,7 +262,9 @@
                                                                   (p/paivita-arvo :id str "-otsikko")))))))
         linkkiotsikko-fn (fn [rivin-pohja teksti jakso linkki]
                            (-> rivin-pohja
-                               (p/aseta-arvo :id (keyword teksti))
+                               (p/aseta-arvo :id (keyword teksti)
+                                             :class #{"suunnitelma-rivi"
+                                                      "table-default"})
                                (p/paivita-arvo :lapset
                                                (osien-paivitys-fn (fn [osa]
                                                                     (-> osa
@@ -233,7 +293,8 @@
                                                                                   :class #{(sarakkeiden-leveys :jakso)}))))))
         sisaotsikko-fn (fn [rivin-pohja teksti jakso]
                          (-> rivin-pohja
-                             (p/aseta-arvo :id (keyword teksti))
+                             (p/aseta-arvo :id (keyword teksti)
+                                           :class #{})
                              (p/paivita-arvo :lapset
                                              (osien-paivitys-fn (fn [osa]
                                                                   (p/aseta-arvo osa
@@ -260,7 +321,12 @@
         laajenna-toimenpide-fn (fn [laajenna-toimenpide-pohja teksti jakso]
                                  (let [rivi-id (keyword (str teksti "-laajenna"))]
                                    (-> (sisaotsikko-fn laajenna-toimenpide-pohja teksti jakso)
-                                       (p/aseta-arvo :id rivi-id)
+                                       (p/aseta-arvo :id rivi-id
+                                                     :class #{"toimenpide-rivi"
+                                                              "suunnitelma-rivi"
+                                                              "table-default"
+                                                              (when viimeinen-vuosi?
+                                                                "viimeinen-vuosi")})
                                        (p/paivita-arvo :lapset
                                                        (fn [osat]
                                                          (update osat 0 (fn [laajenna-osa]
@@ -288,7 +354,9 @@
                                      (let [rahavarausteksti (tyyppi->nimi tyyppi)]
                                        (-> toimenpide-osa-pohja
                                            (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
-                                                         :class #{"piillotettu"})
+                                                         :class #{"piillotettu"
+                                                                  "table-default"
+                                                                  "suunnitelma-rivi"})
                                            (p/paivita-arvo :lapset
                                                            (osien-paivitys-fn (fn [osa]
                                                                                 (p/aseta-arvo osa
@@ -321,7 +389,8 @@
                         (map (fn [toimenpide jakso]
                                (let [toimenpideteksti (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]
                                  (-> toimenpide-pohja
-                                     (p/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi")))
+                                     (p/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi"))
+                                                   :class #{})
                                      (p/paivita-arvo :lapset
                                                      (fn [rivit]
                                                        (into []
@@ -339,7 +408,8 @@
                              (repeat (count t/toimenpiteet) "/vuosi")))
         hankintakustannukset-fn (fn [hankintakustannukset-pohja]
                                   (-> hankintakustannukset-pohja
-                                      (p/aseta-arvo :id (keyword (str "hankintakustannukset-vanhempi")))
+                                      (p/aseta-arvo :id (keyword (str "hankintakustannukset-vanhempi"))
+                                                    :class #{})
                                       (p/paivita-arvo :lapset
                                                       (fn [rivit]
                                                         (into []
@@ -371,7 +441,8 @@
                                             (repeat 4 "/kk")))
         hallinnollisetkustannukset-fn (fn [hallinnollisetkustannukset-pohja]
                                         (-> hallinnollisetkustannukset-pohja
-                                            (p/aseta-arvo :id (keyword (str "hallinnollisetkustannukset-vanhempi")))
+                                            (p/aseta-arvo :id (keyword (str "hallinnollisetkustannukset-vanhempi"))
+                                                          :class #{})
                                             (p/paivita-arvo :lapset
                                                             (fn [rivit]
                                                               (let [rivin-pohja (first rivit)]
@@ -493,7 +564,7 @@
         (when (and (:toimenpiteet hankintakustannukset) (:johtopalkkio hallinnolliset-toimenpiteet))
           (go (>! kaskytyskanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)])))
         (if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
-          [p/piirra-taulukko suunnitelmien-tila-taulukko]
+          [p/piirra-taulukko (aseta-rivien-taustavari suunnitelmien-tila-taulukko 1)]
           [yleiset/ajax-loader])))))
 
 (defn maksetaan-filter [_ _]
@@ -633,6 +704,7 @@
         laskutuksen-perusteella? (and (= toimenpide-avain valittu-toimenpide)
                                       (contains? laskutukseen-perustuen toimenpide-avain))
         kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
+        nyt (pvm/nyt)
         hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
                                             toimenpiteet)
         otsikko-fn (fn [otsikko-pohja]
@@ -663,8 +735,11 @@
                                                (osien-paivitys-fn (fn [osa]
                                                                     (p/aseta-arvo osa
                                                                                   :id (keyword (str rivin-id "-nimi"))
-                                                                                  :arvo (str hoitokausi ". hoitovuosi")
-                                                                                  :class #{(sarakkeiden-leveys :nimi)}))
+                                                                                  :arvo (if (< hoitokausi kuluva-hoitovuosi)
+                                                                                          (str hoitokausi ". hoitovuosi (mennyt)")
+                                                                                          (str hoitokausi ". hoitovuosi"))
+                                                                                  :class #{(sarakkeiden-leveys :nimi)
+                                                                                           "lihavoitu"}))
                                                                   (fn [osa]
                                                                     (p/aseta-arvo osa
                                                                                   :id (keyword (str rivin-id "-maara-kk"))
@@ -674,7 +749,8 @@
                                                                     (let [osa (-> osa
                                                                                   (p/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
                                                                                                 :arvo yhteensa
-                                                                                                :class #{(sarakkeiden-leveys :yhteensa)})
+                                                                                                :class #{(sarakkeiden-leveys :yhteensa)
+                                                                                                         "lihavoitu"})
                                                                                   p/luo-tila!
                                                                                   (p/lisaa-fmt summa-formatointi)
                                                                                   (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2))))]
@@ -694,7 +770,13 @@
                                                                                :arvo paivamaara
                                                                                :class #{(sarakkeiden-leveys :nimi) "solu-sisenna-1"})
                                                                  (p/lisaa-fmt (fn [paivamaara]
-                                                                                (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))))
+                                                                                (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                                      mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                                   (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                                       (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                                  (if mennyt?
+                                                                                    (str teksti " (mennyt)")
+                                                                                    teksti))))))
                                                            (fn [osa]
                                                              (if on-oikeus?
                                                                (-> osa
@@ -1489,69 +1571,19 @@
                           :class #{}
                           :id taulukko-elementin-id}))))
 
-(defn aseta-rivien-luokat
-  "Tämä tekee taulukkoon seeprakuvioinnin"
-  [rivit taulukko]
-  (let [rivit (mapv (fn [rivi]
-                      (case (p/rivin-skeema taulukko rivi)
-                        :laajenna-lapsilla (p/paivita-arvo rivi :lapset
-                                                           (fn [rivit]
-                                                             (mapv (fn [rivi]
-                                                                     (if (empty? (::t/piillotettu rivi))
-                                                                       (p/paivita-arvo rivi :class disj "piillotettu")
-                                                                       (p/paivita-arvo rivi :class conj "piillotettu")))
-                                                                   rivit)))
-                        (if (empty? (::t/piillotettu rivi))
-                          (p/paivita-arvo rivi :class disj "piillotettu")
-                          (p/paivita-arvo rivi :class conj "piillotettu"))))
-                    rivit)
-        rivien-luokat (fn rivien-luokat [rivit i]
-                        (loop [[rivi & rivit] rivit
-                               lopputulos []
-                               i i]
-                          (if (nil? rivi)
-                            [i lopputulos]
-                            (let [konttirivi? (satisfies? p/Jana (first (p/arvo rivi :lapset)))
-                                  piillotettu-rivi? (contains? (p/arvo rivi :class) "piillotettu")
-                                  rivii (if konttirivi?
-                                         (rivien-luokat (p/arvo rivi :lapset) i)
-                                         rivi)]
-                              (recur rivit
-                                     (if konttirivi?
-                                       (conj lopputulos
-                                             (p/aseta-arvo rivi :lapset (second rivii)))
-                                       (conj lopputulos
-                                             (if piillotettu-rivi?
-                                               rivi
-                                               (-> rivi
-                                                   (p/paivita-arvo :class conj (if (odd? i)
-                                                                                 "table-default-odd"
-                                                                                 "table-default-even"))
-                                                   (p/paivita-arvo :class disj (if (odd? i)
-                                                                                 "table-default-even"
-                                                                                 "table-default-odd"))))))
-                                     (cond
-                                       piillotettu-rivi? i
-                                       konttirivi? (if (odd? (first rivii))
-                                                     1 0)
-                                       :else (inc i)))))))]
-    (second (rivien-luokat rivit 0))))
-
 (defn suunnitellut-hankinnat [e! toimenpiteet valinnat]
   (if toimenpiteet
     [:div
      (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet
            :let [nakyvissa? (= toimenpide-avain (:toimenpide valinnat))]]
        ^{:key toimenpide-avain}
-       [p/piirra-taulukko (-> toimenpide-taulukko
-                              (p/paivita-arvo :class (fn [luokat]
+       [p/piirra-taulukko (cond-> toimenpide-taulukko
+                              true (p/paivita-arvo :class (fn [luokat]
                                                        (if nakyvissa?
                                                          (disj luokat "piillotettu")
                                                          (conj luokat "piillotettu"))))
-                              (p/paivita-arvo :lapset (fn [rivit]
-                                                        (if nakyvissa?
-                                                          (aseta-rivien-luokat rivit toimenpide-taulukko)
-                                                          rivit))))])]
+                              nakyvissa? aseta-rivien-nakyvyys
+                              nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
 (defn laskutukseen-perustuvat-kustannukset [e! toimenpiteet-laskutukseen-perustuen valinnat]
@@ -1561,15 +1593,13 @@
            :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
                                  (contains? (:laskutukseen-perustuen valinnat) toimenpide-avain))]]
        ^{:key toimenpide-avain}
-       [p/piirra-taulukko (-> toimenpide-taulukko
-                              (p/paivita-arvo :class (fn [luokat]
-                                                       (if nakyvissa?
-                                                         (disj luokat "piillotettu")
-                                                         (conj luokat "piillotettu"))))
-                              (p/paivita-arvo :lapset (fn [rivit]
-                                                        (if nakyvissa?
-                                                          (aseta-rivien-luokat rivit toimenpide-taulukko)
-                                                          rivit))))])]
+       [p/piirra-taulukko (cond-> toimenpide-taulukko
+                                  true (p/paivita-arvo :class (fn [luokat]
+                                                                (if nakyvissa?
+                                                                  (disj luokat "piillotettu")
+                                                                  (conj luokat "piillotettu"))))
+                                  nakyvissa? aseta-rivien-nakyvyys
+                                  nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
 (defn arvioidaanko-laskutukseen-perustuen [e! _ _]
@@ -1599,15 +1629,13 @@
            :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
                                  (t/toimenpiteet-rahavarauksilla toimenpide-avain))]]
        ^{:key toimenpide-avain}
-       [p/piirra-taulukko (-> rahavaraus-taulukko
-                              (p/paivita-arvo :class (fn [luokat]
-                                                       (if nakyvissa?
-                                                         (disj luokat "piillotettu")
-                                                         (conj luokat "piillotettu"))))
-                              (p/paivita-arvo :lapset (fn [rivit]
-                                                        (if nakyvissa?
-                                                          (aseta-rivien-luokat rivit rahavaraus-taulukko)
-                                                          rivit))))])]
+       [p/piirra-taulukko (cond-> rahavaraus-taulukko
+                                  true (p/paivita-arvo :class (fn [luokat]
+                                                                (if nakyvissa?
+                                                                  (disj luokat "piillotettu")
+                                                                  (conj luokat "piillotettu"))))
+                                  nakyvissa? aseta-rivien-nakyvyys
+                                  nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
 (defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
@@ -1637,22 +1665,23 @@
   (if jh-laskulla
     [p/piirra-taulukko (-> jh-laskulla
                            (assoc-in [:parametrit :id] "jh-toimenkuva-laskulla")
-                           (p/paivita-arvo :lapset (fn [rivit]
-                                                     (aseta-rivien-luokat rivit jh-laskulla))))]
+                           aseta-rivien-nakyvyys
+                           aseta-rivien-taustavari)]
     [yleiset/ajax-loader]))
 
 (defn jh-toimenkuva-yhteenveto [jh-yhteenveto]
   (if jh-yhteenveto
     [p/piirra-taulukko (-> jh-yhteenveto
                            (assoc-in [:parametrit :id] "jh-toimenkuva-yhteenveto")
-                           (p/paivita-arvo :lapset (fn [rivit]
-                                                     (aseta-rivien-luokat rivit jh-yhteenveto))))]
+                           aseta-rivien-nakyvyys
+                           aseta-rivien-taustavari)]
     [yleiset/ajax-loader]))
 
 (defn maara-kk [taulukko]
   (if taulukko
-    [p/piirra-taulukko (p/paivita-arvo taulukko :lapset (fn [rivit]
-                                                          (aseta-rivien-luokat rivit taulukko)))]
+    [p/piirra-taulukko (-> taulukko
+                           aseta-rivien-nakyvyys
+                           aseta-rivien-taustavari)]
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
