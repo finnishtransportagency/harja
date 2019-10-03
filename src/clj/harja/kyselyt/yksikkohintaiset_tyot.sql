@@ -7,13 +7,14 @@ SELECT
   yt.maara,
   yt.yksikko,
   yt.yksikkohinta,
+  yt.tehtava,
   yt.urakka,
   yt.sopimus,
   yt.arvioitu_kustannus,
   yt.kuukausi,
   yt.vuosi,
-  tk.id   AS tehtava_id,
-  tk.nimi AS tehtava_nimi
+  tk.id   AS tehtavan_id,
+  tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
   LEFT JOIN toimenpidekoodi tk ON yt.tehtava = tk.id
 WHERE urakka = :urakka
