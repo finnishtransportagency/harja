@@ -134,7 +134,7 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
     (is (= 400 (:status vastaus)))))
 
-#_(deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
+(deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
@@ -149,7 +149,7 @@
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
-#_(deftest hae-paivystajatiedot-sijainnilla
+(deftest hae-paivystajatiedot-sijainnilla
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)

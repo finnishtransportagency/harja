@@ -51,7 +51,7 @@
 (defn sisaltaa-roolin? [yhteyshenkilot rooli]
   (some #(= rooli (get-in % [:yhteyshenkilo :rooli])) yhteyshenkilot))
 
-#_(deftest tarkista-yhteystietojen-haku
+(deftest tarkista-yhteystietojen-haku
   (with-fake-http
     [(str "http://localhost:" portti "/api/urakat/yhteystiedot/1238") :allow
      fim-url fim-vastaus]
