@@ -94,3 +94,7 @@
 
 (defn modal [optiot sisalto]
   [modal-container* optiot sisalto])
+
+(defn liuku-modal [sisalto]
+  [:div.liuku-modal-peitto
+   [sisalto]])

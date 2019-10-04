@@ -16,8 +16,25 @@
                                                        :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}
                                                        :kaskytyskanava (chan)}})
 
-(defonce tila (atom {:yleiset {:urakka {}}
+(defn hankinnat-testidata [maara]
+  (into []
+        (drop 9
+              (drop-last 3
+                         (mapcat (fn [vuosi]
+                                   (map #(identity
+                                           {:pvm   (harja.pvm/luo-pvm vuosi % 15)
+                                            :maara maara})
+                                        (range 0 12)))
+                                 (range (harja.pvm/vuosi (harja.pvm/nyt)) (+ (harja.pvm/vuosi (harja.pvm/nyt)) 6)))))))
+
+(defonce tila (atom {:yleiset     {:urakka {}}
+                     :laskutus    {:kohdistetut-kulut {:taulukko    nil
+                                                       :kulut       []
+                                                       :syottomoodi false}}
                      :suunnittelu suunnittelu-default-arvot}))
+
+
+(defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
 (defonce yleiset (cursor tila [:yleiset]))
 
