@@ -291,7 +291,7 @@
         ;; R.I.P valtakunnalliset välitavoitteet
         (is (empty? poistetut-valtakunnalliset))
         ;; Muokattu välitavoite säilyi Oulun urakassa
-        (is (= (count (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)) 2)) ;; TODO: Ennen count oli 1, 30.9.2019 2. Ei tutkittu tarkemmin.
+        (is (= (count (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)) 1))
         ;; Muhoksen urakassa ei valtakunnallisia tavoitteita koskaan ollutkaan, eikä ole vieläkään
         (is (empty? (filter :valtakunnallinen-id muhoksen-urakan-poistetut-valitavoitteet)))
 
