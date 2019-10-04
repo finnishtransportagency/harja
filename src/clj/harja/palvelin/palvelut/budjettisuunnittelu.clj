@@ -2,34 +2,25 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
-            [clojure.set :as set]
             [clojure.string :as clj-str]
             [specql.core :refer [fetch update! insert!]]
             [specql.op :as op]
-            [taoensso.timbre :as log]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
 
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.pvm :as pvm]
             [harja.kyselyt
              [budjettisuunnittelu :as q]
              [urakat :as urakat-q]
-             [sopimukset :as sopimus-q]
-             [kokonaishintaiset-tyot :as kok-q]
-             [toimenpidekoodit :as tpik-q]
              [toimenpideinstanssit :as tpi-q]]
             [harja.palvelin.palvelut
-             [kokonaishintaiset-tyot :as sampo-kustannussuunnitelmat]
              [kiinteahintaiset-tyot :as kiinthint-tyot]
-             [kustannusarvioidut-tyot :as kustarv-tyot]
-             [yksikkohintaiset-tyot :as ykshint-tyot]]
+             [kustannusarvioidut-tyot :as kustarv-tyot]]
             [harja.domain
              [oikeudet :as oikeudet]
              [budjettisuunnittelu :as bs]
              [toimenpidekoodi :as tpk]
-             [tehtavaryhma :as tr]
-             [toimenpideinstanssi :as tpi]
-             [roolit :as roolit]]))
+             [tehtavaryhma :as tr]]))
 
 (def tallennettava-asia #{:hoidonjohtopalkkio
                           :toimistokulut
@@ -44,15 +35,6 @@
           (when (= v v_)
             k))
         m))
-
-#_(def ^{:private true} toimenpide-avain->toimenpide-nimi
-  {:paallystepaikkaukset "Päällysteiden paikkaus (hoidon ylläpito)"
-   :mhu-yllapito "MHU Ylläpito"
-   :talvihoito "Talvihoito laaja TPI"
-   :liikenneympariston-hoito "Liikenneympäristön hoito laaja TPI"
-   :sorateiden-hoito "Soratien hoito laaja TPI"
-   :mhu-korvausinvestointi "MHU Korvausinvestointi"
-   :mhu-johto "MHU ja HJU Hoidon johto"})
 
 (def ^{:private true} toimenpide-avain->toimenpide
   {:paallystepaikkaukset "20107"
@@ -154,43 +136,6 @@
                                               ::bs/hoitokausi
                                               [::bs/toimenkuva #{::bs/toimenkuva}]}
                                             {::bs/urakka-id urakka-id}))})
-
-(defn tallenna-budjetoidut-tyot
-  "Palvelu joka tallentaa urakan kustannusarvioidut tyot."
-  [db user {:keys [urakka-id tyot]}]
-
-  (let [urakkatyyppi (keyword (:tyyppi
-                                (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
-        sopimusnumero (:id
-                        (first (sopimus-q/hae-urakan-paasopimus db urakka-id))) ;; teiden hoidon urakoissa (MHU) on vain yksi sopimus
-        tallennettavat-toimenpideinstanssit (into #{}
-                                                  (keep :toimenpideinstanssi (concat (:kiinteahintaiset-tyot tyot)
-                                                                                     (:kustannusarvioidut-tyot tyot)
-                                                                                     (:yksikkohintaiset-tyot tyot))))
-        tallennettavat-toimenpideinstanssit-urakassa (into #{}
-                                                           (map :id)
-                                                           (tpi-q/urakan-toimenpideinstanssit-idlla db urakka-id tallennettavat-toimenpideinstanssit))]
-
-    ;; Tarkistetaan oikeudet ja että kyseessä on maanteiden hoidon urakka (MHU) ja että käsitellyt toimenpideinstanssit kuuluvat urakkaan.
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-    (if-not (= urakkatyyppi :teiden-hoito)
-      (throw (IllegalArgumentException. (str "Urakan " urakka-id " budjetoituja töitä ei voi tallentaa urakkatyypillä " urakkatyyppi "."))))
-    (when-not (empty?
-                (set/difference tallennettavat-toimenpideinstanssit tallennettavat-toimenpideinstanssit-urakassa))
-      (throw (IllegalArgumentException. "Väärän urakan toimenpideinstanssi")))
-
-    (jdbc/with-db-transaction [c db]
-                              (kiinthint-tyot/tallenna-kiinteahintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kiinteahintaiset-tyot tyot)})
-                              (kustarv-tyot/tallenna-kustannusarvioidut-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:kustannusarvioidut-tyot tyot)})
-                              (ykshint-tyot/tallenna-urakan-yksikkohintaiset-tyot c user {:urakka-id urakka-id :sopimusnumero sopimusnumero :tyot (:yksikkohintaiset-tyot tyot)})
-
-                              ;; Merkitään likaiseksi tallennettujen toimenpideinstanssien kustannussuunnitelmat.
-                              ;; Periaatteessa tässä voisi myös selvittää ovatko kaikki tiedot päivittyneet ja jättää tarvittaessa osa kustannussuunnitelmista päivittämättä.
-                              (when not-empty tallennettavat-toimenpideinstanssit-urakassa
-                                              (kok-q/merkitse-kustannussuunnitelmat-likaisiksi! c tallennettavat-toimenpideinstanssit-urakassa))
-
-                              ;; Palautetaan päivitetty tilanne
-                              (hae-urakan-budjetoidut-tyot c user {:urakka-id urakka-id}))))
 
 (defn- mudosta-ajat [ajat urakan-alkuvuosi urakan-loppuvuosi]
   (reduce (fn [ajat {:keys [vuosi kuukausi]}]
@@ -404,6 +349,8 @@
 (s/def ::tuntipalkka number?)
 (s/def ::kk-v number?)
 (s/def ::summa number?)
+(s/def ::tavoitehinta number?)
+(s/def ::kattohinta number?)
 (s/def ::toimenpide-avain (s/and keyword?
                                  (fn [k]
                                    (some #(= k %)
@@ -416,6 +363,9 @@
 (s/def ::ajat (s/coll-of (s/keys :req-un [::vuosi]
                                  :opt-un [::kuukausi])))
 
+(s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
+                               :kind vector?))
+
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
@@ -424,6 +374,9 @@
 
 (s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat ::summa]))
 (s/def ::tallenna-kiinteahintaiset-tyot-vastaus any?)
+
+(s/def ::tallenna-budjettitavoite-kysely (s/keys :req-un [::urakka-id ::tavoitteet]))
+(s/def ::tallenna-budjettitavoite-vastaus any?)
 
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
@@ -434,15 +387,15 @@
           (julkaise-palvelu
             :budjetoidut-tyot (fn [user tiedot]
                                 (hae-urakan-budjetoidut-tyot db user tiedot)))
-          (julkaise-palvelu
-            :tallenna-budjetoidut-tyot (fn [user tiedot]
-                                         (tallenna-budjetoidut-tyot db user tiedot)))
+
           (julkaise-palvelu
             :budjettitavoite (fn [user tiedot]
                                (hae-urakan-tavoite db user tiedot)))
           (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
-                                        (tallenna-urakan-tavoite db user tiedot)))
+                                        (tallenna-urakan-tavoite db user tiedot))
+            {:kysely-spec ::tallenna-budjettitavoite-kysely
+             :vastaus-spec ::tallenna-budjettitavoite-vastaus})
 
           (julkaise-palvelu
             :tallenna-kiinteahintaiset-tyot
@@ -465,8 +418,11 @@
     this)
 
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :budjetoidut-tyot)
-    (poista-palvelu (:http-palvelin this) :tallenna-budjetoidut-tyot)
-    (poista-palvelu (:http-palvelin this) :budjettitavoite)
-    (poista-palvelu (:http-palvelin this) :tallenna-budjettitavoite)
+    (poista-palvelut (:http-palvelin this)
+                     :budjetoidut-tyot
+                     :budjettitavoite
+                     :tallenna-budjettitavoite
+                     :tallenna-kiinteahintaiset-tyot
+                     :tallenna-johto-ja-hallintokorvaukset
+                     :tallenna-kustannusarvioitu-tyo)
     this))
