@@ -11,11 +11,18 @@ WHERE hallintayksikko = :hallintayksikko AND suolarajoitus IS TRUE;
 -- name: hae-urakan-pohjavesialueet
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet
 SELECT
-  p.nimi,
-  p.tunnus,
-  p.alue
-FROM pohjavesialueet_urakoittain p
-WHERE p.urakka = :urakka-id AND suolarajoitus IS TRUE;
+  p_u.nimi,
+  p_u.tunnus,
+  p_u.alue,
+  p.tr_numero AS numero,
+  p.tr_alkuosa AS aosa,
+  p.tr_alkuetaisyys AS aet,
+  p.tr_loppuosa AS losa,
+  p.tr_loppuetaisyys AS let
+FROM pohjavesialueet_urakoittain p_u
+JOIN pohjavesialue p ON p.tunnus = p_u.tunnus
+WHERE p_u.urakka = :urakka-id AND p_u.suolarajoitus IS TRUE
+ORDER BY p_u.tunnus, numero, aosa, aet, losa, let;
 
 -- name: hae-urakan-pohjavesialueet-teittain
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet teittain
