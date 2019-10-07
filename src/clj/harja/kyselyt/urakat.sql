@@ -661,8 +661,7 @@ SELECT EXISTS(
 SELECT u.id
 FROM urakka u
   LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
-WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
-      AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
       AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
            OR
