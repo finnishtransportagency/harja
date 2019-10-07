@@ -510,7 +510,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Rovaniemen MHU testiurakka';
+  urakan_nimi TEXT := 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus');
@@ -781,7 +781,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Pellon MHU testiurakka';
+  urakan_nimi TEXT := 'Pellon MHU testiurakka (3. hoitovuosi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Pellon MHU testiurakan sopimus');
@@ -1119,7 +1119,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Kemin MHU testiurakka';
+  urakan_nimi TEXT := 'Kemin MHU testiurakka (5. hoitovuosi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Kemin MHU testiurakan sopimus');
@@ -1451,7 +1451,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Ivalon MHU testiurakka';
+  urakan_nimi TEXT := 'Ivalon MHU testiurakka (uusi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Ivalon MHU testiurakan sopimus');

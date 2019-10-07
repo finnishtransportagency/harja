@@ -1132,3 +1132,88 @@ VALUES ((SELECT id
                                                                                                   WHERE nimi = 'Aktiivinen Oulu Päällystys Testi'),
                                                                                                  'Joku', 'Jokela', '0441231234', '0441231234', 'joku.jokea@example.com', 'asukas' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.com');
+
+
+
+
+
+
+
+
+-- Rovaniemen MHU testi ilmoitukset
+DO $$
+DECLARE
+  urakan_aloitus_pvm TIMESTAMP;
+  urakan_paattymis_pvm TIMESTAMP;
+  urakka_id INTEGER := (SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakan sopimus');
+  viimeisin_ilmoitus_id INTEGER := (SELECT ilmoitusid FROM ilmoitus ORDER BY ilmoitusid DESC LIMIT 1);
+  ilmoitus_id_ INTEGER;
+  ilmoitus_harja_id INTEGER;
+  counter INTEGER;
+  jsonb_index INTEGER;
+  toimenpide_counter INTEGER;
+  toimenpiteita_n INTEGER;
+  ilmoituksia_n INTEGER;
+  urakkatyyppi_ URAKKATYYPPI := 'hoito'::urakkatyyppi; -- Kyseessä on oikeasti teiden-hoito, mutta T-LOIK:sta tulee 'hoito'
+  ilmoittaja_etunimi_ TEXT := 'Ilmoittaja';
+  ilmoittaja_sukunimi_ TEXT := 'Rovanieminen';
+  ilmoittaja_tyyppi_ TEXT := 'muu';
+  lahettaja_etunimi_ TEXT := 'Lahettaja';
+  lahettaja_sukunimi_ TEXT := 'Rovanieminen';
+  kuittaaja_etunimi_ TEXT := 'Kuittaaja';
+  kuittaaja_sukunimi_ TEXT := 'Rovanieminen';
+  kuittaaja_organisaatio_nimi_ TEXT := 'Välittävä Urakoitsija';
+  kuittaaja_organisaatio_ytunnus_ TEXT := 'Y1242334';
+  yhteydenottopyynnot BOOLEAN[] := (SELECT ARRAY[FALSE, TRUE, TRUE, TRUE]::BOOLEAN[]);
+  yhteydenottopyynto_ BOOLEAN;
+  ilmoitustyypit ILMOITUSTYYPPI[] := (SELECT ARRAY['toimenpidepyynto', 'tiedoitus', 'toimenpidepyynto', 'tiedoitus', 'toimenpidepyynto', 'tiedoitus']::ILMOITUSTYYPPI[]);
+  ilmoitustyyppi_ ILMOITUSTYYPPI;
+  paikankuvaukset TEXT[] := (SELECT ARRAY['Sillalla on lunta. Liikaa.', 'Joku on tuonut sinne pingviinejäki. Etelästä roudanneet?',
+                                          'LUMI MENNEE SILLAN ALI!!', 'Oikeasti, pingviinejä?', 'Juu-u. Ei muutaku jokkeen vaan auraamaan...',
+                                          'Tuolla on aurauskone joessa. Kelekat ei pääse kulukemmaan.']::TEXT[]);
+  paikankuvaus_ TEXT;
+  kaikki_selitteet JSONB := '[["auraustarve"], ["tiellaOnEste"], ["auraustarve"], ["tiellaOnEste"], ["auraustarve"], ["tiellaOnEste"]]'::jsonb;
+  selitteet_ TEXT[];
+  toimenpiteet JSONB := '[["vastaanotto", "aloitus"], ["vastaanotto"], ["vastaanotto"], ["valitys", "vastaanotto"], ["valitys", "vastaanotto", "aloitus"], ["valitys", "vastaanotto"]]'::jsonb;
+  ilmoituksen_toimenpiteet TEXT[];
+  ilmoituksen_toimenpide TEXT;
+  viestisuunnat JSONB := '[["sisaan", "sisaan"], ["sisaan"], ["sisaan"], ["ulos", "sisaan"], ["ulos", "sisaan", "sisaan"], ["ulos", "sisaan"]]'::jsonb;
+  toimenpiteen_suunnat VIESTISUUNTA[];
+  toimenpiteen_suunta VIESTISUUNTA;
+  minuutit INTEGER;
+  nyt TIMESTAMP := (SELECT now());
+BEGIN
+  ilmoituksia_n = (SELECT array_length(ilmoitustyypit, 1));
+  FOR counter IN 1..ilmoituksia_n
+  LOOP
+    jsonb_index = counter - 1;
+    ilmoitus_id_ = viimeisin_ilmoitus_id + counter;
+    yhteydenottopyynto_ = (SELECT yhteydenottopyynnot[counter]);
+    ilmoitustyyppi_ = (SELECT ilmoitustyypit[counter]);
+    paikankuvaus_ = (SELECT paikankuvaukset[counter]);
+    ilmoituksen_toimenpiteet = (SELECT array_agg(toimenpiteet_.elem::TEXT) FROM jsonb_array_elements_text(toimenpiteet->jsonb_index) AS toimenpiteet_(elem)); --(SELECT toimenpiteet_[counter] AS ilmoituksen_toimenpiteet_ FROM toimenpiteet);
+    toimenpiteen_suunnat = (SELECT array_agg(viestisuunnat_.elem::VIESTISUUNTA) FROM jsonb_array_elements_text(viestisuunnat->jsonb_index) AS viestisuunnat_(elem)); --(SELECT viestisuunnat_[counter] AS toimenpiteen_suunnat_ FROM viestisuunnat);
+    selitteet_ = (SELECT array_agg(kaikki_selitteet_.elem::TEXT) FROM jsonb_array_elements_text(kaikki_selitteet->jsonb_index) AS kaikki_selitteet_(elem));  --(SELECT kaikki_selitteet_[counter] FROM kaikki_selitteet);
+    INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, paikankuvaus, sijainti,
+                          tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+                          ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyyppi,
+                          lahettaja_etunimi, lahettaja_sukunimi)
+    VALUES (urakka_id, ilmoitus_id_, nyt - interval '1 minute', nyt, yhteydenottopyynto_, paikankuvaus_, ST_MakePoint(444037.946026911, 7376527.888717536)::GEOMETRY,
+            78, 224, 224, 3710, 3710, ilmoitustyyppi_, selitteet_, urakkatyyppi_, ilmoittaja_etunimi_, ilmoittaja_sukunimi_, ilmoittaja_tyyppi_, lahettaja_etunimi_, lahettaja_sukunimi_);
+
+    ilmoitus_harja_id = (SELECT id FROM ilmoitus WHERE ilmoitusid = ilmoitus_id_);
+    minuutit = 1;
+    toimenpiteita_n = (SELECT array_length(ilmoituksen_toimenpiteet, 1));
+
+    FOR toimenpide_counter IN 1..toimenpiteita_n
+    LOOP
+      ilmoituksen_toimenpide = (SELECT ilmoituksen_toimenpiteet[toimenpide_counter]);
+      toimenpiteen_suunta = (SELECT toimenpiteen_suunnat[toimenpide_counter]);
+      INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi, kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi,
+                                      kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava)
+      VALUES (ilmoitus_harja_id, ilmoitus_id_, nyt + interval '1 minute' * minuutit, ilmoituksen_toimenpide,
+              kuittaaja_etunimi_, kuittaaja_sukunimi_, kuittaaja_organisaatio_nimi_, kuittaaja_organisaatio_ytunnus_, toimenpiteen_suunta, 'sms'::viestikanava);
+      minuutit = minuutit + 1;
+    END LOOP;
+  END LOOP;
+END $$;

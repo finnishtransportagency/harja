@@ -3,6 +3,9 @@
             [clojure.test :refer [deftest is use-fixtures]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
+            [clj-time
+             [core :as t]
+             [format :as df]]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
@@ -10,7 +13,7 @@
             [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
-            [clojure.string :as str]
+            [clojure.string :as clj-str]
             [harja.kyselyt.konversio :as konv]
             [clojure.set :as set]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]))
@@ -20,23 +23,24 @@
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
-(def +testi-ilmoitus-sanoma+
-  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+(defn testi-ilmoitus-sanoma [ilmoitettu]
+  ; 2015-09-29T14:49:45
+  (str "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
   <tunniste>UV-1509-1a</tunniste>
   <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
-  <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
+  <ilmoitettu>" ilmoitettu "</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
   <otsikko>Korkeat vallit</otsikko>
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
-  <tienumero>4</tienumero>
-  <x>452935</x>
-  <y>7186873</y>
+  <tienumero>79</tienumero>
+  <x>443199</x>
+  <y>7377324</y>
   </sijainti>
   <ilmoittaja>
   <etunimi>Matti</etunimi>
@@ -133,7 +137,7 @@
   <selite>tapahtumaOhi</selite>
   <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
   <selite>tietOvatjaisiaJamarkia</selite>
-  </seliteet>\n</harja:ilmoitus>")
+  </seliteet>\n</harja:ilmoitus>"))
 
 (def +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
@@ -258,9 +262,9 @@
     "7186873" "7345904"))
 
 (def +ilmoitus-hailuodon-jaatiella+
-  (clojure.string/replace
-    (clojure.string/replace +testi-ilmoitus-sanoma+ "319130" "7186873")
-    "414212" "7211797"))
+  (-> (testi-ilmoitus-sanoma "2015-09-29T14:49:45")
+      (clj-str/replace "319130" "7186873")
+      (clj-str/replace "414212" "7211797")))
 
 (defn hae-ilmoituksen-urakka-id [{:keys [urakkatyyppi sijainti]}]
   (urakkapalvelu/hae-lahin-urakka-id-sijainnilla (:db jarjestelma) urakkatyyppi sijainti))
@@ -279,18 +283,18 @@
 (defn tuo-ilmoitus-teknisista-laitteista []
   (let [sanoma
         (-> +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
-            (str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>tekniset laitteet</urakkatyyppi>")
-            (str/replace "<x>452935</x>" "<x>326269</x>")
-            (str/replace "<y>7186873</y>" "<y>6822985</y>"))
+            (clj-str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>tekniset laitteet</urakkatyyppi>")
+            (clj-str/replace "<x>452935</x>" "<x>326269</x>")
+            (clj-str/replace "<y>7186873</y>" "<y>6822985</y>"))
         ilmoitus (assoc (ilmoitussanoma/lue-viesti sanoma) :urakkatyyppi "tekniset-laitteet")]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-ilmoitus-siltapalvelusopimukselle []
   (let [sanoma
         (-> +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
-            (str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>silta</urakkatyyppi>")
-            (str/replace "<x>452935</x>" "<x>595754</x>")
-            (str/replace "<y>7186873</y>" "<y>6785914</y>"))
+            (clj-str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>silta</urakkatyyppi>")
+            (clj-str/replace "<x>452935</x>" "<x>595754</x>")
+            (clj-str/replace "<y>7186873</y>" "<y>6785914</y>"))
         ilmoitus (assoc (ilmoitussanoma/lue-viesti sanoma) :urakkatyyppi "siltakorjaus")]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
@@ -299,7 +303,7 @@
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-ilmoitus-ilman-tienumeroa []
-  (let [sanoma (str/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "<tienumero>4</tienumero>" "")
+  (let [sanoma (clj-str/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "<tienumero>4</tienumero>" "")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
