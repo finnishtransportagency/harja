@@ -339,10 +339,10 @@ WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
 (defn hae-paivystaja []
   (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;")))
 
-(defn tee-testipaivystys []
+(defn tee-testipaivystys [urakka-id]
   (let [yhteyshenkilo (hae-paivystaja)]
     (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
-    VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
+    VALUES (now() - interval '1' day, now() + interval '1' day, %s, %s, false, true)" urakka-id (first yhteyshenkilo)))
     yhteyshenkilo))
 
 (defn poista-ilmoitus []

@@ -8,7 +8,10 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sahkoposti-sanomat])
+            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sahkoposti-sanomat]
+            [clj-time
+             [core :as t]
+             [format :as df]])
   (:import (java.util UUID)))
 
 (def kayttaja "jvh")
@@ -50,19 +53,22 @@
       (.replace "__SISALTO__" sisalto)))
 
 (deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
-  (let [ilmoitusviesti (atom nil)]
-    (tloik-apurit/tee-testipaivystys)
+  (let [ilmoitusviesti (atom nil)
+        urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+    (tloik-apurit/tee-testipaivystys urakka-id)
     (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
     (sonja/laheta (:sonja jarjestelma)
                   tloik-apurit/+tloik-ilmoitusviestijono+
-                  (tloik-apurit/testi-ilmoitus-sanoma))
+                  (tloik-apurit/testi-ilmoitus-sanoma
+                    (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                (t/minus (t/now) (t/hours 5)))))
     (let [saapunut (-> (odota-arvo ilmoitusviesti)
                        .getText
                        sahkoposti-sanomat/lue-sahkoposti)
           vastaanottaja (:vastaanottaja saapunut)
           viesti (str (UUID/randomUUID))]
       ;; Tarkista että viesti lähtee päivystäjälle
-      (is (= (:otsikko saapunut) "#[4/123456789] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)"))
+      (is (= (:otsikko saapunut) (str "#[" urakka-id "/123456789] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)")))
 
       ;; Lähetä aloitettu kuittaus
       (sonja/laheta (:sonja jarjestelma) "email-to-harja"
