@@ -952,9 +952,9 @@
                      (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))
-     (fn [e! {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet historia
+     (fn [e! {:keys [ilmoitustiedot paallystyskohde-id kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet historia
                      ohjauskahvat validoi-lomake?] :as lomakedata-nyt}
-          lukko urakka kayttaja]
+          lukko urakka kayttaja {:keys [paallystysilmoitukset]}]
        (when validoi-lomake?
          (when-let [ohjauskahva (:tierekisteriosoitteet ohjauskahvat)]
            (grid/validoi-grid ohjauskahva))
@@ -1048,8 +1048,23 @@
                                        (false? lukittu?))
              perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})]
          [:div.paallystysilmoituslomake
+          (let [[edellinen-ilmoitus seuraava-ilmoitus] (loop [i 0
+                                                              edellinen nil]
+                                                         (let [ilmo (nth paallystysilmoitukset i)]
+                                                           (if (= (:paallystyskohde-id ilmo) paallystyskohde-id)
+                                                             [edellinen (nth paallystysilmoitukset (inc i) nil)]
+                                                             (recur (inc i) ilmo))))]
+            [:div
+             [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
 
-          [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+             [napit/yleinen-ensisijainen "Edellinen"
+              #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id seuraava-ilmoitus)))
+              {:disabled (nil? seuraava-ilmoitus)}]
+             [napit/yleinen-ensisijainen "Seuraava"
+              #(e! (paallystys/->AvaaPaallystysilmoitus (:paallystyskohde-id edellinen-ilmoitus)))
+              {:disabled (nil? edellinen-ilmoitus)}]
+
+             ])
 
           (when lukittu?
             [lomake/lomake-lukittu-huomautus lukko])
@@ -1225,7 +1240,7 @@
        [kartta/kartan-paikka]
        [debug app {:otsikko "TUCK STATE"}]
        (if paallystysilmoitus-lomakedata
-         [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+         [paallystysilmoitus e! paallystysilmoitus-lomakedata lukko urakka kayttaja app]
          [:div
           [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]
           [ilmoitusluettelo e! app]])])))
