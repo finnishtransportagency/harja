@@ -122,11 +122,16 @@
   (sort-by
     (juxt #(if (sillat/on-poistettu? %) 1 0)
           (fn [silta]
-            (let [siltatunnus (:siltatunnus silta)
-                  siltatunnus-numerona (js/parseInt
-                                         (apply str
-                                                (filter #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9} %) siltatunnus)))]
-              siltatunnus-numerona)))
+            (case @sillat/jarjestys
+              :nimi (:siltanimi silta)
+              :tunnus (let [siltatunnus (:siltatunnus silta)
+                            siltatunnus-numerona (js/parseInt
+                                                   (apply str
+                                                          (filter #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9} %) siltatunnus)))]
+                        siltatunnus-numerona)
+
+
+              )))
     sillat))
 
 (defn sillat []
@@ -143,7 +148,6 @@
          [kartta/kartan-paikka]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Siltojen hakuehto"]
-
           [livi-pudotusvalikko {:valinta    @sillat/listaus
                                 ;;\u2014 on väliviivan unikoodi
                                 :format-fn  #(case %
@@ -154,6 +158,15 @@
                                                "Kaikki")
                                 :valitse-fn #(reset! sillat/listaus %)}
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
+
+         [:div.label-ja-alasveto
+          [:span.alasvedon-otsikko "Järjestä sillat"]
+          [livi-pudotusvalikko {:valinta    @sillat/jarjestys
+                                :format-fn  #(if (= % :nimi)
+                                               "Nimen mukaan"
+                                               "Siltatunnuksen mukaan")
+                                :valitse-fn #(reset! sillat/jarjestys %)}
+           [:nimi :tunnus]]]
          [grid/grid
           {:otsikko       "Sillat"
            :rivin-luokka  #(when (sillat/on-poistettu? %) "poistettu-silta")

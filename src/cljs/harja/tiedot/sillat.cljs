@@ -11,7 +11,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def karttataso-sillat (atom false))
-
+(def jarjestys (atom :nimi))
 (def listaus (atom :kaikki))
 
 (defn- on-tarkastettu-hoitokautena?
