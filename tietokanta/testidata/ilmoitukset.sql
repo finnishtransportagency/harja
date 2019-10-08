@@ -1145,7 +1145,7 @@ DO $$
 DECLARE
   urakan_aloitus_pvm TIMESTAMP;
   urakan_paattymis_pvm TIMESTAMP;
-  urakka_id INTEGER := (SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakan sopimus');
+  urakka_id INTEGER := (SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)');
   viimeisin_ilmoitus_id INTEGER := (SELECT ilmoitusid FROM ilmoitus ORDER BY ilmoitusid DESC LIMIT 1);
   ilmoitus_id_ INTEGER;
   ilmoitus_harja_id INTEGER;
