@@ -66,20 +66,24 @@ WHERE
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
-SELECT
-  u.id        AS urakka_id,
-  u.nimi      AS urakka_nimi,
-  u.tyyppi    AS tyyppi,
-  o.id        AS hallintayksikko_id,
-  o.nimi      AS hallintayksikko_nimi,
-  o.elynumero AS hallintayksikko_elynumero,
-  u.urakkanro AS urakka_urakkanro
+-- Palauttaa teiden-hoito-urakan hoitourakkana (MHU).
+SELECT u.id        AS urakka_id,
+       u.nimi      AS urakka_nimi,
+       CASE
+         WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
+         ELSE u.tyyppi
+         END       AS tyyppi,
+       u.tyyppi    AS todellinen_tyyppi,
+       o.id        AS hallintayksikko_id,
+       o.nimi      AS hallintayksikko_nimi,
+       o.elynumero AS hallintayksikko_elynumero,
+       u.urakkanro AS urakka_urakkanro
 FROM urakka u
-  JOIN organisaatio o ON u.hallintayksikko = o.id
+       JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
-      AND (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija)
-      AND (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi)
-      AND (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko));
+  AND (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija)
+  AND (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi)
+  AND (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko));
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
@@ -341,16 +345,20 @@ WHERE u.id = :id;
 
 -- name: hae-urakoiden-organisaatiotiedot
 -- Hakee joukolle urakoita urakan ja hallintayksikön nimet ja id:t
-SELECT
-  u.id         AS urakka_id,
-  u.nimi       AS urakka_nimi,
-  u.tyyppi     AS tyyppi,
-  hy.id        AS hallintayksikko_id,
-  hy.nimi      AS hallintayksikko_nimi,
-  hy.elynumero AS hallintayksikko_elynumero,
-  u.urakkanro  AS urakka_urakkanro
+-- Palauttaa teiden-hoito-urakan hoitourakkana (MHU).
+SELECT u.id         AS urakka_id,
+       u.nimi       AS urakka_nimi,
+       CASE
+         WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
+         ELSE u.tyyppi
+         END        AS tyyppi,
+       u.tyyppi     AS todellinen_tyyppi,
+       hy.id        AS hallintayksikko_id,
+       hy.nimi      AS hallintayksikko_nimi,
+       hy.elynumero AS hallintayksikko_elynumero,
+       u.urakkanro  AS urakka_urakkanro
 FROM urakka u
-  JOIN organisaatio hy ON u.hallintayksikko = hy.id
+       JOIN organisaatio hy ON u.hallintayksikko = hy.id
 WHERE u.id IN (:id);
 
 -- name: hae-urakat-ytunnuksella
