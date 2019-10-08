@@ -55,7 +55,7 @@
     (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
     (sonja/laheta (:sonja jarjestelma)
                   tloik-apurit/+tloik-ilmoitusviestijono+
-                  tloik-apurit/+testi-ilmoitus-sanoma+)
+                  (tloik-apurit/testi-ilmoitus-sanoma))
     (let [saapunut (-> (odota-arvo ilmoitusviesti)
                        .getText
                        sahkoposti-sanomat/lue-sahkoposti)

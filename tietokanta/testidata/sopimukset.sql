@@ -10,8 +10,6 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Utajärv
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Porvoon päällystyksen pääsopimus', '2019-01-01','2023-12-31','5H05340/10', (SELECT id FROM urakka WHERE nimi='Porvoon päällystysurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('YHA-päällystysurakka (sidottu) pääsopimus', '2014-10-01','2018-09-30','5H03228/10', (SELECT id FROM urakka WHERE nimi='YHA-päällystysurakka (sidottu)'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun päällystyksen palvelusopimus, pääsopimus', '2016-01-01','2018-12-31','5H01228/10', (SELECT id FROM urakka WHERE nimi='Oulun päällystyksen palvelusopimus'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('PIR RATU IHJU 2016 -2022, P pääsopimus', '2016-01-01','2023-12-31','5H07428/10', (SELECT id FROM urakka WHERE nimi='PIR RATU IHJU 2016 -2022, P'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('KAS siltojen ylläpidon palvelusopimus Etelä-Karjala 2016-2019, P pääsopimus', '2015-01-01','2020-12-31','5H05728/10', (SELECT id FROM urakka WHERE nimi='KAS siltojen ylläpidon palvelusopimus Etelä-Karjala 2016-2019, P'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('YHA1 pääsopimus', '2014-06-01','2018-09-30','5HE5228/10', (SELECT id FROM urakka WHERE nimi='YHA-päällystysurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('YHA2 pääsopimus', '2014-06-01','2018-09-30','5HE5558/10', (SELECT id FROM urakka WHERE nimi='YHA-paikkausurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen paikkauksen pääsopimus', '2007-06-01','2012-09-30','5H05229/10', (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka'));
@@ -57,7 +55,6 @@ VALUES
   ('Espoon alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisaES6339/06', (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null));
 
--- MHU sopimus
 DO $$
 DECLARE
   urakan_aloitus_pvm TIMESTAMP;
@@ -70,6 +67,11 @@ BEGIN
       urakan_aloitus_pvm = make_date((SELECT date_part('year', now())::INT - 1), 10, 1);
   END IF;
   urakan_paattymis_pvm = urakan_aloitus_pvm + interval '5 years';
+  -- Testeissä käytettyjä urakoita
+  INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+  VALUES ('KAS siltojen ylläpidon palvelusopimus Etelä-Karjala pääsopimus', urakan_aloitus_pvm, urakan_paattymis_pvm, '5H05728/10', (SELECT id FROM urakka WHERE nimi='KAS siltojen ylläpidon palvelusopimus Etelä-Karjala')),
+         ('PIR RATU IHJU pääsopimus', urakan_aloitus_pvm, urakan_paattymis_pvm,'5H07428/10', (SELECT id FROM urakka WHERE nimi='PIR RATU IHJU'));
+  -- MHU urakoiden sopimukset
   INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
   VALUES
     ('Rovaniemen MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-ROV', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka (1. hoitovuosi)')),
