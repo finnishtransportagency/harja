@@ -99,6 +99,7 @@
         {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
          :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
         {:otsikko "Valmis\u00ADtumis\u00ADpäivä" :leveys 20 :tyyppi :pvm
+         :validointi :korkeintaan-kuluva-paiva
          :muokattava? (constantly voi-merkita-valmiiksi?)
          :nimi :valmispvm
          :fmt #(if %

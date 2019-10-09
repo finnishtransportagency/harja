@@ -352,7 +352,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :muokattava? (constantly muokattava?)
                  :tyyppi :pvm-aika
                  :nimi :aika
-                 :validoi [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
+                 :validoi [[:pvm-ennen (pvm/nyt)][:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
                  :huomauta [[:urakan-aikana-ja-hoitokaudella]]
                  :palstoja 1}
 
