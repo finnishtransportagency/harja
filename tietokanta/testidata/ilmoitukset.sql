@@ -1164,7 +1164,7 @@ DECLARE
   kuittaaja_sukunimi_ TEXT := 'Rovanieminen';
   kuittaaja_organisaatio_nimi_ TEXT := 'Välittävä Urakoitsija';
   kuittaaja_organisaatio_ytunnus_ TEXT := 'Y1242334';
-  yhteydenottopyynnot BOOLEAN[] := (SELECT ARRAY[FALSE, TRUE, TRUE, TRUE]::BOOLEAN[]);
+  yhteydenottopyynnot BOOLEAN[] := (SELECT ARRAY[FALSE, TRUE, TRUE, TRUE, FALSE, TRUE]::BOOLEAN[]);
   yhteydenottopyynto_ BOOLEAN;
   ilmoitustyypit ILMOITUSTYYPPI[] := (SELECT ARRAY['toimenpidepyynto', 'tiedoitus', 'toimenpidepyynto', 'tiedoitus', 'toimenpidepyynto', 'tiedoitus']::ILMOITUSTYYPPI[]);
   ilmoitustyyppi_ ILMOITUSTYYPPI;

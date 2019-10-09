@@ -144,7 +144,7 @@
         lahetys-aika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
                                  (t/minus (t/now) (t/hours 3)))
         aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
-                            (t/minus (t/now) (t/hours 7)))
+                            (t/now))
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
         tloik-kuittaukset (atom [])]
     (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))

@@ -840,7 +840,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    111, 'L11', 'Ouluntie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13371,
-   22, 12, 4336, 12, 9477, NULL, NULL, NULL, '{2019}', FALSE),
+   22, 12, 4336, 12, 9477, NULL, NULL, NULL, ARRAY[(SELECT date_part('year', now()))::INTEGER], FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -851,7 +851,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    112, 'L12', 'Kirkkotie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13372,
-   18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2019}', FALSE),
+   18642, 1, 13, 1, 493, NULL, NULL, NULL, ARRAY[(SELECT date_part('year', now()))::INTEGER], FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -862,7 +862,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    113, 'L13', 'Puolangalle menevä (EI SAA NÄKYÄ)', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13373,
-   837, 1, 136, 1, 546, NULL, NULL, NULL, '{2019}', TRUE),
+   837, 1, 136, 1, 546, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), TRUE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -873,7 +873,7 @@ VALUES
                     WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
    115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13375,
-   837, 2, 0, 2, 1000, NULL, NULL, NULL, '{2019}', FALSE),
+   837, 2, 0, 2, 1000, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -884,7 +884,7 @@ VALUES
                      WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
-    22, 13, 0, 13, 3888, NULL, NULL, NULL, '{2019}', FALSE);
+    22, 13, 0, 13, 3888, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE);
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
@@ -892,43 +892,43 @@ INSERT INTO yllapitokohteen_aikataulu
 VALUES
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Ouluntie'), '2019-05-19',
-   '2019-05-19', '2019-05-21', '2019-05-22',
-   '2019-05-23',
-   '2019-05-24', (SELECT id
+    WHERE nimi = 'Ouluntie'), make_date((SELECT date_part('year', now())::INT - 1), 5, 19),
+   make_date((SELECT date_part('year', now())::INT - 1), 5, 19), make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 5, 22),
+   make_date((SELECT date_part('year', now())::INT - 1), 5, 23),
+   make_date((SELECT date_part('year', now())::INT - 1), 5, 24), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   '2019-05-21', '2019-06-04'),
+   make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 4)),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Kirkkotie'), '2019-06-19',
-   '2019-06-19', '2019-06-21', '2019-06-22',
-   '2019-06-23',
-   '2019-06-24', (SELECT id
+    WHERE nimi = 'Kirkkotie'), make_date((SELECT date_part('year', now())::INT - 1), 6, 19),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 19), make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 22),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 23),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 24), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   '2019-06-21', '2019-07-04'),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 7, 04)),
   ((SELECT id
     FROM yllapitokohde
     WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Puolangantie'), '2019-06-19',
-   '2019-06-19', '2019-06-21', '2019-06-22',
-   '2019-06-23',
-   '2019-06-24', (SELECT id
+    WHERE nimi = 'Puolangantie'), make_date((SELECT date_part('year', now())::INT - 1), 6, 19),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 19), make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 22),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 23),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 24), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   '2019-06-21', '2019-07-04'),
+   make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 7, 04)),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Ouluntie 2'), '2019-05-19',
-                              '2019-05-19', '2019-05-21', '2019-05-22',
-                              '2019-05-23',
-                              '2019-05-24', (SELECT id
+    WHERE nimi = 'Ouluntie 2'), make_date((SELECT date_part('year', now())::INT - 1), 5, 19),
+                              make_date((SELECT date_part('year', now())::INT - 1), 5, 19), make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 5, 22),
+                              make_date((SELECT date_part('year', now())::INT - 1), 5, 23),
+                              make_date((SELECT date_part('year', now())::INT - 1), 5, 24), (SELECT id
                                              FROM kayttaja
                                              WHERE kayttajanimi = 'jvh'), NOW(),
-                              '2019-05-21', '2019-06-04');
+                              make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 4));
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
@@ -973,7 +973,7 @@ VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, 100, 4543.9
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
 VALUES ((SELECT id
          FROM yllapitokohde
-         WHERE nimi = 'Ouluntie'), 'aloitettu' ::paallystystila, '2020-12-20 00:00:00+02',
+         WHERE nimi = 'Ouluntie'), 'aloitettu' ::paallystystila, make_date((SELECT date_part('year', now())::INT - 1), 12, 20),
          '{
             "osoitteet": [
               {
@@ -1013,4 +1013,4 @@ VALUES ((SELECT id
               }
             ]
           }',
-        NULL, 'Tekninen osa ok!', '2005-12-20 00:00:00+02');
+        NULL, 'Tekninen osa ok!', make_date((SELECT date_part('year', now())::INT - 1), 5, 21));
