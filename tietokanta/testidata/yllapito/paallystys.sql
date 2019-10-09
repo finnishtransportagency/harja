@@ -892,43 +892,43 @@ INSERT INTO yllapitokohteen_aikataulu
 VALUES
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Ouluntie'), make_date((SELECT date_part('year', now())::INT - 1), 5, 19),
-   make_date((SELECT date_part('year', now())::INT - 1), 5, 19), make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 5, 22),
-   make_date((SELECT date_part('year', now())::INT - 1), 5, 23),
-   make_date((SELECT date_part('year', now())::INT - 1), 5, 24), (SELECT id
+    WHERE nimi = 'Ouluntie'), make_date((SELECT date_part('year', now())::INT), 5, 19),
+   make_date((SELECT date_part('year', now())::INT), 5, 19), make_date((SELECT date_part('year', now())::INT), 5, 21), make_date((SELECT date_part('year', now())::INT), 5, 22),
+   make_date((SELECT date_part('year', now())::INT), 5, 23),
+   make_date((SELECT date_part('year', now())::INT), 5, 24), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 4)),
+   make_date((SELECT date_part('year', now())::INT), 5, 21), make_date((SELECT date_part('year', now())::INT), 6, 4)),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Kirkkotie'), make_date((SELECT date_part('year', now())::INT - 1), 6, 19),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 19), make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 22),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 23),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 24), (SELECT id
+    WHERE nimi = 'Kirkkotie'), make_date((SELECT date_part('year', now())::INT), 6, 19),
+   make_date((SELECT date_part('year', now())::INT), 6, 19), make_date((SELECT date_part('year', now())::INT), 6, 21), make_date((SELECT date_part('year', now())::INT), 6, 22),
+   make_date((SELECT date_part('year', now())::INT), 6, 23),
+   make_date((SELECT date_part('year', now())::INT), 6, 24), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 7, 04)),
+   make_date((SELECT date_part('year', now())::INT), 6, 21), make_date((SELECT date_part('year', now())::INT), 7, 04)),
   ((SELECT id
     FROM yllapitokohde
     WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Puolangantie'), make_date((SELECT date_part('year', now())::INT - 1), 6, 19),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 19), make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 22),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 23),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 24), (SELECT id
+    WHERE nimi = 'Puolangantie'), make_date((SELECT date_part('year', now())::INT), 6, 19),
+   make_date((SELECT date_part('year', now())::INT), 6, 19), make_date((SELECT date_part('year', now())::INT), 6, 21), make_date((SELECT date_part('year', now())::INT), 6, 22),
+   make_date((SELECT date_part('year', now())::INT), 6, 23),
+   make_date((SELECT date_part('year', now())::INT), 6, 24), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date((SELECT date_part('year', now())::INT - 1), 6, 21), make_date((SELECT date_part('year', now())::INT - 1), 7, 04)),
+   make_date((SELECT date_part('year', now())::INT), 6, 21), make_date((SELECT date_part('year', now())::INT), 7, 04)),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Ouluntie 2'), make_date((SELECT date_part('year', now())::INT - 1), 5, 19),
-                              make_date((SELECT date_part('year', now())::INT - 1), 5, 19), make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 5, 22),
-                              make_date((SELECT date_part('year', now())::INT - 1), 5, 23),
-                              make_date((SELECT date_part('year', now())::INT - 1), 5, 24), (SELECT id
+    WHERE nimi = 'Ouluntie 2'), make_date((SELECT date_part('year', now())::INT), 5, 19),
+                              make_date((SELECT date_part('year', now())::INT), 5, 19), make_date((SELECT date_part('year', now())::INT), 5, 21), make_date((SELECT date_part('year', now())::INT), 5, 22),
+                              make_date((SELECT date_part('year', now())::INT), 5, 23),
+                              make_date((SELECT date_part('year', now())::INT), 5, 24), (SELECT id
                                              FROM kayttaja
                                              WHERE kayttajanimi = 'jvh'), NOW(),
-                              make_date((SELECT date_part('year', now())::INT - 1), 5, 21), make_date((SELECT date_part('year', now())::INT - 1), 6, 4));
+                              make_date((SELECT date_part('year', now())::INT), 5, 21), make_date((SELECT date_part('year', now())::INT), 6, 4));
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
@@ -973,7 +973,7 @@ VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, 100, 4543.9
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
 VALUES ((SELECT id
          FROM yllapitokohde
-         WHERE nimi = 'Ouluntie'), 'aloitettu' ::paallystystila, make_date((SELECT date_part('year', now())::INT - 1), 12, 20),
+         WHERE nimi = 'Ouluntie'), 'aloitettu' ::paallystystila, make_date((SELECT date_part('year', now())::INT), 12, 20),
          '{
             "osoitteet": [
               {
@@ -1013,4 +1013,4 @@ VALUES ((SELECT id
               }
             ]
           }',
-        NULL, 'Tekninen osa ok!', make_date((SELECT date_part('year', now())::INT - 1), 5, 21));
+        NULL, 'Tekninen osa ok!', make_date((SELECT date_part('year', now())::INT), 5, 21));
