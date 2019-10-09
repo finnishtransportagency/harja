@@ -809,12 +809,6 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        IF (toimenpidenimi = 'Soratien hoito TP' AND
-            vuosi_ = 3)
-        THEN
-          -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
-          EXIT;
-        END IF;
         INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
           VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
       END LOOP;
@@ -874,11 +868,6 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        IF (toimenpidenimi = 'Soratien hoito TP' AND
-            vuosi_ = 3) THEN
-        -- Jätetään soratiet suunnittelematta
-          EXIT;
-        END IF;
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
           VALUES -- kolmansien osapuolien aiheuttamat vahingot
                  ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
