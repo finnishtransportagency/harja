@@ -14,6 +14,11 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-kustannusarvioidut-tyot db {:urakka urakka-id}))
 
+(defn hae-urakan-kustannusarvoidut-tyot-nimineen
+  [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (q/hae-urakan-kustannusarvioidut-tyot-nimineen db {:urakka urakka-id}))
+
 (defn tallenna-kustannusarvioidut-tyot
   "Funktio tallentaa ja palautaa urakan kustannusarvioidut tyot. Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
