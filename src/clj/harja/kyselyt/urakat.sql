@@ -73,7 +73,6 @@ SELECT u.id        AS urakka_id,
          WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
          ELSE u.tyyppi
          END       AS tyyppi,
-       u.tyyppi    AS todellinen_tyyppi,
        o.id        AS hallintayksikko_id,
        o.nimi      AS hallintayksikko_nimi,
        o.elynumero AS hallintayksikko_elynumero,
@@ -352,7 +351,6 @@ SELECT u.id         AS urakka_id,
          WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
          ELSE u.tyyppi
          END        AS tyyppi,
-       u.tyyppi     AS todellinen_tyyppi,
        hy.id        AS hallintayksikko_id,
        hy.nimi      AS hallintayksikko_nimi,
        hy.elynumero AS hallintayksikko_elynumero,
