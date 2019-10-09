@@ -14,4 +14,15 @@ FROM kustannusarvioitu_tyo kat
        LEFT JOIN toimenpidekoodi tpik_tpi ON tpik_tpi.id = tpi.toimenpide
        LEFT JOIN toimenpidekoodi tpik_t ON tpik_t.id = kat.tehtava
        LEFT JOIN tehtavaryhma tr ON kat.tehtavaryhma = tr.id
-WHERE tpi.urakka = :urakka
+WHERE tpi.urakka = :urakka;
+
+
+-- name: merkitse-kustannussuunnitelmat-likaisiksi!
+-- Merkitsee teiden hoidon urakan (MHU) kustannussuunnitelmat likaiseksi urakkakohtaisen toimenpideinstanssin ja maksuerätyypin mukaan
+UPDATE kustannussuunnitelma
+SET likainen = TRUE
+WHERE maksuera IN (SELECT m.numero
+                   FROM maksuera m
+                               JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                   WHERE m.tyyppi IN (:maksueratyyppi ::MAKSUERATYYPPI)
+                     AND tpi.id = :toimenpideinstanssi);
