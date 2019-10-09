@@ -77,18 +77,21 @@
 
        ;; Alasvetovalikko urakan nopeaa vaihtamista varten
        [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
-
-        (let [muut-kaynnissaolevat-urakat (sort-by :nimi
-                                                   (filter #(and
-                                                             (not= % valittu)
-                                                             (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
-                                                           @nav/suodatettu-urakkalista))]
-          (if (empty? muut-kaynnissaolevat-urakat)
+        (let [{muut-kaynnissaolevat-urakat true
+               muut-urakat false}
+              (group-by #(pvm/jalkeen? (:loppupvm %) (pvm/nyt))
+                        (sort-by :nimi (filter #(not= % valittu) @nav/suodatettu-urakkalista)))]
+          (if (and (empty? muut-kaynnissaolevat-urakat) (empty? muut-urakat))
             [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita, joita on oikeus tarkastella."]
 
-            (for [urakka muut-kaynnissaolevat-urakat]
-              ^{:key (str "urakka-" (:id urakka))}
-              [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])))]])))
+            [:<>
+             (for [urakka muut-kaynnissaolevat-urakat]
+               ^{:key (str "urakka-" (:id urakka))}
+               [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])
+             [:div.harja-alasvetolistaotsikko {:on-click #(.preventDefault %)} "Päättyneet urakat"]
+             (for [urakka muut-urakat]
+               ^{:key (str "urakka-muut-" (:id urakka))}
+               [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])]))]])))
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
