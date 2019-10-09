@@ -845,7 +845,7 @@
             [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"}]]]
           [:div.row.hae-painike
             [harja.ui.napit/yleinen-ensisijainen "Hae lupia"
-             #(hae-luvat {:valinnat valinnat})
+             hae-luvat
              {:disabled (or (and (:myonnetty valinnat)
                                  (= 1 (count (filter nil? (:myonnetty valinnat)))))
                             (and (:voimassaolo valinnat)
@@ -942,7 +942,6 @@
 (defn tieluvat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeTieluvat (:valinnat app) nil))
                            (tasot/taso-paalle! :tieluvat)
                            (tasot/taso-pois! :organisaatio)
                            (kartta-tiedot/piilota-infopaneeli!)

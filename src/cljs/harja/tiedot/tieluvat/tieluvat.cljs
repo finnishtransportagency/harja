@@ -14,7 +14,7 @@
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tila (atom {:valinnat {:myonnetty (pvm/aikavali-nyt-miinus 0)}
+(def tila (atom {:valinnat {:myonnetty nil}
                  :valittu-tielupa nil
                  :tielupien-haku-kaynnissa? false
                  :nakymassa? false}))
@@ -127,7 +127,7 @@
     (assoc app :nakymassa? n))
 
   PaivitaValinnat
-  (process-event [{} app]
+  (process-event [_ app]
     (let [aikaleima (pvm/nyt)
           valinnat (:valinnat app)]
       ((tuck/send-async! ->HaeTieluvat) valinnat aikaleima)
