@@ -76,7 +76,7 @@ describe('Luo uusi tietyöilmoitus', () => {
                 .should('have.text', arvo);
         }
 
-        cy.get('#tietyoilmoitushakutulokset').as('ilmoitusTaulukko');
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible')
 
         cy.get('@ilmoitusTaulukko').find('tr.klikattava').then(($rivit) => {
             expect($rivit.length).to.be.equal(1);
