@@ -248,3 +248,123 @@
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) ajat))
               (str "Ajat eivät tallentuneet kantaan oikein toimenpiteelle " toimenpide-avain)))))))
+
+(deftest tallenna-kustannusarvioitu-tyo
+  (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        tallennettavat-tyot [{:urakka-id urakka-id
+                              :tallennettavat-asiat #{:toimenpiteen-maaramitattavat-tyot}
+                              :toimenpide-avain :paallystepaikkaukset
+                              ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
+                              ;; että lopulta kaikkien aikojen vuosi on uniikki
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}
+                             {:urakka-id urakka-id
+                              :tallennettavat-asiat #{:rahavaraus-lupaukseen-1
+                                                      :toimenpiteen-maaramitattavat-tyot}
+                              :toimenpide-avain :mhu-yllapito
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}
+                             {:urakka-id urakka-id
+                              :tallennettavat-asiat #{:kolmansien-osapuolten-aiheuttamat-vahingot
+                                                      :akilliset-hoitotyot
+                                                      :toimenpiteen-maaramitattavat-tyot}
+                              :toimenpide-avain :talvihoito
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}
+                             {:urakka-id urakka-id
+                              :tallennettavat-asiat #{:kolmansien-osapuolten-aiheuttamat-vahingot
+                                                      :akilliset-hoitotyot
+                                                      :toimenpiteen-maaramitattavat-tyot}
+                              :toimenpide-avain :liikenneympariston-hoito
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}
+                             {:urakka-id urakka-id
+                              :tallennettavat-asiat #{:kolmansien-osapuolten-aiheuttamat-vahingot
+                                                      :akilliset-hoitotyot
+                                                      :toimenpiteen-maaramitattavat-tyot}
+                              :toimenpide-avain :sorateiden-hoito
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}
+                             {:urakka-id urakka-id
+                              :tallennettavat-asiat #{:toimenpiteen-maaramitattavat-tyot}
+                              :toimenpide-avain :mhu-korvausinvestointi
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}
+                             {:urakka-id urakka-id
+                              :tallennettavat-asiat #{:hoidonjohtopalkkio
+                                                      :toimistokulut
+                                                      :erillishankinnat}
+                              :toimenpide-avain :mhu-johto
+                              :ajat (mapv first
+                                          (vals (group-by :vuosi
+                                                          (gen/sample (s/gen ::aika-vuodella-ivalon-urakalle)))))
+                              :summa (gen/generate (s/gen ::bs/summa))}]]
+    (testing "Tallennus onnistuu"
+      (doseq [tyo tallennettavat-tyot
+              :let [tallennettavat-asiat (:tallennettavat-asiat tyo)]
+              tallennettava-asia tallennettavat-asiat
+              :let [tyo (-> tyo (dissoc :tallennettavat-asiat) (assoc :tallennettava-asia tallennettava-asia))]]
+        (let [vastaus (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-jvh+ tyo)]
+          (is (:onnistui? vastaus) (str "Tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui.")))))
+    (testing "Data kannassa on oikein"
+      (doseq [{:keys [toimenpide-avain urakka-id ajat summa tallennettavat-asiat]} tallennettavat-tyot]
+        (let [toimenpidekoodi (case toimenpide-avain
+                                :paallystepaikkaukset "20107"
+                                :mhu-yllapito "20191"
+                                :talvihoito "23104"
+                                :liikenneympariston-hoito "23116"
+                                :sorateiden-hoito "23124"
+                                :mhu-korvausinvestointi "14301"
+                                :mhu-johto "23151")
+              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
+              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
+                                         FROM kustannusarvioitu_tyo kt
+                                           LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                           LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
+                                         WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";"))]
+          (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
+          (is (every? #(= (float (:summa %))
+                          (float summa))
+                      data-kannassa)
+              (str "Summa ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+          (doseq [tallennettava-asia tallennettavat-asiat]
+            (let [tallennetun-asian-data? (fn [{:keys [tyyppi tehtava tehtavaryhma]}]
+                                            (case tallennettava-asia
+                                              :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
+                                                                       (= tehtava "Hoitourakan työnjohto")
+                                                                       (nil? tehtavaryhma))
+                                              :toimistokulut (and (= tyyppi "laskutettava-tyo")
+                                                                  (= tehtava "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.")
+                                                                  (nil? tehtavaryhma))
+                                              :erillishankinnat (and (= tyyppi "laskutettava-tyo")
+                                                                     (nil? tehtava)
+                                                                     (= tehtavaryhma "ERILLISHANKINNAT"))
+                                              :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
+                                                                            (nil? tehtava)
+                                                                            (= tehtavaryhma "TILAAJAN RAHAVARAUS"))
+                                              :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
+                                                                                               (= tehtava "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen")
+                                                                                               (nil? tehtavaryhma))
+                                              :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
+                                                                        (= tehtava "Äkillinen hoitotyö")
+                                                                        (nil? tehtavaryhma))
+                                              :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
+                                                                                      (nil? tehtava)
+                                                                                      (nil? tehtavaryhma))))
+                  tallennetun-asian-data-kannassa (filter tallennetun-asian-data? data-kannassa)]
+              (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) tallennetun-asian-data-kannassa))
+                     (sort-by (juxt :vuosi :kuukausi) ajat))
+                  (str "Ajat eivät tallentuneet kantaan oikein toimenpiteelle: " toimenpide-avain " ja tallennettavalle asialle: " tallennettava-asia)))))))))

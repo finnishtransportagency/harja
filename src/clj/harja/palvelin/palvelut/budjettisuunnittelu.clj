@@ -317,7 +317,7 @@
                                                                                                             :toimenpideinstanssi toimenpideinstanssi-id})
                                 :akillinen-hoitotyo (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "akillinen-hoitotyo"
                                                                                                          :toimenpideinstanssi toimenpideinstanssi-id})
-                                :laskutettava-tyo (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "kokonaishintainen"
+                                (:laskutettava-tyo :muut-rahavaraukset) (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "kokonaishintainen"
                                                                                                        :toimenpideinstanssi toimenpideinstanssi-id}))
                               (if paivitetaan?
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
