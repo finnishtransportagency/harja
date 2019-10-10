@@ -357,29 +357,36 @@
                                                                         :summa        summa}))))
 
 
-(s/def ::vuosi integer?)
-(s/def ::kuukausi integer?)
-(s/def ::urakka-id integer?)
+(s/def ::positive-int? (s/and integer? #(>= % 0)))
+(s/def ::positive-number? (s/and number? #(>= % 0)))
+
+(s/def ::vuosi ::positive-int?)
+(s/def ::kuukausi (s/and integer?
+                         #(<= 1 % 12)))
+(s/def ::urakka-id ::positive-int?)
 (s/def ::toimenkuva string?)
 (s/def ::maksukausi keyword?)
-(s/def ::hoitokausi integer?)
-(s/def ::tunnit number?)
-(s/def ::tuntipalkka number?)
-(s/def ::kk-v number?)
-(s/def ::summa number?)
-(s/def ::tavoitehinta number?)
-(s/def ::kattohinta number?)
+(s/def ::hoitokausi (s/and integer?
+                           #(<= 1 % 5)))
+(s/def ::tunnit ::positive-number?)
+(s/def ::tuntipalkka ::positive-number?)
+(s/def ::kk-v (s/and number?
+                     #(<= 1 % 12)))
+(s/def ::summa ::positive-number?)
+(s/def ::tavoitehinta ::positive-number?)
+(s/def ::kattohinta ::positive-number?)
 (s/def ::toimenpide-avain (s/and keyword?
                                  (fn [k]
                                    (some #(= k %)
                                          (keys toimenpide-avain->toimenpide)))))
 (s/def ::tallennettava-asia tallennettava-asia)
+(s/def ::aika (s/keys :req-un [::vuosi]
+                      :opt-un [::kuukausi]))
 
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
 
-(s/def ::ajat (s/coll-of (s/keys :req-un [::vuosi]
-                                 :opt-un [::kuukausi])))
+(s/def ::ajat (s/coll-of ::aika))
 
 (s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
                                :kind vector?))
