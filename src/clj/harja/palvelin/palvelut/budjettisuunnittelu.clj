@@ -358,7 +358,7 @@
 
 
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
-(s/def ::positive-number? (s/and number? #(>= % 0)))
+(s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf)))
 
 (s/def ::vuosi ::positive-int?)
 (s/def ::kuukausi (s/and integer?
@@ -371,6 +371,7 @@
 (s/def ::tunnit ::positive-number?)
 (s/def ::tuntipalkka ::positive-number?)
 (s/def ::kk-v (s/and number?
+                     #(not= % ##Inf)
                      #(<= 1 % 12)))
 (s/def ::summa ::positive-number?)
 (s/def ::tavoitehinta ::positive-number?)
