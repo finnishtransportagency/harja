@@ -6,7 +6,8 @@
             [harja.tiedot.navigaatio :as nav]))
 
 (def suunnittelu-default-arvot {:tehtavat {:valinnat {:toimenpide nil
-                                                      :valitaso nil}}
+                                                      :valitaso nil
+                                                      :noudetaan 0}}
                                 :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
                                                                                          :maksetaan :molemmat
                                                                                          :kopioidaan-tuleville-vuosille? true

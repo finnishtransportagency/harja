@@ -30,6 +30,28 @@
   (into []
         (q/hae-tehtavahierarkia db)))
 
+(defn hae-tehtavat
+  "Urakan tehtävähierarkia ilman määriä"
+  [db user]
+  (reduce
+    (fn [kaikki {:keys [tehtava-id tehtava valitaso-id ylataso-id otsikko alataso valitaso] :as t}]
+      (assoc kaikki tehtava-id {:id   tehtava-id
+                                :nimi tehtava
+                                :vanhempi valitaso-id
+                                :taso 4}
+                    valitaso-id {:id valitaso-id
+                                 :nimi otsikko
+                                 :vanhempi ylataso-id
+                                 :taso 3}
+                    ylataso-id {:id   ylataso-id
+                                :nimi (-> otsikko
+                                          (clojure.string/split #" " 2)
+                                          second)
+                                :taso 2}
+                    ))
+    {}
+    (into [] (q/hae-tehtavahierarkia db))))
+
 (defn- jarjesta-tehtavahierarkia
   "Järjestää tehtävähierarkian käyttöliittymän (Suunnittelu > Tehtävä- ja määräluettelo) tarvitsemaan muotoon.
   Suunnitteluosiossa ei tehtävähierarkian tasoilla (ylä-, väli- ja alataso) ole merkitystä. Tasoja käytetään budjettiseurannassa.
@@ -44,7 +66,6 @@
   ;; {:id "5" :tehtava-id 4621  :nimi "Opastustaulun/-viitan uusiminen" :tehtavaryhmatyyppi "tehtava" :maara 50 :vanhempi "3" :piillotettu? false}]
 
   ;; TODO: Muodosta palautettavat tiedot. Vrt. println tulostukset.
-
   (let [cnt (atom 1)
         tulos (atom [])
         toimenpiteet (atom #{})
@@ -72,13 +93,13 @@
                            :toimenpide toimenpide})
         (doseq [{:keys [tehtava-id tehtava maara yksikko hoitokauden-alkuvuosi urakka] :as teht} tehtavalista]
           (swap! cnt + 1)
-          (swap! tulos conj {:id                 @cnt
+          (swap! tulos conj {                               ;:id                 @cnt
                              :tehtava-id         tehtava-id
-                             :tehtavaryhmatyyppi "tehtava"
-                             :nimi               tehtava
+                             ; :tehtavaryhmatyyppi "tehtava"
+                             ; :nimi               tehtava
                              :maara              (if (nil? maara) 0 maara)
-                             :yksikko            yksikko
-                             :vanhempi           emo
+                             ;:yksikko            yksikko
+                             ;:vanhempi           emo
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                              :urakka             urakka
                              :piillotettu?       false})
@@ -122,9 +143,6 @@
                                           (filter #(= (:tehtava-id tm) (:tehtava-id %)) validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
 
-                                  #_(println (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
-                                                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))))
-
                                   (if-not (tehtavamaarat-kannassa (tehtavamaara-avain (merge tm {:urakka                urakka-id
                                                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
                                     ;; insert
@@ -141,6 +159,10 @@
   component/Lifecycle
   (start [this]
     (doto (:http-palvelin this)
+      (julkaise-palvelu
+        :tehtavat
+        (fn [user]
+          (hae-tehtavat (:db this) user)))
       (julkaise-palvelu
         :tehtavahierarkia
         (fn [user]
@@ -160,6 +182,7 @@
     this)
 
   (stop [this]
+    (poista-palvelu (:http-palvelin this) :tehtavat)
     (poista-palvelu (:http-palvelin this) :tehtavahierarkia)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
