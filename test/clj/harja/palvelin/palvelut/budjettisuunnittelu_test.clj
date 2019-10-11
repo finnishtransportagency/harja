@@ -6,7 +6,8 @@
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [slingshot.slingshot :refer [try+]]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -55,13 +56,6 @@
                               {:vuosi vuosi}))
                           (gen/int)))))
 
-
-
-:budjettitavoite
-:tallenna-budjettitavoite
-
-;; sampoa varten likaiseksi merkitseminen
-;; oikeustarkistukset
 (deftest budjetoidut-tyot-haku
   (let [{urakka-id :id urakan-alkupvm :alkupvm} (first (q-map "SELECT id, alkupvm FROM urakka WHERE nimi='Pellon MHU testiurakka (3. hoitovuosi)';"))
         budjetoidut-tyot (bs/hae-urakan-budjetoidut-tyot (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
@@ -786,3 +780,40 @@
         (is (every? #(= (float (:kattohinta %)) (float (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
         (is (every? #(= (float (:tavoitehinta %)) (float paivitetty-tavoitehinta)) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
         (is (every? #(= (float (:kattohinta %)) (float (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) "Päivitetty kattohinta ei oikein päivityksen jälkeen")))))
+
+(deftest budjettisuunnittelun-oikeustarkastukset
+  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+    (testing "budjetoidut-tyot kutsun oikeustarkistus"
+      (is (= (try+ (bs/hae-urakan-budjetoidut-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "budjettitavoite kutsun oikeustarkistus"
+      (is (= (try+ (bs/hae-urakan-tavoite (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "tallenna-budjettitavoite kutsun oikeustarkistus"
+      (is (= (try+ (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "tallenna-kiinteahintaiset-tyot kutsun oikeustarkistus"
+      (is (= (try+ (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id
+                                                                                          :toimenpide-avain :foo
+                                                                                          :summa 1})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "tallenna-johto-ja-hallintokorvaukset kutsun oikeustarkistus"
+      (is (= (try+ (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id
+                                                                                                :toimenkuva "foo"
+                                                                                                :maksukausi :bar})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "tallenna-kustannusarvioitu-tyo kutsun oikeustarkistus"
+      (is (= (try+ (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))))
