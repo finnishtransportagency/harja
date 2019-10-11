@@ -148,17 +148,18 @@
     (fn [e! {:keys [tehtavat-ja-toimenpiteet valinnat] :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
             valitasot (mapv (fn [[_ data]] data)
-                            (distinct
-                              (filter (fn [[_ data]]
-                                        (and
-                                          (= (get-in valinnat [:toimenpide :id]) (:vanhempi data))
-                                          (= 3 (:taso data))))
-                                      tehtavat-ja-toimenpiteet)))
-            ylatasot (mapv (fn [[_ data]] data)
-                           (distinct
-                             (filter
-                               (fn [[_ data]] (= 2 (:taso data)))
-                               tehtavat-ja-toimenpiteet)))
+                            (filter (fn [[_ data]]
+                                      (and
+                                        (= (get-in valinnat [:toimenpide :id]) (:vanhempi data))
+                                        (= 3 (:taso data))))
+                                    tehtavat-ja-toimenpiteet))
+            ylatasot (mapv (fn [[_ data]]
+                             (loki/log "DAATTTTaaasdfTAAAA" data)
+                             data)
+                           (filter
+                             (fn [[_ data]]
+                               (= 2 (:taso data)))
+                             tehtavat-ja-toimenpiteet))
             hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
             disabloitu-alasveto? (fn [koll]
                                    (or (not (= 0 (:noudetaan valinnat)))

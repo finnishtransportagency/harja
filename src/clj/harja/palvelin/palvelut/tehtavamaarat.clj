@@ -33,24 +33,32 @@
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
   [db user]
-  (reduce
-    (fn [kaikki {:keys [tehtava-id tehtava valitaso-id ylataso-id otsikko alataso valitaso] :as t}]
-      (assoc kaikki tehtava-id {:id   tehtava-id
-                                :nimi tehtava
-                                :vanhempi valitaso-id
-                                :taso 4}
-                    valitaso-id {:id valitaso-id
-                                 :nimi otsikko
-                                 :vanhempi ylataso-id
-                                 :taso 3}
-                    ylataso-id {:id   ylataso-id
-                                :nimi (-> otsikko
-                                          (clojure.string/split #" " 2)
-                                          second)
-                                :taso 2}
-                    ))
-    {}
-    (into [] (q/hae-tehtavahierarkia db))))
+  (let [kannasta (into [] (q/hae-tehtavahierarkia db))
+        ryhmissa (group-by :otsikko (distinct kannasta))
+        {:keys [tehtavat valitasot toimenpiteet]} (reduce
+                                                    (fn [kaikki {:keys [tehtava-id tehtava otsikko valitaso-id ylataso-id] :as t}]
+                                                      (-> kaikki
+                                                          (update :tehtavat (fn [tehtavat] (conj tehtavat
+                                                                                                 {:id       tehtava-id
+                                                                                                  :nimi     tehtava
+                                                                                                  :vanhempi valitaso-id
+                                                                                                  :taso     4})))
+                                                          (update :valitasot (fn [valitasot] (conj valitasot
+                                                                                                   {:id       valitaso-id
+                                                                                                    :nimi     otsikko
+                                                                                                    :vanhempi ylataso-id
+                                                                                                    :taso     3})))
+                                                          (update :toimenpiteet (fn [toimenpiteet] (conj toimenpiteet
+                                                                                                         {:id   ylataso-id
+                                                                                                          :nimi (-> otsikko
+                                                                                                                    (clojure.string/split #" " 2)
+                                                                                                                    second)
+                                                                                                          :taso 2})))))
+                                                    {:tehtavat [] :valitasot [] :toimenpiteet []}
+                                                    kannasta)
+        ryhmitelty-valitasot (group-by :nimi (distinct valitasot))
+        ryhmitelty-toimenpiteet (group-by :nimi (distinct toimenpiteet))]
+    {:teht tehtavat :tp ryhmitelty-toimenpiteet :vt ryhmitelty-valitasot :ryhmat ryhmissa}))
 
 (defn- jarjesta-tehtavahierarkia
   "Järjestää tehtävähierarkian käyttöliittymän (Suunnittelu > Tehtävä- ja määräluettelo) tarvitsemaan muotoon.
@@ -86,25 +94,25 @@
                                   :nimi (-> otsikko
                                             (clojure.string/split #" " 2)
                                             (second))})
-        (swap! tulos conj {:id @cnt
+        (swap! tulos conj {:id                 @cnt
                            :tehtavaryhmatyyppi "otsikko"
-                           :nimi otsikko
-                           :piillotettu? false
-                           :toimenpide toimenpide})
+                           :nimi               otsikko
+                           :piillotettu?       false
+                           :toimenpide         toimenpide})
         (doseq [{:keys [tehtava-id tehtava maara yksikko hoitokauden-alkuvuosi urakka] :as teht} tehtavalista]
           (swap! cnt + 1)
-          (swap! tulos conj {                               ;:id                 @cnt
-                             :tehtava-id         tehtava-id
+          (swap! tulos conj {;:id                 @cnt
+                             :tehtava-id            tehtava-id
                              ; :tehtavaryhmatyyppi "tehtava"
                              ; :nimi               tehtava
-                             :maara              (if (nil? maara) 0 maara)
+                             :maara                 (if (nil? maara) 0 maara)
                              ;:yksikko            yksikko
                              ;:vanhempi           emo
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                             :urakka             urakka
-                             :piillotettu?       false})
+                             :urakka                urakka
+                             :piillotettu?          false})
           ;; TODO: Muodosta tehtävätyyppinen rivi
-         #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false :urakka}" urakka " :hoitikausi " hoitokauden-alkuvuosi))))
+          #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false :urakka}" urakka " :hoitikausi " hoitokauden-alkuvuosi))))
     (reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
                                 :piillotettu? false)) @tulos @toimenpiteet)))
 
@@ -152,7 +160,7 @@
                                     (do
                                       (apply q/paivita-tehtavamaara! parametrit)))))))
 
-  (hae-tehtavahierarkia-maarineen db user {:urakka-id     urakka-id
+  (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
 (defrecord Tehtavamaarat []
