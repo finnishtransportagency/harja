@@ -98,7 +98,6 @@
                     (component/start
                       (component/system-map
                         :db ds
-                        #_#_:http-palvelin (testi-http-palvelin)
                         :sonja (component/using
                                  (sonja/luo-oikea-sonja (:sonja asetukset))
                                  [:db])
@@ -113,27 +112,12 @@
                         :testikomponentti (component/using
                                             (->Testikomponentti nil)
                                             [:sonja])
-                        #_#_:labyrintti (feikki-labyrintti)
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
                                  [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
-                        #_#_:sampo (component/using
-                                     (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
-                                     [:db :sonja :integraatioloki])
-                        #_#_:db-replica (tietokanta/luo-tietokanta testitietokanta)
                         :klusterin-tapahtumat (component/using
                                                 (tapahtumat/luo-tapahtumat)
-                                                [:db])
-                        #_#_:sonja-jms-yhteysvarmistus (component/using
-                                                         (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
-                                                           (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
-                                                         [:db :pois-kytketyt-ominaisuudet :integraatioloki :sonja :klusterin-tapahtumat])
-                        #_#_:sahke (component/using
-                                     (sahke/->Sahke +lahetysjono+ nil)
-                                     [:db :sonja :integraatioloki])
-                        #_#_:status (component/using
-                                      (status/luo-status)
-                                      [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])))))
+                                                [:db])))))
   ;; aloita-sonja palauttaa kanavan.
   (binding [*sonja-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
