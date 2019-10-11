@@ -110,7 +110,8 @@
                                       (assoc hkt :kayttaja (:id user))
                                       (if (not (paivitettavat-tavoitteet (:hoitokausi hkt)))
                                         (q/tallenna-budjettitavoite<! c hkt)
-                                        (q/paivita-budjettitavoite<! c hkt)))))))
+                                        (q/paivita-budjettitavoite<! c hkt))))
+                              {:onnistui? true})))
 
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
@@ -199,7 +200,9 @@
                               (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
                                   (update! db ::bs/kiinteahintainen-tyo
-                                           {::bs/summa summa}
+                                           {::bs/summa summa
+                                            ::bs/muokattu    (pvm/nyt)
+                                            ::bs/muokkaaja   (:id user)}
                                            {::bs/id (::bs/id olemassa-oleva-tyo)})))
                               (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
                                 (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
@@ -244,7 +247,9 @@
                                                  olemassa-olevat-jhkt)]
                                     (update! db ::bs/johto-ja-hallintokorvaus
                                              {::bs/tunnit      tunnit
-                                              ::bs/tuntipalkka tuntipalkka}
+                                              ::bs/tuntipalkka tuntipalkka
+                                              ::bs/muokattu    (pvm/nyt)
+                                              ::bs/muokkaaja   (:id user)}
                                              {::bs/id id})))
                                 (doseq [{:keys [hoitokausi tunnit tuntipalkka kk-v]} jhkt]
                                   (insert! db ::bs/johto-ja-hallintokorvaus
@@ -322,7 +327,9 @@
                               (if paivitetaan?
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
                                   (update! db ::bs/kustannusarvioitu-tyo
-                                           {::bs/summa summa}
+                                           {::bs/summa summa
+                                            ::bs/muokattu    (pvm/nyt)
+                                            ::bs/muokkaaja   (:id user)}
                                            {::bs/id (::bs/id olemassa-oleva-tyo)}))
                                 (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
                                   (doseq [{:keys [vuosi kuukausi]} ajat]

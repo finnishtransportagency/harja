@@ -271,13 +271,18 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               vanha-summa (:uusi summa)
               paivitetty-summa (:paivitys summa)
               pudotettava-maara (int (/ (count ajat) 2))
               vanhat-ajat (take pudotettava-maara ajat)
-              paivitetyt-ajat (drop pudotettava-maara ajat)]
-          (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
+              paivitetyt-ajat (drop pudotettava-maara ajat)
+              paivitetty-data-kannassa (filter (fn [{:keys [vuosi kuukausi]}]
+                                                 (some #(and (= vuosi (:vuosi %))
+                                                             (= kuukausi (:kuukausi %)))
+                                                       paivitetyt-ajat))
+                                               data-kannassa)]
+          (is (every? :muokattu paivitetty-data-kannassa) "Luomisaika ei tallennettu")
           (is (= (+ (count vanhat-ajat) (count paivitetyt-ajat)) (count data-kannassa)))
           (is (every? #(= (float (:summa %))
                           (float vanha-summa))
@@ -289,11 +294,7 @@
               (str "Vanhat summat ei pysy kannassa oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
           (is (every? #(= (float (:summa %))
                           (float paivitetty-summa))
-                      (filter (fn [{:keys [vuosi kuukausi]}]
-                                (some #(and (= vuosi (:vuosi %))
-                                            (= kuukausi (:kuukausi %)))
-                                      paivitetyt-ajat))
-                              data-kannassa))
+                      paivitetty-data-kannassa)
               (str "Päivitetyt summat ei tallennu kantaan oikein toimenpiteelle " toimenpide-avain)))))))
 
 (deftest tallenna-kustannusarvioitu-tyo
@@ -464,12 +465,11 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
+              data-kannassa (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma
                                          FROM kustannusarvioitu_tyo kt
                                            LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                          WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";"))]
-          (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (doseq [tallennettava-asia tallennettavat-asiat]
             (let [tallennetun-asian-data? (fn [{:keys [tyyppi tehtava tehtavaryhma]}]
                                             (case tallennettava-asia
@@ -508,6 +508,7 @@
                                                (some #(= vuosi (:vuosi %))
                                                      paivitetyt-ajat))
                                              tallennetun-asian-data-kannassa)]
+              (is (every? :muokattu uusi-data-kannassa) "Muokkausaika ei tallennettu")
               (is (every? #(= (float (:summa %))
                               (float vanha-summa))
                           vanha-data-kannassa)
@@ -613,11 +614,12 @@
           (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Data kannassa on oikein"
       (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.\"kk-v\", j_h.maksukausi, j_h.hoitokausi,
-                                                 tk.toimenkuva
+                                                 tk.toimenkuva, j_h.luotu
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
                                           WHERE \"urakka-id\"=" urakka-id))
             td-ryhmitelty (group-by :toimenkuva tallennettu-data)]
+        (is (every? :luotu tallennettu-data))
         (doseq [{:keys [toimenkuva maksukaudet jhkt]} tallennettava-data
                 maksukausi maksukaudet]
           (is (= (sort-by :hoitokausi (map (fn [data]
@@ -655,7 +657,7 @@
           (is (:onnistui? vastaus) (str "Päivittäminen ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Päivitetty data kannassa on oikein"
       (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.\"kk-v\", j_h.maksukausi, j_h.hoitokausi,
-                                                 tk.toimenkuva
+                                                 tk.toimenkuva, j_h.muokattu
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
                                           WHERE \"urakka-id\"=" urakka-id))
@@ -693,14 +695,94 @@
                                                  (when (and (>= (:hoitokausi data) paivitysvuosi)
                                                             (= (keyword (:maksukausi data)) maksukausi))
                                                    (-> data
-                                                       (select-keys #{:hoitokausi :tunnit :tuntipalkka :kk-v})
+                                                       (select-keys #{:hoitokausi :tunnit :tuntipalkka :kk-v :muokattu})
                                                        (update :tunnit float)
                                                        (update :tuntipalkka float)
                                                        (update :kk-v float))))
                                                (get td-ryhmitelty toimenkuva))]
+            (is (every? :muokattu paivitetyt-kannassa-jhkt))
             (is (= (sort-by :hoitokausi vanhat-tallennettava-jhkt)
                    (sort-by :hoitokausi vanhat-kannassa-jhkt))
                 (str "Vanha data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))
             (is (= (sort-by :hoitokausi paivitetyt-tallennettava-jhkt)
-                   (sort-by :hoitokausi paivitetyt-kannassa-jhkt))
+                   (sort-by :hoitokausi (map #(dissoc % :muokattu) paivitetyt-kannassa-jhkt)))
                 (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
+
+(deftest budjettitavoite-haku
+  (let [parametrit {:urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)}
+        budjettitavoite (bs/hae-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ parametrit)
+        kerroin 1.1]
+    (is (every? :luotu budjettitavoite) "Luotuaika ei löytynyt")
+    (doseq [kausitavoite budjettitavoite
+            :let [{:keys [kattohinta tavoitehinta hoitokausi]} kausitavoite]]
+      (case hoitokausi
+        1 (do (is (= tavoitehinta 250000M))
+              (is (= (float kattohinta)
+                     (float (* kerroin 250000M)))))
+        2 (do (is (= tavoitehinta 300000M))
+              (is (= (float kattohinta)
+                     (float (* kerroin 300000M)))))
+        3 (do (is (= tavoitehinta 350000M))
+              (is (= (float kattohinta)
+                     (float (* kerroin 350000M)))))
+        4 (do (is (= tavoitehinta 250000M))
+              (is (= (float kattohinta)
+                     (float (* kerroin 250000M)))))
+        5 (do (is (= tavoitehinta 250000M))
+              (is (= (float kattohinta)
+                     (float (* kerroin 250000M)))))))))
+
+(deftest budjettitavoite-tallennus
+  (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        uusi-tavoitehinta (gen/generate (s/gen ::bs/tavoitehinta))
+        paivitetty-tavoitehinta (gen/generate (s/gen ::bs/tavoitehinta))
+        kerroin 1.1
+        paivitys-hoitokaudesta-eteenpain 3
+        tallennettavat-tavoitteet (mapv (fn [hoitokausi]
+                                          {:hoitokausi hoitokausi
+                                           :tavoitehinta {:uusi uusi-tavoitehinta
+                                                          :paivitys paivitetty-tavoitehinta}
+                                           :kattohinta {:uusi (* kerroin uusi-tavoitehinta)
+                                                        :paivitys (* kerroin paivitetty-tavoitehinta)}})
+                                        (range 1 5))]
+    (testing "Tallennus onnistuu"
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                  :tavoitteet (mapv (fn [tavoite]
+                                                                                                      (-> tavoite
+                                                                                                          (update :tavoitehinta get :uusi)
+                                                                                                          (update :kattohinta get :uusi)))
+                                                                                                    tallennettavat-tavoitteet)})]
+        (is (:onnistui? vastaus) "Budjettitavoitteen tallentaminen ei onnistunut")))
+    (testing "Data kannassa on oikein"
+      (let [data-kannassa (q-map (str "SELECT *
+                                       FROM urakka_tavoite
+                                       WHERE urakka = " urakka-id ";"))]
+        (is (every? :luotu data-kannassa) "Luotu aikaa ei kannassa budjettitavoitteelle")
+        (is (every? #(= (float (:tavoitehinta %)) (float uusi-tavoitehinta)) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
+        (is (every? #(= (float (:kattohinta %)) (float (* kerroin uusi-tavoitehinta))) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
+    (testing "Päivitys onnistuu"
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                  :tavoitteet (transduce
+                                                                                                (comp (filter (fn [tavoite]
+                                                                                                                (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain)))
+                                                                                                      (map (fn [tavoite]
+                                                                                                             (-> tavoite
+                                                                                                                 (update :tavoitehinta get :paivitys)
+                                                                                                                 (update :kattohinta get :paivitys)))))
+                                                                                                conj [] tallennettavat-tavoitteet)})]
+        (is (:onnistui? vastaus) "Budjettitavoitteen päivittäminen ei onnistunut")))
+    (testing "Päivitetty data kannassa on oikein"
+      (let [data-kannassa (q-map (str "SELECT *
+                                       FROM urakka_tavoite
+                                       WHERE urakka = " urakka-id ";"))
+            vanhadata-kannassa (filter (fn [tavoite]
+                                         (< (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
+                                       data-kannassa)
+            uusidata-kannassa (filter (fn [tavoite]
+                                        (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
+                                      data-kannassa)]
+        (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
+        (is (every? #(= (float (:tavoitehinta %)) (float uusi-tavoitehinta)) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(= (float (:kattohinta %)) (float (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
+        (is (every? #(= (float (:tavoitehinta %)) (float paivitetty-tavoitehinta)) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(= (float (:kattohinta %)) (float (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) "Päivitetty kattohinta ei oikein päivityksen jälkeen")))))
