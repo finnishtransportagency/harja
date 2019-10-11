@@ -372,60 +372,83 @@
         tallennettava-data [{:toimenkuva "hankintavastaava"
                              :maksukaudet #{:molemmat}
                              :jhkt {:molemmat (mapv (fn [hoitokausi kk-v]
-                                                      {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                       :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                      {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                       :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                       :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                     :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                     (range 0 6) (cons 4.5 (repeat 5 12)))}}
                             {:toimenkuva "sopimusvastaava"
                              :maksukaudet #{:molemmat}
                              :jhkt {:molemmat (mapv (fn [hoitokausi kk-v]
-                                                      {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                       :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                      {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                       :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                       :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                     :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                     (range 1 6) (repeat 5 12))}}
                             {:toimenkuva "vastuunalainen työnjohtaja"
                              :maksukaudet #{:molemmat}
                              :jhkt {:molemmat (mapv (fn [hoitokausi kk-v]
-                                                      {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                       :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                      {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                       :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                       :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                     :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                     (range 1 6) (repeat 5 12))}}
                             {:toimenkuva "päätoiminen apulainen"
                              :maksukaudet #{:talvi :kesa}
                              :jhkt {:kesa (mapv (fn [hoitokausi kk-v]
-                                                  {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                   :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                  {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                   :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                   :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                 :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                 (range 1 6) (repeat 5 5))
                                     :talvi (mapv (fn [hoitokausi kk-v]
-                                                   {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                    :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                   {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                    :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                    :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                  :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                  (range 1 6) (repeat 5 7))}}
                             {:toimenkuva "apulainen/työnjohtaja"
                              :maksukaudet #{:talvi :kesa}
                              :jhkt {:kesa (mapv (fn [hoitokausi kk-v]
-                                                  {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                   :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                  {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                   :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                   :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                 :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                 (range 1 6) (repeat 5 5))
                                     :talvi (mapv (fn [hoitokausi kk-v]
-                                                   {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                    :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                   {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                    :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                    :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                  :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                  (range 1 6) (repeat 5 7))}}
                             {:toimenkuva "viherhoidosta vastaava henkilö"
                              :maksukaudet #{:molemmat}
                              :jhkt {:molemmat (mapv (fn [hoitokausi kk-v]
-                                                      {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                       :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                                      {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                       :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                       :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                     :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
                                                     (range 1 6) (repeat 5 5))}}
                             {:toimenkuva "harjoittelija"
                              :maksukaudet #{:molemmat}
                              :jhkt {:molemmat (mapv (fn [hoitokausi kk-v]
-                                                      {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                                       :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
-                                                    (range 1 6) (repeat 4 12))}}]]
+                                                      {:hoitokausi hoitokausi :tunnit {:uusi (gen/generate (s/gen ::bs/tunnit))
+                                                                                       :paivitys (gen/generate (s/gen ::bs/tunnit))}
+                                                       :tuntipalkka {:uusi (gen/generate (s/gen ::bs/tuntipalkka))
+                                                                     :paivitys (gen/generate (s/gen ::bs/tuntipalkka))} :kk-v kk-v})
+                                                    (range 1 6) (repeat 4 12))}}]
+        paivitysvuosi 3]
     (testing "Tallennus onnistuu"
       (doseq [{:keys [toimenkuva maksukaudet jhkt]} tallennettava-data
               maksukausi maksukaudet]
         (let [parametrit {:urakka-id urakka-id
                           :toimenkuva toimenkuva
                           :maksukausi maksukausi
-                          :jhkt (get jhkt maksukausi)}
+                          :jhkt (mapv (fn [data]
+                                        (-> data
+                                            (update :tunnit get :uusi)
+                                            (update :tuntipalkka get :uusi)))
+                                      (get jhkt maksukausi))}
               vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Data kannassa on oikein"
@@ -437,10 +460,11 @@
             td-ryhmitelty (group-by :toimenkuva tallennettu-data)]
         (doseq [{:keys [toimenkuva maksukaudet jhkt]} tallennettava-data
                 maksukausi maksukaudet]
-          (clojure.pprint/pprint (get td-ryhmitelty toimenkuva))
           (is (= (sort-by :hoitokausi (map (fn [data]
                                              (-> data
+                                                 (update :tunnit get :uusi)
                                                  (update :tunnit float)
+                                                 (update :tuntipalkka get :uusi)
                                                  (update :tuntipalkka float)
                                                  (update :kk-v float)))
                                            (get jhkt maksukausi)))
@@ -453,5 +477,70 @@
                                                     (update :kk-v float))))
                                             (get td-ryhmitelty toimenkuva))))
               (str "Data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
-    (testing "Päivitys onnistuu")
-    (testing "Data kannassa on oikein")))
+    (testing "Päivitys onnistuu"
+      (doseq [{:keys [toimenkuva maksukaudet jhkt]} tallennettava-data
+              maksukausi maksukaudet]
+        (let [parametrit {:urakka-id urakka-id
+                          :toimenkuva toimenkuva
+                          :maksukausi maksukausi
+                          :jhkt (transduce
+                                  (comp (remove (fn [{:keys [hoitokausi]}]
+                                                  (< hoitokausi paivitysvuosi)))
+                                        (map (fn [data]
+                                               (-> data
+                                                   (update :tunnit get :paivitys)
+                                                   (update :tuntipalkka get :paivitys)))))
+                                  conj [] (get jhkt maksukausi))}
+              vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
+          (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
+    (testing "Päivitetty data kannassa on oikein"
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.\"kk-v\", j_h.maksukausi, j_h.hoitokausi,
+                                                 tk.toimenkuva
+                                          FROM johto_ja_hallintokorvaus j_h
+                                            JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
+                                          WHERE \"urakka-id\"=" urakka-id))
+            td-ryhmitelty (group-by :toimenkuva tallennettu-data)]
+        (doseq [{:keys [toimenkuva maksukaudet jhkt]} tallennettava-data
+                maksukausi maksukaudet]
+          (let [vanhat-tallennettava-jhkt (keep (fn [data]
+                                                  (when (< (:hoitokausi data) paivitysvuosi)
+                                                    (-> data
+                                                        (update :tunnit get :uusi)
+                                                        (update :tunnit float)
+                                                        (update :tuntipalkka get :uusi)
+                                                        (update :tuntipalkka float)
+                                                        (update :kk-v float))))
+                                                (get jhkt maksukausi))
+                paivitetyt-tallennettava-jhkt (keep (fn [data]
+                                                      (when (>= (:hoitokausi data) paivitysvuosi)
+                                                        (-> data
+                                                            (update :tunnit get :paivitys)
+                                                            (update :tunnit float)
+                                                            (update :tuntipalkka get :paivitys)
+                                                            (update :tuntipalkka float)
+                                                            (update :kk-v float))))
+                                                    (get jhkt maksukausi))
+                vanhat-kannassa-jhkt (keep (fn [data]
+                                             (when (and (< (:hoitokausi data) paivitysvuosi)
+                                                        (= (keyword (:maksukausi data)) maksukausi))
+                                               (-> data
+                                                   (select-keys #{:hoitokausi :tunnit :tuntipalkka :kk-v})
+                                                   (update :tunnit float)
+                                                   (update :tuntipalkka float)
+                                                   (update :kk-v float))))
+                                           (get td-ryhmitelty toimenkuva))
+                paivitetyt-kannassa-jhkt (keep (fn [data]
+                                                 (when (and (>= (:hoitokausi data) paivitysvuosi)
+                                                            (= (keyword (:maksukausi data)) maksukausi))
+                                                   (-> data
+                                                       (select-keys #{:hoitokausi :tunnit :tuntipalkka :kk-v})
+                                                       (update :tunnit float)
+                                                       (update :tuntipalkka float)
+                                                       (update :kk-v float))))
+                                               (get td-ryhmitelty toimenkuva))]
+            (is (= (sort-by :hoitokausi vanhat-tallennettava-jhkt)
+                   (sort-by :hoitokausi vanhat-kannassa-jhkt))
+                (str "Vanha data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))
+            (is (= (sort-by :hoitokausi paivitetyt-tallennettava-jhkt)
+                   (sort-by :hoitokausi paivitetyt-kannassa-jhkt))
+                (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
