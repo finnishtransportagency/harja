@@ -374,7 +374,7 @@
 (s/def ::toimenkuva string?)
 (s/def ::maksukausi keyword?)
 (s/def ::hoitokausi (s/and integer?
-                           #(<= 1 % 5)))
+                           #(<= 0 % 5)))
 (s/def ::tunnit ::positive-number?)
 (s/def ::tuntipalkka ::positive-number?)
 (s/def ::kk-v (s/and number?
