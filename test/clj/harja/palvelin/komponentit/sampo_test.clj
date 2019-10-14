@@ -64,41 +64,61 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+;; muu = vahinkojen korjaukset
+
+;{:paallystepaikkaukset     "20107"
+;   :mhu-yllapito             "20191"
+;   :talvihoito               "23104"
+;   :liikenneympariston-hoito "23116"
+;   :sorateiden-hoito         "23124"
+;   :mhu-korvausinvestointi   "14301"
+;   :mhu-johto                "23151"}
 (deftest merkataan-budjettitavotteita-likaiseksi-ja-lähetetään-ne-Sampoon
   (let [{urakka-id :id alkupvm :alkupvm} (first (q-map (str "SELECT id, alkupvm
                                                              FROM   urakka
                                                              WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
         urakan-aloitusvuosi (pvm/vuosi alkupvm)
-        tyo {:urakka-id urakka-id
-             :toimenpide-avain :talvihoito
-             :ajat (into []
-                         (mapcat (fn [hoitokausi]
-                                   (let [kuukaudet (case hoitokausi
-                                                     1 (range 10 13)
-                                                     5 (range 1 10)
-                                                     (range 1 13))
-                                         vuosi (+ urakan-aloitusvuosi (dec hoitokausi))]
-                                     (map (fn [kuukausi]
-                                            {:kuukausi kuukausi
-                                             :vuosi vuosi})
-                                          kuukaudet)))
-                                 (range 1 6)))
-             :summa 1000}
-        toimenpideinstanssi (ffirst (q (str "SELECT id
-                                             FROM toimenpideinstanssi
-                                             WHERE urakka = " urakka-id " AND
-                                                   toimenpide = (SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi='23104')")))]
+        kokonaishintaisten-toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi}
+        kokonaishintainen-tyo (fn [toimenpide-avain]
+                                {:urakka-id urakka-id
+                                 :toimenpide-avain toimenpide-avain
+                                 :ajat (into []
+                                             (mapcat (fn [hoitokausi]
+                                                       (let [kuukaudet (case hoitokausi
+                                                                         1 (range 10 13)
+                                                                         5 (range 1 10)
+                                                                         (range 1 13))
+                                                             vuosi (+ urakan-aloitusvuosi (dec hoitokausi))]
+                                                         (map (fn [kuukausi]
+                                                                {:kuukausi kuukausi
+                                                                 :vuosi vuosi})
+                                                              kuukaudet)))
+                                                     (range 1 6)))
+                                 :summa 1000})
+        kokonaishintaisten-toimenpideinstanssit (flatten
+                                                  (q (str "WITH toimenpide_idt AS (
+                                                             SELECT id
+                                                             FROM toimenpidekoodi
+                                                             WHERE taso = 3 AND
+                                                                   koodi IN ('20107', '20191', '23104', '23116', '23124', '14301')
+                                                           )
+                                                           SELECT id
+                                                           FROM toimenpideinstanssi
+                                                           WHERE urakka = " urakka-id " AND
+                                                                 toimenpide IN (SELECT id FROM toimenpide_idt);")))
+        ]
     (testing "Kiinteahintaisen työn tallentaminen merkkaa maksuerän likaiseksi"
-      (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)
-            kustannussuunnitelmat (q-map (str "SELECT ks.*
+      (let [vastaukset (doall (for [toimenpide-avain kokonaishintaisten-toimenpide-avaimet]
+                                (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ (kokonaishintainen-tyo toimenpide-avain))))
+            kustannussuunnitelmat (q-map (str "SELECT ks.*, tpi.*
                                            FROM kustannussuunnitelma ks
                                              JOIN maksuera m ON m.numero = ks.maksuera
                                              JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                                            WHERE m.tyyppi = 'kokonaishintainen' AND
-                                                 tpi.id = " toimenpideinstanssi))]
-        (is (:onnistui? vastaus) "Kiinteähintaisen työn tallentaminen epäonnistui")
-        (is (= 1 (count kustannussuunnitelmat)))
-        (is (-> kustannussuunnitelmat first :likainen))))
+                                                 tpi.id IN (" (apply str (interpose ", " kokonaishintaisten-toimenpideinstanssit)) ");"))]
+        (is (every? :onnistui? vastaukset) "Kiinteähintaisen työn tallentaminen epäonnistui")
+        (is (= (count kokonaishintaisten-toimenpide-avaimet) (count kustannussuunnitelmat)))
+        (is (every? :likainen kustannussuunnitelmat))))
     (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon"
       (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
       (let [sonja-broker-tila (fn [jonon-nimi attribuutti]
@@ -107,4 +127,4 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= 1 viestit-jonossa))))))
+        (is (= (count kokonaishintaisten-toimenpide-avaimet) viestit-jonossa))))))
