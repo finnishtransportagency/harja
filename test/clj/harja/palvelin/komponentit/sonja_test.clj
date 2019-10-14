@@ -23,6 +23,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
+            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
@@ -34,8 +35,6 @@
                             :toimenpideviestijono tloik-tk/+tloik-ilmoitustoimenpideviestijono+
                             :toimenpidekuittausjono tloik-tk/+tloik-ilmoitustoimenpidekuittausjono+
                             :uudelleenlahetysvali-minuuteissa 30}})
-
-(defonce ai-port 8162)
 
 (def ^:dynamic *sonja-yhteys* nil)
 
@@ -129,89 +128,6 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(defn sonja-laheta [jonon-nimi sanoma]
-  (let [options {:timeout 5000
-                 :basic-auth ["admin" "admin"]
-                 :headers {"Content-Type" "application/xml"}
-                 :body sanoma}
-        {:keys [status error] :as response} @(http/post (str "http://localhost:" ai-port "/api/message/" jonon-nimi "?type=queue") options)]
-    response))
-
-(defn sonja-jolokia [sanoma]
-  (let [options {:timeout 200
-                 :basic-auth ["admin" "admin"]
-                 :body (cheshire/encode sanoma)}]
-    @(http/post (str "http://localhost:" ai-port "/api/jolokia/") options)))
-
-(defn sonja-jolokia-jono [jonon-nimi attribute operation]
-  (let [attribute (when attribute
-                    {:type "read"
-                     :attribute (case attribute
-                                  :dispatch-count "DispatchCount"
-                                  :in-flight-count "InFlightCount"
-                                  :dequeue-count "DequeueCount"
-                                  :enqueue-count "EnqueueCount")})
-        operation (when operation
-                    {:type "EXEC"
-                     :operation (case operation
-                                  :purge "purge")
-                     :arguments (case operation
-                                  :purge [])})
-        sanoma (merge {:mbean (str "org.apache.activemq:brokerName=localhost,destinationName=" jonon-nimi ",destinationType=Queue,type=Broker")}
-                       attribute
-                       operation)]
-    (sonja-jolokia sanoma)))
-
-(defn sonja-jolokia-connection [attribute operation]
-  (let [attribute (when attribute
-                    {:type "read"
-                     :attribute (case attribute
-                                  :status "health")})
-        operation (when operation
-                    {:type "EXEC"
-                     :operation (case operation
-                                  :start "start"
-                                  :stop "stop")})
-        sanoma (merge {:mbean "org.apache.activemq:type=Broker,brokerName=localhost,connector=clientConnectors,connectorName=openwire"}
-                      attribute
-                      operation)]
-    (sonja-jolokia sanoma)))
-
-(defn sonja-jolokia-broker [attribute operation]
-  (let [attribute (when attribute
-                    {:type "read"
-                     :attribute (case attribute
-                                  :status "health")})
-        operation (when operation
-                    {:type "EXEC"
-                     :operation (case operation
-                                  :start "start"
-                                  :restart "restart"
-                                  :stop "stop")})
-        sanoma (merge {:mbean "org.apache.activemq:type=Broker,brokerName=localhost"}
-                      attribute
-                      operation)]
-    (sonja-jolokia sanoma)))
-
-(defn sonja-laheta-odota [jonon-nimi sanoma]
-  (let [kasitellyn-tapahtuman-id (fn []
-                                   (not-empty
-                                     (first (q (str "SELECT it.id "
-                                                    "FROM integraatiotapahtuma it"
-                                                    "  JOIN integraatioviesti iv ON iv.integraatiotapahtuma=it.id "
-                                                    "WHERE iv.sisalto ILIKE('" (clj-str/replace sanoma #"ä" "Ã¤") "') AND "
-                                                    "it.paattynyt IS NOT NULL")))))]
-    (sonja-laheta jonon-nimi sanoma)
-    (<!!
-      (go-loop [kasitelty? (kasitellyn-tapahtuman-id)
-                aika 0]
-        (if (or kasitelty? (> aika 10))
-          kasitelty?
-          (do
-            (<! (timeout 1000))
-            (recur (kasitellyn-tapahtuman-id)
-                   (inc aika))))))))
-
 (deftest sonjan-kaynnistys
   (let [[alkoiko-yhteys? _] (alts!! [*sonja-yhteys* (timeout 10000)])
         {sonja-asetukset :asetukset yhteys-future :yhteys-future yhteys-ok? :yhteys-ok? tila :tila
@@ -254,7 +170,7 @@
     (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :exception)
     (is (first (alts!! [*sonja-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
     (is (not (nil? (-> jarjestelma :testikomponentti :tila deref :testijono))))
-    (sonja-laheta "virhetestijono" "foo")
+    (s-tk/sonja-laheta "virhetestijono" "foo")
     ;; Odotetaan, että viesti on käsitelty
     (loop [n 0
            kasitelty? false]
@@ -263,10 +179,10 @@
                  (not kasitelty?))
         (recur (inc n)
                (= 0
-                  (- (-> (sonja-jolokia-jono "virhetestijono" :enqueue-count nil) :body (cheshire/decode) (get "value"))
-                     (-> (sonja-jolokia-jono "virhetestijono" :dequeue-count nil) :body (cheshire/decode) (get "value")))))))
+                  (- (-> (s-tk/sonja-jolokia-jono "virhetestijono" :enqueue-count nil) :body (cheshire/decode) (get "value"))
+                     (-> (s-tk/sonja-jolokia-jono "virhetestijono" :dequeue-count nil) :body (cheshire/decode) (get "value")))))))
     (is (= "VIRHE" (-> jarjestelma :sonja :tila deref :istunnot (get "testijarjestelma") :jonot (get "virhetestijono") :virheet first :viesti)))
-    (sonja-jolokia-jono "virhetestijono" nil :purge))
+    (s-tk/sonja-jolokia-jono "virhetestijono" nil :purge))
 
 (deftest sonja-yhteys-ei-kaynnisty-mutta-sita-kayttavat-komponentit-kylla
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
@@ -328,7 +244,7 @@
 (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        _ (sonja-jolokia-jono "harja-to-email" nil :purge)
+        _ (s-tk/sonja-jolokia-jono "harja-to-email" nil :purge)
         istunnot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :istunnot)
         jonot-ennen-lahetysta (apply merge
                                      (map (fn [[istunnon-nimi istunnon-tiedot]]
@@ -374,9 +290,9 @@
 (deftest sonja-kuormitus-testi
   (swap! (-> jarjestelma :testikomponentti :tila) assoc :tapahtuma :kuormitus)
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        _ (sonja-jolokia-jono "testilahetys-jono" nil :purge)
-        _ (sonja-jolokia-jono "testijono-1" nil :purge)
-        _ (sonja-jolokia-jono "testijono-2" nil :purge)
+        _ (s-tk/sonja-jolokia-jono "testilahetys-jono" nil :purge)
+        _ (s-tk/sonja-jolokia-jono "testijono-1" nil :purge)
+        _ (s-tk/sonja-jolokia-jono "testijono-2" nil :purge)
         {:keys [lahetys-fn testijonokanava tila]} (:testikomponentti jarjestelma)
         {:keys [testijono-1 testijono-2]} @tila
         sonja (-> jarjestelma :sonja)
@@ -384,7 +300,7 @@
         {istunnot :istunnot} (-> sonja :tila deref :istunnot)
         testikomponentin-istunnot (select-keys istunnot ["istunto-testijono-1" "istunto-testijono-2"])
         sonja-broker-tila (fn [jonon-nimi attribuutti]
-                            (-> (sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
+                            (-> (s-tk/sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
         testikomponentin-lahettamat-viestit (into #{}
                                                   (repeatedly 100 #(gen/generate (s/gen ::testilahetys-viesti))))
         testijono-1-vastaanottamat-viestit (into #{}
@@ -395,8 +311,8 @@
                                                  (repeatedly 100 #(str "<harja:testi xmlns:harja=\"\">"
                                                                        "<viesti>jono-2" (gen/generate (s/gen ::testilahetys-viesti))
                                                                        "</viesti></harja:testi>")))
-        testijono-1-lahetys-fn #(sonja-laheta "testijono-1" %)
-        testijono-2-lahetys-fn #(sonja-laheta "testijono-2" %)
+        testijono-1-lahetys-fn #(s-tk/sonja-laheta "testijono-1" %)
+        testijono-2-lahetys-fn #(s-tk/sonja-laheta "testijono-2" %)
         ;; Lähetetään viestejä rinnakkain testikomponentista brokerille
         testijonon-lahetys (thread (suorita-rinnakkain lahetys-fn testikomponentin-lahettamat-viestit))
         ;; Vastaanotetaan viestejä rinnakkain testijonoon 1
@@ -421,7 +337,7 @@
 
 
 (deftest main-komponentit-loytyy
-  (is (sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))))
+  (is (s-tk/sonja-laheta-odota "tloik-ilmoitusviestijono" (slurp "resources/xsd/tloik/esimerkit/ilmoitus.xml"))))
 
 (deftest jms-yhteys-kay-alhaalla
   (is (first (alts!! [*sonja-yhteys* (timeout 10000)])) "Yhteys ei alkanut 10 s sisällä")
@@ -437,12 +353,12 @@
                               (recur (inc kertoja))
                               (:vastaus vastaus))))))
         _ (println "Lopetetetaan yhteys")
-        _ (sonja-jolokia-connection nil :stop)
+        _ (s-tk/sonja-jolokia-connection nil :stop)
         ;; Odotetaan hetki, että yhteys on pysäytetty
         _ (<!! (timeout 1500))
         status-lopetuksen-jalkeen (kysy-status)
         _ (println "Aloitetaan yhteys uudestaan")
-        _ (sonja-jolokia-connection nil :start)
+        _ (s-tk/sonja-jolokia-connection nil :start)
         ;; Odotetaan hetki, että yhteys on aloitettu
         _ (<!! (go-loop [i 0]
                  (when (and (not= "ACTIVE" @sonja/jms-connection-tila)
@@ -472,7 +388,7 @@
 
 (deftest liikaa-kaskyja
   (alts!! [*sonja-yhteys* (timeout 10000)])
-  (let [_ (sonja-jolokia-jono "testilahetys-jono" nil :purge)
+  (let [_ (s-tk/sonja-jolokia-jono "testilahetys-jono" nil :purge)
         {:keys [lahetys-fn]} (:testikomponentti jarjestelma)
         lahetykset (atom {:taynna 0 :ruuhkaa 0 :lahetettiin 0 :kaskyjen-kasittely 0})
         pitkaan-kestava-lahetys-kanava (chan)
