@@ -5,7 +5,8 @@
             [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]))
 
-(def suunnittelu-default-arvot {:tehtavat {:valinnat {:toimenpide nil
+(def suunnittelu-default-arvot {:tehtavat {:valinnat {:samat-kaikille false
+                                                      :toimenpide nil
                                                       :valitaso nil
                                                       :noudetaan 0}}
                                 :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito

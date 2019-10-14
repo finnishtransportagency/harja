@@ -20,6 +20,7 @@
 (defrecord TehtavaTallennusEpaonnistui [vastaus])
 (defrecord TallennaTehtavamaara [tehtava])
 (defrecord HaeMaarat [parametrit])
+(defrecord SamatKaikilleMoodi [samat?])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -111,23 +112,36 @@
   TehtavaTallennusOnnistui
   (process-event
     [vastaus app]
-    (loki/log "Vastaus" vastaus)
     app)
   TallennaTehtavamaara
   (process-event
-    [{:keys [tehtava]} {:keys [valinnat] :as app}]
+    [{:keys [tehtava]} {:keys [valinnat tehtavat-ja-toimenpiteet] :as app}]
     (let [{:keys [urakka-id tehtava-id maara]} tehtava
           numero-maara (js/parseFloat maara)
-          numero? (not (js/isNaN numero-maara))]
-      (when numero?
-        (tuck-apurit/post! :tallenna-tehtavamaarat
-                           {:urakka-id             urakka-id
-                            :hoitokauden-alkuvuosi (:hoitokausi valinnat)
-                            :tehtavamaarat         [{:tehtava-id tehtava-id
-                                                     :maara      numero-maara}]}
-                           {:onnistui           ->TehtavaTallennusOnnistui
-                            :epaonnistui        ->TehtavaTallennusEpaonnistui
-                            :paasta-virhe-lapi? true}))
+          numero? (not (js/isNaN numero-maara))
+          samat-kaikille? (:samat-kaikille valinnat)]
+      (if samat-kaikille?
+        (doseq [vuosi (keys (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat]))]
+          (let [maara (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat vuosi])]
+            (tuck-apurit/post! :tallenna-tehtavamaarat
+                               {:urakka-id             urakka-id
+                                :hoitokauden-alkuvuosi (-> vuosi
+                                                           name
+                                                           js/parseInt)
+                                :tehtavamaarat         [{:tehtava-id tehtava-id
+                                                         :maara      maara}]}
+                               {:onnistui           ->TehtavaTallennusOnnistui
+                                :epaonnistui        ->TehtavaTallennusEpaonnistui
+                                :paasta-virhe-lapi? true})))
+        (when numero?
+          (tuck-apurit/post! :tallenna-tehtavamaarat
+                             {:urakka-id             urakka-id
+                              :hoitokauden-alkuvuosi (:hoitokausi valinnat)
+                              :tehtavamaarat         [{:tehtava-id tehtava-id
+                                                       :maara      numero-maara}]}
+                             {:onnistui           ->TehtavaTallennusOnnistui
+                              :epaonnistui        ->TehtavaTallennusEpaonnistui
+                              :paasta-virhe-lapi? true})))
       (update app :valinnat #(assoc %
                                :virhe-tallennettaessa (if numero? false
                                                                   true)
@@ -142,39 +156,22 @@
   TehtavaHakuOnnistui
   (process-event
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
-    (loki/log "SAIN" tehtavat)
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           alkuvuosi (harja.pvm/vuosi urakka-alkupvm)
-          #_hierarkia #_(into []
-                          (distinct
-                            (flatten
-                              (mapv
-                                (fn [[avain arvo]]
-                                  (let [tasot (filter #(not (= 1 (:taso %))) arvo)
-                                        {:keys [tp vt teht]} (reduce
-                                                               (fn [acc t]
-                                                                 (loki/log t)
-                                                                 (let [av
-                                                                      (case (:taso t)
-                                                                        2 :tp
-                                                                        3 :vt
-                                                                        4 :teht)]
-                                                                  (assoc acc av t)))
-                                                               {}
-                                                               tasot)]
-                                    [tp
-                                     (assoc vt :vanhempi (:id tp))
-                                     (assoc teht :vanhempi (:id vt)
-                                                 :maarat (reduce #(assoc %1 (-> %2
-                                                                                str
-                                                                                keyword) 0) {} (range alkuvuosi (+ alkuvuosi 5)))
-                                                 :alkuvuosi alkuvuosi)]))
-                                tehtavat))))
-          id-avaimilla-hierarkia tehtavat #_(reduce (fn [acc m] (assoc acc (-> m :id str keyword) m)) {} tehtavat)
+          id-avaimilla-hierarkia (reduce (fn [kaikki tehtava]
+                                           (let [[avain teht] tehtava]
+                                             (assoc kaikki avain
+                                                           (if (= 4 (:taso teht))
+                                                             (assoc teht
+                                                               :maarat (reduce #(assoc %1 (-> %2
+                                                                                              str
+                                                                                              keyword) 0) {} (range alkuvuosi (+ alkuvuosi 5)))
+                                                               :alkuvuosi alkuvuosi)
+                                                             teht)))) {} (seq tehtavat))
           toimenpide (some (fn [[_ t]] (when (= 2 (:taso t)) t)) tehtavat)
           valitaso (some (fn [[_ t]] (when (and
-                                         (= (:id toimenpide) (:vanhempi t))
-                                         (= 3 (:taso t))) t)) tehtavat)
+                                             (= (:id toimenpide) (:vanhempi t))
+                                             (= 3 (:taso t))) t)) tehtavat)
           {prosessori :prosessori} parametrit]
       (-> app
           (assoc :tehtavat-ja-toimenpiteet id-avaimilla-hierarkia
@@ -195,7 +192,6 @@
   MaaraHakuOnnistui
   (process-event
     [{:keys [maarat prosessoi-tulokset] :as params} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat] :as app}]
-    (loki/log "AMOUnTS" maarat)
     (let [valitaso (get-in app [:valinnat :valitaso])
           hoitokausi (get-in app [:valinnat :hoitokausi])
           tehtavat-maarilla (paivita-tehtavien-maarat tehtavat-ja-toimenpiteet maarat)
@@ -211,17 +207,17 @@
     (let [{urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
           uusi-tila (-> app
                         (tuck-apurit/get! :tehtavat
-                                          {:onnistui           ->TehtavaHakuOnnistui
-                                           :epaonnistui        ->HakuEpaonnistui
+                                          {:onnistui            ->TehtavaHakuOnnistui
+                                           :epaonnistui         ->HakuEpaonnistui
                                            :onnistui-parametrit [parametrit]
-                                           :paasta-virhe-lapi? true})
+                                           :paasta-virhe-lapi?  true})
                         #_(tuck-apurit/post! :urakan-toimenpiteet-ja-tehtavat
-                                           {:urakka urakka-id}
-                                           (merge
-                                             {:onnistui            ->TehtavaHakuOnnistui
-                                              :epaonnistui         ->HakuEpaonnistui
-                                              :paasta-virhe-lapi?  true
-                                              :onnistui-parametrit [parametrit]}))
+                                             {:urakka urakka-id}
+                                             (merge
+                                               {:onnistui            ->TehtavaHakuOnnistui
+                                                :epaonnistui         ->HakuEpaonnistui
+                                                :paasta-virhe-lapi?  true
+                                                :onnistui-parametrit [parametrit]}))
                         (update :valinnat #(assoc %
                                              :virhe-noudettaessa false
                                              :noudetaan (inc (:noudetaan %)))))]
@@ -257,7 +253,7 @@
                                (assoc-in app [:valinnat :hoitokausi] arvo)))
         :ylataso
         (let [valitaso (some (fn [[_ data]] (when (and (= 3 (:taso data))
-                                         (= (:id arvo) (:vanhempi data))) data)) tehtavat-ja-toimenpiteet)
+                                                       (= (:id arvo) (:vanhempi data))) data)) tehtavat-ja-toimenpiteet)
               toimenpide-ja-valitaso (update app :valinnat (fn [valinnat]
                                                              (assoc valinnat
                                                                :toimenpide arvo
@@ -270,15 +266,23 @@
           (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :valitaso] arvo))))))
   PaivitaMaara
   (process-event [{:keys [solu arvo]} {:keys [valinnat] :as app}]
-    (let [{:keys [hoitokausi]} valinnat
+    (let [{:keys [hoitokausi samat-kaikille]} valinnat
+          arvo (js/parseFloat arvo)
+          numero? (not (js/isNaN arvo))
+          arvo (if numero? arvo 0)
           id (-> (p/osan-id solu)
                  name
                  (clojure.string/split #"-")
                  first)
-          _ (loki/log id)
-          app (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] arvo)]
+          app (if samat-kaikille
+                (update-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat] (fn [m]
+                                                                                         (let [avaimet (keys m)]
+                                                                                           (reduce (fn [acc avain] (assoc acc avain arvo)) m avaimet))))
+                (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] arvo))]
       (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo) app)))
-
+  SamatKaikilleMoodi
+  (process-event [{:keys [samat?]} app]
+    (assoc-in app [:valinnat :samat-kaikille] samat?))
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
     (update app :tehtavat-taulukko

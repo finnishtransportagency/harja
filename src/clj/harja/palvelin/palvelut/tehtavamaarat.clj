@@ -34,31 +34,38 @@
   "Urakan tehtävähierarkia ilman määriä"
   [db user]
   (let [kannasta (into [] (q/hae-tehtavahierarkia db))
-        ryhmissa (group-by :otsikko (distinct kannasta))
-        {:keys [tehtavat valitasot toimenpiteet]} (reduce
-                                                    (fn [kaikki {:keys [tehtava-id tehtava otsikko valitaso-id ylataso-id] :as t}]
-                                                      (-> kaikki
-                                                          (update :tehtavat (fn [tehtavat] (conj tehtavat
-                                                                                                 {:id       tehtava-id
-                                                                                                  :nimi     tehtava
-                                                                                                  :vanhempi valitaso-id
-                                                                                                  :taso     4})))
-                                                          (update :valitasot (fn [valitasot] (conj valitasot
-                                                                                                   {:id       valitaso-id
-                                                                                                    :nimi     otsikko
-                                                                                                    :vanhempi ylataso-id
-                                                                                                    :taso     3})))
-                                                          (update :toimenpiteet (fn [toimenpiteet] (conj toimenpiteet
-                                                                                                         {:id   ylataso-id
-                                                                                                          :nimi (-> otsikko
-                                                                                                                    (clojure.string/split #" " 2)
-                                                                                                                    second)
-                                                                                                          :taso 2})))))
-                                                    {:tehtavat [] :valitasot [] :toimenpiteet []}
-                                                    kannasta)
-        ryhmitelty-valitasot (group-by :nimi (distinct valitasot))
-        ryhmitelty-toimenpiteet (group-by :nimi (distinct toimenpiteet))]
-    {:teht tehtavat :tp ryhmitelty-toimenpiteet :vt ryhmitelty-valitasot :ryhmat ryhmissa}))
+        {:keys [tehtavat valitasot toimenpiteet]} (let [idt (atom {})]
+                                                    (reduce
+                                                      (fn [kaikki {:keys [tehtava-id tehtava otsikko yksikko jarjestys] :as t}]
+                                                        (let [otsake (-> otsikko
+                                                                         (clojure.string/split #" " 2)
+                                                                         second)
+                                                              luo-id-fn (fn [polku] (let [arvo (get @idt polku)]
+                                                                                      (if (nil? arvo)
+                                                                                        (get (swap! idt assoc polku (Integer/parseInt (name (gensym "-")))) polku)
+                                                                                        arvo)))
+                                                              toimenpide-id (luo-id-fn otsake)
+                                                              valitaso-id (luo-id-fn otsikko)]
+                                                          (-> kaikki
+                                                              (update :tehtavat (fn [tehtavat] (conj tehtavat
+                                                                                                     {:id       tehtava-id
+                                                                                                      :nimi     tehtava
+                                                                                                      :vanhempi valitaso-id
+                                                                                                      :jarjestys jarjestys
+                                                                                                      :yksikko  yksikko
+                                                                                                      :taso     4})))
+                                                              (update :valitasot (fn [valitasot] (conj valitasot
+                                                                                                       {:id       valitaso-id
+                                                                                                        :nimi     otsikko
+                                                                                                        :vanhempi toimenpide-id
+                                                                                                        :taso     3})))
+                                                              (update :toimenpiteet (fn [toimenpiteet] (conj toimenpiteet
+                                                                                                             {:id   toimenpide-id
+                                                                                                              :nimi otsake
+                                                                                                              :taso 2}))))))
+                                                      {:tehtavat [] :valitasot [] :toimenpiteet []}
+                                                      kannasta))]
+    (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct toimenpiteet) (distinct valitasot)))))
 
 (defn- jarjesta-tehtavahierarkia
   "Järjestää tehtävähierarkian käyttöliittymän (Suunnittelu > Tehtävä- ja määräluettelo) tarvitsemaan muotoon.

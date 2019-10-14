@@ -65,14 +65,14 @@
 
 
 (defn luo-tehtava-taulukko
-  [e! tehtavat-ja-maaraluettelo]
+  [e! tehtavat-ja-toimenpiteet]
   (let [polku-taulukkoon [:tehtavat-taulukko]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
         syottorivi (fn [rivi]
                      (let [luku (atom 0)]
                        (mapv (fn [tehtava]
-                               (let [{:keys [nimi maarat id tehtava-id piillotettu? vanhempi yksikko] :as tehtava} (second tehtava)]
+                               (let [{:keys [nimi maarat id vanhempi yksikko] :as tehtava} (second tehtava)]
                                  (swap! luku inc)
                                  (-> rivi
                                      (p/aseta-arvo :id (keyword (str vanhempi "/" id))
@@ -102,7 +102,7 @@
                                                                                        :arvo (or yksikko "")
                                                                                        :class #{(sarakkeiden-leveys :maara-yksikko)})))
                                      )))
-                             tehtavat-ja-maaraluettelo)))]
+                             tehtavat-ja-toimenpiteet)))]
     (muodosta-taulukko :tehtavat
                        {:teksti {:janan-tyyppi jana/Rivi
                                  :osat         [osa/Teksti osa/Teksti osa/Teksti]}
@@ -153,9 +153,7 @@
                                         (= (get-in valinnat [:toimenpide :id]) (:vanhempi data))
                                         (= 3 (:taso data))))
                                     tehtavat-ja-toimenpiteet))
-            ylatasot (mapv (fn [[_ data]]
-                             (loki/log "DAATTTTaaasdfTAAAA" data)
-                             data)
+            ylatasot (mapv (fn [[_ data]] data)
                            (filter
                              (fn [[_ data]]
                                (= 2 (:taso data)))
@@ -190,8 +188,9 @@
                                         :disabled   (disabloitu-alasveto? hoitokaudet)}
            hoitokaudet]]
          [:label.kopioi-tuleville-vuosille
-          [:input {:type      "checkbox" :checked false
-                   :on-change (r/partial #() :ei)
+          [:input {:type      "checkbox"
+                   :checked   (:samat-kaikille valinnat)
+                   :on-change #(e! (t/->SamatKaikilleMoodi (not (:samat-kaikille valinnat))))
                    :disabled  (:noudetaan valinnat)}]
           "Samat suunnitellut määrät kaikille hoitokausille"]]))))
 
@@ -206,7 +205,7 @@
       (let [{taulukon-tehtavat :tehtavat-taulukko} app
             {:keys [nimi]} (-> @tila/tila :yleiset :urakka)]
         [:div
-         [debug/debug app]
+         #_[debug/debug app]
          [:h1 "Tehtävät ja määrät" nimi]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
          [valitaso-filtteri e! app]
