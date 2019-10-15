@@ -142,21 +142,23 @@
                                               [::bs/toimenkuva #{::bs/toimenkuva}]}
                                             {::bs/urakka-id urakka-id}))})
 
-(defn- mudosta-ajat [ajat urakan-alkuvuosi urakan-loppuvuosi]
+(defn- mudosta-ajat
+  "Oletuksena, että jos pelkästään vuosi on annettuna kuukauden sijasta, kyseessä on hoitokauden aloitusvuosi"
+  [ajat]
   (reduce (fn [ajat {:keys [vuosi kuukausi]}]
             (if kuukausi
               (conj ajat {:vuosi    vuosi
                           :kuukausi kuukausi})
-              (let [kuukaudet (cond
-                                (= urakan-alkuvuosi vuosi) [10 12]
-                                (= urakan-loppuvuosi vuosi) [1 9]
-                                :else [1 12])]
+              (let [ajat-valille (fn [vuosi [alku loppu]]
+                                   (map #(identity
+                                           {:vuosi vuosi
+                                            :kuukausi %})
+                                        (range alku (inc loppu))))
+                    hoitokauden-vuodet [vuosi (inc vuosi)]]
                 (into []
                       (concat ajat
-                              (map (fn [kk]
-                                     {:vuosi    vuosi
-                                      :kuukausi kk})
-                                   (range (first kuukaudet) (inc (second kuukaudet)))))))))
+                              (ajat-valille (first hoitokauden-vuodet) [10 12])
+                              (ajat-valille (second hoitokauden-vuodet) [1 9]))))))
           [] ajat))
 
 (defn tallenna-kiinteahintaiset-tyot
@@ -175,10 +177,7 @@
                                   _ (when (nil? toimenpideinstanssi-id)
                                       (throw (Exception. "Toimenpideinstanssia ei löydetty")))
 
-                                  {:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
-                                  alkuvuosi (pvm/vuosi alkupvm)
-                                  loppuvuosi (pvm/vuosi loppupvm)
-                                  ajat (mudosta-ajat ajat alkuvuosi loppuvuosi)
+                                  ajat (mudosta-ajat ajat)
 
                                   olemassa-olevat-kiinteahintaiset-tyot-vuosille (fetch db ::bs/kiinteahintainen-tyo
                                                                                         #{::bs/id ::bs/smallint-v ::bs/smallint-kk}
@@ -292,11 +291,7 @@
                                       (throw (Exception. "Toimenpideinstanssia ei löydetty")))
                                   tyyppi (keyword tyyppi)
 
-
-                                  {:keys [alkupvm loppupvm]} (first (urakat-q/hae-urakka db urakka-id))
-                                  alkuvuosi (pvm/vuosi alkupvm)
-                                  loppuvuosi (pvm/vuosi loppupvm)
-                                  ajat (mudosta-ajat ajat alkuvuosi loppuvuosi)
+                                  ajat (mudosta-ajat ajat)
                                   kustannusarvioitu-tyo-params (into {}
                                                                      (map (fn [[k v]]
                                                                             (if (nil? v)

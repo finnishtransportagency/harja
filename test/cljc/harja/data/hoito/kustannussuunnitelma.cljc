@@ -3,7 +3,10 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.set :as clj-set]
+            [harja.pvm :as pvm]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
+
+(def ^:dynamic *hoitokaudet* #{1 2 3 4 5})
 
 (s/def ::toimenkuvat-arg (s/or :setti (s/coll-of ::bs/toimenkuva :kind set?)
                                :avain #(= % :kaikki)))
@@ -11,6 +14,42 @@
                                :avain #(= % :kaikki)))
 (s/def ::hoitokaudet-arg (s/or :setti (s/coll-of ::bs/hoitokausi :kind set?)
                                :avain #(= % :kaikki)))
+
+
+
+(s/def ::aika-kuukaudella-juuri-alkaneelle-urakalle
+  (s/with-gen ::bs/aika
+              (fn []
+                (gen/fmap (fn [_]
+                            (let [aloitus-vuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
+                                  vuodet (into [] (range aloitus-vuosi (+ aloitus-vuosi 5)))
+                                  hoitokauden-vuodet (rand-nth (map (fn [hoitokausi]
+                                                                      [(get vuodet (dec hoitokausi))
+                                                                       (get vuodet hoitokausi)])
+                                                                    *hoitokaudet*))
+                                  v-kks (concat
+                                          (map #(identity
+                                                  {:vuosi (first hoitokauden-vuodet)
+                                                   :kuukausi %})
+                                               (range 10 13))
+                                          (map #(identity
+                                                  {:vuosi (second hoitokauden-vuodet)
+                                                   :kuukausi %})
+                                               (range 1 10)))]
+                              (rand-nth v-kks)))
+                          (gen/int)))))
+
+(s/def ::aika-vuodella-juuri-alkaneelle-urakalle
+  (s/with-gen ::bs/aika
+              (fn []
+                (gen/fmap (fn [_]
+                            (let [aloitus-vuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
+                                  vuodet (into [] (range aloitus-vuosi (+ aloitus-vuosi 5)))
+                                  vuosi (rand-nth (map (fn [hoitokausi]
+                                                         (get vuodet (dec hoitokausi)))
+                                                       *hoitokaudet*))]
+                              {:vuosi vuosi}))
+                          (gen/int)))))
 
 (defn toimenkuvan-maksukaudet [toimenkuva]
   (case toimenkuva
@@ -53,18 +92,14 @@
    (transduce
      (comp
        (filter (fn [{toimenkuva :toimenkuva}]
-                 (cond
-                   (= toimenkuvat :kaikki) true
-                   (contains? toimenkuvat toimenkuva) true
-                   :else false)))
+                 (or (= toimenkuvat :kaikki)
+                     (contains? toimenkuvat toimenkuva))))
        (mapcat (fn [{:keys [urakka-id toimenkuva hoitokaudet kk-kertoimet]}]
                  (dg-tallenna-johto-ja-hallintokorvaus-data urakka-id toimenkuva hoitokaudet kk-kertoimet)))
        (filter (fn [{:keys [toimenkuva maksukausi]}]
                  (validoi-toimenkuvan-maksukaudet! toimenkuva (get maksukaudet toimenkuva))
-                 (cond
-                   (= maksukaudet :kaikki) true
-                   (contains? maksukaudet maksukausi) true
-                   :else false)))
+                 (or (= maksukaudet :kaikki)
+                     (contains? maksukaudet maksukausi))))
        (map (fn [data]
               (update data :jhkt (fn [jhkt]
                                    (if (= hoitokaudet :kaikki)
@@ -103,3 +138,70 @@
        :toimenkuva "harjoittelija"
        :hoitokaudet (range 1 6)
        :kk-kertoimet {:molemmat (repeat 5 4)}}])))
+
+(defn toimenpiteen-tallennettavat-asiat
+  [toimenpide-avain]
+  (case toimenpide-avain
+    :paallystepaikkaukset #{:toimenpiteen-maaramitattavat-tyot}
+    :mhu-yllapito #{:rahavaraus-lupaukseen-1
+                    :toimenpiteen-maaramitattavat-tyot}
+    :talvihoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
+                  :akilliset-hoitotyot
+                  :toimenpiteen-maaramitattavat-tyot}
+    :liikenneympariston-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
+                                :akilliset-hoitotyot
+                                :toimenpiteen-maaramitattavat-tyot}
+    :sorateiden-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
+                        :akilliset-hoitotyot
+                        :toimenpiteen-maaramitattavat-tyot}
+    :mhu-korvausinvestointi #{:toimenpiteen-maaramitattavat-tyot}
+    :mhu-johto #{:hoidonjohtopalkkio
+                 :toimistokulut
+                 :erillishankinnat}))
+
+(defn dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
+  [urakka-id toimenpide-avain hoitokaudet]
+  (loop [[tallennettava-asia & loput-asiat] (toimenpiteen-tallennettavat-asiat toimenpide-avain)
+         data []]
+    (if (nil? tallennettava-asia)
+      data
+      (recur loput-asiat
+             (conj data
+                   {:urakka-id urakka-id
+                    :tallennettava-asia tallennettava-asia
+                    :toimenpide-avain toimenpide-avain
+                    ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
+                    ;; että lopulta kaikkien aikojen vuosi on uniikki
+                    :ajat (binding [*hoitokaudet* hoitokaudet]
+                            (mapv first
+                                  (vals (group-by :vuosi
+                                                  (gen/sample (s/gen ::aika-vuodella-juuri-alkaneelle-urakalle))))))
+                    :summa (gen/generate (s/gen ::bs/summa))})))))
+
+(defn tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
+  ([urakka-id] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id {}))
+  ([urakka-id
+    {:keys [toimenpide-avaimet tallennettavat-asiat hoitokaudet]
+     :or {toimenpide-avaimet :kaikki
+          tallennettavat-asiat :kaikki
+          hoitokaudet :kaikki}}]
+   (transduce
+     (comp
+       (filter (fn [toimenpide-avain]
+                 (or (= toimenpide-avaimet :kaikki)
+                     (contains? toimenpide-avaimet toimenpide-avain))))
+       (mapcat (fn [toimenpide-avain]
+                 (dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
+                                                                                                                #{1 2 3 4 5}
+                                                                                                                hoitokaudet))))
+       (filter (fn [{tallennettava-asia :tallennettava-asia}]
+                 (or (= tallennettavat-asiat :kaikki)
+                     (contains? tallennettavat-asiat tallennettava-asia)))))
+     conj []
+     [:paallystepaikkaukset
+      :mhu-yllapito
+      :talvihoito
+      :liikenneympariston-hoito
+      :sorateiden-hoito
+      :mhu-korvausinvestointi
+      :mhu-johto])))
