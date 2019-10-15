@@ -51,6 +51,41 @@
                               {:vuosi vuosi}))
                           (gen/int)))))
 
+(defn dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle
+  [urakka-id toimenpide-avain hoitokaudet]
+  {:urakka-id urakka-id
+   :toimenpide-avain toimenpide-avain
+   ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
+   ;; että lopulta kaikkien aika on uniikki
+   :ajat (binding [*hoitokaudet* hoitokaudet]
+           (mapv first
+                 (vals (group-by (juxt :vuosi :kuukausi)
+                                 (gen/sample (s/gen ::aika-kuukaudella-juuri-alkaneelle-urakalle))))))
+   :summa (gen/generate (s/gen ::bs/summa))})
+
+(defn tallenna-kiinteahintaiset-tyot-data
+  ([urakka-id] (tallenna-kiinteahintaiset-tyot-data urakka-id {}))
+  ([urakka-id
+    {:keys [toimenpide-avaimet tallennettavat-asiat hoitokaudet]
+     :or {toimenpide-avaimet :kaikki
+          hoitokaudet :kaikki}}]
+   (transduce
+     (comp
+       (filter (fn [toimenpide-avain]
+                 (or (= toimenpide-avaimet :kaikki)
+                     (contains? toimenpide-avaimet toimenpide-avain))))
+       (map (fn [toimenpide-avain]
+              (dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
+                                                                                                            #{1 2 3 4 5}
+                                                                                                            hoitokaudet)))))
+     conj []
+     [:paallystepaikkaukset
+      :mhu-yllapito
+      :talvihoito
+      :liikenneympariston-hoito
+      :sorateiden-hoito
+      :mhu-korvausinvestointi])))
+
 (defn toimenkuvan-maksukaudet [toimenkuva]
   (case toimenkuva
     "hankintavastaava" #{:molemmat}
@@ -99,7 +134,7 @@
        (filter (fn [{:keys [toimenkuva maksukausi]}]
                  (validoi-toimenkuvan-maksukaudet! toimenkuva (get maksukaudet toimenkuva))
                  (or (= maksukaudet :kaikki)
-                     (contains? maksukaudet maksukausi))))
+                     (contains? (get maksukaudet toimenkuva) maksukausi))))
        (map (fn [data]
               (update data :jhkt (fn [jhkt]
                                    (if (= hoitokaudet :kaikki)
@@ -159,6 +194,11 @@
                  :toimistokulut
                  :erillishankinnat}))
 
+(defn validoi-toimenpiteen-tallennettavat-asiat! [toimenpide-avain tallennettavat-asiat]
+  (when-not (clj-set/subset? tallennettavat-asiat (toimenpiteen-tallennettavat-asiat toimenpide-avain))
+    (throw #?(:clj (Exception. (str "Toimenpide avaimella " toimenpide-avain " ei ole kaikkia seuraavista tallennettavista asioita: " tallennettavat-asiat))
+              :cljs (js/Error (str "Toimenpide avaimella " toimenpide-avain " ei ole kaikkia seuraavista tallennettavista asioita: " tallennettavat-asiat))))))
+
 (defn dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
   [urakka-id toimenpide-avain hoitokaudet]
   (loop [[tallennettava-asia & loput-asiat] (toimenpiteen-tallennettavat-asiat toimenpide-avain)
@@ -194,9 +234,11 @@
                  (dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
                                                                                                                 #{1 2 3 4 5}
                                                                                                                 hoitokaudet))))
-       (filter (fn [{tallennettava-asia :tallennettava-asia}]
+       (filter (fn [{tallennettava-asia :tallennettava-asia
+                     toimenpide-avain :toimenpide-avain}]
+                 (validoi-toimenpiteen-tallennettavat-asiat! toimenpide-avain (get tallennettavat-asiat toimenpide-avain))
                  (or (= tallennettavat-asiat :kaikki)
-                     (contains? tallennettavat-asiat tallennettava-asia)))))
+                     (contains? (get tallennettavat-asiat toimenpide-avain) tallennettava-asia)))))
      conj []
      [:paallystepaikkaukset
       :mhu-yllapito

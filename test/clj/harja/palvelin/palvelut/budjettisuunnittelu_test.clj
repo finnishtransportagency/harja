@@ -195,65 +195,27 @@
 
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
-        tallennettavat-tyot [{:urakka-id urakka-id
-                              :toimenpide-avain :paallystepaikkaukset
-                              ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
-                              ;; että lopulta kaikkien aikojen vuosi-kuukausi yhdistelmä on uniikki
-                              :ajat (mapv first
-                                          (vals (group-by (juxt :vuosi :kuukausi)
-                                                          (gen/sample (s/gen ::aika-kuukaudella-ivalon-urakalle)))))
-                              :summa {:uusi (gen/generate (s/gen ::bs/summa))
-                                      :paivitys (gen/generate (s/gen ::bs/summa))}}
-                             {:urakka-id urakka-id
-                              :toimenpide-avain :mhu-yllapito
-                              :ajat (mapv first
-                                          (vals (group-by (juxt :vuosi :kuukausi)
-                                                          (gen/sample (s/gen ::aika-kuukaudella-ivalon-urakalle)))))
-                              :summa {:uusi (gen/generate (s/gen ::bs/summa))
-                                      :paivitys (gen/generate (s/gen ::bs/summa))}}
-                             {:urakka-id urakka-id
-                              :toimenpide-avain :talvihoito
-                              :ajat (mapv first
-                                          (vals (group-by (juxt :vuosi :kuukausi)
-                                                          (gen/sample (s/gen ::aika-kuukaudella-ivalon-urakalle)))))
-                              :summa {:uusi (gen/generate (s/gen ::bs/summa))
-                                      :paivitys (gen/generate (s/gen ::bs/summa))}}
-                             {:urakka-id urakka-id
-                              :toimenpide-avain :liikenneympariston-hoito
-                              :ajat (mapv first
-                                          (vals (group-by (juxt :vuosi :kuukausi)
-                                                          (gen/sample (s/gen ::aika-kuukaudella-ivalon-urakalle)))))
-                              :summa {:uusi (gen/generate (s/gen ::bs/summa))
-                                      :paivitys (gen/generate (s/gen ::bs/summa))}}
-                             {:urakka-id urakka-id
-                              :toimenpide-avain :sorateiden-hoito
-                              :ajat (mapv first
-                                          (vals (group-by (juxt :vuosi :kuukausi)
-                                                          (gen/sample (s/gen ::aika-kuukaudella-ivalon-urakalle)))))
-                              :summa {:uusi (gen/generate (s/gen ::bs/summa))
-                                      :paivitys (gen/generate (s/gen ::bs/summa))}}
-                             {:urakka-id urakka-id
-                              :toimenpide-avain :mhu-korvausinvestointi
-                              :ajat (mapv first
-                                          (vals (group-by (juxt :vuosi :kuukausi)
-                                                          (gen/sample (s/gen ::aika-kuukaudella-ivalon-urakalle)))))
-                              :summa {:uusi (gen/generate (s/gen ::bs/summa))
-                                      :paivitys (gen/generate (s/gen ::bs/summa))}}]]
+        tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id)
+        paivitettava-data (mapv (fn [data]
+                                  (-> data
+                                      (update :ajat (fn [ajat]
+                                                      (drop (int (/ (count ajat) 2)) ajat)))
+                                      (assoc :summa (gen/generate (s/gen ::bs/summa)))))
+                                tallennettava-data)]
     (testing "Tallennus onnistuu"
-      (doseq [tyo tallennettavat-tyot]
-        (let [tyo (update tyo :summa get :uusi)
-              vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
+      (doseq [tyo tallennettava-data]
+        (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
           (is (:onnistui? vastaus) (str "Tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui.")))))
     (testing "Data kannassa on oikein"
-      (doseq [{:keys [toimenpide-avain urakka-id ajat] {summa :uusi} :summa} tallennettavat-tyot]
+      (doseq [{:keys [toimenpide-avain urakka-id ajat summa]} tallennettava-data]
         (let [toimenpidekoodi (case toimenpide-avain
-                                 :paallystepaikkaukset "20107"
-                                 :mhu-yllapito "20191"
-                                 :talvihoito "23104"
-                                 :liikenneympariston-hoito "23116"
-                                 :sorateiden-hoito "23124"
-                                 :mhu-korvausinvestointi "14301"
-                                 :mhu-johto "23151")
+                                :paallystepaikkaukset "20107"
+                                :mhu-yllapito "20191"
+                                :talvihoito "23104"
+                                :liikenneympariston-hoito "23116"
+                                :sorateiden-hoito "23124"
+                                :mhu-korvausinvestointi "14301"
+                                :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
@@ -266,15 +228,11 @@
                  (sort-by (juxt :vuosi :kuukausi) ajat))
               (str "Ajat eivät tallentuneet kantaan oikein toimenpiteelle " toimenpide-avain)))))
     (testing "Päivitys onnistuu"
-      (doseq [tyo tallennettavat-tyot]
-        (let [tyo (-> tyo
-                      (update :summa get :paivitys)
-                      (update :ajat (fn [ajat]
-                                      (drop (int (/ (count ajat) 2)) ajat))))
-              vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
+      (doseq [tyo paivitettava-data]
+        (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
           (is (:onnistui? vastaus) (str "Päivittäminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui.")))))
     (testing "Päivitetty data kannassa on oikein"
-      (doseq [{:keys [toimenpide-avain urakka-id ajat summa]} tallennettavat-tyot]
+      (doseq [{:keys [toimenpide-avain urakka-id ajat summa]} paivitettava-data]
         (let [toimenpidekoodi (case toimenpide-avain
                                 :paallystepaikkaukset "20107"
                                 :mhu-yllapito "20191"
@@ -286,11 +244,14 @@
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
-              vanha-summa (:uusi summa)
-              paivitetty-summa (:paivitys summa)
-              pudotettava-maara (int (/ (count ajat) 2))
-              vanhat-ajat (take pudotettava-maara ajat)
-              paivitetyt-ajat (drop pudotettava-maara ajat)
+              [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
+                                                    summa :summa
+                                                    ajat :ajat}]
+                                                (when (= v-tpa toimenpide-avain)
+                                                  [summa (take (int (/ (count ajat) 2)) ajat)]))
+                                              tallennettava-data)
+              paivitetty-summa summa
+              paivitetyt-ajat ajat
               paivitetty-data-kannassa (filter (fn [{:keys [vuosi kuukausi]}]
                                                  (some #(and (= vuosi (:vuosi %))
                                                              (= kuukausi (:kuukausi %)))
