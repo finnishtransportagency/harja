@@ -37,7 +37,7 @@
   (some #(not (get % pakolliset)) (keys objekti)))
 
 (defn- kulujen-syottolomake
-  [e! app]
+  [e! {:keys [toimenpiteet tehtavaryhmat] :as app}]
   (let [lomakkeen-tila (reagent.core/atom {:validi?               false
                                            :tehtavat-lkm          1
                                            :tehtavat              [{:tehtava      nil
@@ -83,15 +83,15 @@
                                            [:label "Toimenpide"]
                                            [yleiset/livi-pudotusvalikko {:valinta    tehtava
                                                                          :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtava] %)
-                                                                         :format-fn  #(str "- " %)}
-                                            [:eka :toka]]]]
+                                                                         :format-fn  #(str %)}
+                                            toimenpiteet]]]
                                          [:div.row
                                           [:div.col-xs-12.col-sm-6.label-ja-alasveto
                                            [:label "Tehtäväryhmä"]
                                            [yleiset/livi-pudotusvalikko {:valinta    tehtavaryhma
                                                                          :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtavaryhma] %)
-                                                                         :format-fn  #(str "- " %)}
-                                            [:eka :toka]]]
+                                                                         :format-fn  #(str %)}
+                                            tehtavaryhmat]]
                                           [:div.col-xs-12.col-sm-6
                                            [:label "Ilmoita"]]]
 
@@ -195,19 +195,6 @@
                      (-> rivi
                          (p/aseta-arvo :id :kulut-rivi
                                        :class #{"table-default-even"})))]
-    (loki/log "koko paska " (muodosta-taulukko :kohdistetut-kulut-taulukko
-                                               {:otsikot {:janan-tyyppi jana/Rivi
-                                                          :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}
-                                                :kulut   {:janan-tyyppi jana/Rivi
-                                                          :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}}
-                                               ["kk/hoitov." "Erä" "Toimenpide" "Tehtäväryhmä" "Määrä"]
-                                               [:otsikot otsikot-rivi
-                                                :kulut kulut-rivi]
-                                               {:class                 #{}
-                                                :taulukon-paivitys-fn! (fn [uusi app]
-                                                                         (loki/log "uusi" uusi app)
-                                                                         #_(assoc-in app [:taulukko] uusi)
-                                                                         app)}))
     (muodosta-taulukko :kohdistetut-kulut-taulukko
                        {:otsikot {:janan-tyyppi jana/Rivi
                                   :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}
@@ -218,14 +205,21 @@
                         :kulut kulut-rivi]
                        {:class                 #{}
                         :taulukon-paivitys-fn! (fn [uusi]
-                                                 (loki/log "UUSI" (type uusi) uusi)
-                                                 (swap! tila/laskutus-kohdistetut-kulut assoc-in [:taulukko] uusi))})))
+                                                 (loki/log "UUSI" (type uusi) uusi (->
+                                                                                     tila/laskutus-kohdistetut-kulut
+                                                                                     (swap! assoc-in [:taulukko] uusi)
+                                                                                     :taulukko))
+                                                 (->
+                                                   tila/laskutus-kohdistetut-kulut
+                                                   (swap! assoc-in [:taulukko] uusi)
+                                                   :taulukko))})))
 
 (defn- kohdistetut*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
                       (loki/log "Piirretty")
+                      (e! (tiedot/->HaeKustannussuunnitelma (-> @tila/yleiset :urakka :id)))
                       (e! (tiedot/->LuoKulutaulukko (luo-kulutaulukko)))))
     (fn [e! {:keys [taulukko syottomoodi] :as app}]
       [:div

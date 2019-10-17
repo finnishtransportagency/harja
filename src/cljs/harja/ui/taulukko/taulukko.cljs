@@ -41,8 +41,7 @@
                        rivit)))
 
 (defn tee-rivi [jana args]
-  (loki/log "JANA " jana " ARGS" args)
-  (let [jana-fn #(jana :jana1 % #{"jana"})]
+  (let [jana-fn #(jana (keyword (gensym "jana-")) % #{"jana"})]
     (loop [rivi []
            args (vec args)]
       (if (= 0 (count args))
@@ -121,12 +120,11 @@
   (paivita-taulukko! [this]
     (p/paivita-taulukko! this tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo tyhja-arvo))
 
-  (lisaa-rivi! [this rivin a1 a2 a3 a4 a5 a6 a7]
+  (lisaa-rivi! [this rivin-tiedot a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukko! (:taulukon-paivitys-fn! parametrit)
-          {:keys [avain rivi]} rivin
+          {:keys [avain rivi]} rivin-tiedot
           args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])
           paivitetty-taulukko (update this :rivit (fn [m] (conj m (tee-rivi rivi args))))]
-      (loki/log "LISÄTÄÄN " (type paivitetty-taulukko) paivitetty-taulukko (tee-rivi rivi args))
       (paivita-taulukko! paivitetty-taulukko)))
   (lisaa-rivi! [this rivin-avain a1 a2 a3 a4 a5 a6]
     (p/lisaa-rivi! this rivin-avain a1 a2 a3 a4 a5 a6 tyhja-arvo))
