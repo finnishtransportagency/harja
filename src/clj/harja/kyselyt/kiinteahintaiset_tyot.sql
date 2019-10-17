@@ -15,25 +15,6 @@ FROM kiinteahintainen_tyo kht
 WHERE tpi.urakka = :urakka
 ORDER BY vuosi, kuukausi;
 
--- name: paivita-kiinteahintainen-tyo!
--- Päivittää kiinteahintaisen tyon summan, tunnisteena tpi, tehtävä-id, vuosi ja kk
-UPDATE kiinteahintainen_tyo
-SET summa     = :summa,
-    muokattu  = current_timestamp,
-    muokkaaja = :kayttaja
-WHERE toimenpideinstanssi = :toimenpideinstanssi
-  AND ((:tehtavaryhma::INTEGER IS NULL AND tehtavaryhma IS NULL) OR tehtavaryhma = :tehtavaryhma)
-  AND ((:tehtava::INTEGER IS NULL AND tehtava IS NULL) OR tehtava = :tehtava)
-  AND vuosi = :vuosi
-  AND kuukausi = :kuukausi;
-
--- name: lisaa-kiinteahintainen-tyo<!
--- Lisää kiinteähintaisen tyon
-INSERT INTO kiinteahintainen_tyo
-(vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma, tehtava, sopimus, luotu, luoja)
-VALUES (:vuosi, :kuukausi, :summa, :toimenpideinstanssi, :tehtavaryhma, :tehtava, :sopimus, current_timestamp,
-        :kayttaja);
-
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee teiden hoidon urakan (MHU) kaikki kustannussuunnitelmat likaiseksi urakkakohtaisen toimenpideinstanssin ja maksuerätyypin mukaan
 UPDATE kustannussuunnitelma
