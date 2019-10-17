@@ -3,7 +3,6 @@
             [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout put! alts!! chan poll!]]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [harja.palvelin.asetukset :as asetukset]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sampo
@@ -11,11 +10,11 @@
              [sampo-komponentti :as sampo]
              [vienti :as vienti]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
-            [harja.pvm :as pvm]
             [harja.palvelin.main :as sut]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]))
+            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
+            [harja.data.hoito.kustannussuunnitelma :as ks-data]))
 
 (defonce asetukset {:sonja {:url "tcp://localhost:61617"
                             :kayttaja ""
@@ -64,37 +63,30 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-;; muu = vahinkojen korjaukset
-
-;{:paallystepaikkaukset     "20107"
-;   :mhu-yllapito             "20191"
-;   :talvihoito               "23104"
-;   :liikenneympariston-hoito "23116"
-;   :sorateiden-hoito         "23124"
-;   :mhu-korvausinvestointi   "14301"
-;   :mhu-johto                "23151"}
 (deftest merkataan-budjettitavotteita-likaiseksi-ja-lähetetään-ne-Sampoon
-  (let [{urakka-id :id alkupvm :alkupvm} (first (q-map (str "SELECT id, alkupvm
-                                                             FROM   urakka
-                                                             WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
-        urakan-aloitusvuosi (pvm/vuosi alkupvm)
-        kiinteahintaisten-toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi}
-        kiinteahintainen-tyo (fn [toimenpide-avain]
-                                {:urakka-id urakka-id
-                                 :toimenpide-avain toimenpide-avain
-                                 :ajat (into []
-                                             (mapcat (fn [hoitokausi]
-                                                       (let [kuukaudet (case hoitokausi
-                                                                         1 (range 10 13)
-                                                                         5 (range 1 10)
-                                                                         (range 1 13))
-                                                             vuosi (+ urakan-aloitusvuosi (dec hoitokausi))]
-                                                         (map (fn [kuukausi]
-                                                                {:kuukausi kuukausi
-                                                                 :vuosi vuosi})
-                                                              kuukaudet)))
-                                                     (range 1 6)))
-                                 :summa 1000})
+  (let [{urakka-id :id} (first (q-map (str "SELECT id, alkupvm
+                                            FROM   urakka
+                                            WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
+        kiinteahintaiset-data (ks-data/tallenna-kiinteahintaiset-tyot-data urakka-id)
+        jhk-data (ks-data/tallenna-johto-ja-hallintokorvaus-data urakka-id)
+        kustannusarvioitu-data (ks-data/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
+
+        kokonaishintainen-maksuerantyyppi #{:toimenpiteen-maaramitattavat-tyot
+                                            :rahavaraus-lupaukseen-1
+                                            :hoidonjohtopalkkio
+                                            :toimistokulut
+                                            :erillishankinnat}
+        poista-dublikaatti-kokonaishintaiset (fn [kustannusarvioitu-data]
+                                               (first (reduce (fn [[pidettava-data kasiteltava-data] {:keys [toimenpide-avain tallennettava-asia] :as data}]
+                                                                (if (and (kokonaishintainen-maksuerantyyppi tallennettava-asia)
+                                                                         (some (fn [{kasiteltava-tpa :toimenpide-avain kasiteltava-ta :tallennettava-asia}]
+                                                                                 (and (= kasiteltava-tpa toimenpide-avain)
+                                                                                      (kokonaishintainen-maksuerantyyppi kasiteltava-ta)))
+                                                                               kasiteltava-data))
+                                                                  [pidettava-data (rest kasiteltava-data)]
+                                                                  [(conj pidettava-data data) (rest kasiteltava-data)]))
+                                                              [[] (rest kustannusarvioitu-data)] kustannusarvioitu-data)))
+
         kiinteahintaisten-toimenpideinstanssit (flatten
                                                   (q (str "WITH toimenpide_idt AS (
                                                              SELECT id
@@ -106,34 +98,38 @@
                                                            FROM toimenpideinstanssi
                                                            WHERE urakka = " urakka-id " AND
                                                                  toimenpide IN (SELECT id FROM toimenpide_idt);")))
-        ]
+        mhu-johto-toimenpideinstanssi (ffirst (q (str "SELECT id
+                                                       FROM toimenpideinstanssi
+                                                       WHERE urakka = " urakka-id " AND
+                                                             toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = '23151');")))]
     (testing "Kiinteahintaisen työn tallentaminen merkkaa kustannussuunnitelman likaiseksi"
-      (let [vastaukset (doall (for [toimenpide-avain kiinteahintaisten-toimenpide-avaimet]
-                                (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ (kiinteahintainen-tyo toimenpide-avain))))
-            kustannussuunnitelmat (q-map (str "SELECT ks.*, tpi.*
-                                           FROM kustannussuunnitelma ks
-                                             JOIN maksuera m ON m.numero = ks.maksuera
-                                             JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                                           WHERE m.tyyppi = 'kokonaishintainen' AND
-                                                 tpi.id IN (" (apply str (interpose ", " kiinteahintaisten-toimenpideinstanssit)) ");"))]
+      (let [vastaukset (doall (for [tallennettava-data kiinteahintaiset-data]
+                                (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tallennettava-data)))
+            kustannussuunnitelmat (filter (fn [{:keys [tyyppi likainen]}]
+                                            ;; Tällainen filteröinti tässä SQL:n WHERE sijasta, jotta saadaan mahdollisia
+                                            ;; bugeja kiinni, jossa on merkattu muitakin kuin kokonaishintaisia likaisiksi tjv.
+                                            (or (= "kokonaishintainen" tyyppi)
+                                                (not (nil? likainen))))
+                                          (q-map (str "SELECT ks.likainen, m.tyyppi
+                                                       FROM kustannussuunnitelma ks
+                                                         JOIN maksuera m ON m.numero = ks.maksuera
+                                                         JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                                                       WHERE tpi.id IN (" (apply str (interpose ", " kiinteahintaisten-toimenpideinstanssit)) ");")))]
         (is (every? :onnistui? vastaukset) "Kiinteähintaisen työn tallentaminen epäonnistui")
-        (is (= (count kiinteahintaisten-toimenpide-avaimet) (count kustannussuunnitelmat)))
+        (is (every? #(= "kokonaishintainen" (:tyyppi %)) kustannussuunnitelmat) "Kiinteähintaisten maksuerän tyyppi pitäisi olla 'kokonaishintainen'")
+        (is (= (count kiinteahintaiset-data) (count kustannussuunnitelmat)))
         (is (every? :likainen kustannussuunnitelmat))))
     (testing "Johto- ja hallintokorvausten tallentaminen merkkaa kustannussuunnitelman likaiseksi"
-      (let [
-            parametrit {:urakka-id urakka-id
-                        :toimenkuva toimenkuva
-                        :maksukausi maksukausi
-                        :jhkt (transduce
-                                (comp (remove (fn [{:keys [hoitokausi]}]
-                                                (< hoitokausi paivitysvuosi)))
-                                      (map (fn [data]
-                                             (-> data
-                                                 (update :tunnit get :paivitys)
-                                                 (update :tuntipalkka get :paivitys)))))
-                                conj [] (get jhkt maksukausi))}
-            vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]))
-    (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon"
+      (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ (first jhk-data))
+            kustannussuunnitelma (first (q-map (str "SELECT ks.*, m.tyyppi
+                                                     FROM kustannussuunnitelma ks
+                                                       JOIN maksuera m ON m.numero = ks.maksuera
+                                                       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                                                     WHERE tpi.id = " mhu-johto-toimenpideinstanssi ";")))]
+        (is (:onnistui? vastaus) "Johto- ja hallintokorvauksien tallentaminen epäonnistui")
+        (is (= "kokonaishintainen" (:tyyppi kustannussuunnitelma)) "Johto- ja hallintokorvauksen maksuerän tyypin pitäisi olla 'kokonaishintainen'")
+        (is (:likainen kustannussuunnitelma) "Johto- ja hallintokorvauksen tallentamien ei merkkaa kustannussuunnitelmaa likaiseksi")))
+    (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kiintahintainen sekä johto- ja hallintokorvaus)"
       (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
       (let [sonja-broker-tila (fn [jonon-nimi attribuutti]
                                 (-> (s-tk/sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
@@ -141,4 +137,48 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= (count kiinteahintaisten-toimenpide-avaimet) viestit-jonossa))))))
+        (is (= (+ (count kiinteahintaisten-toimenpideinstanssit)
+                  1 ;; mhu-johto toimenpideinstanssi
+                  )
+               viestit-jonossa)
+            "Sampoon ei siirry kaikki likaisiksi merkatut kiinteättyöt sekä johto- ja hallintokorvaustyöt")))
+    (testing "Kustannusarvoidun työn tallentaminen merkkaa kustannussuunnitelman likaiseksi"
+      (let [vastaukset (doall (for [tallennettava-data kustannusarvioitu-data]
+                                (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-jvh+ tallennettava-data)))
+            kustannussuunnitelmat (q-map (str "SELECT ks.likainen, m.tyyppi, tpi.*
+                                               FROM kustannussuunnitelma ks
+                                                 JOIN maksuera m ON m.numero = ks.maksuera
+                                                 JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                                               WHERE tpi.id IN (" (apply str (interpose ", " (conj kiinteahintaisten-toimenpideinstanssit mhu-johto-toimenpideinstanssi))) ") AND
+                                                     ks.likainen IS TRUE;"))]
+        (is (every? :onnistui? vastaukset) "Kiinteähintaisen työn tallentaminen epäonnistui")
+        (is (= (count (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))
+               (count kustannussuunnitelmat)))
+        (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %))
+                              kustannussuunnitelmat))
+               (count (filter #(kokonaishintainen-maksuerantyyppi (:tallennettava-asia %))
+                              (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))))
+            "Kustannusarviotuja töitä maksuerän tyypillä 'kokonaishintainen' on väärä määrä")
+        (is (= (count (filter #(= "akillinen-hoitotyo" (:tyyppi %))
+                              kustannussuunnitelmat))
+               (count (filter #(= :akilliset-hoitotyot (:tallennettava-asia %))
+                              kustannusarvioitu-data)))
+            "Kustannusarviotuja töitä maksuerän tyypillä 'akillinen-hoitotyo' on väärä määrä")
+        (is (= (count (filter #(= "muu" (:tyyppi %))
+                              kustannussuunnitelmat))
+               (count (filter #(= :kolmansien-osapuolten-aiheuttamat-vahingot (:tallennettava-asia %))
+                              kustannusarvioitu-data)))
+            "Kustannusarviotuja töitä maksuerän tyypillä 'muu' on väärä määrä")
+        (is (every? :likainen kustannussuunnitelmat))))
+    (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kustannusarvioitu)"
+      (s-tk/sonja-jolokia-jono (get-in asetukset [:sampo :lahetysjono-ulos]) nil :purge)
+      (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
+      (let [sonja-broker-tila (fn [jonon-nimi attribuutti]
+                                (-> (s-tk/sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
+            viestit-jonossa (- (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
+                                                  :enqueue-count)
+                               (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
+                                                  :dequeue-count))]
+        (is (= (count (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))
+               viestit-jonossa)
+            "Sampoon ei siirry kaikki likaisiksi merkatut kustannusarvioidut työt")))))

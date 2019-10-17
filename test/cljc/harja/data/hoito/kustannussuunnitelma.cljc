@@ -66,7 +66,7 @@
 (defn tallenna-kiinteahintaiset-tyot-data
   ([urakka-id] (tallenna-kiinteahintaiset-tyot-data urakka-id {}))
   ([urakka-id
-    {:keys [toimenpide-avaimet tallennettavat-asiat hoitokaudet]
+    {:keys [toimenpide-avaimet hoitokaudet]
      :or {toimenpide-avaimet :kaikki
           hoitokaudet :kaikki}}]
    (transduce
