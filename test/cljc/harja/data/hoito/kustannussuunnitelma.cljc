@@ -4,21 +4,21 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.set :as clj-set]
             [harja.pvm :as pvm]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
+            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
 (def ^:dynamic *hoitokaudet* #{1 2 3 4 5})
 
-(s/def ::toimenkuvat-arg (s/or :setti (s/coll-of ::bs/toimenkuva :kind set?)
+(s/def ::toimenkuvat-arg (s/or :setti (s/coll-of ::bs-p/toimenkuva :kind set?)
                                :avain #(= % :kaikki)))
-(s/def ::maksukaudet-arg (s/or :setti (s/coll-of ::bs/maksukausi :kind set?)
+(s/def ::maksukaudet-arg (s/or :setti (s/coll-of ::bs-p/maksukausi :kind set?)
                                :avain #(= % :kaikki)))
-(s/def ::hoitokaudet-arg (s/or :setti (s/coll-of ::bs/hoitokausi :kind set?)
+(s/def ::hoitokaudet-arg (s/or :setti (s/coll-of ::bs-p/hoitokausi :kind set?)
                                :avain #(= % :kaikki)))
 
 
 
 (s/def ::aika-kuukaudella-juuri-alkaneelle-urakalle
-  (s/with-gen ::bs/aika
+  (s/with-gen ::bs-p/aika
               (fn []
                 (gen/fmap (fn [_]
                             (let [aloitus-vuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
@@ -40,7 +40,7 @@
                           (gen/int)))))
 
 (s/def ::aika-vuodella-juuri-alkaneelle-urakalle
-  (s/with-gen ::bs/aika
+  (s/with-gen ::bs-p/aika
               (fn []
                 (gen/fmap (fn [_]
                             (let [aloitus-vuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
@@ -61,7 +61,7 @@
            (mapv first
                  (vals (group-by (juxt :vuosi :kuukausi)
                                  (gen/sample (s/gen ::aika-kuukaudella-juuri-alkaneelle-urakalle))))))
-   :summa (gen/generate (s/gen ::bs/summa))})
+   :summa (gen/generate (s/gen ::bs-p/summa))})
 
 (defn tallenna-kiinteahintaiset-tyot-data
   ([urakka-id] (tallenna-kiinteahintaiset-tyot-data urakka-id {}))
@@ -113,8 +113,8 @@
                     :toimenkuva toimenkuva
                     :maksukausi maksukausi
                     :jhkt (mapv (fn [hoitokausi kk-v]
-                                  {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs/tunnit))
-                                   :tuntipalkka (gen/generate (s/gen ::bs/tuntipalkka)) :kk-v kk-v})
+                                  {:hoitokausi hoitokausi :tunnit (gen/generate (s/gen ::bs-p/tunnit))
+                                   :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka)) :kk-v kk-v})
                                 hoitokaudet (get kk-kertoimet maksukausi))})))))
 (defn tallenna-johto-ja-hallintokorvaus-data
   ([urakka-id] (tallenna-johto-ja-hallintokorvaus-data urakka-id {}))
@@ -216,7 +216,7 @@
                             (mapv first
                                   (vals (group-by :vuosi
                                                   (gen/sample (s/gen ::aika-vuodella-juuri-alkaneelle-urakalle))))))
-                    :summa (gen/generate (s/gen ::bs/summa))})))))
+                    :summa (gen/generate (s/gen ::bs-p/summa))})))))
 
 (defn tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
   ([urakka-id] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id {}))

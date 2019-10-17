@@ -121,14 +121,20 @@
         (is (every? :likainen kustannussuunnitelmat))))
     (testing "Johto- ja hallintokorvausten tallentaminen merkkaa kustannussuunnitelman likaiseksi"
       (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ (first jhk-data))
-            kustannussuunnitelma (first (q-map (str "SELECT ks.*, m.tyyppi
+            kustannussuunnitelma (filter (fn [{:keys [tyyppi likainen]}]
+                                           ;; Tällainen filteröinti tässä SQL:n WHERE sijasta, jotta saadaan mahdollisia
+                                           ;; bugeja kiinni, jossa on merkattu muitakin kuin kokonaishintaisia likaisiksi tjv.
+                                           (or (= "kokonaishintainen" tyyppi)
+                                               (not (nil? likainen))))
+                                         (q-map (str "SELECT ks.*, m.tyyppi
                                                      FROM kustannussuunnitelma ks
                                                        JOIN maksuera m ON m.numero = ks.maksuera
                                                        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                                                      WHERE tpi.id = " mhu-johto-toimenpideinstanssi ";")))]
+        (is (= 1 (count kustannussuunnitelma)))
         (is (:onnistui? vastaus) "Johto- ja hallintokorvauksien tallentaminen epäonnistui")
-        (is (= "kokonaishintainen" (:tyyppi kustannussuunnitelma)) "Johto- ja hallintokorvauksen maksuerän tyypin pitäisi olla 'kokonaishintainen'")
-        (is (:likainen kustannussuunnitelma) "Johto- ja hallintokorvauksen tallentamien ei merkkaa kustannussuunnitelmaa likaiseksi")))
+        (is (= "kokonaishintainen" (:tyyppi (first kustannussuunnitelma))) "Johto- ja hallintokorvauksen maksuerän tyypin pitäisi olla 'kokonaishintainen'")
+        (is (:likainen (first kustannussuunnitelma)) "Johto- ja hallintokorvauksen tallentamien ei merkkaa kustannussuunnitelmaa likaiseksi")))
     (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kiintahintainen sekä johto- ja hallintokorvaus)"
       (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
       (let [sonja-broker-tila (fn [jonon-nimi attribuutti]

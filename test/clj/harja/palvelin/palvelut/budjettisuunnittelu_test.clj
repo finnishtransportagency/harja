@@ -6,6 +6,7 @@
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
             [harja.testi :refer :all]
             [harja.data.hoito.kustannussuunnitelma :as data-gen]
+            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [try+]]))
@@ -31,7 +32,7 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (s/def ::aika-kuukaudella-ivalon-urakalle
-  (s/with-gen ::bs/aika
+  (s/with-gen ::bs-p/aika
               (fn []
                 (gen/fmap (fn [_]
                             (let [aloitus-vuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
@@ -45,7 +46,7 @@
                           (gen/int)))))
 
 (s/def ::aika-vuodella-ivalon-urakalle
-  (s/with-gen ::bs/aika
+  (s/with-gen ::bs-p/aika
               (fn []
                 (gen/fmap (fn [_]
                             (let [aloitus-vuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
@@ -200,7 +201,7 @@
                                   (-> data
                                       (update :ajat (fn [ajat]
                                                       (drop (int (/ (count ajat) 2)) ajat)))
-                                      (assoc :summa (gen/generate (s/gen ::bs/summa)))))
+                                      (assoc :summa (gen/generate (s/gen ::bs-p/summa)))))
                                 tallennettava-data)]
     (testing "Tallennus onnistuu"
       (doseq [tyo tallennettava-data]
@@ -316,7 +317,7 @@
                                   (-> data
                                       (update :ajat (fn [ajat]
                                                       (drop (int (/ (count ajat) 2)) ajat)))
-                                      (assoc :summa (gen/generate (s/gen ::bs/summa)))))
+                                      (assoc :summa (gen/generate (s/gen ::bs-p/summa)))))
                                 tallennettava-data)]
     (testing "Tallennus onnistuu"
       (doseq [tyo tallennettava-data]
@@ -528,8 +529,8 @@
 
 (deftest budjettitavoite-tallennus
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
-        uusi-tavoitehinta (gen/generate (s/gen ::bs/tavoitehinta))
-        paivitetty-tavoitehinta (gen/generate (s/gen ::bs/tavoitehinta))
+        uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
+        paivitetty-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
         kerroin 1.1
         paivitys-hoitokaudesta-eteenpain 3
         tallennettavat-tavoitteet (mapv (fn [hoitokausi]
@@ -538,7 +539,8 @@
                                                           :paivitys paivitetty-tavoitehinta}
                                            :kattohinta {:uusi (* kerroin uusi-tavoitehinta)
                                                         :paivitys (* kerroin paivitetty-tavoitehinta)}})
-                                        (range 1 5))]
+                                        (range 1 5))
+        pyorista (fn [x] (with-precision 6 (float x)))]
     (testing "Tallennus onnistuu"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                   :tavoitteet (mapv (fn [tavoite]
@@ -552,8 +554,8 @@
                                        FROM urakka_tavoite
                                        WHERE urakka = " urakka-id ";"))]
         (is (every? :luotu data-kannassa) "Luotu aikaa ei kannassa budjettitavoitteelle")
-        (is (every? #(= (float (:tavoitehinta %)) (float uusi-tavoitehinta)) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
-        (is (every? #(= (float (:kattohinta %)) (float (* kerroin uusi-tavoitehinta))) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
+        (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta)) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
+        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta))) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
     (testing "Päivitys onnistuu"
       (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                   :tavoitteet (transduce
@@ -576,10 +578,10 @@
                                         (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
                                       data-kannassa)]
         (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
-        (is (every? #(= (float (:tavoitehinta %)) (float uusi-tavoitehinta)) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (float (:kattohinta %)) (float (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (float (:tavoitehinta %)) (float paivitetty-tavoitehinta)) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(= (float (:kattohinta %)) (float (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) "Päivitetty kattohinta ei oikein päivityksen jälkeen")))))
+        (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta)) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta))) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
+        (is (every? #(= (pyorista (:tavoitehinta %)) (pyorista paivitetty-tavoitehinta)) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(= (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta))) uusidata-kannassa) "Päivitetty kattohinta ei oikein päivityksen jälkeen")))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
@@ -617,3 +619,7 @@
                    (catch harja.domain.roolit.EiOikeutta eo#
                      :ei-oikeutta-virhe))
              :ei-oikeutta-virhe)))))
+
+(deftest palvelun-validointi-ja-palvelu-sama
+  (is (= (into #{} (keys (var-get #'harja.palvelin.palvelut.budjettisuunnittelu/toimenpide-avain->toimenpide)))
+         bs-p/toimenpide-avaimet)))
