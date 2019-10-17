@@ -18,7 +18,8 @@ ORDER BY vuosi, kuukausi;
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee teiden hoidon urakan (MHU) kaikki kustannussuunnitelmat likaiseksi urakkakohtaisen toimenpideinstanssin ja maksuerätyypin mukaan
 UPDATE kustannussuunnitelma
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                           JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
