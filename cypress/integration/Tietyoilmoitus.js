@@ -76,6 +76,7 @@ describe('Luo uusi tietyöilmoitus', () => {
                 .should('have.text', arvo);
         }
 
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible');
         cy.get('#tietyoilmoitushakutulokset').as('ilmoitusTaulukko');
 
         cy.get('@ilmoitusTaulukko').find('tr.klikattava').then(($rivit) => {
@@ -91,6 +92,8 @@ describe('Luo uusi tietyöilmoitus', () => {
                 cy.get('td.vetolaatikon-tila.klikattava').click();
             });
         });
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.be.visible');
+        cy.get('#tietyoilmoitushakutulokset').as('ilmoitusTaulukko');
 
         cy.get('@ilmoitusTaulukko').find('.vetolaatikko').as('vetolaatikko').within(() => {
             validoiKentta('urakka_nimi', urakanNimi, true);
