@@ -104,7 +104,7 @@
                              (let [{:keys [tunnisteen-kanava saije]} (get viivastetyt-eventit tunniste)
                                    uusi-tunnisteen-kanava (chan)]
                                (when (and saije (nil? (async/poll! saije)))
-                                 (>! tunnisteen-kanava true))
+                                 (async/put! tunnisteen-kanava true))
                                (recur (assoc viivastetyt-eventit
                                         tunniste {:tunnisteen-kanava uusi-tunnisteen-kanava
                                                   :saije (go (<! (timeout viive))
