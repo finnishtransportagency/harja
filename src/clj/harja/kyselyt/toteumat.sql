@@ -451,7 +451,8 @@ WHERE id = :id;
 -- name: merkitse-toteuman-maksuera-likaiseksi!
 -- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE
   tyyppi = :tyyppi :: maksueratyyppi AND
   toimenpideinstanssi IN (SELECT tpi.id
@@ -477,7 +478,8 @@ WHERE
 -- name: merkitse-toimenpideinstanssin-maksuera-likaiseksi!
 -- Merkitsee erilliskustannuksia vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE
   tyyppi = 'muu' AND
   toimenpideinstanssi IN (SELECT id

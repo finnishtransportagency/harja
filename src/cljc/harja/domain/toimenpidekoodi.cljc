@@ -18,10 +18,10 @@
   ["toimenpidekoodi" ::toimenpidekoodi
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {"emo" ::emo-id}
-   {::toimenpidekoodi (specql.rel/has-one
-                        ::emo-id
-                        :harja.domain.toimenpidekoodi/toimenpidekoodi
-                        :harja.domain.toimenpidekoodi/id)}])
+   {::toimenpidekoodi-join (specql.rel/has-one
+                             ::emo-id
+                             ::toimenpidekoodi
+                             ::id)}])
 
 (def perustiedot #{::id ::nimi})
 (def viittaukset #{::toimenpidekoodi-id ::hinnoittelu-id})

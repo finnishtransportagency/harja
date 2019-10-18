@@ -33,7 +33,7 @@
                             :urakoitsija {:ytunnus urakoitsija_ytunnus
                                           :nimi urakoitsija_nimi}
                             :vaylamuoto "tie"
-                            :tyyppi urakka_tyyppi
+                            :tyyppi (if (= "teiden-hoito" urakka_tyyppi) "hoito" urakka_tyyppi)
                             :alkupvm urakka_alkupvm
                             :loppupvm urakka_loppupvm}
                    :paivystykset (muodosta-paivystykset urakan-paivystykset)}}))
