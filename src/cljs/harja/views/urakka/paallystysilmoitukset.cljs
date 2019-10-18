@@ -140,8 +140,11 @@
                                                (:id urakka))
                       (not= tila :lukittu)
                       (false? lukittu?))]
-    [:div.pot-kasittely
 
+    (when (and muokattava? (:paatos tekninen-osa) (nil? (:kasittelyaika tekninen-osa)))
+      (muokkaa! assoc-in [:perustiedot :tekninen-osa :kasittelyaika] (pvm/nyt)))
+
+    [:div.pot-kasittely
      [:h3 "Käsittely"]
      [lomake/lomake
       {:otsikko "Tekninen osa"
@@ -153,8 +156,7 @@
       [{:otsikko "Käsitelty"
         :nimi :kasittelyaika
         :tyyppi :pvm
-        :huomauta kasittelyaika}
-
+        :validoi kasittelyaika}
        {:otsikko "Päätös"
         :nimi :paatos
         :tyyppi :valinta
@@ -1030,12 +1032,9 @@
                                                                                       :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
                           :perustiedot {:tr-osoite [{:fn paakohteen-validointi}]}}
              ;; Tarkista pitäisikö näiden olla ihan virheitä
-             huomautukset {:perustiedot {:tekninen-osa {:kasittelyaika (if (:paatos tekninen-osa)
-                                                                         [[:ei-tyhja "Anna käsittelypvm"]
-                                                                          [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Käsittely ei voi olla ennen valmistumista"]]
-                                                                         [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Käsittely ei voi olla ennen valmistumista"]])
+             ;; Validoi :kasittelyaika
+             huomautukset {:perustiedot {:tekninen-osa {:kasittelyaika [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                         "Käsittely ei voi olla ennen valmistumista"]]
                                                         :paatos [[:ei-tyhja "Anna päätös"]]
                                                         :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
                                          :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]

@@ -16,6 +16,7 @@
             [cljs.core.async :refer [<! >!]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.ui.ikonit :as ikonit]
@@ -177,58 +178,76 @@
      [:div ""])])
 
 (defn pohjavesialueen-suola []
-  (komp/luo
-   (komp/sisaan
-    (fn []
-      (let [urakkaid @nav/valittu-urakka-id]
-        (go
-          (reset! tiedot/pohjavesialueen-toteuma nil)
-          (reset! tiedot/urakan-pohjavesialueet (<! (tiedot/hae-urakan-pohjavesialueet urakkaid)))))))
-   (fn []
-     (let [alueet @tiedot/urakan-pohjavesialueet
-           urakka @nav/valittu-urakka]
-       [:div
-        [urakka-valinnat/aikavali-nykypvm-taakse urakka
-         tiedot/valittu-aikavali
-         {:aikavalin-rajoitus [12 :kuukausi]}]
-        [grid/grid {:otsikko "Urakan pohjavesialueet"
-                    :tunniste :tunnus
-                    :mahdollista-rivin-valinta? true
-                    :rivi-valinta-peruttu (fn [rivi]
-                                            (reset! tiedot/pohjavesialueen-toteuma nil))
-                    :rivi-klikattu
-                    (fn [rivi]
-                      (go
-                        (reset! tiedot/pohjavesialueen-toteuma
-                                (<! (tiedot/hae-pohjavesialueen-suolatoteuma (:tunnus rivi) @tiedot/valittu-aikavali)))))
-                         
-                    :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
-                             [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
-                             "Ei pohjavesialueita")}
-         [{:otsikko "Tunnus" :nimi :tunnus :leveys 10}
-          {:otsikko "Nimi" :nimi :nimi}]
-         alueet]
-        (let [toteuma @tiedot/pohjavesialueen-toteuma]
-          (when toteuma
-            [grid/grid
-             {:otsikko "Pohjavesialueen suolatoteuma"
-              :tunniste :maara_t_per_km
-              :piilota-toiminnot? true
-              :tyhja (if (empty? toteuma)
-                       "Ei tietoja")
-              }
-             [{:otsikko "Määrä t/km"
-               :nimi :maara_t_per_km
-               :fmt #(fmt/desimaaliluku-opt % 1)
-               :leveys 10}
-              {:otsikko "Yhteensä"
-               :leveys 10
-               :fmt #(fmt/desimaaliluku-opt % 1)
-               :nimi :yhteensa}
-              {:otsikko "Käyttöraja"
-               :leveys 10
-               :nimi :kayttoraja}]
-             toteuma]))]))))
+  (let [nayta-tr-osoitteet (atom {})
+        tr-osoite (fn [osoitteet]
+                    [:span {:style {:white-space "pre-line"}}
+                     (reduce #(str %1 (if %1 "\n" "") (tr/tierekisteriosoite-tekstina %2)) nil osoitteet)])
+        nappi (fn [ikoni tunnus tila]
+                [napit/nappi "" #(swap! nayta-tr-osoitteet assoc tunnus tila) {:style {:width "100%"} :ikoni ikoni}])]
+    (komp/luo
+      (komp/sisaan
+        (fn []
+          (let [urakkaid @nav/valittu-urakka-id]
+            (go
+              (reset! tiedot/pohjavesialueen-toteuma nil)
+              (reset! tiedot/urakan-pohjavesialueet (<! (tiedot/hae-urakan-pohjavesialueet urakkaid)))))))
+      (fn []
+        (let [alueet @tiedot/urakan-pohjavesialueet
+              urakka @nav/valittu-urakka]
+          [:div
+           [harja.ui.debug/debug alueet]
+           [urakka-valinnat/aikavali-nykypvm-taakse urakka
+            tiedot/valittu-aikavali
+            {:aikavalin-rajoitus [12 :kuukausi]}]
+           [grid/grid {:otsikko "Urakan pohjavesialueet"
+                       :tunniste :tunnus
+                       :mahdollista-rivin-valinta? true
+                       :rivi-valinta-peruttu (fn [rivi]
+                                               (reset! tiedot/pohjavesialueen-toteuma nil))
+                       :rivi-klikattu
+                       (fn [rivi]
+                         (go
+                           (reset! tiedot/pohjavesialueen-toteuma
+                                   (<! (tiedot/hae-pohjavesialueen-suolatoteuma (:tunnus rivi) @tiedot/valittu-aikavali)))))
+
+                       :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
+                                [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
+                                "Ei pohjavesialueita")}
+            [{:otsikko "Tunnus" :nimi :tunnus :leveys 1}
+             {:otsikko "Nimi" :nimi :nimi :leveys 8}
+             {:otsikko "Tieosoite"
+              :leveys 2
+              :tyyppi :komponentti
+              :komponentti (fn [{tunnus :tunnus osoitteet :tr-osoitteet}]
+                               [:div {:on-click #(.stopPropagation %)}
+                                (when (> (count osoitteet) 0)
+                                  (if (get @nayta-tr-osoitteet tunnus)
+                                    [:<>
+                                     (nappi (ikonit/livicon-chevron-up) tunnus false)
+                                     (tr-osoite osoitteet)]
+                                    (nappi (ikonit/livicon-chevron-down) tunnus true)))])}]
+            alueet]
+           (let [toteuma @tiedot/pohjavesialueen-toteuma]
+             (when toteuma
+               [grid/grid
+                {:otsikko "Pohjavesialueen suolatoteuma"
+                 :tunniste :maara_t_per_km
+                 :piilota-toiminnot? true
+                 :tyhja (if (empty? toteuma)
+                          "Ei tietoja")
+                 }
+                [{:otsikko "Määrä t/km"
+                  :nimi :maara_t_per_km
+                  :fmt #(fmt/desimaaliluku-opt % 1)
+                  :leveys 10}
+                 {:otsikko "Yhteensä"
+                  :leveys 10
+                  :fmt #(fmt/desimaaliluku-opt % 1)
+                  :nimi :yhteensa}
+                 {:otsikko "Käyttöraja"
+                  :leveys 10
+                  :nimi :kayttoraja}]
+                toteuma]))])))))
 
 (defn suolatoteumat []
   (komp/luo

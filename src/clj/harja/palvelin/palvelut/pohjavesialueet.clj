@@ -15,7 +15,24 @@
         (q/hae-pohjavesialueet db hallintayksikko)))
 
 (defn hae-urakan-pohjavesialueet [db user urakka-id]
-  (into [] (q/hae-urakan-pohjavesialueet db urakka-id)))
+  (let [tr->map #(select-keys % [:numero :aosa :aet :losa :let])]
+    (reduce (fn [e-rivit s-rivi]
+              (let [e-rivi (last e-rivit)]
+                (if (= (:tunnus e-rivi) (:tunnus s-rivi))
+                  (conj (pop e-rivit)
+                        (update e-rivi :tr-osoitteet
+                                (fn [osoitteet]
+                                  (let [e-osoite (last osoitteet)]
+                                    (if (and (= (:numero e-osoite) (:numero s-rivi))
+                                             (= (:losa e-osoite) (:aosa s-rivi))
+                                             (= (:let e-osoite) (:aet s-rivi)))
+                                      (conj (pop osoitteet) (assoc e-osoite :losa (:losa s-rivi) :let (:let s-rivi)))
+                                      (conj osoitteet (tr->map s-rivi)))))))
+                  (conj e-rivit
+                        (dissoc (assoc s-rivi :tr-osoitteet [(tr->map s-rivi)])
+                                :numero :aosa :aet :losa :let)))))
+            []
+            (q/hae-urakan-pohjavesialueet db urakka-id))))
 
 (defn hae-pohjavesialueen-suolatoteuma [db user pohjavesialue alkupvm loppupvm]
   (into [] (m/hae-pohjavesialueen-suolatoteuma db {:pohjavesialue pohjavesialue
