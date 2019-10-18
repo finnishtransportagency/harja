@@ -34,7 +34,6 @@
       {:materiaali {:nimi (:nimi materiaali) :yksikko (:yksikko materiaali)}})))
 
 (defn- urakan-tiedot [urakka]
-  (println (:tyyppi urakka))
   (let [urakka (if (= "teiden-hoito"(:tyyppi urakka))
                  (assoc urakka :tyyppi "hoito")
                                 urakka)]
