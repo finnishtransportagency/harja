@@ -5,7 +5,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def kayttaja "jvh")
@@ -34,6 +35,7 @@
   (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
         urakka-id (hae-utajarven-paallystysurakan-id)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
+        vuosi-nyt (pvm/vuosi (pvm/nyt))
         url (tee-url)
         onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
     (with-fake-http
@@ -55,10 +57,10 @@
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Ouluntie"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2019-05-19"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2019-05-21"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) ["2019-05-24"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2020-12-20"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) [(str vuosi-nyt "-05-19")]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) [(str vuosi-nyt "-05-21")]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str vuosi-nyt "-05-24")]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) [(str vuosi-nyt "-12-20")]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5043.95"]))
 
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["22"]))

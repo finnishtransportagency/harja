@@ -59,7 +59,8 @@ VALUES (:summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :s
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee kokonaishintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE kustannussuunnitelma
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                      JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi

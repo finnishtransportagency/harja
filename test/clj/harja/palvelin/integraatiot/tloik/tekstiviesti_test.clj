@@ -62,7 +62,8 @@
         jms-lahettaja (jms/jonolahettaja lokittaja (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+)
         ilmoitus (first (hae-testi-ilmoitukset))
         ilmoitus-id (:ilmoitus-id ilmoitus)
-        yhteyshenkilo (tee-testipaivystys)
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yhteyshenkilo (tee-testipaivystys urakka-id)
         yhteyshenkilo-id (first yhteyshenkilo)
         puhelinnumero (second yhteyshenkilo)]
 

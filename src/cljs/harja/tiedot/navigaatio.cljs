@@ -110,8 +110,10 @@
     (let [tyyppi (if (str/starts-with? (name tyyppi) "vesivayla")
                    :vesivayla
                    tyyppi)]
-      (first (filter #(= tyyppi (:arvo %))
-                     +urakkatyypit+)))))
+      (if (= tyyppi :teiden-hoito)
+        {:nimi "Hoito" :arvo :teiden-hoito}
+        (first (filter #(= tyyppi (:arvo %))
+                       +urakkatyypit+))))))
 
 (defn nayta-urakkatyyppi [tyyppi]
   (when tyyppi
@@ -392,6 +394,8 @@
                                (= v-ur-tyyppi (:tyyppi %))
                                (and (= v-ur-tyyppi :hoito)
                                     (= (:tyyppi %) :teiden-hoito))
+                               (and (= v-ur-tyyppi :teiden-hoito)
+                                    (= (:tyyppi %) :hoito))
                                (and (= v-ur-tyyppi :vesivayla)
                                     (urakka-domain/vesivaylaurakka? %))))
                   (filter #(or

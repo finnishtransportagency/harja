@@ -559,9 +559,11 @@
                ;; Timeoutin lisääminen aiheuttaa
                ;; siinä mielessä harmia, että jms-saikeen täytyy kysyä tältä säikeeltä, onko timeout kerennyt jo tapahuta siinä vaiheessa,
                ;; kun jms-saie olisi valmis käsittelemään tämän viestin.
-               (timeout viestin-kasittely-timeout) (do (async/put! kaskyn-kasittely-jms-saikeelle
-                                                                   :aikakatkaisu)
-                                                       {:kaskytysvirhe :aikakatkaisu})
+               (timeout (if (and (map? kasky)
+                                 (= (first (keys kasky)) :aloita-yhteys))
+                          60000 viestin-kasittely-timeout)) (do (async/put! kaskyn-kasittely-jms-saikeelle
+                                                                            :aikakatkaisu)
+                                                                {:kaskytysvirhe :aikakatkaisu})
                kaskyn-kasittely-kaskytys-saikeelle ([tulos _]
                                                      (case tulos
                                                        :valmis-kasiteltavaksi (do
