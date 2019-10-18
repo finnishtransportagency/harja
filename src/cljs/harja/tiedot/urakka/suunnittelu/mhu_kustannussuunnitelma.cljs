@@ -1402,7 +1402,7 @@
           paivitetyt-tavoitehinnat (map (fn [{:keys [summa hoitokausi] :as yhteensa}]
                                           (if (< hoitokausi kuluva-hoitovuosi)
                                             yhteensa
-                                            (assoc yhteensa :summa (nth summatut-arvot (dec hoitokausi)))))
+                                            (assoc yhteensa :summa (nth summatut-arvot (- hoitokausi kuluva-hoitovuosi)))))
                                         (:tavoitehinnat tavoite-ja-kattohinta))
           ;; Kantaan lähtevä data
           {urakka-id :id} (:urakka @tiedot/yleiset)
