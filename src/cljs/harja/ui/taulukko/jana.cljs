@@ -5,7 +5,8 @@
 (defonce muuta-avain-rivi
          {:id [:janan-id]
           :lapset [:solut]
-          :class [:luokat]})
+          :class [:luokat]
+          :piillotettu? [:piilotettu?]})
 (defonce muuta-avain-rivi-lapsilla
          {:id [:janan-id]
           :lapset [:janat]})

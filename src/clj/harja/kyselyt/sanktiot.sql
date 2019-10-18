@@ -122,7 +122,8 @@ WHERE
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE maksuera
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE tyyppi = 'sakko' AND
       toimenpideinstanssi IN (
         SELECT toimenpideinstanssi
