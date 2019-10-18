@@ -71,10 +71,17 @@ SET urakka = (
 WHERE urakka_sampoid = :urakka_sampoid;
 
 -- name: hae-urakan-toimenpideinstanssi
--- Hakee urakan toimenpideinstanssin urakan ja 3. tason toimenpidekoodin mukaan
-SELECT *
+-- Hakee urakan toimenpideinstanssin urakan ja 3. tason toimenpidekoodin id:n mukaan
+SELECT id
 FROM toimenpideinstanssi
 WHERE urakka = :urakka AND toimenpide = :tp;
+
+-- name: hae-urakan-toimenpideinstanssi-toimenpidekoodilla
+-- Hakee urakan toimenpideinstanssin urakan ja 3. tason toimenpidekoodin koodin mukaan
+SELECT *
+FROM toimenpideinstanssi
+WHERE urakka = :urakka AND toimenpide = (select id from toimenpidekoodi where koodi = :koodi);
+
 
 -- name: hae-hoidon-maksuerattomat-toimenpideistanssit
 SELECT

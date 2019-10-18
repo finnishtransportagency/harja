@@ -61,9 +61,9 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-#_(deftest hae-ilmoituksia
-  (let [parametrit {:alkuaika (pvm/luo-pvm 2016 1 1)
-                    :loppuaika (pvm/luo-pvm 2017 3 1)
+(deftest hae-ilmoituksia
+  (let [parametrit {:alkuaika (pvm/dateksi (pvm/tuntia-sitten 8760))
+                    :loppuaika (pvm/nyt)
                     :urakka nil
                     :sijainti nil
                     :vain-kayttajan-luomat nil}
