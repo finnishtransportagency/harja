@@ -134,7 +134,8 @@
                        ["Tehtävä" "Määrä" "Yksikkö"]
                        [:teksti otsikkorivi
                         :datarivit datarivi]
-                       {:class #{}})))
+                       {:class #{}
+                        :taulukon-paivitys-fn! identity})))
 
 (defn valitaso-filtteri
   [_ app]
