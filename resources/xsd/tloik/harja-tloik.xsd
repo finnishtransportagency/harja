@@ -510,6 +510,7 @@
             <xs:enumeration value="valaistus" />
             <xs:enumeration value="paallystys" />
             <xs:enumeration value="hoito" />
+            <xs:enumeration value="teiden-hoito" />
             <xs:enumeration value="paikkaus" />
             <xs:enumeration value="silta" />
             <xs:enumeration value="tekniset laitteet" />
