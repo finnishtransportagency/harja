@@ -210,7 +210,7 @@ VALUES ((SELECT id
 INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Rovaniemen MHU testiurakka'),
+         WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
         'Kunnossapitopäällikkö',
         (SELECT id
          FROM yhteyshenkilo
@@ -220,7 +220,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Rovaniemen MHU testiurakka'),
+         WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
         'Sillanvalvoja',
         (SELECT id
          FROM yhteyshenkilo
@@ -230,7 +230,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Pellon MHU testiurakka'),
+         WHERE nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'),
         'Kunnossapitopäällikkö',
         (SELECT id
          FROM yhteyshenkilo
@@ -240,7 +240,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Pellon MHU testiurakka'),
+         WHERE nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'),
         'Sillanvalvoja',
         (SELECT id
          FROM yhteyshenkilo
@@ -249,7 +249,7 @@ VALUES ((SELECT id
            sukunimi = 'Ollila'
          LIMIT 1)),((SELECT id
          FROM urakka
-         WHERE nimi = 'Kemin MHU testiurakka'),
+         WHERE nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
         'Kunnossapitopäällikkö',
         (SELECT id
          FROM yhteyshenkilo
@@ -259,7 +259,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Kemin MHU testiurakka'),
+         WHERE nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
         'Sillanvalvoja',
         (SELECT id
          FROM yhteyshenkilo
@@ -269,7 +269,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Ivalon MHU testiurakka'),
+         WHERE nimi = 'Ivalon MHU testiurakka (uusi)'),
         'Kunnossapitopäällikkö',
         (SELECT id
          FROM yhteyshenkilo
@@ -279,7 +279,7 @@ VALUES ((SELECT id
          LIMIT 1)),
          ((SELECT id
          FROM urakka
-         WHERE nimi = 'Ivalon MHU testiurakka'),
+         WHERE nimi = 'Ivalon MHU testiurakka (uusi)'),
         'Sillanvalvoja',
         (SELECT id
          FROM yhteyshenkilo

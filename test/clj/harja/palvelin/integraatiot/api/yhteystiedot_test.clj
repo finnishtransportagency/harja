@@ -7,7 +7,10 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.komponentit.fim :as fim]
             [cheshire.core :as cheshire]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [clj-time
+             [coerce :as tc]
+             [format :as df]]))
 
 (def livi-jarjestelmakayttaja "livi")
 (def urakoitsija-jarjestelmakayttaja "skanska")
@@ -22,7 +25,7 @@
 <Email>erkki@example.com</Email>
 <MobilePhone>0982345</MobilePhone>
 <Company>ELY</Company>
-<Role>1242141-OULU2_ELY_Urakanvalvoja</Role>
+<Role>MHU-TESTI-LAP-ROV_ELY_Urakanvalvoja</Role>
 </member>
 <member>
 <AccountName>LXTESTI</AccountName>
@@ -32,7 +35,7 @@
 <Email>ulla@example.com</Email>
 <MobilePhone>234234</MobilePhone>
 <Company>YIT Rakennus Oy</Company>
-<Role>1242141-OULU2_vastuuhenkilo</Role>
+<Role>MHU-TESTI-LAP-ROV_vastuuhenkilo</Role>
 </member>
 </Members>")
 
@@ -51,12 +54,19 @@
 (defn sisaltaa-roolin? [yhteyshenkilot rooli]
   (some #(= rooli (get-in % [:yhteyshenkilo :rooli])) yhteyshenkilot))
 
-#_(deftest tarkista-yhteystietojen-haku
+(deftest tarkista-yhteystietojen-haku
   (with-fake-http
-    [(str "http://localhost:" portti "/api/urakat/yhteystiedot/1238") :allow
+    [(str "http://localhost:" portti "/api/urakat/yhteystiedot/13371") :allow
      fim-url fim-vastaus]
-    (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/1238" livi-jarjestelmakayttaja portti)
-          odotettu-vastaus "{\"urakka\":{\"elynro\":12,\"alueurakkanro\":\"1238\",\"loppupvm\":\"2019-09-29T21:00:00Z\",\"nimi\":\"Oulun alueurakka 2014-2019\",\"sampoid\":\"1242141-OULU2\",\"alkupvm\":\"2014-09-30T21:00:00Z\",\"elynimi\":\"Pohjois-Pohjanmaa\",\"urakoitsija\":{\"nimi\":\"YIT Rakennus Oy\",\"ytunnus\":\"1565583-5\",\"katuosoite\":\"Panuntie 11, PL 36\",\"postinumero\":\"621  \"},\"yhteyshenkilot\":[{\"yhteyshenkilo\":{\"rooli\":\"ELY urakanvalvoja\",\"nimi\":\"Erkki Elyläinen\",\"puhelinnumero\":\"0982345\",\"email\":\"erkki@example.com\",\"organisaatio\":\"ELY\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Urakan vastuuhenkilö\",\"nimi\":\"Ulla Urakoitsija\",\"puhelinnumero\":\"234234\",\"email\":\"ulla@example.com\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Kunnossapitopäällikkö\",\"nimi\":\"Jouko Kasslin\",\"puhelinnumero\":\"046 248 7808\",\"email\":\"JoukoKasslin@gustr.com\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Sillanvalvoja\",\"nimi\":\"Tiina Frösén\",\"puhelinnumero\":\"042 869 5938\",\"email\":\"TiinaFrosen@teleworm.us\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}}]}}"
+    (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" livi-jarjestelmakayttaja portti)
+          {:keys [alkupvm loppupvm]} (first (q-map "SELECT * FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
+          formaatti "yyyy-MM-dd'T'HH:mm:ss"
+          alkupvm (str (df/unparse (df/formatter formaatti) (tc/from-date alkupvm)) "Z")
+          loppupvm (str (df/unparse (df/formatter formaatti) (tc/from-date loppupvm)) "Z")
+          odotettu-vastaus (str "{\"urakka\":{\"elynro\":14,\"alueurakkanro\":\"13371\",\"loppupvm\":\"" loppupvm
+                                "\",\"nimi\":\"Rovaniemen MHU testiurakka (1. hoitovuosi)\",\"sampoid\":\"MHU-TESTI-LAP-ROV\",\"alkupvm\":\"" alkupvm
+                                "\",\"elynimi\":\"Lappi\",\"urakoitsija\":{\"nimi\":\"YIT Rakennus Oy\",\"ytunnus\":\"1565583-5\",\"katuosoite\":\"Panuntie 11, PL 36\",\"postinumero\":\"621  \"},"
+                                "\"yhteyshenkilot\":[{\"yhteyshenkilo\":{\"rooli\":\"ELY urakanvalvoja\",\"nimi\":\"Erkki Elyläinen\",\"puhelinnumero\":\"0982345\",\"email\":\"erkki@example.com\",\"organisaatio\":\"ELY\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Urakan vastuuhenkilö\",\"nimi\":\"Ulla Urakoitsija\",\"puhelinnumero\":\"234234\",\"email\":\"ulla@example.com\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Kunnossapitopäällikkö\",\"nimi\":\"Åsa Linnasalo\",\"puhelinnumero\":\"044 261 2773\",\"email\":\"AsaLinnasalo@cuvox.de\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Sillanvalvoja\",\"nimi\":\"Vihtori Ollila\",\"puhelinnumero\":\"042 220 6892\",\"email\":\"VihtoriOllila@einrot.com\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}}]}}")
           data (walk/keywordize-keys (cheshire/decode (:body vastaus)))
           yhteyshenkilot (get-in data [:urakka :yhteyshenkilot])]
       (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")
@@ -68,7 +78,7 @@
       (is (sisaltaa-roolin? yhteyshenkilot "Kunnossapitopäällikkö")))))
 
 (deftest tarkista-oikeudet-rajapintaan
-  (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/1238" urakoitsija-jarjestelmakayttaja portti)]
+  (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" urakoitsija-jarjestelmakayttaja portti)]
     (is (= 403 (:status vastaus)) "Urakoitsijan järjestelmätunnuksella ei ole oikeutta palveluun")))
 
 
