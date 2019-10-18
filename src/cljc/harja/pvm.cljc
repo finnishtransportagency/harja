@@ -258,6 +258,15 @@
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
         (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
+(defn tiukin-aikavali
+ [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
+ (let [alkupvm (if (jalkeen? alkupvm v-alkupvm)
+                 alkupvm
+                 v-alkupvm)
+       loppupvm (if (ennen? loppupvm v-loppupvm)
+                  loppupvm
+                  v-loppupvm)]
+   [alkupvm loppupvm]))
 
 #?(:clj
    (defn tanaan? [pvm]
