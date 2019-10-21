@@ -5,7 +5,7 @@ describe('Päänäkymien avaamiset', function () {
 
     it("Urakkavalinta listan kautta toimii", function () {
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
-        cy.contains('.haku-lista-item', 'Oulu').click()
-        cy.contains('Oulun alueurakka')
+        cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
+        cy.contains('Aktiivinen Oulu Testi')
     })
 })
