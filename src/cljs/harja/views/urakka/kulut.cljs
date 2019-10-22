@@ -83,14 +83,14 @@
                                            [:label "Toimenpide"]
                                            [yleiset/livi-pudotusvalikko {:valinta    tehtava
                                                                          :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtava] %)
-                                                                         :format-fn  #(str %)}
+                                                                         :format-fn  #(get % :toimenpide)}
                                             toimenpiteet]]]
                                          [:div.row
                                           [:div.col-xs-12.col-sm-6.label-ja-alasveto
                                            [:label "Tehtäväryhmä"]
                                            [yleiset/livi-pudotusvalikko {:valinta    tehtavaryhma
                                                                          :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtavaryhma] %)
-                                                                         :format-fn  #(str %)}
+                                                                         :format-fn  #(get % :tehtavaryhma)}
                                             tehtavaryhmat]]
                                           [:div.col-xs-12.col-sm-6
                                            [:label "Ilmoita"]]]

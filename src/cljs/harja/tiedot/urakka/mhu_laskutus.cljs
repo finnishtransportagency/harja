@@ -13,15 +13,24 @@
 (defrecord KutsuOnnistui [tulos])
 (defrecord KutsuEpaonnistui [tulos])
 
+(def instanssi->toimenpide {52 :talvihoito
+                            53 :liikenneympariston-hoito
+                            55 :paallystepaikkaukset
+                            56 :mhu-ylläpito
+                            57 :mhu-korvausinvestointi})
+
 (extend-protocol tuck/Event
   KutsuOnnistui
-  (process-event [{{:keys [kiinteahintaiset-tyot johto-ja-hallintokorvaukset kustannusarvioidut-tyot] :as tulos} :tulos} app]
+  (process-event [{tulos :tulos} app]
     (loki/log "Tulos  " tulos)
-    (let [toimenpiteet (concat (keys (group-by :toimenpide kiinteahintaiset-tyot)) (keys (group-by :toimenpide-avain kustannusarvioidut-tyot)))
-          tehtavaryhmat [:johto-ja-hallintokorvaus :erilliskustannukset]]
+    (let [kasitelty (set (flatten (mapv (fn [{:keys [t2_koodi t2_nimi t2_id t3_id t3_nimi t3_koodi]}] (vector {:toimenpide t2_nimi :koodi t2_koodi :id t2_id}
+                                                                                                                 {:tehtavaryhma t3_nimi :koodi t3_koodi :id t3_id :emo t2_id})) tulos)))
+          toimenpiteet (filterv #(not (nil? (:toimenpide %))) kasitelty)
+          tehtavaryhmat (into [{:tehtavaryhma :johto-ja-hallintokorvaus} {:tehtavaryhma :erilliskustannukset}] (filterv #(not (nil? (:tehtavaryhma %))) kasitelty))]
       (assoc app :kustannussuunnitelma tulos
                  :toimenpiteet toimenpiteet
                  :tehtavaryhmat tehtavaryhmat
+                 :instanssilla (group-by :toimenpideinstanssi kiinteahintaiset-tyot)
                 :kiinteahintaiset-tyot (group-by :toimenpide kiinteahintaiset-tyot)
                 :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset
                 :kustannusarvioidut-tyot (group-by :toimenpide-avain kustannusarvioidut-tyot))))
@@ -32,9 +41,24 @@
   HaeKustannussuunnitelma
   (process-event
     [{:keys [urakka]} app]
+    #_(tuck-apurit/post! :urakan-toimenpiteet-ja-tehtavat
+                       urakka
+                       {:onnistui           ->KutsuEpaonnistui
+                        :epaonnistui        ->KutsuEpaonnistui
+                        :paasta-virhe-lapi? true})
+    (tuck-apurit/post! :urakan-toimenpiteet
+                       urakka
+                       {:onnistui           ->KutsuEpaonnistui
+                        :epaonnistui        ->KutsuEpaonnistui
+                        :paasta-virhe-lapi? true})
+    (tuck-apurit/post! :urakan-tehtavat
+                        urakka
+                       {:onnistui           ->KutsuOnnistui
+                        :epaonnistui        ->KutsuEpaonnistui
+                        :paasta-virhe-lapi? true})
     (tuck-apurit/post! :budjetoidut-tyot
                        {:urakka-id urakka}
-                       {:onnistui           ->KutsuOnnistui
+                       {:onnistui           ->KutsuEpäonnistui
                         :epaonnistui        ->KutsuEpaonnistui
                         :paasta-virhe-lapi? true})
     app)
