@@ -91,24 +91,6 @@ FROM maksuera m
        JOIN yksikkohintainen_tyo yt on tpi.id = yt.toimenpideinstanssi
 WHERE m.numero = :maksuera GROUP BY yt.vuosi;
 
--- name: hae-teiden-hoidon-kustannussuunnitelman-akillisten-hoitotoiden-summat
-SELECT
-  ka.vuosi as vuosi,
-  Sum(COALESCE(ka.summa, 0)) AS summa
-FROM maksuera m
-       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi AND ka.tyyppi = 'akillinen-hoitotyo'
-WHERE m.numero = :maksuera GROUP BY ka.vuosi;
-
--- name: hae-teiden-hoidon-kustannussuunnitelman-vahinkojen-korjausten-summat
-SELECT
-  ka.vuosi as vuosi,
-  Sum(COALESCE(ka.summa, 0)) AS summa
-FROM maksuera m
-       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi AND ka.tyyppi = 'vahinkojen-korjaukset'
-WHERE m.numero = :maksuera GROUP BY ka.vuosi;
-
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
   Extract(YEAR FROM yht.alkupvm) AS vuosi,
