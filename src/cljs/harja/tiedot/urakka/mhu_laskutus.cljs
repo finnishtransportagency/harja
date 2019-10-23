@@ -23,17 +23,13 @@
   KutsuOnnistui
   (process-event [{tulos :tulos} app]
     (loki/log "Tulos  " tulos)
-    (let [kasitelty (set (flatten (mapv (fn [{:keys [t2_koodi t2_nimi t2_id t3_id t3_nimi t3_koodi]}] (vector {:toimenpide t2_nimi :koodi t2_koodi :id t2_id}
-                                                                                                                 {:tehtavaryhma t3_nimi :koodi t3_koodi :id t3_id :emo t2_id})) tulos)))
+    (let [kasitelty (set (flatten (mapv (fn [{:keys [t2_koodi t2_nimi t3_id t3_nimi t3_koodi t3_emo]}] (vector {:toimenpide t2_nimi :koodi t2_koodi :id t3_emo}
+                                                                                                                 {:tehtavaryhma t3_nimi :koodi t3_koodi :id t3_id :emo t3_emo})) tulos)))
           toimenpiteet (filterv #(not (nil? (:toimenpide %))) kasitelty)
           tehtavaryhmat (into [{:tehtavaryhma :johto-ja-hallintokorvaus} {:tehtavaryhma :erilliskustannukset}] (filterv #(not (nil? (:tehtavaryhma %))) kasitelty))]
       (assoc app :kustannussuunnitelma tulos
                  :toimenpiteet toimenpiteet
-                 :tehtavaryhmat tehtavaryhmat
-                 :instanssilla (group-by :toimenpideinstanssi kiinteahintaiset-tyot)
-                :kiinteahintaiset-tyot (group-by :toimenpide kiinteahintaiset-tyot)
-                :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset
-                :kustannusarvioidut-tyot (group-by :toimenpide-avain kustannusarvioidut-tyot))))
+                 :tehtavaryhmat tehtavaryhmat)))
   KutsuEpaonnistui
   (process-event [{:keys [tulos]} app]
     (loki/log "tai ulos " tulos)
@@ -41,22 +37,12 @@
   HaeKustannussuunnitelma
   (process-event
     [{:keys [urakka]} app]
-    #_(tuck-apurit/post! :urakan-toimenpiteet-ja-tehtavat
-                       urakka
-                       {:onnistui           ->KutsuEpaonnistui
-                        :epaonnistui        ->KutsuEpaonnistui
-                        :paasta-virhe-lapi? true})
     (tuck-apurit/post! :urakan-toimenpiteet
                        urakka
-                       {:onnistui           ->KutsuEpaonnistui
-                        :epaonnistui        ->KutsuEpaonnistui
-                        :paasta-virhe-lapi? true})
-    (tuck-apurit/post! :urakan-tehtavat
-                        urakka
                        {:onnistui           ->KutsuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
                         :paasta-virhe-lapi? true})
-    (tuck-apurit/post! :budjetoidut-tyot
+    #_(tuck-apurit/post! :budjetoidut-tyot
                        {:urakka-id urakka}
                        {:onnistui           ->KutsuEpäonnistui
                         :epaonnistui        ->KutsuEpaonnistui

@@ -32,6 +32,70 @@
 ;
 ;
 
+(defn alihankkija-modaali
+  [paivitys-fn {:keys [nimi y-tunnus] :as alihankkija}]
+  [:div
+   [:h1 "Lisää alihankkija"]
+   [:div
+    [:label "Yrityksen nimi"
+     [:input {:type      :text
+              :value     nimi
+              :on-change #(paivitys-fn (assoc alihankkija :nimi (-> % .-target .-value)))}]]]
+   [:div
+    [:label "Y-tunnus"
+     [:input {:type      :text
+              :value     y-tunnus
+              :on-change #(paivitys-fn (assoc alihankkija :y-tunnus (-> % .-target .-value)))}]]]])
+
+(defn- sijainti-modaali
+  [paivitys-fn {:keys [tie tie-patka-piste tieosa-alku etaisyys-alku tieosa-loppu etaisyys-loppu] :as sijainti}]
+  [:div
+   [:h1 "Lisää sijainti"]
+   [:div
+    [:label "Tie *"]
+    [:input {:type      :text
+             :value     tie
+             :on-change #(paivitys-fn (assoc sijainti :tie (-> % .-target .-value)))}]]
+   [:div
+    [:input {:type :radio
+             :value :tie
+             :name "tie-patka-piste"
+             :on-click #(paivitys-fn (assoc sijainti :tie-patka-piste (-> % .-target .-value)))}]
+    [:label "Valitse koko tie"]
+    [:input {:type :radio
+             :value :patka
+             :name "tie-patka-piste"
+             :on-click #(paivitys-fn (assoc sijainti :tie-patka-piste (-> % .-target .-value)))}]
+    [:label "Valitse tietty tienpätkä"]
+    [:input {:type :radio
+             :value :piste
+             :name "tie-patka-piste"
+             :on-click #(paivitys-fn (assoc sijainti :tie-patka-piste (-> % .-target .-value)))}]
+    [:label "Valitse piste"]]
+   [:div
+    [:label.col-xs-2 "Tieosa, alku"
+     [:input.form-control {:type      :text
+              :value     tieosa-alku
+              :on-change #(paivitys-fn (assoc sijainti :tieosa-alku (-> % .-target .-value)))}]]
+    [:label.col-xs-2 "Aloitusetäisyys, m"
+     [:input.form-control {:type      :text
+              :value     etaisyys-alku
+              :on-change #(paivitys-fn (assoc sijainti :etaisyys-alku (-> % .-target .-value)))}]]
+    [:span.col-xs-2 "->"]
+    [:label.col-xs-2 "Tieosa, loppu"
+     [:input.form-control {:type      :text
+              :value     tieosa-loppu
+              :on-change #(paivitys-fn (assoc sijainti :tieosa-loppu (-> % .-target .-value)))}]]
+    [:label.col-xs-2 "Lopetusetäisyys, m"
+     [:input.form-control {:type      :text
+              :value     etaisyys-loppu
+              :on-change #(paivitys-fn (assoc sijainti :etaisyys-loppu (-> % .-target .-value)))}]]]
+   [:div
+    [:input {:type :button
+             :value "Tallenna"}]
+    [:input {:type :button
+             :value "Sulje"}]]])
+
 (defn- validoi
   [pakolliset objekti]
   (some #(not (get % pakolliset)) (keys objekti)))
@@ -39,14 +103,14 @@
 (defn- kulujen-syottolomake
   [e! {:keys [toimenpiteet tehtavaryhmat] :as app}]
   (let [lomakkeen-tila (reagent.core/atom {:validi?               false
+                                           :nayta nil
                                            :tehtavat-lkm          1
                                            :tehtavat              [{:tehtava      nil
                                                                     :tehtavaryhma nil
                                                                     :sijainti     nil
                                                                     :maara        nil}]
                                            :koontilaskun-kuukausi nil
-                                           :koontilaskun-era      nil
-                                           })
+                                           :koontilaskun-era      nil})
         lisaa-tehtava (fn [m]
                         (-> m
                             (update :tehtavat-lkm inc)
@@ -64,7 +128,7 @@
                                    assoc)
                                  polku arvo))))]
     (fn [e! {:keys [syottomoodi]}]
-      (let [{:keys [tehtavat tehtavat-lkm validi? koontilaskun-kuukausi koontilaskun-era]} @lomakkeen-tila
+      (let [{:keys [tehtavat tehtavat-lkm validi? koontilaskun-kuukausi koontilaskun-era alihankkija]} @lomakkeen-tila
             validointi-fn (partial validoi #{:maara :koontilaskun-kuukausi})
             kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu]
             erat [:era-1 :era-2 :era-3 :muu]]
@@ -76,15 +140,8 @@
                    :on-change #(swap! lomakkeen-tila lisaa-tehtava)}]
           [:label "Kulut kohdistuvat useammalle eri tehtävälle"]]
          (into [:div] (keep-indexed (fn [indeksi t]
-                                      (let [{:keys [tehtava tehtavaryhma sijainti maara]} t]
+                                      (let [{:keys [tehtavaryhma sijainti maara]} t]
                                         [:div.lomake-rivi
-                                         [:div.row
-                                          [:div.col-xs-12.col-sm-6.label-ja-alasveto
-                                           [:label "Toimenpide"]
-                                           [yleiset/livi-pudotusvalikko {:valinta    tehtava
-                                                                         :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtava] %)
-                                                                         :format-fn  #(get % :toimenpide)}
-                                            toimenpiteet]]]
                                          [:div.row
                                           [:div.col-xs-12.col-sm-6.label-ja-alasveto
                                            [:label "Tehtäväryhmä"]
@@ -93,7 +150,8 @@
                                                                          :format-fn  #(get % :tehtavaryhma)}
                                             tehtavaryhmat]]
                                           [:div.col-xs-12.col-sm-6
-                                           [:label "Ilmoita"]]]
+                                           [:label "Ilmoita sijainti"]
+                                           [sijainti-modaali (partial paivitys-fn [:tehtavat indeksi :sijainti]) sijainti]]]
 
                                          (when (> tehtavat-lkm 1)
                                            [:div.row
@@ -115,7 +173,7 @@
                                          :format-fn  #(str "- " %)}
             kuukaudet]]
           [:div.col-xs-12.col-sm-6.label-ja-alasveto
-           [:label "Suorittaja"]
+           [:label "Alihankkija"]
            [yleiset/livi-pudotusvalikko {:valinta    :eka
                                          :valitse-fn #(paivitys-fn :suorittaja %)
                                          :format-fn  #(str "- " %)}
@@ -129,8 +187,10 @@
             erat]]
           [:div.col-xs-12.col-sm-6
            [:label "Suorittajan y-tunnus"]
+           [alihankkija-modaali (partial paivitys-fn [:alihankkija]) alihankkija]
            [:input.form-control
             {:type      :text
+             :value  (:y-tunnus alihankkija)
              :on-change #(paivitys-fn :suorittajan-ytunnus (-> % .-target .-value))}]]]
          [:div.row
           [:div.col-xs-12.col-sm-6
@@ -156,8 +216,8 @@
              [:input.form-control
               {:type      :text
                :on-change #(paivitys-fn [:tehtavat 0 :maara] (-> % .-target .-value js/parseFloat))}]]])
-         [:input {:type  :button
-                  :value "Tallenna"
+         [:input {:type     :button
+                  :value    "Tallenna"
                   :on-click #(e! (tiedot/->TallennaKulu @lomakkeen-tila))}]
          [:input {:type     :button
                   :value    "Peruuta"
