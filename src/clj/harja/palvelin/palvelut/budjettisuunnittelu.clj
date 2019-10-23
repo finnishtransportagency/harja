@@ -110,7 +110,7 @@
                                    indeksit-vuosittain)
           urakan-indeksit (reduce (fn [indeksit [vuosi data]]
                                     (conj indeksit
-                                          {:hoitokausi vuosi
+                                          {:vuosi (inc vuosi) ; tämän vuoden indeksi lasketaan edellisen vuoden arvoista
                                            :arvo (pyorista (/ (reduce (fn [summa {:keys [arvo kuukausi]}]
                                                                         (if (contains? indeksin-lasku-kk kuukausi)
                                                                           (+ summa arvo)
@@ -123,12 +123,10 @@
       (if (= 5 urakan-indeksien-maara)
         (into [] urakan-indeksit)
         (mapv (fn [index]
-                (if (> (inc index) urakan-indeksien-maara)
-                  (update (nth urakan-indeksit (dec urakan-indeksien-maara))
-                          :hoitokausi
-                          (fn [vuosi]
-                            (+ vuosi (inc (- index urakan-indeksien-maara)))))
-                  (nth urakan-indeksit index)))
+                (let [indeksi (if (> (inc index) urakan-indeksien-maara)
+                                (nth urakan-indeksit (dec urakan-indeksien-maara))
+                                (nth urakan-indeksit index))]
+                  (assoc indeksi :hoitokausi (inc index))))
               (range 0 5))))))
 
 (defn tallenna-urakan-tavoite

@@ -47,7 +47,7 @@
 (s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
                                :kind vector?))
 
-(s/def ::indeksi (s/keys :req-un [::hoitokausi ::arvo]))
+(s/def ::indeksi (s/keys :req-un [::hoitokausi ::vuosi ::arvo]))
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)

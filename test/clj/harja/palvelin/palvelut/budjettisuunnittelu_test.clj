@@ -205,17 +205,17 @@
         ivalon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
         pellon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
     (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
-    (is (= rovaniemen-indeksit [{:hoitokausi 2018, :arvo 130.833333}
-                                {:hoitokausi 2019, :arvo 130.833333}
-                                {:hoitokausi 2020, :arvo 130.833333}
-                                {:hoitokausi 2021, :arvo 130.833333}
-                                {:hoitokausi 2022, :arvo 130.833333}])
+    (is (= rovaniemen-indeksit [{:hoitokausi 1 :vuosi 2019, :arvo 130.833333}
+                                {:hoitokausi 2 :vuosi 2019, :arvo 130.833333}
+                                {:hoitokausi 3 :vuosi 2019, :arvo 130.833333}
+                                {:hoitokausi 4 :vuosi 2019, :arvo 130.833333}
+                                {:hoitokausi 5 :vuosi 2019, :arvo 130.833333}])
         "Indeksilukemat eivät ole oikein Rovaniemen testiurakalle")
-    (is (= pellon-indeksit [{:hoitokausi 2016, :arvo 110.833333}
-                            {:hoitokausi 2017, :arvo 120.833333}
-                            {:hoitokausi 2018, :arvo 130.833333}
-                            {:hoitokausi 2019, :arvo 130.833333}
-                            {:hoitokausi 2020, :arvo 130.833333}])
+    (is (= pellon-indeksit [{:hoitokausi 1 :vuosi 2017, :arvo 110.833333}
+                            {:hoitokausi 2 :vuosi 2018, :arvo 120.833333}
+                            {:hoitokausi 3 :vuosi 2019, :arvo 130.833333}
+                            {:hoitokausi 4 :vuosi 2019, :arvo 130.833333}
+                            {:hoitokausi 5 :vuosi 2019, :arvo 130.833333}])
         "Indeksilukemat eivät ole oikein Pellon testiurakalle")))
 
 (deftest tallenna-kiinteahintaiset-tyot
