@@ -16,7 +16,7 @@
   (:import (java.util UUID)))
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
-(def maksueratyypit-maanteidenhoidon-urakoissa ["kokonaishintainen" "akillinen-hoitotyo" "muu"]) ;; MHU = maanteiden hoidon urakka = teiden-hoito -urakkatyyppi = uudenlainen hoidon urakka = kaikki uudet hoitourakat lokakuusta 2019 lähtien
+(def maksueratyypit-maanteidenhoidon-urakoissa ["kokonaishintainen"]) ;; MHU = maanteiden hoidon urakka = teiden-hoito -urakkatyyppi = uudenlainen hoidon urakka = kaikki uudet hoitourakat lokakuusta 2019 lähtien
 
 (defn hae-maksuera [db numero summat]
   (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
