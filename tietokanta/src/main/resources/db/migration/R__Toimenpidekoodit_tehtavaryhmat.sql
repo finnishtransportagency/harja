@@ -718,7 +718,7 @@ UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nim
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'AVO-OJITUS (SORATIET)' and tyyppi = 'alataso') WHERE
   tehtavaryhma IS NOT NULL and nimi IN ('Kalliokynsien louhinta ojituksen yhteydessä');
 
----- UPDATE tehtavaryhma set nimi = concat('VOID ' || nimi) where nimi in ('Alataso Ojat');
+---- UPDATE tehtavaryhma set nimi = concat('VOID ' || nimi) where nimi in ('Alataso OÄkillinen hoitotyöjat');
 
 
 
