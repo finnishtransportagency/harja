@@ -12,11 +12,10 @@
             [harja.kyselyt
              [budjettisuunnittelu :as q]
              [urakat :as urakat-q]
-             [sopimukset :as sopimus-q]
              [kiinteahintaiset-tyot :as kiin-q]
              [kustannusarvioidut-tyot :as ka-q]
-             [kokonaishintaiset-tyot :as kok-q]
-             [toimenpideinstanssit :as tpi-q]]
+             [toimenpideinstanssit :as tpi-q]
+             [indeksit :as i-q]]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]]
@@ -24,7 +23,8 @@
              [oikeudet :as oikeudet]
              [budjettisuunnittelu :as bs]
              [toimenpidekoodi :as tpk]
-             [tehtavaryhma :as tr]]
+             [tehtavaryhma :as tr]
+             [urakka :as urakka]]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
 (defn- key-from-val [m v]
@@ -77,6 +77,59 @@
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
+
+(defn hae-urakan-indeksit
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
+          indeksit (map (fn [indeksi]
+                          (update indeksi :arvo float))
+                        (i-q/hae-indeksi db "MAKU 2015"))
+          indeksit-vuosittain (group-by :vuosi indeksit)
+          indeksin-lasku-kk #{9 10 11}
+          {::urakka/keys [alkupvm loppupvm]} (first (fetch db ::urakka/urakka
+                                                           #{::urakka/alkupvm ::urakka/loppupvm}
+                                                           {::urakka/id urakka-id}))
+          urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+          urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+          kuluvan-hoitokauden-vuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
+
+          indeksit-urakan-aikana (eduction
+                                   (filter (fn [[vuosi _]]
+                                                  (>= vuosi (dec urakan-alkuvuosi))))
+                                   (remove (fn [[vuosi _]]
+                                             (>= vuosi (dec urakan-loppuvuosi))))
+                                   (remove (fn [[vuosi _]]
+                                             ;; Otetaan kuluvasta hoitovuodesta muodostuva indeksi pois
+                                             (= vuosi kuluvan-hoitokauden-vuosi)))
+                                   (filter (fn [[_ data]]
+                                             ;; Otetaan epätäydellinen indeksidata pois
+                                             (= 3 (count (filter #(contains? indeksin-lasku-kk (:kuukausi %))
+                                                                 data)))))
+                                   indeksit-vuosittain)
+          urakan-indeksit (reduce (fn [indeksit [vuosi data]]
+                                    (conj indeksit
+                                          {:hoitokausi vuosi
+                                           :arvo (pyorista (/ (reduce (fn [summa {:keys [arvo kuukausi]}]
+                                                                        (if (contains? indeksin-lasku-kk kuukausi)
+                                                                          (+ summa arvo)
+                                                                          summa))
+                                                                      0 data)
+                                                              (count indeksin-lasku-kk))
+                                                           6)}))
+                                  [] indeksit-urakan-aikana)
+          urakan-indeksien-maara (count urakan-indeksit)]
+      (if (= 5 urakan-indeksien-maara)
+        (into [] urakan-indeksit)
+        (mapv (fn [index]
+                (if (> (inc index) urakan-indeksien-maara)
+                  (update (nth urakan-indeksit (dec urakan-indeksien-maara))
+                          :hoitokausi
+                          (fn [vuosi]
+                            (+ vuosi (inc (- index urakan-indeksien-maara)))))
+                  (nth urakan-indeksit index)))
+              (range 0 5))))))
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.
@@ -365,6 +418,11 @@
             :budjettitavoite (fn [user tiedot]
                                (hae-urakan-tavoite db user tiedot)))
           (julkaise-palvelu
+            :budjettisuunnittelun-indeksit (fn [user tiedot]
+                                             (hae-urakan-indeksit db user tiedot))
+            {:kysely-spec ::bs-p/budjettisuunnittelun-indeksit-kysely
+             :vastaus-spec ::bs-p/budjettisuunnittelun-indeksit-vastaus})
+          (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
                                         (tallenna-urakan-tavoite db user tiedot))
             {:kysely-spec ::bs-p/tallenna-budjettitavoite-kysely
@@ -394,6 +452,7 @@
     (poista-palvelut (:http-palvelin this)
                      :budjetoidut-tyot
                      :budjettitavoite
+                     :budjettisuunnittelun-indeksit
                      :tallenna-budjettitavoite
                      :tallenna-kiinteahintaiset-tyot
                      :tallenna-johto-ja-hallintokorvaukset

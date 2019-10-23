@@ -194,6 +194,30 @@
                                                  (range 1 6)))
                                    (into #{} (keys (group-by (juxt :hoitokausi :maksukausi) tiedot)))))))))))
 
+(deftest indeksien-haku
+  (let [rovaniemi-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+        ivalo-urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        pellon-urakka-id (hae-pellon-maanteiden-hoitourakan-id)
+
+        db (:db jarjestelma)
+
+        rovaniemen-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
+        ivalon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
+        pellon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
+    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
+    (is (= rovaniemen-indeksit [{:hoitokausi 2018, :arvo 130.833333}
+                                {:hoitokausi 2019, :arvo 130.833333}
+                                {:hoitokausi 2020, :arvo 130.833333}
+                                {:hoitokausi 2021, :arvo 130.833333}
+                                {:hoitokausi 2022, :arvo 130.833333}])
+        "Indeksilukemat eivät ole oikein Rovaniemen testiurakalle")
+    (is (= pellon-indeksit [{:hoitokausi 2016, :arvo 110.833333}
+                            {:hoitokausi 2017, :arvo 120.833333}
+                            {:hoitokausi 2018, :arvo 130.833333}
+                            {:hoitokausi 2019, :arvo 130.833333}
+                            {:hoitokausi 2020, :arvo 130.833333}])
+        "Indeksilukemat eivät ole oikein Pellon testiurakalle")))
+
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
         tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id)
@@ -587,6 +611,11 @@
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
     (testing "budjetoidut-tyot kutsun oikeustarkistus"
       (is (= (try+ (bs/hae-urakan-budjetoidut-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "hae-urakan-indeksit"
+      (is (= (try+ (bs/hae-urakan-indeksit (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                    (catch harja.domain.roolit.EiOikeutta eo#
                      :ei-oikeutta-virhe))
              :ei-oikeutta-virhe)))

@@ -136,6 +136,9 @@
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
+(defrecord HaeIndeksit [])
+(defrecord HaeIndeksitOnnistui [vastaus])
+(defrecord HaeIndeksitEpaonnistui [vastaus])
 (defrecord Oikeudet [])
 (defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
@@ -596,6 +599,21 @@
   Hoitokausi
   (process-event [_ app]
     (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))
+  HaeIndeksit
+  (process-event [_ app]
+    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
+      (tuck-apurit/post! app :budjettisuunnittelun-indeksit
+                         {:urakka-id urakka-id}
+                         {:onnistui ->HaeIndeksitOnnistui
+                          :epaonnistui ->HaeIndeksitEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  HaeIndeksitOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :indeksit vastaus))
+  HaeIndeksitEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Indeksien haku epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
   Oikeudet
   (process-event [_ app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)

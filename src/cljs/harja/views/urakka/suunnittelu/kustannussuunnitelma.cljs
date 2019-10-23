@@ -1803,6 +1803,7 @@
   (komp/luo
     (komp/piirretty (fn [_]
                       (e! (t/->Hoitokausi))
+                      (e! (t/->HaeIndeksit))
                       (e! (t/->Oikeudet))
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))

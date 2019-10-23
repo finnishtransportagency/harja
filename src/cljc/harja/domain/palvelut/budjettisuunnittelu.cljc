@@ -37,6 +37,7 @@
 (s/def ::tallennettava-asia tallennettava-asia)
 (s/def ::aika (s/keys :req-un [::vuosi]
                       :opt-un [::kuukausi]))
+(s/def ::arvo ::positive-number?)
 
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
@@ -45,6 +46,8 @@
 
 (s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
                                :kind vector?))
+
+(s/def ::indeksi (s/keys :req-un [::hoitokausi ::arvo]))
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
@@ -57,3 +60,6 @@
 
 (s/def ::tallenna-budjettitavoite-kysely (s/keys :req-un [::urakka-id ::tavoitteet]))
 (s/def ::tallenna-budjettitavoite-vastaus any?)
+
+(s/def ::budjettisuunnittelun-indeksit-kysely (s/keys :req-un [::urakka-id]))
+(s/def ::budjettisuunnittelun-indeksit-vastaus (s/coll-of ::indeksi :count 5))
