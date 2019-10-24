@@ -47,13 +47,13 @@
 
   (let [cnt (atom 1)
         tulos (atom [])
-        toimenpiteet (atom #{})
+        ;toimenpiteet (atom #{})
         tehtavahierarkia (sort-by first (group-by :otsikko hierarkia))] ;; Ryhmitelty hierarkia sisältää otsikot (first) ja niiden alle kuuluvat tehtävärivit (second)
     (doseq [rivi tehtavahierarkia]
       (let [emo (Long/valueOf @cnt)
             otsikko (first rivi)
             tehtavalista (second rivi)
-            toimenpide (-> otsikko
+            #_toimenpide #_(-> otsikko
                            (clojure.string/split #" " 2)
                            (second)
                            (clojure.string/replace " " "_")
@@ -61,15 +61,16 @@
                            (clojure.string/replace "Ö" "O")
                            (keyword))]
         ;; TODO: Muodosta otsikkotyyppinen rivi
-        (swap! toimenpiteet conj {:id   toimenpide
+        #_(swap! toimenpiteet conj {:id   toimenpide
                                   :nimi (-> otsikko
                                             (clojure.string/split #" " 2)
                                             (second))})
-        (swap! tulos conj {:id @cnt
+        (swap! tulos conj {:id                 @cnt
                            :tehtavaryhmatyyppi "otsikko"
-                           :nimi otsikko
-                           :piillotettu? false
-                           :toimenpide toimenpide})
+                           :nimi               otsikko
+                           :piillotettu?       false
+                           ;:toimenpide toimenpide
+                           })
         (doseq [{:keys [tehtava-id tehtava maara yksikko hoitokauden-alkuvuosi urakka] :as teht} tehtavalista]
           (swap! cnt + 1)
           (swap! tulos conj {:id                 @cnt
@@ -84,8 +85,9 @@
                              :piillotettu?       false})
           ;; TODO: Muodosta tehtävätyyppinen rivi
          #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false :urakka}" urakka " :hoitikausi " hoitokauden-alkuvuosi))))
-    (reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
-                                :piillotettu? false)) @tulos @toimenpiteet)))
+    #_(reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
+                                :piillotettu? false)) @tulos @toimenpiteet)
+    @tulos))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."

@@ -13,7 +13,8 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.loki :as loki])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn sarakkeiden-leveys [sarake]
@@ -55,17 +56,22 @@
                                          #(p/aseta-arvo %
                                                         :id :tehtava-maara
                                                         :arvo "Määrä"
-                                                        :class #{(sarakkeiden-leveys :maara)})
+                                                        :class #{(sarakkeiden-leveys :maara-input)})
                                          #(p/aseta-arvo %
                                                         :id :tehtava-yksikko
                                                         :arvo "Yksikkö"
-                                                        :class #{(sarakkeiden-leveys :maara)})))
-      ))
+                                                        :class #{(sarakkeiden-leveys :maara-yksikko)})))))
 
 
 (defn luo-tehtava-taulukko
   [e! tehtavat-ja-maaraluettelo]
   (let [polku-taulukkoon [:tehtavat-taulukko]
+        validi? (fn [arvo tyyppi]
+                  (loki/log "Tsekkaan tilanteen" (str arvo) tyyppi)
+                  (let [validius (case tyyppi
+                                   :numero (re-matches #"\d+(?:\.?\d+)?" (str arvo)))]
+                    (loki/log "Tilanne on " (not (nil? validius)))
+                    (not (nil? validius))))
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
         syottorivi (fn [rivi]
@@ -82,16 +88,19 @@
                                                                     #(p/aseta-arvo %
                                                                                    :id (keyword (str id "-maara"))
                                                                                    :arvo maara
-                                                                                   :class #{(sarakkeiden-leveys :maara-input) "input-default"}
+                                                                                   :class #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? maara :numero) "" "ei-validi")}
                                                                                    :on-blur (fn [arvo]
-                                                                                              (e! (t/->TallennaTehtavamaara
-                                                                                                    {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                                                                                                     :tehtava-id tehtava-id
-                                                                                                     :maara (-> arvo (.. -target -value))})))
+                                                                                              (let [arvo (-> arvo (.. -target -value))]
+                                                                                                (when (validi? arvo :numero)
+                                                                                                 (e! (t/->TallennaTehtavamaara
+                                                                                                       {:urakka-id  (-> @tila/tila :yleiset :urakka :id)
+                                                                                                        :tehtava-id tehtava-id
+                                                                                                        :maara      arvo})))))
                                                                                    :on-change (fn [arvo]
                                                                                                 (e!
                                                                                                   (t/->PaivitaMaara osa/*this*
-                                                                                                                    (-> arvo (.. -target -value))))))
+                                                                                                                    (-> arvo (.. -target -value))
+                                                                                                                    #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")} ))))
                                                                     #(p/aseta-arvo %
                                                                                    :id :tehtava-yksikko
                                                                                    :arvo (or yksikko "")
@@ -121,7 +130,7 @@
                                                                    #(-> % (p/aseta-arvo
                                                                             :id :tehtava-maara
                                                                             :class #{(sarakkeiden-leveys :maara)})
-                                                                        (assoc :komponentti (fn [_ {:keys [teksti]} _] (yleiset/ajax-loader teksti))
+                                                                        (assoc :komponentti (fn [_ {:keys [teksti]} _] (yleiset/ajax-loader teksti {:luokka "col-xs-12 keskita"}))
                                                                                :komponentin-argumentit {:teksti "Haetaan tehtäviä"}))
                                                                    #(p/aseta-arvo %
                                                                                   :id :tehtava-yksikko
@@ -142,10 +151,9 @@
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)]
     (fn [e! {:keys [tehtava-ja-maaraluettelo valinnat] :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
-            valitasot (filter #(and
-                                 (= (get-in valinnat [:toimenpide :id]) (:toimenpide %))
+            toimenpiteet (filter #(and
+                                 #_(= (get-in valinnat [:toimenpide :id]) (:toimenpide %))
                                  (= "otsikko" (:tehtavaryhmatyyppi %))) tehtava-ja-maaraluettelo)
-            ylatasot (filter #(= "toimenpide" (:tehtavaryhmatyyppi %)) tehtava-ja-maaraluettelo)
             hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
             disabloitu-alasveto? (fn [koll] (or (:noudetaan valinnat)
                                                 (= 0 (count koll))))]
@@ -153,18 +161,11 @@
         [:div
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Toimenpide"]
-          [yleiset/livi-pudotusvalikko {:valinta (:toimenpide valinnat)
-                                        :valitse-fn #(e! (t/->ValitseTaso % :ylataso))
-                                        :format-fn #(:nimi %)
-                                        :disabled (disabloitu-alasveto? ylatasot)}
-           ylatasot]]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Välitaso"]
           [yleiset/livi-pudotusvalikko {:valinta (:valitaso valinnat)
                                         :valitse-fn #(e! (t/->ValitseTaso % :valitaso))
                                         :format-fn #(:nimi %)
-                                        :disabled (disabloitu-alasveto? valitasot)}
-           valitasot]]
+                                        :disabled (disabloitu-alasveto? toimenpiteet)}
+           toimenpiteet]]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Hoitokausi"]
           [yleiset/livi-pudotusvalikko {:valinta (:hoitokausi valinnat)
@@ -174,7 +175,7 @@
                                         :format-fn #(str "1.10." % "-30.9." (inc %))
                                         :disabled (disabloitu-alasveto? hoitokaudet)}
            hoitokaudet]]
-         [:label.kopioi-tuleville-vuosille
+         #_[:label.kopioi-tuleville-vuosille
           [:input {:type "checkbox" :checked false
                    :on-change (r/partial #() :ei)
                    :disabled (:noudetaan valinnat)}]
@@ -190,7 +191,7 @@
       (let [{taulukon-tehtavat :tehtavat-taulukko} app
             {:keys [nimi]} (-> @tila/tila :yleiset :urakka)]
         [:div
-         ;[debug/debug app]
+         [debug/debug app]
          [:h1 "Tehtävät ja määrät" nimi]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
          [valitaso-filtteri e! app]
