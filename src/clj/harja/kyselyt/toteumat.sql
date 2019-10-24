@@ -998,7 +998,7 @@ SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysv
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset
-SELECT id
+SELECT id, luotu
 FROM varustetoteuma
 WHERE tila = 'virhe';
 
