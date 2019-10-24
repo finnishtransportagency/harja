@@ -26,7 +26,8 @@
     [harja.kyselyt.konversio :as konversio]
     [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -126,7 +127,10 @@
 
 (defn laheta-varustetoteumat [this]
   (log/debug "Lähetetään epäonnistuneet varustetoteumat uudestaan Tierekisteriin")
-  (let [varustetoteuma-idt (map :id (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this)))]
+  (let [varustetoteuma-idt (eduction (filter (fn [{:keys [luotu]}]
+                                               (-> luotu pvm/joda-timeksi (pvm/jalkeen? (pvm/paivaa-sitten 30)))))
+                                     (map :id)
+                                     (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this)))]
     (doseq [varustetoteuma-id varustetoteuma-idt]
       (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id)))
   (log/debug "Varustetoteumien lähetys valmis"))
