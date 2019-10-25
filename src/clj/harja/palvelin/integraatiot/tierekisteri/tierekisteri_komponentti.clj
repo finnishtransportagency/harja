@@ -126,8 +126,7 @@
 
 (defn laheta-varustetoteumat [this]
   (log/debug "Lähetetään tuoreet, epäonnistuneet varustetoteumat uudestaan Tierekisteriin")
-  (let [varustetoteuma-idt (map :id)
-        (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this))]
+  (let [varustetoteuma-idt (map :id (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this)))]
     (doseq [varustetoteuma-id varustetoteuma-idt]
       (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id)))
   (log/debug "Varustetoteumien lähetys valmis"))
