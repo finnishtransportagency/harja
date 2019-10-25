@@ -26,8 +26,7 @@
     [harja.kyselyt.konversio :as konversio]
     [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
-    [clojure.string :as str]
-    [harja.pvm :as pvm])
+    [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -53,8 +52,8 @@
   (when (not
           (contains? tietolajitunnisteet tunniste))
     (throw+ {:type virheet/+viallinen-kutsu+ :virheet
-             [{:koodi :tuntematon-tietolaji
-               :viesti (str "Tietolajia ei voida hakea. Tuntematon tietolaji: " tunniste)}]})))
+                   [{:koodi  :tuntematon-tietolaji
+                     :viesti (str "Tietolajia ei voida hakea. Tuntematon tietolaji: " tunniste)}]})))
 
 (defn varusteen-tiedot [{:keys [henkilo
                                 organisaatio
@@ -67,33 +66,33 @@
                                 tietolaji
                                 arvot]}]
   (let [formatoi-pvm #(when % (.format (SimpleDateFormat. "yyyy-MM-dd") %))
-        tekija {:henkilo henkilo
-                :jarjestelma "Harja"
+        tekija {:henkilo      henkilo
+                :jarjestelma  "Harja"
                 :organisaatio organisaatio
-                :yTunnus ytunnus}]
-    {:lisaaja tekija
-     :poistaja tekija
-     :tarkastaja tekija
-     :paivittaja tekija
-     :tietue {:tunniste tunniste
-              :alkupvm (formatoi-pvm alkupvm)
-              :loppupvm (formatoi-pvm loppupvm)
-              :sijainti {:tie
-                         {:numero (:numero tr)
-                          :aet (:alkuetaisyys tr)
-                          :aosa (:alkuosa tr)
-                          :losa (:loppuosa tr)
-                          :let (:loppuetaisyys tr)
-                          :ajr (:ajorata tr)
-                          :puoli (:puoli tr)
-                          :tilannepvm (formatoi-pvm luotu)}}
-              :tietolaji {:tietolajitunniste tietolaji
-                          :arvot arvot}}
+                :yTunnus      ytunnus}]
+    {:lisaaja           tekija
+     :poistaja          tekija
+     :tarkastaja        tekija
+     :paivittaja        tekija
+     :tietue            {:tunniste  tunniste
+                         :alkupvm   (formatoi-pvm alkupvm)
+                         :loppupvm  (formatoi-pvm loppupvm)
+                         :sijainti  {:tie
+                                     {:numero     (:numero tr)
+                                      :aet        (:alkuetaisyys tr)
+                                      :aosa       (:alkuosa tr)
+                                      :losa       (:loppuosa tr)
+                                      :let        (:loppuetaisyys tr)
+                                      :ajr        (:ajorata tr)
+                                      :puoli      (:puoli tr)
+                                      :tilannepvm (formatoi-pvm luotu)}}
+                         :tietolaji {:tietolajitunniste tietolaji
+                                     :arvot             arvot}}
      :tietolajitunniste tietolaji
-     :lisatty (formatoi-pvm luotu)
-     :paivitetty (formatoi-pvm luotu)
-     :poistettu (formatoi-pvm luotu)
-     :tunniste tunniste}))
+     :lisatty           (formatoi-pvm luotu)
+     :paivitetty        (formatoi-pvm luotu)
+     :poistettu         (formatoi-pvm luotu)
+     :tunniste          tunniste}))
 
 (defn laheta-varustetoteuma-tierekisteriin [this varustetoteuma-id]
   (log/debug (format "Lähetetään varustetoteuma (id: %s) Tierekisteriin" varustetoteuma-id))
@@ -126,11 +125,9 @@
       (log/warn e (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))))
 
 (defn laheta-varustetoteumat [this]
-  (log/debug "Lähetetään epäonnistuneet varustetoteumat uudestaan Tierekisteriin")
-  (let [varustetoteuma-idt (eduction (filter (fn [{:keys [luotu]}]
-                                               (-> luotu pvm/joda-timeksi (pvm/jalkeen? (pvm/paivaa-sitten 30)))))
-                                     (map :id)
-                                     (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this)))]
+  (log/debug "Lähetetään tuoreet, epäonnistuneet varustetoteumat uudestaan Tierekisteriin")
+  (let [varustetoteuma-idt (map :id)
+        (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this))]
     (doseq [varustetoteuma-id varustetoteuma-idt]
       (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id)))
   (log/debug "Varustetoteumien lähetys valmis"))
@@ -140,7 +137,7 @@
     (do
       (log/debug (format "Ajastetaan varustetoteumien uudelleenlähetys %s minuutin välein" aikavali-minuutteina))
       (ajastettu-tehtava/ajasta-minuutin-valein
-        aikavali-minuutteina 17 ;; aikaväliajastus alkaen 17 sekuntia käynnistyksestä
+        aikavali-minuutteina 17                             ;; aikaväliajastus alkaen 17 sekuntia käynnistyksestä
         (fn [_] (laheta-varustetoteumat this))))
     (fn [])))
 

@@ -566,7 +566,7 @@ VALUES (:tunniste,
   :piiri,
   :kuntoluokka,
   :tierekisteriurakkakoodi,
-  :luoja,
+  :kayttaja,
   NOW(),
   :tr_numero,
   :tr_alkuosa,
@@ -600,7 +600,9 @@ SET
   tr_loppuetaisyys        = :tr_loppuetaisyys,
   tr_puoli                = :tr_puoli,
   tr_ajorata              = :tr_ajorata,
-  sijainti                = :sijainti
+  sijainti                = :sijainti,
+  muokkaaja               = :kayttaja,
+  muokattu                = current_timestamp
 WHERE id = :id;
 
 -- name: poista-toteuman-varustetiedot!
@@ -998,9 +1000,13 @@ SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysv
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset
-SELECT id, luotu
+-- Palauttaa rivit, joiden lähetys on epäonnistunut ja
+-- jotka on luotu tai joita on muokattu viimeisen viikon aikana
+SELECT id
 FROM varustetoteuma
-WHERE tila = 'virhe';
+WHERE tila = 'virhe'
+  and ((luotu IS NOT NULL AND (EXTRACT(EPOCH FROM (current_timestamp - luotu)) < 604800)) OR
+       (muokattu IS NOT NULL AND (EXTRACT(EPOCH FROM (current_timestamp - muokattu)) < 604800)));
 
 -- name: suhteellinen-paikka-pisteiden-valissa
 SELECT
