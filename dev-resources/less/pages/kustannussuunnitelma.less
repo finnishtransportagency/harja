@@ -14,6 +14,8 @@
   display:flex;
   flex-direction: column;
 
+  .body-text();
+
   > * {
     margin-bottom: 15px;
 
@@ -81,6 +83,30 @@
     margin-top: 0;
   }
 }
+.indeksilaskuri {
+  > span:first-child {
+    font-weight: 700;
+    color: @gray125;
+  }
+  .hintalaskuri-vuodet {
+    padding-top: 0;
+  }
+  .hintalaskurisarake-yla {
+    text-align: center;
+    padding: 5px 0px;
+    .small-text();
+    color: @gray125;
+  }
+  .hintalaskurisarake-ala {
+    padding-top: 0px;
+  }
+}
+
+.summa-ja-indeksilaskuri {
+  > .indeksilaskuri {
+    padding-top: 0;
+  }
+}
 .hintalaskuri-vuodet {
   display:flex;
   justify-content: space-evenly;
@@ -88,25 +114,35 @@
   padding-bottom: 15px;
   > div {
     flex: 3;
+  }
+}
+.sarake-wrapper {
+  display: inline-block;
+}
+.hintalaskurisarake-yla {
+
+}
+.hintalaskurisarake-ala {
+  color: @gray200;
+  padding-top: 15px;
+}
+
+.hintalaskuri-yhtakuin, .hintalaskuri-yhteensa {
+  display: flex;
+  > div:first-child {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    > div {
+    > * {
       flex: 1;
-      &:last-child {
-        color: @gray200;
-      }
     }
-    &.hintalaskuri-yhtakuin {
-      flex: 1;
-      div:last-child {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
+  }
+}
 
-        padding-right: 15px;
-        color: black;
-      }
-    }
+.hintalaskuri-yhtakuin {
+  .hintalaskurisarake-ala {
+    align-self: end;
+    padding-right: 15px;
   }
 }
 
@@ -155,13 +191,16 @@
 
     .hintalaskuri:first-child {
       padding-top: 0px;
-      border-bottom: 1px solid @gray200;
     }
   }
   .livicon-chevron {
     color: @blue;
     font-size: 20px;
   }
+}
+
+#tavoitehinnan-indeksikorjaus {
+  border-bottom: 1px dashed @gray200;
 }
 
 #tavoite-ja-kattohinta-huomio {

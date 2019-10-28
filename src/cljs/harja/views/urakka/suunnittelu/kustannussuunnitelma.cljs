@@ -139,12 +139,16 @@
                              (concat (take rivista-eteenpain rivit)
                                      (second (rivien-luokat (drop rivista-eteenpain rivit) 0)))))))))
 
-(defn hintalaskuri-sarake
-  ([yla ala] (hintalaskuri-sarake yla ala nil))
-  ([yla ala luokat]
-   [:div {:class luokat}
-    [:div yla]
-    [:div ala]]))
+(defn hintalaskurisarake
+  ([yla ala] [hintalaskurisarake yla ala nil])
+  ([yla ala {:keys [wrapper-luokat container-luokat]}]
+   ;; Tämä div ottaa sen tasasen tilan muiden sarakkeiden kanssa, jotta vuodet jakautuu tasaisesti
+   [:div {:class container-luokat}
+    ;; Tämä div taas pitää sisällänsä ylä- ja alarivit, niin että leveys on maksimissaan sisällön leveys.
+    ;; Tämä siksi, että ylarivin sisältö voidaan keskittää alariviin nähden
+    [:div.sarake-wrapper {:class wrapper-luokat}
+     [:div.hintalaskurisarake-yla yla]
+     [:div.hintalaskurisarake-ala ala]]]))
 
 (defn hintalaskuri
   [{:keys [otsikko selite hinnat]} {:keys [vuosi]}]
@@ -153,32 +157,38 @@
             hinnat)
     [virhe-datassa hinnat]
     [:div.hintalaskuri
-     [:h5 otsikko]
-     [:div selite]
+     (when otsikko
+       [:h5 otsikko])
+     (when selite
+       [:div selite])
      [:div.hintalaskuri-vuodet
       (for [{:keys [summa hoitokausi teksti]} hinnat]
         ^{:key hoitokausi}
-        [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa) (when (= hoitokausi vuosi) "aktiivinen-vuosi")])
-      [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
-      [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
+        [hintalaskurisarake (or teksti (str hoitokausi ". vuosi"))
+         (fmt/euro summa)
+         (when (= hoitokausi vuosi) {:wrapper-luokat "aktiivinen-vuosi"})])
+      [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
+      [hintalaskurisarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
 
-(defn indeksilaskuri [hinnat indeksit]
-  (let [hinnat (mapv (fn [{:keys [summa hoitokausi]}]
-                       (let [{:keys [arvo vuosi hoitokausi]} (get indeksit (dec hoitokausi))
-                             indeksikorjattu-summa (/ (* summa arvo)
-                                                      100)]
-                         {:vuosi vuosi
-                          :summa indeksikorjattu-summa
-                          :hoitokausi hoitokausi}))
-                     hinnat)]
-    [:div.hintalaskuri
-     [:h5 "Indeksikorjattu"]
-     [:div.hintalaskuri-vuodet
-      (for [{:keys [vuosi summa hoitokausi]} hinnat]
-        ^{:key hoitokausi}
-        [hintalaskuri-sarake vuosi (fmt/euro summa)])
-      [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
-      [hintalaskuri-sarake " " (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
+(defn indeksilaskuri
+  ([hinnat indeksit] [indeksilaskuri hinnat indeksit nil])
+  ([hinnat indeksit dom-id]
+   (let [hinnat (mapv (fn [{:keys [summa hoitokausi]}]
+                        (let [{:keys [arvo vuosi hoitokausi]} (get indeksit (dec hoitokausi))
+                              indeksikorjattu-summa (/ (* summa arvo)
+                                                       100)]
+                          {:vuosi vuosi
+                           :summa indeksikorjattu-summa
+                           :hoitokausi hoitokausi}))
+                      hinnat)]
+     [:div.hintalaskuri.indeksilaskuri {:id dom-id}
+      [:span "Indeksikorjattu"]
+      [:div.hintalaskuri-vuodet
+       (for [{:keys [vuosi summa hoitokausi]} hinnat]
+         ^{:key hoitokausi}
+         [hintalaskurisarake vuosi (fmt/euro summa)])
+       [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
+       [hintalaskurisarake " " (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
 
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
@@ -207,11 +217,12 @@
                     :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
                     :hinnat (update (vec tavoitehinnat) 0 assoc :teksti "1. vuosi*")}
       kuluva-hoitokausi]
-     [indeksilaskuri tavoitehinnat indeksit]
+     [indeksilaskuri tavoitehinnat indeksit "tavoitehinnan-indeksikorjaus"]
      [hintalaskuri {:otsikko "Kattohinta"
                     :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
                     :hinnat kattohinnat}
-      kuluva-hoitokausi]]
+      kuluva-hoitokausi]
+     [indeksilaskuri kattohinnat indeksit]]
     [yleiset/ajax-loader]))
 
 (defn suunnitelman-selitteet [this luokat _]
@@ -1658,15 +1669,17 @@
     [yleiset/ajax-loader]))
 
 (defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
-                                     kuluva-hoitokausi kirjoitusoikeus?]
+                                     kuluva-hoitokausi kirjoitusoikeus? indeksit]
   [:div
    [:h2#hankintakustannukset "Hankintakustannukset"]
    (if yhteenveto
      ^{:key "hankintakustannusten-yhteenveto"}
-     [hintalaskuri {:otsikko "Yhteenveto"
-                    :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
-                    :hinnat yhteenveto}
-      kuluva-hoitokausi]
+     [:div.summa-ja-indeksilaskuri
+      [hintalaskuri {:otsikko "Yhteenveto"
+                     :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
+                     :hinnat yhteenveto}
+       kuluva-hoitokausi]
+      [indeksilaskuri yhteenveto indeksit]]
      ^{:key "hankintakustannusten-loader"}
      [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
    [:h3 "Suunnitellut hankinnat"]
@@ -1704,7 +1717,7 @@
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
-  [erillishankinnat menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi}]
+  [erillishankinnat menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi} indeksit]
   (if erillishankinnat
     (let [summarivin-index 1
           tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
@@ -1716,24 +1729,26 @@
                           {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
-      [hintalaskuri {:otsikko nil
-                     :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                     :hinnat hinnat}
-       kuluva-hoitokausi])
+      [:div.summa-ja-indeksilaskuri
+       [hintalaskuri {:otsikko nil
+                      :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
+                      :hinnat hinnat}
+        kuluva-hoitokausi]
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat [erillishankinnat]
   [maara-kk erillishankinnat])
 
-(defn erillishankinnat-sisalto [erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi]
+(defn erillishankinnat-sisalto [erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi indeksit]
   [:<>
    [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
-   [erillishankinnat-yhteenveto erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi]
+   [erillishankinnat-yhteenveto erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi indeksit]
    [erillishankinnat erillishankinnat-taulukko]
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
 
 (defn johto-ja-hallintokorvaus-yhteenveto
-  [jh-yhteenveto toimistokulut menneet-toimistokulut {:keys [vuosi] :as kuluva-hoitokausi}]
+  [jh-yhteenveto toimistokulut menneet-toimistokulut {:keys [vuosi] :as kuluva-hoitokausi} indeksit]
   (if (and jh-yhteenveto toimistokulut)
     (let [tamavuosi-toimistokulutsumma (p/arvo (tyokalut/hae-asia-taulukosta toimistokulut [1 "Yhteensä"])
                                                :arvo)
@@ -1745,16 +1760,18 @@
                                      (* (get-in menneet-toimistokulut [(dec hoitokausi) :maara-kk]) 12)))
                          :hoitokausi hoitokausi})
                       (range 1 6))]
-      [hintalaskuri {:otsikko nil
-                     :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                     :hinnat hinnat}
-       kuluva-hoitokausi])
+      [:div.summa-ja-indeksilaskuri
+       [hintalaskuri {:otsikko nil
+                      :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
+                      :hinnat hinnat}
+        kuluva-hoitokausi]
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi]
+(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
-   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi]
+   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
    [maara-kk toimistokulut]
@@ -1762,7 +1779,7 @@
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
 (defn hoidonjohtopalkkio-yhteenveto
-  [johtopalkkio menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi}]
+  [johtopalkkio menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi} indeksit]
   (if johtopalkkio
     (let [summarivin-index 1
           tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
@@ -1774,22 +1791,24 @@
                           {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
-      [hintalaskuri {:otsikko nil
-                     :selite nil
-                     :hinnat hinnat}
-       kuluva-hoitokausi])
+      [:div.summa-ja-indeksilaskuri
+       [hintalaskuri {:otsikko nil
+                      :selite nil
+                      :hinnat hinnat}
+        kuluva-hoitokausi]
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio [johtopalkkio]
   [maara-kk johtopalkkio])
 
-(defn hoidonjohtopalkkio-sisalto [johtopalkkio menneet-suunnitelmat kuluva-hoitokausi]
+(defn hoidonjohtopalkkio-sisalto [johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
-   [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi]
+   [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
    [hoidonjohtopalkkio johtopalkkio]])
 
-(defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi]
+(defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
   (if (and erillishankinnat jh-yhteenveto johtopalkkio)
     (let [hinnat (map (fn [hoitokausi]
                         (let [eh (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [1 "Yhteensä"])
@@ -1801,21 +1820,23 @@
                           {:summa (+ eh jh jp)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
-      [hintalaskuri {:otsikko "Yhteenveto"
-                     :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
-                     :hinnat hinnat}
-       kuluva-hoitokausi])
+      [:div.summa-ja-indeksilaskuri
+       [hintalaskuri {:otsikko "Yhteenveto"
+                      :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
+                      :hinnat hinnat}
+        kuluva-hoitokausi]
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
 (defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
                                                       toimistokulut johtopalkkio erillishankinnat menneet-vuodet] :as hallinnolliset-toimenpiteet}
-                                           kuluva-hoitokausi]
+                                           kuluva-hoitokausi indeksit]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
-   [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
-   [erillishankinnat-sisalto erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi]
-   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi]
-   [hoidonjohtopalkkio-sisalto johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi]])
+   [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
+   [erillishankinnat-sisalto erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit]
+   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit]
+   [hoidonjohtopalkkio-sisalto johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit]])
 
 (defn kustannussuunnitelma*
   [e! app]
@@ -1854,9 +1875,9 @@
          :otsikko-elementti :h2}
         [suunnitelmien-tila e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]]
        [:span.viiva-alas]
-       [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi kirjoitusoikeus?]
+       [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi kirjoitusoikeus? indeksit]
        [:span.viiva-alas]
-       [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-toimenpiteet kuluva-hoitokausi]])))
+       [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-toimenpiteet kuluva-hoitokausi indeksit]])))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

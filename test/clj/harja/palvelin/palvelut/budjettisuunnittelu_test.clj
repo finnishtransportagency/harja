@@ -198,6 +198,7 @@
   (let [rovaniemi-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
         ivalo-urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
         pellon-urakka-id (hae-pellon-maanteiden-hoitourakan-id)
+        kuluvan-hoitokauden-aloitusvuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
 
         db (:db jarjestelma)
 
@@ -205,17 +206,17 @@
         ivalon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
         pellon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
     (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
-    (is (= rovaniemen-indeksit [{:hoitokausi 1 :vuosi 2019, :arvo 130.833333}
-                                {:hoitokausi 2 :vuosi 2019, :arvo 130.833333}
-                                {:hoitokausi 3 :vuosi 2019, :arvo 130.833333}
-                                {:hoitokausi 4 :vuosi 2019, :arvo 130.833333}
-                                {:hoitokausi 5 :vuosi 2019, :arvo 130.833333}])
+    (is (= rovaniemen-indeksit [{:hoitokausi 1 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
+                                {:hoitokausi 2 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
+                                {:hoitokausi 3 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
+                                {:hoitokausi 4 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
+                                {:hoitokausi 5 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}])
         "Indeksilukemat eivät ole oikein Rovaniemen testiurakalle")
-    (is (= pellon-indeksit [{:hoitokausi 1 :vuosi 2017, :arvo 110.833333}
-                            {:hoitokausi 2 :vuosi 2018, :arvo 120.833333}
-                            {:hoitokausi 3 :vuosi 2019, :arvo 130.833333}
-                            {:hoitokausi 4 :vuosi 2019, :arvo 130.833333}
-                            {:hoitokausi 5 :vuosi 2019, :arvo 130.833333}])
+    (is (= pellon-indeksit [{:hoitokausi 1 :vuosi (- kuluvan-hoitokauden-aloitusvuosi 2) :arvo 110.833333}
+                            {:hoitokausi 2 :vuosi (dec kuluvan-hoitokauden-aloitusvuosi) :arvo 120.833333}
+                            {:hoitokausi 3 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
+                            {:hoitokausi 4 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
+                            {:hoitokausi 5 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}])
         "Indeksilukemat eivät ole oikein Pellon testiurakalle")))
 
 (deftest tallenna-kiinteahintaiset-tyot
