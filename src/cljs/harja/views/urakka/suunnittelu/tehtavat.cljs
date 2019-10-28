@@ -69,7 +69,7 @@
         validi? (fn [arvo tyyppi]
                   (loki/log "Tsekkaan tilanteen" (str arvo) tyyppi)
                   (let [validius (case tyyppi
-                                   :numero (re-matches #"\d+(?:\.?\d+)?" (str arvo)))]
+                                   :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
                     (loki/log "Tilanne on " (not (nil? validius)))
                     (not (nil? validius))))
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]

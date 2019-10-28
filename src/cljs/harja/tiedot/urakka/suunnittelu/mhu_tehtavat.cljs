@@ -116,7 +116,9 @@
                          {:urakka-id             urakka-id
                           :hoitokauden-alkuvuosi (:hoitokausi valinnat)
                           :tehtavamaarat         [{:tehtava-id tehtava-id
-                                                   :maara      (js/parseFloat maara)}]}
+                                                   :maara      (-> maara
+                                                                   (clojure.string/replace #"," ".")
+                                                                   js/parseFloat)}]}
                          {:onnistui ->TehtavaTallennusOnnistui
                           :epaonnistui ->TehtavaTallennusEpaonnistui
                           :paasta-virhe-lapi? true})
