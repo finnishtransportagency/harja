@@ -65,9 +65,9 @@
           vuodet)))
 
 (defn tee-vuosisummat-teiden-hoidolle
-  "Käytetään maanteiden hoidon urakoissa (MHU). Laskee yhteen relevantit budjettisuunnitelmat
-(kiinteahintaiset_tyot, kustannusarvioidut_tyot (tyypiltään laskutettava-tyo) ja yksikkohintaiset_tyot [sic].
-Palauttaa vuodet ja yhteenlasketut summat."
+  "Käytetään maanteiden hoidon urakoissa (MHU). Laskee yhteen kustannussuunnitelmaan kaikki budjettisuunnitelmat.
+   Sis. kiinteahintaiset_tyot, kustannusarvioidut_tyot (ml. laskutettava-tyo, äkillinen hoitotyö, vahinkojen korjaukset sekä yksikköhintaisten töiden summat).
+   Palauttaa vuodet ja yhteenlasketut summat."
   [vuodet luvut]
 
   (tee-vuosisummat vuodet
@@ -92,33 +92,29 @@ Palauttaa vuodet ja yhteenlasketut summat."
       "lisatyo" (if (contains? #{"vesivayla-kanavien-hoito" "vesivayla-kanavien-korjaus"} urakkatyyppi)
                   (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
                   (tee-oletus-vuosisummat vuodet))
-      "akillinen-hoitotyo" (if (= "teiden-hoito" urakkatyyppi)
-                             (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-akillisten-hoitotoiden-summat db numero))
-                             (tee-oletus-vuosisummat vuodet))
-      "muu" (if (= "teiden-hoito" urakkatyyppi)
-              (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-vahinkojen-korjausten-summat db numero))
-              (tee-oletus-vuosisummat vuodet))
+      "akillinen-hoitotyo" (tee-oletus-vuosisummat vuodet)
+      "muu" (tee-oletus-vuosisummat vuodet)
       (tee-oletus-vuosisummat vuodet))))
 
 (defn valitse-lpk-tilinumero
   [numero toimenpidekoodi]
   (case toimenpidekoodi
-    "23104" "43020000" ;; Talvihoito
-    "23116" "43020000" ;; Liikenneympäristön hoito
-    "23124" "43020000" ;; Soratien hoito
-    "20107" "43020000" ;; Päällysteiden paikkaus
-    "20112" "43020000" ;; Päällystetun tien rakenne (urakkatyyppi: hoito)
-    "20143" "43020000" ;; Soratien rakenne (urakkatyyppi: hoito)
-    "20179" "43020000" ;; Varuste ja laite korjaus (urakkatyyppi: hoito)
-    "20191" "43020000" ;; MHU Ylläpito (urakkatyyppi: teiden-hoito)
-    "23151" "43020000" ;; MHU ja HJU Hoidon johto (nk. hallinnolliset toimenpiteet, urakkatyyppi: teiden-hoito, urakkatyypissä hoito HJU-urakat)
-    "27105" "43020000" ;; Vesiliikenteen käyttöpalvelut (urakkatyyppi: kanava)
-    "20106" "12980010" ;; Päällyste (urakkatyyppi: paallystys). Kustannussuunnitelmia tai maksueriä ei lähetetä.
-    "20135" "12980010" ;; Tiesilta (urakkatyyppi: tiemerkinta). Kustannussuunnitelmia tai maksueriä ei lähetetä.
-    "20183" "12980010" ;; Liikenneympäristön parantaminen (urakkatyyppi: hoito)
-    "14109" "12980010" ;; Sorateiden runkokelirikkokorjaukset (urakkatyyppi: hoito)
-    "14301" "12980010" ;; MHU Korvausinvestointi (urakkatyyppi: teiden-hoito)
-    "141217" "12980010" ;; Varuste ja laite (urakkatyyppi: hoito)
+    "23104" "43020000"                                      ;; Talvihoito
+    "23116" "43020000"                                      ;; Liikenneympäristön hoito
+    "23124" "43020000"                                      ;; Soratien hoito
+    "20107" "43020000"                                      ;; Päällysteiden paikkaus
+    "20112" "43020000"                                      ;; Päällystetun tien rakenne (urakkatyyppi: hoito)
+    "20143" "43020000"                                      ;; Soratien rakenne (urakkatyyppi: hoito)
+    "20179" "43020000"                                      ;; Varuste ja laite korjaus (urakkatyyppi: hoito)
+    "20191" "43020000"                                      ;; MHU Ylläpito (urakkatyyppi: teiden-hoito)
+    "23151" "43020000"                                      ;; MHU ja HJU Hoidon johto (nk. hallinnolliset toimenpiteet, urakkatyyppi: teiden-hoito, urakkatyypissä hoito HJU-urakat)
+    "27105" "43020000"                                      ;; Vesiliikenteen käyttöpalvelut (urakkatyyppi: kanava)
+    "20106" "12980010"                                      ;; Päällyste (urakkatyyppi: paallystys). Kustannussuunnitelmia tai maksueriä ei lähetetä.
+    "20135" "12980010"                                      ;; Tiesilta (urakkatyyppi: tiemerkinta). Kustannussuunnitelmia tai maksueriä ei lähetetä.
+    "20183" "12980010"                                      ;; Liikenneympäristön parantaminen (urakkatyyppi: hoito)
+    "14109" "12980010"                                      ;; Sorateiden runkokelirikkokorjaukset (urakkatyyppi: hoito)
+    "14301" "12980010"                                      ;; MHU Korvausinvestointi (urakkatyyppi: teiden-hoito)
+    "141217" "12980010"                                     ;; Varuste ja laite (urakkatyyppi: hoito)
     :else 0
     (let [viesti
           (format "Toimenpidekoodilla '%1$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle (numero: %s)."
