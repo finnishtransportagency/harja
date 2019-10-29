@@ -13,7 +13,9 @@
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.jana :as jana]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet])
+  (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -136,7 +138,6 @@
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
-(defrecord HaeIndeksit [])
 (defrecord HaeIndeksitOnnistui [vastaus])
 (defrecord HaeIndeksitEpaonnistui [vastaus])
 (defrecord Oikeudet [])
@@ -599,14 +600,6 @@
   Hoitokausi
   (process-event [_ app]
     (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))
-  HaeIndeksit
-  (process-event [_ app]
-    (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
-      (tuck-apurit/post! app :budjettisuunnittelun-indeksit
-                         {:urakka-id urakka-id}
-                         {:onnistui ->HaeIndeksitOnnistui
-                          :epaonnistui ->HaeIndeksitEpaonnistui
-                          :paasta-virhe-lapi? true})))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app :indeksit vastaus))
@@ -667,7 +660,7 @@
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
                           johtopalkkio-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
-      (-> app
+      #_(-> app
           (tuck-apurit/post! :budjettitavoite
                              {:urakka-id urakka-id}
                              {:onnistui ->HaeTavoiteJaKattohintaOnnistui
@@ -681,7 +674,28 @@
                                                     erillishankinnat-taulukko toimistokulut-taulukko
                                                     johtopalkkio-taulukko]
                               :epaonnistui ->HaeHankintakustannuksetEpaonnistui
-                              :paasta-virhe-lapi? true}))))
+                              :paasta-virhe-lapi? true}))
+      (varmista-kasittelyjen-jarjestys
+        (tuck-apurit/post! app :budjettisuunnittelun-indeksit
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeIndeksitOnnistui
+                            :epaonnistui ->HaeIndeksitEpaonnistui
+                            :paasta-virhe-lapi? true})
+        (tuck-apurit/post! app :budjettitavoite
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeTavoiteJaKattohintaOnnistui
+                            :epaonnistui ->HaeTavoiteJaKattohintaEpaonnistui
+                            :paasta-virhe-lapi? true})
+        (tuck-apurit/post! app :budjetoidut-tyot
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeHankintakustannuksetOnnistui
+                            :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
+                                                  johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
+                                                  erillishankinnat-taulukko toimistokulut-taulukko
+                                                  johtopalkkio-taulukko]
+                            :epaonnistui ->HaeHankintakustannuksetEpaonnistui
+                            :paasta-virhe-lapi? true}))
+      app))
   HaeTavoiteJaKattohintaOnnistui
   (process-event [{vastaus :vastaus} app]
     (log "HAE TAVOITE JA KATTOHINTA ONNISTUI")
