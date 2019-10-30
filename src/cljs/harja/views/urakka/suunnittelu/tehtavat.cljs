@@ -228,7 +228,7 @@
       (let [{taulukon-tehtavat :tehtavat-taulukko} app
             {:keys [nimi]} (-> @tila/tila :yleiset :urakka)]
         [:div
-         [debug/debug app]
+         ;[debug/debug app]
          [:h1 "Tehtävät ja määrät" [:span.pull-right nimi]]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
          [valitaso-filtteri e! app]
