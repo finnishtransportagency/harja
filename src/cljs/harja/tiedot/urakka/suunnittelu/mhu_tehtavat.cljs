@@ -11,15 +11,16 @@
 
 (defrecord PaivitaMaara [solu arvo tyylit])
 (defrecord LaajennaSoluaKlikattu [laajenna-osa auki?])
-(defrecord JarjestaTehtavienMukaan [])
-(defrecord JarjestaMaaranMukaan [])
 (defrecord ValitseTaso [arvo taso])
-(defrecord HaeTehtavat [parametrit])
-(defrecord TehtavaHakuEpaonnistui [])
-(defrecord TehtavaHakuOnnistui [tehtavat prosessoi-tulokset])
-(defrecord TehtavaTallennusOnnistui [])
-(defrecord TehtavaTallennusEpaonnistui [])
+(defrecord HaeTehtavatJaMaarat [parametrit])
+(defrecord TehtavaHakuOnnistui [tehtavat parametrit])
+(defrecord HakuEpaonnistui [])
+(defrecord MaaraHakuOnnistui [maarat prosessoi-tulokset])
+(defrecord TehtavaTallennusOnnistui [vastaus])
+(defrecord TehtavaTallennusEpaonnistui [vastaus])
 (defrecord TallennaTehtavamaara [tehtava])
+(defrecord HaeMaarat [parametrit])
+(defrecord SamatKaikilleMoodi [samat?])
 
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
@@ -28,12 +29,6 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
-(defn ylempi-taso?
-  [ylempi-taso alempi-taso]
-  (case ylempi-taso
-    "ylataso" (not= "ylataso" alempi-taso)
-    "valitaso" (= "alataso" alempi-taso)
-    "alataso" false))
 
 (defn klikatun-rivin-lapsenlapsi?
   [janan-id klikatun-rivin-id taulukon-rivit]
@@ -51,53 +46,48 @@
       recursion-vastaus
       (some true? recursion-vastaus))))
 
-(defn jarjesta-tehtavan-otsikon-mukaisesti [tehtavat otsikko]
-  (let [tehtavan-nimi (fn [tehtava]
-                        (let [solu (some #(when (= (-> % meta :sarake) "Tehtävä")
-                                            %)
-                                         (p/janan-osat tehtava))]
-                          (:teksti solu)))
-        tehtavan-maara (fn [tehtava]
-                         (let [solu (some #(when (= (-> % meta :sarake) "Määrä")
-                                             %)
-                                          (p/janan-osat tehtava))
-                               maara (cond
-                                       (= (type solu) osa/Teksti) (get solu :teksti)
-                                       (= (type solu) osa/Syote) (get-in solu [:parametrit :value]))]
-                           (if (= "" maara) 0 (js/parseFloat maara))))
-        tehtavan-id (fn [tehtava]
-                      (p/janan-id tehtava))
-        vanhemman-tehtava (fn [tehtava]
-                            (some #(when (= (:vanhempi (meta tehtava)) (p/janan-id %))
-                                     %)
-                                  tehtavat))
-        tehtavan-tunniste (juxt (case otsikko
-                                  :tehtava tehtavan-nimi
-                                  :maara tehtavan-maara)
-                                tehtavan-id)]
-    (into []
-          (sort-by (fn [tehtava]
-                     (if (= (p/janan-id tehtava) :tehtavataulukon-otsikko)
-                       []
-                       (case (-> tehtava meta :tehtavaryhmatyyppi)
-                         "ylataso" [(tehtavan-tunniste tehtava) nil nil]
-                         "valitaso" [(tehtavan-tunniste (vanhemman-tehtava tehtava))
-                                     (tehtavan-tunniste tehtava)
-                                     nil]
-                         "alitaso" [(-> tehtava vanhemman-tehtava vanhemman-tehtava tehtavan-tunniste)
-                                    (tehtavan-tunniste (vanhemman-tehtava tehtava))
-                                    (tehtavan-tunniste tehtava)])))
-                   tehtavat))))
+(defn osien-paivitys-fn [tehtava maara yksikko]
+  (fn [osat]
+    (mapv
+      (fn [osa]
+        (cond
+          (re-find #"-maara" (name (p/osan-id osa))) (maara osa)
+          :else (identity osa)))
+      osat)))
 
-(defn paivitys-fn [arvo hierarkia nayta-aina]
+(defn paivita-tehtavien-maarat
+  [tehtavat maarat]
+  (reduce (fn [acc m]
+            (let [{:keys [hoitokauden-alkuvuosi maara tehtava-id] :as maara-koko} m]
+              (assoc-in acc [(-> tehtava-id str keyword)
+                             :maarat
+                             (-> hoitokauden-alkuvuosi str keyword)]
+                        maara)))
+          tehtavat
+          (filter #(not (nil? (:hoitokauden-alkuvuosi %))) maarat)))
+
+(defn paivita-maarat-hoitokaudella
+  [hoitokausi tehtavat]
   (fn [rivit]
-   (mapv (fn [rivi]
-           (if (or
-                 (= (:id arvo) (get hierarkia (p/janan-id rivi)))
-                 (get nayta-aina (p/janan-id rivi)))
-             (p/aseta-arvo rivi :piillotettu? false)
-             (p/aseta-arvo rivi :piillotettu? true)))
-         rivit)))
+    (mapv (fn [rivi]
+            (let [tehtava-id (-> rivi p/janan-id name keyword)
+                  kausi (-> hoitokausi str keyword)]
+              (p/paivita-arvo rivi :lapset
+                              (osien-paivitys-fn
+                                identity
+                                (fn [o]
+                                  (p/aseta-arvo o :arvo (get-in tehtavat [tehtava-id :maarat kausi])))
+                                identity)))) rivit)))
+
+(defn filtteri-paivitys-fn [valitaso nayta-aina]
+  (fn [rivit]
+    (mapv (fn [rivi]
+            (if (or
+                  (= (keyword (str (:id valitaso))) (keyword (namespace (p/janan-id rivi))))
+                  (get nayta-aina (p/janan-id rivi)))
+              (p/aseta-arvo rivi :piillotettu? false)
+              (p/aseta-arvo rivi :piillotettu? true)))
+          rivit)))
 
 (extend-protocol tuck/Event
   TehtavaTallennusEpaonnistui
@@ -106,137 +96,194 @@
     app)
   TehtavaTallennusOnnistui
   (process-event
-    [_ app]
+    [vastaus app]
     app)
   TallennaTehtavamaara
   (process-event
-    [{:keys [tehtava]} {:keys [valinnat] :as app}]
-    (let [{:keys [urakka-id tehtava-id maara]} tehtava]
-      (tuck-apurit/post! :tallenna-tehtavamaarat
-                         {:urakka-id             urakka-id
-                          :hoitokauden-alkuvuosi (:hoitokausi valinnat)
-                          :tehtavamaarat         [{:tehtava-id tehtava-id
-                                                   :maara      (-> maara
-                                                                   (clojure.string/replace #"," ".")
-                                                                   js/parseFloat)}]}
-                         {:onnistui ->TehtavaTallennusOnnistui
-                          :epaonnistui ->TehtavaTallennusEpaonnistui
-                          :paasta-virhe-lapi? true})
+    [{:keys [tehtava]} {:keys [valinnat tehtavat-ja-toimenpiteet] :as app}]
+    (let [{:keys [urakka-id tehtava-id maara]} tehtava
+          numero-maara (-> maara (clojure.string/replace #"," ".") js/parseFloat )
+          numero? (not (js/isNaN numero-maara))
+          samat-kaikille? (:samat-kaikille valinnat)]
+      (if samat-kaikille?
+        (doseq [vuosi (keys (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat]))]
+          (let [maara (-> tehtavat-ja-toimenpiteet
+                          (get-in [(-> tehtava-id str keyword) :maarat vuosi])
+                          (clojure.string/replace #"," ".")
+                          js/parseFloat)]
+            (tuck-apurit/post! :tallenna-tehtavamaarat
+                               {:urakka-id             urakka-id
+                                :hoitokauden-alkuvuosi (-> vuosi
+                                                           name
+                                                           js/parseInt)
+                                :tehtavamaarat         [{:tehtava-id tehtava-id
+                                                         :maara      maara}]}
+                               {:onnistui           ->TehtavaTallennusOnnistui
+                                :epaonnistui        ->TehtavaTallennusEpaonnistui
+                                :paasta-virhe-lapi? true})))
+        (when numero?
+          (tuck-apurit/post! :tallenna-tehtavamaarat
+                             {:urakka-id             urakka-id
+                              :hoitokauden-alkuvuosi (:hoitokausi valinnat)
+                              :tehtavamaarat         [{:tehtava-id tehtava-id
+                                                       :maara      numero-maara}]}
+                             {:onnistui           ->TehtavaTallennusOnnistui
+                              :epaonnistui        ->TehtavaTallennusEpaonnistui
+                              :paasta-virhe-lapi? true})))
       (update app :valinnat #(assoc %
-                               :virhe-tallennettaessa false
-                               :tallennetaan true))))
-  TehtavaHakuEpaonnistui
+                               :virhe-tallennettaessa (if numero? false
+                                                                  true)
+                               :tallennetaan (if numero? true
+                                                         false)))))
+  HakuEpaonnistui
   (process-event
     [_ app]
     (update app :valinnat #(assoc %
-                               :virhe-noudettaessa true
-                               :noudetaan false)))
+                             :virhe-noudettaessa true
+                             :noudetaan (dec (:noudetaan %)))))
   TehtavaHakuOnnistui
   (process-event
-    [{:keys [tehtavat prosessoi-tulokset]} {:keys [valinnat] :as app}]
-    (let [valittu-otsikko (:valitaso valinnat)
-          hierarkia (reduce (fn [acc {:keys [id tehtavaryhmatyyppi vanhempi toimenpide]}]
-                              (case tehtavaryhmatyyppi
-                                "otsikko"
-                                (assoc acc id toimenpide)
-                                ;"toimenpide"
-                                ;acc
-                                "tehtava"
-                                (assoc acc id vanhempi))) {} tehtavat)
-          ;toimenpide (some (fn [t] (when (= "toimenpide" (:tehtavaryhmatyyppi t)) t)) tehtavat)
-          valitaso (if (nil? valittu-otsikko)
-                     (some (fn [t] (when (and
-                                          ;(= (:id toimenpide) (:toimenpide t))
-                                          (= "otsikko" (:tehtavaryhmatyyppi t))) t)) tehtavat)
-                     valittu-otsikko)]
+    [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
+    (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
+          alkuvuosi (harja.pvm/vuosi urakka-alkupvm)
+          id-avaimilla-hierarkia (reduce (fn [kaikki tehtava]
+                                           (let [[avain teht] tehtava]
+                                             (assoc kaikki avain
+                                                           (if (= 4 (:taso teht))
+                                                             (assoc teht
+                                                               :maarat (reduce
+                                                                         (fn [vuodet vuosi]
+                                                                           (assoc vuodet (-> vuosi
+                                                                                             str
+                                                                                             keyword) 0))
+                                                                         {}
+                                                                         (range alkuvuosi (+ alkuvuosi 5)))
+                                                               :alkuvuosi alkuvuosi)
+                                                             teht)))) {} (seq tehtavat))
+          toimenpide (some (fn [[_ t]] (when (= 3 (:taso t)) t)) tehtavat)
+          {tehtavat->taulukko :tehtavat->taulukko} parametrit]
       (-> app
-         (update :valinnat #(assoc % :noudetaan false
-                                     :hoitokausi (pvm/vuosi (pvm/nyt))
-                                     ;:toimenpide toimenpide
-                                     :valitaso valitaso))
-         (assoc :tehtava-ja-maaraluettelo tehtavat
-                :hierarkia hierarkia
-                :tehtavat-taulukko (p/paivita-arvo (prosessoi-tulokset tehtavat) :lapset (paivitys-fn valitaso hierarkia #{:tehtava}))))))
-  HaeTehtavat
+          (assoc :tehtavat-ja-toimenpiteet id-avaimilla-hierarkia
+                 :tehtavat-taulukko (p/paivita-arvo (tehtavat->taulukko id-avaimilla-hierarkia) :lapset (filtteri-paivitys-fn toimenpide #{:tehtava})))
+          (update :valinnat #(assoc % :noudetaan (do
+                                                   (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+                                                                      {:urakka-id             urakka-id
+                                                                       :hoitokauden-alkuvuosi (or (:hoitokausi valinnat)
+                                                                                                  alkuvuosi)}
+                                                                      (merge
+                                                                        {:onnistui           ->MaaraHakuOnnistui
+                                                                         :epaonnistui        ->HakuEpaonnistui
+                                                                         :paasta-virhe-lapi? true} (when tehtavat->taulukko {:onnistui-parametrit [tehtavat->taulukko]})))
+                                                   (:noudetaan %))
+                                      :hoitokausi (pvm/vuosi (pvm/nyt))
+                                      :toimenpide toimenpide)))))
+  MaaraHakuOnnistui
+  (process-event
+    [{:keys [maarat prosessoi-tulokset] :as params} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat] :as app}]
+    (let [{:keys [toimenpide hoitokausi]} valinnat
+          tehtavat-maarilla (paivita-tehtavien-maarat tehtavat-ja-toimenpiteet maarat)
+          paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella hoitokausi tehtavat-ja-toimenpiteet))
+          filtteroity-taulukko (p/paivita-arvo paivitetty-taulukko :lapset (filtteri-paivitys-fn toimenpide #{:tehtava}))]
+      (p/paivita-taulukko! filtteroity-taulukko (-> app
+                                                    (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
+                                                    (update :valinnat #(assoc % :noudetaan (dec (:noudetaan %))))))))
+  HaeTehtavatJaMaarat
+  (process-event
+    [{parametrit :parametrit} app]
+    (let [{urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
+          uusi-tila (-> app
+                        (tuck-apurit/get! :tehtavat
+                                          {:onnistui            ->TehtavaHakuOnnistui
+                                           :epaonnistui         ->HakuEpaonnistui
+                                           :onnistui-parametrit [parametrit]
+                                           :paasta-virhe-lapi?  true})
+                        #_(tuck-apurit/post! :urakan-toimenpiteet-ja-tehtavat
+                                             {:urakka urakka-id}
+                                             (merge
+                                               {:onnistui            ->TehtavaHakuOnnistui
+                                                :epaonnistui         ->HakuEpaonnistui
+                                                :paasta-virhe-lapi?  true
+                                                :onnistui-parametrit [parametrit]}))
+                        (update :valinnat #(assoc %
+                                             :virhe-noudettaessa false
+                                             :noudetaan (inc (:noudetaan %)))))]
+      uusi-tila))
+  HaeMaarat
   (process-event
     [{:keys [parametrit]} app]
     (let [{:keys [hoitokausi prosessori tilan-paivitys-fn]} parametrit
           {urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           uusi-tila (-> app
                         (tuck-apurit/post! :tehtavamaarat-hierarkiassa
-                                           {:urakka-id urakka-id
+                                           {:urakka-id             urakka-id
                                             :hoitokauden-alkuvuosi (or hoitokausi
                                                                        (harja.pvm/vuosi urakka-alkupvm))}
                                            (merge
-                                             {:onnistui            ->TehtavaHakuOnnistui
-                                              :epaonnistui         ->TehtavaHakuEpaonnistui
-                                              :paasta-virhe-lapi?  true} (when prosessori {:onnistui-parametrit [prosessori]})))
+                                             {:onnistui           ->MaaraHakuOnnistui
+                                              :epaonnistui        ->HakuEpaonnistui
+                                              :paasta-virhe-lapi? true} (when prosessori {:onnistui-parametrit [prosessori]})))
                         (update :valinnat #(assoc %
                                              :virhe-noudettaessa false
-                                             :noudetaan true)))]
+                                             :noudetaan (inc (:noudetaan %)))))]
       (if tilan-paivitys-fn
         (tilan-paivitys-fn uusi-tila)
         uusi-tila)))
   ValitseTaso
   (process-event
-    [{:keys [arvo taso]} {:keys [tehtavat-taulukko hierarkia tehtava-ja-maaraluettelo] :as app}]
+    [{:keys [arvo taso]} {:keys [tehtavat-taulukko tehtavat-ja-toimenpiteet] :as app}]
     (let [nayta-aina #{:tehtava}]
       (case taso
-        ;:hoitokausi
-        #_(assoc-in app [:valinnat :hoitokausi] arvo)
-        ;:ylataso
-        #_(let [valitaso (some #(when (and (= "otsikko" (:tehtavaryhmatyyppi %))
-                                         (= (:id arvo) (:toimenpide %))) %) tehtava-ja-maaraluettelo)
-              toimenpide-ja-valitaso (update app :valinnat (fn [valinnat]
-                                                             (assoc valinnat
-                                                               :toimenpide arvo
-                                                               :valitaso valitaso)))
-              taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivitys-fn valitaso hierarkia nayta-aina))]
-          (p/paivita-taulukko! taulukko toimenpide-ja-valitaso))
-        :valitaso
+        :hoitokausi
+        (let [paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella arvo tehtavat-ja-toimenpiteet))]
+          (p/paivita-taulukko! paivitetty-taulukko
+                               (assoc-in app [:valinnat :hoitokausi] arvo)))
+        :toimenpide
         (let [taulukko (p/paivita-arvo tehtavat-taulukko :lapset
-                                       (paivitys-fn arvo hierarkia nayta-aina))]
-          (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :valitaso] arvo))))))
+                                       (filtteri-paivitys-fn arvo nayta-aina))]
+          (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :toimenpide] arvo))))))
   PaivitaMaara
-  (process-event [{:keys [solu arvo tyylit]} app]
-    (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo :class tyylit) app))
+  (process-event [{:keys [solu arvo tyylit]} {:keys [valinnat] :as app}]
+    (let [{:keys [hoitokausi samat-kaikille]} valinnat
+          id (-> (p/osan-id solu)
+                 name
+                 (clojure.string/split #"-")
+                 first)
+          app (if samat-kaikille
+                (update-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat] (fn [m]
+                                                                                         (let [avaimet (keys m)]
+                                                                                           (reduce (fn [acc avain] (assoc acc avain arvo)) m avaimet))))
+                (assoc-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat (-> hoitokausi str keyword)] arvo))]
+      (p/paivita-solu! (:tehtavat-taulukko app) (p/aseta-arvo solu :arvo arvo :class tyylit) app)))
 
+  SamatKaikilleMoodi
+  (process-event [{:keys [samat?]} app]
+    (assoc-in app [:valinnat :samat-kaikille] samat?))
   LaajennaSoluaKlikattu
   (process-event [{:keys [laajenna-osa auki?]} app]
     (update app :tehtavat-taulukko
-               (fn [taulukon-rivit]
-                 (let [klikatun-rivin-id (first (keep (fn [rivi]
-                                                        (when (p/osan-polku rivi laajenna-osa)
-                                                          (p/janan-id rivi)))
-                                                      taulukon-rivit))]
-                   (map (fn [{:keys [janan-id] :as rivi}]
-                          (let [{:keys [vanhempi]} (meta rivi)
-                                klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
-                                klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
-                            ;; Jos joku rivi on kiinnitetty, halutaan sulkea myös kaikki lapset ja lasten lapset.
-                            ;; Kumminkin lapsirivien Laajenna osan sisäinen tila jää väärään tilaan, ellei sitä säädä ulko käsin.
-                            ;; Tässä otetaan ja muutetaan se oikeaksi.
-                            (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
-                              (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
-                                                                     %)
-                                                                  (:solut rivi))]
-                                (reset! (p/osan-tila rivin-laajenna-osa) false)))
-                            (cond
-                              ;; Jos riviä klikataan, piilotetaan lapset
-                              (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
-                                                                           assoc :piillotettu? false)
-                              ;; Jos rivillä on lapsen lapsia, piillotetaan myös ne
-                              (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
-                                                                                       assoc :piillotettu? true)
-                              :else rivi)))
-                        taulukon-rivit)))))
-  JarjestaTehtavienMukaan
-  (process-event [_ app]
-    (update app :tehtavat-taulukko
-            (fn [tehtavat]
-              (jarjesta-tehtavan-otsikon-mukaisesti tehtavat :tehtava))))
-  JarjestaMaaranMukaan
-  (process-event [_ app]
-    (update app :tehtavat-taulukko
-            (fn [tehtavat]
-              (jarjesta-tehtavan-otsikon-mukaisesti tehtavat :maara)))))
+            (fn [taulukon-rivit]
+              (let [klikatun-rivin-id (first (keep (fn [rivi]
+                                                     (when (p/osan-polku rivi laajenna-osa)
+                                                       (p/janan-id rivi)))
+                                                   taulukon-rivit))]
+                (map (fn [{:keys [janan-id] :as rivi}]
+                       (let [{:keys [vanhempi]} (meta rivi)
+                             klikatun-rivin-lapsi? (= klikatun-rivin-id vanhempi)
+                             klikatun-rivin-lapsenlapsi? (klikatun-rivin-lapsenlapsi? janan-id klikatun-rivin-id taulukon-rivit)]
+                         ;; Jos joku rivi on kiinnitetty, halutaan sulkea myös kaikki lapset ja lasten lapset.
+                         ;; Kumminkin lapsirivien Laajenna osan sisäinen tila jää väärään tilaan, ellei sitä säädä ulko käsin.
+                         ;; Tässä otetaan ja muutetaan se oikeaksi.
+                         (when (and (not auki?) klikatun-rivin-lapsenlapsi?)
+                           (when-let [rivin-laajenna-osa (some #(when (instance? osa/Laajenna %)
+                                                                  %)
+                                                               (:solut rivi))]
+                             (reset! (p/osan-tila rivin-laajenna-osa) false)))
+                         (cond
+                           ;; Jos riviä klikataan, piilotetaan lapset
+                           (and auki? klikatun-rivin-lapsi?) (vary-meta (update rivi :luokat disj "piillotettu")
+                                                                        assoc :piillotettu? false)
+                           ;; Jos rivillä on lapsen lapsia, piillotetaan myös ne
+                           (and (not auki?) klikatun-rivin-lapsenlapsi?) (vary-meta (update rivi :luokat conj "piillotettu")
+                                                                                    assoc :piillotettu? true)
+                           :else rivi)))
+                     taulukon-rivit))))))
