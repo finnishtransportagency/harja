@@ -9,11 +9,12 @@
 
 (def palveukutsu-viive (atom {})) ;; Palvelukontekstin tunniste -> palvelukutsu-eventin id
 
-(def ^:dynamic *kutsu-jarjestys* nil)
+;; Kutsujärjestys on bindingina palvelukutsu*:n parametrin sijasta, koska se koskee useita kutsuja eikä vain yhtä
+(def ^:dynamic *kutsujarjestys* nil)
 
 (defonce jarjestys-kanava (chan))
 
-(defonce jarjestys-pub (pub jarjestys-kanava :kutsu-kasitelty?))
+(defonce jarjestys-pub (pub jarjestys-kanava :kutsu-kasittely))
 
 (defn- palvelukutsu*
   "Optiot:
@@ -38,6 +39,7 @@
                                         onnistui-parametrit))
         epaonnistui! (when epaonnistui (apply tuck/send-async! epaonnistui
                                               epaonnistui-parametrit))
+        kutsujarjestys *kutsujarjestys*
         suorituskanava (try
                           (go
                             (let [event-tunniste (when tunniste (gensym tunniste))]
@@ -69,13 +71,14 @@
                                                                            (vastauksen-kasittely vastaus)
                                                                            (unsub jarjestys-pub :kutsu-kasitelty? jarjestys-sub)
                                                                            (close! jarjestys-sub)
-                                                                           (swap! *kutsu-jarjestys* rest)
-                                                                           (put! jarjestys-kanava {:kutsu-kasitelty? true}))]
+                                                                           (swap! kutsujarjestys rest)
+                                                                           (put! jarjestys-kanava {:kutsu-kasittely :kutsu-kasitelty?
+                                                                                                   :arvo true}))]
                                     (cond
-                                      (nil? *kutsu-jarjestys*) (vastauksen-kasittely vastaus)
-                                      (= (first (deref *kutsu-jarjestys*)) palvelu) (kasittele-vastaus-jarjestyksessa vastaus)
+                                      (nil? kutsujarjestys) (vastauksen-kasittely vastaus)
+                                      (= (first @kutsujarjestys) palvelu) (kasittele-vastaus-jarjestyksessa vastaus)
                                       :else (<! (go-loop [aikaisempi-kutsu-kasitelty (<! jarjestys-sub)]
-                                                  (if (= (first (deref *kutsu-jarjestys*)) palvelu)
+                                                  (if (= (first @kutsujarjestys) palvelu)
                                                     (kasittele-vastaus-jarjestyksessa vastaus)
                                                     (recur (<! jarjestys-sub))))))
                                     :kutsu-kasitelty))

@@ -33,26 +33,27 @@
                              (= harja.tyokalut.tuck/get! ~'f)))
                        ~(mapv first kutsut))
        (throw (~'js/Error. "Jokainen kutsuttava funktio varmista-kasittelyjen-jarjestys makrolle tulisi olla joko harja.tyokalut.tuck/get! tai harja.tyokalut.tuck/post!")))
-     (cljs.core.async.macros/go
-       (binding [harja.tyokalut.tuck/*kutsu-jarjestys* kutsujen-jarjestys-atomi#]
-         (let [kutsut# ~(mapv (fn [palvelukutsu-f]
-                                (let [f# (butlast palvelukutsu-f)]
-                                  `(apply partial ~f#)))
-                              kutsut)
-               optiot# ~(mapv (fn [palvelukutsu-f]
-                                (last palvelukutsu-f))
-                              kutsut)
-               kanavat# (repeatedly ~(count kutsut) (cljs.core.async/chan))
-               ~'_ (doseq [~'kanava kanavat#]
+     (binding [harja.tyokalut.tuck/*kutsujarjestys* kutsujen-jarjestys-atomi#]
+       (let [kutsut# ~(mapv (fn [palvelukutsu-f]
+                              (let [f# (butlast palvelukutsu-f)]
+                                (cons `partial f#)))
+                            kutsut)
+             optiot# ~(mapv (fn [palvelukutsu-f]
+                              (last palvelukutsu-f))
+                            kutsut)
+             kanavat# (repeatedly ~(count kutsut) cljs.core.async/chan)
+             ~'_ (doseq [~'kanava kanavat#]
                    (cljs.core.async/sub harja.tyokalut.tuck/jarjestys-pub :kutsu-kasitelty? ~'kanava))
-               kutujen-kanavat# (map (fn [~'kutsu ~'optiot ~'kanava]
-                                        (~'kutsu (merge ~'optiot
-                                                        {:harja.tyokalut.tuck/jarjestys-sub ~'kanava
-                                                         :palauta-kanava? true})))
-                                      kutsut#
-                                      optiot#
-                                      kanavat#)
-               kasittelykanava# (cljs.core.async/merge kutujen-kanavat#)]
+             kutujen-kanavat# (doall
+                                (map (fn [~'kutsu ~'optiot ~'kanava]
+                                       (~'kutsu (merge ~'optiot
+                                                       {:harja.tyokalut.tuck/jarjestys-sub ~'kanava
+                                                        :palauta-kanava? true})))
+                                     kutsut#
+                                     optiot#
+                                     kanavat#))
+             kasittelykanava# (cljs.core.async/merge kutujen-kanavat#)]
+         (cljs.core.async.macros/go
            (loop [vastaus# (cljs.core.async/<! kasittelykanava#)]
              (if (nil? vastaus#)
                :kutsut-kasitelty

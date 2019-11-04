@@ -856,7 +856,8 @@
                                                              (-> osa
                                                                  (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-indeksikorjattu"))
                                                                                :arvo ""
-                                                                               :class #{(sarakkeiden-leveys :indeksikorjattu)})))))))
+                                                                               :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                        "harmaa-teksti"})))))))
         laajenna-lapsille-fn (fn [laajenna-lapsille-pohja]
                                (map-indexed (fn [index [_ hoitokauden-hankinnat]]
                                               (let [hoitokausi (inc index)
@@ -957,7 +958,7 @@
 (defn rahavarausten-taulukko [e! kaskytyskanava toimenpiteet
                               {valittu-toimenpide :toimenpide}
                               toimenpide-avain
-                              on-oikeus?]
+                              on-oikeus? indeksit]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-6 col-md-6 col-lg-6"
@@ -967,6 +968,7 @@
         polku-taulukkoon [:hankintakustannukset :rahavaraukset toimenpide-avain]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
+        kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
         tyyppi->nimi (fn [tyyppi]
                        (case tyyppi
                          "vahinkojen-korjaukset" "Kolmansien osapuolien aih. vaurioiden korjaukset"
@@ -997,7 +999,8 @@
                                                             (fn [osa]
                                                               (p/aseta-arvo osa
                                                                             :arvo "Indeksikorjattu"
-                                                                            :class #{(sarakkeiden-leveys :indeksikorjattu)}))))))
+                                                                            :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                     "harmaa-teksti"}))))))
         syottorivi-fn (fn [syotto-pohja]
                         (mapv (fn [{:keys [summa tyyppi]}]
                                 (-> syotto-pohja
@@ -1038,7 +1041,17 @@
                                                                              (p/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
                                                                                            :arvo (* summa 12)
                                                                                            :class #{(sarakkeiden-leveys :yhteensa)})
-                                                                             (p/lisaa-fmt summa-formatointi)))))))
+                                                                             (p/lisaa-fmt summa-formatointi)))
+                                                                       (fn [osa]
+                                                                         (let [{:keys [arvo]} (get indeksit (dec kuluva-hoitovuosi))
+                                                                               indeksikorjattu (/ (* summa 12 arvo)
+                                                                                                  100)]
+                                                                           (-> osa
+                                                                               (p/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
+                                                                                             :arvo indeksikorjattu
+                                                                                             :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                                      "harmaa-teksti"})
+                                                                               (p/lisaa-fmt summa-formatointi))))))))
                               toimenpiteet))
         rivi-fn (fn [rivi-pohja]
                   (mapv (fn [{:keys [summa tyyppi]}]
@@ -1064,7 +1077,17 @@
                                                                        (p/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
                                                                                      :arvo (* summa 12)
                                                                                      :class #{(sarakkeiden-leveys :yhteensa)})
-                                                                       (p/lisaa-fmt summa-formatointi)))))))
+                                                                       (p/lisaa-fmt summa-formatointi)))
+                                                                 (fn [osa]
+                                                                   (let [{:keys [arvo]} (get indeksit (dec kuluva-hoitovuosi))
+                                                                         indeksikorjattu (/ (* summa 12 arvo)
+                                                                                            100)]
+                                                                     (-> osa
+                                                                         (p/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
+                                                                                       :arvo indeksikorjattu
+                                                                                       :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                                "harmaa-teksti"})
+                                                                         (p/lisaa-fmt summa-formatointi))))))))
                         toimenpiteet))
         yhteensa-fn (fn [yhteensa-pohja]
                       (-> yhteensa-pohja
@@ -1088,8 +1111,9 @@
                                                                    (p/lisaa-fmt summa-formatointi)))
                                                              (fn [osa]
                                                                (-> osa
-                                                                   (p/aseta-arvo :id :yhteensa-yhteensa
-                                                                                 :class #{(sarakkeiden-leveys :indeksikorjattu)})
+                                                                   (p/aseta-arvo :id :yhteensa-indeksikorjattu
+                                                                                 :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                          "harmaa-teksti"})
                                                                    (p/lisaa-fmt summa-formatointi)))))))]
     (if on-oikeus?
       (muodosta-taulukko :rahavaraukset-taulukko
@@ -1516,14 +1540,20 @@
                         :class #{}})))
 
 (defn maara-kk-taulukko [e! kaskytyskanava polku-taulukkoon rivin-nimi taulukko-elementin-id
-                         {:keys [maara-kk yhteensa]} tallennettava-asia on-oikeus?]
+                         {:keys [maara-kk yhteensa]} tallennettava-asia on-oikeus? indeksit]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
-                               :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
+                               :nimi "col-xs-12 col-sm-6 col-md-6 col-lg-6"
                                :maara-kk "col-xs-12 col-sm-2 col-md-2 col-lg-2"
-                               :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
+                               :yhteensa "col-xs-12 col-sm-2 col-md-2 col-lg-2"
+                               :indeksikorjattu "col-xs-12 col-sm-2 col-md-2 col-lg-2"))
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
+        kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
+        indeksikorjaa (fn [x]
+                        (let [{:keys [arvo]} (get indeksit (dec kuluva-hoitovuosi))]
+                          (/ (* x arvo)
+                             100)))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (p/aseta-arvo :id :otsikko-rivi
@@ -1540,7 +1570,12 @@
                                                             (fn [osa]
                                                               (p/aseta-arvo osa
                                                                             :arvo "Yhteensä"
-                                                                            :class #{(sarakkeiden-leveys :yhteensa)}))))))
+                                                                            :class #{(sarakkeiden-leveys :yhteensa)}))
+                                                            (fn [osa]
+                                                              (p/aseta-arvo osa
+                                                                            :arvo "Indeksikorjattu"
+                                                                            :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                     "harmaa-teksti"}))))))
         syottorivi-fn (fn [syotto-pohja]
                         (-> syotto-pohja
                             (p/aseta-arvo :class #{"table-default"}
@@ -1578,7 +1613,15 @@
                                                                      (p/aseta-arvo :id (keyword (p/osan-id osa))
                                                                                    :arvo yhteensa
                                                                                    :class #{(sarakkeiden-leveys :yhteensa)})
-                                                                     (p/lisaa-fmt summa-formatointi)))))))
+                                                                     (p/lisaa-fmt summa-formatointi)))
+                                                               (fn [osa]
+                                                                 (let [indeksikorjattu (indeksikorjaa (* yhteensa 12))]
+                                                                   (-> osa
+                                                                       (p/aseta-arvo :id (keyword (p/osan-id osa))
+                                                                                     :arvo indeksikorjattu
+                                                                                     :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                              "harmaa-teksti"})
+                                                                       (p/lisaa-fmt summa-formatointi))))))))
         rivi-fn (fn [rivi-pohja]
                   (-> rivi-pohja
                       (p/aseta-arvo :id :rivi
@@ -1600,7 +1643,15 @@
                                                                (p/aseta-arvo :id (keyword (p/osan-id osa))
                                                                              :arvo yhteensa
                                                                              :class #{(sarakkeiden-leveys :yhteensa)})
-                                                               (p/lisaa-fmt summa-formatointi)))))))
+                                                               (p/lisaa-fmt summa-formatointi)))
+                                                         (fn [osa]
+                                                           (let [indeksikorjattu (indeksikorjaa (* yhteensa 12))]
+                                                             (-> osa
+                                                                 (p/aseta-arvo :id (keyword (p/osan-id osa))
+                                                                               :arvo indeksikorjattu
+                                                                               :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                        "harmaa-teksti"})
+                                                                 (p/lisaa-fmt summa-formatointi))))))))
         yhteensa-fn (fn [yhteensa-pohja]
                       (-> yhteensa-pohja
                           (p/aseta-arvo :id :yhteensa
@@ -1620,16 +1671,24 @@
                                                                (-> osa
                                                                    (p/aseta-arvo :id :yhteensa-yhteensa
                                                                                  :class #{(sarakkeiden-leveys :yhteensa)})
+                                                                   (p/lisaa-fmt summa-formatointi)))
+                                                             (fn [osa]
+                                                               (-> osa
+                                                                   (p/aseta-arvo :id :yhteensa-indeksikorjattu
+                                                                                 :class #{(sarakkeiden-leveys :indeksikorjattu)
+                                                                                          "harmaa-teksti"})
                                                                    (p/lisaa-fmt summa-formatointi)))))))]
     (if on-oikeus?
       (muodosta-taulukko (str rivin-nimi "-taulukko")
                          {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
                                             osa/Teksti
+                                            osa/Teksti
                                             osa/Teksti]}
                           :syottorivi {:janan-tyyppi jana/Rivi
                                        :osat [osa/Teksti
                                               osa/Syote
+                                              osa/Teksti
                                               osa/Teksti]}}
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
@@ -1640,9 +1699,11 @@
                          {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
                                             osa/Teksti
+                                            osa/Teksti
                                             osa/Teksti]}
                           :rivi {:janan-tyyppi jana/Rivi
                                  :osat [osa/Teksti
+                                        osa/Teksti
                                         osa/Teksti
                                         osa/Teksti]}}
                          ["Nimi" "Määrä" "Yhteensä"]
