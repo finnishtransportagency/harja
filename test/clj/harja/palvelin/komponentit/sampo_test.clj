@@ -76,17 +76,6 @@
                                             :hoidonjohtopalkkio
                                             :toimistokulut
                                             :erillishankinnat}
-        poista-dublikaatti-kokonaishintaiset (fn [kustannusarvioitu-data]
-                                               (first (reduce (fn [[pidettava-data kasiteltava-data] {:keys [toimenpide-avain tallennettava-asia] :as data}]
-                                                                (if (and (kokonaishintainen-maksuerantyyppi tallennettava-asia)
-                                                                         (some (fn [{kasiteltava-tpa :toimenpide-avain kasiteltava-ta :tallennettava-asia}]
-                                                                                 (and (= kasiteltava-tpa toimenpide-avain)
-                                                                                      (kokonaishintainen-maksuerantyyppi kasiteltava-ta)))
-                                                                               kasiteltava-data))
-                                                                  [pidettava-data (rest kasiteltava-data)]
-                                                                  [(conj pidettava-data data) (rest kasiteltava-data)]))
-                                                              [[] (rest kustannusarvioitu-data)] kustannusarvioitu-data)))
-
         kiinteahintaisten-toimenpideinstanssit (flatten
                                                   (q (str "WITH toimenpide_idt AS (
                                                              SELECT id
@@ -157,24 +146,9 @@
                                                  JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                                                WHERE tpi.id IN (" (apply str (interpose ", " (conj kiinteahintaisten-toimenpideinstanssit mhu-johto-toimenpideinstanssi))) ") AND
                                                      ks.likainen IS TRUE;"))]
+        (println "KUSTANNUSSUUNNITELMAT " kustannussuunnitelmat)
         (is (every? :onnistui? vastaukset) "Kiinteähintaisen työn tallentaminen epäonnistui")
-        (is (= (count (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))
-               (count kustannussuunnitelmat)))
-        (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %))
-                              kustannussuunnitelmat))
-               (count (filter #(kokonaishintainen-maksuerantyyppi (:tallennettava-asia %))
-                              (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))))
-            "Kustannusarviotuja töitä maksuerän tyypillä 'kokonaishintainen' on väärä määrä")
-        (is (= (count (filter #(= "akillinen-hoitotyo" (:tyyppi %))
-                              kustannussuunnitelmat))
-               (count (filter #(= :akilliset-hoitotyot (:tallennettava-asia %))
-                              kustannusarvioitu-data)))
-            "Kustannusarviotuja töitä maksuerän tyypillä 'akillinen-hoitotyo' on väärä määrä")
-        (is (= (count (filter #(= "muu" (:tyyppi %))
-                              kustannussuunnitelmat))
-               (count (filter #(= :kolmansien-osapuolten-aiheuttamat-vahingot (:tallennettava-asia %))
-                              kustannusarvioitu-data)))
-            "Kustannusarviotuja töitä maksuerän tyypillä 'muu' on väärä määrä")
+        (is (= 7 (count kustannussuunnitelmat))) ;; MHU-urakoissa on seitsemän toimenpideinstainssia ja niillä kullakin yksi kustannussuunnitelma
         (is (every? :likainen kustannussuunnitelmat))))
     (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kustannusarvioitu)"
       (s-tk/sonja-jolokia-jono (get-in asetukset [:sampo :lahetysjono-ulos]) nil :purge)
@@ -185,6 +159,5 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= (count (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))
-               viestit-jonossa)
+        (is (= 7 viestit-jonossa)
             "Sampoon ei siirry kaikki likaisiksi merkatut kustannusarvioidut työt")))))

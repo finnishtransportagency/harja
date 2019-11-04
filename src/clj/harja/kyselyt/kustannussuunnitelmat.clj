@@ -13,5 +13,4 @@
         urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
     (case urakan-tyyppi
       "vesivayla-kanavien-hoito" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
-      "vesivayla-kanavien-korjaus" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
-      (harja.kyselyt.kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-yksikkohintaiset-summat db numero))))
+      "vesivayla-kanavien-korjaus" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero))))

@@ -41,7 +41,7 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 DO $$
 DECLARE
   toimenpide_koodit TEXT[] := ARRAY['20107','20191','23104','23116','23124','14301','23151'];
-  tyypit TEXT[] := ARRAY['kokonaishintainen', 'muu', 'akillinen-hoitotyo'];
+  tyypit TEXT[] := ARRAY['kokonaishintainen'];
   urakat INT[] := (SELECT array_agg(id)
                    FROM urakka
                    WHERE nimi IN ('Rovaniemen MHU testiurakka (1. hoitovuosi)', 'Ivalon MHU testiurakka (uusi)', 'Pellon MHU testiurakka (3. hoitovuosi)', 'Kemin MHU testiurakka (5. hoitovuosi)'));
