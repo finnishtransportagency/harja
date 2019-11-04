@@ -1690,7 +1690,7 @@
                                               osa/Syote
                                               osa/Teksti
                                               osa/Teksti]}}
-                         ["Nimi" "Määrä" "Yhteensä"]
+                         ["Nimi" "Määrä" "Yhteensä" "Indeksikorjattu"]
                          [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                           :class #{}
@@ -1706,7 +1706,7 @@
                                         osa/Teksti
                                         osa/Teksti
                                         osa/Teksti]}}
-                         ["Nimi" "Määrä" "Yhteensä"]
+                         ["Nimi" "Määrä" "Yhteensä" "Indeksikorjattu"]
                          [:normaali otsikko-fn :rivi rivi-fn :normaali yhteensa-fn]
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                           :class #{}

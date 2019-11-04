@@ -660,21 +660,6 @@
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
                           johtopalkkio-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
-      #_(-> app
-          (tuck-apurit/post! :budjettitavoite
-                             {:urakka-id urakka-id}
-                             {:onnistui ->HaeTavoiteJaKattohintaOnnistui
-                              :epaonnistui ->HaeTavoiteJaKattohintaEpaonnistui
-                              :paasta-virhe-lapi? true})
-          (tuck-apurit/post! :budjetoidut-tyot
-                             {:urakka-id urakka-id}
-                             {:onnistui ->HaeHankintakustannuksetOnnistui
-                              :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
-                                                    johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
-                                                    erillishankinnat-taulukko toimistokulut-taulukko
-                                                    johtopalkkio-taulukko]
-                              :epaonnistui ->HaeHankintakustannuksetEpaonnistui
-                              :paasta-virhe-lapi? true}))
       (varmista-kasittelyjen-jarjestys
         (tuck-apurit/post! app :budjettisuunnittelun-indeksit
                            {:urakka-id urakka-id}
