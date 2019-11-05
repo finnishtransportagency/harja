@@ -57,7 +57,7 @@
                                              polut-arvot)))
             valitaso-id (luo-id-fn otsikko)
             paivitetty-idt (paivita-tarvittaessa idt otsikko valitaso-id)]
-        (println paivitetty-idt)
+        #_(println paivitetty-idt)
         (recur
           paivitetty-idt
           (-> tulos
@@ -116,9 +116,9 @@
                              :maara                 (if (nil? maara) 0 maara)
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                              :urakka                urakka
-                             :piillotettu?          false}))
+                             :piillotettu?          false}))))
         ;; TODO: Muodosta tehtävätyyppinen rivi
-        @tulos))))
+    @tulos))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
