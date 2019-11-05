@@ -116,7 +116,7 @@
         muokatun-summan-ajat-vuosittain (if tulevien-vuosien-ajat
                                           (into [] (cons v-kk tulevien-vuosien-ajat))
                                           [v-kk])]
-    (reduce (fn [ajat {:keys [vuosi]}]
+    (reduce (fn [ajat {:keys [vuosi] :as tuleva-v-kk}]
               (let [muokattavan-rivin-aika (pvm/luo-pvm vuosi (dec (:kuukausi v-kk)) 15)
                     muokatun-hoitokauden-paattymisvuosi (pvm/vuosi (second (pvm/paivamaaran-hoitokausi muokattavan-rivin-aika)))
                     kauden-viimeinen-aika (case maksetaan
@@ -132,7 +132,7 @@
                                           {:vuosi vuosi
                                            :kuukausi kuukausi}))
                                       (pvm/aikavalin-kuukausivalit [muokattavan-rivin-aika kauden-viimeinen-aika]))))
-                  (conj ajat v-kk))))
+                  (conj ajat tuleva-v-kk))))
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
