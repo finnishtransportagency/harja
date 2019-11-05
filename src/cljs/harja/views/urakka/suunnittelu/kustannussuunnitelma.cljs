@@ -1026,10 +1026,11 @@
                                                                                                              (when arvo
                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                                 :on-blur (fn [arvo]
-                                                                                                           (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                           (e! (t/->TallennaKustannusarvoituTyo (tyyppi->tallennettava-asia tyyppi) toimenpide-avain arvo nil))
-                                                                                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
-                                                                                                           (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))
+                                                                                                           (when arvo
+                                                                                                             (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                             (e! (t/->TallennaKustannusarvoituTyo (tyyppi->tallennettava-asia tyyppi) toimenpide-avain arvo nil))
+                                                                                                             (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
+                                                                                                             (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                                 :on-key-down (fn [event]
                                                                                                                (when (= "Enter" (.. event -key))
                                                                                                                  (.. event -target blur)))}
@@ -1599,9 +1600,10 @@
                                                                                                      (when arvo
                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                         :on-blur (fn [arvo]
-                                                                                                   (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                   (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                                                                                   (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))
+                                                                                                   (when arvo
+                                                                                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                     (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                                     (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                         :on-key-down (fn [event]
                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                          (.. event -target blur)))}

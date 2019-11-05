@@ -332,7 +332,6 @@
                                   _ (when (nil? toimenpideinstanssi-id)
                                       (throw (Exception. "Toimenpideinstanssia ei löydetty")))
                                   tyyppi (keyword tyyppi)
-
                                   ajat (mudosta-ajat ajat)
                                   kustannusarvioitu-tyo-params (into {}
                                                                      (map (fn [[k v]]
@@ -353,17 +352,22 @@
                                                                                                 (= (:kuukausi %) smallint-kk))
                                                                                           ajat))
                                                                                   olemassa-olevat-kustannusarvioidut-tyot-vuosille)
-                                  paivitetaan? (not (empty? olemassa-olevat-kustannusarvioidut-tyot))]
+                                  uudet-kustannusarvioidut-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
+                                                                               (some #(and (= vuosi (::bs/smallint-v %))
+                                                                                           (= kuukausi (::bs/smallint-kk %)))
+                                                                                     olemassa-olevat-kustannusarvioidut-tyot-vuosille))
+                                                                             ajat)]
                               (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (if paivitetaan?
+                              (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
                                   (update! db ::bs/kustannusarvioitu-tyo
                                            {::bs/summa     summa
                                             ::bs/muokattu  (pvm/nyt)
                                             ::bs/muokkaaja (:id user)}
-                                           {::bs/id (::bs/id olemassa-oleva-tyo)}))
+                                           {::bs/id (::bs/id olemassa-oleva-tyo)})))
+                              (when-not (empty? uudet-kustannusarvioidut-tyot-ajat)
                                 (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
-                                  (doseq [{:keys [vuosi kuukausi]} ajat]
+                                  (doseq [{:keys [vuosi kuukausi]} uudet-kustannusarvioidut-tyot-ajat]
                                     (insert! db ::bs/kustannusarvioitu-tyo
                                              {::bs/smallint-v          vuosi
                                               ::bs/smallint-kk         kuukausi
