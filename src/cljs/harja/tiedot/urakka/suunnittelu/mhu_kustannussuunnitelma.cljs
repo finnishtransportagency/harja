@@ -719,23 +719,21 @@
                                    (let [asia-kannasta (filter (fn [tyo]
                                                                  (= haettu-asia (:haettu-asia tyo)))
                                                                kustannusarvioidut-tyot)
-                                         asia-kannasta (into []
-                                                             (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
-                                                                       (let [vuoden-maara (some (fn [{:keys [vuosi summa]}]
-                                                                                                  (when (= vuosi hoitokauden-aloitus-vuosi)
-                                                                                                    summa))
-                                                                                                asia-kannasta)
-                                                                             maara-kk (or vuoden-maara 0)]
-                                                                         (conj palkkiot {:maara-kk maara-kk
-                                                                                         :nimi asia-nimi-frontilla
-                                                                                         :yhteensa (* 12 maara-kk)})))
-                                                                     [] (range (pvm/vuosi urakan-aloituspvm) (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))
-                                         asia-pohjadata [{:nimi asia-nimi-frontilla}]]
-                                     [(tyokalut/generoi-pohjadata [(last asia-kannasta)]
-                                                                  {:maara-kk ""
-                                                                   :yhteensa ""}
-                                                                  asia-pohjadata)
-                                      asia-kannasta]))
+                                         asia-kannasta (vec
+                                                         (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
+                                                                   (let [vuoden-maara (some (fn [{:keys [vuosi summa kuukausi]}]
+                                                                                              (when (and (= vuosi hoitokauden-aloitus-vuosi)
+                                                                                                         (> kuukausi 9))
+                                                                                                summa))
+                                                                                            asia-kannasta)
+                                                                         maara-kk (or vuoden-maara 0)]
+                                                                     (conj palkkiot {:maara-kk maara-kk
+                                                                                     :nimi asia-nimi-frontilla
+                                                                                     :yhteensa (* 12 maara-kk)})))
+                                                                 []
+                                                                 (range (pvm/vuosi urakan-aloituspvm)
+                                                                        (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))]
+                                     [[(last asia-kannasta)] asia-kannasta]))
           hankinnat (:kiinteahintaiset-tyot vastaus)
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
