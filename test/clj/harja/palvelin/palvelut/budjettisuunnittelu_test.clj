@@ -118,38 +118,41 @@
           (testaa-ajat tehtavat toimenpide))))
     (testing "Kustannusarvioidut työt on oikein"
       (let [kustannusarvioidut-tyot-toimenpiteittain (group-by :toimenpide-avain (:kustannusarvioidut-tyot budjetoidut-tyot))]
+        (println (into [] (eduction (filter #(= "akillinen-hoitotyo" (:tyyppi %)))
+                                    (filter #(nil? (:haettu-asia %)))
+                                    (:talvihoito kustannusarvioidut-tyot-toimenpiteittain))))
         (doseq [[toimenpide-avain tehtavat] kustannusarvioidut-tyot-toimenpiteittain
-                :let [ryhmiteltyna (group-by (juxt :tyyppi :tehtava-nimi) tehtavat)]]
+                :let [ryhmiteltyna (group-by (juxt :tyyppi :haettu-asia) tehtavat)]]
           (case toimenpide-avain
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
-                            (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" nil]]))
+                            (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" :rahavaraus-lupaukseen-1]]))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
                           (is (= (into #{} (keys ryhmiteltyna))
-                                 #{["vahinkojen-korjaukset" nil]
-                                   ["akillinen-hoitotyo" nil]}))
+                                 #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
+                                   ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
                           (doseq [[_ tehtavat] ryhmiteltyna]
                             (testaa-ajat tehtavat toimenpide-avain)))
             :liikenneympariston-hoito (do
                                         (is (= (into #{} (keys ryhmiteltyna))
                                                #{["laskutettava-tyo" nil] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
-                                                 ["vahinkojen-korjaukset" nil]
-                                                 ["akillinen-hoitotyo" nil]}))
+                                                 ["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
+                                                 ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
                                         (doseq [[_ tehtavat] ryhmiteltyna]
                                           (testaa-ajat tehtavat toimenpide-avain)))
             :sorateiden-hoito (do
                                 (is (= (into #{} (keys ryhmiteltyna))
-                                       #{["vahinkojen-korjaukset" nil]
-                                         ["akillinen-hoitotyo" nil]}))
+                                       #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
+                                         ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
                                 (doseq [[_ tehtavat] ryhmiteltyna]
                                   (testaa-ajat tehtavat toimenpide-avain)))
             :mhu-korvausinvestointi (is (= ryhmiteltyna {}))
             :mhu-johto (do
                          (is (= (into #{} (keys ryhmiteltyna))
                                 #{["laskutettava-tyo" nil]
-                                  ["laskutettava-tyo" "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."]
-                                  ["laskutettava-tyo" "Hoitourakan työnjohto"]}))
+                                  ["laskutettava-tyo" :toimistokulut]
+                                  ["laskutettava-tyo" :hoidonjohtopalkkio]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
                            (testaa-ajat tehtavat toimenpide-avain)))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"

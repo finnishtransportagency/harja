@@ -627,9 +627,9 @@ BEGIN
                         tehtavaryhma=(SELECT id
                                       FROM tehtavaryhma
                                       WHERE nimi = CASE
-                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN 'VAHINKOJEN KORJAUKSET (TALVIHOITO)'
-                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN 'VAHINKOJEN KORJAUKSET (LIIKENNEYMPÄRISTÖN HOITO)'
-                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'VAHINKOJEN KORJAUKSET (SORATIET)'
+                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN 'ÄKILLISET HOITOTYÖT (TALVIHOITO)'
+                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN 'ÄKILLISET HOITOTYÖT (LIIKENNEYMPÄRISTÖN HOITO)'
+                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'ÄKILLISET HOITOTYÖT (SORATIET)'
                                                    END)),
                  NULL,
                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
@@ -890,9 +890,9 @@ BEGIN
                         tehtavaryhma=(SELECT id
                                       FROM tehtavaryhma
                                       WHERE nimi = CASE
-                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN 'VAHINKOJEN KORJAUKSET (TALVIHOITO)'
-                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN 'VAHINKOJEN KORJAUKSET (LIIKENNEYMPÄRISTÖN HOITO)'
-                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'VAHINKOJEN KORJAUKSET (SORATIET)'
+                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN 'ÄKILLISET HOITOTYÖT (TALVIHOITO)'
+                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN 'ÄKILLISET HOITOTYÖT (LIIKENNEYMPÄRISTÖN HOITO)'
+                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'ÄKILLISET HOITOTYÖT (SORATIET)'
                                                    END)),
                  NULL,
                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
@@ -1222,9 +1222,9 @@ BEGIN
                         tehtavaryhma=(SELECT id
                                       FROM tehtavaryhma
                                       WHERE nimi = CASE
-                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN 'VAHINKOJEN KORJAUKSET (TALVIHOITO)'
-                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN 'VAHINKOJEN KORJAUKSET (LIIKENNEYMPÄRISTÖN HOITO)'
-                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'VAHINKOJEN KORJAUKSET (SORATIET)'
+                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN 'ÄKILLISET HOITOTYÖT (TALVIHOITO)'
+                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN 'ÄKILLISET HOITOTYÖT (LIIKENNEYMPÄRISTÖN HOITO)'
+                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'ÄKILLISET HOITOTYÖT (SORATIET)'
                                                    END)),
                  NULL,
                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
