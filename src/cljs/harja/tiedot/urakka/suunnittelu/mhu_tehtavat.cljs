@@ -52,19 +52,20 @@
       (fn [osa]
         (cond
           (re-find #"-maara" (name (p/osan-id osa))) (maara osa)
-          :else (identity osa)))
+          :else osa))
       osat)))
 
 (defn paivita-tehtavien-maarat
   [tehtavat maarat]
-  (reduce (fn [acc m]
-            (let [{:keys [hoitokauden-alkuvuosi maara tehtava-id] :as maara-koko} m]
+  (reduce (fn [acc {:keys [hoitokauden-alkuvuosi maara tehtava-id]}]
+            (if-not (nil? hoitokauden-alkuvuosi)
               (assoc-in acc [(-> tehtava-id str keyword)
                              :maarat
                              (-> hoitokauden-alkuvuosi str keyword)]
-                        maara)))
+                        maara)
+              acc))
           tehtavat
-          (filter #(not (nil? (:hoitokauden-alkuvuosi %))) maarat)))
+          maarat))
 
 (defn paivita-maarat-hoitokaudella
   [hoitokausi tehtavat]
@@ -102,14 +103,14 @@
   (process-event
     [{:keys [tehtava]} {:keys [valinnat tehtavat-ja-toimenpiteet] :as app}]
     (let [{:keys [urakka-id tehtava-id maara]} tehtava
-          numero-maara (-> maara (clojure.string/replace #"," ".") js/parseFloat )
+          numero-maara (-> maara (clj-str/replace #"," ".") js/parseFloat)
           numero? (not (js/isNaN numero-maara))
           samat-kaikille? (:samat-kaikille valinnat)]
       (if samat-kaikille?
         (doseq [vuosi (keys (get-in tehtavat-ja-toimenpiteet [(-> tehtava-id str keyword) :maarat]))]
           (let [maara (-> tehtavat-ja-toimenpiteet
                           (get-in [(-> tehtava-id str keyword) :maarat vuosi])
-                          (clojure.string/replace #"," ".")
+                          (clj-str/replace #"," ".")
                           js/parseFloat)]
             (tuck-apurit/post! :tallenna-tehtavamaarat
                                {:urakka-id             urakka-id
@@ -145,22 +146,28 @@
   (process-event
     [{:keys [tehtavat parametrit]} {:keys [valinnat] :as app}]
     (let [{urakka-id :id urakka-alkupvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
-          alkuvuosi (harja.pvm/vuosi urakka-alkupvm)
-          id-avaimilla-hierarkia (reduce (fn [kaikki tehtava]
-                                           (let [[avain teht] tehtava]
-                                             (assoc kaikki avain
-                                                           (if (= 4 (:taso teht))
-                                                             (assoc teht
-                                                               :maarat (reduce
-                                                                         (fn [vuodet vuosi]
-                                                                           (assoc vuodet (-> vuosi
-                                                                                             str
-                                                                                             keyword) 0))
-                                                                         {}
-                                                                         (range alkuvuosi (+ alkuvuosi 5)))
-                                                               :alkuvuosi alkuvuosi)
-                                                             teht)))) {} (seq tehtavat))
-          toimenpide (some (fn [[_ t]] (when (= 3 (:taso t)) t)) tehtavat)
+          alkuvuosi (pvm/vuosi urakka-alkupvm)
+          id-avaimilla-hierarkia (reduce (fn [kaikki [avain teht]]
+                                           (assoc kaikki avain
+                                                         (if (= 4 (:taso teht))
+                                                           (assoc teht
+                                                             :maarat (reduce
+                                                                       (fn [vuodet vuosi]
+                                                                         (assoc vuodet (-> vuosi
+                                                                                           str
+                                                                                           keyword) 0))
+                                                                       {}
+                                                                       (range alkuvuosi
+                                                                              (+ alkuvuosi 5)))
+                                                             :alkuvuosi alkuvuosi)
+                                                           teht)))
+                                         {}
+                                         (seq tehtavat))
+          toimenpide (some
+                       (fn [[_ t]]
+                         (when (= 3 (:taso t))
+                           t))
+                       tehtavat)
           {tehtavat->taulukko :tehtavat->taulukko} parametrit]
       (-> app
           (assoc :tehtavat-ja-toimenpiteet id-avaimilla-hierarkia
@@ -179,10 +186,10 @@
                                       :toimenpide toimenpide)))))
   MaaraHakuOnnistui
   (process-event
-    [{:keys [maarat prosessoi-tulokset] :as params} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat] :as app}]
+    [{:keys [maarat]} {:keys [tehtavat-ja-toimenpiteet tehtavat-taulukko valinnat] :as app}]
     (let [{:keys [toimenpide hoitokausi]} valinnat
           tehtavat-maarilla (paivita-tehtavien-maarat tehtavat-ja-toimenpiteet maarat)
-          paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella hoitokausi tehtavat-ja-toimenpiteet))
+          paivitetty-taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivita-maarat-hoitokaudella hoitokausi tehtavat-maarilla))
           filtteroity-taulukko (p/paivita-arvo paivitetty-taulukko :lapset (filtteri-paivitys-fn toimenpide #{:tehtava}))]
       (p/paivita-taulukko! filtteroity-taulukko (-> app
                                                     (assoc :tehtavat-ja-toimenpiteet tehtavat-maarilla)
@@ -190,24 +197,15 @@
   HaeTehtavatJaMaarat
   (process-event
     [{parametrit :parametrit} app]
-    (let [{urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
-          uusi-tila (-> app
-                        (tuck-apurit/get! :tehtavat
-                                          {:onnistui            ->TehtavaHakuOnnistui
-                                           :epaonnistui         ->HakuEpaonnistui
-                                           :onnistui-parametrit [parametrit]
-                                           :paasta-virhe-lapi?  true})
-                        #_(tuck-apurit/post! :urakan-toimenpiteet-ja-tehtavat
-                                             {:urakka urakka-id}
-                                             (merge
-                                               {:onnistui            ->TehtavaHakuOnnistui
-                                                :epaonnistui         ->HakuEpaonnistui
-                                                :paasta-virhe-lapi?  true
-                                                :onnistui-parametrit [parametrit]}))
-                        (update :valinnat #(assoc %
-                                             :virhe-noudettaessa false
-                                             :noudetaan (inc (:noudetaan %)))))]
-      uusi-tila))
+    (-> app
+        (tuck-apurit/get! :tehtavat
+                          {:onnistui            ->TehtavaHakuOnnistui
+                           :epaonnistui         ->HakuEpaonnistui
+                           :onnistui-parametrit [parametrit]
+                           :paasta-virhe-lapi?  true})
+        (update :valinnat #(assoc %
+                             :virhe-noudettaessa false
+                             :noudetaan (inc (:noudetaan %))))))
   HaeMaarat
   (process-event
     [{:keys [parametrit]} app]
@@ -217,7 +215,7 @@
                         (tuck-apurit/post! :tehtavamaarat-hierarkiassa
                                            {:urakka-id             urakka-id
                                             :hoitokauden-alkuvuosi (or hoitokausi
-                                                                       (harja.pvm/vuosi urakka-alkupvm))}
+                                                                       (pvm/vuosi urakka-alkupvm))}
                                            (merge
                                              {:onnistui           ->MaaraHakuOnnistui
                                               :epaonnistui        ->HakuEpaonnistui
@@ -246,7 +244,7 @@
     (let [{:keys [hoitokausi samat-kaikille]} valinnat
           id (-> (p/osan-id solu)
                  name
-                 (clojure.string/split #"-")
+                 (clj-str/split #"-")
                  first)
           app (if samat-kaikille
                 (update-in app [:tehtavat-ja-toimenpiteet (-> id str keyword) :maarat] (fn [m]

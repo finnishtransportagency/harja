@@ -4,6 +4,7 @@
             [taoensso.timbre :as log]
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as clj-str]
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.tehtavamaarat :as q]
             [harja.kyselyt.urakat :as urakat-q]
@@ -30,37 +31,57 @@
   (into []
         (q/hae-tehtavahierarkia db)))
 
+(defn- muodosta-hierarkia
+  [kannasta]
+  (loop [idt {}
+         tulos {:tehtavat [] :valitasot []}
+         loput (rest kannasta)
+         t (first kannasta)]
+    (if (nil? t)
+      tulos
+      (let [{:keys [tehtava-id tehtava otsikko yksikko jarjestys]} t
+            luo-id-fn (fn [polku]
+                        (let [arvo (get idt polku)]
+                          (if (nil? arvo)
+                            (Integer/parseInt
+                              (name
+                                (gensym "-")))
+                            arvo)))
+            paivita-tarvittaessa (fn [idt & params]
+                                   (let [polut-arvot (partition 2 params)]
+                                     (reduce (fn [koko [polku arvo]]
+                                               (if (nil? (get koko arvo))
+                                                 (assoc koko polku arvo)
+                                                 koko))
+                                             idt
+                                             polut-arvot)))
+            valitaso-id (luo-id-fn otsikko)
+            paivitetty-idt (paivita-tarvittaessa idt otsikko valitaso-id)]
+        (println paivitetty-idt)
+        (recur
+          paivitetty-idt
+          (-> tulos
+              (update :tehtavat
+                      conj
+                      {:id        tehtava-id
+                       :nimi      tehtava
+                       :vanhempi  valitaso-id
+                       :jarjestys jarjestys
+                       :yksikko   yksikko
+                       :taso      4})
+              (update :valitasot
+                      conj
+                      {:id       valitaso-id
+                       :nimi     otsikko
+                       :taso     3}))
+          (rest loput)
+          (first loput))))))
+
 (defn hae-tehtavat
   "Urakan tehtävähierarkia ilman määriä"
   [db user]
   (let [kannasta (into [] (q/hae-tehtavahierarkia db))
-        {:keys [tehtavat valitasot toimenpiteet]} (let [idt (atom {})]
-                                                    (reduce
-                                                      (fn [kaikki {:keys [tehtava-id tehtava otsikko yksikko jarjestys] :as t}]
-                                                        (let [otsake (-> otsikko
-                                                                         (clojure.string/split #" " 2)
-                                                                         second)
-                                                              luo-id-fn (fn [polku] (let [arvo (get @idt polku)]
-                                                                                      (if (nil? arvo)
-                                                                                        (get (swap! idt assoc polku (Integer/parseInt (name (gensym "-")))) polku)
-                                                                                        arvo)))
-                                                              toimenpide-id (luo-id-fn otsake)
-                                                              valitaso-id (luo-id-fn otsikko)]
-                                                          (-> kaikki
-                                                              (update :tehtavat (fn [tehtavat] (conj tehtavat
-                                                                                                     {:id       tehtava-id
-                                                                                                      :nimi     tehtava
-                                                                                                      :vanhempi valitaso-id
-                                                                                                      :jarjestys jarjestys
-                                                                                                      :yksikko  yksikko
-                                                                                                      :taso     4})))
-                                                              (update :valitasot (fn [valitasot] (conj valitasot
-                                                                                                       {:id       valitaso-id
-                                                                                                        :nimi     otsikko
-                                                                                                        :vanhempi toimenpide-id
-                                                                                                        :taso     3}))))))
-                                                      {:tehtavat [] :valitasot []}
-                                                      kannasta))]
+        {:keys [tehtavat valitasot toimenpiteet]} (muodosta-hierarkia kannasta)]
     (reduce (fn [acc asia] (assoc acc (-> asia :id str keyword) asia)) {} (concat (sort-by :jarjestys tehtavat) (distinct valitasot)))))
 
 (defn- jarjesta-tehtavahierarkia
@@ -79,47 +100,25 @@
   ;; TODO: Muodosta palautettavat tiedot. Vrt. println tulostukset.
   (let [cnt (atom 1)
         tulos (atom [])
-        ;toimenpiteet (atom #{})
         tehtavahierarkia (sort-by first (group-by :otsikko hierarkia))] ;; Ryhmitelty hierarkia sisältää otsikot (first) ja niiden alle kuuluvat tehtävärivit (second)
     (doseq [rivi tehtavahierarkia]
       (let [emo (Long/valueOf @cnt)
             otsikko (first rivi)
-            tehtavalista (second rivi)
-            #_toimenpide #_(-> otsikko
-                           (clojure.string/split #" " 2)
-                           (second)
-                           (clojure.string/replace " " "_")
-                           (clojure.string/replace "Ä" "A")
-                           (clojure.string/replace "Ö" "O")
-                           (keyword))]
+            tehtavalista (second rivi)]
         ;; TODO: Muodosta otsikkotyyppinen rivi
-        #_(swap! toimenpiteet conj {:id   toimenpide
-                                  :nimi (-> otsikko
-                                            (clojure.string/split #" " 2)
-                                            (second))})
         (swap! tulos conj {:id                 @cnt
                            :tehtavaryhmatyyppi "otsikko"
                            :nimi               otsikko
-                           :piillotettu?       false
-                           ;:toimenpide toimenpide
-                           })
+                           :piillotettu?       false})
         (doseq [{:keys [tehtava-id tehtava maara yksikko hoitokauden-alkuvuosi urakka] :as teht} tehtavalista]
           (swap! cnt + 1)
-          (swap! tulos conj {;:id                 @cnt
-                             :tehtava-id            tehtava-id
-                             ; :tehtavaryhmatyyppi "tehtava"
-                             ; :nimi               tehtava
+          (swap! tulos conj {:tehtava-id            tehtava-id
                              :maara                 (if (nil? maara) 0 maara)
-                             ;:yksikko            yksikko
-                             ;:vanhempi           emo
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                              :urakka                urakka
-                             :piillotettu?          false})
-          ;; TODO: Muodosta tehtävätyyppinen rivi
-         #_(println "{:id" @cnt ":tehtava-id" tehtava-id ":nimi" tehtava ":tehtavaryhmatyyppi tehtava :yksikko " yksikko " :maara" maara ":vanhempi" emo ":piillotettu? false :urakka}" urakka " :hoitikausi " hoitokauden-alkuvuosi))))
-    #_(reduce #(conj %1 (assoc %2 :tehtavaryhmatyyppi "toimenpide"
-                                :piillotettu? false)) @tulos @toimenpiteet)
-    @tulos))
+                             :piillotettu?          false}))
+        ;; TODO: Muodosta tehtävätyyppinen rivi
+        @tulos))))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."

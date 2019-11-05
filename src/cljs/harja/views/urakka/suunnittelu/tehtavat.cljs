@@ -62,84 +62,59 @@
                                                         :arvo "Yksikkö"
                                                         :class #{(sarakkeiden-leveys :maara-yksikko)})))))
 
+(defn- validi?
+  [arvo tyyppi]
+  (let [validius (case tyyppi
+                   :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
+    (not (nil? validius))))
+
+(defn- luo-syottorivit
+  [e! rivi tnt]
+  (let [luku (atom {})]
+    (mapv
+      (fn [[_ {:keys [nimi maarat id vanhempi yksikko]}]]
+        (swap! luku update vanhempi inc)
+        (-> rivi
+            (p/aseta-arvo :id (keyword (str vanhempi "/" id))
+                          :class #{(str "table-default-" (if (= 0 (rem (get @luku vanhempi) 2)) "even" "odd"))}
+                          :piillotettu? false)
+            (p/paivita-arvo :lapset
+                            (osien-paivitys-fn #(p/aseta-arvo %
+                                                              :id :tehtava-nimi
+                                                              :arvo nimi
+                                                              :class #{(sarakkeiden-leveys :maara)})
+                                               #(p/aseta-arvo %
+                                                              :id (keyword (str vanhempi "/" id "-maara"))
+                                                              :arvo (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))
+                                                              :class #{(sarakkeiden-leveys :maara-input) "input-default"}
+                                                              :on-blur (fn [arvo]
+                                                                         (let [arvo (-> arvo (.. -target -value))]
+                                                                           (when (validi? arvo :numero)
+                                                                             (e! (t/->TallennaTehtavamaara
+                                                                                   {:urakka-id  (-> @tila/tila :yleiset :urakka :id)
+                                                                                    :tehtava-id id
+                                                                                    :maara      arvo})))))
+                                                              :on-change (fn [arvo]
+                                                                           (e!
+                                                                             (t/->PaivitaMaara osa/*this*
+                                                                                               (-> arvo (.. -target -value))
+                                                                                               #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")}))))
+                                               #(p/aseta-arvo %
+                                                              :id :tehtava-yksikko
+                                                              :arvo (or yksikko "")
+                                                              :class #{(sarakkeiden-leveys :maara-yksikko)})))))
+      (filter (fn [[_ t]]
+                (= 4 (:taso t)))
+              tnt))))
+
 
 (defn luo-tehtava-taulukko
   [e! tehtavat-ja-toimenpiteet]
   (let [polku-taulukkoon [:tehtavat-taulukko]
-        validi? (fn [arvo tyyppi]
-                  (let [validius (case tyyppi
-                                   :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
-                    (not (nil? validius))))
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
         syottorivi (fn [rivi]
-                     #_(mapv (fn [{:keys [nimi maara id piillotettu? tehtava-id tehtavaryhmatyyppi yksikko] :as tehtava}]
-                             (-> rivi
-                                 (p/aseta-arvo :id id
-                                               :class #{(str "table-default-" (if (= 0 (rem id 2)) "even" "odd"))}
-                                               :piillotettu? piillotettu?)
-                                 (p/paivita-arvo :lapset
-                                                 (osien-paivitys-fn #(p/aseta-arvo %
-                                                                                   :id :tehtava-nimi
-                                                                                   :arvo nimi
-                                                                                   :class #{(sarakkeiden-leveys :maara)})
-                                                                    #(p/aseta-arvo %
-                                                                                   :id (keyword (str id "-maara"))
-                                                                                   :arvo maara
-                                                                                   :class #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? maara :numero) "" "ei-validi")}
-                                                                                   :on-blur (fn [arvo]
-                                                                                              (let [arvo (-> arvo (.. -target -value))]
-                                                                                                (when (validi? arvo :numero)
-                                                                                                 (e! (t/->TallennaTehtavamaara
-                                                                                                       {:urakka-id  (-> @tila/tila :yleiset :urakka :id)
-                                                                                                        :tehtava-id tehtava-id
-                                                                                                        :maara      arvo})))))
-                                                                                   :on-change (fn [arvo]
-                                                                                                (e!
-                                                                                                  (t/->PaivitaMaara osa/*this*
-                                                                                                                    (-> arvo (.. -target -value))
-                                                                                                                    #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")} ))))
-                                                                    #(p/aseta-arvo %
-                                                                                   :id :tehtava-yksikko
-                                                                                   :arvo (or yksikko "")
-                                                                                   :class #{(sarakkeiden-leveys :maara-yksikko)})))
-                                 ))
-                           (filter #(= "tehtava" (:tehtavaryhmatyyppi %)) tehtavat-ja-maaraluettelo))
-                     (let [luku (atom 0)]
-                       (mapv (fn [tehtava]
-                               (let [{:keys [nimi maarat id vanhempi yksikko] :as tehtava} (second tehtava)]
-                                 (swap! luku inc)
-                                 (-> rivi
-                                     (p/aseta-arvo :id (keyword (str vanhempi "/" id))
-                                                   :class #{(str "table-default-" (if (= 0 (rem @luku 2)) "even" "odd"))}
-                                                   :piillotettu? false)
-                                     (p/paivita-arvo :lapset
-                                                     (osien-paivitys-fn #(p/aseta-arvo %
-                                                                                       :id :tehtava-nimi
-                                                                                       :arvo nimi
-                                                                                       :class #{(sarakkeiden-leveys :maara)})
-                                                                        #(p/aseta-arvo %
-                                                                                       :id (keyword (str vanhempi "/" id "-maara"))
-                                                                                       :arvo (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))
-                                                                                       :class #{(sarakkeiden-leveys :maara-input) "input-default"}
-                                                                                       :on-blur (fn [arvo]
-                                                                                                  (let [arvo (-> arvo (.. -target -value))]
-                                                                                                    (when (validi? arvo :numero)
-                                                                                                      (e! (t/->TallennaTehtavamaara
-                                                                                                            {:urakka-id  (-> @tila/tila :yleiset :urakka :id)
-                                                                                                             :tehtava-id id
-                                                                                                             :maara      arvo})))))
-                                                                                       :on-change (fn [arvo]
-                                                                                                    (e!
-                                                                                                      (t/->PaivitaMaara osa/*this*
-                                                                                                                        (-> arvo (.. -target -value))
-                                                                                                                        #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")} ))))
-                                                                        #(p/aseta-arvo %
-                                                                                       :id :tehtava-yksikko
-                                                                                       :arvo (or yksikko "")
-                                                                                       :class #{(sarakkeiden-leveys :maara-yksikko)})))
-                                     )))
-                             tehtavat-ja-toimenpiteet)))]
+                      (luo-syottorivit e! rivi tehtavat-ja-toimenpiteet))]
     (muodosta-taulukko :tehtavat
                        {:teksti {:janan-tyyppi jana/Rivi
                                  :osat         [osa/Teksti osa/Teksti osa/Teksti]}
@@ -184,22 +159,23 @@
   (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)]
     (fn [e! {:keys [tehtavat-ja-toimenpiteet valinnat] :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
-            toimenpiteet (sort-by :nimi (mapv (fn [[_ data]] data)
-                                (filter (fn [[_ data]]
-                                          (= 3 (:taso data)))
-                                        tehtavat-ja-toimenpiteet)))
+            toimenpide-xform (comp (map
+                                     (fn [[_ data]] data))
+                                   (filter
+                                     (fn [data]
+                                       (= 3 (:taso data)))))
+            toimenpiteet (sort-by :nimi (into [] toimenpide-xform tehtavat-ja-toimenpiteet))
             hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
             disabloitu-alasveto? (fn [koll]
-                                   (or (not true #_(= 0 (:noudetaan valinnat)))
-                                       (= 0 (count koll))))]
+                                   (= 0 (count koll)))]
 
         [:div
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Toimenpide"]
-          [yleiset/livi-pudotusvalikko {:valinta (:toimenpide valinnat)
+          [yleiset/livi-pudotusvalikko {:valinta    (:toimenpide valinnat)
                                         :valitse-fn #(e! (t/->ValitseTaso % :toimenpide))
-                                        :format-fn #(:nimi %)
-                                        :disabled (disabloitu-alasveto? toimenpiteet)}
+                                        :format-fn  #(:nimi %)
+                                        :disabled   (disabloitu-alasveto? toimenpiteet)}
            toimenpiteet]]
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Hoitokausi"]
@@ -222,13 +198,13 @@
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (t/->HaeTehtavatJaMaarat
-                            {:hoitokausi (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
+                            {:hoitokausi         (-> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi)
                              :tehtavat->taulukko (partial luo-tehtava-taulukko e!)}))))
     (fn [e! app]
       (let [{taulukon-tehtavat :tehtavat-taulukko} app
             {:keys [nimi]} (-> @tila/tila :yleiset :urakka)]
         [:div
-         ;[debug/debug app]
+         [debug/debug app]
          [:h1 "Tehtävät ja määrät" [:span.pull-right nimi]]
          [:div "Tehtävät ja määrät suunnitellaan urakan alussa, ja tarkennetaan jokaisen hoitovuoden alussa. " [:a {:href "#"} "Toteuma"] "-puolelle kirjataan ja kirjautuu kalustosta toteutuneet määrät."]
          [valitaso-filtteri e! app]
