@@ -165,7 +165,7 @@
                (assoc :toimenpide-avain (toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
                (assoc :haettu-asia (or (tehtava->tallennettava-asia (:tehtava-nimi tyo))
                                        (tehtavaryhma->tallennettava-asia (:tehtavaryhman-nimi tyo))))
-               (dissoc :toimenpiteen-koodi :tehtavan-nimi :tehtavaryhman-nimi)))
+               (dissoc :toimenpiteen-koodi :tehtava-nimi :tehtavaryhman-nimi)))
          kustannusarvoidut-tyot)))
 
 (defn hae-urakan-budjetoidut-tyot

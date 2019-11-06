@@ -240,22 +240,43 @@
 
 (defn paivita-maara-kk-taulukon-summat-automaattisesti [taulukko polku-taulukkoon app]
   (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")
-        yhteensa-rivin-index (-> taulukko (p/arvo :lapset) count dec)]
-    (tyokalut/paivita-asiat-taulukossa taulukko
-                                       [yhteensa-rivin-index yhteensa-otsikon-index]
-                                       (fn [taulukko taulukon-asioiden-polut]
-                                         (let [[rivit rivi osat osa] taulukon-asioiden-polut
-                                               rivit (get-in taulukko rivit)
-                                               osa (get-in taulukko osa)
-                                               polku-muokkausrivin-yhteensa-osaan (into [] (apply concat polku-taulukkoon
-                                                                                                  (p/osan-polku-taulukossa taulukko (nth (p/arvo (second rivit) :lapset) yhteensa-otsikon-index))))]
-                                           (-> osa
-                                               (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma [polku-muokkausrivin-yhteensa-osaan] app)
-                                               (p/lisaa-muodosta-arvo (fn [this {maara-kk-osat :uusi}]
-                                                                        (let [yhteensa-osan-arvo (-> maara-kk-osat vals first (p/arvo :arvo))]
-                                                                          (if (number? yhteensa-osan-arvo)
-                                                                            (* 5 yhteensa-osan-arvo)
-                                                                            0))))))))))
+        indeksikorjattu-otsikon-index (p/otsikon-index taulukko "Indeksikorjattu")
+        yhteensa-rivin-index (-> taulukko (p/arvo :lapset) count dec)
+        {kuluva-hoitovuosi :vuosi} (:kuluva-hoitokausi app)
+        indeksikorjaa (fn [x]
+                        (let [{:keys [arvo]} (get (:indeksit app) (dec kuluva-hoitovuosi))]
+                          (/ (* x arvo)
+                             100)))
+        vuodet-yhteensa (fn [this {maara-kk-osat :uusi}]
+                          (let [yhteensa-osan-arvo (-> maara-kk-osat vals first (p/arvo :arvo))]
+                            (if (number? yhteensa-osan-arvo)
+                              (* 5 yhteensa-osan-arvo)
+                              0)))
+        vuodet-yhteensa-indeksikorjattuna (fn [this {maara-kk-osat :uusi}]
+                                            (let [yhteensa-osan-arvo (-> maara-kk-osat vals first (p/arvo :arvo))]
+                                              (if (number? yhteensa-osan-arvo)
+                                                (indeksikorjaa (* 5 yhteensa-osan-arvo))
+                                                0)))
+        paivita-osa-automaattisesti! (fn [taulukko osan-index f]
+                                       (tyokalut/paivita-asiat-taulukossa taulukko
+                                                                          [yhteensa-rivin-index osan-index]
+                                                                          (fn [taulukko taulukon-asioiden-polut]
+                                                                            (let [[rivit rivi osat osan-polku] taulukon-asioiden-polut
+                                                                                  osa (get-in taulukko osan-polku)
+                                                                                  rivit (get-in taulukko rivit)
+                                                                                  maara-yhteensa-solun-polku (apply concat
+                                                                                                                    (p/osan-polku-taulukossa taulukko
+                                                                                                                                             (nth (p/arvo (second rivit) :lapset)
+                                                                                                                                                  yhteensa-otsikon-index)))
+                                                                                  polku-muokkausrivin-yhteensa-osaan (vec (concat
+                                                                                                                            polku-taulukkoon
+                                                                                                                            maara-yhteensa-solun-polku))]
+                                                                              (-> osa
+                                                                                  (p/lisaa-renderointi-derefable! tiedot/suunnittelu-kustannussuunnitelma [polku-muokkausrivin-yhteensa-osaan] app)
+                                                                                  (p/lisaa-muodosta-arvo f))))))]
+    (-> taulukko
+        (paivita-osa-automaattisesti! yhteensa-otsikon-index vuodet-yhteensa)
+        (paivita-osa-automaattisesti! indeksikorjattu-otsikon-index vuodet-yhteensa-indeksikorjattuna))))
 
 (defn paivita-hankinta-summat-automaattisesti [taulukko polku-taulukkoon app]
   (let [yhteensa-otsikon-index (p/otsikon-index taulukko "Yhteensä")

@@ -1390,7 +1390,7 @@
                           :class #{}}))))
 
 (defn johto-ja-hallintokorvaus-yhteenveto-taulukko
-  [e! jh-korvaukset]
+  [e! jh-korvaukset indeksit]
   (let [osien-paivitys-fn (fn [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]
                             (fn [osat]
                               (mapv (fn [osa]
@@ -1404,7 +1404,6 @@
                                           "4.vuosi/€" (hoitokausi-4 osa)
                                           "5.vuosi/€" (hoitokausi-5 osa))))
                                     osat)))
-        {kuluva-hoitovuosi :vuosi} (t/kuluva-hoitokausi)
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
@@ -1498,34 +1497,71 @@
                                3 :hoitokausi-3
                                4 :hoitokausi-4
                                5 :hoitokausi-5})]
-                        (-> yhteensa-pohja
-                            (p/aseta-arvo :id :yhteensa
-                                          :class #{"table-default" "table-default-sum"})
-                            (p/paivita-arvo :lapset
-                                            (osien-paivitys-fn (fn [osa]
-                                                                 (p/aseta-arvo osa :arvo "Yhteensä"))
-                                                               (fn [osa]
-                                                                 (p/aseta-arvo osa :arvo ""))
-                                                               (fn [osa]
-                                                                 (-> osa
-                                                                     (p/aseta-arvo :arvo hoitokausi-1)
-                                                                     (p/lisaa-fmt summa-formatointi)))
-                                                               (fn [osa]
-                                                                 (-> osa
-                                                                     (p/aseta-arvo :arvo hoitokausi-2)
-                                                                     (p/lisaa-fmt summa-formatointi)))
-                                                               (fn [osa]
-                                                                 (-> osa
-                                                                     (p/aseta-arvo :arvo hoitokausi-3)
-                                                                     (p/lisaa-fmt summa-formatointi)))
-                                                               (fn [osa]
-                                                                 (-> osa
-                                                                     (p/aseta-arvo :arvo hoitokausi-4)
-                                                                     (p/lisaa-fmt summa-formatointi)))
-                                                               (fn [osa]
-                                                                 (-> osa
-                                                                     (p/aseta-arvo :arvo hoitokausi-5)
-                                                                     (p/lisaa-fmt summa-formatointi))))))))]
+                        [(-> yhteensa-pohja
+                             (p/aseta-arvo :id :yhteensa
+                                           :class #{"table-default" "table-default-sum"})
+                             (p/paivita-arvo :lapset
+                                             (osien-paivitys-fn (fn [osa]
+                                                                  (p/aseta-arvo osa :arvo "Yhteensä"))
+                                                                (fn [osa]
+                                                                  (p/aseta-arvo osa :arvo ""))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-1)
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-2)
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-3)
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-4)
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-5)
+                                                                      (p/lisaa-fmt summa-formatointi))))))
+                         (-> yhteensa-pohja
+                             (p/aseta-arvo :id :yhteensa-indeksikorjattu
+                                           :class #{"table-default" "table-default-sum"})
+                             (p/paivita-arvo :lapset
+                                             (osien-paivitys-fn (fn [osa]
+                                                                  (p/aseta-arvo osa
+                                                                                :arvo "Indeksikorjattu"
+                                                                                :class #{"harmaa-teksti"}))
+                                                                (fn [osa]
+                                                                  (p/aseta-arvo osa
+                                                                                :arvo ""
+                                                                                :class #{"harmaa-teksti"}))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-1
+                                                                                    :class #{"harmaa-teksti"})
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-2
+                                                                                    :class #{"harmaa-teksti"})
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-3
+                                                                                    :class #{"harmaa-teksti"})
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-4
+                                                                                    :class #{"harmaa-teksti"})
+                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                (fn [osa]
+                                                                  (-> osa
+                                                                      (p/aseta-arvo :arvo hoitokausi-5
+                                                                                    :class #{"harmaa-teksti"})
+                                                                      (p/lisaa-fmt summa-formatointi))))))]))]
     (muodosta-taulukko :jh-yhteenveto
                        {:rivi {:janan-tyyppi jana/Rivi
                                :osat [osa/Teksti
@@ -1602,6 +1638,7 @@
                                                                                         :on-blur (fn [arvo]
                                                                                                    (when arvo
                                                                                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (indeksikorjaa (* 12 arvo)))))
                                                                                                      (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
                                                                                                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                         :on-key-down (fn [event]
@@ -1617,7 +1654,7 @@
                                                                                    :class #{(sarakkeiden-leveys :yhteensa)})
                                                                      (p/lisaa-fmt summa-formatointi)))
                                                                (fn [osa]
-                                                                 (let [indeksikorjattu (indeksikorjaa (* yhteensa 12))]
+                                                                 (let [indeksikorjattu (indeksikorjaa yhteensa)]
                                                                    (-> osa
                                                                        (p/aseta-arvo :id (keyword (p/osan-id osa))
                                                                                      :arvo indeksikorjattu
