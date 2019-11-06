@@ -1587,10 +1587,6 @@
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
         kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
-        indeksikorjaa (fn [x]
-                        (let [{:keys [arvo]} (get indeksit (dec kuluva-hoitovuosi))]
-                          (/ (* x arvo)
-                             100)))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (p/aseta-arvo :id :otsikko-rivi
@@ -1638,7 +1634,7 @@
                                                                                         :on-blur (fn [arvo]
                                                                                                    (when arvo
                                                                                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (indeksikorjaa (* 12 arvo)))))
+                                                                                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
                                                                                                      (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
                                                                                                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                         :on-key-down (fn [event]
@@ -1654,7 +1650,7 @@
                                                                                    :class #{(sarakkeiden-leveys :yhteensa)})
                                                                      (p/lisaa-fmt summa-formatointi)))
                                                                (fn [osa]
-                                                                 (let [indeksikorjattu (indeksikorjaa yhteensa)]
+                                                                 (let [indeksikorjattu (t/indeksikorjaa yhteensa)]
                                                                    (-> osa
                                                                        (p/aseta-arvo :id (keyword (p/osan-id osa))
                                                                                      :arvo indeksikorjattu
@@ -1684,7 +1680,7 @@
                                                                              :class #{(sarakkeiden-leveys :yhteensa)})
                                                                (p/lisaa-fmt summa-formatointi)))
                                                          (fn [osa]
-                                                           (let [indeksikorjattu (indeksikorjaa (* yhteensa 12))]
+                                                           (let [indeksikorjattu (t/indeksikorjaa (* yhteensa 12))]
                                                              (-> osa
                                                                  (p/aseta-arvo :id (keyword (p/osan-id osa))
                                                                                :arvo indeksikorjattu
