@@ -1170,7 +1170,8 @@
                                                                        tuntipalkka (p/arvo (nth osat tuntipalkka-sarakkeen-index) :arvo)
                                                                        tuntipalkka (if (number? tuntipalkka) tuntipalkka 0)]
                                                                    (p/aseta-arvo yhteensaosa :arvo (* tunnit tuntipalkka)))))
-          summa-rivin-index (dec (count (p/arvo yhteenveto-taulukko :lapset)))
+          indeksikorjatun-rivin-index (dec (count (p/arvo yhteenveto-taulukko :lapset)))
+          summa-rivin-index (dec indeksikorjatun-rivin-index)
 
           yhteenveto-taulukko (-> yhteenveto-taulukko
                                   (tyokalut/paivita-asiat-taulukossa [(last rivin-polku)]
@@ -1202,8 +1203,9 @@
                                                                        (let [[rivit rivi] polut
                                                                              rivit (get-in taulukko rivit)
                                                                              yhteensarivi (get-in taulukko rivi)
-                                                                             summarivit (-> rivit rest butlast)]
-                                                                         (p/paivita-arvo yhteensarivi :lapset
+                                                                             summarivit (->> rivit rest (drop-last 2))]
+                                                                         (p/paivita-arvo yhteensarivi
+                                                                                         :lapset
                                                                                          (fn [osat]
                                                                                            (into []
                                                                                                  (map-indexed (fn [index osa]
@@ -1215,6 +1217,27 @@
                                                                                                                                                                      :arvo)))
                                                                                                                                                         0 summarivit)]
                                                                                                                     (p/aseta-arvo osa :arvo rivit-yhteensa-vuodelta))
+                                                                                                                  osa))
+                                                                                                              osat)))))))
+                                  (tyokalut/paivita-asiat-taulukossa [indeksikorjatun-rivin-index]
+                                                                     (fn [taulukko polut]
+                                                                       (let [[rivit rivi] polut
+                                                                             rivit (get-in taulukko rivit)
+                                                                             indeksikorjattuyhteensarivi (get-in taulukko rivi)
+                                                                             indeksikorjatturivit (->> rivit rest (drop-last 2))]
+                                                                         (p/paivita-arvo indeksikorjattuyhteensarivi
+                                                                                         :lapset
+                                                                                         (fn [osat]
+                                                                                           (into []
+                                                                                                 (map-indexed (fn [index osa]
+                                                                                                                (if (> index 1)
+                                                                                                                  (let [rivit-yhteensa-vuodelta (reduce (fn [summa rivi]
+                                                                                                                                                          (+ summa (p/arvo
+                                                                                                                                                                     (nth (p/arvo rivi :lapset)
+                                                                                                                                                                          index)
+                                                                                                                                                                     :arvo)))
+                                                                                                                                                        0 indeksikorjatturivit)]
+                                                                                                                    (p/aseta-arvo osa :arvo (indeksikorjaa rivit-yhteensa-vuodelta)))
                                                                                                                   osa))
                                                                                                               osat))))))))]
       (-> app
