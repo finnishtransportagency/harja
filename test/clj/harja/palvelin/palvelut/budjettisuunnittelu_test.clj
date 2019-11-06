@@ -150,7 +150,7 @@
             :mhu-korvausinvestointi (is (= ryhmiteltyna {}))
             :mhu-johto (do
                          (is (= (into #{} (keys ryhmiteltyna))
-                                #{["laskutettava-tyo" nil]
+                                #{["laskutettava-tyo" :erillishankinnat]
                                   ["laskutettava-tyo" :toimistokulut]
                                   ["laskutettava-tyo" :hoidonjohtopalkkio]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
