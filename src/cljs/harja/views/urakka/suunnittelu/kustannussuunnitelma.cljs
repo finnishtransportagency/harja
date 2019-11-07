@@ -174,9 +174,8 @@
   ([hinnat indeksit] [indeksilaskuri hinnat indeksit nil])
   ([hinnat indeksit dom-id]
    (let [hinnat (mapv (fn [{:keys [summa hoitokausi]}]
-                        (let [{:keys [arvo vuosi hoitokausi]} (get indeksit (dec hoitokausi))
-                              indeksikorjattu-summa (/ (* summa arvo)
-                                                       100)]
+                        (let [{:keys [vuosi]} (get indeksit (dec hoitokausi))
+                              indeksikorjattu-summa (t/indeksikorjaa summa)]
                           {:vuosi vuosi
                            :summa indeksikorjattu-summa
                            :hoitokausi hoitokausi}))

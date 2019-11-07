@@ -52,12 +52,11 @@
              :kaikki hoitokausi})
 
 (defn indeksikorjaa
-  [x]
+  [hinta]
   (let [{:keys [indeksit kuluva-hoitokausi]} @tiedot/suunnittelu-kustannussuunnitelma
-        {:keys [arvo]} (get indeksit (dec (:vuosi kuluva-hoitokausi)))]
+        {:keys [indeksikorjaus]} (get indeksit (dec (:vuosi kuluva-hoitokausi)))]
     (when (and indeksit kuluva-hoitokausi)
-      (/ (* x arvo)
-         100))))
+      (* hinta indeksikorjaus))))
 
 (defn kuluva-hoitokausi []
   (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))

@@ -5,7 +5,7 @@ SELECT kat.id,
        kat.kuukausi,
        kat.summa,
        kat.tyyppi ::TOTEUMATYYPPI,
-       tpik_t.nimi AS "tehtava-nimi",
+       tpik_t.nimi AS "tehtavan-nimi",
        tr.nimi AS "tehtavaryhman-nimi",
        tpik_tpi.koodi AS "toimenpiteen-koodi",
        kat.sopimus

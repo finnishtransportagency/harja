@@ -201,6 +201,8 @@
   (let [rovaniemi-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
         ivalo-urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
         pellon-urakka-id (hae-pellon-maanteiden-hoitourakan-id)
+        ;; Indeksi lyödään automaagisesti urakalle, josta syystä Pellolla saattaa olla vanha indeksi käytössä
+        _ (u (str "UPDATE urakka SET indeksi = 'MAKU 2015' WHERE id = " pellon-urakka-id ";"))
         kuluvan-hoitokauden-aloitusvuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
 
         db (:db jarjestelma)
@@ -208,18 +210,20 @@
         rovaniemen-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
         ivalon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
         pellon-indeksit (bs/hae-urakan-indeksit db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
+    (clojure.pprint/pprint ivalon-indeksit)
+    (clojure.pprint/pprint pellon-indeksit)
     (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
-    (is (= rovaniemen-indeksit [{:hoitokausi 1 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
-                                {:hoitokausi 2 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
-                                {:hoitokausi 3 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
-                                {:hoitokausi 4 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
-                                {:hoitokausi 5 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}])
+    (is (= rovaniemen-indeksit [{:vuosi kuluvan-hoitokauden-aloitusvuosi :indeksikorjaus 1.000255}
+                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.076707}
+                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.076707}
+                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.076707}
+                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.076707}])
         "Indeksilukemat eivät ole oikein Rovaniemen testiurakalle")
-    (is (= pellon-indeksit [{:hoitokausi 1 :vuosi (- kuluvan-hoitokauden-aloitusvuosi 2) :arvo 110.833333}
-                            {:hoitokausi 2 :vuosi (dec kuluvan-hoitokauden-aloitusvuosi) :arvo 120.833333}
-                            {:hoitokausi 3 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
-                            {:hoitokausi 4 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}
-                            {:hoitokausi 5 :vuosi kuluvan-hoitokauden-aloitusvuosi :arvo 130.833333}])
+    (is (= pellon-indeksit [{:vuosi (- kuluvan-hoitokauden-aloitusvuosi 2) :indeksikorjaus 1.000301}
+                            {:vuosi (dec kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.090554}
+                            {:vuosi kuluvan-hoitokauden-aloitusvuosi :indeksikorjaus       1.180806}
+                            {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.271059}
+                            {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikorjaus 1.271059}])
         "Indeksilukemat eivät ole oikein Pellon testiurakalle")))
 
 (deftest tallenna-kiinteahintaiset-tyot

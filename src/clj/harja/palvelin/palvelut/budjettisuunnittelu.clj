@@ -83,50 +83,31 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
-          indeksit (map (fn [indeksi]
-                          (update indeksi :arvo float))
-                        (i-q/hae-indeksi db "MAKU 2015"))
-          indeksit-vuosittain (group-by :vuosi indeksit)
-          indeksin-lasku-kk #{9 10 11}
-          {::urakka/keys [alkupvm loppupvm]} (first (fetch db ::urakka/urakka
-                                                           #{::urakka/alkupvm ::urakka/loppupvm}
-                                                           {::urakka/id urakka-id}))
+          {::urakka/keys [alkupvm loppupvm indeksi]} (first (fetch db
+                                                                   ::urakka/urakka
+                                                                   #{::urakka/alkupvm ::urakka/loppupvm ::urakka/indeksi}
+                                                                   {::urakka/id urakka-id}))
           urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
           urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-          kuluvan-hoitokauden-vuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
-
-          indeksit-urakan-aikana (eduction
-                                   (filter (fn [[vuosi _]]
-                                                  (>= vuosi (dec urakan-alkuvuosi))))
-                                   (remove (fn [[vuosi _]]
-                                             (>= vuosi (dec urakan-loppuvuosi))))
-                                   (remove (fn [[vuosi _]]
-                                             ;; Otetaan kuluvasta hoitovuodesta muodostuva indeksi pois
-                                             (= vuosi kuluvan-hoitokauden-vuosi)))
-                                   (filter (fn [[_ data]]
-                                             ;; Otetaan epätäydellinen indeksidata pois
-                                             (= 3 (count (filter #(contains? indeksin-lasku-kk (:kuukausi %))
-                                                                 data)))))
-                                   indeksit-vuosittain)
-          urakan-indeksit (reduce (fn [indeksit [vuosi data]]
-                                    (conj indeksit
-                                          {:vuosi (inc vuosi) ; tämän vuoden indeksi lasketaan edellisen vuoden arvoista
-                                           :arvo (pyorista (/ (reduce (fn [summa {:keys [arvo kuukausi]}]
-                                                                        (if (contains? indeksin-lasku-kk kuukausi)
-                                                                          (+ summa arvo)
-                                                                          summa))
-                                                                      0 data)
-                                                              (count indeksin-lasku-kk))
-                                                           6)}))
-                                  [] indeksit-urakan-aikana)
-          urakan-indeksien-maara (count urakan-indeksit)]
+          perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
+          indeksiluvut-urakan-aikana (sequence
+                                       (comp (filter (fn [{:keys [kuukausi vuosi]}]
+                                                       (and (= 10 kuukausi)
+                                                            (>= vuosi (dec urakan-alkuvuosi)))))
+                                             (remove (fn [{:keys [vuosi]}]
+                                                       (>= vuosi (dec urakan-loppuvuosi))))
+                                             (map (fn [{:keys [arvo vuosi]}]
+                                                    ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
+                                                    {:vuosi (inc vuosi)
+                                                     :indeksikorjaus (pyorista (/ arvo perusluku) 6)})))
+                                       (i-q/hae-indeksi db {:nimi indeksi}))
+          urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
       (if (= 5 urakan-indeksien-maara)
-        (into [] urakan-indeksit)
+        (vec indeksiluvut-urakan-aikana)
         (mapv (fn [index]
-                (let [indeksi (if (> (inc index) urakan-indeksien-maara)
-                                (nth urakan-indeksit (dec urakan-indeksien-maara))
-                                (nth urakan-indeksit index))]
-                  (assoc indeksi :hoitokausi (inc index))))
+                (if (> (inc index) urakan-indeksien-maara)
+                  (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
+                  (nth indeksiluvut-urakan-aikana index)))
               (range 0 5))))))
 
 (defn tallenna-urakan-tavoite
@@ -163,9 +144,9 @@
     (map (fn [tyo]
            (-> tyo
                (assoc :toimenpide-avain (toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
-               (assoc :haettu-asia (or (tehtava->tallennettava-asia (:tehtava-nimi tyo))
+               (assoc :haettu-asia (or (tehtava->tallennettava-asia (:tehtavan-nimi tyo))
                                        (tehtavaryhma->tallennettava-asia (:tehtavaryhman-nimi tyo))))
-               (dissoc :toimenpiteen-koodi :tehtava-nimi :tehtavaryhman-nimi)))
+               (dissoc :toimenpiteen-koodi :tehtavan-nimi :tehtavaryhman-nimi)))
          kustannusarvoidut-tyot)))
 
 (defn hae-urakan-budjetoidut-tyot
