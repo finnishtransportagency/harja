@@ -12,10 +12,8 @@
             [harja.kyselyt
              [budjettisuunnittelu :as q]
              [urakat :as urakat-q]
-             [sopimukset :as sopimus-q]
              [kiinteahintaiset-tyot :as kiin-q]
              [kustannusarvioidut-tyot :as ka-q]
-             [kokonaishintaiset-tyot :as kok-q]
              [toimenpideinstanssit :as tpi-q]]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
@@ -144,7 +142,7 @@
                           :kuukausi kuukausi})
               (let [ajat-valille (fn [vuosi [alku loppu]]
                                    (map #(identity
-                                           {:vuosi vuosi
+                                           {:vuosi    vuosi
                                             :kuukausi %})
                                         (range alku (inc loppu))))
                     hoitokauden-vuodet [vuosi (inc vuosi)]]
@@ -187,14 +185,13 @@
                                                                                    olemassa-olevat-kiinteahintaiset-tyot))
                                                                            ajat)]
                               (kiin-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:urakka              urakka-id
-                                                                                     :maksueratyyppi      "kokonaishintainen"
                                                                                      :toimenpideinstanssi toimenpideinstanssi-id})
                               (when-not (empty? olemassa-olevat-kiinteahintaiset-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kiinteahintaiset-tyot]
                                   (update! db ::bs/kiinteahintainen-tyo
-                                           {::bs/summa summa
-                                            ::bs/muokattu    (pvm/nyt)
-                                            ::bs/muokkaaja   (:id user)}
+                                           {::bs/summa     summa
+                                            ::bs/muokattu  (pvm/nyt)
+                                            ::bs/muokkaaja (:id user)}
                                            {::bs/id (::bs/id olemassa-oleva-tyo)})))
                               (when-not (empty? uudet-kiinteahintaiset-tyot-ajat)
                                 (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
@@ -228,8 +225,7 @@
                                                                ::bs/toimenkuva-id toimenkuva-id
                                                                ::bs/maksukausi    maksukausi})
                                   paivitetaan? (not (empty? olemassa-olevat-jhkt))]
-                              (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "kokonaishintainen" ;;sic
-                                                                                   :toimenpideinstanssi toimenpideinstanssi-id})
+                              (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
                               (if paivitetaan?
                                 (doseq [{:keys [hoitokausi tunnit tuntipalkka]} jhkt]
                                   (let [id (some #(when (and (= hoitokausi (::bs/hoitokausi %))
@@ -283,7 +279,6 @@
                                   _ (when (nil? toimenpideinstanssi-id)
                                       (throw (Exception. "Toimenpideinstanssia ei löydetty")))
                                   tyyppi (keyword tyyppi)
-
                                   ajat (mudosta-ajat ajat)
                                   kustannusarvioitu-tyo-params (into {}
                                                                      (map (fn [[k v]]
@@ -304,23 +299,22 @@
                                                                                                 (= (:kuukausi %) smallint-kk))
                                                                                           ajat))
                                                                                   olemassa-olevat-kustannusarvioidut-tyot-vuosille)
-                                  paivitetaan? (not (empty? olemassa-olevat-kustannusarvioidut-tyot))]
-                              (case tyyppi
-                                :vahinkojen-korjaukset (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "muu"
-                                                                                                            :toimenpideinstanssi toimenpideinstanssi-id})
-                                :akillinen-hoitotyo (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "akillinen-hoitotyo"
-                                                                                                         :toimenpideinstanssi toimenpideinstanssi-id})
-                                (:laskutettava-tyo :muut-rahavaraukset) (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:maksueratyyppi      "kokonaishintainen"
-                                                                                                       :toimenpideinstanssi toimenpideinstanssi-id}))
-                              (if paivitetaan?
+                                  uudet-kustannusarvioidut-tyot-ajat (remove (fn [{:keys [vuosi kuukausi]}]
+                                                                               (some #(and (= vuosi (::bs/smallint-v %))
+                                                                                           (= kuukausi (::bs/smallint-kk %)))
+                                                                                     olemassa-olevat-kustannusarvioidut-tyot-vuosille))
+                                                                             ajat)]
+                              (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
+                              (when-not (empty? olemassa-olevat-kustannusarvioidut-tyot)
                                 (doseq [olemassa-oleva-tyo olemassa-olevat-kustannusarvioidut-tyot]
                                   (update! db ::bs/kustannusarvioitu-tyo
-                                           {::bs/summa summa
-                                            ::bs/muokattu    (pvm/nyt)
-                                            ::bs/muokkaaja   (:id user)}
-                                           {::bs/id (::bs/id olemassa-oleva-tyo)}))
+                                           {::bs/summa     summa
+                                            ::bs/muokattu  (pvm/nyt)
+                                            ::bs/muokkaaja (:id user)}
+                                           {::bs/id (::bs/id olemassa-oleva-tyo)})))
+                              (when-not (empty? uudet-kustannusarvioidut-tyot-ajat)
                                 (let [paasopimus (urakat-q/urakan-paasopimus-id db urakka-id)]
-                                  (doseq [{:keys [vuosi kuukausi]} ajat]
+                                  (doseq [{:keys [vuosi kuukausi]} uudet-kustannusarvioidut-tyot-ajat]
                                     (insert! db ::bs/kustannusarvioitu-tyo
                                              {::bs/smallint-v          vuosi
                                               ::bs/smallint-kk         kuukausi
@@ -367,7 +361,7 @@
           (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
                                         (tallenna-urakan-tavoite db user tiedot))
-            {:kysely-spec ::bs-p/tallenna-budjettitavoite-kysely
+            {:kysely-spec  ::bs-p/tallenna-budjettitavoite-kysely
              :vastaus-spec ::bs-p/tallenna-budjettitavoite-vastaus})
 
           (julkaise-palvelu

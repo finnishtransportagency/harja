@@ -499,10 +499,6 @@ INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, teht
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaukset'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
 
 
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, toimenpideinstanssi, tehtava, urakka, sopimus) VALUES (2020, 2, 13, 'h', 45, 585, (SELECT id from toimenpideinstanssi where urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi='23151')), (select id from toimenpidekoodi where nimi = 'Hoitourakan työnjohto'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, toimenpideinstanssi, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (SELECT id from toimenpideinstanssi where urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi='23151')), (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
-
-
 -- Rovaniemen MHU-urakka
 --'Hallinnolliset toimenpiteet TP'
 DO $$

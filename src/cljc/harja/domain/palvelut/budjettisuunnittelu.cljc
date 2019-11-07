@@ -41,7 +41,17 @@
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
 
-(s/def ::ajat (s/coll-of ::aika))
+(s/def ::ajat (s/and (s/coll-of ::aika)
+                     (fn [ajat]
+                       (= (count ajat)
+                          (count (distinct ajat))))
+                     (fn [ajat]
+                       (or (every? (and #(contains? % :vuosi)
+                                        #(contains? % :kuukausi))
+                                   ajat)
+                           (every? (and #(contains? % :vuosi)
+                                        #(not (contains? % :kuukausi)))
+                                   ajat)))))
 
 (s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
                                :kind vector?))
