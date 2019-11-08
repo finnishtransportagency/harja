@@ -582,10 +582,10 @@
                                   ;; Tätä argumenttien tarkkailua ei tulisi tehdä tässä, mutta nykyinen reagentin versio tukee vain
                                   ;; :component-will-receive-props metodia, joka olisi toki sopivampi tähän tarkoitukseen,
                                   ;; mutta React on deprecoinut tuon ja se tulee hajottamaan tulevan koodin.
-                                  (let [vanhat-hankintakustannukset (last (butlast old-argv))
-                                        uudet-hankintakustannukset (last (butlast new-argv))
-                                        vanhat-hallinnolliset-toimenpiteet (last old-argv)
-                                        uudet-hallinnolliset-toimenpiteet (last new-argv)]
+                                  (let [{vanhat-hankintakustannukset :hankintakustannukset
+                                         vanhat-hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet} (last old-argv)
+                                        {uudet-hankintakustannukset :hankintakustannukset
+                                         uudet-hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet} (last new-argv)]
                                     (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
                                                                  (suunnitelman-paivitettavat-osat edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
                                                                                                   vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet))))
