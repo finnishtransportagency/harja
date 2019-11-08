@@ -43,6 +43,14 @@
    :toimistokulut-taulukko "toimistokulut-taulukko"
    :hoidonjohtopalkkio "hoidonjohtopalkkio"})
 
+(def filteroitavat-tallennettavat-asiat
+  #{:hoidonjohtopalkkio
+    :toimistokulut
+    :erillishankinnat
+    :rahavaraus-lupaukseen-1
+    :kolmansien-osapuolten-aiheuttamat-vahingot
+    :akilliset-hoitotyot})
+
 (def talvikausi [10 11 12 1 2 3 4])
 (def kesakausi (into [] (range 5 10)))
 (def hoitokausi (concat talvikausi kesakausi))
@@ -1341,12 +1349,18 @@
     app)
   TallennaKustannusarvoituTyo
   (process-event [{:keys [tallennettava-asia toimenpide-avain arvo ajat]}
-                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
+                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-hoitokausi :pvmt} :kuluva-hoitokausi
+                   {valittu-hoitovuosi :hoitovuosi} :suodatin :as app}]
     (let [{:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
+          kuluvan-hoitokauden-aloitusvuosi (-> kuluvan-hoitovuoden-hoitokausi first pvm/vuosi)
+          vuodesta-eteenpain (if (or (not (contains? filteroitavat-tallennettavat-asiat tallennettava-asia))
+                                     (= kuluva-hoitovuosi valittu-hoitovuosi))
+                               kuluvan-hoitokauden-aloitusvuosi
+                               (dec (+ kuluvan-hoitokauden-aloitusvuosi valittu-hoitovuosi)))
           ajat (or ajat
                    (map (fn [vuosi]
                           {:vuosi vuosi})
-                        (range (-> kuluvan-hoitovuoden-pvmt first pvm/vuosi)
+                        (range vuodesta-eteenpain
                                (pvm/vuosi loppupvm))))
           lahetettava-data {:urakka-id urakka-id
                             :toimenpide-avain toimenpide-avain
@@ -1390,7 +1404,7 @@
     app)
   TallennaJohtoJaHallintokorvaukset
   (process-event [{:keys [osa polku-taulukkoon]}
-                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi :as app}]
+                  {{valittu-hoitovuosi :hoitovuosi} :suodatin :as app}]
     (let [taulukko (get-in app polku-taulukkoon)
           [polku-riviin polku-osaan] (p/osan-polku-taulukossa taulukko osa)
           rivi (get-in taulukko polku-riviin)
@@ -1398,7 +1412,7 @@
           rivin-oleelliset-arvot (tyokalut/rivin-arvot-otsikoilla taulukko rivi "Tunnit/kk" "Tuntipalkka" "kk/v")
           {:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
           tallennettavat-hoitokaudet (clj-set/intersection (into #{}
-                                                                 (range (if (= kuluva-hoitovuosi 1) 0 kuluva-hoitovuosi)
+                                                                 (range (if (= valittu-hoitovuosi 1) 0 valittu-hoitovuosi)
                                                                         6))
                                                            (-> rivi ::p/lisatty-data :hoitokaudet))
           toimenkuva (:toimenkuva rivin-lisatty-data)
