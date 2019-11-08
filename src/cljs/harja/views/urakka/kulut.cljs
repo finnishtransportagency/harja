@@ -1,5 +1,6 @@
 (ns harja.views.urakka.kulut
   (:require [tuck.core :as tuck]
+            [reagent.core :as r]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
@@ -27,99 +28,62 @@
 
 (defn- luo-paivitys-fn
   [& avain-arvot]
-  (fn [osa] (apply (partial p/aseta-arvo osa) avain-arvot)))
-
-; {:tehtava-id }
-;
-;
+  (fn [osa]
+    (apply
+      (partial p/aseta-arvo osa)
+      avain-arvot)))
 
 (defn alihankkija-modaali
   [paivitys-fn tallennus-fn sulku-fn {:keys [nimi ytunnus] :as alihankkija}]
-  [:div
-   [:h1 "Lisää alihankkija"]
-   [:div
+  [:div.peitto-modal
+   [:div.peitto-kontentti
+    [:h1 "Lisää alihankkija"
+     [:input {:type  :button
+              :value "X"}]]
     [:label "Yrityksen nimi"
-     [:input {:type      :text
-              :value     nimi
-              :on-change #(paivitys-fn (assoc alihankkija :nimi (-> % .-target .-value)))}]]]
-   [:div
+     [:input.form-control
+      {:type      :text
+       :value     nimi
+       :on-change #(paivitys-fn (assoc alihankkija :nimi (-> % .-target .-value)))}]]
     [:label "Y-tunnus"
-     [:input {:type      :text
-              :value     ytunnus
-              :on-change #(paivitys-fn (assoc alihankkija :ytunnus (-> % .-target .-value)))}]]]
-   [:div
-    [:input {:type     :button
-             :value    "Tallenna"
-             :on-click tallennus-fn}]
-    [:input {:type     :button
-             :value    "Sulje"
-             :on-click sulku-fn}]]])
-
-(defn- sijainti-modaali
-  [paivitys-fn sulku-fn {:keys [tie tie-patka-piste tieosa-alku etaisyys-alku tieosa-loppu etaisyys-loppu] :as sijainti}]
-  [:div
-   [:h1 "Lisää sijainti"]
-   [:div
-    [:label "Tie *"]
-    [:input {:type      :text
-             :value     tie
-             :on-change #(paivitys-fn (assoc sijainti :tie (-> % .-target .-value)))}]]
-   [:div
-    [:input {:type     :radio
-             :value    :tie
-             :name     "tie-patka-piste"
-             :on-click #(paivitys-fn (assoc sijainti :tie-patka-piste (-> % .-target .-value)))}]
-    [:label "Valitse koko tie"]
-    [:input {:type     :radio
-             :value    :patka
-             :name     "tie-patka-piste"
-             :on-click #(paivitys-fn (assoc sijainti :tie-patka-piste (-> % .-target .-value)))}]
-    [:label "Valitse tietty tienpätkä"]
-    [:input {:type     :radio
-             :value    :piste
-             :name     "tie-patka-piste"
-             :on-click #(paivitys-fn (assoc sijainti :tie-patka-piste (-> % .-target .-value)))}]
-    [:label "Valitse piste"]]
-   [:div
-    [:label.col-xs-2 "Tieosa, alku"
-     [:input.form-control {:type      :text
-                           :value     tieosa-alku
-                           :on-change #(paivitys-fn (assoc sijainti :tieosa-alku (-> % .-target .-value)))}]]
-    [:label.col-xs-2 "Aloitusetäisyys, m"
-     [:input.form-control {:type      :text
-                           :value     etaisyys-alku
-                           :on-change #(paivitys-fn (assoc sijainti :etaisyys-alku (-> % .-target .-value)))}]]
-    [:span.col-xs-2 "->"]
-    [:label.col-xs-2 "Tieosa, loppu"
-     [:input.form-control {:type      :text
-                           :value     tieosa-loppu
-                           :on-change #(paivitys-fn (assoc sijainti :tieosa-loppu (-> % .-target .-value)))}]]
-    [:label.col-xs-2 "Lopetusetäisyys, m"
-     [:input.form-control {:type      :text
-                           :value     etaisyys-loppu
-                           :on-change #(paivitys-fn (assoc sijainti :etaisyys-loppu (-> % .-target .-value)))}]]]
-   [:div
-    [:input {:type     :button
-             :value    "Tallenna"
-             :on-click sulku-fn}]
-    [:input {:type     :button
-             :value    "Sulje"
-             :on-click sulku-fn}]]])
+     [:input.form-control
+      {:type      :text
+       :value     ytunnus
+       :on-change #(paivitys-fn (assoc alihankkija :ytunnus (-> % .-target .-value)))}]]
+    [:div
+     [:button
+      {:class    #{"tallenna"}
+       :on-click tallennus-fn}
+      "Tallenna"]
+     [:button
+      {:class    #{"sulje"}
+       :on-click sulku-fn}
+      "Sulje"]]]])
 
 (defn- validoi
   [pakolliset objekti]
   (some #(not (get % pakolliset)) (keys objekti)))
 
+(defn droppari-lisakamppeella
+  [{:keys [valittu valinnat valitse-fn formaatti-fn]} komponentti nayta-kun]
+  [:div
+   [yleiset/livi-pudotusvalikko
+    {:valinta    valittu
+     :valitse-fn valitse-fn
+     :format-fn  formaatti-fn}
+    valinnat]
+   komponentti])
+
 (defn- kulujen-syottolomake
-  [e! {:keys [toimenpiteet tehtavaryhmat] :as app}]
-  (let [lomakkeen-tila (reagent.core/atom {:validi?               false
-                                           :nayta                 nil
-                                           :alihankkijat          [(get-in @tila/yleiset [:urakka :urakoitsija])]
-                                           :tehtavat-lkm          1
-                                           :tehtavat              [{:tehtavaryhma nil
-                                                                    :maara        nil}]
-                                           :koontilaskun-kuukausi nil
-                                           :koontilaskun-era      nil})
+  [e! {:keys [toimenpiteet tehtavaryhmat aliurakoitsijat] :as app}]
+  (let [lomakkeen-tila (r/atom {:validi?               false
+                                :nayta                 nil
+                                :aliurakoitsijat       []
+                                :tehtavat-lkm          1
+                                :tehtavat              [{:tehtavaryhma nil
+                                                         :maara        nil}]
+                                :koontilaskun-kuukausi nil
+                                :koontilaskun-era      nil})
         lisaa-tehtava (fn [m]
                         (-> m
                             (update :tehtavat-lkm inc)
@@ -128,7 +92,7 @@
                                                     :sijainti     nil
                                                     :maara        nil})))
         paivitys-fn (fn [& polut-ja-arvot]
-                      (apply loki/log "päivitän " polut-ja-arvot)
+                      (e! (tiedot/->PaivitaLomake polut-ja-arvot))
                       (let [polut-ja-arvot (partition 2 polut-ja-arvot)]
                         (doseq
                           [[polku arvo] polut-ja-arvot]
@@ -159,17 +123,7 @@
                                            [yleiset/livi-pudotusvalikko {:valinta    tehtavaryhma
                                                                          :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtavaryhma] %)
                                                                          :format-fn  #(get % :tehtavaryhma)}
-                                            tehtavaryhmat]]
-                                          #_[:div.col-xs-12.col-sm-6
-                                           [:input {:type     :button
-                                                    :value    "Ilmoita missä sijainnissa työ tehtiin"
-                                                    :on-click #(paivitys-fn :nayta :sijainti-modaali)}]
-                                           (when (= nayta :sijainti-modaali)
-                                             [sijainti-modaali
-                                              (partial paivitys-fn [:tehtavat indeksi :sijainti])
-                                              #(paivitys-fn :nayta nil)
-                                              sijainti])]]
-
+                                            tehtavaryhmat]]]
                                          (when (> tehtavat-lkm 1)
                                            [:div.row
                                             [:div.col-xs-12.col-sm-6
@@ -185,8 +139,8 @@
          [:div.row
           [:div.col-sm-6.col-xs-12
            [:h2 "Koontilaskun tiedot"]
-           [:div.col-xs-12
-            [:label "Koontilaskun kuukausi"]
+           [:div.col-xs-12.label-ja-alasveto.toimenpide
+            [:label.alasvedon-otsikko "Koontilaskun kuukausi"]
             [yleiset/livi-pudotusvalikko {:valinta    koontilaskun-kuukausi
                                           :valitse-fn #(paivitys-fn :koontilaskun-kuukausi %)
                                           :format-fn  #(str "- " %)}
@@ -196,11 +150,7 @@
             [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :koontilaskun-pvm %)
                                                          :pvm           koontilaskun-pvm
                                                          :pakota-suunta false
-                                                         :valittava?-fn #(true? true)}]
-            #_[yleiset/livi-pudotusvalikko {:valinta    koontilaskun-era
-                                          :valitse-fn #(paivitys-fn :koontilaskun-era %)
-                                          :format-fn  #(str "- " %)}
-             erat]]
+                                                         :valittava?-fn #(true? true)}]]
            [:div.col-xs-12
             [:label "Laskun viite"]
             [:input.form-control
@@ -222,14 +172,15 @@
            [:h2 "Lisätiedot"]
            [:div.col-xs-12
             [:label "Alihankkija"]
-            [yleiset/livi-pudotusvalikko {:valinta    alihankkija
-                                          :valitse-fn #(paivitys-fn :alihankkija %)
-                                          :format-fn  #(get % :nimi)}
-             alihankkijat]]
+            [droppari-lisakamppeella {:valittu      alihankkija
+                                      :valinnat     alihankkijat
+                                      :valinta-fn   #(paivitys-fn :alihankkija %)
+                                      :formaatti-fn #(get % :nimi)}
+             #([:div "Oon kampe"])]
+            :kaikki]
            [:div.col-xs-12
-            [:label "Alihankkijan y-tunnus"]
-            (when (= nayta nayta                             ;:alihankkija-modaali
-                     )
+            [:label {:on-click #(paivitys-fn :nayta :alihankkija-modaali)} "Alihankkijan y-tunnus"]
+            (when (= nayta :alihankkija-modaali)
               [alihankkija-modaali
                (fn [arvo]
                  (paivitys-fn
@@ -248,12 +199,12 @@
             [:input.form-control
              {:type      :text
               :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))}]]]]
-         [:input {:type     :button
-                  :value    "Tallenna"
-                  :on-click #(e! (tiedot/->TallennaKulu @lomakkeen-tila))}]
-         [:input {:type     :button
-                  :value    "Peruuta"
-                  :on-click #(e! (tiedot/->KulujenSyotto (not syottomoodi)))}]]))))
+         [:button {:class    #{"nappi" "nappi-ensisijainen"}
+                   :on-click #(e! (tiedot/->TallennaKulu @lomakkeen-tila))}
+          "Tallenna"]
+         [:button {:class    #{"nappi" "nappi-toissijainen"}
+                   :on-click #(e! (tiedot/->KulujenSyotto (not syottomoodi)))}
+          "Peruuta"]]))))
 
 (defn- luo-kulumodaali
   [e! app]
@@ -310,19 +261,26 @@
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
-                      (loki/log "Piirretty")
-                      (e! (tiedot/->HaeKustannussuunnitelma (-> @tila/yleiset :urakka :id)))
+                      (e! (tiedot/->HaeAliurakoitsijat))
+                      (e! (tiedot/->HaeUrakanLaskut (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
+                      (e! (tiedot/->HaeUrakanToimenpiteet (-> @tila/yleiset :urakka :id)))
                       (e! (tiedot/->LuoKulutaulukko (luo-kulutaulukko)))))
     (fn [e! {:keys [taulukko syottomoodi] :as app}]
       [:div
-       (when syottomoodi [luo-kulumodaali e! app])
-       [debug/debug app]
-       [debug/debug taulukko]
-       [:div "Kohdista mut babe"]
-       [:div {:on-click #(e! (tiedot/->KulujenSyotto (not syottomoodi)))}
-        "Paina mua kohdistaksees mut"]
-       (when taulukko
-         [p/piirra-taulukko taulukko])])))
+       (if syottomoodi
+         [luo-kulumodaali e! app]
+         [:div
+          [debug/debug app]
+          [debug/debug taulukko]
+          [:button {:class    #{"nappi" "nappi-toissijainen"}
+                    :disabled true} "Tallenna Excel"]
+          [:button {:class    #{"nappi" "nappi-toissijainen"}
+                    :disabled true} "Tallenna PDF"]
+          [:button {:class    #{"nappi" "nappi-ensisijainen"}
+                    :on-click #(e! (tiedot/->KulujenSyotto (not syottomoodi)))} "Uusi kulu"]
+          (when taulukko
+            [p/piirra-taulukko taulukko])])
+       ])))
 
 (defn kohdistetut-kulut
   []

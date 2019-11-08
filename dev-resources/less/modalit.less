@@ -64,3 +64,57 @@
 .modal-otsikko-virhe {
   color: @vaara;
 }
+
+.peitto-modal {
+  position:fixed;
+  background-color:rgba(200,200,200,.5);
+  top:0;
+  left:0;
+  min-width:100%;
+  min-height:100%;
+  z-index:1;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+
+  .peitto-kontentti {
+    padding: 0px;
+    background-color:#ffffff;
+
+    h1 {
+      padding:0px 32px;
+      margin:0px;
+      height:72px;
+      border-bottom: 1px solid lightgrey;
+      display:flex;
+      flex-direction:row;
+      align-items: center;
+
+      input {
+
+      }
+    }
+    div {
+      margin:0px 32px;
+
+      .tallenna {
+        background-color:green;
+        box-sizing: border-box;
+        width:160px;
+        height:40px;
+      }
+
+      .sulje {
+        border: 1px solid blue;
+        width:160px;
+        height:40px;
+      }
+
+    }
+    label {
+      margin:0px 32px;
+      margin-bottom: 24px;
+      display: block;
+    }
+  }
+}
