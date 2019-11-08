@@ -209,7 +209,8 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta-sisalto [{:keys [tavoitehinnat kattohinnat]} kuluva-hoitokausi indeksit]
+(defn tavoite-ja-kattohinta-sisalto [{{:keys [tavoitehinnat kattohinnat]} :tavoite-ja-kattohinta
+                                      :keys [kuluva-hoitokausi indeksit]}]
   (if (and tavoitehinnat kattohinnat indeksit)
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
@@ -571,7 +572,7 @@
                                                                                                                      :johtopalkkio)}))))))
 
 (defn suunnitelmien-tila
-  [e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
+  [e! suunnitelmien-argumentit]
   (let [paivitetyt-taulukot (cljs.core/atom {})]
     (komp/luo
       (komp/piirretty (fn [this]
@@ -589,7 +590,7 @@
                                                                  (suunnitelman-paivitettavat-osat edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
                                                                                                   vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet))))
                                   (not= old-argv new-argv))}
-      (fn [e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
+      (fn [e! {:keys [kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]}]
         (when (and (:toimenpiteet hankintakustannukset) (:johtopalkkio hallinnolliset-toimenpiteet))
           (go (>! kaskytyskanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)])))
         (if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
@@ -603,14 +604,13 @@
                             :talvikausi "Talvikaudella"
                             :molemmat "Kesä- ja talvikaudella"))]
     (fn [valitse-kausi maksetaan]
-      [:div.maksu-filter
-       [:div
-        [:span "Maksetaan"]
-        [yleiset/livi-pudotusvalikko {:valinta maksetaan
-                                      :valitse-fn valitse-kausi
-                                      :format-fn kausi-tekstiksi
-                                      :vayla-tyyli? true}
-         [:kesakausi :talvikausi :molemmat]]]])))
+      [:div.pudotusvalikko-filter
+       [:span "Maksetaan"]
+       [yleiset/livi-pudotusvalikko {:valinta maksetaan
+                                     :valitse-fn valitse-kausi
+                                     :format-fn kausi-tekstiksi
+                                     :vayla-tyyli? true}
+        [:kesakausi :talvikausi :molemmat]]])))
 
 (defn hankintojen-filter [e! _]
   (let [toimenpide-tekstiksi (fn [toimenpide]
@@ -640,6 +640,35 @@
            :on-change (r/partial vaihda-fn)}]
          [:label {:for "kopioi-tuleville-hoitovuosille"}
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
+
+(defn yleis-suodatin [e! _]
+  (let [yksiloiva-id (str (gensym "kopioi-tuleville-hoitovuosille"))
+        hoitovuodet (vec (range 1 6))
+        vaihda-fn (fn [event]
+                    (.preventDefault event)
+                    (e! (tuck-apurit/->PaivitaTila [:suodatin :kopioidaan-tuleville-vuosille?] not)))
+        valitse-hoitovuosi (fn [hoitovuosi]
+                             (e! (tuck-apurit/->MuutaTila [:suodatin :hoitovuosi] hoitovuosi)))
+        hoitovuositeksti (fn [hoitovuosi]
+                           (str hoitovuosi ". hoitovuosi"))]
+    (fn [_ {:keys [hoitovuosi kopioidaan-tuleville-vuosille?]}]
+      (if hoitovuosi
+        ^{:key :yleis-suodatin}
+        [:div.kustannussuunnitelma-filter
+         [:div
+          [:input.vayla-checkbox {:id yksiloiva-id
+                                  :type "checkbox" :checked kopioidaan-tuleville-vuosille?
+                                  :on-change (r/partial vaihda-fn)}]
+          [:label {:for yksiloiva-id}
+           "Kopioi kuluvan hoitovuoden määrät tuleville vuosille"]]
+         [:div.pudotusvalikko-filter
+          [:span "Hoitovuosi"]
+          [yleiset/livi-pudotusvalikko {:valinta hoitovuosi
+                                        :valitse-fn valitse-hoitovuosi
+                                        :format-fn hoitovuositeksti
+                                        :vayla-tyyli? true}
+           hoitovuodet]]]
+        [yleiset/ajax-loader]))))
 
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
@@ -1813,9 +1842,10 @@
                                   nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
-(defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
-                                     kuluva-hoitokausi kirjoitusoikeus? indeksit]
-  [:div
+(defn hankintakustannukset-taulukot [e!
+                                     {{:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset} :hankintakustannukset
+                                      :keys [kuluva-hoitokausi kirjoitusoikeus? indeksit suodatin]}]
+  [:<>
    [:h2#hankintakustannukset "Hankintakustannukset"]
    (if yhteenveto
      ^{:key "hankintakustannusten-yhteenveto"}
@@ -1835,7 +1865,9 @@
    [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
    (when (t/toimenpiteet-rahavarauksilla (:toimenpide valinnat))
      ^{:key "rahavaraukset-otsikko"}
-     [:h3 "Rahavarukset"])
+     [:<>
+      [:h3 "Rahavarukset"]
+      [yleis-suodatin e! suodatin]])
    [suunnitellut-rahavaraukset e! rahavaraukset valinnat]])
 
 (defn jh-toimenkuva-laskulla [jh-laskulla]
@@ -1885,10 +1917,11 @@
 (defn erillishankinnat [erillishankinnat]
   [maara-kk erillishankinnat])
 
-(defn erillishankinnat-sisalto [erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi indeksit]
+(defn erillishankinnat-sisalto [e! erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin]
   [:<>
    [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
    [erillishankinnat-yhteenveto erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi indeksit]
+   [yleis-suodatin e! suodatin]
    [erillishankinnat erillishankinnat-taulukko]
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
 
@@ -1913,12 +1946,16 @@
        [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
+(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit suodatin]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
    [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
+   [:h3 "Tuntimäärät ja -palkat"]
+   [yleis-suodatin e! suodatin]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
+   [:h3 "Johto ja hallinto: muut kulut"]
+   [yleis-suodatin e! suodatin]
    [maara-kk toimistokulut]
    [:span
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
@@ -1947,10 +1984,11 @@
 (defn hoidonjohtopalkkio [johtopalkkio]
   [maara-kk johtopalkkio])
 
-(defn hoidonjohtopalkkio-sisalto [johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
+(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
+   [yleis-suodatin e! suodatin]
    [hoidonjohtopalkkio johtopalkkio]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
@@ -1973,21 +2011,23 @@
        [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
-                                                      toimistokulut johtopalkkio erillishankinnat menneet-vuodet] :as hallinnolliset-toimenpiteet}
-                                           kuluva-hoitokausi indeksit]
+(defn hallinnolliset-toimenpiteet-sisalto [e!
+                                           {{:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
+                                                    toimistokulut johtopalkkio erillishankinnat menneet-vuodet]} :hallinnolliset-toimenpiteet
+                                            :keys [kuluva-hoitokausi indeksit suodatin]}]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
-   [erillishankinnat-sisalto erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit]
-   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit]
-   [hoidonjohtopalkkio-sisalto johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit]])
+   [erillishankinnat-sisalto e! erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
+   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
+   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin]])
 
 (defn kustannussuunnitelma*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
                       (e! (t/->Hoitokausi))
+                      (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
@@ -1997,31 +2037,33 @@
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
-    (fn [e! {:keys [suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? tavoite-ja-kattohinta
-                    hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi kaskytyskanava
-                    kirjoitusoikeus? indeksit] :as app}]
-      [:div#kustannussuunnitelma
-       ;[debug/debug app]
-       [:h1 "Kustannussuunnitelma"]
-       [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
-       [kuluva-hoitovuosi kuluva-hoitokausi]
-       [haitari-laatikko
-        "Tavoite- ja kattohinta lasketaan automaattisesti"
-        {:alussa-auki? true
-         :id "tavoite-ja-kattohinta"}
-        [tavoite-ja-kattohinta-sisalto tavoite-ja-kattohinta kuluva-hoitokausi indeksit]
-        [:span#tavoite-ja-kattohinta-huomio
-         "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
-       [:span.viiva-alas]
-       [haitari-laatikko
-        "Suunnitelmien tila"
-        {:alussa-auki? true
-         :otsikko-elementti :h2}
-        [suunnitelmien-tila e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]]
-       [:span.viiva-alas]
-       [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi kirjoitusoikeus? indeksit]
-       [:span.viiva-alas]
-       [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-toimenpiteet kuluva-hoitokausi indeksit]])))
+    (fn [e! {:keys [kuluva-hoitokausi] :as app}]
+      (let [tavoite-ja-kattohinta-argumentit (select-keys app #{:tavoite-ja-kattohinta :kuluva-hoitokausi :indeksit})
+            suunnitelmien-argumentit (select-keys app #{:kaskytyskanava :suunnitelmien-tila-taulukko :suunnitelmien-tila-taulukon-tilat-luotu-kerran? :kirjoitusoikeus? :hankintakustannukset :hallinnolliset-toimenpiteet})
+            hankintakustannusten-argumentit (select-keys app #{:hankintakustannukset :kuluva-hoitokausi :kirjoitusoikeus? :indeksit :suodatin})
+            hallinnolliset-argumentit (select-keys app #{:hallinnolliset-toimenpiteet :kuluva-hoitokausi :indeksit :suodatin})]
+        [:div#kustannussuunnitelma
+         ;[debug/debug app]
+         [:h1 "Kustannussuunnitelma"]
+         [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
+         [kuluva-hoitovuosi kuluva-hoitokausi]
+         [haitari-laatikko
+          "Tavoite- ja kattohinta lasketaan automaattisesti"
+          {:alussa-auki? true
+           :id "tavoite-ja-kattohinta"}
+          [tavoite-ja-kattohinta-sisalto tavoite-ja-kattohinta-argumentit]
+          [:span#tavoite-ja-kattohinta-huomio
+           "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
+         [:span.viiva-alas]
+         [haitari-laatikko
+          "Suunnitelmien tila"
+          {:alussa-auki? true
+           :otsikko-elementti :h2}
+          [suunnitelmien-tila e! suunnitelmien-argumentit]]
+         [:span.viiva-alas]
+         [hankintakustannukset-taulukot e! hankintakustannusten-argumentit]
+         [:span.viiva-alas]
+         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit]]))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

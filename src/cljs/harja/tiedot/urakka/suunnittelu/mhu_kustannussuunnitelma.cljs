@@ -145,6 +145,7 @@
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
+(defrecord YleisSuodatinArvot [])
 (defrecord HaeIndeksitOnnistui [vastaus])
 (defrecord HaeIndeksitEpaonnistui [vastaus])
 (defrecord Oikeudet [])
@@ -639,6 +640,9 @@
   Hoitokausi
   (process-event [_ app]
     (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))
+  YleisSuodatinArvot
+  (process-event [_ {{hoitovuosi :vuosi} :kuluva-hoitokausi :as app}]
+    (assoc app :suodatin {:hoitovuosi hoitovuosi :kopioidaan-tuleville-vuosille? true}))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app :indeksit vastaus))

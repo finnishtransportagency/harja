@@ -300,17 +300,9 @@
   }
 }
 
-.maksu-filter {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  > div {
+.pudotusvalikko-filter {
     display: flex;
     flex-direction: column;
-    &:nth-child(1) {
-      flex: 1;
-    }
-  }
 }
 
 #suunnitelmien-taulukko {
@@ -324,6 +316,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
+  align-items: flex-end;
   > * {
     &:nth-child(1) {
       max-width: 400px;
