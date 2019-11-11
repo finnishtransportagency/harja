@@ -26,7 +26,7 @@
 
 (defn summa-formatointi [teksti]
   (let [teksti (clj-str/replace (str teksti) "," ".")]
-    (if (or (nil? teksti) (= "" teksti))
+    (if (or (nil? teksti) (= "" teksti) (js/isNaN teksti))
       "0,00"
       (fmt/desimaaliluku teksti 2 true))))
 
@@ -37,6 +37,13 @@
       (re-matches #".*\.0*$" teksti-ilman-pilkkua) (apply str (fmt/desimaaliluku teksti-ilman-pilkkua nil true)
                                                           (drop 1 (re-find #".*(\.|,)(0*)" teksti)))
       :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
+
+(defn virhe-datassa
+  [data]
+  (log "Virheellinen data:\n" (with-out-str (cljs.pprint/pprint data)))
+  [:span
+   [ikonit/warning]
+   " Osaa ei voida näyttää.."])
 
 (defn toimenpiteiden-jarjestys
   [toimenpide]
@@ -75,6 +82,63 @@
                                  {:key index}))
                              sisalto)))])))
 
+(defn aseta-rivien-nakyvyys
+  [taulukko]
+  (p/paivita-arvo taulukko :lapset
+                  (fn [rivit]
+                    (mapv (fn [rivi]
+                            (case (p/rivin-skeema taulukko rivi)
+                              :laajenna-lapsilla (p/paivita-arvo rivi :lapset
+                                                                 (fn [rivit]
+                                                                   (mapv (fn [rivi]
+                                                                           (if (empty? (::t/piillotettu rivi))
+                                                                             (p/paivita-arvo rivi :class disj "piillotettu")
+                                                                             (p/paivita-arvo rivi :class conj "piillotettu")))
+                                                                         rivit)))
+                              (if (empty? (::t/piillotettu rivi))
+                                (p/paivita-arvo rivi :class disj "piillotettu")
+                                (p/paivita-arvo rivi :class conj "piillotettu"))))
+                          rivit))))
+
+(defn aseta-rivien-taustavari
+  ([taulukko] (aseta-rivien-taustavari taulukko 0))
+  ([taulukko rivista-eteenpain]
+   (p/paivita-arvo taulukko :lapset
+                   (fn [rivit]
+                     (let [rivien-luokat (fn rivien-luokat [rivit i]
+                                           (loop [[rivi & rivit] rivit
+                                                  lopputulos []
+                                                  i i]
+                                             (if (nil? rivi)
+                                               [i lopputulos]
+                                               (let [konttirivi? (satisfies? p/Jana (first (p/arvo rivi :lapset)))
+                                                     piillotettu-rivi? (contains? (p/arvo rivi :class) "piillotettu")
+                                                     rivii (if konttirivi?
+                                                             (rivien-luokat (p/arvo rivi :lapset) i)
+                                                             rivi)]
+                                                 (recur rivit
+                                                        (if konttirivi?
+                                                          (conj lopputulos
+                                                                (p/aseta-arvo rivi :lapset (second rivii)))
+                                                          (conj lopputulos
+                                                                (if piillotettu-rivi?
+                                                                  rivi
+                                                                  (-> rivi
+                                                                      (p/paivita-arvo :class conj (if (odd? i)
+                                                                                                    "table-default-odd"
+                                                                                                    "table-default-even"))
+                                                                      (p/paivita-arvo :class disj (if (odd? i)
+                                                                                                    "table-default-even"
+                                                                                                    "table-default-odd"))))))
+                                                        (cond
+                                                          piillotettu-rivi? i
+                                                          konttirivi? (if (odd? (first rivii))
+                                                                        1 0)
+                                                          :else (inc i)))))))]
+                       (into []
+                             (concat (take rivista-eteenpain rivit)
+                                     (second (rivien-luokat (drop rivista-eteenpain rivit) 0)))))))))
+
 (defn hintalaskuri-sarake
   ([yla ala] (hintalaskuri-sarake yla ala nil))
   ([yla ala luokat]
@@ -84,15 +148,19 @@
 
 (defn hintalaskuri
   [{:keys [otsikko selite hinnat]} {:keys [vuosi]}]
-  [:div.hintalaskuri
-   [:h5 otsikko]
-   [:div selite]
-   [:div.hintalaskuri-vuodet
-    (for [{:keys [summa hoitokausi teksti]} hinnat]
-      ^{:key hoitokausi}
-      [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa) (when (= hoitokausi vuosi) "aktiivinen-vuosi")])
-    [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
-    [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]])
+  (if (some #(or (nil? (:summa %))
+                 (js/isNaN (:summa %)))
+            hinnat)
+    [virhe-datassa hinnat]
+    [:div.hintalaskuri
+     [:h5 otsikko]
+     [:div selite]
+     [:div.hintalaskuri-vuodet
+      (for [{:keys [summa hoitokausi teksti]} hinnat]
+        ^{:key hoitokausi}
+        [hintalaskuri-sarake (or teksti (str hoitokausi ". vuosi")) (fmt/euro summa) (when (= hoitokausi vuosi) "aktiivinen-vuosi")])
+      [hintalaskuri-sarake " " "=" "hintalaskuri-yhtakuin"]
+      [hintalaskuri-sarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
 
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
@@ -114,7 +182,7 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta [tavoitehinnat kattohinnat kuluva-hoitokausi]
+(defn tavoite-ja-kattohinta-sisalto [{:keys [tavoitehinnat kattohinnat]} kuluva-hoitokausi]
   (if (and tavoitehinnat kattohinnat)
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
@@ -159,7 +227,8 @@
                      (.scrollIntoView (dom/getElement id)))
         otsikko-fn (fn [otsikkopohja]
                      (-> otsikkopohja
-                         (p/aseta-arvo :id :otsikko-rivi)
+                         (p/aseta-arvo :id :otsikko-rivi
+                                       :class #{})
                          (p/paivita-arvo :lapset
                                          (osien-paivitys-fn (fn [osa]
                                                               (-> osa
@@ -193,7 +262,9 @@
                                                                   (p/paivita-arvo :id str "-otsikko")))))))
         linkkiotsikko-fn (fn [rivin-pohja teksti jakso linkki]
                            (-> rivin-pohja
-                               (p/aseta-arvo :id (keyword teksti))
+                               (p/aseta-arvo :id (keyword teksti)
+                                             :class #{"suunnitelma-rivi"
+                                                      "table-default"})
                                (p/paivita-arvo :lapset
                                                (osien-paivitys-fn (fn [osa]
                                                                     (-> osa
@@ -222,7 +293,8 @@
                                                                                   :class #{(sarakkeiden-leveys :jakso)}))))))
         sisaotsikko-fn (fn [rivin-pohja teksti jakso]
                          (-> rivin-pohja
-                             (p/aseta-arvo :id (keyword teksti))
+                             (p/aseta-arvo :id (keyword teksti)
+                                           :class #{})
                              (p/paivita-arvo :lapset
                                              (osien-paivitys-fn (fn [osa]
                                                                   (p/aseta-arvo osa
@@ -249,11 +321,17 @@
         laajenna-toimenpide-fn (fn [laajenna-toimenpide-pohja teksti jakso]
                                  (let [rivi-id (keyword (str teksti "-laajenna"))]
                                    (-> (sisaotsikko-fn laajenna-toimenpide-pohja teksti jakso)
-                                       (p/aseta-arvo :id rivi-id)
+                                       (p/aseta-arvo :id rivi-id
+                                                     :class #{"toimenpide-rivi"
+                                                              "suunnitelma-rivi"
+                                                              "table-default"
+                                                              (when viimeinen-vuosi?
+                                                                "viimeinen-vuosi")})
                                        (p/paivita-arvo :lapset
                                                        (fn [osat]
                                                          (update osat 0 (fn [laajenna-osa]
                                                                           (-> laajenna-osa
+                                                                              (assoc-in [:parametrit :ikoni] "triangle")
                                                                               (p/aseta-arvo :id (str (gensym "laajenna-toimenpide")))
                                                                               (p/paivita-arvo :class conj "ikoni-vasemmalle" "solu-sisenna-1")
                                                                               (assoc :aukaise-fn #(e! (t/->YhteenvetoLaajennaSoluaKlikattu polku-taulukkoon rivi-id %1 %2)))))))))))
@@ -263,49 +341,56 @@
                          :vahinkojen-korjaukset "Kolmansien osapuolien aiheuttamien vaurioiden korjaukset"
                          :akillinen-hoitotyo "Äkilliset hoitotyöt"
                          :muut-rahavaraukset "Rahavaraus lupaukseen 1"))
-        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti rahavarausrivit?]
-                            (map (fn [tyyppi jakso]
-                                   (let [rahavarausteksti (tyyppi->nimi tyyppi)]
-                                     (-> toimenpide-osa-pohja
-                                         (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
-                                                       :class #{"piillotettu"})
-                                         (p/paivita-arvo :lapset
-                                                         (osien-paivitys-fn (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo rahavarausteksti
-                                                                                            :class #{(sarakkeiden-leveys :teksti)
-                                                                                                     "solu-sisenna-2"}))
-                                                                            (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo {:ikoni ikonit/remove}
-                                                                                            :class #{(sarakkeiden-leveys :kuluva-vuosi)
-                                                                                                     "keskita"}))
-                                                                            (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo {:ikoni ikonit/remove}
-                                                                                            :class #{(sarakkeiden-leveys :tuleva-vuosi)
-                                                                                                     "keskita"}))
-                                                                            (fn [osa]
-                                                                              (p/aseta-arvo osa
-                                                                                            :id (str (gensym "toimenpide-osa"))
-                                                                                            :arvo jakso
-                                                                                            :class #{(sarakkeiden-leveys :jakso)}))))
-                                         ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
-                                         (assoc :suunnitelma tyyppi))))
-                                 (if rahavarausrivit?
-                                   [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset :muut-rahavaraukset]
-                                   [:kokonaishintainen-ja-lisatyo])
-                                 (if rahavarausrivit?
-                                   ["/kk**" "/kk" "/kk" "/kk"]
-                                   ["/kk**"])))
+        toimenpide-osa-fn (fn [toimenpide-osa-pohja toimenpideteksti toimenpide]
+                            (let [rahavarausrivit (case toimenpide
+                                                    (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset]
+                                                    :mhu-yllapito [:kokonaishintainen-ja-lisatyo :muut-rahavaraukset]
+                                                    [:kokonaishintainen-ja-lisatyo])
+                                  jaksot (case toimenpide
+                                           (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) ["/kk**" "/kk" "/kk"]
+                                           :mhu-yllapito ["/kk**" "/kk"]
+                                           ["/kk**"])]
+                              (map (fn [tyyppi jakso]
+                                     (let [rahavarausteksti (tyyppi->nimi tyyppi)]
+                                       (-> toimenpide-osa-pohja
+                                           (p/aseta-arvo :id (keyword (str toimenpideteksti "-" rahavarausteksti))
+                                                         :class #{"piillotettu"
+                                                                  "table-default"
+                                                                  "suunnitelma-rivi"})
+                                           (p/paivita-arvo :lapset
+                                                           (osien-paivitys-fn (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo rahavarausteksti
+                                                                                              :class #{(sarakkeiden-leveys :teksti)
+                                                                                                       "solu-sisenna-2"}))
+                                                                              (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo {:ikoni ikonit/remove}
+                                                                                              :class #{(sarakkeiden-leveys :kuluva-vuosi)
+                                                                                                       "keskita"}))
+                                                                              (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo {:ikoni ikonit/remove}
+                                                                                              :class #{(sarakkeiden-leveys :tuleva-vuosi)
+                                                                                                       "keskita"}))
+                                                                              (fn [osa]
+                                                                                (p/aseta-arvo osa
+                                                                                              :id (str (gensym "toimenpide-osa"))
+                                                                                              :arvo jakso
+                                                                                              :class #{(sarakkeiden-leveys :jakso)}))))
+                                           ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
+                                           (assoc :suunnitelma tyyppi))))
+                                   rahavarausrivit
+                                   jaksot)))
         toimenpide-fn (fn [toimenpide-pohja]
                         (map (fn [toimenpide jakso]
                                (let [toimenpideteksti (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]
                                  (-> toimenpide-pohja
-                                     (p/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi")))
+                                     (p/aseta-arvo :id (keyword (str toimenpideteksti "-vanhempi"))
+                                                   :class #{})
                                      (p/paivita-arvo :lapset
                                                      (fn [rivit]
                                                        (into []
@@ -315,7 +400,7 @@
                                                                            rivit
                                                                            (case rivin-tyyppi
                                                                              :laajenna-toimenpide [(laajenna-toimenpide-fn rivin-pohja toimenpideteksti jakso)]
-                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti (t/toimenpiteet-rahavarauksilla toimenpide))))))
+                                                                             :toimenpide-osa (toimenpide-osa-fn rivin-pohja toimenpideteksti toimenpide)))))
                                                                      [] rivit))))
                                      ;; Laitetaan tämä info, jotta voidaan päivittää pelkästään tarvittaessa render funktiossa
                                      (assoc :toimenpide toimenpide))))
@@ -323,7 +408,8 @@
                              (repeat (count t/toimenpiteet) "/vuosi")))
         hankintakustannukset-fn (fn [hankintakustannukset-pohja]
                                   (-> hankintakustannukset-pohja
-                                      (p/aseta-arvo :id (keyword (str "hankintakustannukset-vanhempi")))
+                                      (p/aseta-arvo :id (keyword (str "hankintakustannukset-vanhempi"))
+                                                    :class #{})
                                       (p/paivita-arvo :lapset
                                                       (fn [rivit]
                                                         (into []
@@ -342,28 +428,28 @@
                                                   (p/paivita-arvo :lapset
                                                                   (fn [osat]
                                                                     (update osat 0 (fn [laajenna-osa]
-                                                                                     (p/paivita-arvo laajenna-osa :class conj "solu-sisenna-2")))))))
+                                                                                     (p/paivita-arvo laajenna-osa :class conj "solu-sisenna-2")))))
+                                                  (assoc :halllinto-id id)))
                                             ["Erillishankinnat"
                                              "Johto- ja hallintokorvaus"
+                                             "Toimistokulut"
                                              "Hoidonjohtopalkkio"]
-                                            ["erillishankinnat"
-                                             "johto-ja-hallintokorvaus"
-                                             "hoidonjohtopalkkio"]
+                                            [(:erillishankinnat t/hallinnollisten-idt)
+                                             (:johto-ja-hallintokorvaus t/hallinnollisten-idt)
+                                             (:toimistokulut-taulukko t/hallinnollisten-idt)
+                                             (:hoidonjohtopalkkio t/hallinnollisten-idt)]
                                             (repeat 4 "/kk")))
         hallinnollisetkustannukset-fn (fn [hallinnollisetkustannukset-pohja]
                                         (-> hallinnollisetkustannukset-pohja
-                                            (p/aseta-arvo :id (keyword (str "hallinnollisetkustannukset-vanhempi")))
+                                            (p/aseta-arvo :id (keyword (str "hallinnollisetkustannukset-vanhempi"))
+                                                          :class #{})
                                             (p/paivita-arvo :lapset
                                                             (fn [rivit]
-                                                              (into []
-                                                                    (reduce (fn [rivit rivin-pohja]
-                                                                              (let [rivin-tyyppi (p/janan-id rivin-pohja)]
-                                                                                (concat
-                                                                                  rivit
-                                                                                  (case rivin-tyyppi
-                                                                                    :linkkiotsikko [(linkkiotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi" "hallinnolliset-toimenpiteet")]
-                                                                                    :hallinnollinen-toimenpide (hallinnollinen-toimenpide-fn rivin-pohja)))))
-                                                                            [] rivit))))))]
+                                                              (let [rivin-pohja (first rivit)]
+                                                                (into []
+                                                                      (concat
+                                                                        [(linkkiotsikko-fn rivin-pohja "Hallinnolliset toimenpiteet" "/vuosi" "hallinnolliset-toimenpiteet")]
+                                                                        (hallinnollinen-toimenpide-fn rivin-pohja))))))))]
     (muodosta-taulukko :suunnitelmien-taulukko
                        {:otsikko {:janan-tyyppi jana/Rivi
                                   :osat [osa/Komponentti
@@ -389,24 +475,75 @@
                                      :janat [:laajenna-toimenpide :toimenpide-osa]}
                         :hankintakustannukset {:janan-tyyppi jana/RiviLapsilla
                                                :janat [:linkkiotsikko :toimenpide]}
-                        :hallinnollinen-toimenpide {:janan-tyyppi jana/Rivi
-                                                    :osat [osa/Nappi
-                                                           osa/Ikoni
-                                                           osa/Ikoni
-                                                           osa/Teksti]}
                         :hallinnollisetkustannukset {:janan-tyyppi jana/RiviLapsilla
-                                                     :janat [:linkkiotsikko :hallinnollinen-toimenpide]}}
+                                                     :janat [:linkkiotsikko]}}
                        ["Teksti" "Kuluva vuosi" "Tuleva vuosi" "Jakso"]
                        [:otsikko otsikko-fn :hankintakustannukset hankintakustannukset-fn :hallinnollisetkustannukset hallinnollisetkustannukset-fn]
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                         :id "suunnitelmien-taulukko"
                         :class #{"suunnitelma-ikonien-varit"}})))
 
+(defn suunnitelman-paivitettavat-osat
+  [edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
+   vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet]
+  (let [toimenpide-muutokset (fn [hankinnat uudet-toimenpiteet vanhat-toimenpiteet muutoksen-avain]
+                               (into {}
+                                     (map (fn [[avain uusi] [_ vanha]]
+                                            [avain {muutoksen-avain (or (get-in hankinnat [avain muutoksen-avain])
+                                                                        (not= uusi vanha))}])
+                                          uudet-toimenpiteet
+                                          vanhat-toimenpiteet)))
+        hallinnolliset-muutokset (fn [hallinnolliset uudet-hallinnolliset vanhat-hallinnolliset muutoksen-avain]
+                                   (or (get hallinnolliset muutoksen-avain)
+                                       (not= uudet-hallinnolliset vanhat-hallinnolliset)))]
+    (-> edelliset-taulukot
+        (update :hankinnat (fn [hankinnat]
+                             (merge-with merge
+                                         (toimenpide-muutokset hankinnat
+                                                               (:toimenpiteet uudet-hankintakustannukset)
+                                                               (:toimenpiteet vanhat-hankintakustannukset)
+                                                               :kokonaishintainen)
+                                         (toimenpide-muutokset hankinnat
+                                                               (:toimenpiteet-laskutukseen-perustuen uudet-hankintakustannukset)
+                                                               (:toimenpiteet-laskutukseen-perustuen vanhat-hankintakustannukset)
+                                                               :lisatyo)
+                                         (toimenpide-muutokset hankinnat
+                                                               (:rahavaraukset uudet-hankintakustannukset)
+                                                               (:rahavaraukset vanhat-hankintakustannukset)
+                                                               :rahavaraukset)
+                                         (into {}
+                                               (map (fn [toimenpide]
+                                                      [toimenpide {:laskutukseen-perustuen-valinta (or (get-in hankinnat [toimenpide :laskutukseen-perustuen-valinta])
+                                                                                                       (and (not= (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
+                                                                                                                  (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
+                                                                                                            (not (contains? (clj-set/intersection (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
+                                                                                                                                                  (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
+                                                                                                                            toimenpide))))}])
+                                                    t/toimenpiteet)))))
+        (update :hallinnolliset (fn [hallinnolliset]
+                                  (merge-with (fn [vanha-muuttunut? uusi-muuttunut?]
+                                                (or vanha-muuttunut? uusi-muuttunut?))
+                                              hallinnolliset
+                                              {(:erillishankinnat t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                   (:erillishankinnat uudet-hallinnolliset-toimenpiteet)
+                                                                                                                   (:erillishankinnat vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                   :erillishankinnat)
+                                               (:johto-ja-hallintokorvaus t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                           (:johto-ja-hallintokorvaus-yhteenveto uudet-hallinnolliset-toimenpiteet)
+                                                                                                                           (:johto-ja-hallintokorvaus-yhteenveto vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                           :johto-ja-hallintokorvaus-yhteenveto)
+                                               (:toimistokulut-taulukko t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                         (:toimistokulut uudet-hallinnolliset-toimenpiteet)
+                                                                                                                         (:toimistokulut vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                         :toimistokulut)
+                                               (:hoidonjohtopalkkio t/hallinnollisten-idt) (hallinnolliset-muutokset hallinnolliset
+                                                                                                                     (:johtopalkkio uudet-hallinnolliset-toimenpiteet)
+                                                                                                                     (:johtopalkkio vanhat-hallinnolliset-toimenpiteet)
+                                                                                                                     :johtopalkkio)}))))))
+
 (defn suunnitelmien-tila
-  [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
-  (let [paivitetyt-taulukot (cljs.core/atom {})
-        kaskytys-kanava (chan)]
-    (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 kaskytys-kanava))
+  [e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
+  (let [paivitetyt-taulukot (cljs.core/atom {})]
     (komp/luo
       (komp/piirretty (fn [this]
                         (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
@@ -415,47 +552,19 @@
                                   ;; Tätä argumenttien tarkkailua ei tulisi tehdä tässä, mutta nykyinen reagentin versio tukee vain
                                   ;; :component-will-receive-props metodia, joka olisi toki sopivampi tähän tarkoitukseen,
                                   ;; mutta React on deprecoinut tuon ja se tulee hajottamaan tulevan koodin.
-                                  #_(println "VANHOJEN ARGUMENTTIEN COUNT " (count old-argv) " JA UUSIEN: " (count new-argv))
                                   (let [vanhat-hankintakustannukset (last (butlast old-argv))
-                                        uudet-hankintakustannukset (last (butlast new-argv))]
+                                        uudet-hankintakustannukset (last (butlast new-argv))
+                                        vanhat-hallinnolliset-toimenpiteet (last old-argv)
+                                        uudet-hallinnolliset-toimenpiteet (last new-argv)]
                                     (swap! paivitetyt-taulukot (fn [edelliset-taulukot]
-                                                                 ;{:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
-                                                                 (-> edelliset-taulukot
-                                                                     (update :hankinnat (fn [hankinnat]
-                                                                                          (merge-with merge
-                                                                                                      (into {}
-                                                                                                            (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   [avain {:kokonaishintainen (or (get-in hankinnat [avain :kokonaishintainen])
-                                                                                                                                                  (not= uusi vanha))}])
-                                                                                                                 (:toimenpiteet uudet-hankintakustannukset)
-                                                                                                                 (:toimenpiteet vanhat-hankintakustannukset)))
-                                                                                                      (into {}
-                                                                                                            (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   [avain {:lisatyo (or (get-in hankinnat [avain :lisatyo])
-                                                                                                                                        (not= uusi vanha))}])
-                                                                                                                 (:toimenpiteet-laskutukseen-perustuen uudet-hankintakustannukset)
-                                                                                                                 (:toimenpiteet-laskutukseen-perustuen vanhat-hankintakustannukset)))
-                                                                                                      (into {}
-                                                                                                            (map (fn [toimenpide]
-                                                                                                                   [toimenpide {:laskutukseen-perustuen-valinta (or (get-in hankinnat [toimenpide :laskutukseen-perustuen-valinta])
-                                                                                                                                                                    (and (not= (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
-                                                                                                                                                                               (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
-                                                                                                                                                                         (not (contains? (clj-set/intersection (:laskutukseen-perustuen (:valinnat uudet-hankintakustannukset))
-                                                                                                                                                                                                               (:laskutukseen-perustuen (:valinnat vanhat-hankintakustannukset)))
-                                                                                                                                                                                         toimenpide))))}])
-                                                                                                                 t/toimenpiteet))
-                                                                                                      (into {}
-                                                                                                            (map (fn [[avain uusi] [_ vanha]]
-                                                                                                                   (let [rahavaraukset-muuttunut? (not= uusi vanha)]
-                                                                                                                     [avain {:rahavaraukset (or (get-in hankinnat [avain :rahavaraukset])
-                                                                                                                                                rahavaraukset-muuttunut?)}]))
-                                                                                                                 (:rahavaraukset uudet-hankintakustannukset)
-                                                                                                                 (:rahavaraukset vanhat-hankintakustannukset))))))))))
+                                                                 (suunnitelman-paivitettavat-osat edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
+                                                                                                  vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet))))
                                   (not= old-argv new-argv))}
-      (fn [e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]
-        (go (>! kaskytys-kanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)]))
-        (if suunnitelmien-tila-taulukko
-          [p/piirra-taulukko suunnitelmien-tila-taulukko]
+      (fn [e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]
+        (when (and (:toimenpiteet hankintakustannukset) (:johtopalkkio hallinnolliset-toimenpiteet))
+          (go (>! kaskytyskanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)])))
+        (if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
+          [p/piirra-taulukko (aseta-rivien-taustavari suunnitelmien-tila-taulukko 1)]
           [yleiset/ajax-loader])))))
 
 (defn maksetaan-filter [_ _]
@@ -506,24 +615,27 @@
 (defn hankintasuunnitelmien-syotto
   "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
    'Täytä alas' nappi päälle."
-  [this {:keys [input-luokat nimi e! on-oikeus? polku-taulukkoon]} value]
+  [this {:keys [input-luokat kaskytyskanava nimi e! laskutuksen-perusteella-taulukko? polku-taulukkoon toimenpide-avain]} value]
   (let [on-change (fn [arvo]
                     (when arvo
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :value arvo))))))
         on-blur (fn [event]
-                  (let [klikattu-elementti (.-relatedTarget event)]
+                  (let [klikattu-elementti (.-relatedTarget event)
+                        klikattu-nappia? (and (not (nil? klikattu-elementti))
+                                              (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
+                                                  (= (str (.getAttribute klikattu-elementti "data-id"))
+                                                     (str (p/osan-id this)))))]
                     (e! (t/->PaivitaToimenpideTaulukko (::tama-komponentti osa/*this*) polku-taulukkoon))
                     (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
                     ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
-                    (when-not (and (not (nil? klikattu-elementti))
-                                   (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
-                                       (= (str (.getAttribute klikattu-elementti "data-id"))
-                                          (str (p/osan-id this)))))
+                    (when-not klikattu-nappia?
+                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon false laskutuksen-perusteella-taulukko?))
                       (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                   (fn [komponentin-tila]
-                                                    (assoc komponentin-tila :nappi-nakyvilla? false)))))))
+                                                    (assoc komponentin-tila :nappi-nakyvilla? false))))
+                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))))
         on-focus (fn [_]
                    (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
                                                (fn [komponentin-tila]
@@ -540,7 +652,6 @@
                                                 {:eventin-arvo {:f poista-tyhjat}}]}
                                    {:class input-luokat
                                     :type "text"
-                                    :disabled (not on-oikeus?)
                                     :value value})
                       (p/lisaa-fmt summa-formatointi)
                       (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen))
@@ -548,7 +659,9 @@
                       (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
                                                   (fn [komponentin-tila]
                                                     (assoc komponentin-tila :nappi-nakyvilla? false))))
-                      (e! (t/->TaytaAlas this polku-taulukkoon)))]
+                      (e! (t/->TaytaAlas this polku-taulukkoon))
+                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain this polku-taulukkoon true laskutuksen-perusteella-taulukko?))
+                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))]
     (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
       [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
                               :tab-index -1
@@ -573,7 +686,7 @@
                 "Yhteensä" (yhteensa osa))))
           osat)))
 
-(defn hankintojen-taulukko [e! toimenpiteet
+(defn hankintojen-taulukko [e! kaskytyskanava toimenpiteet
                             {laskutukseen-perustuen :laskutukseen-perustuen
                              valittu-toimenpide :toimenpide}
                             toimenpide-avain
@@ -591,6 +704,7 @@
         laskutuksen-perusteella? (and (= toimenpide-avain valittu-toimenpide)
                                       (contains? laskutukseen-perustuen toimenpide-avain))
         kuluva-hoitovuosi (:vuosi (t/kuluva-hoitokausi))
+        nyt (pvm/nyt)
         hankinnat-hoitokausittain (group-by #(pvm/paivamaaran-hoitokausi (:pvm %))
                                             toimenpiteet)
         otsikko-fn (fn [otsikko-pohja]
@@ -621,8 +735,11 @@
                                                (osien-paivitys-fn (fn [osa]
                                                                     (p/aseta-arvo osa
                                                                                   :id (keyword (str rivin-id "-nimi"))
-                                                                                  :arvo (str hoitokausi ". hoitovuosi")
-                                                                                  :class #{(sarakkeiden-leveys :nimi)}))
+                                                                                  :arvo (if (< hoitokausi kuluva-hoitovuosi)
+                                                                                          (str hoitokausi ". hoitovuosi (mennyt)")
+                                                                                          (str hoitokausi ". hoitovuosi"))
+                                                                                  :class #{(sarakkeiden-leveys :nimi)
+                                                                                           "lihavoitu"}))
                                                                   (fn [osa]
                                                                     (p/aseta-arvo osa
                                                                                   :id (keyword (str rivin-id "-maara-kk"))
@@ -632,7 +749,8 @@
                                                                     (let [osa (-> osa
                                                                                   (p/aseta-arvo :id (keyword (str rivin-id "-yhteensa"))
                                                                                                 :arvo yhteensa
-                                                                                                :class #{(sarakkeiden-leveys :yhteensa)})
+                                                                                                :class #{(sarakkeiden-leveys :yhteensa)
+                                                                                                         "lihavoitu"})
                                                                                   p/luo-tila!
                                                                                   (p/lisaa-fmt summa-formatointi)
                                                                                   (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2))))]
@@ -652,18 +770,33 @@
                                                                                :arvo paivamaara
                                                                                :class #{(sarakkeiden-leveys :nimi) "solu-sisenna-1"})
                                                                  (p/lisaa-fmt (fn [paivamaara]
-                                                                                (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))))))
+                                                                                (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                                      mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                                   (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                                       (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                                  (if mennyt?
+                                                                                    (str teksti " (mennyt)")
+                                                                                    teksti))))))
                                                            (fn [osa]
-                                                             (-> osa
-                                                                 (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-maara"))
-                                                                               :arvo {:value (str maara)})
-                                                                 (assoc :komponentti hankintasuunnitelmien-syotto
-                                                                        :komponentin-argumentit {:e! e!
-                                                                                                 :nimi (pvm/pvm paivamaara)
-                                                                                                 :on-oikeus? on-oikeus?
-                                                                                                 :polku-taulukkoon polku-taulukkoon
-                                                                                                 :luokat #{(sarakkeiden-leveys :maara-kk)}
-                                                                                                 :input-luokat #{"input-default" "komponentin-input"}})))
+                                                             (if on-oikeus?
+                                                               (-> osa
+                                                                   (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-maara"))
+                                                                                 :arvo {:value (str maara)})
+                                                                   (assoc :komponentti hankintasuunnitelmien-syotto
+                                                                          :komponentin-argumentit {:e! e!
+                                                                                                   :nimi (pvm/pvm paivamaara)
+                                                                                                   :laskutuksen-perusteella-taulukko? laskutuksen-perusteella-taulukko?
+                                                                                                   :toimenpide-avain toimenpide-avain
+                                                                                                   :on-oikeus? on-oikeus?
+                                                                                                   :polku-taulukkoon polku-taulukkoon
+                                                                                                   :kaskytyskanava kaskytyskanava
+                                                                                                   :luokat #{(sarakkeiden-leveys :maara-kk)}
+                                                                                                   :input-luokat #{"input-default" "komponentin-input"}}))
+                                                               (-> osa
+                                                                   (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-maara"))
+                                                                                 :arvo maara
+                                                                                 :class #{(sarakkeiden-leveys :maara-kk)})
+                                                                   (p/lisaa-fmt summa-formatointi))))
                                                            (fn [osa]
                                                              (-> osa
                                                                  (p/aseta-arvo :id (keyword (str (pvm/pvm paivamaara) "-yhteensa"))
@@ -711,29 +844,51 @@
                                                                    (p/aseta-arvo :id :yhteensa-yhteensa
                                                                                  :class #{(sarakkeiden-leveys :yhteensa)})
                                                                    (p/lisaa-fmt summa-formatointi)))))))]
-    (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
-                         :hankinnat-taulukko-laskutukseen-perustuen
-                         :hankinnat-taulukko)
-                       {:normaali {:janan-tyyppi jana/Rivi
+    (if on-oikeus?
+      (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
+                           :hankinnat-taulukko-laskutukseen-perustuen
+                           :hankinnat-taulukko)
+                         {:normaali {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Teksti
+                                            osa/Teksti]}
+                          :laajenna {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Teksti
+                                            osa/Laajenna]}
+                          :lapset {:janan-tyyppi jana/Rivi
+                                   :osat [osa/Teksti
+                                          osa/Komponentti
+                                          osa/Teksti]}
+                          :laajenna-lapsilla {:janan-tyyppi jana/RiviLapsilla
+                                              :janat [:laajenna :lapset]}}
+                         ["Nimi" "Määrä" "Yhteensä"]
+                         [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}})
+      (muodosta-taulukko (if laskutuksen-perusteella-taulukko?
+                           :hankinnat-taulukko-laskutukseen-perustuen
+                           :hankinnat-taulukko)
+                         {:normaali {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Teksti
+                                            osa/Teksti]}
+                          :laajenna {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Teksti
+                                            osa/Laajenna]}
+                          :lapset {:janan-tyyppi jana/Rivi
                                    :osat [osa/Teksti
                                           osa/Teksti
                                           osa/Teksti]}
-                        :laajenna {:janan-tyyppi jana/Rivi
-                                   :osat [osa/Teksti
-                                          osa/Teksti
-                                          osa/Laajenna]}
-                        :lapset {:janan-tyyppi jana/Rivi
-                                 :osat [osa/Teksti
-                                        osa/Komponentti
-                                        osa/Teksti]}
-                        :laajenna-lapsilla {:janan-tyyppi jana/RiviLapsilla
-                                            :janat [:laajenna :lapset]}}
-                       ["Nimi" "Määrä" "Yhteensä"]
-                       [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                        :class #{}})))
+                          :laajenna-lapsilla {:janan-tyyppi jana/RiviLapsilla
+                                              :janat [:laajenna :lapset]}}
+                         ["Nimi" "Määrä" "Yhteensä"]
+                         [:normaali otsikko-fn :laajenna-lapsilla laajenna-lapsille-fn :normaali yhteensa-fn]
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}}))))
 
-(defn rahavarausten-taulukko [e! toimenpiteet
+(defn rahavarausten-taulukko [e! kaskytyskanava toimenpiteet
                               {valittu-toimenpide :toimenpide}
                               toimenpide-avain
                               on-oikeus?]
@@ -750,6 +905,11 @@
                          "vahinkojen-korjaukset" "Kolmansien osapuolien aih. vaurioiden korjaukset"
                          "akillinen-hoitotyo" "Äkilliset hoitotyöt"
                          "muut-rahavaraukset" "Rahavaraus lupaukseen 1"))
+        tyyppi->tallennettava-asia (fn [tyyppi]
+                                     (case tyyppi
+                                       "vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot
+                                       "akillinen-hoitotyo" :akilliset-hoitotyot
+                                       "muut-rahavaraukset" :rahavaraus-lupaukseen-1))
         otsikko-fn (fn [otsikko-pohja]
                      (-> otsikko-pohja
                          (p/aseta-arvo :id :otsikko-rivi
@@ -792,8 +952,11 @@
                                                                                                              (when arvo
                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                                 :on-blur (fn [arvo]
-                                                                                                           (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                           (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot)))
+                                                                                                           (when arvo
+                                                                                                             (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                             (e! (t/->TallennaKustannusarvoituTyo (tyyppi->tallennettava-asia tyyppi) toimenpide-avain arvo nil))
+                                                                                                             (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
+                                                                                                             (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                                 :on-key-down (fn [event]
                                                                                                                (when (= "Enter" (.. event -key))
                                                                                                                  (.. event -target blur)))}
@@ -807,6 +970,32 @@
                                                                                            :class #{(sarakkeiden-leveys :yhteensa)})
                                                                              (p/lisaa-fmt summa-formatointi)))))))
                               toimenpiteet))
+        rivi-fn (fn [rivi-pohja]
+                  (mapv (fn [{:keys [summa tyyppi]}]
+                          (-> rivi-pohja
+                              (p/aseta-arvo :class #{"table-default"}
+                                            :id (keyword tyyppi))
+                              ;; Laitetaan tämä info, jotta voidaan päivittää suunnitelma yhteenveto pelkästään tarvittaessa render funktiossa
+                              (assoc :suunnitelma (keyword tyyppi))
+                              (p/paivita-arvo :lapset
+                                              (osien-paivitys-fn (fn [osa]
+                                                                   (p/aseta-arvo osa
+                                                                                 :id (keyword (str tyyppi "-" (p/osan-id osa)))
+                                                                                 :arvo (tyyppi->nimi tyyppi)
+                                                                                 :class #{(sarakkeiden-leveys :nimi)}))
+                                                                 (fn [osa]
+                                                                   (-> osa
+                                                                       (p/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
+                                                                                     :arvo summa
+                                                                                     :class #{(sarakkeiden-leveys :maara-kk)})
+                                                                       (p/lisaa-fmt summa-formatointi)))
+                                                                 (fn [osa]
+                                                                   (-> osa
+                                                                       (p/aseta-arvo :id (keyword (str tyyppi "-" (p/osan-id osa)))
+                                                                                     :arvo (* summa 12)
+                                                                                     :class #{(sarakkeiden-leveys :yhteensa)})
+                                                                       (p/lisaa-fmt summa-formatointi)))))))
+                        toimenpiteet))
         yhteensa-fn (fn [yhteensa-pohja]
                       (-> yhteensa-pohja
                           (p/aseta-arvo :id :yhteensa
@@ -827,22 +1016,82 @@
                                                                    (p/aseta-arvo :id :yhteensa-yhteensa
                                                                                  :class #{(sarakkeiden-leveys :yhteensa)})
                                                                    (p/lisaa-fmt summa-formatointi)))))))]
-    (muodosta-taulukko :rahavaraukset-taulukko
-                       {:normaali {:janan-tyyppi jana/Rivi
-                                   :osat [osa/Teksti
-                                          osa/Teksti
-                                          osa/Teksti]}
-                        :syottorivi {:janan-tyyppi jana/Rivi
+    (if on-oikeus?
+      (muodosta-taulukko :rahavaraukset-taulukko
+                         {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
-                                            osa/Syote
-                                            osa/Teksti]}}
-                       ["Nimi" "Määrä" "Yhteensä"]
-                       [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                        :class #{}})))
+                                            osa/Teksti
+                                            osa/Teksti]}
+                          :syottorivi {:janan-tyyppi jana/Rivi
+                                       :osat [osa/Teksti
+                                              osa/Syote
+                                              osa/Teksti]}}
+                         ["Nimi" "Määrä" "Yhteensä"]
+                         [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}})
+      (muodosta-taulukko :rahavaraukset-taulukko
+                         {:normaali {:janan-tyyppi jana/Rivi
+                                     :osat [osa/Teksti
+                                            osa/Teksti
+                                            osa/Teksti]}
+                          :rivi {:janan-tyyppi jana/Rivi
+                                 :osat [osa/Teksti
+                                        osa/Teksti
+                                        osa/Teksti]}}
+                         ["Nimi" "Määrä" "Yhteensä"]
+                         [:normaali otsikko-fn :rivi rivi-fn :normaali yhteensa-fn]
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}}))))
+
+(defn jh-korvauksen-rivit
+  [{:keys [toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+  ;; Tässä voi rikastaa kannasta tulevaa tietoa tai lisätä rivejä datan perusteella
+  (let [arvot-nolliksi (fn [arvot alku-nollia? n]
+                         (into []
+                               (concat
+                                 (if alku-nollia?
+                                   (repeat 0 n)
+                                   (take n arvot))
+                                 (if alku-nollia?
+                                   (drop n arvot)
+                                   (repeat 0 (- (count arvot) n))))))
+        hoitokausikohtaiset-rivit (cond
+                                    ;; Hankintavastaavalla mahdollisesti eri tiedot ensimmäisenä vuonna kuin 2-5
+                                    (and (= toimenkuva "hankintavastaava") (= kk-v 12)) [(-> jh-korvaus
+                                                                                             (assoc :hoitokaudet #{1})
+                                                                                             (update :tunnit-kk arvot-nolliksi false 1)
+                                                                                             (update :tuntipalkka arvot-nolliksi false 1)
+                                                                                             (update :yhteensa-kk arvot-nolliksi false 1))
+                                                                                         (-> jh-korvaus
+                                                                                             (update :hoitokaudet disj 1)
+                                                                                             (update :tunnit-kk arvot-nolliksi true 1)
+                                                                                             (update :tuntipalkka arvot-nolliksi true 1)
+                                                                                             (update :yhteensa-kk arvot-nolliksi true 1))]
+                                    :else [jh-korvaus])
+        toimenkuvan-maksukausiteksti-suluissa (case maksukausi
+                                                :kesa "kesäkausi"
+                                                :talvi "talvikausi"
+                                                nil)
+        toimenkuvan-hoitokausiteksti-suluissa (cond
+                                                (> (count hoitokausikohtaiset-rivit) 1) (mapv (fn [{:keys [hoitokaudet]}]
+                                                                                                (if (= 1 (count hoitokaudet))
+                                                                                                  (str (first hoitokaudet) ". sopimusvuosi")
+                                                                                                  (str (apply min hoitokaudet) ".-" (apply max hoitokaudet) ". sopimusvuosi")))
+                                                                                              hoitokausikohtaiset-rivit)
+                                                (= hoitokaudet #{0}) ["ennen urakkaa"]
+                                                :else nil)
+        sulkutekstit (map (fn [index]
+                            (remove nil? [toimenkuvan-maksukausiteksti-suluissa (get toimenkuvan-hoitokausiteksti-suluissa index)]))
+                          (range (count hoitokausikohtaiset-rivit)))]
+    (map-indexed (fn [index jh-korvaus]
+                   (assoc jh-korvaus :muokattu-toimenkuva (if (empty? (nth sulkutekstit index))
+                                                            toimenkuva
+                                                            (str toimenkuva " (" (apply str (interpose ", " (nth sulkutekstit index))) ")"))))
+                 hoitokausikohtaiset-rivit)))
 
 (defn johto-ja-hallintokorvaus-laskulla-taulukko
-  [e! jh-laskulla on-oikeus?]
+  [e! kaskytyskanava jh-korvaukset on-oikeus?]
   (let [osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
                             (fn [osat]
                               (mapv (fn [osa]
@@ -854,6 +1103,7 @@
                                           "Yhteensä/kk" (yhteensa-kk osa)
                                           "kk/v" (kk-v osa))))
                                     osat)))
+        {kuluva-hoitovuosi :vuosi} (t/kuluva-hoitokausi)
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-laskulla]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
@@ -878,91 +1128,165 @@
                                                             (fn [osa]
                                                               (p/aseta-arvo osa
                                                                             :arvo "kk/v"))))))
+        disabloidaanko-rivi? (fn [hoitokaudet]
+                               (and (every? false? (map #(>= % kuluva-hoitovuosi) hoitokaudet))
+                                    (not (and (= 1 kuluva-hoitovuosi)
+                                              (contains? hoitokaudet 0)))))
         syottorivi-fn (fn [syotto-pohja]
-                        (mapv (fn [{:keys [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]}]
-                                (-> syotto-pohja
-                                    (p/aseta-arvo :class #{"table-default"
-                                                           "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
-                                                  :id (keyword toimenkuva))
-                                    (p/paivita-arvo :lapset
-                                                    (osien-paivitys-fn (fn [osa]
-                                                                         (p/aseta-arvo osa
-                                                                                       :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                       :arvo toimenkuva))
-                                                                       (fn [osa]
-                                                                         (p/aseta-arvo
-                                                                           (-> osa
-                                                                               (assoc :toiminnot {:on-change (fn [arvo]
-                                                                                                               (when arvo
-                                                                                                                 (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
-                                                                                                  :on-blur (fn [arvo]
-                                                                                                             (when arvo
-                                                                                                               (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
-                                                                                                               (e! (t/->PaivitaJHRivit osa/*this*))))
-                                                                                                  :on-key-down (fn [event]
-                                                                                                                 (when (= "Enter" (.. event -key))
-                                                                                                                   (.. event -target blur)))}
-                                                                                      :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                   {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                       :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
-                                                                               (p/lisaa-fmt summa-formatointi)
-                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
-                                                                               (assoc-in [:parametrit :size] 2))
-                                                                           :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                           :arvo tunnit-kk
-                                                                           :class #{"input-default"}))
-                                                                       (fn [osa]
-                                                                         (p/aseta-arvo
-                                                                           (-> osa
-                                                                               (assoc :toiminnot {:on-change (fn [arvo]
-                                                                                                               (when arvo
-                                                                                                                 (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
-                                                                                                  :on-blur (fn [arvo]
-                                                                                                             (when arvo
-                                                                                                               (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
-                                                                                                               (e! (t/->PaivitaJHRivit osa/*this*))))
-                                                                                                  :on-key-down (fn [event]
-                                                                                                                 (when (= "Enter" (.. event -key))
-                                                                                                                   (.. event -target blur)))}
-                                                                                      :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                   {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                       :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
-                                                                               (p/lisaa-fmt summa-formatointi)
-                                                                               (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
-                                                                               (assoc-in [:parametrit :size] 2))
-                                                                           :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                           :arvo tuntipalkka
-                                                                           :class #{"input-default"}))
-                                                                       (fn [osa]
-                                                                         (-> osa
-                                                                             (p/aseta-arvo :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                           :arvo yhteensa-kk)
-                                                                             (p/lisaa-fmt summa-formatointi)))
-                                                                       (fn [osa]
-                                                                         (p/aseta-arvo osa
-                                                                                       :id (keyword (str toimenkuva "-" (p/osan-id osa)))
-                                                                                       :arvo kk-v))))))
-                              jh-laskulla))]
-    (muodosta-taulukko :jh-laskulla
-                       {:otsikko {:janan-tyyppi jana/Rivi
-                                  :osat [osa/Teksti
-                                         osa/Teksti
-                                         osa/Teksti
-                                         osa/Teksti
-                                         osa/Teksti]}
-                        :syottorivi {:janan-tyyppi jana/Rivi
-                                     :osat [osa/Teksti
-                                            osa/Syote
-                                            osa/Syote
-                                            osa/Teksti
-                                            osa/Teksti]}}
-                       ["Toimenkuva" "Tunnit/kk" "Tuntipalkka" "Yhteensä/kk" "kk/v"]
-                       [:otsikko otsikko-fn :syottorivi syottorivi-fn]
-                       {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                        :class #{}})))
+                        (into []
+                              (mapcat (fn [jh-korvaus]
+                                        (map (fn [{:keys [toimenkuva muokattu-toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+                                               (-> syotto-pohja
+                                                   (p/aseta-arvo :class #{"table-default"
+                                                                          "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
+                                                                 :id (keyword muokattu-toimenkuva))
+                                                   (assoc ::p/lisatty-data {:toimenkuva toimenkuva
+                                                                            :maksukausi maksukausi
+                                                                            :hoitokaudet hoitokaudet})
+                                                   (p/paivita-arvo :lapset
+                                                                   (osien-paivitys-fn (fn [osa]
+                                                                                        (-> osa
+                                                                                            (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                          :arvo muokattu-toimenkuva)
+                                                                                            (p/lisaa-fmt clj-str/capitalize)))
+                                                                                      (fn [osa]
+                                                                                        (p/aseta-arvo
+                                                                                          (-> osa
+                                                                                              (assoc :toiminnot {:on-change (fn [arvo]
+                                                                                                                              (when arvo
+                                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                                                 :on-blur (fn [arvo]
+                                                                                                                            (when arvo
+                                                                                                                              (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
+                                                                                                                              (e! (t/->TallennaJohtoJaHallintokorvaukset osa/*this* polku-taulukkoon))
+                                                                                                                              (e! (t/->PaivitaJHRivit osa/*this*))
+                                                                                                                              (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                                                 :on-key-down (fn [event]
+                                                                                                                                (when (= "Enter" (.. event -key))
+                                                                                                                                  (.. event -target blur)))}
+                                                                                                     :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                                  {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                                      :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
+                                                                                              (p/lisaa-fmt summa-formatointi)
+                                                                                              (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
+                                                                                              (update :parametrit (fn [parametrit]
+                                                                                                                    (assoc parametrit :size 2
+                                                                                                                                      :disabled? (disabloidaanko-rivi? hoitokaudet)))))
+                                                                                          :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                          :arvo (get tunnit-kk (dec kuluva-hoitovuosi))
+                                                                                          :class #{"input-default"}))
+                                                                                      (fn [osa]
+                                                                                        (p/aseta-arvo
+                                                                                          (-> osa
+                                                                                              (assoc :toiminnot {:on-change (fn [arvo]
+                                                                                                                              (when arvo
+                                                                                                                                (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
+                                                                                                                 :on-blur (fn [arvo]
+                                                                                                                            (when arvo
+                                                                                                                              (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))
+                                                                                                                              (e! (t/->TallennaJohtoJaHallintokorvaukset osa/*this* polku-taulukkoon))
+                                                                                                                              (e! (t/->PaivitaJHRivit osa/*this*))))
+                                                                                                                 :on-key-down (fn [event]
+                                                                                                                                (when (= "Enter" (.. event -key))
+                                                                                                                                  (.. event -target blur)))}
+                                                                                                     :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                                  {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                                      :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]})
+                                                                                              (p/lisaa-fmt summa-formatointi)
+                                                                                              (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen)
+                                                                                              (update :parametrit (fn [parametrit]
+                                                                                                                    (assoc parametrit :size 2
+                                                                                                                                      :disabled? (disabloidaanko-rivi? hoitokaudet)))))
+                                                                                          :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                          :arvo (get tuntipalkka (dec kuluva-hoitovuosi))
+                                                                                          :class #{"input-default"}))
+                                                                                      (fn [osa]
+                                                                                        (-> osa
+                                                                                            (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                          :arvo (get yhteensa-kk (dec kuluva-hoitovuosi)))
+                                                                                            (p/lisaa-fmt summa-formatointi)))
+                                                                                      (fn [osa]
+                                                                                        (p/aseta-arvo osa
+                                                                                                      :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                      :arvo kk-v))))))
+                                             (jh-korvauksen-rivit jh-korvaus)))
+                                    jh-korvaukset)))
+        rivi-fn (fn [rivi-pohja]
+                  (into []
+                        (mapcat (fn [jh-korvaus]
+                                  (map (fn [{:keys [toimenkuva muokattu-toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+                                         (-> rivi-pohja
+                                             (p/aseta-arvo :class #{"table-default"
+                                                                    "col-xs-12" "col-sm-12" "col-md-12" "col-lg-12"}
+                                                           :id (keyword muokattu-toimenkuva))
+                                             (assoc ::p/lisatty-data {:toimenkuva toimenkuva
+                                                                      :maksukausi maksukausi
+                                                                      :hoitokaudet hoitokaudet})
+                                             (p/paivita-arvo :lapset
+                                                             (osien-paivitys-fn (fn [osa]
+                                                                                  (-> osa
+                                                                                      (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                    :arvo muokattu-toimenkuva)
+                                                                                      (p/lisaa-fmt clj-str/capitalize)))
+                                                                                (fn [osa]
+                                                                                  (-> osa
+                                                                                      (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                    :arvo (get tunnit-kk (dec kuluva-hoitovuosi)))
+                                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                                (fn [osa]
+                                                                                  (-> osa
+                                                                                      (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                    :arvo (get tuntipalkka (dec kuluva-hoitovuosi)))
+                                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                                (fn [osa]
+                                                                                  (-> osa
+                                                                                      (p/aseta-arvo :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                    :arvo (get yhteensa-kk (dec kuluva-hoitovuosi)))
+                                                                                      (p/lisaa-fmt summa-formatointi)))
+                                                                                (fn [osa]
+                                                                                  (p/aseta-arvo osa
+                                                                                                :id (keyword (str muokattu-toimenkuva "-" (p/osan-id osa)))
+                                                                                                :arvo kk-v))))))
+                                       (jh-korvauksen-rivit jh-korvaus)))
+                                jh-korvaukset)))]
+    (if on-oikeus?
+      (muodosta-taulukko :jh-laskulla
+                         {:otsikko {:janan-tyyppi jana/Rivi
+                                    :osat [osa/Teksti
+                                           osa/Teksti
+                                           osa/Teksti
+                                           osa/Teksti
+                                           osa/Teksti]}
+                          :syottorivi {:janan-tyyppi jana/Rivi
+                                       :osat [osa/Teksti
+                                              osa/Syote
+                                              osa/Syote
+                                              osa/Teksti
+                                              osa/Teksti]}}
+                         ["Toimenkuva" "Tunnit/kk" "Tuntipalkka" "Yhteensä/kk" "kk/v"]
+                         [:otsikko otsikko-fn :syottorivi syottorivi-fn]
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}})
+      (muodosta-taulukko :jh-laskulla
+                         {:otsikko {:janan-tyyppi jana/Rivi
+                                    :osat [osa/Teksti
+                                           osa/Teksti
+                                           osa/Teksti
+                                           osa/Teksti
+                                           osa/Teksti]}
+                          :rivi {:janan-tyyppi jana/Rivi
+                                 :osat [osa/Teksti
+                                        osa/Teksti
+                                        osa/Teksti
+                                        osa/Teksti
+                                        osa/Teksti]}}
+                         ["Toimenkuva" "Tunnit/kk" "Tuntipalkka" "Yhteensä/kk" "kk/v"]
+                         [:otsikko otsikko-fn :rivi rivi-fn]
+                         {:taulukon-paivitys-fn! taulukon-paivitys-fn!
+                          :class #{}}))))
 
 (defn johto-ja-hallintokorvaus-yhteenveto-taulukko
-  [e! jh-yhteenveto on-oikeus?]
+  [e! jh-korvaukset]
   (let [osien-paivitys-fn (fn [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]
                             (fn [osat]
                               (mapv (fn [osa]
@@ -976,6 +1300,7 @@
                                           "4.vuosi/€" (hoitokausi-4 osa)
                                           "5.vuosi/€" (hoitokausi-5 osa))))
                                     osat)))
+        {kuluva-hoitovuosi :vuosi} (t/kuluva-hoitokausi)
         polku-taulukkoon [:hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus-yhteenveto]
         taulukon-paivitys-fn! (fn [paivitetty-taulukko]
                                 (swap! tila/suunnittelu-kustannussuunnitelma assoc-in polku-taulukkoon paivitetty-taulukko))
@@ -1008,48 +1333,67 @@
                                                                  (fn [osa]
                                                                    (p/aseta-arvo osa
                                                                                  :arvo "5.vuosi/€")))))
-                          (map (fn [{:keys [toimenkuva kk-v hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]}]
-                                 (-> rivi-pohja
-                                     (p/aseta-arvo :id (keyword toimenkuva)
-                                                   :class #{"table-default"})
-                                     (p/paivita-arvo :lapset
-                                                     (osien-paivitys-fn (fn [osa]
-                                                                          (p/aseta-arvo osa :arvo toimenkuva))
-                                                                        (fn [osa]
-                                                                          (p/aseta-arvo osa :arvo kk-v))
-                                                                        (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-1)
-                                                                              (p/lisaa-fmt summa-formatointi)))
-                                                                        (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-2)
-                                                                              (p/lisaa-fmt summa-formatointi)))
-                                                                        (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-3)
-                                                                              (p/lisaa-fmt summa-formatointi)))
-                                                                        (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-4)
-                                                                              (p/lisaa-fmt summa-formatointi)))
-                                                                        (fn [osa]
-                                                                          (-> osa
-                                                                              (p/aseta-arvo :arvo hoitokausi-5)
-                                                                              (p/lisaa-fmt summa-formatointi)))))))
-                               jh-yhteenveto))))
+                          (mapcat (fn [jh-korvaus]
+                                    (map (fn [{:keys [toimenkuva muokattu-toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+                                           (let [hoitokauden-arvo (fn [hoitokausi]
+                                                                    (if (or (contains? hoitokaudet hoitokausi)
+                                                                            (and (= 1 hoitokausi)
+                                                                                 (contains? hoitokaudet 0)))
+                                                                      (* (get yhteensa-kk (dec hoitokausi)) kk-v)
+                                                                      ""))]
+                                             (-> rivi-pohja
+                                                 (p/aseta-arvo :id (keyword muokattu-toimenkuva)
+                                                               :class #{"table-default"})
+                                                 (assoc :vuodet hoitokaudet)
+                                                 (p/paivita-arvo :lapset
+                                                                 (osien-paivitys-fn (fn [osa]
+                                                                                      (-> osa
+                                                                                          (p/aseta-arvo :arvo muokattu-toimenkuva)
+                                                                                          (p/lisaa-fmt clj-str/capitalize)))
+                                                                                    (fn [osa]
+                                                                                      (p/aseta-arvo osa :arvo kk-v))
+                                                                                    (fn [osa]
+                                                                                      (cond-> osa
+                                                                                              true (p/aseta-arvo :arvo (hoitokauden-arvo 1))
+                                                                                              (or (contains? hoitokaudet 1)
+                                                                                                  (contains? hoitokaudet 0)) (p/lisaa-fmt summa-formatointi)))
+                                                                                    (fn [osa]
+                                                                                      (cond-> osa
+                                                                                              true (p/aseta-arvo :arvo (hoitokauden-arvo 2))
+                                                                                              (contains? hoitokaudet 2) (p/lisaa-fmt summa-formatointi)))
+                                                                                    (fn [osa]
+                                                                                      (cond-> osa
+                                                                                              true (p/aseta-arvo :arvo (hoitokauden-arvo 3))
+                                                                                              (contains? hoitokaudet 3) (p/lisaa-fmt summa-formatointi)))
+                                                                                    (fn [osa]
+                                                                                      (cond-> osa
+                                                                                              true (p/aseta-arvo :arvo (hoitokauden-arvo 4))
+                                                                                              (contains? hoitokaudet 4) (p/lisaa-fmt summa-formatointi)))
+                                                                                    (fn [osa]
+                                                                                      (cond-> osa
+                                                                                              true (p/aseta-arvo :arvo (hoitokauden-arvo 5))
+                                                                                              (contains? hoitokaudet 5) (p/lisaa-fmt summa-formatointi))))))))
+                                         (jh-korvauksen-rivit jh-korvaus)))
+                                  jh-korvaukset))))
         yhteensa-fn (fn [yhteensa-pohja]
                       (let [{:keys [hoitokausi-1 hoitokausi-2 hoitokausi-3 hoitokausi-4 hoitokausi-5]}
-                            (apply merge-with (fn [& hoitokausien-summat]
-                                                (transduce
-                                                  (comp
-                                                    (map (fn [summa]
-                                                           (js/Number summa)))
-                                                    (remove (fn [summa]
-                                                              (js/isNaN summa))))
-                                                  + 0 hoitokausien-summat))
-                                   (map #(select-keys % #{:hoitokausi-1 :hoitokausi-2 :hoitokausi-3 :hoitokausi-4 :hoitokausi-5})
-                                        jh-yhteenveto))]
+                            (clj-set/rename-keys
+                              (transduce
+                                (comp (mapcat jh-korvauksen-rivit)
+                                      (map (fn [{:keys [toimenkuva muokattu-toimenkuva maksukausi tunnit-kk tuntipalkka yhteensa-kk kk-v hoitokaudet] :as jh-korvaus}]
+                                             (into {}
+                                                   (map (fn [hoitokausi]
+                                                          (let [hoitokauden-index (if (= 0 hoitokausi)
+                                                                                    0 (dec hoitokausi))]
+                                                            [(if (= 0 hoitokausi) 1 hoitokausi)
+                                                             (* (get tunnit-kk hoitokauden-index) (get tuntipalkka hoitokauden-index) kk-v)]))
+                                                        hoitokaudet)))))
+                                (partial merge-with +) {} jh-korvaukset)
+                              {1 :hoitokausi-1
+                               2 :hoitokausi-2
+                               3 :hoitokausi-3
+                               4 :hoitokausi-4
+                               5 :hoitokausi-5})]
                         (-> yhteensa-pohja
                             (p/aseta-arvo :id :yhteensa
                                           :class #{"table-default" "table-default-sum"})
@@ -1092,8 +1436,8 @@
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                         :class #{}})))
 
-(defn maara-kk-taulukko [e! polku-taulukkoon rivin-nimi voi-muokata?
-                         {:keys [maara-kk yhteensa]} on-oikeus?]
+(defn maara-kk-taulukko [e! kaskytyskanava polku-taulukkoon rivin-nimi taulukko-elementin-id
+                         {:keys [maara-kk yhteensa]} tallennettava-asia on-oikeus?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
                                :nimi "col-xs-12 col-sm-8 col-md-8 col-lg-8"
@@ -1141,7 +1485,10 @@
                                                                                                      (when arvo
                                                                                                        (e! (t/->MuutaTaulukonOsa osa/*this* polku-taulukkoon arvo))))
                                                                                         :on-blur (fn [arvo]
-                                                                                                   (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo)))))
+                                                                                                   (when arvo
+                                                                                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                     (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                                     (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
                                                                                         :on-key-down (fn [event]
                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                          (.. event -target blur)))}
@@ -1161,18 +1508,19 @@
                       (p/paivita-arvo :lapset
                                       (osien-paivitys-fn (fn [osa]
                                                            (p/aseta-arvo osa
-                                                                         :id :yhteensa-nimi
+                                                                         :id (keyword (p/osan-id osa))
                                                                          :arvo rivin-nimi
                                                                          :class #{(sarakkeiden-leveys :nimi)}))
                                                          (fn [osa]
                                                            (-> osa
-                                                               (p/aseta-arvo :id :yhteensa-maara-kk
-                                                                             :arvo ""
+                                                               (p/aseta-arvo :id (keyword (p/osan-id osa))
+                                                                             :arvo maara-kk
                                                                              :class #{(sarakkeiden-leveys :maara-kk)})
                                                                (p/lisaa-fmt summa-formatointi)))
                                                          (fn [osa]
                                                            (-> osa
-                                                               (p/aseta-arvo :id :yhteensa-yhteensa
+                                                               (p/aseta-arvo :id (keyword (p/osan-id osa))
+                                                                             :arvo yhteensa
                                                                              :class #{(sarakkeiden-leveys :yhteensa)})
                                                                (p/lisaa-fmt summa-formatointi)))))))
         yhteensa-fn (fn [yhteensa-pohja]
@@ -1195,7 +1543,7 @@
                                                                    (p/aseta-arvo :id :yhteensa-yhteensa
                                                                                  :class #{(sarakkeiden-leveys :yhteensa)})
                                                                    (p/lisaa-fmt summa-formatointi)))))))]
-    (if voi-muokata?
+    (if on-oikeus?
       (muodosta-taulukko (str rivin-nimi "-taulukko")
                          {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
@@ -1208,7 +1556,8 @@
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :syottorivi syottorivi-fn :normaali yhteensa-fn]
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                          :class #{}})
+                          :class #{}
+                          :id taulukko-elementin-id})
       (muodosta-taulukko (str rivin-nimi "-taulukko")
                          {:normaali {:janan-tyyppi jana/Rivi
                                      :osat [osa/Teksti
@@ -1221,55 +1570,8 @@
                          ["Nimi" "Määrä" "Yhteensä"]
                          [:normaali otsikko-fn :rivi rivi-fn :normaali yhteensa-fn]
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
-                          :class #{}}))))
-
-(defn aseta-rivien-luokat
-  "Tämä tekee taulukkoon seeprakuvioinnin"
-  [rivit taulukko]
-  (let [rivit (mapv (fn [rivi]
-                      (case (p/rivin-skeema taulukko rivi)
-                        :laajenna-lapsilla (p/paivita-arvo rivi :lapset
-                                                           (fn [rivit]
-                                                             (mapv (fn [rivi]
-                                                                     (if (empty? (::t/piillotettu rivi))
-                                                                       (p/paivita-arvo rivi :class disj "piillotettu")
-                                                                       (p/paivita-arvo rivi :class conj "piillotettu")))
-                                                                   rivit)))
-                        (if (empty? (::t/piillotettu rivi))
-                          (p/paivita-arvo rivi :class disj "piillotettu")
-                          (p/paivita-arvo rivi :class conj "piillotettu"))))
-                    rivit)
-        rivien-luokat (fn rivien-luokat [rivit i]
-                        (loop [[rivi & rivit] rivit
-                               lopputulos []
-                               i i]
-                          (if (nil? rivi)
-                            [i lopputulos]
-                            (let [konttirivi? (satisfies? p/Jana (first (p/arvo rivi :lapset)))
-                                  piillotettu-rivi? (contains? (p/arvo rivi :class) "piillotettu")
-                                  rivii (if konttirivi?
-                                         (rivien-luokat (p/arvo rivi :lapset) i)
-                                         rivi)]
-                              (recur rivit
-                                     (if konttirivi?
-                                       (conj lopputulos
-                                             (p/aseta-arvo rivi :lapset (second rivii)))
-                                       (conj lopputulos
-                                             (if piillotettu-rivi?
-                                               rivi
-                                               (-> rivi
-                                                   (p/paivita-arvo :class conj (if (odd? i)
-                                                                                 "table-default-odd"
-                                                                                 "table-default-even"))
-                                                   (p/paivita-arvo :class disj (if (odd? i)
-                                                                                 "table-default-even"
-                                                                                 "table-default-odd"))))))
-                                     (cond
-                                       piillotettu-rivi? i
-                                       konttirivi? (if (odd? (first rivii))
-                                                     1 0)
-                                       :else (inc i)))))))]
-    (second (rivien-luokat rivit 0))))
+                          :class #{}
+                          :id taulukko-elementin-id}))))
 
 (defn suunnitellut-hankinnat [e! toimenpiteet valinnat]
   (if toimenpiteet
@@ -1277,15 +1579,13 @@
      (for [[toimenpide-avain toimenpide-taulukko] toimenpiteet
            :let [nakyvissa? (= toimenpide-avain (:toimenpide valinnat))]]
        ^{:key toimenpide-avain}
-       [p/piirra-taulukko (-> toimenpide-taulukko
-                              (p/paivita-arvo :class (fn [luokat]
+       [p/piirra-taulukko (cond-> toimenpide-taulukko
+                              true (p/paivita-arvo :class (fn [luokat]
                                                        (if nakyvissa?
                                                          (disj luokat "piillotettu")
                                                          (conj luokat "piillotettu"))))
-                              (p/paivita-arvo :lapset (fn [rivit]
-                                                        (if nakyvissa?
-                                                          (aseta-rivien-luokat rivit toimenpide-taulukko)
-                                                          rivit))))])]
+                              nakyvissa? aseta-rivien-nakyvyys
+                              nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
 (defn laskutukseen-perustuvat-kustannukset [e! toimenpiteet-laskutukseen-perustuen valinnat]
@@ -1295,15 +1595,13 @@
            :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
                                  (contains? (:laskutukseen-perustuen valinnat) toimenpide-avain))]]
        ^{:key toimenpide-avain}
-       [p/piirra-taulukko (-> toimenpide-taulukko
-                              (p/paivita-arvo :class (fn [luokat]
-                                                       (if nakyvissa?
-                                                         (disj luokat "piillotettu")
-                                                         (conj luokat "piillotettu"))))
-                              (p/paivita-arvo :lapset (fn [rivit]
-                                                        (if nakyvissa?
-                                                          (aseta-rivien-luokat rivit toimenpide-taulukko)
-                                                          rivit))))])]
+       [p/piirra-taulukko (cond-> toimenpide-taulukko
+                                  true (p/paivita-arvo :class (fn [luokat]
+                                                                (if nakyvissa?
+                                                                  (disj luokat "piillotettu")
+                                                                  (conj luokat "piillotettu"))))
+                                  nakyvissa? aseta-rivien-nakyvyys
+                                  nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
 (defn arvioidaanko-laskutukseen-perustuen [e! _ _]
@@ -1321,7 +1619,7 @@
       [:div#laskutukseen-perustuen-filter
        [:input#lakutukseen-perustuen.vayla-checkbox
         {:type "checkbox" :checked (laskutukseen-perustuen? laskutukseen-perustuen toimenpide)
-         :on-change (r/partial vaihda-fn toimenpide)}]
+         :on-change (r/partial vaihda-fn toimenpide) :disabled (not on-oikeus?)}]
        [:label {:for "lakutukseen-perustuen"}
         "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle: "
         [:b (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)]]])))
@@ -1333,19 +1631,17 @@
            :let [nakyvissa? (and (= toimenpide-avain (:toimenpide valinnat))
                                  (t/toimenpiteet-rahavarauksilla toimenpide-avain))]]
        ^{:key toimenpide-avain}
-       [p/piirra-taulukko (-> rahavaraus-taulukko
-                              (p/paivita-arvo :class (fn [luokat]
-                                                       (if nakyvissa?
-                                                         (disj luokat "piillotettu")
-                                                         (conj luokat "piillotettu"))))
-                              (p/paivita-arvo :lapset (fn [rivit]
-                                                        (if nakyvissa?
-                                                          (aseta-rivien-luokat rivit rahavaraus-taulukko)
-                                                          rivit))))])]
+       [p/piirra-taulukko (cond-> rahavaraus-taulukko
+                                  true (p/paivita-arvo :class (fn [luokat]
+                                                                (if nakyvissa?
+                                                                  (disj luokat "piillotettu")
+                                                                  (conj luokat "piillotettu"))))
+                                  nakyvissa? aseta-rivien-nakyvyys
+                                  nakyvissa? aseta-rivien-taustavari)])]
     [yleiset/ajax-loader]))
 
 (defn hankintakustannukset-taulukot [e! {:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset}
-                                     kuluva-hoitokausi]
+                                     kuluva-hoitokausi kirjoitusoikeus?]
   [:div
    [:h2#hankintakustannukset "Hankintakustannukset"]
    (if yhteenveto
@@ -1360,7 +1656,7 @@
    [hankintojen-filter e! valinnat]
    [suunnitellut-hankinnat e! toimenpiteet valinnat]
    ;; TODO: Korjaa oikeus
-   [arvioidaanko-laskutukseen-perustuen e! valinnat true]
+   [arvioidaanko-laskutukseen-perustuen e! valinnat kirjoitusoikeus?]
    [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
    (when (t/toimenpiteet-rahavarauksilla (:toimenpide valinnat))
      ^{:key "rahavaraukset-otsikko"}
@@ -1371,35 +1667,36 @@
   (if jh-laskulla
     [p/piirra-taulukko (-> jh-laskulla
                            (assoc-in [:parametrit :id] "jh-toimenkuva-laskulla")
-                           (p/paivita-arvo :lapset (fn [rivit]
-                                                     (aseta-rivien-luokat rivit jh-laskulla))))]
+                           aseta-rivien-nakyvyys
+                           aseta-rivien-taustavari)]
     [yleiset/ajax-loader]))
 
 (defn jh-toimenkuva-yhteenveto [jh-yhteenveto]
   (if jh-yhteenveto
     [p/piirra-taulukko (-> jh-yhteenveto
                            (assoc-in [:parametrit :id] "jh-toimenkuva-yhteenveto")
-                           (p/paivita-arvo :lapset (fn [rivit]
-                                                     (aseta-rivien-luokat rivit jh-yhteenveto))))]
+                           aseta-rivien-nakyvyys
+                           aseta-rivien-taustavari)]
     [yleiset/ajax-loader]))
 
 (defn maara-kk [taulukko]
   (if taulukko
-    [p/piirra-taulukko (p/paivita-arvo taulukko :lapset (fn [rivit]
-                                                          (aseta-rivien-luokat rivit taulukko)))]
+    [p/piirra-taulukko (-> taulukko
+                           aseta-rivien-nakyvyys
+                           aseta-rivien-taustavari)]
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
-  [erillishankinnat {:keys [vuosi] :as kuluva-hoitokausi}]
+  [erillishankinnat menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi}]
   (if erillishankinnat
     (let [summarivin-index 1
-          vuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
+          tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
                               :arvo)
           hinnat (map (fn [hoitokausi]
-                        (if (= hoitokausi vuosi)
-                          {:summa vuosi-summa
+                        (if (>= hoitokausi vuosi)
+                          {:summa tamavuosi-summa
                            :hoitokausi hoitokausi}
-                          {:summa 0
+                          {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1411,19 +1708,24 @@
 (defn erillishankinnat [erillishankinnat]
   [maara-kk erillishankinnat])
 
-(defn erillishankinnat-sisalto [erillishankinnat-taulukko kuluva-hoitokausi]
+(defn erillishankinnat-sisalto [erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi]
   [:<>
-   [:h3#erillishankinnat "Erillishankinnat"]
-   [erillishankinnat-yhteenveto erillishankinnat-taulukko kuluva-hoitokausi]
+   [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
+   [erillishankinnat-yhteenveto erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi]
    [erillishankinnat erillishankinnat-taulukko]
    [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]])
 
 (defn johto-ja-hallintokorvaus-yhteenveto
-  [jh-yhteenveto {:keys [vuosi] :as kuluva-hoitokausi}]
-  (if jh-yhteenveto
-    (let [hinnat (map (fn [hoitokausi]
-                        {:summa (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
-                                        :arvo)
+  [jh-yhteenveto toimistokulut menneet-toimistokulut {:keys [vuosi] :as kuluva-hoitokausi}]
+  (if (and jh-yhteenveto toimistokulut)
+    (let [tamavuosi-toimistokulutsumma (p/arvo (tyokalut/hae-asia-taulukosta toimistokulut [1 "Yhteensä"])
+                                               :arvo)
+          hinnat (map (fn [hoitokausi]
+                        {:summa (+ (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
+                                           :arvo)
+                                   (if (>= hoitokausi vuosi)
+                                     tamavuosi-toimistokulutsumma
+                                     (* (get-in menneet-toimistokulut [(dec hoitokausi) :maara-kk]) 12)))
                          :hoitokausi hoitokausi})
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1432,60 +1734,27 @@
        kuluva-hoitokausi])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut kuluva-hoitokausi]
+(defn johto-ja-hallintokorvaus [jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi]
   [:<>
-   [:h3#johto-ja-hallintokorvaus "Johto- ja hallintokorvaus"]
-   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto kuluva-hoitokausi]
+   [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
+   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi]
    [jh-toimenkuva-laskulla jh-laskulla]
    [jh-toimenkuva-yhteenveto jh-yhteenveto]
    [maara-kk toimistokulut]
    [:span
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
-(defn ht-yhteensa [{:keys [erillishankinnat johto-ja-hallintokorvaus-laskulla
-                           toimistokulut johtopalkkio hallinnolliset-toimenpiteet-yhteensa] :as hallinnolliset-toimenpiteet}
-                   {kuluva-hoitovuosi :vuosi}]
-  ;; TODO Kysy miten tuo johto-ja-hallintokorvaus kk pitäs laskea yhteen, kun kk määrä vaihtelee
-  (if (and erillishankinnat johto-ja-hallintokorvaus-laskulla johtopalkkio toimistokulut)
-    (let [maara-sarakkeen-index (p/otsikon-index hallinnolliset-toimenpiteet-yhteensa "Määrä")
-          yhteensa-sarakkeen-index (p/otsikon-index hallinnolliset-toimenpiteet-yhteensa "Yhteensä")
-          hallinnolliset-toimenpiteet-yhteensa (-> hallinnolliset-toimenpiteet-yhteensa
-                                                   (tyokalut/paivita-asiat-taulukossa [1]
-                                                                                      (fn [taulukko polut]
-                                                                                        (let [[rivit ht-rivi] polut
-                                                                                              ht-rivi (get-in taulukko ht-rivi)
-                                                                                              #_#_henkilostokulut (p/arvo
-                                                                                                                    (tyokalut/hae-asia-taulukosta johto-ja-hallintokorvaus-laskulla
-                                                                                                                                                  [last (str kuluva-hoitovuosi ".vuosi/€")])
-                                                                                                                    :arvo)
-                                                                                              maara-kk (+ 1)]
-                                                                                          (p/paivita-arvo ht-rivi :lapset
-                                                                                                          (fn [lapset]
-                                                                                                            (tyokalut/mapv-indexed (fn [index osa]
-                                                                                                                                     (cond
-                                                                                                                                       (= maara-sarakkeen-index index) (p/aseta-arvo osa :arvo maara-kk)
-                                                                                                                                       (= yhteensa-sarakkeen-index index) (p/aseta-arvo osa :arvo (* 12 maara-kk))
-                                                                                                                                       :else osa))
-                                                                                                                                   lapset))))))
-                                                   (tyokalut/paivita-asiat-taulukossa [2]
-                                                                                      (fn [taulukko polut]
-                                                                                        (let [[rivit summarivi] polut
-                                                                                              summarivi (get-in taulukko summarivi)]
-                                                                                          summarivi))))]
-      [maara-kk hallinnolliset-toimenpiteet-yhteensa])
-    [yleiset/ajax-loader]))
-
 (defn hoidonjohtopalkkio-yhteenveto
-  [johtopalkkio {:keys [vuosi] :as kuluva-hoitokausi}]
+  [johtopalkkio menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi}]
   (if johtopalkkio
     (let [summarivin-index 1
-          vuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
-                              :arvo)
+          tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
+                                  :arvo)
           hinnat (map (fn [hoitokausi]
-                        (if (= hoitokausi vuosi)
-                          {:summa vuosi-summa
+                        (if (>= hoitokausi vuosi)
+                          {:summa tamavuosi-summa
                            :hoitokausi hoitokausi}
-                          {:summa 0
+                          {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
                            :hoitokausi hoitokausi}))
                       (range 1 6))]
       [hintalaskuri {:otsikko nil
@@ -1497,10 +1766,10 @@
 (defn hoidonjohtopalkkio [johtopalkkio]
   [maara-kk johtopalkkio])
 
-(defn hoidonjohtopalkkio-sisalto [johtopalkkio kuluva-hoitokausi]
+(defn hoidonjohtopalkkio-sisalto [johtopalkkio menneet-suunnitelmat kuluva-hoitokausi]
   [:<>
-   [:h3#hoidonjohtopalkkio "Hoidonjohtopalkkio"]
-   [hoidonjohtopalkkio-yhteenveto johtopalkkio kuluva-hoitokausi]
+   [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
+   [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi]
    [hoidonjohtopalkkio johtopalkkio]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi]
@@ -1522,29 +1791,32 @@
     [yleiset/ajax-loader]))
 
 (defn hallinnolliset-toimenpiteet-sisalto [e! {:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
-                                                      toimistokulut johtopalkkio erillishankinnat] :as hallinnolliset-toimenpiteet}
+                                                      toimistokulut johtopalkkio erillishankinnat menneet-vuodet] :as hallinnolliset-toimenpiteet}
                                            kuluva-hoitokausi]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi]
-   [erillishankinnat-sisalto erillishankinnat kuluva-hoitokausi]
-   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut kuluva-hoitokausi]
-   [hoidonjohtopalkkio-sisalto johtopalkkio kuluva-hoitokausi]])
+   [erillishankinnat-sisalto erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi]
+   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi]
+   [hoidonjohtopalkkio-sisalto johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi]])
 
 (defn kustannussuunnitelma*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
                       (e! (t/->Hoitokausi))
-                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e!)
-                                                       (partial rahavarausten-taulukko e!)
-                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e!)
+                      (e! (t/->Oikeudet))
+                      (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
+                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
+                                                       (partial rahavarausten-taulukko e! (:kaskytyskanava app))
+                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" true)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" true)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" true)
-                                                       (partial maara-kk-taulukko e! [:hallinnolliset-toimenpiteet :hallinnolliset-toimenpiteet-yhteensa] "Hallinnolliset toimenpiteet" false)))))
-    (fn [e! {:keys [suunnitelmien-tila-taulukko tavoitehinnat kattohinnat hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi] :as app}]
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
+    (fn [e! {:keys [suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? tavoite-ja-kattohinta
+                    hankintakustannukset hallinnolliset-toimenpiteet kuluva-hoitokausi kaskytyskanava
+                    kirjoitusoikeus?] :as app}]
       [:div#kustannussuunnitelma
        ;[debug/debug app]
        [:h1 "Kustannussuunnitelma"]
@@ -1554,7 +1826,7 @@
         "Tavoite- ja kattohinta lasketaan automaattisesti"
         {:alussa-auki? true
          :id "tavoite-ja-kattohinta"}
-        [tavoite-ja-kattohinta tavoitehinnat kattohinnat kuluva-hoitokausi]
+        [tavoite-ja-kattohinta-sisalto tavoite-ja-kattohinta kuluva-hoitokausi]
         [:span#tavoite-ja-kattohinta-huomio
          "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
        [:span.viiva-alas]
@@ -1562,9 +1834,9 @@
         "Suunnitelmien tila"
         {:alussa-auki? true
          :otsikko-elementti :h2}
-        [suunnitelmien-tila e! suunnitelmien-tila-taulukko hankintakustannukset hallinnolliset-toimenpiteet]]
+        [suunnitelmien-tila e! kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]]
        [:span.viiva-alas]
-       [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi]
+       [hankintakustannukset-taulukot e! hankintakustannukset kuluva-hoitokausi kirjoitusoikeus?]
        [:span.viiva-alas]
        [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-toimenpiteet kuluva-hoitokausi]])))
 
