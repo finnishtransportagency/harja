@@ -7,7 +7,8 @@
             [com.stuartsierra.component :as component]
             [harja.testi :as testi]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -25,7 +26,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest urakan-valitavoitteiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -164,10 +165,10 @@
                              {:urakka-id urakka-id
                               :valitavoitteet valitavoitteet})))))
 
-#_(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
-  (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
+  (let [rovaniemen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                           (hae-oulun-alueurakan-2014-2019-id))
+                                                           (hae-rovaniemen-maanteiden-hoitourakan-id))
         lisatyt-valtakunnalliset
         (kutsu-palvelua
           (:http-palvelin jarjestelma)
@@ -175,16 +176,16 @@
           +kayttaja-jvh+
           {:valitavoitteet [{:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
                              :takaraja nil, :tyyppi :toistuva,
-                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
+                             :urakkatyyppi :teiden-hoito, :takaraja-toistopaiva 1,
                              :takaraja-toistokuukausi 7}]})
-        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+        rovaniemen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                               (hae-oulun-alueurakan-2014-2019-id))
-        odotetut-toistovuodet (range (t/year (t/now)) (inc 2019))]
+                                                               (hae-rovaniemen-maanteiden-hoitourakan-id))
+        odotetut-toistovuodet (range (t/year (t/now)) (+ (t/year (t/now)) 5))]
 
     ;; Oulun urakan jäljellä oleville vuosille luotiin uusi välitavoite
-    (is (= (count oulun-urakan-paivitetyt-valitavoitteet)
-           (-> (count oulun-urakan-vanhat-valitavoitteet)
+    (is (= (count rovaniemen-urakan-paivitetyt-valitavoitteet)
+           (-> (count rovaniemen-urakan-vanhat-valitavoitteet)
                (+ (count odotetut-toistovuodet)))))
     (is (not (empty? odotetut-toistovuodet))) ;; Urakka päättynyt, päivitä testi
 
@@ -192,13 +193,13 @@
     (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
 
 
-#_(deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
-  (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+(deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
+  (let [rovaniemen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                           (hae-oulun-alueurakan-2014-2019-id))
-        muhoksen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                           (hae-rovaniemen-maanteiden-hoitourakan-id))
+        utajarven-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                               :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                              (hae-muhoksen-paallystysurakan-id))
+                                                              (hae-utajarven-paallystysurakan-id))
         lisatyt-valtakunnalliset
         (kutsu-palvelua
           (:http-palvelin jarjestelma)
@@ -206,18 +207,18 @@
           +kayttaja-jvh+
           {:valitavoitteet [{:id -2, :nimi "Kertaluontoinen",
                              :takaraja (c/to-date (t/plus (t/now) (t/years 5))),
-                             :tyyppi :kertaluontoinen, :urakkatyyppi :hoito,
+                             :tyyppi :kertaluontoinen, :urakkatyyppi :teiden-hoito,
                              :takaraja-toistopaiva nil, :takaraja-toistokuukausi nil}
                             {:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
                              :takaraja nil, :tyyppi :toistuva,
-                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
+                             :urakkatyyppi :teiden-hoito, :takaraja-toistopaiva 1,
                              :takaraja-toistokuukausi 7}]})
-        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+        rovaniemen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                               (hae-oulun-alueurakan-2014-2019-id))
-        muhoksen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                               (hae-rovaniemen-maanteiden-hoitourakan-id))
+        utajarven-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                   :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                                  (hae-muhoksen-paallystysurakan-id))]
+                                                                  (hae-utajarven-paallystysurakan-id))]
 
     ;; Uudet valtakunnalliset lisätty ok
     (is (= (count lisatyt-valtakunnalliset) 2))
@@ -225,15 +226,15 @@
     (is (= (count (filter #(= (:tyyppi %) :toistuva) lisatyt-valtakunnalliset)) 1))
 
     ;; Oulun hoidon urakalle tuli lisää välitavoitteita
-    (is (> (count oulun-urakan-paivitetyt-valitavoitteet) (count oulun-urakan-vanhat-valitavoitteet)))
-    (is (some :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet))
+    (is (> (count rovaniemen-urakan-paivitetyt-valitavoitteet) (count rovaniemen-urakan-vanhat-valitavoitteet)))
+    (is (some :valtakunnallinen-id rovaniemen-urakan-paivitetyt-valitavoitteet))
     ;; Muhokselle ei tullut, koska oli eri urakkatyyppi
-    (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-vanhat-valitavoitteet)))
+    (is (= (count utajarven-urakan-paivitetyt-valitavoitteet) (count utajarven-urakan-vanhat-valitavoitteet)))
 
     ;; Päivitä urakkakohtaista tavoitetta ja sen jälkeen valtakunnallista
     (let [random-tavoite-id-urakassa (first (first (q (str
                                                         "SELECT id FROM valitavoite
-                                                         WHERE urakka = " (hae-oulun-alueurakan-2014-2019-id)
+                                                         WHERE urakka = " (hae-rovaniemen-maanteiden-hoitourakan-id)
                                                         " AND valtakunnallinen_valitavoite IS NOT NULL
                                                         AND poistettu IS NOT TRUE
                                                         LIMIT 1;"))))
@@ -247,29 +248,29 @@
             {:valitavoitteet (mapv
                                #(assoc % :nimi "PÄIVITÄ")
                                lisatyt-valtakunnalliset)})
-          oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+          rovaniemen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                                 (hae-oulun-alueurakan-2014-2019-id))]
+                                                                 (hae-rovaniemen-maanteiden-hoitourakan-id))]
       ;; Ei muokatut välitavoitteet päivittyivät myös urakkaan
       (is (every? #(= (:nimi %) "PÄIVITÄ")
                   (filter #(and (:valtakunnallinen-id %)
                                 (nil? (:muokattu %)))
-                          oulun-urakan-paivitetyt-valitavoitteet)))
+                          rovaniemen-urakan-paivitetyt-valitavoitteet)))
 
       ;; Muokatut välitavoitteet eivät päivittyneet
       (is (every? #(not= (:nimi %) "PÄIVITÄ")
                   (filter #(and (:valtakunnallinen-id %)
                                 (some? (:muokattu %)))
-                          oulun-urakan-paivitetyt-valitavoitteet)))
+                          rovaniemen-urakan-paivitetyt-valitavoitteet)))
 
       ;; Kaikkien linkitettyjen välitavoitteiden "emo" näkyy kuitenkin päivitettynä
       (is (every? #(= (:valtakunnallinen-nimi %) "PÄIVITÄ")
-                  (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
+                  (filter :valtakunnallinen-id rovaniemen-urakan-paivitetyt-valitavoitteet)))
 
       ;; Poistetaan valtakunnalliset välitavoitteet (mutta ei valmiita)
       (let [random-tavoite-id-urakassa (first (first (q (str
                                                           "SELECT id FROM valitavoite
-                                                           WHERE urakka = " (hae-oulun-alueurakan-2014-2019-id)
+                                                           WHERE urakka = " (hae-rovaniemen-maanteiden-hoitourakan-id)
                                                           " AND valtakunnallinen_valitavoite IS NOT NULL
                                                           AND poistettu IS NOT TRUE
                                                           LIMIT 1;"))))
@@ -282,18 +283,18 @@
                                          {:valitavoitteet (mapv
                                                             #(assoc % :poistettu true)
                                                             paivitetyt-valtakunnalliset)})
-            oulun-urakan-poistetut-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+            rovaniemen-urakan-poistetut-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                   :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                                  (hae-oulun-alueurakan-2014-2019-id))
-            muhoksen-urakan-poistetut-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                  (hae-rovaniemen-maanteiden-hoitourakan-id))
+            utajarven-urakan-poistetut-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                      :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                                     (hae-muhoksen-paallystysurakan-id))]
+                                                                     (hae-utajarven-paallystysurakan-id))]
         ;; R.I.P valtakunnalliset välitavoitteet
         (is (empty? poistetut-valtakunnalliset))
         ;; Muokattu välitavoite säilyi Oulun urakassa
-        (is (= (count (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)) 2)) ;; TODO: Ennen count oli 1, 30.9.2019 2. Ei tutkittu tarkemmin.
+        (is (= (count (filter :valtakunnallinen-id rovaniemen-urakan-poistetut-valitavoitteet)) 1))
         ;; Muhoksen urakassa ei valtakunnallisia tavoitteita koskaan ollutkaan, eikä ole vieläkään
-        (is (empty? (filter :valtakunnallinen-id muhoksen-urakan-poistetut-valitavoitteet)))
+        (is (empty? (filter :valtakunnallinen-id utajarven-urakan-poistetut-valitavoitteet)))
 
         (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
         (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))

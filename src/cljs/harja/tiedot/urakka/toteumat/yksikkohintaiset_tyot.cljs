@@ -106,13 +106,14 @@
    (let [urakka-id (:id @nav/valittu-urakka)
          sopimus-id (first @urakka/valittu-sopimusnumero)
          hoitokausi @urakka/valittu-hoitokausi
+         aikavali @u/valittu-aikavali
          toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
          tehtava (:id @u/valittu-yksikkohintainen-tehtava)
          taso-paalla? @karttataso-yksikkohintainen-toteuma
          summat @yks-hint-tehtavien-summat
          toteuma @valittu-yksikkohintainen-toteuma]
      (luo-yksikkohintaisten-toteumien-kuvataso
-      urakka-id sopimus-id taso-paalla? hoitokausi toimenpide
+      urakka-id sopimus-id taso-paalla? (pvm/tiukin-aikavali aikavali hoitokausi) toimenpide
       (if toteuma
         (let [tehtavat (into #{}
                              (map (comp :id :tehtava))

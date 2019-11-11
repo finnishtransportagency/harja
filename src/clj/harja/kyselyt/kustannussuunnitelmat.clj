@@ -3,7 +3,7 @@
             [harja.kyselyt.urakat :as urakat-q]))
 
 (defqueries "harja/kyselyt/kustannussuunnitelmat.sql"
-  {:positional? true})
+            {:positional? true})
 
 (defn tuotenumero-loytyy? [db maksueranumero]
   (:exists (first (harja.kyselyt.kustannussuunnitelmat/tuotenumero-loytyy db maksueranumero))))
@@ -14,4 +14,4 @@
     (case urakan-tyyppi
       "vesivayla-kanavien-hoito" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
       "vesivayla-kanavien-korjaus" (harja.kyselyt.kustannussuunnitelmat/hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat db numero)
-      (harja.kyselyt.kustannussuunnitelmat/hae-teiden-hoidon-kustannussuunnitelman-yksikkohintaiset-summat db numero))))
+      "hoito" (harja.kyselyt.kustannussuunnitelmat/hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat db numero))))
