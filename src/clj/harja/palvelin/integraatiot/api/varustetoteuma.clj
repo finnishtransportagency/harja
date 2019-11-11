@@ -167,7 +167,7 @@
           :piiri (get-in toimenpiteen-tiedot [:varuste :tietue :piiri])
           :kuntoluokka (get-in toimenpiteen-tiedot [:varuste :tietue :kuntoluokitus])
           :tierekisteriurakkakoodi (get-in toimenpiteen-tiedot [:varuste :tietue :tierekisteriurakkakoodi])
-          :luoja (:id kirjaaja)
+          :kayttaja (:id kirjaaja)
           :tr_numero (:numero tie)
           :tr_alkuosa (:aosa tie)
           :tr_alkuetaisyys (:aet tie)

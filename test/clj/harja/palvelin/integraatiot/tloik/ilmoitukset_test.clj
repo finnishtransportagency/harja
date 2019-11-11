@@ -19,7 +19,10 @@
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clj-time
+             [coerce :as tc]
+             [format :as df]])
   (:import (org.postgis PGgeometry)))
 
 (def kayttaja "yit-rakennus")
@@ -48,13 +51,16 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-#_(deftest tarkista-uuden-ilmoituksen-tallennus
+(deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
-        ilmoitus (first ilmoitukset)]
+        ilmoitus (first ilmoitukset)
+        urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
     (def ilmoitusasdf ilmoitus)
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
-    (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49"))
+    (is (= (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss")
+                       (tc/from-date (:ilmoitettu ilmoitus)))
+           nyt))
     (is (= (:yhteydenottopyynto ilmoitus) false))
     (is (= (:tila ilmoitus) "kuittaamaton"))
     (is (= (:tunniste ilmoitus) "UV-1509-1a"))
@@ -66,8 +72,8 @@
     (is (= (:ilmoittaja_sukunimi ilmoitus) "Urakoitsija"))
     (is (= (:ilmoitustyyppi ilmoitus) "toimenpidepyynto"))
     (is (= (:ilmoittaja_sahkoposti ilmoitus) "uuno.urakoitsija@example.com"))
-    (is (= (:urakka ilmoitus) 4))
-    (is (= (:tr_numero ilmoitus) 4))
+    (is (= (:urakka ilmoitus) urakka-id))
+    (is (= (:tr_numero ilmoitus) 79))
     (is (= (:lahettaja_etunimi ilmoitus) "Pekka"))
     (is (= (:lahettaja_sukunimi ilmoitus) "Päivystäjä"))
     (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
@@ -85,33 +91,33 @@
       "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
   (poista-ilmoitus))
 
-#_(deftest tarkista-ilmoituksen-urakan-paattely
+(deftest tarkista-ilmoituksen-urakan-paattely
   (tuo-ilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+  (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
   (poista-ilmoitus)
 
   (tuo-paallystysilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+  (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-ilmoitus)
 
   (tuo-ilmoitus-teknisista-laitteista)
-  (is (= (first (q "select id from urakka where nimi = 'PIR RATU IHJU 2016 -2022, P';"))
+  (is (= (first (q "select id from urakka where nimi = 'PIR RATU IHJU';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oikein tekniset laitteet urakalle.")
   (poista-ilmoitus)
 
   (tuo-ilmoitus-siltapalvelusopimukselle)
-  (is (= (first (q "select id from urakka where nimi = 'KAS siltojen ylläpidon palvelusopimus Etelä-Karjala 2016-2019, P';"))
+  (is (= (first (q "select id from urakka where nimi = 'KAS siltojen ylläpidon palvelusopimus Etelä-Karjala';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oikein siltojen palvelusopimukselle.")
 
   (poista-ilmoitus))
 
-#_(deftest tarkista-viestin-kasittely-ja-kuittaukset
+(deftest tarkista-viestin-kasittely-ja-kuittaukset
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
@@ -119,9 +125,10 @@
                     #(swap! viestit conj (.getText %)))
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
-    (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"]
+    (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+          ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
-      (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
+      (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
 
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 10000)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
@@ -175,7 +182,7 @@
 
         (sonja/laheta (:sonja jarjestelma)
                       +tloik-ilmoitusviestijono+
-                      +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)
+                      (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija))
 
         (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
 
@@ -195,7 +202,7 @@
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
 
-#_(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
+(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
   "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
   (let [sanoma +ilmoitus-hailuodon-jaatiella+
         viestit (atom [])]
@@ -205,7 +212,7 @@
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
-    (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+    (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
            (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
         "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
     (poista-ilmoitus)))
@@ -215,5 +222,8 @@
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)]
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
-    (is (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49")) "Ilmoitusaika on parsittu oikein"))
+    (is (= (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss")
+                       (tc/from-date (:ilmoitettu ilmoitus)))
+           nyt)
+        "Ilmoitusaika on parsittu oikein"))
   (poista-ilmoitus))
