@@ -34,6 +34,14 @@
                               (tietokannan-tila db)
                               (replikoinnin-tila db-replica)
                               (sonja-yhteyden-tila sonja)))))})))
+    (http-palvelin/julkaise-reitti
+      http :app-status
+      (GET "/app_status" _
+        (let [{:keys [status viesti] :as body} @status]
+          {:status status
+           :headers {"Content-Type" "application/json; charset=UTF-8"}
+           :body (encode
+                   {:viesti viesti})})))
     this)
 
   (stop [{http :http-palvelin :as this}]

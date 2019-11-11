@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama
   (:require [taoensso.timbre :as log]
+            [clojure.walk :as walk]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
@@ -234,7 +235,16 @@
       (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
                                  Validointivirheet: %s\n
                                  Muodostettu sanoma:\n
-                                 %s" virheet xml)]
+                                 %s"
+                                virheet
+                                (xml/tee-xml-sanoma
+                                  ;; Poistetaan tiedoston logitus sen takia, kun sen logitus voi jumittaa koko prosessin
+                                  (walk/prewalk (fn [osa]
+                                                  (if (and (vector? osa)
+                                                           (= :tiedosto (first osa)))
+                                                    [:tiedosto "<<EI LOKITETA TIEDOSTOA>>"]
+                                                    osa))
+                                                sisalto)))]
         (log/error virheviesti)
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
                  :error virheviesti}))
