@@ -277,7 +277,7 @@
               :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
               :leveys 8}
              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
-              :leveys 2}
+              :leveys 2 :fmt #(if (= % "NULL") "-" %)}
              {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 3
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet

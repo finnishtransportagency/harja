@@ -309,7 +309,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             {:class (when disabled "disabled")
              :type "button"
              :disabled (if disabled "disabled" "")
-             :title title
+             :title (or title naytettava-arvo (format-fn valinta))
              :on-click (r/partial on-click-fn vaihtoehdot)
              :on-focus on-focus
              :on-key-down (r/partial {:on-key-down-fn on-key-down-fn
