@@ -116,7 +116,7 @@
         muokatun-summan-ajat-vuosittain (if tulevien-vuosien-ajat
                                           (into [] (cons v-kk tulevien-vuosien-ajat))
                                           [v-kk])]
-    (reduce (fn [ajat {:keys [vuosi]}]
+    (reduce (fn [ajat {:keys [vuosi] :as tuleva-v-kk}]
               (let [muokattavan-rivin-aika (pvm/luo-pvm vuosi (dec (:kuukausi v-kk)) 15)
                     muokatun-hoitokauden-paattymisvuosi (pvm/vuosi (second (pvm/paivamaaran-hoitokausi muokattavan-rivin-aika)))
                     kauden-viimeinen-aika (case maksetaan
@@ -132,7 +132,7 @@
                                           {:vuosi vuosi
                                            :kuukausi kuukausi}))
                                       (pvm/aikavalin-kuukausivalit [muokattavan-rivin-aika kauden-viimeinen-aika]))))
-                  (conj ajat v-kk))))
+                  (conj ajat tuleva-v-kk))))
             [] muokatun-summan-ajat-vuosittain)))
 
 (defrecord Hoitokausi [])
@@ -719,23 +719,21 @@
                                    (let [asia-kannasta (filter (fn [tyo]
                                                                  (= haettu-asia (:haettu-asia tyo)))
                                                                kustannusarvioidut-tyot)
-                                         asia-kannasta (into []
-                                                             (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
-                                                                       (let [vuoden-maara (some (fn [{:keys [vuosi summa]}]
-                                                                                                  (when (= vuosi hoitokauden-aloitus-vuosi)
-                                                                                                    summa))
-                                                                                                asia-kannasta)
-                                                                             maara-kk (or vuoden-maara 0)]
-                                                                         (conj palkkiot {:maara-kk maara-kk
-                                                                                         :nimi asia-nimi-frontilla
-                                                                                         :yhteensa (* 12 maara-kk)})))
-                                                                     [] (range (pvm/vuosi urakan-aloituspvm) (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))
-                                         asia-pohjadata [{:nimi asia-nimi-frontilla}]]
-                                     [(tyokalut/generoi-pohjadata [(last asia-kannasta)]
-                                                                  {:maara-kk ""
-                                                                   :yhteensa ""}
-                                                                  asia-pohjadata)
-                                      asia-kannasta]))
+                                         asia-kannasta (vec
+                                                         (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
+                                                                   (let [vuoden-maara (some (fn [{:keys [vuosi summa kuukausi]}]
+                                                                                              (when (and (= vuosi hoitokauden-aloitus-vuosi)
+                                                                                                         (> kuukausi 9))
+                                                                                                summa))
+                                                                                            asia-kannasta)
+                                                                         maara-kk (or vuoden-maara 0)]
+                                                                     (conj palkkiot {:maara-kk maara-kk
+                                                                                     :nimi asia-nimi-frontilla
+                                                                                     :yhteensa (* 12 maara-kk)})))
+                                                                 []
+                                                                 (range (pvm/vuosi urakan-aloituspvm)
+                                                                        (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))]
+                                     [[(last asia-kannasta)] asia-kannasta]))
           hankinnat (:kiinteahintaiset-tyot vastaus)
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
@@ -1402,7 +1400,7 @@
           paivitetyt-tavoitehinnat (map (fn [{:keys [summa hoitokausi] :as yhteensa}]
                                           (if (< hoitokausi kuluva-hoitovuosi)
                                             yhteensa
-                                            (assoc yhteensa :summa (nth summatut-arvot (dec hoitokausi)))))
+                                            (assoc yhteensa :summa (nth summatut-arvot (- hoitokausi kuluva-hoitovuosi)))))
                                         (:tavoitehinnat tavoite-ja-kattohinta))
           ;; Kantaan lähtevä data
           {urakka-id :id} (:urakka @tiedot/yleiset)
