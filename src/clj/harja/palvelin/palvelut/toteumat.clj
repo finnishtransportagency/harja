@@ -700,7 +700,7 @@
                           :piiri elynro
                           :kuntoluokka kuntoluokitus
                           :tierekisteriurakkakoodi (:tierekisteriurakkakoodi arvot)
-                          :luoja (:id user)
+                          :kayttaja (:id user)
                           :tr_numero (:numero tierekisteriosoite)
                           :tr_alkuosa (:alkuosa tierekisteriosoite)
                           :tr_alkuetaisyys (:alkuetaisyys tierekisteriosoite)
