@@ -14,6 +14,7 @@
   (case (str/lower-case urakkatyyppi)
     "siltakorjaus" "silta"
     "tekniset-laitteet" "tekniset laitteet"
+    "teiden-hoito" "hoito" ;; Palauta teiden-hoito urakkatyyppi aina hoitona. Teiden hoito on relevantti vain Harjan sisällä.
     urakkatyyppi))
 
 (defn rakenna-urakka [urakka]
