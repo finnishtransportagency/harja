@@ -499,10 +499,6 @@ INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, teht
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaukset'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
 
 
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, toimenpideinstanssi, tehtava, urakka, sopimus) VALUES (2020, 2, 13, 'h', 45, 585, (SELECT id from toimenpideinstanssi where urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi='23151')), (select id from toimenpidekoodi where nimi = 'Hoitourakan työnjohto'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, toimenpideinstanssi, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (SELECT id from toimenpideinstanssi where urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi='23151')), (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
-
-
 -- Rovaniemen MHU-urakka
 --'Hallinnolliset toimenpiteet TP'
 DO $$
@@ -510,7 +506,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Rovaniemen MHU testiurakka';
+  urakan_nimi TEXT := 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus');
@@ -781,7 +777,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Pellon MHU testiurakka';
+  urakan_nimi TEXT := 'Pellon MHU testiurakka (3. hoitovuosi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Pellon MHU testiurakan sopimus');
@@ -809,12 +805,6 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        IF (toimenpidenimi = 'Soratien hoito TP' AND
-            vuosi_ = 3)
-        THEN
-          -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
-          EXIT;
-        END IF;
         INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
           VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
       END LOOP;
@@ -874,11 +864,6 @@ BEGIN
     END LOOP;
     FOR i IN 1..12 LOOP
       FOR vuosi_ IN 1..4 LOOP
-        IF (toimenpidenimi = 'Soratien hoito TP' AND
-            vuosi_ = 3) THEN
-        -- Jätetään soratiet suunnittelematta
-          EXIT;
-        END IF;
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
           VALUES -- kolmansien osapuolien aiheuttamat vahingot
                  ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
@@ -1119,7 +1104,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Kemin MHU testiurakka';
+  urakan_nimi TEXT := 'Kemin MHU testiurakka (5. hoitovuosi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Kemin MHU testiurakan sopimus');
@@ -1451,7 +1436,7 @@ DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
   hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
-  urakan_nimi TEXT := 'Ivalon MHU testiurakka';
+  urakan_nimi TEXT := 'Ivalon MHU testiurakka (uusi)';
   toimenpideinstanssin_nimi TEXT;
   toimenpidenimi TEXT;
   urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Ivalon MHU testiurakan sopimus');
