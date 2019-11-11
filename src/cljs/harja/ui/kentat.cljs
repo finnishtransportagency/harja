@@ -943,11 +943,9 @@
 (defn onko-tr-osoite-oikeinpain?
   [{:keys [alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
 
-  (if (or (< alkuosa loppuosa)
+  (or (< alkuosa loppuosa)
           (and (= alkuosa loppuosa)
-               (<= alkuetaisyys loppuetaisyys)))
-    true
-    false))
+               (<= alkuetaisyys loppuetaisyys))))
 
 (defn onko-tr-osoite-kokonainen? [osoite]
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
