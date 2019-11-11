@@ -166,6 +166,9 @@
       (julkaise-palvelu http :laskut
                         (fn [user hakuehdot]
                           (hae-urakan-laskut db user hakuehdot)))
+      (julkaise-palvelu http :laskuerittelyt
+                        (fn [user hakuehdot]
+                          (hae-urakan-laskuerittelyt db user hakuehdot)))
       (julkaise-palvelu http :lasku
                         (fn [user hakuehdot]
                           (hae-laskuerittely db user hakuehdot)))
@@ -181,8 +184,9 @@
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :hae-laskut)
-    (poista-palvelut (:http-palvelin this) :hae-lasku)
+    (poista-palvelut (:http-palvelin this) :laskut)
+    (poista-palvelut (:http-palvelin this) :lasku)
+    (poista-palvelut (:http-palvelin this) :laskuerittelyt)
     (poista-palvelut (:http-palvelin this) :tallenna-lasku)
     (poista-palvelut (:http-palvelin this) :poista-lasku)
     (poista-palvelut (:http-palvelin this) :poista-laskurivi)

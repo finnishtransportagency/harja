@@ -92,27 +92,19 @@
                                                     :sijainti     nil
                                                     :maara        nil})))
         paivitys-fn (fn [& polut-ja-arvot]
-                      (e! (tiedot/->PaivitaLomake polut-ja-arvot))
-                      (let [polut-ja-arvot (partition 2 polut-ja-arvot)]
-                        (doseq
-                          [[polku arvo] polut-ja-arvot]
-                          (swap! lomakkeen-tila
-                                 (if (vector? polku)
-                                   (if (fn? arvo) update-in assoc-in)
-                                   (if (fn? arvo) update assoc))
-                                 polku arvo))))]
-    (fn [e! {:keys [syottomoodi]}]
+                      (e! (tiedot/->PaivitaLomake polut-ja-arvot)))]
+    (fn [e! {:keys [syottomoodi lomake]}]
       (let [{:keys [tehtavat tehtavat-lkm nayta validi? koontilaskun-kuukausi koontilaskun-pvm koontilaskun-era alihankkija alihankkijat]} @lomakkeen-tila
             validointi-fn (partial validoi #{:maara :koontilaskun-kuukausi})
             kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu]
             erat [:era-1 :era-2 :era-3 :muu]]
         [:div
          [debug/debug @tila/yleiset]
-         [debug/debug @lomakkeen-tila]
+         [debug/debug lomake]
          [:div.row
           [:h1 "Uusi kulu"]
           [:input {:type      :radio
-                   :on-change #(swap! lomakkeen-tila lisaa-tehtava)}]
+                   :on-change #(paivitys-fn :tehtavat lisaa-tehtava)}]
           [:label "Kulut kohdistuvat useammalle eri tehtävälle"]]
          (into [:div] (keep-indexed (fn [indeksi t]
                                       (let [{:keys [tehtavaryhma maara]} t]

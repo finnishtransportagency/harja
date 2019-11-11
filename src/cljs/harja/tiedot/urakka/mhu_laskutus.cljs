@@ -9,8 +9,9 @@
 (defrecord LuoKulutaulukko [taulukko])
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [kulu])
-(defrecord PaivitaLomake [polut-ja-arvot]
-  )
+(defrecord PaivitaLomake [polut-ja-arvot])
+
+(defrecord TallennaLasku [])
 
 (defrecord HaeUrakanToimenpiteet [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
@@ -39,6 +40,9 @@
            (partition 2 polut-ja-arvot)))
 
 (extend-protocol tuck/Event
+  TallennaLasku
+  (process-event [_ app]
+    app)
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot} app]
     (apply loki/log "päivitetään" polut-ja-arvot)
@@ -52,7 +56,7 @@
     (update-in app [:meta :haetaan] inc))
   HaeUrakanLaskut
   (process-event [{:keys [hakuparametrit]} app]
-    (tuck-apurit/post! :laskut
+    (tuck-apurit/post! :laskuerittelyt
                        {:urakka-id (:id hakuparametrit)
                         :alkupvm   (:alkupvm hakuparametrit)
                         :loppupvm  (:loppupvm hakuparametrit)}
