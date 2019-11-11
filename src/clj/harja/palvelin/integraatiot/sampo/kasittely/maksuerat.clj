@@ -16,7 +16,7 @@
   (:import (java.util UUID)))
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
-(def maksueratyypit-maanteidenhoidon-urakoissa ["kokonaishintainen" "akillinen-hoitotyo" "muu"]) ;; MHU = maanteiden hoidon urakka = teiden-hoito -urakkatyyppi = uudenlainen hoidon urakka = kaikki uudet hoitourakat lokakuusta 2019 lähtien
+(def maksueratyypit-maanteidenhoidon-urakoissa ["kokonaishintainen"]) ;; MHU = maanteiden hoidon urakka = teiden-hoito -urakkatyyppi = uudenlainen hoidon urakka = kaikki uudet hoitourakat lokakuusta 2019 lähtien
 
 (defn hae-maksuera [db numero summat]
   (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
@@ -46,7 +46,7 @@
   (log/debug "Merkitään maksuerä (numero:" numero ") lähetetyksi.")
   (= 1 (qm/merkitse-maksuera-lahetetyksi! db numero)))
 
-(defn tee-makseuran-nimi [toimenpiteen-nimi maksueratyyppi]
+(defn tee-makseuran-nimi [toimenpiteen-nimi maksueratyyppi urakkatyyppi]
   (let [tyyppi (case maksueratyyppi
                  "kokonaishintainen" "Kokonaishintaiset"
                  "yksikkohintainen" "Yksikköhintaiset"
@@ -56,7 +56,9 @@
                  "sakko" "Sakot"
                  "akillinen-hoitotyo" "Äkilliset hoitotyöt"
                  "Muut")]
-    (str toimenpiteen-nimi ": " tyyppi)))
+    (if (= "teiden-hoito" urakkatyyppi)
+      (str toimenpiteen-nimi)
+      (str toimenpiteen-nimi ": " tyyppi))))
 
 ;; Jos Samposta tulee toimenpideinstanssi, joka jo on kannassa, päivitetään siihen liityvät maksuerät ja kustannussuunnitelmat
 ;; likaisiksi, jotta ne lähetetään uudelleen Sampoon. Tämä sen varalta, että toimenpideinstansissa on merkitsevä muutos (esim. tuotepolku).
@@ -74,18 +76,18 @@
       (doseq [maksueratyyppi (if (= (:urakkatyyppi tpi) "teiden-hoito")
                                maksueratyypit-maanteidenhoidon-urakoissa
                                maksueratyypit)]
-        (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi)
+        (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi (:urakkatyyppi tpi))
               maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
 (defn tarkista-maksueran-tiedot [{:keys [toimenpideinstanssi numero]}]
   (when (str/blank? (:talousosastopolku toimenpideinstanssi))
     (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu talousosastopolku. Maksuerää ei voi lähettää." numero)]
-      (throw+ {:type virheet/+viallinen-kutsu+
+      (throw+ {:type    virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-talousosastopolku :viesti virheviesti}]})))
   (when (str/blank? (:tuotepolku toimenpideinstanssi))
     (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu tuotepolku. Maksuerää ei voi lähettää." numero)]
-      (throw+ {:type virheet/+viallinen-kutsu+
+      (throw+ {:type    virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
 
 (defn hae-maksueran-tiedot [db numero summat]
@@ -127,15 +129,15 @@
 
     (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
       (log/error virheviesti)
-      (throw+ {:type virheet/+tuntematon-maksuera+
+      (throw+ {:type    virheet/+tuntematon-maksuera+
                :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]
-    (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
-      (if (contains? kuittaus :virhe)
-        (do
-          (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-          (merkitse-maksueralle-lahetysvirhe db maksueranumero))
-        (merkitse-maksuera-lahetetyksi db maksueranumero))
-      (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+                            (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
+                              (if (contains? kuittaus :virhe)
+                                (do
+                                  (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
+                                  (merkitse-maksueralle-lahetysvirhe db maksueranumero))
+                                (merkitse-maksuera-lahetetyksi db maksueranumero))
+                              (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))

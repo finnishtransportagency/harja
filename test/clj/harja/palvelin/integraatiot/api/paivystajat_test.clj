@@ -135,9 +135,9 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
-        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
@@ -150,9 +150,9 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-sijainnilla
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
-        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
