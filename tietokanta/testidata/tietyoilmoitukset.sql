@@ -146,6 +146,112 @@ VALUES (NULL,
    WHERE nimi ILIKE '% YIT Rakennus Oy %'),
   (SELECT nimi
    FROM organisaatio
+   WHERE nimi ILIKE '%YIT Rakennus Oy%')),
+
+   (NULL,
+  NOW(),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  ROW ((SELECT etunimi
+        FROM kayttaja
+        WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sukunimi
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT puhelin
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sahkoposti
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org')) :: tietyon_henkilo,
+  (SELECT id
+   FROM urakka
+   WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+  (SELECT nimi
+   FROM urakka
+   WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+  (SELECT tyyppi
+   FROM urakka
+   WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  ROW ((SELECT etunimi
+        FROM kayttaja
+        WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sukunimi
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT puhelin
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sahkoposti
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org')) :: tietyon_henkilo,
+  (SELECT id
+   FROM organisaatio
+   WHERE lyhenne = 'LAP'),
+  (SELECT nimi
+   FROM organisaatio
+   WHERE lyhenne = 'LAP'),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  ROW ((SELECT etunimi
+        FROM kayttaja
+        WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  (SELECT sukunimi
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  (SELECT puhelin
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  (SELECT sahkoposti
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com')) :: tietyon_henkilo,
+  '{"(Tienrakennus,Rakennetaan tietä)"}',
+  ROW (4, 501, 183, 501, 312,
+  ST_GeomFromText(
+      'MULTILINESTRING((443024.62635065464 7376285.663026805,443029.15299999993 7376291.609000001,443050.64499999955 7376318.767999999,443074.1830000002 7376347.986000001,443104.09300000034 7376385.761999998,443104.83108483226 7376386.695368251))')) :: tr_osoite,
+  'Valtatie 4',
+  'Rovaniemi, keskusta',
+  'Keskustassa',
+  'Keskustassa',
+  NOW(),
+  NOW() + interval '7 days',
+  ARRAY[
+    ROW('08:00:00'::TIME, '17:00:00'::TIME,
+        ARRAY['maanantai','tiistai','keskiviikko']::viikonpaiva[])::tietyon_tyoaika,
+    ROW('07:00:00'::TIME, '21:00:00'::TIME,
+        ARRAY['lauantai','sunnuntai']::viikonpaiva[])::tietyon_tyoaika
+  ]::tietyon_tyoaika[],
+  'molemmat',
+  ROW ('ajokaistaSuljettu', NULL) :: tietyon_kaistajarjestelyt,
+  ARRAY ['(30, 100)'] :: tietyon_nopeusrajoitus [],
+  ARRAY ['(paallystetty, 100)'] :: tietyon_tienpinta [],
+  666,
+  'loivatMutkat',
+  ARRAY ['(murske, 100)'] :: tietyon_tienpinta [],
+  'ohjataanVuorotellen',
+  'liikennevalot',
+  15,
+  30,
+  ROW (4, 3, 10, 4000) :: tietyon_ajoneuvorajoitukset,
+  '{avotuli}',
+  TRUE,
+  TRUE,
+  NOW(),
+  NOW() + interval '7 days',
+  'Tämä on testi-ilmoitus',
+  (SELECT id
+   FROM organisaatio
+   WHERE nimi ILIKE '% YIT Rakennus Oy %'),
+  (SELECT nimi
+   FROM organisaatio
    WHERE nimi ILIKE '%YIT Rakennus Oy%'));
 
 -- Luodaan lapsi-ilmoitus (työvaiheilmoitus) edelliselle
@@ -292,6 +398,114 @@ VALUES (1,
   TRUE,
   '2017-01-01 01:01:01',
   '2017-07-07 07:07:07',
+  'Tämä on testi-ilmoitus',
+        (SELECT id
+         FROM organisaatio
+         WHERE nimi ILIKE '% YIT Rakennus Oy %'),
+        (SELECT nimi
+         FROM organisaatio
+         WHERE nimi ILIKE '%YIT Rakennus Oy%'),
+        (SELECT ytunnus
+         FROM organisaatio
+         WHERE nimi ILIKE '%YIT Rakennus Oy%')),
+   (2,
+  NOW(),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  ROW ((SELECT etunimi
+        FROM kayttaja
+        WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sukunimi
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT puhelin
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sahkoposti
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org')) :: TIETYON_HENKILO,
+  (SELECT id
+   FROM urakka
+   WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+  (SELECT nimi
+   FROM urakka
+   WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+  (SELECT tyyppi
+   FROM urakka
+   WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  ROW ((SELECT etunimi
+        FROM kayttaja
+        WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sukunimi
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT puhelin
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org'),
+  (SELECT sahkoposti
+   FROM kayttaja
+   WHERE sahkoposti = 'yit_pk2@example.org')) :: TIETYON_HENKILO,
+  (SELECT id
+   FROM organisaatio
+   WHERE lyhenne = 'LAP'),
+  (SELECT nimi
+   FROM organisaatio
+   WHERE lyhenne = 'LAP'),
+  (SELECT id
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  ROW ((SELECT etunimi
+        FROM kayttaja
+        WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  (SELECT sukunimi
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  (SELECT puhelin
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com'),
+  (SELECT sahkoposti
+   FROM kayttaja
+   WHERE sahkoposti = 'tero.toripolliisi@example.com')) :: TIETYON_HENKILO,
+  '{"(Tienrakennus,Rakennetaan tietä)"}',
+  ROW (4, 501, 183, 501, 312,
+  ST_GeomFromText(
+      'MULTILINESTRING((443024.62635065464 7376285.663026805,443029.15299999993 7376291.609000001,443050.64499999955 7376318.767999999,443074.1830000002 7376347.986000001,443104.09300000034 7376385.761999998,443104.83108483226 7376386.695368251))')) :: tr_osoite,
+  'Valtatie 4',
+  'Rovaniemi, keskusta',
+  'Keskusta',
+  'Keskusta',
+  NOW(),
+  NOW() + interval '7 days',
+  ARRAY [
+    ROW ('06:00:00' :: TIME, '18:15:00' :: TIME,
+    ARRAY ['maanantai', 'tiistai', 'keskiviikko'] :: VIIKONPAIVA []) :: TIETYON_TYOAIKA,
+    ROW ('20:00:00' :: TIME, '23:00:00' :: TIME,
+    ARRAY ['lauantai', 'sunnuntai'] :: VIIKONPAIVA []) :: TIETYON_TYOAIKA
+  ] :: TIETYON_TYOAIKA [],
+  'molemmat',
+  ROW ('ajokaistaSuljettu', NULL) :: TIETYON_KAISTAJARJESTELYT,
+  ARRAY ['(30, 100)'] :: TIETYON_NOPEUSRAJOITUS [],
+  ARRAY ['(paallystetty, 100)'] :: TIETYON_TIENPINTA [],
+  123,
+  'jyrkatMutkat',
+  ARRAY ['(murske, 100)'] :: TIETYON_TIENPINTA [],
+  'ohjataanVuorotellen',
+  'liikennevalot',
+  15,
+  30,
+  ROW (4, 3, 10, 4000) :: TIETYON_AJONEUVORAJOITUKSET,
+  '{avotuli}',
+  TRUE,
+  TRUE,
+  NOW(),
+  NOW() + interval '7 days',
   'Tämä on testi-ilmoitus',
         (SELECT id
          FROM organisaatio

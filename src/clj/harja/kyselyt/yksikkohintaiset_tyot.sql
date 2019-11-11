@@ -63,7 +63,8 @@ VALUES (:maara, :yksikko, :yksikkohinta,
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 UPDATE kustannussuunnitelma
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                      JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi

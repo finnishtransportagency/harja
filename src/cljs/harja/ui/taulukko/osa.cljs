@@ -841,10 +841,10 @@
                 ikoni (or ikoni "chevron")
                 ikoni-auki (if (= ikoni "chevron")
                              ikonit/livicon-chevron-down
-                             ikonit/triangle-bottom)
+                             ikonit/oi-caret-bottom)
                 ikoni-kiinni (if (= ikoni "chevron")
                                ikonit/livicon-chevron-up
-                               ikonit/triangle-top)
+                               ikonit/oi-caret-top)
                 teksti (if tilan-seuranta-lisatty?
                          ;; Tämä aiheuttaa re-renderöinnin, kun tila annetussa polussa muuttuu
                          (muodosta-arvo this @renderointi)
