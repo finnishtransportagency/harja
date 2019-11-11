@@ -281,38 +281,43 @@
   ([vanha-taulukko uusi-taulukko] [(flatten (kasittele-diff vanha-taulukko uusi-taulukko []))
                                    (flatten (kasittele-diff uusi-taulukko vanha-taulukko []))])
   ([vanha uusi polku]
-   (let [muutoksia? (fn [x y]
-                      (let [[muutokset-x muutokset-y _] (data/diff x y)]
-                        (or (not (nil? muutokset-y))
-                            (not (nil? muutokset-x)))))
-         map-diff (fn [m1 m2]
-                    (keep (fn [[avain arvo]]
-                            (let [arvo-uudesta (get m2 avain)]
-                              (when (muutoksia? arvo arvo-uudesta)
-                                (kasittele-diff arvo arvo-uudesta (conj polku avain)))))
-                          m1))
-         vector-diff (fn [v1 v2]
-                       (let [v1-pituus (count v1)
-                             v2-pituus (count v2)]
-                         (into []
-                               (concat
-                                 (keep-indexed (fn [index a1]
-                                                 (let [a2 (when (> v2-pituus index)
-                                                            (get v2 index))]
-                                                   (when (and a2 (muutoksia? a1 a2))
-                                                     (kasittele-diff a1 a2 (conj polku index)))))
-                                               v1)
-                                 (if (< v2-pituus v1-pituus)
-                                   (map (fn [tiputettu-asia]
-                                          {:polku polku
-                                           :diff tiputettu-asia})
-                                        (drop v1 v2-pituus))
-                                   [])))))]
-     (cond
-       (and (map? vanha) (map? uusi)) (map-diff vanha uusi)
-       (and (vector? vanha) (vector? uusi)) (vector-diff vanha uusi)
-       :else {:polku polku
-              :diff (first (data/diff vanha uusi))}))))
+   (try
+     (let [muutoksia? (fn [x y]
+                        (let [[muutokset-x muutokset-y _] (data/diff x y)]
+                          (or (not (nil? muutokset-y))
+                              (not (nil? muutokset-x)))))
+           map-diff (fn [m1 m2]
+                      (keep (fn [[avain arvo]]
+                              (let [arvo-uudesta (get m2 avain)]
+                                (when (muutoksia? arvo arvo-uudesta)
+                                  (kasittele-diff arvo arvo-uudesta (conj polku avain)))))
+                            m1))
+           vector-diff (fn [v1 v2]
+                         (let [v1-pituus (count v1)
+                               v2-pituus (count v2)]
+                           (into []
+                                 (concat
+                                   (keep-indexed (fn [index a1]
+                                                   (let [a2 (when (> v2-pituus index)
+                                                              (get v2 index))]
+                                                     (when (and a2 (muutoksia? a1 a2))
+                                                       (kasittele-diff a1 a2 (conj polku index)))))
+                                                 v1)
+                                   (if (< v2-pituus v1-pituus)
+                                     (map (fn [tiputettu-asia]
+                                            {:polku polku
+                                             :diff tiputettu-asia})
+                                          (drop v1 v2-pituus))
+                                     [])))))]
+       (cond
+         (and (map? vanha) (map? uusi)) (map-diff vanha uusi)
+         (and (vector? vanha) (vector? uusi)) (vector-diff vanha uusi)
+         :else {:polku polku
+                :diff (first (data/diff vanha uusi))}))
+     (catch :default e
+       (println "error debug taulussa")
+       {:polku polku
+        :diff nil}))))
 
 (defn taulukko-diff [vanha uusi]
   (kasittele-diff vanha uusi))
