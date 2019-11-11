@@ -52,12 +52,12 @@
 
       "Suola" :suola
       (when (and (oikeudet/urakat-toteumat-suola id)
-                 (= :hoito (:tyyppi ur)))
+                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
         [suolatoteumat])
 
       "Pohjavesialueet" :pohjavesialueet
       (when (and (oikeudet/urakat-toteumat-suola id)
-                 (= :hoito (:tyyppi ur)))
+                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
         [pohjavesialueen-suola])
       
       "Materiaalit" :materiaalit
@@ -71,5 +71,5 @@
       "Varusteet" :varusteet
       (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                  (oikeudet/urakat-toteumat-varusteet id)
-                 (= :hoito (:tyyppi ur)))
+                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
         [varusteet/varusteet])])))

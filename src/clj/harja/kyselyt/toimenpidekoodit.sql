@@ -106,8 +106,9 @@ SELECT tk4.id
 FROM toimenpidekoodi tk4
   JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
 WHERE tk4.nimi=:nimi AND
-      tk3.koodi= (select koodi from toimenpidekoodi where id =
-                                    (select toimenpide from toimenpideinstanssi where urakka = :urakkaid LIMIT 1));
+      tk3.koodi IN (select koodi from toimenpidekoodi where id IN
+                                    (select toimenpide from toimenpideinstanssi where urakka = :urakkaid))
+LIMIT 1;
 
 -- name: hae-hinnoittelu
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.

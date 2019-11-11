@@ -24,8 +24,11 @@
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [suunnittelutiedot (yks-hint-tyot/suunnitellut-tehtavat db urakka-id)
         toteumat (hae-yksikkohintaiset-tyot-per-paiva db
-                                                      urakka-id alkupvm loppupvm
-                                                      (not (nil? toimenpide-id)) toimenpide-id)
+                                                      {:urakka urakka-id
+                                                       :alkupvm alkupvm
+                                                       :loppupvm loppupvm
+                                                       :rajaa_tpi (not (nil? toimenpide-id))
+                                                       :tpi toimenpide-id})
         naytettavat-rivit (yks-hint-tyot/liita-toteumiin-suunnittelutiedot
                                                    alkupvm
                                                    loppupvm
