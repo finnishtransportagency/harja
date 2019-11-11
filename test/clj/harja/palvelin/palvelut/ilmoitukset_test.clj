@@ -96,6 +96,8 @@
 (deftest hae-ilmoitukset-tyypin-mukaan
   (let [hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
                                  :urakkatyyppi :hoito))
+        teiden-hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
+                                        :urakkatyyppi :teiden-hoito))
         paallystys-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
                                       :urakkatyyppi :paallystys))
         kaikki-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
@@ -107,11 +109,13 @@
     (is (= 3 (count paallystys-ilmoitukset)))
 
     (is (< (count paallystys-ilmoitukset)
-           (count hoito-ilmoitukset)
+           (+ (count hoito-ilmoitukset)
+              (count teiden-hoito-ilmoitukset))
            (count kaikki-ilmoitukset)))
 
     (is (= (set/union (idt hoito-ilmoitukset)
-                      (idt paallystys-ilmoitukset))
+                      (idt paallystys-ilmoitukset)
+                      (idt teiden-hoito-ilmoitukset))
            (idt kaikki-ilmoitukset)))))
 
 (deftest tallenna-ilmoitustoimenpide
@@ -323,7 +327,7 @@
       (is (#{:toimenpidepyynto :tiedoitus :kysely}
             (:ilmoitustyyppi i)) "ilmoitustyyppi"))
     (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
-    (is (= ilmoitusten-maara-suoraan-kannasta 10042) "Ilmoitusten lukumäärä")))
+    (is (= ilmoitusten-maara-suoraan-kannasta 10048) "Ilmoitusten lukumäärä")))
 
 (deftest ^:perf hae-ilmoitukset-kesto
   (is (gatling-onnistuu-ajassa?
