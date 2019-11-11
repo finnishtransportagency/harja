@@ -79,11 +79,16 @@
           kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 20)
           kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 21)
 
-          nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
+          nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))
+
+          numero (ffirst (q "SELECT numero
+                             FROM maksuera
+                             WHERE nimi = 'Oulu Talvihoito TP ME 2014-2019' AND
+                                   tyyppi = 'kokonaishintainen';"))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
 
-      (is (= "Talvihoito (#17)" oulun-au-talvihoito-kok-hint-maksueranumero))
+      (is (= (str "Talvihoito (#" numero ")") oulun-au-talvihoito-kok-hint-maksueranumero))
 
       (is (=marginaalissa? kok-hint 162010.00M))
       (is (=marginaalissa? yks-hint 6000.00M))

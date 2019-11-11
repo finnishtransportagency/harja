@@ -151,7 +151,7 @@
                                      :valitaso valitaso))
          (assoc :tehtava-ja-maaraluettelo tehtavat
                 :hierarkia hierarkia
-                :tehtavat-taulukko (update (prosessoi-tulokset tehtavat) :rivit (paivitys-fn valitaso hierarkia #{:tehtava}))))))
+                :tehtavat-taulukko (p/paivita-arvo (prosessoi-tulokset tehtavat) :lapset (paivitys-fn valitaso hierarkia #{:tehtava}))))))
   HaeTehtavat
   (process-event
     [{:keys [parametrit]} app]
@@ -186,12 +186,11 @@
                                                             (assoc valinnat
                                                               :toimenpide arvo
                                                               :valitaso valitaso)))
-             taulukko (update tehtavat-taulukko :rivit
-                              (paivitys-fn valitaso hierarkia nayta-aina))]
+             taulukko (p/paivita-arvo tehtavat-taulukko :lapset (paivitys-fn valitaso hierarkia nayta-aina))]
          (p/paivita-taulukko! taulukko toimenpide-ja-valitaso))
        :valitaso
-       (let [taulukko (update tehtavat-taulukko :rivit
-                              (paivitys-fn arvo hierarkia nayta-aina))]
+       (let [taulukko (p/paivita-arvo tehtavat-taulukko :lapset
+                                      (paivitys-fn arvo hierarkia nayta-aina))]
          (p/paivita-taulukko! taulukko (assoc-in app [:valinnat :valitaso] arvo))))))
   PaivitaMaara
   (process-event [{:keys [solu arvo]} app]

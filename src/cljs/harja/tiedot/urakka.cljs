@@ -171,6 +171,7 @@
   (boolean
     (or
       (= (:tyyppi ur) :hoito)
+      (= (:tyyppi ur) :teiden-hoito)
       (= (:tyyppi ur) :valaistus)
       (= (:tyyppi ur) :siltakorjaus)
       (= (:tyyppi ur) :tekniset-laitteet)
