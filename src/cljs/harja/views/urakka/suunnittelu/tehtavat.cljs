@@ -70,42 +70,61 @@
 
 (defn- luo-syottorivit
   [e! rivi tnt]
-  (let [luku (atom {})]
-    (mapv
-      (fn [[_ {:keys [nimi maarat id vanhempi yksikko]}]]
-        (swap! luku update vanhempi inc)
-        (-> rivi
-            (p/aseta-arvo :id (keyword (str vanhempi "/" id))
-                          :class #{(str "table-default-" (if (= 0 (rem (get @luku vanhempi) 2)) "even" "odd"))}
-                          :piillotettu? false)
-            (p/paivita-arvo :lapset
-                            (osien-paivitys-fn #(p/aseta-arvo %
-                                                              :id :tehtava-nimi
-                                                              :arvo nimi
-                                                              :class #{(sarakkeiden-leveys :maara)})
-                                               #(p/aseta-arvo %
-                                                              :id (keyword (str vanhempi "/" id "-maara"))
-                                                              :arvo (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))
-                                                              :class #{(sarakkeiden-leveys :maara-input) "input-default"}
-                                                              :on-blur (fn [arvo]
-                                                                         (let [arvo (-> arvo (.. -target -value))]
-                                                                           (when (validi? arvo :numero)
-                                                                             (e! (t/->TallennaTehtavamaara
-                                                                                   {:urakka-id  (-> @tila/tila :yleiset :urakka :id)
-                                                                                    :tehtava-id id
-                                                                                    :maara      arvo})))))
-                                                              :on-change (fn [arvo]
-                                                                           (e!
-                                                                             (t/->PaivitaMaara osa/*this*
-                                                                                               (-> arvo (.. -target -value))
-                                                                                               #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")}))))
-                                               #(p/aseta-arvo %
-                                                              :id :tehtava-yksikko
-                                                              :arvo (or yksikko "")
-                                                              :class #{(sarakkeiden-leveys :maara-yksikko)})))))
-      (filter (fn [[_ t]]
-                (= 4 (:taso t)))
-              tnt))))
+  (let [luku (atom {})
+        pura-rivit (map (fn [[_ rivi]] rivi))
+        lajittele-jarjestyksen-mukaan #(fn [rf]
+                                         (let [s (volatile! [])]
+                                           (fn
+                                             ([]
+                                              (rf))
+                                             ([kaikki]
+                                              (let [ss @s]
+                                                (vreset! s [])
+                                                (reduce rf kaikki (sort (fn [{a :jarjestys} {b :jarjestys}]
+                                                                          (compare a b)) ss))))
+                                             ([kaikki syote]
+                                              (let [syote syote]
+                                                (vswap! s conj syote)
+                                                kaikki)))))
+        tee-rivit (map
+                    (fn [{:keys [nimi maarat id vanhempi yksikko jarjestys]}]
+                      (swap! luku update vanhempi inc)
+                      (-> rivi
+                          (p/aseta-arvo :id (keyword (str vanhempi "/" id))
+                                        :class #{(str "table-default-" (if (= 0 (rem (get @luku vanhempi) 2)) "even" "odd"))}
+                                        :piillotettu? false)
+                          (p/paivita-arvo :lapset
+                                          (osien-paivitys-fn #(p/aseta-arvo %
+                                                                            :id :tehtava-nimi
+                                                                            :arvo (str nimi)
+                                                                            :class #{(sarakkeiden-leveys :maara)})
+                                                             #(p/aseta-arvo %
+                                                                            :id (keyword (str vanhempi "/" id "-maara"))
+                                                                            :arvo (->> @tila/tila :yleiset :urakka :alkupvm pvm/vuosi str keyword (get maarat))
+                                                                            :class #{(sarakkeiden-leveys :maara-input) "input-default"}
+                                                                            :on-blur (fn [arvo]
+                                                                                       (let [arvo (-> arvo (.. -target -value))]
+                                                                                         (when (validi? arvo :numero)
+                                                                                           (e! (t/->TallennaTehtavamaara
+                                                                                                 {:urakka-id  (-> @tila/tila :yleiset :urakka :id)
+                                                                                                  :tehtava-id id
+                                                                                                  :maara      arvo})))))
+                                                                            :on-change (fn [arvo]
+                                                                                         (e!
+                                                                                           (t/->PaivitaMaara osa/*this*
+                                                                                                             (-> arvo (.. -target -value))
+                                                                                                             #{(sarakkeiden-leveys :maara-input) "input-default" (if (validi? (-> arvo (.. -target -value)) :numero) "" "ei-validi")}))))
+                                                             #(p/aseta-arvo %
+                                                                            :id :tehtava-yksikko
+                                                                            :arvo (or yksikko "")
+                                                                            :class #{(sarakkeiden-leveys :maara-yksikko)}))))))
+        ota-vain-neljas-taso (filter (fn [[_ t]]
+                                       (= 4 (:taso t))))
+        xform-fn (comp ota-vain-neljas-taso
+                       pura-rivit
+                       (lajittele-jarjestyksen-mukaan)
+                       tee-rivit)]
+    (into [] xform-fn tnt)))
 
 
 (defn luo-tehtava-taulukko
@@ -114,7 +133,7 @@
         taulukon-paivitys-fn! (fn [paivitetty-taulukko app]
                                 (assoc-in app polku-taulukkoon paivitetty-taulukko))
         syottorivi (fn [rivi]
-                      (luo-syottorivit e! rivi tehtavat-ja-toimenpiteet))]
+                     (luo-syottorivit e! rivi tehtavat-ja-toimenpiteet))]
     (muodosta-taulukko :tehtavat
                        {:teksti {:janan-tyyppi jana/Rivi
                                  :osat         [osa/Teksti osa/Teksti osa/Teksti]}
