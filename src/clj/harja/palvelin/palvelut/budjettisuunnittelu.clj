@@ -115,23 +115,33 @@
                (dissoc :toimenpiteen-koodi :tehtavan-nimi :tehtavaryhman-nimi)))
          kustannusarvoidut-tyot)))
 
+
+(defn hae-urakan-johto-ja-hallintokorvaukset
+  [db user {:keys [urakka-id]}]
+  [db user {:keys [urakka-id hoitokaude]}]
+  (map (fn [jhk]
+         (into {}
+               (map (fn [[k v]]
+                      [(keyword (clj-str/replace (name k) #"_" "-")) v])
+                    (update jhk ::bs/toimenkuva (fn [{::bs/keys [toimenkuva]}]
+                                                  toimenkuva)))))
+       (fetch db ::bs/johto-ja-hallintokorvaus
+              #{::bs/tunnit
+                ::bs/tuntipalkka
+                ::bs/kk-v
+                ::bs/maksukausi
+                ::bs/hoitokausi
+                ::bs/hoitokauden_alkuvuosi
+                [::bs/toimenkuva #{::bs/toimenkuva}]}
+              {::bs/urakka-id urakka-id})))
+
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   {:kiinteahintaiset-tyot       (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot     (hae-urakan-kustannusarvoidut-tyot db user urakka-id)
-   :johto-ja-hallintokorvaukset (map (fn [jhk]
-                                       (into {}
-                                             (map (fn [[k v]]
-                                                    [(keyword (clj-str/replace (name k) #"_" "-")) v])
-                                                  (update jhk ::bs/toimenkuva (fn [{::bs/keys [toimenkuva]}]
-                                                                                toimenkuva)))))
-                                     (fetch db ::bs/johto-ja-hallintokorvaus
-                                            #{::bs/tunnit ::bs/tuntipalkka ::bs/kk-v ::bs/maksukausi
-                                              ::bs/hoitokausi
-                                              [::bs/toimenkuva #{::bs/toimenkuva}]}
-                                            {::bs/urakka-id urakka-id}))})
+   :johto-ja-hallintokorvaukset (hae-urakan-johto-ja-hallintokorvaukset db user urakka-id)})
 
 (defn- mudosta-ajat
   "Oletuksena, että jos pelkästään vuosi on annettuna kuukauden sijasta, kyseessä on hoitokauden aloitusvuosi"
@@ -218,6 +228,7 @@
                                                                        {::bs/toimenkuva toimenkuva})))
                                   toimenpideinstanssi-id (:id (first (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db {:urakka urakka-id
                                                                                                                                   :koodi  (toimenpide-avain->toimenpide :mhu-johto)})))
+                                  urakan_alkuvuosi (:id (first (urakat-q/hae-urakan-alkuvuosi db {:urakka urakka-id})))
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
                                                               #{::bs/id ::bs/toimenkuva-id ::bs/maksukausi ::bs/hoitokausi}
                                                               {::bs/urakka-id     urakka-id
@@ -241,15 +252,18 @@
                                              {::bs/id id})))
                                 (doseq [{:keys [hoitokausi tunnit tuntipalkka kk-v]} jhkt]
                                   (insert! db ::bs/johto-ja-hallintokorvaus
-                                           {::bs/urakka-id     urakka-id
-                                            ::bs/toimenkuva-id toimenkuva-id
-                                            ::bs/tunnit        tunnit
-                                            ::bs/tuntipalkka   tuntipalkka
-                                            ::bs/kk-v          kk-v
-                                            ::bs/maksukausi    maksukausi
-                                            ::bs/hoitokausi    hoitokausi
-                                            ::bs/luotu         (pvm/nyt)
-                                            ::bs/luoja         (:id user)})))
+                                           {::bs/urakka-id             urakka-id
+                                            ::bs/toimenkuva-id         toimenkuva-id
+                                            ::bs/tunnit                tunnit
+                                            ::bs/tuntipalkka           tuntipalkka
+                                            ::bs/kk-v                  kk-v
+                                            ::bs/maksukausi            maksukausi
+                                            ::bs/hoitokausi            hoitokausi
+                                            ::bs/hoitokauden_alkuvuosi (-> urakan_alkuvuosi
+                                                                           (- 1)
+                                                                           (+ hoitokausi))
+                                            ::bs/luotu                 (pvm/nyt)
+                                            ::bs/luoja                 (:id user)})))
                               {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
