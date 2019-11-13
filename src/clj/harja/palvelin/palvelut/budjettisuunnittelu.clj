@@ -67,8 +67,8 @@
   (key-from-val tallennettava-asia->tehtava v))
 
 (def ^{:private true} tallennettava-asia->tehtavaryhma
-  {:erillishankinnat        "ERILLISHANKINNAT"
-   :rahavaraus-lupaukseen-1 "TILAAJAN RAHAVARAUS"})
+  {:erillishankinnat        "ERILLISHANKINNAT (W)"
+   :rahavaraus-lupaukseen-1 "TILAAJAN RAHAVARAUS (T3)"})
 
 (defn- tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
