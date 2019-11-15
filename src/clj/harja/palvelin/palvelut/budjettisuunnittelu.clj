@@ -92,7 +92,7 @@
           perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
           indeksiluvut-urakan-aikana (sequence
                                        (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                       (and (= 10 kuukausi)
+                                                       (and (= 9 kuukausi)
                                                             (>= vuosi (dec urakan-alkuvuosi)))))
                                              (remove (fn [{:keys [vuosi]}]
                                                        (>= vuosi (dec urakan-loppuvuosi))))
