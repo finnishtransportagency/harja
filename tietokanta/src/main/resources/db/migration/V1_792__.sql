@@ -13,7 +13,7 @@ ALTER TABLE johto_ja_hallintokorvaus
   DROP CONSTRAINT "johto_ja_hallintokorvaus_urakka-id_toimenkuva-id_maksukausi_key",
   ADD COLUMN vuosi INTEGER,
   ADD COLUMN kuukausi INTEGER,
-  ADD COLUMN "ennen-urakkaa" INTEGER REFERENCES johto_ja_hallintokorvaus_ennen_urakkaa(id);
+  ADD COLUMN "ennen-urakkaa-id" INTEGER REFERENCES johto_ja_hallintokorvaus_ennen_urakkaa(id);
 
 DO $$
 DECLARE
@@ -43,7 +43,7 @@ BEGIN
     kuukausi_vali = (SELECT CASE
                               WHEN toimenkuva = 'harjoittelija' THEN 5
                               WHEN toimenkuva = 'viherhoidosta vastaava henkilö' THEN 4
-                              WHEN toimenkuva = 'hankintavastaava' AND hoitokausi = 0 THEN 10
+                              WHEN toimenkuva = 'hankintavastaava' AND jh_korvaus.hoitokausi = 0 THEN 10
                               WHEN maksukausi = 'talvi'::maksukausi THEN 10
                               WHEN maksukausi = 'kesa'::maksukausi THEN 5
                               ELSE 1
@@ -51,7 +51,7 @@ BEGIN
                             CASE
                               WHEN toimenkuva = 'harjoittelija' THEN 8
                               WHEN toimenkuva = 'viherhoidosta vastaava henkilö' THEN 8
-                              WHEN toimenkuva = 'hankintavastaava' AND hoitokausi = 0 THEN 10
+                              WHEN toimenkuva = 'hankintavastaava' AND jh_korvaus.hoitokausi = 0 THEN 10
                               WHEN maksukausi = 'talvi'::maksukausi THEN 4
                               WHEN maksukausi = 'kesa'::maksukausi THEN 9
                               ELSE 1
@@ -70,7 +70,7 @@ BEGIN
       FOREACH kuukausi_ IN ARRAY kuukaudet
       LOOP
         INSERT INTO johto_ja_hallintokorvaus ("urakka-id", "toimenkuva-id", tunnit, tuntipalkka, vuosi, kuukausi,
-                                              "ennen-urakkaa", luotu, luoja, muokattu, muokkaaja)
+                                              "ennen-urakkaa-id", luotu, luoja, muokattu, muokkaaja)
         VALUES (jh_korvaus."urakka-id", jh_korvaus."toimenkuva-id", jh_korvaus.tunnit, jh_korvaus.tuntipalkka, vuosi_, kuukausi_,
                 ennen_urakkaa_id, jh_korvaus.luotu, jh_korvaus.luoja, NOW(), integraatio);
       END LOOP;
@@ -87,4 +87,4 @@ ALTER TABLE johto_ja_hallintokorvaus
   DROP COLUMN hoitokausi,
   ALTER COLUMN vuosi SET NOT NULL,
   ALTER COLUMN kuukausi SET NOT NULL,
-  ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus UNIQUE("urakka-id", "toimenkuva-id", vuosi, kuukausi, "ennen-urakkaa");
+  ADD CONSTRAINT uniikki_johto_ja_hallintokorvaus UNIQUE("urakka-id", "toimenkuva-id", vuosi, kuukausi, "ennen-urakkaa-id");

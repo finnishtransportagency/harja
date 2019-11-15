@@ -1082,7 +1082,7 @@ BEGIN
         INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
            RETURNING id
            INTO ennen_urakkaa_id;
-        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
           VALUES
                  ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
       END IF;
@@ -1460,7 +1460,7 @@ BEGIN
         INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
            RETURNING id
            INTO ennen_urakkaa_id;
-        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa", luotu, "toimenkuva-id")
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
           VALUES
                  ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
       END IF;
