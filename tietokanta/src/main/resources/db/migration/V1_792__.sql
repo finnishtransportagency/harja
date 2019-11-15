@@ -29,6 +29,7 @@ $$
         kuukaudet          INTEGER[];
         kaytavat_kuukaudet INTEGER[];
         ennen_urakkaa_id   INTEGER;
+        tunnit_            NUMERIC;
     BEGIN
         integraatio = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
 
@@ -40,10 +41,12 @@ $$
                     INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v")
                     VALUES (4.5) RETURNING id
                         INTO ennen_urakkaa_id;
+                    tunnit_ = jh_korvaus.tunnit * 4.5;
                 ELSE
                     vuodet = (SELECT ARRAY [(SELECT 2018 + jh_korvaus.hoitokausi),
                                              (SELECT 2019 + jh_korvaus.hoitokausi)]::INTEGER[]);
                     ennen_urakkaa_id = NULL;
+                    tunnit_ = jh_korvaus.tunnit;
                 END IF;
                 RAISE NOTICE 'toimenkuva-id: % , maksukausi: % , hoitokausi: %', jh_korvaus."toimenkuva-id", jh_korvaus.maksukausi, jh_korvaus.hoitokausi;
                 SELECT CASE
@@ -99,7 +102,7 @@ $$
                                                                       vuosi, kuukausi,
                                                                       "ennen-urakkaa-id", luotu, luoja, muokattu,
                                                                       muokkaaja)
-                                VALUES (jh_korvaus."urakka-id", jh_korvaus."toimenkuva-id", jh_korvaus.tunnit,
+                                VALUES (jh_korvaus."urakka-id", jh_korvaus."toimenkuva-id", tunnit_,
                                         jh_korvaus.tuntipalkka, vuosi_, kuukausi_,
                                         ennen_urakkaa_id, jh_korvaus.luotu, jh_korvaus.luoja, NOW(), integraatio);
                             END LOOP;
