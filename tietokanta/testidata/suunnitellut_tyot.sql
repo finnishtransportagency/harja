@@ -1077,69 +1077,62 @@ BEGIN
   ----------------------------------
   -- URAKAN YKSIKKÖHINTAISET TYÖT --
   ----------------------------------
-  FOR hoitokausi_ IN 0..5 LOOP
-      IF hoitokausi_ = 0 THEN
-        INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
-           RETURNING id
-           INTO ennen_urakkaa_id;
-        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
-          VALUES
-                 ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
+     RETURNING id
+     INTO ennen_urakkaa_id;
+  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  FOR i IN 10..12 LOOP
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
       END IF;
-      IF hoitokausi_ > 0 THEN
-        FOR i IN 10..12 LOOP
-          INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-            VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
-        END LOOP;
-        FOR i IN 1..12 LOOP
-          FOR vuosi_ IN 1..4 LOOP
-            INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-            VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+      END IF;
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    IF toimenpidenimi = 'Soratien hoito TP'
+      THEN
+        -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
+        EXIT;
+    END IF;
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
 
-            IF (5 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
-            END IF;
-            IF (4 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
-            END IF;
-          END LOOP;
-        END LOOP;
-        FOR i IN 1..9 LOOP
-          IF toimenpidenimi = 'Soratien hoito TP'
-            THEN
-              -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
-              EXIT;
-          END IF;
-          INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-            VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
-
-            IF (5 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
-            END IF;
-            IF (4 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
-            END IF;
-        END LOOP;
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+      END IF;
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
       END IF;
   END LOOP;
 END $$;
@@ -1455,69 +1448,63 @@ BEGIN
   -- URAKAN YKSIKKÖHINTAISET TYÖT --
   ----------------------------------
 
-  FOR hoitokausi_ IN 0..5 LOOP
-      IF hoitokausi_ = 0 THEN
-        INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
-           RETURNING id
-           INTO ennen_urakkaa_id;
-        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
-          VALUES
-                 ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
+     RETURNING id
+     INTO ennen_urakkaa_id;
+  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
       END IF;
-      IF hoitokausi_ > 0 THEN
-        FOR i IN 10..12 LOOP
-          INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-            VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
-        END LOOP;
-        FOR i IN 1..12 LOOP
-          FOR vuosi_ IN 1..4 LOOP
-            INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-            VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+      END IF;
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    IF toimenpidenimi = 'Soratien hoito TP'
+      THEN
+        -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
+        EXIT;
+    END IF;
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
 
-            IF (5 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
-            END IF;
-            IF (4 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
-            END IF;
-          END LOOP;
-        END LOOP;
-        FOR i IN 1..9 LOOP
-          IF toimenpidenimi = 'Soratien hoito TP'
-            THEN
-              -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
-              EXIT;
-          END IF;
-          INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-            VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
-                   ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
-
-            IF (5 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
-            END IF;
-            IF (4 <= i) AND (i <= 8)
-            THEN
-              INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
-              VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
-            END IF;
-        END LOOP;
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+      END IF;
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
       END IF;
   END LOOP;
 
