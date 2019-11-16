@@ -48,7 +48,7 @@ $$
                     ennen_urakkaa_id = NULL;
                     tunnit_ = jh_korvaus.tunnit;
                 END IF;
-                RAISE NOTICE 'toimenkuva-id: % , maksukausi: % , hoitokausi: %', jh_korvaus."toimenkuva-id", jh_korvaus.maksukausi, jh_korvaus.hoitokausi;
+                
                 SELECT CASE
                            WHEN toimenkuva = 'harjoittelija' THEN 5
                            WHEN toimenkuva = 'viherhoidosta vastaava henkilö' THEN 4
