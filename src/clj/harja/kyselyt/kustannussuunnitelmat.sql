@@ -81,7 +81,15 @@ SELECT
 FROM maksuera m
        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
        JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi
-WHERE m.numero = :maksuera GROUP BY ka.vuosi;
+WHERE m.numero = :maksuera GROUP BY ka.vuosi
+UNION ALL
+SELECT
+  jhk.vuosi as vuosi,
+  Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa1
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- hoidon johto
+       JOIN johto_ja_hallintokorvaus jhk on tpi.urakka = jhk."urakka-id"
+WHERE m.numero = :maksuera GROUP BY jhk.vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
