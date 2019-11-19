@@ -24,7 +24,7 @@
              [budjettisuunnittelu :as bs]
              [toimenpidekoodi :as tpk]
              [tehtavaryhma :as tr]
-             [urakka :as urakka]]
+             [urakka :as ur]]
             [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
 
 (defn- key-from-val [m v]
@@ -83,10 +83,10 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
-          {::urakka/keys [alkupvm loppupvm indeksi]} (first (fetch db
-                                                                   ::urakka/urakka
-                                                                   #{::urakka/alkupvm ::urakka/loppupvm ::urakka/indeksi}
-                                                                   {::urakka/id urakka-id}))
+          {::ur/keys [alkupvm loppupvm indeksi]} (first (fetch db
+                                                                   ::ur/urakka
+                                                                   #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                                   {::ur/id urakka-id}))
           urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
           urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
           perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
