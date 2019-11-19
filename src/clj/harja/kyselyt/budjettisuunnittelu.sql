@@ -16,4 +16,14 @@ SELECT *
 from urakka_tavoite
 WHERE urakka = :urakka;
 
-
+-- name:hae-johto-ja-hallintokorvaukset
+SELECT jh.tunnit,
+       jh.tuntipalkka,
+       jh.vuosi,
+       jh.kuukausi,
+       jht.toimenkuva,
+       jheu."kk-v"
+FROM johto_ja_hallintokorvaus jh
+  JOIN johto_ja_hallintokorvaus_toimenkuva jht ON jh."toimenkuva-id" = jht.id
+  LEFT JOIN johto_ja_hallintokorvaus_ennen_urakkaa jheu ON jh."ennen-urakkaa-id" = jheu.id
+WHERE jh."urakka-id" = :urakka-id
