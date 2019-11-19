@@ -78,7 +78,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
 
-(defn hae-urakan-indeksit
+(defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -99,7 +99,7 @@
                                              (map (fn [{:keys [arvo vuosi]}]
                                                     ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
                                                     {:vuosi (inc vuosi)
-                                                     :indeksikorjaus (pyorista (/ arvo perusluku) 6)})))
+                                                     :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
                                        (i-q/hae-indeksi db {:nimi indeksi}))
           urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
       (if (= 5 urakan-indeksien-maara)
@@ -485,7 +485,7 @@
                                (hae-urakan-tavoite db user tiedot)))
           (julkaise-palvelu
             :budjettisuunnittelun-indeksit (fn [user tiedot]
-                                             (hae-urakan-indeksit db user tiedot))
+                                             (hae-urakan-indeksikertoimet db user tiedot))
             {:kysely-spec ::bs-p/budjettisuunnittelun-indeksit-kysely
              :vastaus-spec ::bs-p/budjettisuunnittelun-indeksit-vastaus})
           (julkaise-palvelu

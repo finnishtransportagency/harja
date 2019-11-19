@@ -37,7 +37,7 @@
 (s/def ::tallennettava-asia tallennettava-asia)
 (s/def ::aika (s/keys :req-un [::vuosi]
                       :opt-un [::kuukausi]))
-(s/def ::indeksikorjaus ::positive-number?)
+(s/def ::indeksikerroin ::positive-number?)
 
 (s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
 (s/def ::jhkt (s/coll-of ::jhk))
@@ -57,7 +57,7 @@
 (s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
                                :kind vector?))
 
-(s/def ::indeksi (s/keys :req-un [::vuosi ::indeksikorjaus]))
+(s/def ::indeksi (s/keys :req-un [::vuosi ::indeksikerroin]))
 
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
