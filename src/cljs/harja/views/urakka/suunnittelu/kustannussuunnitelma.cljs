@@ -1823,7 +1823,7 @@
    [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
    (when (t/toimenpiteet-rahavarauksilla (:toimenpide valinnat))
      ^{:key "rahavaraukset-otsikko"}
-     [:h3 "Rahavarukset"])
+     [:h3 "Rahavaraukset"])
    [suunnitellut-rahavaraukset e! rahavaraukset valinnat]])
 
 (defn jh-toimenkuva-laskulla [jh-laskulla]
