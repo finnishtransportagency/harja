@@ -17,6 +17,7 @@
       "havainto": {
         "tyokone": {
           "id": 666,
+          "tunnus": "Beast-1",
           "tyokonetyyppi": "aura-auto"
         },
         "sijainti": {
