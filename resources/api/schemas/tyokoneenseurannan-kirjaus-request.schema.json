@@ -37,6 +37,11 @@
                     "type": "integer",
                     "required": true
                   },
+                  "tunnus": {
+                    "id": "urn:harja/havainnot/0/tyokone/tunnus",
+                    "type": "string",
+                    "required": true
+                  },
                   "tyokonetyyppi": {
                     "id": "urn:harja/havainnot/0/tyokone/tyyppi",
                     "type": "string",
