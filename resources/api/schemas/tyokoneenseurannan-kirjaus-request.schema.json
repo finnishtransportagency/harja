@@ -40,7 +40,7 @@
                   "tunnus": {
                     "id": "urn:harja/havainnot/0/tyokone/tunnus",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "tyokonetyyppi": {
                     "id": "urn:harja/havainnot/0/tyokone/tyyppi",
