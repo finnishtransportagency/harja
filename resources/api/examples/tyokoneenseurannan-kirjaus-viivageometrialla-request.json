@@ -17,6 +17,7 @@
       "havainto": {
         "tyokone": {
           "id": 123456789,
+          "tunnus": "HAI333-Y",
           "tyokonetyyppi": "aura-auto"
         },
         "sijainti": {
