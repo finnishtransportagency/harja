@@ -5,8 +5,8 @@ SELECT kat.id,
        kat.kuukausi,
        kat.summa,
        kat.tyyppi ::TOTEUMATYYPPI,
-       tpik_t.tunniste AS "tehtavan-tunniste",
-       tr.tunniste AS "tehtavaryhman-tunniste",
+       tpik_t.yksiloiva_tunniste AS "tehtavan-tunniste",
+       tr.yksiloiva_tunniste AS "tehtavaryhman-tunniste",
        tpik_tpi.koodi AS "toimenpiteen-koodi",
        kat.sopimus
 FROM kustannusarvioitu_tyo kat

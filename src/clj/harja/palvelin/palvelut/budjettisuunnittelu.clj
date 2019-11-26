@@ -395,7 +395,7 @@
                             (let [{tehtava-id ::tpk/id} (when tehtava
                                                           (first (fetch db ::tpk/toimenpidekoodi
                                                                         #{::tpk/id}
-                                                                        {::tpk/tunniste                 tehtava})))
+                                                                        {::tpk/yksiloiva-tunniste                 tehtava})))
                                   {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                                                          #{::tpk/id}
                                                                          {::tpk/taso  3
@@ -403,7 +403,7 @@
                                   {tehtavaryhma-id ::tr/id} (when tehtavaryhma
                                                               (first (fetch db ::tr/tehtavaryhma
                                                                             #{::tr/id}
-                                                                            {::tr/tunniste tehtavaryhma})))
+                                                                            {::tr/yksiloiva-tunniste tehtavaryhma})))
                                   {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
                                   _ (when (nil? toimenpideinstanssi-id)
                                       (throw (Exception. "Toimenpideinstanssia ei löydetty")))

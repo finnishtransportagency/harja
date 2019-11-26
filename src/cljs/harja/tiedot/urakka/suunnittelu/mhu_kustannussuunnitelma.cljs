@@ -54,9 +54,9 @@
 (defn indeksikorjaa
   [hinta]
   (let [{:keys [indeksit kuluva-hoitokausi]} @tiedot/suunnittelu-kustannussuunnitelma
-        {:keys [indeksikorjaus]} (get indeksit (dec (:vuosi kuluva-hoitokausi)))]
+        {:keys [indeksikerroin]} (get indeksit (dec (:vuosi kuluva-hoitokausi)))]
     (when (and indeksit kuluva-hoitokausi)
-      (* hinta indeksikorjaus))))
+      (* hinta indeksikerroin))))
 
 (defn kuluva-hoitokausi []
   (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
@@ -641,6 +641,7 @@
     (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
+    (println "INDEKSIEN HAKU VASTAUS: " vastaus)
     (assoc app :indeksit vastaus))
   HaeIndeksitEpaonnistui
   (process-event [{:keys [vastaus]} app]

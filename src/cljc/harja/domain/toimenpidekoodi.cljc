@@ -18,7 +18,8 @@
   ["hinnoittelutyyppi" ::hinnoittelutype (specql.transform/transform (specql.transform/to-keyword))]
   ["toimenpidekoodi" ::toimenpidekoodi
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
-   #?(:clj {::tunniste (specql.transform/transform (harja.kyselyt.specql/->UUIDTransform))})
+   {"yksiloiva_tunniste" ::yksiloiva-tunniste}
+   #?(:clj {::yksiloiva-tunniste (specql.transform/transform (harja.kyselyt.specql/->UUIDTransform))})
    {"emo" ::emo-id}
    {::toimenpidekoodi-join (specql.rel/has-one
                              ::emo-id

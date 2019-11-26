@@ -9,8 +9,9 @@
 
 (define-tables
   ["tehtavaryhma" ::tehtavaryhma
+   {"yksiloiva_tunniste" ::yksiloiva-tunniste}
    {::emo-fkey (specql.rel/has-one ::emo
                                    ::tehtavaryhma
                                    ::id)
     ::tyyppi (specql.transform/transform (specql.transform/to-keyword))}
-   #?(:clj {::tunniste (specql.transform/transform (harja.kyselyt.specql/->UUIDTransform))})])
+   #?(:clj {::yksiloiva-tunniste (specql.transform/transform (harja.kyselyt.specql/->UUIDTransform))})])

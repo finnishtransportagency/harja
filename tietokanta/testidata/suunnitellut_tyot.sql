@@ -564,7 +564,7 @@ BEGIN
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste = CASE
+                 WHERE yksiloiva_tunniste = CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -577,7 +577,7 @@ BEGIN
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste= CASE
+                 WHERE yksiloiva_tunniste= CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -601,7 +601,7 @@ BEGIN
                   'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                   (SELECT id
                    FROM toimenpidekoodi
-                   WHERE tunniste= CASE
+                   WHERE yksiloiva_tunniste= CASE
                                                       WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                       WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                       WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -614,7 +614,7 @@ BEGIN
                  'akillinen-hoitotyo'::TOTEUMATYYPPI,
                  (SELECT id
                   FROM toimenpidekoodi
-                  WHERE tunniste = CASE
+                  WHERE yksiloiva_tunniste = CASE
                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -639,7 +639,7 @@ BEGIN
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste = CASE
+                 WHERE yksiloiva_tunniste = CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -652,7 +652,7 @@ BEGIN
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste= CASE
+                 WHERE yksiloiva_tunniste= CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -681,20 +681,20 @@ BEGIN
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -706,20 +706,20 @@ BEGIN
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -731,20 +731,20 @@ BEGIN
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -810,7 +810,7 @@ BEGIN
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste = CASE
+                 WHERE yksiloiva_tunniste = CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -823,7 +823,7 @@ BEGIN
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste= CASE
+                 WHERE yksiloiva_tunniste= CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -847,7 +847,7 @@ BEGIN
                   'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                   (SELECT id
                    FROM toimenpidekoodi
-                   WHERE tunniste= CASE
+                   WHERE yksiloiva_tunniste= CASE
                                                       WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                       WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                       WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -860,7 +860,7 @@ BEGIN
                  'akillinen-hoitotyo'::TOTEUMATYYPPI,
                  (SELECT id
                   FROM toimenpidekoodi
-                  WHERE tunniste = CASE
+                  WHERE yksiloiva_tunniste = CASE
                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -885,7 +885,7 @@ BEGIN
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste = CASE
+                 WHERE yksiloiva_tunniste = CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -898,7 +898,7 @@ BEGIN
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste= CASE
+                 WHERE yksiloiva_tunniste= CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -928,7 +928,7 @@ BEGIN
               NULL,
               (SELECT id
                FROM tehtavaryhma
-               WHERE tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
               (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
               urakan_sopimus);
   END LOOP;
@@ -940,7 +940,7 @@ BEGIN
               NULL,
               (SELECT id
                FROM tehtavaryhma
-               WHERE tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
               (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
               urakan_sopimus);
     END LOOP;
@@ -952,7 +952,7 @@ BEGIN
               NULL,
               (SELECT id
                FROM tehtavaryhma
-               WHERE tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
               (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
               urakan_sopimus);
   END LOOP;
@@ -968,20 +968,20 @@ BEGIN
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -993,20 +993,20 @@ BEGIN
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1018,20 +1018,20 @@ BEGIN
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1164,7 +1164,7 @@ BEGIN
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste = CASE
+                 WHERE yksiloiva_tunniste = CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -1177,7 +1177,7 @@ BEGIN
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste= CASE
+                 WHERE yksiloiva_tunniste= CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -1201,7 +1201,7 @@ BEGIN
                   'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                   (SELECT id
                    FROM toimenpidekoodi
-                   WHERE tunniste= CASE
+                   WHERE yksiloiva_tunniste= CASE
                                                       WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                       WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                       WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -1214,7 +1214,7 @@ BEGIN
                  'akillinen-hoitotyo'::TOTEUMATYYPPI,
                  (SELECT id
                   FROM toimenpidekoodi
-                  WHERE tunniste = CASE
+                  WHERE yksiloiva_tunniste = CASE
                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -1239,7 +1239,7 @@ BEGIN
                 'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste = CASE
+                 WHERE yksiloiva_tunniste = CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
@@ -1252,7 +1252,7 @@ BEGIN
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (SELECT id
                  FROM toimenpidekoodi
-                 WHERE tunniste= CASE
+                 WHERE yksiloiva_tunniste= CASE
                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
@@ -1282,7 +1282,7 @@ BEGIN
               NULL,
               (SELECT id
                FROM tehtavaryhma
-               WHERE tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
               (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
               urakan_sopimus);
   END LOOP;
@@ -1294,7 +1294,7 @@ BEGIN
               NULL,
               (SELECT id
                FROM tehtavaryhma
-               WHERE tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
               (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
               urakan_sopimus);
     END LOOP;
@@ -1306,7 +1306,7 @@ BEGIN
               NULL,
               (SELECT id
                FROM tehtavaryhma
-               WHERE tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
               (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
               urakan_sopimus);
   END LOOP;
@@ -1322,20 +1322,20 @@ BEGIN
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1347,20 +1347,20 @@ BEGIN
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1372,20 +1372,20 @@ BEGIN
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
                 NULL,
-                (SELECT id FROM tehtavaryhma WHERE tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Toimistokulut
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
                 -- Työnjohto
                 ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
