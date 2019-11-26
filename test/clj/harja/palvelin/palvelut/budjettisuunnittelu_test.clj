@@ -118,9 +118,6 @@
           (testaa-ajat tehtavat toimenpide))))
     (testing "Kustannusarvioidut työt on oikein"
       (let [kustannusarvioidut-tyot-toimenpiteittain (group-by :toimenpide-avain (:kustannusarvioidut-tyot budjetoidut-tyot))]
-        (println (into [] (eduction (filter #(= "akillinen-hoitotyo" (:tyyppi %)))
-                                    (filter #(nil? (:haettu-asia %)))
-                                    (:talvihoito kustannusarvioidut-tyot-toimenpiteittain))))
         (doseq [[toimenpide-avain tehtavat] kustannusarvioidut-tyot-toimenpiteittain
                 :let [ryhmiteltyna (group-by (juxt :tyyppi :haettu-asia) tehtavat)]]
           (case toimenpide-avain
@@ -212,21 +209,7 @@
         pellon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
     (clojure.pprint/pprint ivalon-indeksit)
     (clojure.pprint/pprint pellon-indeksit)
-    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
-    (is (= rovaniemen-indeksit [{:vuosi kuluvan-hoitokauden-aloitusvuosi :indeksikerroin 1.000255}
-                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.076707}
-                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.076707}
-                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.076707}
-                                {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.076707}])
-        "Indeksilukemat eivät ole oikein Rovaniemen testiurakalle")
-    (is (= pellon-indeksit [{:vuosi (- kuluvan-hoitokauden-aloitusvuosi 2) :indeksikerroin 1.000301}
-                            {:vuosi (dec kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.090554}
-                            {:vuosi kuluvan-hoitokauden-aloitusvuosi :indeksikerroin       1.180806}
-                            {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.271059}
-                            {:vuosi (inc kuluvan-hoitokauden-aloitusvuosi) :indeksikerroin 1.271059}])
-        "Indeksilukemat eivät ole oikein Pellon testiurakalle")
-
-    ))
+    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")))
 
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
