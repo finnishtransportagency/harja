@@ -8,14 +8,16 @@ DECLARE
   sop RECORD;
 BEGIN
 
+  -- Käytä funktiota apuna, kun täytyy päivittää monen urakan materiaalitiedot. Hakuehtoja ja käsittelyä saa tarvittaessa monimutkaistaa.
+
+  RAISE NOTICE 'Aloitetaan urakoitsijan % urakoiden käsittely.', urakkaorganisaatio;
+
   FOR sop IN SELECT * FROM sopimus WHERE urakka IN
                                           (SELECT id FROM urakka WHERE tyyppi = urakkatyyppi AND urakoitsija = urakkaorganisaatio AND loppupvm > current_timestamp)
     LOOP
-      RAISE NOTICE 'Sopimus: %. Urakka: %)', sop.id, sop.urakka;
+      PERFORM paivita_koko_sopimuksen_materiaalin_kaytto(sop.id);
+      RAISE NOTICE 'Päivitetty sopimus % urakassa %.', sop.id, sop.urakka;
     END LOOP;
-
-    --SELECT paivita_koko_sopimuksen_materiaalin_kaytto(sop.id);
-
 
 END;
 $$;
