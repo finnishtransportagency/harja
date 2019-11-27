@@ -175,7 +175,7 @@
   ([hinnat indeksit dom-id]
    (let [hinnat (mapv (fn [{:keys [summa hoitokausi]}]
                         (let [{:keys [vuosi]} (get indeksit (dec hoitokausi))
-                              indeksikorjattu-summa (t/indeksikorjaa summa)]
+                              indeksikorjattu-summa (t/indeksikorjaa summa hoitokausi)]
                           {:vuosi vuosi
                            :summa indeksikorjattu-summa
                            :hoitokausi hoitokausi}))
@@ -820,10 +820,11 @@
                                                                   (fn [osa]
                                                                     (let [osa (-> osa
                                                                                   (p/aseta-arvo :id (keyword (str rivin-id "-indeksikorjattu"))
-                                                                                                :arvo (t/indeksikorjaa yhteensa)
+                                                                                                :arvo (t/indeksikorjaa yhteensa hoitokausi)
                                                                                                 :class #{(sarakkeiden-leveys :indeksikorjattu)
                                                                                                          "lihavoitu"
                                                                                                          "harmaa-teksti"})
+                                                                                  (assoc ::p/lisatty-data {:hoitokausi hoitokausi})
                                                                                   p/luo-tila!
                                                                                   (p/lisaa-fmt summa-formatointi)
                                                                                   (assoc :aukaise-fn #(e! (t/->LaajennaSoluaKlikattu polku-taulukkoon rivin-id %1 %2))))]
@@ -1558,27 +1559,27 @@
                                                                                 :class #{"harmaa-teksti"}))
                                                                 (fn [osa]
                                                                   (-> osa
-                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-1)
+                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-1 1)
                                                                                     :class #{"harmaa-teksti"})
                                                                       (p/lisaa-fmt summa-formatointi)))
                                                                 (fn [osa]
                                                                   (-> osa
-                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-2)
+                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-2 2)
                                                                                     :class #{"harmaa-teksti"})
                                                                       (p/lisaa-fmt summa-formatointi)))
                                                                 (fn [osa]
                                                                   (-> osa
-                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-3)
+                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-3 3)
                                                                                     :class #{"harmaa-teksti"})
                                                                       (p/lisaa-fmt summa-formatointi)))
                                                                 (fn [osa]
                                                                   (-> osa
-                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-4)
+                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-4 4)
                                                                                     :class #{"harmaa-teksti"})
                                                                       (p/lisaa-fmt summa-formatointi)))
                                                                 (fn [osa]
                                                                   (-> osa
-                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-5)
+                                                                      (p/aseta-arvo :arvo (t/indeksikorjaa hoitokausi-5 5)
                                                                                     :class #{"harmaa-teksti"})
                                                                       (p/lisaa-fmt summa-formatointi))))))]))]
     (muodosta-taulukko :jh-yhteenveto

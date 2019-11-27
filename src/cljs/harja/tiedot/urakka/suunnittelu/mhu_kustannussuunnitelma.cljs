@@ -60,11 +60,12 @@
              :kaikki hoitokausi})
 
 (defn indeksikorjaa
-  [hinta]
-  (let [{:keys [indeksit kuluva-hoitokausi]} @tiedot/suunnittelu-kustannussuunnitelma
-        {:keys [indeksikerroin]} (get indeksit (dec (:vuosi kuluva-hoitokausi)))]
-    (when (and indeksit kuluva-hoitokausi)
-      (* hinta indeksikerroin))))
+  ([hinta] (indeksikorjaa hinta (-> @tiedot/suunnittelu-kustannussuunnitelma :kuluva-hoitokausi :vuosi)))
+  ([hinta hoitokauden-numero]
+   (let [{:keys [indeksit]} @tiedot/suunnittelu-kustannussuunnitelma
+         {:keys [indeksikerroin]} (get indeksit (dec hoitokauden-numero))]
+     (when indeksikerroin
+       (* hinta indeksikerroin)))))
 
 (defn kuluva-hoitokausi []
   (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
@@ -272,8 +273,13 @@
                             (if (number? yhteensa-osan-arvo)
                               (* 5 yhteensa-osan-arvo)
                               0)))
-        vuodet-yhteensa-indeksikorjattuna (fn [this arvot]
-                                            (indeksikorjaa (vuodet-yhteensa this arvot)))
+        vuodet-yhteensa-indeksikorjattuna (fn [this {maara-kk-osat :uusi}]
+                                            (let [yhteensa-osan-arvo (-> maara-kk-osat vals first (p/arvo :arvo))]
+                                              (if (number? yhteensa-osan-arvo)
+                                                (apply + (map (fn [hoitokauden-numero]
+                                                                (indeksikorjaa yhteensa-osan-arvo hoitokauden-numero))
+                                                              (range 1 6)))
+                                                0)))
         paivita-osa-automaattisesti! (fn [taulukko osan-index f]
                                        (tyokalut/paivita-asiat-taulukossa taulukko
                                                                           [yhteensa-rivin-index osan-index]
@@ -342,7 +348,16 @@
                                                   arvo 0)))
                                             (vals summa-osat))))
         indeksikorjattu-yhteensa (fn [this arvot]
-                                   (indeksikorjaa (hoitokausi-yhteensa this arvot)))
+                                   (indeksikorjaa (hoitokausi-yhteensa this arvot) (get-in this [::p/lisatty-data :hoitokausi])))
+        indeksikorjattu-kaikki-kaudet-yhteensa (fn [this {summa-osat :uusi}]
+                                                 (let [arvot-hoitokausittain (group-by (fn [[polku data]]
+                                                                                         (->> polku (drop-last 4) last))
+                                                                                       (seq summa-osat))]
+                                                   (reduce (fn [summa [hoitokausi summa-osat]]
+                                                             (+ summa
+                                                                (indeksikorjaa (hoitokausi-yhteensa this {:uusi (into {} summa-osat)}) hoitokausi)))
+                                                           0
+                                                           arvot-hoitokausittain)))
         ;; Sama funktio, mutta parametrien sisältö on eri.
         hoitokaudet-yhteensa hoitokausi-yhteensa
         indeksikorjatut-yhteensa indeksikorjattu-yhteensa]
@@ -350,7 +365,7 @@
         (paivita-laajenna-osa-automaattisesti! [:laajenna-lapsilla 0 yhteensa-otsikon-index] hoitokausi-yhteensa)
         (paivita-laajenna-osa-automaattisesti! [:laajenna-lapsilla 0 indeksikorjattu-otsikon-index] indeksikorjattu-yhteensa)
         (paivita-summarivin-osa-automaattisesti! [summa-rivin-index yhteensa-otsikon-index] hoitokaudet-yhteensa)
-        (paivita-summarivin-osa-automaattisesti! [summa-rivin-index indeksikorjattu-otsikon-index] indeksikorjatut-yhteensa))))
+        (paivita-summarivin-osa-automaattisesti! [summa-rivin-index indeksikorjattu-otsikon-index] indeksikorjattu-kaikki-kaudet-yhteensa))))
 
 (defn suunnitelman-osat
   [paivitetyt-taulukot-instanssi kuluva-hoitokausi suunnitelmien-tila-taulukko
@@ -1249,7 +1264,7 @@
                                                                                                                                                                           index)
                                                                                                                                                                      :arvo)))
                                                                                                                                                         0 indeksikorjatturivit)]
-                                                                                                                    (p/aseta-arvo osa :arvo (indeksikorjaa rivit-yhteensa-vuodelta)))
+                                                                                                                    (p/aseta-arvo osa :arvo (indeksikorjaa rivit-yhteensa-vuodelta (dec index))))
                                                                                                                   osa))
                                                                                                               osat))))))))]
       (-> app
