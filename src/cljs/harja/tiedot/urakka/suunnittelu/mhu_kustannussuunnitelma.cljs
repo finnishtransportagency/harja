@@ -1002,9 +1002,9 @@
           (update-in [:hankintakustannukset :rahavaraukset]
                      (fn [rahavaraukset-toimenpiteittain]
                        (into {}
-                             (map (fn [[toimenpide rahavaraus]]
-                                    [toimenpide (paivita-rahavaraus-summat-automaattisesti rahavaraus
-                                                                                           [:hankintakustannukset :rahavaraukset toimenpide]
+                             (map (fn [[toimenpide-avain rahavaraus]]
+                                    [toimenpide-avain (paivita-rahavaraus-summat-automaattisesti rahavaraus
+                                                                                           [:hankintakustannukset :rahavaraukset toimenpide-avain]
                                                                                            app)])
                                   rahavaraukset-toimenpiteittain))))
           (update-in [:hallinnolliset-toimenpiteet :erillishankinnat]
