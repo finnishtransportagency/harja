@@ -84,12 +84,12 @@ FROM maksuera m
 WHERE m.numero = :maksuera GROUP BY ka.vuosi
 UNION ALL
 SELECT
-  yt.vuosi as vuosi,
-  Sum(COALESCE(yt.arvioitu_kustannus, 0)) AS summa
+  jhk.vuosi as vuosi,
+  Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa1
 FROM maksuera m
-       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-       JOIN yksikkohintainen_tyo yt on tpi.id = yt.toimenpideinstanssi
-WHERE m.numero = :maksuera GROUP BY yt.vuosi;
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- hoidon johto
+       JOIN johto_ja_hallintokorvaus jhk on tpi.urakka = jhk."urakka-id"
+WHERE m.numero = :maksuera GROUP BY jhk.vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
@@ -106,6 +106,23 @@ FROM maksuera m
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
 GROUP BY Extract(YEAR FROM yht.alkupvm);
+
+-- name: hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat
+SELECT
+  Extract(YEAR FROM yht.alkupvm)                              AS vuosi,
+  Sum(COALESCE(yht.maara, 0) * COALESCE(yht.yksikkohinta, 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+       JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+       JOIN yksikkohintainen_tyo yht ON yht.tehtava IN
+                                        (SELECT id
+                                         FROM toimenpidekoodi
+                                         WHERE emo = tpk.id)
+  AND
+                                        yht.urakka = tpi.urakka
+WHERE m.numero = :maksuera
+GROUP BY Extract(YEAR FROM yht.alkupvm)
+ORDER BY vuosi;
 
 -- name: onko-olemassa?
 -- single?: true
