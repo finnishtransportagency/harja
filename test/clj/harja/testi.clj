@@ -601,6 +601,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'"))))
 
+(defn hae-pellon-maanteiden-hoitourakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
                    toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))

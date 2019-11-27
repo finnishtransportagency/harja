@@ -119,37 +119,37 @@
     (testing "Kustannusarvioidut työt on oikein"
       (let [kustannusarvioidut-tyot-toimenpiteittain (group-by :toimenpide-avain (:kustannusarvioidut-tyot budjetoidut-tyot))]
         (doseq [[toimenpide-avain tehtavat] kustannusarvioidut-tyot-toimenpiteittain
-                :let [ryhmiteltyna (group-by (juxt :tyyppi :tehtava-nimi) tehtavat)]]
+                :let [ryhmiteltyna (group-by (juxt :tyyppi :haettu-asia) tehtavat)]]
           (case toimenpide-avain
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
-                            (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" nil]]))
+                            (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" :rahavaraus-lupaukseen-1]]))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
                           (is (= (into #{} (keys ryhmiteltyna))
-                                 #{["vahinkojen-korjaukset" nil]
-                                   ["akillinen-hoitotyo" nil]}))
+                                 #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
+                                   ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
                           (doseq [[_ tehtavat] ryhmiteltyna]
                             (testaa-ajat tehtavat toimenpide-avain)))
             :liikenneympariston-hoito (do
                                         (is (= (into #{} (keys ryhmiteltyna))
                                                #{["laskutettava-tyo" nil] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
-                                                 ["vahinkojen-korjaukset" nil]
-                                                 ["akillinen-hoitotyo" nil]}))
+                                                 ["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
+                                                 ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
                                         (doseq [[_ tehtavat] ryhmiteltyna]
                                           (testaa-ajat tehtavat toimenpide-avain)))
             :sorateiden-hoito (do
                                 (is (= (into #{} (keys ryhmiteltyna))
-                                       #{["vahinkojen-korjaukset" nil]
-                                         ["akillinen-hoitotyo" nil]}))
+                                       #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
+                                         ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
                                 (doseq [[_ tehtavat] ryhmiteltyna]
                                   (testaa-ajat tehtavat toimenpide-avain)))
             :mhu-korvausinvestointi (is (= ryhmiteltyna {}))
             :mhu-johto (do
                          (is (= (into #{} (keys ryhmiteltyna))
-                                #{["laskutettava-tyo" nil]
-                                  ["laskutettava-tyo" "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."]
-                                  ["laskutettava-tyo" "Hoitourakan työnjohto"]}))
+                                #{["laskutettava-tyo" :erillishankinnat]
+                                  ["laskutettava-tyo" :toimistokulut]
+                                  ["laskutettava-tyo" :hoidonjohtopalkkio]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
                            (testaa-ajat tehtavat toimenpide-avain)))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
@@ -193,6 +193,21 @@
                                                    [[hoitokausi :molemmat]])
                                                  (range 1 6)))
                                    (into #{} (keys (group-by (juxt :hoitokausi :maksukausi) tiedot)))))))))))
+
+(deftest indeksikertoimien-haku
+  (let [rovaniemi-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+        ivalo-urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        pellon-urakka-id (hae-pellon-maanteiden-hoitourakan-id)
+        ;; Indeksi lyödään automaagisesti urakalle, josta syystä Pellolla saattaa olla vanha indeksi käytössä
+        _ (u (str "UPDATE urakka SET indeksi = 'MAKU 2015' WHERE id = " pellon-urakka-id ";"))
+        kuluvan-hoitokauden-aloitusvuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
+
+        db (:db jarjestelma)
+
+        rovaniemen-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
+        ivalon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
+        pellon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
+    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")))
 
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
@@ -672,6 +687,11 @@
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
     (testing "budjetoidut-tyot kutsun oikeustarkistus"
       (is (= (try+ (bs/hae-urakan-budjetoidut-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+                   (catch harja.domain.roolit.EiOikeutta eo#
+                     :ei-oikeutta-virhe))
+             :ei-oikeutta-virhe)))
+    (testing "hae-urakan-indeksikertoimet"
+      (is (= (try+ (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                    (catch harja.domain.roolit.EiOikeutta eo#
                      :ei-oikeutta-virhe))
              :ei-oikeutta-virhe)))

@@ -14,7 +14,8 @@
              [urakat :as urakat-q]
              [kiinteahintaiset-tyot :as kiin-q]
              [kustannusarvioidut-tyot :as ka-q]
-             [toimenpideinstanssit :as tpi-q]]
+             [toimenpideinstanssit :as tpi-q]
+             [indeksit :as i-q]]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]]
@@ -28,8 +29,11 @@
 
 (defn- key-from-val [m v]
   (some (fn [[k v_]]
-          (when (= v v_)
-            k))
+          (if (map? v_)
+            (when (key-from-val v_ v)
+              k)
+            (when (= v v_)
+              k)))
         m))
 
 (def ^{:private true} toimenpide-avain->toimenpide
@@ -57,17 +61,21 @@
   (key-from-val tallennettava-asia->tyyppi v))
 
 (def ^{:private true} tallennettava-asia->tehtava
-  {:hoidonjohtopalkkio                         "Hoitourakan työnjohto"
-   :toimistokulut                              "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-   :kolmansien-osapuolten-aiheuttamat-vahingot "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen"
-   :akilliset-hoitotyot                        "Äkillinen hoitotyö"})
+  {:hoidonjohtopalkkio "c9712637-fbec-4fbd-ac13-620b5619c744"
+   :toimistokulut "8376d9c4-3daf-4815-973d-cd95ca3bb388"
+   :kolmansien-osapuolten-aiheuttamat-vahingot {:talvihoito "49b7388b-419c-47fa-9b1b-3797f1fab21d"
+                                                :liikenneympariston-hoito "63a2585b-5597-43ea-945c-1b25b16a06e2"
+                                                :sorateiden-hoito "b3a7a210-4ba6-4555-905c-fef7308dc5ec"}
+   :akilliset-hoitotyot {:talvihoito "1f12fe16-375e-49bf-9a95-4560326ce6cf"
+                         :liikenneympariston-hoito "1ed5d0bb-13c7-4f52-91ee-5051bb0fd974"
+                         :sorateiden-hoito "d373c08b-32eb-4ac2-b817-04106b862fb1"}})
 
 (defn- tehtava->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtava v))
 
 (def ^{:private true} tallennettava-asia->tehtavaryhma
-  {:erillishankinnat        "ERILLISHANKINNAT (W)"
-   :rahavaraus-lupaukseen-1 "TILAAJAN RAHAVARAUS (T3)"})
+  {:erillishankinnat        "37d3752c-9951-47ad-a463-c1704cf22f4c"
+   :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"})
 
 (defn- tehtavaryhma->tallennettava-asia [v]
   (key-from-val tallennettava-asia->tehtavaryhma v))
@@ -76,6 +84,38 @@
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-budjettitavoite db {:urakka urakka-id}))
+
+(defn hae-urakan-indeksikertoimet
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
+          {::ur/keys [alkupvm loppupvm indeksi]} (first (fetch db
+                                                                   ::ur/urakka
+                                                                   #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                                   {::ur/id urakka-id}))
+          urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+          urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+          perusluku (float (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id}))))
+          indeksiluvut-urakan-aikana (sequence
+                                       (comp (filter (fn [{:keys [kuukausi vuosi]}]
+                                                       (and (= 9 kuukausi)
+                                                            (>= vuosi (dec urakan-alkuvuosi)))))
+                                             (remove (fn [{:keys [vuosi]}]
+                                                       (>= vuosi (dec urakan-loppuvuosi))))
+                                             (map (fn [{:keys [arvo vuosi]}]
+                                                    ;; Vuoden indeksi lasketaan edellisen vuoden arvoista
+                                                    {:vuosi (inc vuosi)
+                                                     :indeksikerroin (pyorista (/ arvo perusluku) 6)})))
+                                       (i-q/hae-indeksi db {:nimi indeksi}))
+          urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
+      (if (= 5 urakan-indeksien-maara)
+        (vec indeksiluvut-urakan-aikana)
+        (mapv (fn [index]
+                (if (> (inc index) urakan-indeksien-maara)
+                  (nth indeksiluvut-urakan-aikana (dec urakan-indeksien-maara))
+                  (nth indeksiluvut-urakan-aikana index)))
+              (range 0 5))))))
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.
@@ -111,9 +151,9 @@
     (map (fn [tyo]
            (-> tyo
                (assoc :toimenpide-avain (toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
-               (assoc :haettu-asia (or (tehtava->tallennettava-asia (:tehtava-nimi tyo))
-                                       (tehtavaryhma->tallennettava-asia (:tehtavaryhman-nimi tyo))))
-               (dissoc :toimenpiteen-koodi :tehtavan-nimi :tehtavaryhman-nimi)))
+               (assoc :haettu-asia (or (tehtava->tallennettava-asia (:tehtavan-tunniste tyo))
+                                       (tehtavaryhma->tallennettava-asia (:tehtavaryhman-tunniste tyo))))
+               (dissoc :toimenpiteen-koodi :tehtavan-tunniste :tehtavaryhman-tunniste)))
          kustannusarvoidut-tyot)))
 
 (defn hae-urakan-johto-ja-hallintokorvaukset [db urakka-id]
@@ -354,11 +394,8 @@
   (jdbc/with-db-transaction [db db]
                             (let [{tehtava-id ::tpk/id} (when tehtava
                                                           (first (fetch db ::tpk/toimenpidekoodi
-                                                                        #{::tpk/id
-                                                                          ;; Tämä join pitää hakea, jotta tuo where claussin join toimii
-                                                                          [::tpk/toimenpidekoodi-join #{::tpk/nimi}]}
-                                                                        {::tpk/nimi                 tehtava
-                                                                         ::tpk/toimenpidekoodi-join {::tpk/koodi toimenpide}})))
+                                                                        #{::tpk/id}
+                                                                        {::tpk/yksiloiva-tunniste                 tehtava})))
                                   {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
                                                                          #{::tpk/id}
                                                                          {::tpk/taso  3
@@ -366,7 +403,7 @@
                                   {tehtavaryhma-id ::tr/id} (when tehtavaryhma
                                                               (first (fetch db ::tr/tehtavaryhma
                                                                             #{::tr/id}
-                                                                            {::tr/nimi tehtavaryhma})))
+                                                                            {::tr/yksiloiva-tunniste tehtavaryhma})))
                                   {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
                                   _ (when (nil? toimenpideinstanssi-id)
                                       (throw (Exception. "Toimenpideinstanssia ei löydetty")))
@@ -427,6 +464,9 @@
   (jdbc/with-db-transaction [db db]
                             (let [tyyppi (tallennettava-asia->tyyppi tallennettava-asia)
                                   tehtava (tallennettava-asia->tehtava tallennettava-asia)
+                                  tehtava (if (map? tehtava)
+                                            (get tehtava toimenpide-avain)
+                                            tehtava)
                                   tehtavaryhma (tallennettava-asia->tehtavaryhma tallennettava-asia)
                                   toimenpide (toimenpide-avain->toimenpide toimenpide-avain)]
                               (tallenna-kustannusarvioitu-tyo! db user {:tyyppi       tyyppi
@@ -450,6 +490,11 @@
           (julkaise-palvelu
             :budjettitavoite (fn [user tiedot]
                                (hae-urakan-tavoite db user tiedot)))
+          (julkaise-palvelu
+            :budjettisuunnittelun-indeksit (fn [user tiedot]
+                                             (hae-urakan-indeksikertoimet db user tiedot))
+            {:kysely-spec ::bs-p/budjettisuunnittelun-indeksit-kysely
+             :vastaus-spec ::bs-p/budjettisuunnittelun-indeksit-vastaus})
           (julkaise-palvelu
             :tallenna-budjettitavoite (fn [user tiedot]
                                         (tallenna-urakan-tavoite db user tiedot))
@@ -480,6 +525,7 @@
     (poista-palvelut (:http-palvelin this)
                      :budjetoidut-tyot
                      :budjettitavoite
+                     :budjettisuunnittelun-indeksit
                      :tallenna-budjettitavoite
                      :tallenna-kiinteahintaiset-tyot
                      :tallenna-johto-ja-hallintokorvaukset
