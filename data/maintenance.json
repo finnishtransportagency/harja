@@ -1,4 +1,9 @@
 [
+    {
+    "date": "2019-11-29",
+    "title": "Harja-API:sta on julkaistu versio 1.0.46.",
+    "body": "Työkoneseurantarajapintoihin on lisätty työkoneelle uusi tieto tunnus. Kenttä on alfanumeerinen ja sitä käytetään työkoneen yksilöimiseen. Tieto välittyy Harjan lisäksi Liikennetilannepalveluun."  
+  },
   {
     "date": "2018-07-19",
     "title": "Tietyöilmoitus PDF lomakkeen lähetys suoraan Harjasta Tieliikennekeskukseen sähköpostitse",
