@@ -17,6 +17,7 @@
       "havainto": {
         "tyokone": {
           "id": 999,
+          "tunnus": "HUI333-X",
           "tyokonetyyppi": "aura-auto"
         },
         "sijainti": {

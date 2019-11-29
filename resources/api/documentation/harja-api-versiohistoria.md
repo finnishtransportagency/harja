@@ -2,10 +2,14 @@
 <b>Julkaistu: 12.2.2019</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.46 Julkaistu 22.11.2019
+    - Työkoneseurantarajapintaan alfanumeerinen tieto: tunnus. Tunnus yksilöi käytetyn työkoneen.
+- Versionumero 1.0.45 Julkaistu 4.6.2019
+    - Uusi urakkatyyppi: teiden-hoito. Palautetaan Harjasta kuitenkin edelleen tyyppinä hoito.
 - Versionumero 1.0.44 Julkaistu 26.2.2019
-    - Pistetoteuman kirjauksen ja työkoneseurannan kirjauksen sisällössä pitää antaa jotain sijaintikentälle
+    - Pistetoteuman kirjauksen ja työkoneseurannan kirjauksen sisällössä pitää antaa jotain sijaintikentälle.
 - Versionumero 1.0.43 Julkaistu 14.2.2019
-    - Paikkauskohteita voi poistaa uuden rajapinnan kautta
+    - Paikkauskohteita voi poistaa uuden rajapinnan kautta.
 - Versionumero 1.0.42 Julkaistu 12.2.2019
     - Piste- ja reittitoteumakirjausten mukana voi nyt ilmoittaa työkonetyypin.
 - Versionumero 1.0.41 Julkaistu 8.2.2019
@@ -15,7 +19,7 @@
 - Versionumero 1.0.39 Julkaistu 11.12.2018
     - Päällystysilmoituksen kirjaus rajapinta on muuttunut. Pääkohteelle ei ilmoiteta kaistaa eikä ajorataa, mutta nämä tiedot on annettava alikohteille sekä alustalle tehdyille toimenpiteille.
 - Versionumero 1.0.38 Julkaistu 22.11.2018
-    - Urakoiden haku palauttaa Liikenneviraston järjestelmille kaikki urkat
+    - Urakoiden haku palauttaa Liikenneviraston järjestelmille kaikki urkat.
     - Mahdollisuus hakea urakat tyypeittäin.
     - Mahdollisuus hakea ylläpitokohdeosien geometriat.
 - Versionumero 1.0.37 Julkaistu 27.07.2018
@@ -36,21 +40,21 @@
 - Versionumero: 1.0.32 Julkaistu: 28.2.2018:
     - Ylläpitokohteiden ja päällystysilmoituksen päivitys ottaa nyt vastaan uuden, vapaaehtoisen hyppy-kentän alikohteelle. Jos sen arvo on true, merkitään alikohde hypyksi. Urakan kohteiden haku palauttaa tiedon, onko kyseessä hyppy-alikohde.
 - Versionumero: 1.0.31 Julkaistu: 1.2.2018:
-    - Lisätty uudet rajapinnat paikkauksille sekä niiden hinnoitteluille
+    - Lisätty uudet rajapinnat paikkauksille sekä niiden hinnoitteluille.
 - Versionumero: 1.0.30 Julkaistu: 27.11.2017:
-    - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan
+    - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan.
 - Versionumero: 1.0.29 Julkaistu: 3.11.2017:
     - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille. 
 - Versionumero: 1.0.28 Julkaistu: 21.9.2017:
     - Ilmoituskuittausten kautta voidaan ilmoittaa lopetuksen yhteydessä aiheuttiko ilmoitus toimenpiteitä vai ei.
 - Versionumero: 1.0.27 Julkaistu: 11.9.2017:
-    - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei
+    - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei.
 - Versionumero: 1.0.26 Julkaistu: 26.5.2017:
     - Ylläpitokohteiden päivityksessä ja päällystysilmoituksen kirjauksessa voi antaa karttapäivämäärän, jonka mukaan osoite muunnetaan uusimmalle verkolle. Samoin ylläpitokohteiden mukana välitetään tieto, minkä päivän verkolla ylläpitokohteet ovat Harjassa.
 - Versionumero: 1.0.25 Julkaistu: 15.5.2017:
-    - Mahdollisuus raportoida urakan työtunnit vuosikolmanneksittain
+    - Mahdollisuus raportoida urakan työtunnit vuosikolmanneksittain.
 - Versionumero: 1.0.24 Julkaistu: 5.5.2017:
-    - Siltatarkastuksille on mahdollista tallentaa tarkastuskohtaisesti liitteitä 
+    - Siltatarkastuksille on mahdollista tallentaa tarkastuskohtaisesti liitteitä.
 - Versionumero: 1.0.23 Julkaistu: 19.4.2017:
     - Ylläpidon urakoiden aikataulun kirjauksesta poistettu kenttä tiemerkinta-takaraja. Vain tilaaja voi muuttaa kyseistä arvoa, joten tätä ei ole tarkoitus muokata urakoitsijan rajapinnasta.
 - Versionumero: 1.0.22 Julkaistu: 18.4.2017:
