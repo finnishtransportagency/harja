@@ -3,8 +3,7 @@
    joku rivi näyttää vaan jätetään se käyttäjän vastuulle"
   (:require [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko-debug :as debug]
-            [clojure.spec.alpha :as s]
-            [harja.loki :as loki]))
+            [clojure.spec.alpha :as s]))
 
 (defonce tyhja-arvo (gensym))
 
@@ -41,7 +40,7 @@
                        rivit)))
 
 (defn tee-rivi [jana args]
-  (let [jana-fn #(jana (keyword (gensym "jana-")) % #{"jana"})]
+  (let [jana-fn #(jana (keyword (gensym "jana-")) % #{"jana" "janan-rivi" "table-default"})]
     (loop [rivi []
            args (vec args)]
       (if (= 0 (count args))
@@ -122,9 +121,19 @@
 
   (lisaa-rivi! [this rivin-tiedot a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukko! (:taulukon-paivitys-fn! parametrit)
-          {:keys [avain rivi]} rivin-tiedot
+          {:keys [avain rivi alkuun? rivin-parametrit]} rivin-tiedot
+          {:keys [on-click]} rivin-parametrit
           args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])
-          paivitetty-taulukko (update this :rivit (fn [m] (conj m (tee-rivi rivi args))))]
+          paivitetty-taulukko (update this
+                                      :rivit
+                                      (fn [m]
+                                        (into []
+                                              (let [rivi (-> rivi
+                                                             (tee-rivi args)
+                                                             (p/aseta-arvo :on-click on-click))]
+                                                (if alkuun?
+                                                  (cons rivi m)
+                                                  (conj m rivi))))))]
       (paivita-taulukko! paivitetty-taulukko)))
   (lisaa-rivi! [this rivin-avain a1 a2 a3 a4 a5 a6]
     (p/lisaa-rivi! this rivin-avain a1 a2 a3 a4 a5 a6 tyhja-arvo))

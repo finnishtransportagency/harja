@@ -5,7 +5,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.taulukko.kaytokset :as kaytokset]))
+            [harja.ui.taulukko.kaytokset :as kaytokset]
+            [harja.loki :as loki]))
 
 (def ^:dynamic *this* nil)
 

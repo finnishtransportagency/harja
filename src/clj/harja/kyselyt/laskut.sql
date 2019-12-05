@@ -12,6 +12,35 @@ WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
+-- name: hae-kaikki-urakan-laskuerittelyt
+-- Hakee kaikki urakan laskut ja niihin liittyvät kohdistukset
+SELECT l.id                   as "laskun-id",
+       l.viite                as "viite",
+       l.kokonaissumma        as "kokonaissumma",
+       l.erapaiva             as "erapaiva",
+       l.tyyppi               as "tyyppi",
+       lk.rivi                as "rivi",
+       lk.summa               as "summa",
+       lk.toimenpideinstanssi as "toimenpideinstanssi",
+       lk.tehtavaryhma        as "tehtavaryhma",
+       lk.tehtava             as "tehtava",
+       lk.suorittaja          as "suorittaja-id",
+       a.nimi                 as "suorittaja-nimi",
+       lk.suoritus_alku       as "suoritus-alku",
+       lk.suoritus_loppu      as "suoritus-loppu",
+       liite.id               AS "liite-id",
+       liite.nimi             AS "liite-nimi",
+       liite.tyyppi           AS "liite-tyyppi",
+       liite.koko             AS "liite-koko",
+       liite.liite_oid        AS "liite-oid"
+from lasku l
+       JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
+       LEFT JOIN lasku_liite ll on l.id = ll.lasku
+       LEFT JOIN liite liite on ll.liite = liite.id
+       JOIN aliurakoitsija a on lk.suorittaja = a.id
+WHERE l.urakka = :urakka
+  AND l.poistettu IS NOT TRUE;
+
 -- name: hae-urakan-laskuerittelyt
 -- Hakee urakan laskut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT l.id                   as "laskun-id",
@@ -28,7 +57,6 @@ SELECT l.id                   as "laskun-id",
        a.nimi                 as "suorittaja-nimi",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
-       l.tyyppi               as "tyyppi",
        liite.id               AS "liite-id",
        liite.nimi             AS "liite-nimi",
        liite.tyyppi           AS "liite-tyyppi",
@@ -87,15 +115,14 @@ ON CONFLICT (viite) DO UPDATE
 
 -- name: luo-tai-paivita-laskun-kohdistus<!
 INSERT
-INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, tehtava, maksueratyyppi, suorittaja, suoritus_alku,
+INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suorittaja, suoritus_alku,
                       suoritus_loppu, luotu, luoja)
-VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :tehtava, :maksueratyyppi ::MAKSUERATYYPPI, :suorittaja, :alkupvm, :loppupvm,
+VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :suorittaja, :alkupvm, :loppupvm,
         current_timestamp, :kayttaja)
 ON CONFLICT (lasku, rivi) DO UPDATE
   SET summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
-    tehtava = :tehtava,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
     suorittaja = :suorittaja,
     suoritus_alku = :alkupvm,

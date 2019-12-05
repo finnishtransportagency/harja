@@ -9,6 +9,10 @@ WHERE nimi = :nimi;
 SELECT id, nimi, ytunnus
 FROM aliurakoitsija;
 
+-- name: tallenna-aliurakoitsija<!
+insert into aliurakoitsija (nimi, ytunnus, luotu, luoja)
+values (:nimi, :ytunnus, current_timestamp, :kayttaja);
+
 -- name: luo-aliurakoitsija<!
 INSERT INTO aliurakoitsija (nimi, luotu, luoja)
 VALUES (:nimi, current_timestamp, :kayttaja);

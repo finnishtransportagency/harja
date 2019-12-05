@@ -68,7 +68,12 @@
                  "Tulisi palauttaa taulukko")
   (paivita-solu! [this paivitetty-osa] [this paivitetty-osa a1] [this paivitetty-osa a1 a2] [this paivitetty-osa a1 a2 a3] [this paivitetty-osa a1 a2 a3 a4] [this paivitetty-osa a1 a2 a3 a4 a5] [this paivitetty-osa a1 a2 a3 a4 a5 a6] [this paivitetty-osa a1 a2 a3 a4 a5 a6 a7]
                  "Tulisi palauttaa taulukko")
-  (lisaa-rivi! [this rivin-avain] [this rivin-avain a1] [this rivin-avain a1 a2] [this rivin-avain a1 a2 a3] [this rivin-avain a1 a2 a3 a4] [this rivin-avain a1 a2 a3 a4 a5] [this rivin-avain a1 a2 a3 a4 a5 a6] [this rivin-avain a1 a2 a3 a4 a5 a6 a7]))
+  (lisaa-rivi! [this rivin-avain]
+               [this rivin-avain a1]
+               [this rivin-avain a1 a2]
+               [this rivin-avain a1 a2 a3]
+               [this rivin-avain a1 a2 a3 a4]
+               [this rivin-avain a1 a2 a3 a4 a5] [this rivin-avain a1 a2 a3 a4 a5 a6] [this rivin-avain a1 a2 a3 a4 a5 a6 a7]))
 
 (defprotocol TilanSeuranta
   "Tämän avulla lisätään taulukon asiaan derefable renderöinti funktioon, jonka seurauksena asia renderöidään uudestaan.

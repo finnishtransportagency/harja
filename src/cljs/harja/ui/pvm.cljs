@@ -164,12 +164,13 @@
 (defn pvm-valintakalenteri-inputilla
   [optiot]
   (let [auki? (atom false)]
-    (fn [{:keys [pvm valitse valittava?-fn]}]
+    (fn [{:keys [pvm valitse luokat valittava?-fn]}]
       [:div
-       [:input.form-control {:type     :text
-                             :value    (when-not (nil? pvm) (str (.getDate pvm) "." (.getMonth pvm) "." (.getYear pvm)))
-                             :on-focus #(reset! auki? true)
-                             :on-blur  (fn [] (js/setTimeout #(reset! auki? false) 100))}]
+       [:input {:type     :text
+                :class    (apply conj #{} (filter #(not (nil? %)) luokat))
+                :value    (when-not (nil? pvm) (str (.getDate pvm) "." (.getMonth pvm) "." (.getYear pvm)))
+                :on-focus #(reset! auki? true)
+                :on-blur  (fn [] (js/setTimeout #(reset! auki? false) 100))}]
        (when @auki? [pvm-valintakalenteri {:valitse       valitse
                                            :valittava?-fn #(true? true)
-                                           :pvm pvm}])])))
+                                           :pvm           pvm}])])))

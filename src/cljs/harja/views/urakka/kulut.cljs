@@ -11,6 +11,7 @@
             [harja.ui.taulukko.tyokalut :as tyokalu]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.modal :as modal]
+            [harja.ui.liitteet :as liitteet]
             [harja.loki :refer [log]]
             [harja.loki :as loki]
             [harja.ui.yleiset :as yleiset]
@@ -33,170 +34,218 @@
       (partial p/aseta-arvo osa)
       avain-arvot)))
 
-(defn alihankkija-modaali
-  [paivitys-fn tallennus-fn sulku-fn {:keys [nimi ytunnus] :as alihankkija}]
-  [:div.peitto-modal
-   [:div.peitto-kontentti
-    [:h1 "Lisää alihankkija"
-     [:input {:type  :button
-              :value "X"}]]
-    [:label "Yrityksen nimi"
-     [:input.form-control
-      {:type      :text
-       :value     nimi
-       :on-change #(paivitys-fn (assoc alihankkija :nimi (-> % .-target .-value)))}]]
-    [:label "Y-tunnus"
-     [:input.form-control
-      {:type      :text
-       :value     ytunnus
-       :on-change #(paivitys-fn (assoc alihankkija :ytunnus (-> % .-target .-value)))}]]
-    [:div
-     [:button
-      {:class    #{"tallenna"}
-       :on-click tallennus-fn}
-      "Tallenna"]
-     [:button
-      {:class    #{"sulje"}
-       :on-click sulku-fn}
-      "Sulje"]]]])
+(defn aliurakoitsija-modaali
+  [_ _]
+  (let [tila (r/atom {})]
+    (fn [tallennus-fn sulku-fn]
+      (let [{:keys [nimi ytunnus]} @tila]
+        [:div.peitto-modal
+         [:div.peitto-kontentti
+          [:h1 "Lisää aliurakoitsija"
+           [:input {:type  :button
+                    :value "X"}]]
+          [:label "Yrityksen nimi"
+           [:input.input-default.komponentin-input
+            {:type      :text
+             :value     nimi
+             :on-change #(swap! tila assoc :nimi (-> % .-target .-value))}]]
+          [:label "Y-tunnus"
+           [:input.input-default.komponentin-input
+            {:type      :text
+             :value     ytunnus
+             :on-change #(swap! tila assoc :ytunnus (-> % .-target .-value))}]]
+          [:div
+           [:button
+            {:class    #{"tallenna"}
+             :on-click #(tallennus-fn @tila)}
+            "Tallenna"]
+           [:button
+            {:class    #{"sulje"}
+             :on-click sulku-fn}
+            "Sulje"]]]]))))
 
 (defn- validoi
   [pakolliset objekti]
   (some #(not (get % pakolliset)) (keys objekti)))
 
-(defn droppari-lisakamppeella
-  [{:keys [valittu valinnat valitse-fn formaatti-fn]} komponentti nayta-kun]
-  [:div
-   [yleiset/livi-pudotusvalikko
-    {:valinta    valittu
-     :valitse-fn valitse-fn
-     :format-fn  formaatti-fn}
-    valinnat]
-   komponentti])
+(defn alasveto-toiminnolla
+  [_ _]
+  (let [auki? (r/atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn]}]
+        (loki/log valinnat valittu)
+        [:div {:class #{"select-default" (when @auki? "open")}}
+         [:button.nappi-alasveto
+          [:div.valittu {:on-click #(swap! auki? not)}
+           (or (formaatti-fn valittu)
+               "Ei valittu")]]
+         [:ul {:style {:display (if @auki?
+                                  "block"
+                                  "none")}}
+          (for [v valinnat]
+            [:li.harja-alasvetolistaitemi
+             {:on-click #(do
+                           (swap! auki? not)
+                           (valinta-fn v))}
+             [:span (formaatti-fn v)]])
+          [:li.harja-alasvetolistaitemi [toiminto {:sulje #(swap! auki? not)}]]]]))))
+
+(def kuukaudet-strs {:tammikuu  "Tammikuu"
+                     :helmikuu  "Helmikuu"
+                     :maaliskuu "Maaliskuu"
+                     :huhtikuu  "Huhtikuu"
+                     :toukokuu  "Toukokuu"
+                     :kesakuu   "Kesäkuu"
+                     :heinakuu  "Heinäkuu"
+                     :elokuu    "Elokuu"
+                     :syyskuu   "Syyskuu"
+                     :lokakuu   "Lokakuu"
+                     :marraskuu "Marraskuu"
+                     :joulukuu  "Joulukuu"})
+
+(defn lisaa-kohdistus [m]
+  (conj m {:tehtavaryhma        nil
+           :toimenpideinstanssi nil
+           :suorittaja-nimi     nil
+           :summa               nil
+           :rivi                (count m)}))
+
+(defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
+
+(defn lisatiedot [paivitys-fn {:keys [aliurakoitsija] :as lomake} e! aliurakoitsijat]
+  [:div.col-sm-6.col-xs-12
+   [:h2 "Lisätiedot"]
+   [:div
+    [:label "Aliurakoitsija"]
+    [alasveto-toiminnolla
+     (fn [{sulje :sulje}]
+       [:div
+        {:on-click #(do
+                      (sulje)
+                      (paivitys-fn :nayta :aliurakoitsija-modaali))}
+        "Lisää aliurakoitsija"])
+     {:valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
+      :valinnat     aliurakoitsijat
+      :valinta-fn   #(paivitys-fn :aliurakoitsija (:id %)
+                                  :kohdistukset (fn [kohdistukset] (mapv (fn [m] (assoc m :suorittaja-nimi (:nimi %))) kohdistukset)))
+      :formaatti-fn #(get % :nimi)}]
+    [:label "Aliurakoitsijan y-tunnus"]
+    [:div.select-default [:button.nappi-alasveto {:disabled true}
+                          [:div.valittu (or (some #(when (= aliurakoitsija (:id %)) (:ytunnus %)) aliurakoitsijat)
+                                            "Y-tunnus puuttuu")]]]]
+   [:div
+    [:label "Kirjoita tähän halutessasi lisätietoa"]
+    [:input.input-default.komponentin-input
+     {:type      :text
+      :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))}]]
+   [:div
+    [:label "Liite"]
+    [liitteet/lisaa-liite (-> @tila/yleiset :urakka :id) {:liite-ladattu #(e! (tiedot/->LiiteLisatty %))}]
+    ;:kuvaus, :fileyard-hash, :urakka, :nimi,
+    ;:id,:lahde,:tyyppi, :koko 65528
+    ]])
+
+(defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi erapaiva viite kohdistukset] :as lomake}]
+  [:div.col-sm-6.col-xs-12
+   [:h2 "Koontilaskun tiedot"]
+   [:div
+    [:label.alasvedon-otsikko "Koontilaskun kuukausi"]
+    [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
+                                  :valinta      koontilaskun-kuukausi
+                                  :valitse-fn   #(paivitys-fn :koontilaskun-kuukausi %)
+                                  :format-fn    #(get kuukaudet-strs %)}
+     kuukaudet]]
+   [:div
+    [:label "Laskun pvm"]
+    [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :erapaiva %)
+                                                 :luokat        #{"input-default" "komponentin-input"}
+                                                 :pvm           erapaiva
+                                                 :pakota-suunta false
+                                                 :valittava?-fn #(true? true)}]]
+   [:div
+    [:label "Laskun viite"]
+    [:input.input-default.komponentin-input
+     {:type      :text
+      :value     viite
+      :on-change #(paivitys-fn :viite (-> % .-target .-value))}]]
+   [:div
+    [:label "Koontilaskun numero"]
+    [:input.input-default.komponentin-input
+     {:type      :text
+      :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))}]]
+   (when (< (count kohdistukset) 2)
+     [:div
+      [:label "Määrä"]
+      [:input.input-default.komponentin-input
+       {:type      :text
+        :value     (or (get-in lomake [:kohdistukset 0 :summa])
+                       0)
+        :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value js/parseFloat))}]])])
+
+(defn tehtavaryhma-maara
+  [{:keys [tehtavaryhmat kohdistukset-lkm paivitys-fn]} indeksi t]
+  (let [{:keys [tehtavaryhma summa]} t]
+    (loki/log "TR" tehtavaryhma)
+    [:div.lomake-rivi
+     [:div.row
+      [:div.col-xs-12.col-sm-6
+       [:label "Tehtäväryhmä"]
+       [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
+                                     :valinta      tehtavaryhma
+                                     :valitse-fn   #(paivitys-fn [:kohdistukset indeksi :tehtavaryhma] (:id %)
+                                                                 [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
+                                     :format-fn    #(get % :tehtavaryhma)}
+        tehtavaryhmat]]]
+     (when (> kohdistukset-lkm 1)
+       [:div.row
+        [:div.col-xs-12.col-sm-6
+         [:label "Määrä"]
+         [:input.input-default.komponentin-input
+          {:type      :text
+           :value     summa
+           :on-change #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value js/parseFloat))}]]]
+       )]))
+
+(defn tehtavien-syotto [paivitys-fn {:keys [kohdistukset] :as lomake} tehtavaryhmat]
+  (let [kohdistukset-lkm (count kohdistukset)]
+    [:div.col-xs-12.col-sm-6
+     [:input#kulut-kohdistuvat-useammalle.vayla-checkbox {:type      :radio
+                                                          :on-change #(paivitys-fn :kohdistukset lisaa-kohdistus)}]
+     [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]
+     (into [:div] (map-indexed (r/partial tehtavaryhma-maara {:tehtavaryhmat tehtavaryhmat :kohdistukset-lkm kohdistukset-lkm :paivitys-fn paivitys-fn}) kohdistukset))
+     (when (> kohdistukset-lkm 1)
+       [:div.row
+        [:div.col-xs-12.col-sm-6 {:on-click #(paivitys-fn :kohdistukset lisaa-kohdistus)} "+ lisää juttuja"]])]))
 
 (defn- kulujen-syottolomake
-  [e! {:keys [toimenpiteet tehtavaryhmat aliurakoitsijat] :as app}]
-  (let [lomakkeen-tila (r/atom {:validi?               false
-                                :nayta                 nil
-                                :aliurakoitsijat       []
-                                :tehtavat-lkm          1
-                                :tehtavat              [{:tehtavaryhma nil
-                                                         :maara        nil}]
-                                :koontilaskun-kuukausi nil
-                                :koontilaskun-era      nil})
-        lisaa-tehtava (fn [m]
-                        (-> m
-                            (update :tehtavat-lkm inc)
-                            (update :tehtavat conj {:tehtava      nil
-                                                    :tehtavaryhma nil
-                                                    :sijainti     nil
-                                                    :maara        nil})))
-        paivitys-fn (fn [& polut-ja-arvot]
+  [e! _]
+  (let [paivitys-fn (fn [& polut-ja-arvot]
                       (e! (tiedot/->PaivitaLomake polut-ja-arvot)))]
-    (fn [e! {:keys [syottomoodi lomake]}]
-      (let [{:keys [tehtavat tehtavat-lkm nayta validi? koontilaskun-kuukausi koontilaskun-pvm koontilaskun-era alihankkija alihankkijat]} @lomakkeen-tila
-            validointi-fn (partial validoi #{:maara :koontilaskun-kuukausi})
-            kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu]
-            erat [:era-1 :era-2 :era-3 :muu]]
+    (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
+      (let [{:keys [nayta]} lomake
+            validointi-fn (partial validoi #{:summa :koontilaskun-kuukausi})]
         [:div
          [debug/debug @tila/yleiset]
          [debug/debug lomake]
          [:div.row
           [:h1 "Uusi kulu"]
-          [:input {:type      :radio
-                   :on-change #(paivitys-fn :tehtavat lisaa-tehtava)}]
-          [:label "Kulut kohdistuvat useammalle eri tehtävälle"]]
-         (into [:div] (keep-indexed (fn [indeksi t]
-                                      (let [{:keys [tehtavaryhma maara]} t]
-                                        [:div.lomake-rivi
-                                         [:div.row
-                                          [:div.col-xs-12.col-sm-6.label-ja-alasveto
-                                           [:label "Tehtäväryhmä"]
-                                           [yleiset/livi-pudotusvalikko {:valinta    tehtavaryhma
-                                                                         :valitse-fn #(paivitys-fn [:tehtavat indeksi :tehtavaryhma] %)
-                                                                         :format-fn  #(get % :tehtavaryhma)}
-                                            tehtavaryhmat]]]
-                                         (when (> tehtavat-lkm 1)
-                                           [:div.row
-                                            [:div.col-xs-12.col-sm-6
-                                             [:label "Määrä"]
-                                             [:input.form-control
-                                              {:type      :text
-                                               :value     maara
-                                               :on-change #(paivitys-fn [:tehtavat indeksi :maara] (-> % .-target .-value js/parseFloat))}]]]
-                                           )])) tehtavat))
-         (when (> tehtavat-lkm 1)
-           [:div.row
-            [:div.col-xs-12.col-sm-6 {:on-click #(swap! lomakkeen-tila lisaa-tehtava)} "+ lisää juttu"]])
+          [tehtavien-syotto paivitys-fn lomake tehtavaryhmat]]
          [:div.row
-          [:div.col-sm-6.col-xs-12
-           [:h2 "Koontilaskun tiedot"]
-           [:div.col-xs-12.label-ja-alasveto.toimenpide
-            [:label.alasvedon-otsikko "Koontilaskun kuukausi"]
-            [yleiset/livi-pudotusvalikko {:valinta    koontilaskun-kuukausi
-                                          :valitse-fn #(paivitys-fn :koontilaskun-kuukausi %)
-                                          :format-fn  #(str "- " %)}
-             kuukaudet]]
-           [:div.col-xs-12
-            [:label "Laskun pvm"]
-            [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :koontilaskun-pvm %)
-                                                         :pvm           koontilaskun-pvm
-                                                         :pakota-suunta false
-                                                         :valittava?-fn #(true? true)}]]
-           [:div.col-xs-12
-            [:label "Laskun viite"]
-            [:input.form-control
-             {:type      :text
-              :on-change #(paivitys-fn :laskun-viite (-> % .-target .-value))}]]
-           [:div.col-xs-12
-            [:label "Laskun numero"]
-            [:input.form-control
-             {:type      :text
-              :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))}]]
-           (when (< tehtavat-lkm 2)
-             [:div.row
-              [:div.col-xs-12
-               [:label "Määrä"]
-               [:input.form-control
-                {:type      :text
-                 :on-change #(paivitys-fn [:tehtavat 0 :maara] (-> % .-target .-value js/parseFloat))}]]])]
-          [:div.col-sm-6.col-xs-12
-           [:h2 "Lisätiedot"]
-           [:div.col-xs-12
-            [:label "Alihankkija"]
-            [droppari-lisakamppeella {:valittu      alihankkija
-                                      :valinnat     alihankkijat
-                                      :valinta-fn   #(paivitys-fn :alihankkija %)
-                                      :formaatti-fn #(get % :nimi)}
-             #([:div "Oon kampe"])]
-            :kaikki]
-           [:div.col-xs-12
-            [:label {:on-click #(paivitys-fn :nayta :alihankkija-modaali)} "Alihankkijan y-tunnus"]
-            (when (= nayta :alihankkija-modaali)
-              [alihankkija-modaali
-               (fn [arvo]
-                 (paivitys-fn
-                   :alihankkija arvo))
-               (fn [] (paivitys-fn :alihankkijat
-                                   (fn [alihankkijat]
-                                     (conj alihankkijat alihankkija))))
-               #(paivitys-fn :nayta nil)
-               alihankkija])
-            [:input.form-control
-             {:type      :text
-              :value     (:ytunnus alihankkija)
-              :on-change #(paivitys-fn :ytunnus (-> % .-target .-value))}]]
-           [:div.col-xs-12
-            [:label "Kirjoita tähän halutessasi lisätietoa"]
-            [:input.form-control
-             {:type      :text
-              :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))}]]]]
+          [laskun-tiedot paivitys-fn lomake]
+          [lisatiedot paivitys-fn lomake e! aliurakoitsijat]]
          [:button {:class    #{"nappi" "nappi-ensisijainen"}
-                   :on-click #(e! (tiedot/->TallennaKulu @lomakkeen-tila))}
+                   :on-click #(e! (tiedot/->TallennaKulu))}
           "Tallenna"]
          [:button {:class    #{"nappi" "nappi-toissijainen"}
                    :on-click #(e! (tiedot/->KulujenSyotto (not syottomoodi)))}
-          "Peruuta"]]))))
+          "Peruuta!"]
+         (when (= nayta :aliurakoitsija-modaali)
+           [aliurakoitsija-modaali
+            (fn [arvo]
+              (e! (tiedot/->LuoUusiAliurakoitsija arvo))
+              (paivitys-fn :nayta nil))
+            #(paivitys-fn :nayta nil)])]))))
 
 (defn- luo-kulumodaali
   [e! app]
@@ -205,12 +254,12 @@
 (defn- luo-kulutaulukko
   []
   (loki/log "taulukon luonti")
-  (let [paivitysfunktiot {"kk/hoitov."   (luo-paivitys-fn
-                                           :id :kk-hoito-v
-                                           :arvo "kk/hoitov.")
-                          "Erä"          (luo-paivitys-fn
-                                           :id :era
-                                           :arvo "Erä")
+  (let [paivitysfunktiot {"Pvm"          (luo-paivitys-fn
+                                           :id :pvm
+                                           :arvo "Pvm")
+                          "Maksuerä"     (luo-paivitys-fn
+                                           :id :maksuera
+                                           :arvo "Maksuerä")
                           "Toimenpide"   (luo-paivitys-fn
                                            :id :toimenpide
                                            :arvo "Toimenpide")
@@ -235,7 +284,7 @@
                                   :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}
                         :kulut   {:janan-tyyppi jana/Rivi
                                   :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}}
-                       ["kk/hoitov." "Erä" "Toimenpide" "Tehtäväryhmä" "Määrä"]
+                       ["Pvm" "Maksuerä" "Toimenpide" "Tehtäväryhmä" "Määrä"]
                        [:otsikot otsikot-rivi
                         :kulut kulut-rivi]
                        {:class                 #{}

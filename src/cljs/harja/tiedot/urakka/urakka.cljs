@@ -5,14 +5,14 @@
             [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]))
 
-(def suunnittelu-default-arvot {:tehtavat {:valinnat {:samat-kaikille false
-                                                      :toimenpide nil
-                                                      :valitaso nil
-                                                      :noudetaan 0}}
-                                :kustannussuunnitelma {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
-                                                                                         :maksetaan :molemmat
-                                                                                         :kopioidaan-tuleville-vuosille? true
-                                                                                         :laskutukseen-perustuen-valinta #{}}}
+(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
+                                                                  :toimenpide     nil
+                                                                  :valitaso       nil
+                                                                  :noudetaan      0}}
+                                :kustannussuunnitelma {:hankintakustannukset        {:valinnat {:toimenpide                     :talvihoito
+                                                                                                :maksetaan                      :molemmat
+                                                                                                :kopioidaan-tuleville-vuosille? true
+                                                                                                :laskutukseen-perustuen-valinta #{}}}
                                                        :hallinnolliset-toimenpiteet {:valinnat {:maksetaan :molemmat}}
                                                        :kaskytyskanava              (chan)}})
 
@@ -30,6 +30,9 @@
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laskutus    {:kohdistetut-kulut {:meta        {:haetaan 0}
                                                        :taulukko    nil
+                                                       :lomake      {:kohdistukset [{:rivi         0
+                                                                                     :tehtavaryhma nil
+                                                                                     :summa        nil}]}
                                                        :kulut       []
                                                        :syottomoodi false}}
                      :suunnittelu suunnittelu-default-arvot}))

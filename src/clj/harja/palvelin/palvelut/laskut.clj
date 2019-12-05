@@ -31,6 +31,45 @@
                            :alkupvm  (:alkupvm hakuehdot)
                            :loppupvm (:loppupvm hakuehdot)}))
 
+
+(defn kasittele-kohdistukset
+  [laskukohdistukset]
+  (map
+    (fn [[id kohdistukset]]
+      (let [lasku (first kohdistukset)]
+        (into {} {:id            id
+                  :viite         (:viite lasku)
+                  :tyyppi        (:tyyppi lasku)
+                  :kokonaissumma (:kokonaissumma lasku)
+                  :erapaiva      (:erapaiva lasku)
+                  :liite-id      (:liite-id lasku)
+                  :liite-nimi    (:liite-nimi lasku)
+                  :liite-tyyppi  (:liite-tyyppi lasku)
+                  :liite-koko    (:liite-koko lasku)
+                  :liite-oid     (:liite-oid lasku)
+                  :kohdistukset  (into []
+                                       (map (fn [v]
+                                              (dissoc v :viite
+                                                      :tyyppi
+                                                      :kokonaissumma
+                                                      :erapaiva
+                                                      :liite-id
+                                                      :liite-nimi
+                                                      :liite-tyyppi
+                                                      :liite-koko
+                                                      :liite-oid))
+                                            kohdistukset))})))
+    laskukohdistukset))
+
+
+
+(defn hae-kaikki-urakan-laskuerittelyt
+  "Palauttaa urakan laskut valitulta ajanjaksolta laskuerittelyineen."
+  [db user hakuehdot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
+  (let [laskukohdistukset (group-by :laskun-id (q/hae-kaikki-urakan-laskuerittelyt db {:urakka (:urakka-id hakuehdot)}))]
+    (kasittele-kohdistukset laskukohdistukset)))
+
 (defn hae-urakan-laskuerittelyt
   "Palauttaa urakan laskut valitulta ajanjaksolta laskuerittelyineen."
   [db user hakuehdot]
@@ -38,29 +77,7 @@
   (let [laskukohdistukset (group-by :laskun-id (q/hae-urakan-laskuerittelyt db {:urakka   (:urakka-id hakuehdot)
                                                                                 :alkupvm  (:alkupvm hakuehdot)
                                                                                 :loppupvm (:loppupvm hakuehdot)}))]
-    (map #(into {} {:id            (first %)
-                    :viite         (:viite (second %))
-                    :tyyppi        (:tyyppi (second %))
-                    :kokonaissumma (:kokonaissumma (second %))
-                    :erapaiva      (:erapaiva (second %))
-                    :liite-id      (:liite-id (second %))
-                    :liite-nimi    (:liite-nimi (second %))
-                    :liite-tyyppi  (:liite-tyyppi (second %))
-                    :liite-koko    (:liite-koko (second %))
-                    :liite-oid     (:liite-oid (second %))
-                    :kohdistukset  (into []
-                                         (map (fn [v]
-                                                (dissoc v :viite
-                                                        :tyyppi
-                                                        :kokonaissumma
-                                                        :erapaiva
-                                                        :liite-id
-                                                        :liite-nimi
-                                                        :liite-tyyppi
-                                                        :liite-koko
-                                                        :liite-oid))
-                                              (second %)))})
-         laskukohdistukset)))
+    (kasittele-kohdistukset laskukohdistukset)))
 
 (defn hae-laskuerittely
   "Hakee yksittäisen laskun tiedot laskuerittelyineen."
@@ -89,6 +106,7 @@
 (defn luo-tai-paivita-laskun-kohdistus
   "Luo uuden laskuerittelyrivin (kohdistuksen) kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan laskun viitteen ja rivinumeron perusteella."
   [db user urakka-id lasku-id laskurivi]
+  (println lasku-id urakka-id laskurivi)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (q/luo-tai-paivita-laskun-kohdistus<! db {:lasku               lasku-id
                                             :id                  (:kohdistus-id laskurivi)
@@ -96,8 +114,7 @@
                                             :summa               (:summa laskurivi)
                                             :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
                                             :tehtavaryhma        (:tehtavaryhma laskurivi)
-                                            :tehtava             (:tehtava laskurivi)
-                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtava laskurivi) (:tehtava laskurivi))
+                                            :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
                                             :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
@@ -169,6 +186,9 @@
       (julkaise-palvelu http :laskuerittelyt
                         (fn [user hakuehdot]
                           (hae-urakan-laskuerittelyt db user hakuehdot)))
+      (julkaise-palvelu http :kaikki-laskuerittelyt
+                        (fn [user hakuehdot]
+                          (hae-kaikki-urakan-laskuerittelyt db user hakuehdot)))
       (julkaise-palvelu http :lasku
                         (fn [user hakuehdot]
                           (hae-laskuerittely db user hakuehdot)))
@@ -187,6 +207,7 @@
     (poista-palvelut (:http-palvelin this) :laskut)
     (poista-palvelut (:http-palvelin this) :lasku)
     (poista-palvelut (:http-palvelin this) :laskuerittelyt)
+    (poista-palvelut (:http-palvelin this) :kaikki-laskuerittelyt)
     (poista-palvelut (:http-palvelin this) :tallenna-lasku)
     (poista-palvelut (:http-palvelin this) :poista-lasku)
     (poista-palvelut (:http-palvelin this) :poista-laskurivi)
