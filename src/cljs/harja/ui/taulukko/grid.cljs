@@ -2,7 +2,9 @@
   (:require [harja.ui.taulukko.protokollat :as p]
             [harja.loki :refer [log warn]]
             [cljs.spec.alpha :as s]
-            [clojure.string :as clj-str]))
+            [clojure.string :as clj-str]
+            [reagent.core :as r]
+            [clojure.walk :as walk]))
 
 
 ;; TODO tarkenna string? arvot
@@ -95,12 +97,32 @@
                                      nil
                                      osan-lapset)))
                          lapset)]
-     (if oikea-osa
+     (if (or oikea-osa (empty? lapset))
        oikea-osa
        (let [kaikki-lapsen-lapset (sequence (comp (mapcat p/lapset)
                                                   (remove nil?))
                                             lapset)]
          (recur osa etsittava-osa kaikki-lapsen-lapset))))))
+
+(defn- gridin-osat-vektoriin
+  ([grid pred f]
+   (let [kaikki-gridin-lapset (filter pred (p/lapset grid))
+         aloitus (if (pred grid)
+                   [(f grid)]
+                   [])]
+     (recur aloitus pred f kaikki-gridin-lapset)))
+  ([osat pred f lapset]
+   (let [kaikki-lapsen-lapset (sequence (comp (mapcat p/lapset)
+                                              (remove nil?))
+                                        lapset)
+         oikeat-osat (reduce (fn [osat osa]
+                               (when (pred osa)
+                                 (conj osat (f osa))))
+                             []
+                             lapset)]
+     (if (empty? lapset)
+       (vec osat)
+       (recur (concat osat oikeat-osat) pred f kaikki-lapsen-lapset)))))
 
 ;; TODO tällä funktiolle voinee kehitellä vähän tehokkaammankin toteutuksen
 (defn- paivita-kaikki-lapset
@@ -118,33 +140,9 @@
     (p/aseta-lapset osa paivitetyt-lapset)))
 
 (defn- piirra-grid [osat grid]
-  ;; MIksi seuranta jutut on piirrä funktiossa? Pitäskö
-  ;; siirtää konstruktoriin
-  (let [kokojen-seuranta (transduce (comp
-                                      (filter #(satisfies? p/IGrid %))
-                                      (map (fn [osa]
-                                             (let [alue (p/alue osa)
-                                                   seurattavan-osan-nimi (get-in alue [:seuraa :seurattava])
-                                                   seruattava-osa (if seurattavan-osan-nimi
-                                                                    (etsi-osa (::root osa) seurattavan-osan-nimi)
-                                                                    osa)]
-                                               {(p/nimi osa) seruattava-osa}))))
-                                    merge
-                                    {}
-                                    osat)]
-    (for [osa osat]
-      (let #_[vanhempaa-seuraava-osa? (and (satisfies? p/IGrid osa)
-                                         (not (false? (::koko-seuraa-vanhempaa? osa))))
-            osa (if vanhempaa-seuraava-osa?
-                  (aseta-sama-koko-vanhemman-kanssa grid osa)
-                  osa)]
-        [seurattava-osa (get kokojen-seuranta (p/nimi osa) osa)
-         seuraa-toisen-kokoa? (false? (p/id? osa (p/id seurattava-osa)))
-         osa (if seuraa-toisen-kokoa?
-               (aseta-koon-seuranta osa seurattava-osa)
-               osa)]
-        (with-meta [p/piirra osa]
-                   {:key (p/id osa)})))))
+  (for [osa osat]
+    (with-meta [p/piirra osa]
+               {:key (p/id osa)})))
 
 (defn- dynaaminen-grid [grid]
   (let [data (p/pointteri (::p/data grid) grid)
@@ -176,10 +174,7 @@
         (update ::koko f)
         (assoc ::koko-seuraa-vanhempaa? (boolean *vanhempi-asettaa?*))))
   p/IPiirrettava
-  (piirra [this]
-    {:pre [#(every? (fn [osa]
-                      (satisfies? p/IPiirrettava osa))
-                    (:osat this))]}
+  (-piirra [this]
     (let [luokat (-> this :parametrit :class)
           dom-id (-> this :parametrit :id)]
       [:div {:style {:overflow "hidden"}}
@@ -209,6 +204,13 @@
 
 ;; Alue ottaa vektorin vektoreita (tai sittenkin mappeja?) dataa. Voi määritellä x- ja y-suunnissa, että kasvaako alue datan mukana vaiko ei.
 
+(defn piirra [grid]
+  {:pre [#(every? (fn [osa]
+                    (satisfies? p/IPiirrettava osa))
+                  (:osat grid))]}
+  (p/-piirra grid))
+
+
 (defn gridille-data! [grid data]
   (loop [[lapsi & lapset] (lapset grid)
          tulokset []]
@@ -219,7 +221,7 @@
                               lapsen-dataspec)
             ]))))
 
-(defrecord GridDatanKasittelija []
+(defrecord GridDatanKasittelija [data]
   p/IGridDatanKasittely
   (resetoi! [this data])
   (lisaa! [this osan-id data]
@@ -236,12 +238,46 @@
     ;;  ::pointterit {<:osan-id {:polku-dataan [..] :polut-pointtereihin [..]}>}}
     ;; lapset on vektori osan-idtä.
     ;; Dynaamisesti generoidulle datalle pitänee generoida myös yksilöivä id sen datan löytämistä varten.
-    ))
+    ;; Nimipolut kaiketi pakollisia siihen asti, että lapsoset ovat struktuuriltaan identtisiä vanhemman sisäl.
 
-(defn lisaa-datan-kasittelija [grid]
-  (assoc grid ::p/data (->GridDatanKasittelija)))
+    ;; ::data avaimen taakse kama tulee jostain (esim. backiltä).
+    ;; ::pointterit avaimen taaksen pitäisi luoda :polku-dataan tässä.
+    (let [polut-dataan (walk/postwalk (fn [x]
+                                        (if #(satisfies? p/IAsia x)
+                                          (let [id (p/id x)
+                                                lapset (p/lapset x)
+                                                nimi (p/nimi x)
+                                                datapolku (::datapolku x)]
+                                            (cond
+                                              ;; osa itse määrittää mistä sen data tulee
+                                              datapolku [(with-meta datapolku
+                                                                    {::datapolku? true})]
+                                              ;; lehti
+                                              (and id (empty? lapset)) [[id]]
+                                              ;; nimellinen grid
+                                              (and id nimi lapset) (vec (mapcat (fn [lapsi]
+                                                                                  (mapv (fn [polku]
+                                                                                          (if (-> polku meta ::datapolku?)
+                                                                                            polku
+                                                                                            (conj polku nimi)))
+                                                                                        lapsi))
+                                                                                lapset))
+                                              ;; nimeton grid
+                                              (and id lapset) (vec (concat
+                                                                     (map-indexed (fn [index lapsi]
+                                                                                    (mapv (fn [polku]
+                                                                                            (if (-> polku meta ::datapolku?)
+                                                                                              polku
+                                                                                              (conj polku index)))
+                                                                                          lapsi))
+                                                                                  lapset)))))
+                                          x))
+                                      grid)])))
 
-(defonce ->GridU* ->GridU)
+(defn lisaa-datan-kasittelija [grid data-atom data-atom-polku]
+  (let [datakasittelija (->GridDatanKasittelija (r/cursor data-atom data-atom-polku))]
+    (p/gridin-muoto! datakasittelija grid)
+    (assoc grid ::p/data datakasittelija)))
 
 (defonce oletus-koko {:sarake {:oletus-leveys "1fr"}
                       :rivi {:oletus-korkeus "1fr"}})
@@ -359,19 +395,16 @@
                (koko-conf->koko koko))]
     (p/aseta-koko! grid koko)))
 
-(defn aseta-koot [osat]
-  (let [kokojen-seuranta (transduce (comp
-                                      (filter #(satisfies? p/IGrid %))
-                                      (map (fn [grid]
-                                             (let [koko (p/koko grid)
-                                                   seurattavan-gridin-nimi (get-in koko [:seuraa :seurattava])
-                                                   seruattava-grid (if seurattavan-gridin-nimi
-                                                                    (etsi-osa (::root grid) seurattavan-gridin-nimi)
-                                                                    grid)]
-                                               {grid seruattava-grid}))))
-                                    merge
-                                    {}
-                                    osat)
+(defn aseta-koot [root-grid]
+  (let [kokojen-seuranta (gridin-osat-vektoriin #(satisfies? p/IGrid %)
+                                                (fn [grid]
+                                                  (let [koko (p/koko grid)
+                                                        seurattavan-gridin-nimi (get-in koko [:seuraa :seurattava])
+                                                        seruattava-grid (if seurattavan-gridin-nimi
+                                                                          (etsi-osa (::root grid) seurattavan-gridin-nimi)
+                                                                          grid)]
+                                                    {grid seruattava-grid}))
+                                                root-grid)
         gridit-jarjestetty (loop [jarjestetyt-gridit (filterv (fn [[grid seurattava-grid]]
                                                               (p/id? grid (p/id seurattava-grid)))
                                                             kokojen-seuranta)
@@ -405,43 +438,46 @@
                                    ;; Pitää ettiä seurattava gridi koko-asetettu varista, jotta
                                    ;; voidaan olla varmoja siitä, että sille on koko asetettuna
                                    (if-let [seurattava-grid (get koko-asetettu seurattava-grid)]
-                                     (aseta-koon-seuranta! grid)
-                                     (aseta-koko! grid))))))]
-    (for [osa osat]
-      (if-let [[grid-osa _] (find koot-asetettu osa)]
-        grid-osa
-        osa))))
+                                     (aseta-koon-seuranta! seurattava-grid)
+                                     (aseta-koko! grid))))))
+        root-gridin-lapset (paivita-kaikki-lapset root-grid
+                                                  (fn [osa]
+                                                    (boolean (find koot-asetettu osa)))
+                                                  (fn [osa]
+                                                    (p/aseta-koko osa
+                                                                  (p/koko (first (find koot-asetettu osa))))))
+        root-grid (if-let [[root-grid _] (find koot-asetettu root-grid)]
+                    root-grid
+                    root-grid)]
+    (p/aseta-lapset root-grid root-gridin-lapset)))
 
-(defn Grid-root* [id lapset]
-  (let [root-grid (->GridU* lapset)
-        datan-kasittelija (lisaa-datan-kasittelija)
+(defn grid [id lapset data-atom data-atom-polku]
+  (let [root-grid (->Grid lapset)
+        datan-kasittelija (lisaa-datan-kasittelija root-grid data-atom data-atom-polku)
         koot (atom nil)
-        root-grid (assoc root-grid ::root root-grid
-                                   ::data datan-kasittelija)
-        lapset (paivita-kaikki-lapset root-grid
+        root-grid (paivita-kaikki-lapset root-grid
                                       (fn [& _] true)
                                       (fn [lapsi]
-                                        (assoc lapsi ::root root-grid
+                                        (assoc lapsi ::root (p/id root-grid)
                                                      ::data datan-kasittelija
                                                      ::koot koot)))
-        lapset (aseta-koot lapset)]
-    (p/aseta-lapset root-grid lapset)))
+        root-grid (assoc root-grid ::root (p/id root-grid)
+                                   ::data datan-kasittelija
+                                   ::koot koot)
+        root-grid (aseta-koot root-grid)]
+    ))
 
 (defn Rivi* [id]
   ())
 
-(defn ->GridU [& _]
-  (log "Käytä Gridin konstruktoria äläkä clojuren defaultteja"))
-
-(defn map->GridU [& _]
-  (log "Käytä Gridin konstruktoria äläkä clojuren defaultteja"))
-
 (let [header-jarjestys (atom [:header-1 :header-2 :header-3])]
-  (Grid*
+  (grid
     ;; Alueet
     [{:sarakkeet [3 6] :rivit [0 0]}
      {:sarakkeet [3 6] :rivit [1 10]}]
-    ;; Koot
+    ;; Koko
+    {:class "foo"}
+    ;; Järjestys
 
 
     ;; Gridin ei tulisi välittää minkälaista dataa sille annetaan. Se vain näyttää sen mitä sille välitetään.
@@ -468,6 +504,8 @@
               :rivit ::ei-sorttia}
              ;;Osat
                    [(->Osa :header-1
+                           ;;Datapolku
+                           ;; Jos esim. aggregoidaan dataa, niin halutaan joku muu kasa dataa, kuin perus
                            )
                     (->Osa :header-2)
                     (->Osa :header-3)])
