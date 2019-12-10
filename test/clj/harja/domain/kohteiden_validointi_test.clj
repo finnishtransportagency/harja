@@ -375,7 +375,6 @@
                                                              tr-tieto
                                                              true)]
       ;; Kohde-tiedon-mukainen palauttaa virheelliseksi todeltun kohteen tiedot
-      (is (= 1 (count (:kohde virhetiedot))))
       (is (= (:kohde virhetiedot) {:tr-numero 22, :tr-alkuosa 2, :tr-alkuetaisyys 5000, :tr-loppuosa 6, :tr-loppuetaisyys 5000}))))
 
       (testing "Alikohde"
