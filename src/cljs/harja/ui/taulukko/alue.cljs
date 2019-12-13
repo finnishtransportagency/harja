@@ -1,7 +1,8 @@
 (ns harja.ui.taulukko.alue
   (:require [harja.ui.taulukko.grid :as g]
+            [harja.loki :refer [log]]
             [cljs.spec.alpha :as s]
-            [harja.ui.taulukko.protokollat :as p]))
+            [harja.ui.taulukko.grid-protokollat :as p]))
 
 (defn alue-nollakohtaan [alue]
   (let [nollakohtaan (fn [[alku loppu]]

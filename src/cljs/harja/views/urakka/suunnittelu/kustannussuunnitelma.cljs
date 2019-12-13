@@ -17,6 +17,7 @@
             [harja.ui.taulukko.taulukko :as taulukko]
             [harja.ui.taulukko.jana :as jana]
             [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.grid-protokollat :as gp]
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.komponentti :as komp]
@@ -2016,7 +2017,7 @@
    [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
    [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin]])
 
-(defn hoidonjohtopalkkio-grid []
+(defn hoidonjohtopalkkio-grid [e!]
   (let [syottorivi (fn [syotto-pohja]
                         (-> syotto-pohja
                             (p/aseta-arvo :class #{"table-default"}
@@ -2081,7 +2082,7 @@
                                     {:otsikko 0
                                      :data 1
                                      :yhteenveto 2})
-                    :jarjestys {:rivit [:otsikko :data :yhteenveto]}}
+                    #_#_:jarjestys {:rivit [:otsikko :data :yhteenveto]}}
                    [(alue/rivi {:nimi :otsikko
                                 :koko (-> konf/livi-oletuskoko
                                           (assoc-in [:sarake :leveydet] {0 "3fr"
@@ -2091,7 +2092,6 @@
                                                                       :maara 1
                                                                       :yhteensa 2
                                                                       :indeksikorjattu 3}))
-                                :jarjestys {:sarakkeet [:nimi :maara :yhteensa :indeksikorjattu]}
                                 :osat (mapv (fn [paikka]
                                               (if (= 3 paikka)
                                                 (solu/teksti {:parametrit {:class #{"table-default" "table-default-header" "harmaa-teksti"}}})
@@ -2104,29 +2104,40 @@
                                                 [:rivi :nimet]
                                                 {:data-yhteenveto 0
                                                  :data-sisalto 1})
-                                :jarjestys {:rivit [:data-yhteenveto :data-sisalto]}
+                                #_#_:jarjestys {:rivit [:data-yhteenveto :data-sisalto]}
                                 :osat [(alue/rivi {:nimi :data-yhteenveto
                                                    :koko {:seuraa {:seurattava :otsikko
                                                                    :sarakkeet :sama
                                                                    :rivit :sama}}
-                                                   :jarjestys {:sarakkeet [:nimi :maara :yhteensa :indeksikorjattu]}
-                                                   :osat [laajenna syote teksti teksti-indeksikorjattu]}
+                                                   :osat [(solu/laajenna {:aukaise-fn (fn [this auki?]
+                                                                                        (e! (t/->ASDLaajennaSoluaKlikattu this auki?)))
+                                                                          :auki-alussa? false
+                                                                          :parametrit {:class #{"table-default" "lihavoitu"}}})
+                                                          (solu/syote {:parametrit {:size 2
+                                                                                    :class #{"input-default"}}
+                                                                       :fmt summa-formatointi
+                                                                       :fmt-aktiivinen summa-formatointi-aktiivinen
+                                                                       :toiminnot {:on-change (fn [arvo]
+                                                                                                (when arvo
+                                                                                                  (e! (t/->ASDPaivitaSolunArvo solu/*this* arvo))))
+                                                                                   :on-blur (fn [arvo]
+                                                                                              (when arvo
+                                                                                                (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
+                                                                                                (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                                (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                   :on-key-down (fn [event]
+                                                                                                  (when (= "Enter" (.. event -key))
+                                                                                                    (.. event -target blur)))}
+                                                                       :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                    {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                        :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}})] [laajenna syote teksti teksti-indeksikorjattu]}
                                                   [{:sarakkeet [0 4] :rivit [0 0]}])
                                        (alue/taulukko {:nimi :data-sisalto
                                                        :alueet [{:sarakkeet [0 0] :rivit [0 12]}]
-                                                       :koko konf/auto
-                                                       :jarjestys {
-                                                                   ;(let [data [{:foo :b} {:foo :c} {:foo :a}]
-                                                                   ;      order [:a :b :c]
-                                                                   ;      order-map (zipmap order (range))]
-                                                                   ;  (sort-by :foo
-                                                                   ;           #(compare (order-map %1) (order-map %2))
-                                                                   ;           data))
-                                                                   :rivit {:keyfn :aika
-                                                                           :comp (fn [aika-1 aika-2]
-                                                                                   (pvm/ennen? aika-1 aika-2))}}}
+                                                       :koko konf/auto}
                                                       (mapv (fn [kuukausi]
-                                                              (alue/rivi {:nimi (keyword (str "hoidonjohtopalkkio-datarivi" kuukausi))
+                                                              (alue/rivi {#_#_:nimi (keyword (str "hoidonjohtopalkkio-datarivi" kuukausi))
                                                                           :koko {:seuraa {:seurattava :otsikko
                                                                                           :sarakkeet :sama
                                                                                           :rivit :sama}}
@@ -2140,13 +2151,30 @@
                                                 :rivit :sama}}
                                 :jarjestys {:sarakkeet [:nimi :yhteensa :indeksikorjattu]}
                                 :osat [teksti-yhteensa teksti-yhteensa teksti-yhteensa-indeksikorjattu]}
-                               [{:sarakkeet [0 3] :rivit [0 0]}])])))
+                               [{:sarakkeet [0 3] :rivit [0 0]}])]
+                   {:otsikko {:nimi string? :maara string? :yhteensa string? :indeksikorjattu string?}
+                    :data-yhteenveto {:nimi string? :maara number?}
+                    :data-sisalto [:nimi :maara :yhteensa :indeksikorjattu]}
+                   {:otsikko [[:nimi :maara :yhteensa :indeksikorjattu]]
+                    :data-yhteenveto [[:nimi :maara :yhteensa :indeksikorjattu]]
+                    :data-sisalto [{:keyfn :aika
+                                    :comp (fn [aika-1 aika-2]
+                                            (pvm/ennen? aika-1 aika-2))}
+                                   [:nimi :maara :yhteensa :indeksikorjattu]] #_{
+                                   ;(let [data [{:foo :b} {:foo :c} {:foo :a}]
+                                   ;      order [:a :b :c]
+                                   ;      order-map (zipmap order (range))]
+                                   ;  (sort-by :foo
+                                   ;           #(compare (order-map %1) (order-map %2))
+                                   ;           data))
+                                   :rivit
+                                   :sarakkeet }})))
 
 (defn kustannussuunnitelma*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [_]
-                      (hoidonjohtopalkkio-grid)
+                      (hoidonjohtopalkkio-grid e!)
                       (e! (t/->Hoitokausi))
                       (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))

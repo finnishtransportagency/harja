@@ -10,6 +10,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.grid :as grid]
+            [harja.ui.taulukko.grid-protokollat :as gp]
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.jana :as jana]
@@ -196,6 +198,11 @@
 (defrecord TallennaJaPaivitaTavoiteSekaKattohinta [])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohintaOnnistui [vastaus])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui [vastaus])
+
+;; UUSI GRID
+
+(defrecord ASDLaajennaSoluaKlikattu [solu auki?])
+(defrecord ASDPaivitaSolunArvo [solu arvo])
 
 (defn hankinnat-pohjadata []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
@@ -1539,4 +1546,14 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  ;; UUSI GRID
+  ASDLaajennaSoluaKlikattu
+  (process-event [{:keys [solu auki?]} app]
+    (println "LAAJENNA SOLUA KLIKATTU")
+    app)
+  ASDPaivitaSolunArvo
+  (process-event [{:keys [solu arvo]} app]
+    (gp/aseta-osan-data! (::grid/data solu) (gp/id solu) arvo)
     app))

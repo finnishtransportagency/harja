@@ -1,12 +1,12 @@
 (ns harja.ui.taulukko.grid
-  (:require [harja.ui.taulukko.protokollat :as p]
+  (:require [harja.ui.taulukko.grid-protokollat :as p]
+            [harja.ui.taulukko.datan-kasittely-protokollat :as dp]
             [harja.loki :refer [log warn]]
             [cljs.spec.alpha :as s]
             [clojure.string :as clj-str]
             [reagent.core :as r]
             [reagent.ratom :as ratom]
-            [clojure.walk :as walk])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+            [clojure.walk :as walk]))
 
 
 ;; TODO tarkenna string? arvot
@@ -403,7 +403,7 @@
       [:div {:style {:overflow "hidden"}}
        (let [{:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
          (when (p/id? grid (p/id (::root grid)))
-           (p/gridin-muoto! (::p/data grid) grid))
+           (p/gridin-pointterit! grid (::p/data grid)))
          ;; Järjestys ja koko erilleen (relevantteja vain laps'taulukoille)
          ;; Järjestyksessä joku osa on toisen osan alisteinen
          ;; Järjestyksessä rivien/sarakkeiden määrä voi poiketa
@@ -448,6 +448,82 @@
   (-rivi [this tunniste] (log "KUTSUTTIIN -rivi FUNKTIOTA Grid:ille"))
   (-sarake [this tunniste] (log "KUTSUTTIIN -sarake FUNKTIOTA Grid:ille"))
   (-solu [this tunniste] (log "KUTSUTTIIN -solu FUNKTIOTA Grid:ille"))
+  p/IGridPointterit
+  (-gridin-pointterit! [this datan-kasittelija]
+    (
+                    ;; data : {.. ihmisen ymmärtämiä avaimia ..}
+                    ;; pointterit : {<:osan-id {:polku-dataan [..] :polut-pointtereihin [..]}>}
+
+                    ;; lapset on vektori osan-idtä.
+                    ;; Dynaamisesti generoidulle datalle pitänee generoida myös yksilöivä id sen datan löytämistä varten.
+                    ;; Nimipolut kaiketi pakollisia siihen asti, että lapsoset ovat struktuuriltaan identtisiä vanhemman sisäl.
+
+                    ;; ::data avaimen taakse kama tulee jostain (esim. backiltä).
+                    ;; ::pointterit avaimen taaksen pitäisi luoda :polku-dataan tässä.
+
+                    (let [datakasittelijan-rajapinta (dp/rajapinta datan-kasittelija)
+                          polut-dataan (walk/postwalk (fn [x]
+                                                        (if (satisfies? p/IGridOsa x)
+                                                          (let [id (p/id x)
+                                                                lapset (p/lapset x)
+                                                                nimi (p/nimi x)
+                                                                rajapinta (when (satisfies? p/IOsanRajapinta x)
+                                                                            (p/rajapinta this))
+                                                                datapolku (::datapolku x)
+                                                                rajapinta? (get-in datakasittelijan-rajapinta rajapinta)]
+                                                            (cond
+                                                              ;; osa itse määrittää mistä sen data tulee
+                                                              datapolku [(with-meta (vector (cons id datapolku))
+                                                                                    {::datapolku? true})]
+                                                              ;; Nimi määritetty rajapinnassa?
+
+
+
+                                                              ;;;; TARKASTA LAPSET VIEL TÄSSÄ. INDEKSIN PERUSTEELLLA SITTEN JAOTTELU
+                                                              rajapinta? [(with-meta [id rajapinta]
+                                                                                     {::rajapinta? true})]
+                                                              ;; lehti
+                                                              (and id (empty? lapset)) [[id]]
+                                                              ;; nimellinen grid
+                                                              ;; TODO Tässä voi tulla name conflict rajapinnan ja osien nimien välillä
+                                                              (and id nimi lapset) (vec (mapcat (fn [lapsi]
+                                                                                                  (mapv (fn [polku]
+                                                                                                          (let [m (:meta polku)]
+                                                                                                            (if (or (::datapolku? m)
+                                                                                                                    (::rajapinta? m))
+                                                                                                              polku
+                                                                                                              (conj polku nimi))))
+                                                                                                        lapsi))
+                                                                                                lapset))
+                                                              ;; nimeton grid
+                                                              (and id lapset) (vec (concat
+                                                                                     (map-indexed (fn [index lapsi]
+                                                                                                    (mapv (fn [polku]
+                                                                                                            (let [m (:meta polku)]
+                                                                                                              (if (or (::datapolku? m)
+                                                                                                                      (::rajapinta? m))
+                                                                                                                polku
+                                                                                                                (conj polku index))))
+                                                                                                          lapsi))
+                                                                                                  lapset)))))
+                                                          x))
+                                                      this)
+                          ]
+                      (println "POLUT DATAAN: ")
+                      (cljs.pprint/pprint polut-dataan)
+                      (doseq [[solun-id & polku] polut-dataan]
+                        (when (and (get-in datakasittelijan-rajapinta polku)
+                                   (not (::rajapinta? (meta polku))))
+                          (warn "Solulle " solun-id " asetetaan datapouksi " polku " vaikkei sen pitäisi seurata rajapintaa!"))
+                        (dp/aseta-pointteri! datan-kasittelija
+                                            solun-id
+                                            (vector (reverse polku))))
+                      #_(swap! (:pointterit this)
+                             (fn [_]
+                               (into {}
+                                     (fn [[lehden-id & polku]]
+                                       [lehden-id {:polku-dataan (vector (reverse polku))}])
+                                     polut-dataan))))))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -465,108 +541,11 @@
 
 ;; Alue ottaa vektorin vektoreita (tai sittenkin mappeja?) dataa. Voi määritellä x- ja y-suunnissa, että kasvaako alue datan mukana vaiko ei.
 
-(defrecord GridDatanKasittelija [pointterit data]
-  p/IGridDatanKasittely
-  (-muokkaa-osan-data! [this id f]
-    (let [polku (get-in @pointterit [id :polku-dataan])]
-      (swap! (:data this)
-             (fn [kaikki-data]
-               (assoc-in kaikki-data polku f)))))
-  (-aseta-osan-data! [this id uusi-data]
-    (let [polku (get-in @pointterit [id :polku-dataan])]
-      (swap! (:data this)
-             (fn [kaikki-data]
-               (assoc-in kaikki-data polku uusi-data)))))
-  (-muokkaa-alueen-data! [this nimi-polku f]
-    (swap! (:data this)
-           (fn [kaikki-data]
-             (update-in kaikki-data nimi-polku f))))
-  (-aseta-alueen-data! [this nimi-polku uusi-data]
-    (swap! (:data this)
-           (fn [kaikki-data]
-             (assoc-in kaikki-data nimi-polku uusi-data))))
-  (-osan-derefable [this id]
-    (let [alkuperainen-polku (-> this :pointterit deref (get id) :polku-dataan)
-          osan-polku (r/atom alkuperainen-polku)
-          osan-data (r/atom (-> this :data deref (get-in alkuperainen-polku)))]
-      (add-watch (:pointterit this)
-                 (keyword (str "pointterit-" id))
-                 (fn [_ _ vanha uusi]
-                   (when-not (= (:polku-dataan (get vanha id)) (:polku-dataan (get uusi id)))
-                     (swap! osan-polku (fn [_] (:polku-dataan (get uusi id)))))))
-      (add-watch (:data this)
-                 (keyword (str "data-" id))
-                 (fn [_ _ vanha uusi]
-                   (let [polku @osan-polku]
-                     (when-not (= (get-in vanha polku) (get-in uusi polku))
-                       (swap! osan-data (fn [_] (get-in uusi polku)))))))
-      ;; Reaction on tässä hyvä mm. sen takia, ettei solu voi swap! tai reset! sitä.
-      ;; Datan pitäisi kulkea loopissa: solu -> datan käsittelijä -> reaction -> back again
-      (reaction
-        (let [_ @osan-data
-              polku @osan-polku]
-          (-> this :data deref (get-in polku))))))
-  (-gridin-muoto! [this grid]
-    ;; data : {.. ihmisen ymmärtämiä avaimia ..}
-    ;; pointterit : {<:osan-id {:polku-dataan [..] :polut-pointtereihin [..]}>}
-
-    ;; lapset on vektori osan-idtä.
-    ;; Dynaamisesti generoidulle datalle pitänee generoida myös yksilöivä id sen datan löytämistä varten.
-    ;; Nimipolut kaiketi pakollisia siihen asti, että lapsoset ovat struktuuriltaan identtisiä vanhemman sisäl.
-
-    ;; ::data avaimen taakse kama tulee jostain (esim. backiltä).
-    ;; ::pointterit avaimen taaksen pitäisi luoda :polku-dataan tässä.
-    (let [polut-dataan (walk/postwalk (fn [x]
-                                        (if (satisfies? p/IGridOsa x)
-                                          (let [id (p/id x)
-                                                lapset (p/lapset x)
-                                                nimi (p/nimi x)
-                                                datapolku (::datapolku x)]
-                                            (cond
-                                              ;; osa itse määrittää mistä sen data tulee
-                                              datapolku [(with-meta (vector (cons id datapolku))
-                                                                    {::datapolku? true})]
-                                              ;; lehti
-                                              (and id (empty? lapset)) [[id]]
-                                              ;; nimellinen grid
-                                              (and id nimi lapset) (vec (mapcat (fn [lapsi]
-                                                                                  (mapv (fn [polku]
-                                                                                          (if (-> polku meta ::datapolku?)
-                                                                                            polku
-                                                                                            (conj polku nimi)))
-                                                                                        lapsi))
-                                                                                lapset))
-                                              ;; nimeton grid
-                                              (and id lapset) (vec (concat
-                                                                     (map-indexed (fn [index lapsi]
-                                                                                    (mapv (fn [polku]
-                                                                                            (if (-> polku meta ::datapolku?)
-                                                                                              polku
-                                                                                              (conj polku index)))
-                                                                                          lapsi))
-                                                                                  lapset)))))
-                                          x))
-                                      grid)
-          ]
-      (println "POLUT DATAAN: ")
-      (cljs.pprint/pprint polut-dataan)
-      (swap! (:pointterit this)
-             (fn [_]
-               (into {}
-                     (fn [[lehden-id & polku]]
-                       [lehden-id {:polku-dataan (vector (reverse polku))}])
-                     polut-dataan))))))
-
-(defn lisaa-datan-kasittelija [grid data-atom data-atom-polku]
-  (let [datakasittelija (->GridDatanKasittelija (r/cursor data-atom data-atom-polku))]
-    (p/gridin-muoto! datakasittelija grid)
-    (assoc grid ::p/data datakasittelija)))
-
 
 
 (defn validi-grid-asetukset?
   [{:keys [nimi alueet koko jarjestys osat]}]
-  (and (satisfies? IEquiv nimi)
+  (and (or (nil? nimi) (satisfies? IEquiv nimi))
        (or (nil? alueet) (s/valid? ::alueet alueet))
        (or (nil? koko) (s/valid? ::koko koko))
        (or (nil? jarjestys) (s/valid? ::jarjestys jarjestys))
@@ -585,22 +564,36 @@
             osat (assoc ::osat osat))))
 
 (defn paa-grid
-  [data-atom data-atom-polku grid-asetukset lapset]
+  [data-atom data-atom-polku grid-asetukset lapset datajarjestys]
   {:pre [(satisfies? ratom/IReactiveAtom data-atom)
          (vector? data-atom-polku)
-         (every? #(satisfies? p/IGridOsa %) lapset)]}
+         (every? #(satisfies? p/IGridOsa %) lapset)
+         ;;TODO datajarjestys oikeellisuus
+         ]
+   :post [(instance? Grid %)]}
   (let [root-grid (grid (assoc grid-asetukset :osat lapset))
-        datan-kasittelija (lisaa-datan-kasittelija root-grid data-atom data-atom-polku)
+        datan-kasittelija (dp/datan-kasittelija root-grid data-atom data-atom-polku datajarjestys)
         koot (atom nil)
         root-grid (paivita-kaikki-lapset root-grid
                                          (fn [& _] true)
                                          (fn [lapsi]
-                                           (assoc lapsi ::root root-grid
-                                                        ::data datan-kasittelija
-                                                        ::koot koot)))
+                                           (let [lapsi (assoc lapsi ::root root-grid
+                                                                    ::data datan-kasittelija
+                                                                    ::koot koot)]
+                                             (if (satisfies? p/IGrid lapsi)
+                                               (p/paivita-lapset lapsi
+                                                                 (fn [lapset]
+                                                                   ;; TODO Jos vanhempi vaihtuu, tämä referenssi ei.
+                                                                   ;; Sama tuo rootin kans
+                                                                         (mapv #(assoc % ::vanhempi lapsi)
+                                                                               lapset)))
+                                               lapsi))))
         root-grid (assoc root-grid ::root root-grid
                                    ::data datan-kasittelija
-                                   ::koot koot)]
+                                   ::koot koot)
+        root-grid (p/paivita-lapset root-grid (fn [lapset]
+                                                (mapv #(assoc % ::vanhempi root-grid)
+                                                      lapset)))]
     (aseta-koot! root-grid)
     root-grid))
 

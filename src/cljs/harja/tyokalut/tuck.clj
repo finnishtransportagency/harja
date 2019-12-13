@@ -28,11 +28,11 @@
                                         kutsu))
                                     kutsut)
          kutsujen-jarjestys-atomi# (atom kutsujen-jarjestys#)]
-     (when-not (every? (fn [~'f]
-                         (or (= harja.tyokalut.tuck/post! ~'f)
-                             (= harja.tyokalut.tuck/get! ~'f)))
-                       ~(mapv first kutsut))
-       (throw (~'js/Error. "Jokainen kutsuttava funktio varmista-kasittelyjen-jarjestys makrolle tulisi olla joko harja.tyokalut.tuck/get! tai harja.tyokalut.tuck/post!")))
+     ~(when-not (every? (fn [f]
+                         (or (= harja.tyokalut.tuck/post! f)
+                             (= harja.tyokalut.tuck/get! f)))
+                        (mapv first kutsut))
+       (throw (Error. "Jokainen kutsuttava funktio varmista-kasittelyjen-jarjestys makrolle tulisi olla joko harja.tyokalut.tuck/get! tai harja.tyokalut.tuck/post!")))
      (binding [harja.tyokalut.tuck/*kutsujarjestys* kutsujen-jarjestys-atomi#]
        (let [kutsut# ~(mapv (fn [palvelukutsu-f]
                               (let [f# (butlast palvelukutsu-f)]

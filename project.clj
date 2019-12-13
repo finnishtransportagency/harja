@@ -6,7 +6,7 @@
 
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.520"]
-		 [org.clojure/spec.alpha "0.2.176"]
+                 [org.clojure/spec.alpha "0.2.176"]
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.1.10"]

@@ -4,7 +4,8 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.taulukko.protokollat :as p]
+            [harja.ui.taulukko.grid-protokollat :as p]
+            [harja.ui.taulukko.datan-kasittely-protokollat :as dp]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]))
 
@@ -60,7 +61,7 @@
 (defrecord Teksti [id parametrit]
   p/IPiirrettava
   (-piirra [this]
-    (let [taman-data (p/osan-derefable (::grid/data this) (p/id this))]
+    (let [taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)
               arvo (-> @taman-data (::filtteri this) (::arvo this))]
@@ -69,6 +70,11 @@
                                 :id id
                                 :data-cy (::nimi this)}
            ((::fmt this) arvo)]))))
+  p/IOsanRajapinta
+  (-rajapinta [this]
+    (get this ::rajapinta))
+  (-aseta-rajapinta [this nimi]
+    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -91,7 +97,7 @@
 
 (defn teksti
   ([] (teksti nil))
-  ([{:keys [parametrit filtteri arvo fmt nimi] :as asetukset}]
+  ([{:keys [parametrit filtteri arvo fmt nimi rajapinta] :as asetukset}]
    {:pre [(fmt-asetukset-oikein? asetukset)
           ;; TODO tarkasta parametrit
           (datan-kasittely-asetukset-oikein? asetukset)]
@@ -104,12 +110,13 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             nimi (p/aseta-nimi nimi)
+             rajapinta (p/aseta-rajapinta rajapinta)))))
 
 (defrecord Linkki [id linkki parametrit]
   p/IPiirrettava
   (-piirra [this]
-    (let [taman-data (p/osan-derefable (::grid/data this) (p/id this))]
+    (let [taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)
               arvo (-> @taman-data (::filtteri this) (::arvo this))]
@@ -119,6 +126,11 @@
                               :id id
                               :data-cy (::nimi this)}
            ((::fmt this) teksti)]))))
+  p/IOsanRajapinta
+  (-rajapinta [this]
+    (get this ::rajapinta))
+  (-aseta-rajapinta [this nimi]
+    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -141,7 +153,7 @@
 
 (defn linkki
   ([] (linkki nil))
-  ([{:keys [parametrit linkki filtteri arvo fmt nimi] :as asetukset}]
+  ([{:keys [parametrit linkki filtteri arvo fmt nimi rajapinta] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta parametrit ja linkki
           (fmt-asetukset-oikein? asetukset)
@@ -155,7 +167,8 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             nimi (p/aseta-nimi nimi)
+             rajapinta (p/aseta-rajapinta rajapinta)))))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
 ;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
@@ -165,7 +178,7 @@
   p/IPiirrettava
   (-piirra [this]
     (let [aktiivinen? (atom false)
-          taman-data (p/osan-derefable (::grid/data this) (p/id this))
+          taman-data (dp/osan-derefable (::grid/data this) (p/id this))
           {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
                   on-key-up]} (lisaa-kaytokset (merge-with (fn [kayttajan-lisaama tassa-lisatty]
                                                              (comp kayttajan-lisaama
@@ -237,6 +250,11 @@
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
           [:input.osa.osa-syote parametrit]))))
+  p/IOsanRajapinta
+  (-rajapinta [this]
+    (get this ::rajapinta))
+  (-aseta-rajapinta [this nimi]
+    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -259,7 +277,7 @@
 
 (defn syote
   ([] (syote nil))
-  ([{:keys [toiminnot kayttaytymiset parametrit filtteri arvo fmt nimi] :as asetukset}]
+  ([{:keys [toiminnot kayttaytymiset parametrit filtteri arvo fmt fmt-aktiivinen nimi rajapinta] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta parametrit, toiminnot ja kayttaytymiset
           (fmt-asetukset-oikein? asetukset)
@@ -273,7 +291,10 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             (nil? fmt-aktiivinen) (p/lisaa-fmt-aktiiviselle identity)
+             fmt-aktiivinen (p/lisaa-fmt-aktiiviselle fmt-aktiivinen)
+             nimi (p/aseta-nimi nimi)
+             rajapinta (p/aseta-rajapinta rajapinta)))))
 
 
 
@@ -283,7 +304,7 @@
     (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
                   on-key-up]} (lisaa-kaytokset (:toiminnot this)
                                                (:kayttaytymiset this))
-          taman-data (p/osan-derefable (::grid/data this) (p/id this))]
+          taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
               arvo (-> @taman-data (::filtteri this) (::arvo this))
@@ -319,6 +340,11 @@
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
           [:button.osa.osa-nappi parametrit sisalto]))))
+  p/IOsanRajapinta
+  (-rajapinta [this]
+    (get this ::rajapinta))
+  (-aseta-rajapinta [this nimi]
+    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -341,7 +367,7 @@
 
 (defn nappi
   ([] (nappi nil))
-  ([{:keys [toiminnot kayttaytymiset parametrit sisalto filtteri arvo fmt nimi] :as asetukset}]
+  ([{:keys [toiminnot kayttaytymiset parametrit sisalto filtteri arvo fmt nimi rajapinta] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta parametrit, toiminnot, sisalto ja kayttaytymiset
           (fmt-asetukset-oikein? asetukset)
@@ -355,13 +381,14 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             nimi (p/aseta-nimi nimi)
+             rajapinta (p/aseta-rajapinta rajapinta)))))
 
-(defrecord Laajenna [id aukaise-fn parametrit]
+(defrecord Laajenna [id aukaise-fn auki-alussa? parametrit]
   p/IPiirrettava
   (-piirra [this]
-    (let [auki? (atom false)
-          taman-data (p/osan-derefable (::grid/data this) (p/id this))]
+    (let [auki? (atom auki-alussa?)
+          taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class ikoni]} (:parametrit this)
               arvo (-> @taman-data (::filtteri this) (::arvo this))
@@ -387,6 +414,11 @@
              [ikoni-auki]
              ^{:key "laajenna-kiini"}
              [ikoni-kiinni])]))))
+  p/IOsanRajapinta
+  (-rajapinta [this]
+    (get this ::rajapinta))
+  (-aseta-rajapinta [this nimi]
+    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -409,18 +441,20 @@
 
 (defn laajenna
   ([] (laajenna nil))
-  ([{:keys [aukaise-fn parametrit filtteri arvo fmt nimi] :as asetukset}]
+  ([{:keys [aukaise-fn auki-alussa? parametrit filtteri arvo fmt nimi rajapinta] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta aukaise-fn ja parametrit
+          (or (nil? auki-alussa?) (boolean? auki-alussa?))
           (fmt-asetukset-oikein? asetukset)
           (datan-kasittely-asetukset-oikein? asetukset)]
     :post [(instance? Laajenna %)]}
    (let [id (gensym "laajenna")]
-     (cond-> (->Laajenna id aukaise-fn parametrit)
+     (cond-> (->Laajenna id aukaise-fn auki-alussa? parametrit)
              (nil? filtteri) (p/lisaa-filtteri identity)
              filtteri (p/lisaa-filtteri filtteri)
              (nil? arvo) (p/lisaa-arvo identity)
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             nimi (p/aseta-nimi nimi)
+             rajapinta (p/aseta-rajapinta rajapinta)))))
