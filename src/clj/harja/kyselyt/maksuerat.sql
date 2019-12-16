@@ -268,7 +268,7 @@ SELECT
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON m.toimenpideinstanssi = tpi.id
   JOIN urakka u ON tpi.urakka = u.id
-WHERE m.likainen = TRUE;
+WHERE m.likainen IS TRUE;
 
 -- name: lukitse-maksuera!
 -- Lukitsee maksuerän lähetyksen ajaksi

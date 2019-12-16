@@ -13,7 +13,7 @@
             [clj-time.core :as t]))
 
 (defn hae-valtakunnalliset-valitavoitteet [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
+  ;(;(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
   (into []
         (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
         (q/hae-valtakunnalliset-valitavoitteet db)))
@@ -67,13 +67,17 @@
                                  (fn [urakka]
                                    (and
                                      (= (pvm/ennen? (t/now) (c/from-date (:loppupvm urakka))))
-                                     (= urakkatyyppi (:tyyppi urakka))
+                                     (= urakkatyyppi (if (= :teiden-hoito (:tyyppi urakka))
+                                                       :hoito
+                                                       (:tyyppi urakka)))
                                      (pvm/valissa? (c/from-date takaraja)
                                                    (c/from-date (:alkupvm urakka))
                                                    (c/from-date (:loppupvm urakka)))))
                                  urakat)
                                (filter
-                                 #(and (= urakkatyyppi (:tyyppi %))
+                                 #(and (= urakkatyyppi (if (= :teiden-hoito (:tyyppi %))
+                                                         :hoito
+                                                         (:tyyppi %)))
                                        (= (pvm/ennen? (t/now) (c/from-date (:loppupvm %)))))
                                  urakat))]
     (doseq [urakka linkitettavat-urakat]
@@ -113,9 +117,12 @@
   [db user {:keys [takaraja-toistopaiva urakkatyyppi takaraja-toistokuukausi nimi] :as valitavoite}
    valtakunnallinen-valitavoite-id urakat]
   (let [linkitettavat-urakat (filter
-                               #(and (= urakkatyyppi (:tyyppi %))
+                               #(and (= urakkatyyppi (if (= :teiden-hoito (:tyyppi %))
+                                                       :hoito
+                                                       (:tyyppi %)))
                                      (= (pvm/ennen? (t/now) (c/from-date (:loppupvm %)))))
-                               urakat)]
+                               urakat)
+        _ (println " LINKITETTÄVÄ linkitettavat-urakat " linkitettavat-urakat)]
     (doseq [urakka linkitettavat-urakat]
       (let [urakan-jaljella-olevat-vuodet (range (max (t/year (t/now))
                                                       (t/year (c/from-date (:alkupvm urakka))))

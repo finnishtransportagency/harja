@@ -39,10 +39,12 @@
 
 (def urakan-valitavoitteet
   (reaction (when @valitavoitteet
+              (println " €€€€€€  Urakan omat" @valitavoitteet)
               (filterv (comp not :valtakunnallinen-id) @valitavoitteet))))
 
 (def valtakunnalliset-valitavoitteet
   (reaction (when @valitavoitteet
+              (println " €€€€€€  Valtakunnalliset " @valitavoitteet)
               (filterv :valtakunnallinen-id @valitavoitteet))))
 
 (defn hae-urakan-yllapitokohteet
