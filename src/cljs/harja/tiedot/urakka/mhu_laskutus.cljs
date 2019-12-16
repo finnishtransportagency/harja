@@ -18,7 +18,7 @@
 
 (defrecord LuoUusiAliurakoitsija [aliurakoitsija])
 
-(defrecord HaeUrakanToimenpiteet [urakka])
+(defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanLaskut [hakuparametrit])
 (defrecord HaeAliurakoitsijat [])
 
@@ -129,8 +129,8 @@
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
     (loki/log "laskut haettu")
     (let
-      [e! (tuck/current-send-function)
-       u-k-lkm (count kulut)
+      [;e! (tuck/current-send-function)
+       ;u-k-lkm (count kulut)
        paivitetty-taulukko (p/paivita-taulukko! taulukko tulos)
 
        #_(reduce
@@ -185,7 +185,7 @@
                           (fn [{:keys [tehtavaryhma-id tehtavaryhma-nimi toimenpide jarjestys toimenpide-id toimenpideinstanssi]}]
                             (vector
                               {:toimenpideinstanssi toimenpideinstanssi :toimenpide-id toimenpide-id :toimenpide toimenpide :jarjestys jarjestys}
-                              {:tehtavaryhma tehtavaryhma-nimi :id tehtavaryhma-id :toimenpide toimenpide-id :jarjestys jarjestys}))
+                              {:tehtavaryhma tehtavaryhma-nimi :id tehtavaryhma-id :toimenpide toimenpide-id :toimenpideinstanssi toimenpideinstanssi :jarjestys jarjestys}))
                           tulos)))
           {:keys [tehtavaryhmat toimenpiteet]} (reduce
                                                  (fn [k asia]
@@ -204,14 +204,14 @@
   (process-event [{:keys [tulos]} app]
     (loki/log "tai ulos!!!!!! " tulos)
     app)
-  HaeUrakanToimenpiteet
+  HaeUrakanToimenpiteetJaTehtavaryhmat
   (process-event
     [{:keys [urakka]} app]
     (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
-                      {:urakka-id urakka}
-                      {:onnistui           ->ToimenpidehakuOnnistui
-                       :epaonnistui        ->KutsuEpaonnistui
-                       :paasta-virhe-lapi? true})
+                       {:urakka-id urakka}
+                       {:onnistui           ->ToimenpidehakuOnnistui
+                        :epaonnistui        ->KutsuEpaonnistui
+                        :paasta-virhe-lapi? true})
     app)
   TallennaKulu
   (process-event
@@ -259,7 +259,7 @@
                                           :erapaiva      erapaiva
                                           :urakka        urakka
                                           :kokonaissumma kokonaissumma
-                                          :laskun-numero laskun-numero
+                                          :laskun-numero (js/parseFloat laskun-numero)
                                           :lisatieto     lisatieto
                                           :tyyppi        "laskutettava"}} ;TODO fix
                          {:onnistui            ->TallennusOnnistui
@@ -267,7 +267,8 @@
                           :epaonnistui         ->KutsuEpaonnistui
                           ;:paasta-virhe-lapi?  true
                           })
-      (assoc app :taulukko taulukko)))
+      (assoc app :taulukko taulukko))
+    app)
 
   KulujenSyotto
   (process-event

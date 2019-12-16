@@ -164,7 +164,7 @@
        ;:id,:lahde,:tyyppi, :koko 65528
        ])))
 
-(defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi koontilaskun-numero erapaiva viite kohdistukset] :as lomake}]
+(defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
   [:div.col-sm-6.col-xs-12
    [:h2 "Koontilaskun tiedot"]
    [kulukentta "Koontilaskun kuukausi" :komponentti (fn []
@@ -181,11 +181,10 @@
                                                                                         :pakota-suunta false
                                                                                         :valittava?-fn #(pvm/jalkeen? % (pvm/nyt))}])]
    [kulukentta "Laskun viite" :arvo viite :on-change #(paivitys-fn :viite (-> % .-target .-value))]
-   [kulukentta "Koontilaskun numero" :arvo koontilaskun-numero :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))]
+   [kulukentta "Koontilaskun numero" :arvo laskun-numero :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value js/parseFloat))]
    [kulukentta
     "Kustannus €"
-    :disabled (or (> (count kohdistukset) 1)
-                  true)
+    :disabled (or (> (count kohdistukset) 1) false)
     :arvo (or (when (> (count kohdistukset) 1)
                 (reduce (fn [a s] (+ a (:summa s))) 0 kohdistukset))
               (get-in lomake [:kohdistukset 0 :summa])
@@ -201,7 +200,7 @@
                                                [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
                                                                              :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
                                                                              :valitse-fn   #(paivitys-fn [:kohdistukset indeksi :tehtavaryhma] (:id %)
-                                                                                                         [:kohdistukset indeksi :toimenpide] (:toimenpide %))
+                                                                                                         [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
                                                                              :format-fn    #(get % :tehtavaryhma)}
                                                 tehtavaryhmat])]
      (when (> kohdistukset-lkm 1)
@@ -307,7 +306,7 @@
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskut (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
-                      (e! (tiedot/->HaeUrakanToimenpiteet (-> @tila/yleiset :urakka :id)))
+                      (e! (tiedot/->HaeUrakanToimenpiteetJaTehtavaryhmat (-> @tila/yleiset :urakka :id)))
                       (e! (tiedot/->LuoKulutaulukko (luo-kulutaulukko)))))
     (fn [e! {:keys [taulukko syottomoodi laskut] :as app}]
       [:div
