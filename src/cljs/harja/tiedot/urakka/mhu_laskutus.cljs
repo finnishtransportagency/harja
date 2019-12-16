@@ -88,7 +88,9 @@
           (if (vector? avain)
             assoc-in
             assoc)]
-      (assoc-fn app avain tulos)))
+      (-> app
+          (assoc-fn avain tulos)
+          (assoc :syottomoodi false))))
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot} app]
     (apply loki/log "päivitetään" polut-ja-arvot)
@@ -124,51 +126,55 @@
         (assoc :aliurakoitsijat tulos)
         (update-in [:meta :haetaan] dec)))
   LaskuhakuOnnistui
-  (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet] :as app}]
+  (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
     (loki/log "laskut haettu")
     (let
       [e! (tuck/current-send-function)
        u-k-lkm (count kulut)
-       paivitetty-taulukko (reduce
-                             (fn [koko {:keys [summa viite erapaiva kohdistukset] :as l}]
-                               (loki/log "kohdistukset" l)
-                               (loop
-                                 [taul koko
-                                  kohd kohdistukset]
-                                 (loki/log "KOHD" kohd)
-                                 (if (nil? (first kohd))
-                                   taul
-                                   (recur
-                                     (let [{:keys [tehtava tehtavaryhma toimenpideinstanssi summa]} (first kohd)]
-                                       (p/lisaa-rivi! koko
-                                                      {:avain            :kulut
-                                                       :rivi             jana/->Rivi
-                                                       :alkuun?          true
-                                                       :rivin-parametrit {:on-click #(e! (->AvaaLasku l))}}
-                                                      [osa/->Teksti
-                                                       (keyword (str "kk-hv-" u-k-lkm))
-                                                       (or (pvm/kuukausi-ja-vuosi erapaiva)
-                                                           "Eräpäivä") #_(:koontilaskun-kuukausi (first kohd))]
-                                                      [osa/->Teksti
-                                                       (keyword (str "era-" u-k-lkm))
-                                                       (or (pvm/kuukausi-ja-vuosi erapaiva)
-                                                           "Eräpäivä") #_(:koontilaskun-pvm (first kohd))]
-                                                      [osa/->Teksti
-                                                       (keyword (str "toimenpide-" u-k-lkm))
-                                                       (some #(when (= (:toimenpideinstanssi %) toimenpideinstanssi) (:tpi-nimi %)) toimenpiteet) #_(:tehtava (first kohd))]
-                                                      [osa/->Teksti
-                                                       (keyword (str "tehtavaryhma-" u-k-lkm))
-                                                       (or tehtavaryhma
-                                                           "Tehtäväryhmä") #_(:tehtavaryhma (first kohd))]
-                                                      [osa/->Teksti
-                                                       (keyword (str "maara-" u-k-lkm))
-                                                       summa]))
-                                     (rest kohd)))))
-                             taulukko
-                             tulos)]
+       paivitetty-taulukko (p/paivita-taulukko! taulukko tulos)
+
+       #_(reduce
+           (fn [koko {:keys [summa viite erapaiva kohdistukset] :as l}]
+             (loki/log "kohdistukset" l)
+             (loop
+               [taul koko
+                kohd kohdistukset]
+               (loki/log "KOHD" kohd)
+               (if (nil? (first kohd))
+                 taul
+                 (recur
+                   (let [{:keys [tehtava tehtavaryhma toimenpideinstanssi summa]} (first kohd)]
+                     (p/lisaa-rivi! koko
+                                    {:avain            :kulut
+                                     :rivi             jana/->Rivi
+                                     :alkuun?          true
+                                     :rivin-parametrit {:on-click #(e! (->AvaaLasku l))}}
+                                    [osa/->Teksti
+                                     (keyword (str "kk-hv-" u-k-lkm))
+                                     (or (pvm/kuukausi-ja-vuosi erapaiva)
+                                         "Eräpäivä") #_(:koontilaskun-kuukausi (first kohd))]
+                                    [osa/->Teksti
+                                     (keyword (str "era-" u-k-lkm))
+                                     (or (pvm/kuukausi-ja-vuosi erapaiva)
+                                         "Eräpäivä") #_(:koontilaskun-pvm (first kohd))]
+                                    [osa/->Teksti
+                                     (keyword (str "toimenpide-" u-k-lkm))
+                                     (some #(when (= (:toimenpideinstanssi %) toimenpideinstanssi) (:tpi-nimi %)) toimenpiteet) #_(:tehtava (first kohd))]
+                                    [osa/->Teksti
+                                     (keyword (str "tehtavaryhma-" u-k-lkm))
+                                     (or tehtavaryhma
+                                         "Tehtäväryhmä") #_(:tehtavaryhma (first kohd))]
+                                    [osa/->Teksti
+                                     (keyword (str "maara-" u-k-lkm))
+                                     summa]))
+                   (rest kohd)))))
+           taulukko
+           tulos)]
       (loki/log "LASKUT" tulos)
       (-> app
-          (assoc :laskut tulos :taulukko paivitetty-taulukko)
+          (assoc :laskut tulos
+                 :taulukko paivitetty-taulukko
+                 )
           (update-in [:meta :haetaan] dec))))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -176,10 +182,10 @@
     (let [kasitelty (set
                       (flatten
                         (mapv
-                          (fn [{:keys [t3_id t3_nimi t3_koodi tpi_id tpi_nimi t2_id t2_nimi]}]
+                          (fn [{:keys [tehtavaryhma-id tehtavaryhma-nimi toimenpide jarjestys toimenpide-id toimenpideinstanssi]}]
                             (vector
-                              {:koodi t2_id :nimi t2_nimi :toimenpideinstanssi tpi_id :tpi-nimi tpi_nimi}
-                              {:tehtavaryhma t3_nimi :koodi t3_koodi :id t3_id :toimenpideinstanssi tpi_id}))
+                              {:toimenpideinstanssi toimenpideinstanssi :toimenpide-id toimenpide-id :toimenpide toimenpide :jarjestys jarjestys}
+                              {:tehtavaryhma tehtavaryhma-nimi :id tehtavaryhma-id :toimenpide toimenpide-id :jarjestys jarjestys}))
                           tulos)))
           {:keys [tehtavaryhmat toimenpiteet]} (reduce
                                                  (fn [k asia]
@@ -188,24 +194,24 @@
                                                              :toimenpiteet
                                                              :tehtavaryhmat)
                                                            conj asia))
-                                                 {:tehtavaryhmat [{:tehtavaryhma :johto-ja-hallintokorvaus} {:tehtavaryhma :erilliskustannukset}]
+                                                 {:tehtavaryhmat []
                                                   :toimenpiteet  []}
-                                                 kasitelty)]
+                                                 (sort-by :jarjestys kasitelty))]
       (assoc app
         :toimenpiteet toimenpiteet
         :tehtavaryhmat tehtavaryhmat)))
   KutsuEpaonnistui
   (process-event [{:keys [tulos]} app]
-    (loki/log "tai ulos " tulos)
+    (loki/log "tai ulos!!!!!! " tulos)
     app)
   HaeUrakanToimenpiteet
   (process-event
     [{:keys [urakka]} app]
-    (tuck-apurit/post! :urakan-toimenpiteet
-                       urakka
-                       {:onnistui           ->ToimenpidehakuOnnistui
-                        :epaonnistui        ->KutsuEpaonnistui
-                        :paasta-virhe-lapi? true})
+    (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
+                      {:urakka-id urakka}
+                      {:onnistui           ->ToimenpidehakuOnnistui
+                       :epaonnistui        ->KutsuEpaonnistui
+                       :paasta-virhe-lapi? true})
     app)
   TallennaKulu
   (process-event
@@ -259,7 +265,8 @@
                          {:onnistui            ->TallennusOnnistui
                           :onnistui-parametrit [{:avain :laskut}]
                           :epaonnistui         ->KutsuEpaonnistui
-                          :paasta-virhe-lapi?  true})
+                          ;:paasta-virhe-lapi?  true
+                          })
       (assoc app :taulukko taulukko)))
 
   KulujenSyotto

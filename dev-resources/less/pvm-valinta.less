@@ -6,9 +6,11 @@
   max-width: 200px;
 
   background-color: #ffffff;
+
   .pvm-controllit {
     background-color: #fafafa;
   }
+
   .pvm-valittu {
     font-weight: bold;
   }
@@ -22,13 +24,16 @@
       background-color: wheat;
     }
   }
+
   .pvm-muu-kk-paiva {
     background-color: @harmaa10;
   }
+
   .pvm-viikonpaivat {
     font-size: 85%;
     background-color: @sininen6;
   }
+
   .pvm-disabloitu {
     background-color: @harmaa6;
   }
@@ -36,6 +41,43 @@
   border: solid 1px black;
   border-top: none;
 }
+
 .pvm-tanaan {
   background-color: yellow;
+}
+
+.kalenteri-kontti {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+  z-index: 2000;
+  text-align: center;
+  font-size: 14px;
+  line-height:29px;
+  color: @gray100;
+
+  .calendar-default {
+    background-color:white;
+    min-height: 300px;
+    width:100%;
+    border: 1px solid @gray200;
+    position: absolute;
+  }
+
+  .calendar-header-row {
+    background: @gray230;
+    padding: 16px;
+  }
+
+  .calendar-cell {
+    background: white;
+    &:hover {
+      background-color: @gray245;
+    }
+
+    &.pvm-disabloitu {
+      background-color: @gray200;
+    }
+  }
 }

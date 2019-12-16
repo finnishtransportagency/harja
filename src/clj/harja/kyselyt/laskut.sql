@@ -104,11 +104,14 @@ ORDER by lk.id;
 
 -- name: luo-tai-paivita-lasku<!
 INSERT
-INTO lasku (viite, erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja)
-VALUES (:viite, :erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI, current_timestamp, :kayttaja)
+INTO lasku (viite, erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, lisatieto, laskun_numero)
+VALUES (:viite, :erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI, current_timestamp, :kayttaja, :lisatieto, :numero)
 ON CONFLICT (viite) DO UPDATE
   SET erapaiva = :erapaiva,
+    lisatieto = :lisatieto,
+    laskun_numero = :numero,
     kokonaissumma = :kokonaissumma,
+
     tyyppi = :tyyppi ::LASKUTYYPPI,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja;

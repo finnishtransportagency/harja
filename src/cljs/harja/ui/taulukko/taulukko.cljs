@@ -46,11 +46,11 @@
       (if (= 0 (count args))
         (jana-fn rivi)
         (let [a (first args)
-              o-fn (first a)
-              o-par (vec (rest a))]
+              osa-fn (first a)
+              osa-parametrit (vec (rest a))]
           (recur (conj rivi (apply
-                              o-fn
-                              (conj o-par {:class #{"osa" "osa-teksti"}})))
+                              osa-fn
+                              (conj osa-parametrit {:class #{"osa" "osa-teksti"}})))
                  (rest args)))))))
 
 (defonce muuta-avain

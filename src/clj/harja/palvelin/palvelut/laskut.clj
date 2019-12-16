@@ -131,6 +131,8 @@
                                              :kokonaissumma (:kokonaissumma laskuerittely)
                                              :urakka        (:urakka laskuerittely)
                                              :tyyppi        (:tyyppi laskuerittely)
+                                             :numero (:laskun-numero laskuerittely)
+                                             :lisatieto     (:lisatieto laskuerittely)
                                              :kayttaja      (:id user)})]
     (doseq [kohdistusrivi (:kohdistukset laskuerittely)]
       (as-> kohdistusrivi r

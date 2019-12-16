@@ -71,7 +71,11 @@
         nyt (or (:pvm optiot) (pvm/nyt))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])
         scroll-kuuntelija (fn [this _]
-                            (selvita-kalenterin-suunta this sijainti-atom))]
+                            (selvita-kalenterin-suunta this sijainti-atom))
+        {vayla-tyyli? :vayla-tyyli?} optiot
+        tyyli-otsikkorivi (if vayla-tyyli? "calendar-header-row " "pvm-viikonpaivat ")
+        tyyli-paivasolu (if vayla-tyyli? "calendar-cell " "pvm-paiva ")
+        tyyli-kalenteri (if vayla-tyyli? "calendar-default " "pvm-valinta ")]
     (komp/luo
       {:component-will-receive-props
        (fn [this & [_ optiot]]
@@ -86,11 +90,12 @@
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL scroll-kuuntelija)
 
-      (fn [{:keys [pvm valitse style valittava?-fn] :as optiot}]
+      (fn [{:keys [pvm valitse style valittava?-fn vayla-tyyli?] :as optiot}]
         (let [[vuosi kk] @nayta
               naytettava-kk (t/date-time vuosi (inc kk) 1)
               naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-          [:table.pvm-valinta {:style (merge
+          [:table {:class (str tyyli-kalenteri)
+                   :style (merge
                                         {:display (if @sijainti-atom "table" "none")
                                          ;; Etenkin jos kalenteri avataan ylöspäin, on tärkeää, että korkeus pysyy vakiona
                                          ;; Muuten otsikkorivi hyppii sen mukaan paljonko kuussa on päiviä.
@@ -122,7 +127,7 @@
                                          [vuosi (inc kk)])))
                               nil)}
               (ikonit/livicon-chevron-right)]]
-            [:tr.pvm-viikonpaivat
+            [:tr {:class tyyli-otsikkorivi}
              (for [paiva +paivat+]
                ^{:key paiva}
                [:td paiva])]]
@@ -135,7 +140,7 @@
                      :let [valittava? (or (not (some? valittava?-fn))
                                           (valittava?-fn paiva))]]
                  ^{:key (pvm/millisekunteina paiva)}
-                 [:td.pvm-paiva {:class    (str
+                 [:td {:class    (str        tyyli-paivasolu
                                              (if valittava?
                                                "klikattava "
                                                "pvm-disabloitu ")
@@ -165,12 +170,13 @@
   [optiot]
   (let [auki? (atom false)]
     (fn [{:keys [pvm valitse luokat valittava?-fn]}]
-      [:div
+      [:div.kalenteri-kontti
        [:input {:type     :text
                 :class    (apply conj #{} (filter #(not (nil? %)) luokat))
-                :value    (when-not (nil? pvm) (str (.getDate pvm) "." (.getMonth pvm) "." (.getYear pvm)))
+                :value    (when-not (nil? pvm) (pvm/pvm pvm))
                 :on-focus #(reset! auki? true)
                 :on-blur  (fn [] (js/setTimeout #(reset! auki? false) 100))}]
-       (when @auki? [pvm-valintakalenteri {:valitse       valitse
-                                           :valittava?-fn #(true? true)
+       (when @auki? [pvm-valintakalenteri {:vayla-tyyli? true
+                                           :valitse       valitse
+                                           :valittava?-fn valittava?-fn
                                            :pvm           pvm}])])))
