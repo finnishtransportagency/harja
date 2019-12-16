@@ -7,27 +7,6 @@
             [reagent.ratom :as ratom])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-(defn jarjesta-data [data jarjestykset]
-  ;{:otsikko {:sarakkeet [:nimi :maara :yhteensa :indeksikorjattu]}
-  ; :data-yhteenveto {:sarakkeet [:nimi :maara :yhteensa :indeksikorjattu]}
-  ; :data-sisalto {
-  ;                ;(let [data [{:foo :b} {:foo :c} {:foo :a}]
-  ;                ;      order [:a :b :c]
-  ;                ;      order-map (zipmap order (range))]
-  ;                ;  (sort-by :foo
-  ;                ;           #(compare (order-map %1) (order-map %2))
-  ;                ;           data))
-  ;                :rivit {:keyfn :aika
-  ;                        :comp (fn [aika-1 aika-2]
-  ;                                (pvm/ennen? aika-1 aika-2))}
-  ;                :sarakkeet [:nimi :maara :yhteensa :indeksikorjattu]}}
-  (walk/postwalk (fn [x]
-                   (if-let [[nimi {:keys [sarakkeet rivit]}] (and (map-entry? x)
-                                                                  (find jarjestykset (first x)))]
-                     (first {(first x) })
-                     x))
-                 data))
-
 (s/def ::keyfn fn?)
 (s/def ::comp fn?)
 
@@ -41,26 +20,26 @@
             (first (s/conform ::jarjestys jarjestys))))
 
 (defmethod jarjesta-data :sort-by-with-comp
-  (fn [{:keys [keyfn comp]} data]
-    (let [jarjestetty (sort-by keyfn comp data)]
-      (vec jarjestetty))))
+  [{:keys [keyfn comp]} data]
+  (let [jarjestetty (sort-by keyfn comp data)]
+    (vec jarjestetty)))
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
-  (fn [jarjestys data]
-    (let [jarjestys-map (zipmap jarjestys (range))]
-      (if (or (record? data) (map? data))
-        (sort-by key
-                 #(compare (jarjestys-map %1) (jarjestys-map %2))
-                 data)
-        (do (warn "Yritetään järjestää ei map muotoinen data avainten mukaan. Ei järjestetä.")
-            data)))))
+  [jarjestys data]
+  (let [jarjestys-map (zipmap jarjestys (range))]
+    (if (or (record? data) (map? data))
+      (sort-by key
+               #(compare (jarjestys-map %1) (jarjestys-map %2))
+               data)
+      (do (warn "Yritetään järjestää ei map muotoinen data avainten mukaan. Ei järjestetä.")
+          data))))
 
 (defmethod jarjesta-data :default
-  (fn [_ data]
-    (cond
-      (or (record? data) (map? data)) (mapv val data)
-      (sequential? data) (vec data)
-      :else data)))
+  [_ data]
+  (cond
+    (or (record? data) (map? data)) (mapv val data)
+    (sequential? data) (vec data)
+    :else data))
 
 (defn rajapinnan-data->grid-polut
   "Grid data sisältää vain sisäkkäisiä vektoreita.
@@ -83,7 +62,7 @@
                                                              :else polku)))
                             grid-data))))))
 
-(defrecord GridDatanKasittelija [pointterit data jarjestys rajapinta]
+(defrecord GridDatanKasittelija [grid pointterit data jarjestys rajapinta]
   ;; data avaimet :grid-polut :rajapinta :rajapinta->grid
   p/IGridDatanKasittely
   (-muokkaa-osan-data! [this id f]
@@ -102,9 +81,9 @@
     (swap! (:data this)
            (fn [{grid-polut :grid-polut
                  rajapinta-data :rajapinta
-                 rajapinta->grid :rajapinta->grid :as kaikki-data}]
+                 rajapinta-grid-id :rajapinta-grid-id :as kaikki-data}]
              (let [rajapinnan-data (update-in rajapinta-data rajapinta-polku f)
-                   rajapinnan-polku-gridissa (get-in rajapinta->grid rajapinta-polku)
+                   rajapinnan-polku-gridissa (get-in @pointterit (get rajapinta-grid-id rajapinta-polku))
                    grid-polut (update-in grid-polut
                                         rajapinnan-polku-gridissa
                                         (fn [grid-polut]
@@ -114,13 +93,28 @@
   (-aseta-rajapinnan-data! [this rajapinta-polku uusi-data]
     (swap! (:data this)
            (fn [{grid-polut :grid-polut
-                 rajapinta->grid :rajapinta->grid :as kaikki-data}]
-             (let [grid-polut (update-in grid-polut
-                                        (get-in rajapinta->grid rajapinta-polku)
+                 rajapinta-grid-id :rajapinta-grid-id :as kaikki-data}]
+             (let [rajapinnan-polku-gridissa (get-in @pointterit (get rajapinta-grid-id rajapinta-polku))
+                   grid-polut (update-in grid-polut
+                                         rajapinnan-polku-gridissa
                                         (fn [grid-polut]
                                           (rajapinnan-data->grid-polut grid-polut uusi-data (get-in @(:jarjestys this) rajapinta-polku))))]
                (assoc kaikki-data :rajapinta uusi-data
                                   :grid-polut grid-polut)))))
+  (-root [this]
+    (println "HAE ROOT")
+    (println (:grid this))
+    (println "FOO")
+    @(:grid this))
+  (-aseta-root! [this annettu-grid]
+    (println "ASETA ROOT")
+    (swap! (:grid this) (fn [_] annettu-grid)))
+  (-pointterit [this]
+    @pointterit)
+  (-aseta-pointteri! [this solun-id polku]
+    (swap! (:pointterit this)
+           (fn [kaikki-pointterit]
+             (assoc kaikki-pointterit solun-id polku))))
 
   (-aseta-datan-jarjestys! [this nimi uusi-jarjestys]
     (swap! (:jarjestys this)
@@ -131,17 +125,21 @@
     this
     #_(swap! (:data this)
            (fn [{grid-polut :grid-polut
-                 rajapinta->grid :rajapinta->grid :as kaikki-data}]
+                 rajapinta-grid-id :rajapinta-grid-id :as kaikki-data}]
              (let [grid-polut (update-in grid-polut
-                                         (get-in rajapinta->grid rajapinta-polku)
+                                         (get rajapinta-grid-id rajapinta-polku)
                                          (fn [grid-polut]
                                            (rajapinnan-data->grid-polut grid-polut uusi-data (get-in @(:jarjestys this) rajapinta-polku))))]
                (assoc kaikki-data :rajapinta uusi-data
                                   :grid-polut grid-polut)))))
-  (-aseta-pointteri! [this id polku]
-    (swap! (:pointterit this)
-           (fn [kaikki-pointterit]
-             (assoc kaikki-pointterit id polku))))
+  (-aseta-grid-polut! [this polut]
+    (swap! (:data this)
+           (fn [data]
+             (assoc data :grid-polut polut))))
+  (-aseta-grid-rajapinta! [this grid-rajapinta]
+    (swap! (:data this)
+           (fn [data]
+             (assoc data :rajapinta-grid-id grid-rajapinta))))
   (-rajapinta [this]
     (:rajapinta this))
   (-osan-derefable [this id]
@@ -174,10 +172,12 @@
               polku @osan-polku]
           (-> this :data deref :rajapinta (get-in osan-polku-dataan)))))))
 
-(defn datan-kasittelija [grid data-atom data-atom-polku datajarjestys]
-  (let [datakasittelija (->GridDatanKasittelija (r/cursor data-atom (conj data-atom-polku :pointterit))
+(defn datan-kasittelija [data-atom data-atom-polku datajarjestys rajapinta]
+  (let [datakasittelija (->GridDatanKasittelija (r/cursor data-atom (conj data-atom-polku :grid))
+                                                (r/cursor data-atom (conj data-atom-polku :pointterit))
                                                 (r/cursor data-atom (conj data-atom-polku :data))
-                                                (r/cursor data-atom (conj data-atom-polku :jarjestys)))]
+                                                (r/cursor data-atom (conj data-atom-polku :jarjestys))
+                                                rajapinta)]
     (doseq [[nimi jarjestys] datajarjestys]
       (p/aseta-datan-jarjestys! datakasittelija nimi jarjestys))
     datakasittelija))

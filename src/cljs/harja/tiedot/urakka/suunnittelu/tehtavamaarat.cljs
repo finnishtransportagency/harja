@@ -10,7 +10,7 @@
 
 (defn hae-urakan-tehtavamaarat-hierarkiassa [urakka-id hoitokauden-alkuvuosi]
   (let [tiedot {:urakka-id  urakka-id
-                :hoitokausi hoitokausi}]
+                :hoitokausi hoitokauden-alkuvuosi}]
     (k/post! :tehtavamaarat-hierarkiassa
              tiedot)))
 

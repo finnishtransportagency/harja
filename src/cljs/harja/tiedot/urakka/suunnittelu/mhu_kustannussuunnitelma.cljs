@@ -12,6 +12,7 @@
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.grid-protokollat :as gp]
+            [harja.ui.taulukko.datan-kasittely-protokollat :as dp]
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.jana :as jana]
@@ -1555,5 +1556,5 @@
     app)
   ASDPaivitaSolunArvo
   (process-event [{:keys [solu arvo]} app]
-    (gp/aseta-osan-data! (::grid/data solu) (gp/id solu) arvo)
+    (dp/aseta-osan-data! (::grid/data solu) (gp/id solu) arvo)
     app))

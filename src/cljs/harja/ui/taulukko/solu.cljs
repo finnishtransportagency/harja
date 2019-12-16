@@ -125,7 +125,7 @@
                               :href linkki
                               :id id
                               :data-cy (::nimi this)}
-           ((::fmt this) teksti)]))))
+           ((::fmt this) arvo)]))))
   p/IOsanRajapinta
   (-rajapinta [this]
     (get this ::rajapinta))

@@ -6,6 +6,7 @@
   (-aseta-solut [this solut])
   (-paivita-solut [this f])
   (-koko [this])
+  (-koot [this])
   (-aseta-koko! [this koko])
   (-paivita-koko! [this f])
   (-alueet [this])
@@ -16,8 +17,11 @@
   (-sarake [this tunniste] "Palauttaa sarakkeen tunnisteen perusteella")
   (-solu [this tunniste] "Palauttaa solun tunnisteen perusteella"))
 
-(defprotocol IGridPointterit
-  (-gridin-pointterit! [this datan-kasittelija]))
+(defprotocol IGridDataYhdistaminen
+  (-gridin-pointterit! [this datan-kasittelija])
+  (-gridin-muoto! [this datan-kasittelija])
+  (-rajapinta-grid-yhdistaminen! [this datan-kasittelija])
+  (-vanhempi [this datan-kasittelija id]))
 
 (defprotocol IPiirrettava
   (-piirra [this]))
@@ -67,10 +71,10 @@
 
 (defn piirra [osa]
   {:pre [(satisfies? IPiirrettava osa)]}
-  (-piirra osa))
+  [:<>
+   [-piirra osa]])
 
 (defn lapset [osa]
-  {:pre [(satisfies? IGridOsa osa)]}
   (when (satisfies? IGrid osa)
     (-solut osa)))
 
@@ -91,6 +95,10 @@
   {:pre [(satisfies? IGridOsa osa)]}
   (when (satisfies? IGrid osa)
     (-koko osa)))
+
+(defn koot [osa]
+  {:pre [(satisfies? IGrid osa)]}
+  (-koot osa))
 
 (defn aseta-koko! [grid koko]
   {:pre [(satisfies? IGrid grid)
@@ -123,12 +131,30 @@
    :post [(satisfies? IGrid %)]}
   (-paivita-alueet grid f))
 
+(defn vanhempi [grid datan-kasittelija id]
+  {:pre [(satisfies? dp/IGridDatanKasittely datan-kasittelija)
+         (symbol? id)]
+   ;; TODO määrittele :post
+   }
+  (-vanhempi grid datan-kasittelija id))
 
 (defn gridin-pointterit! [grid datan-kasittelija]
-  {:pre [(and (satisfies? IGridPointterit grid)
+  {:pre [(and (satisfies? IGridDataYhdistaminen grid)
               (satisfies? IGrid grid))
          (satisfies? dp/IGridDatanKasittely datan-kasittelija)]}
   (-gridin-pointterit! grid datan-kasittelija))
+
+(defn gridin-muoto! [grid datan-kasittelija]
+  {:pre [(and (satisfies? IGridDataYhdistaminen grid)
+              (satisfies? IGrid grid))
+         (satisfies? dp/IGridDatanKasittely datan-kasittelija)]}
+  (-gridin-muoto! grid datan-kasittelija))
+
+(defn rajapinta-grid-yhdistaminen! [grid datan-kasittelija]
+  {:pre [(and (satisfies? IGridDataYhdistaminen grid)
+              (satisfies? IGrid grid))
+         (satisfies? dp/IGridDatanKasittely datan-kasittelija)]}
+  (-rajapinta-grid-yhdistaminen! grid datan-kasittelija))
 
 
 (defn lisaa-fmt [solu f]
