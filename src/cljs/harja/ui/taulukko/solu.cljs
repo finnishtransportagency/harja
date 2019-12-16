@@ -64,7 +64,7 @@
     (let [taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)
-              arvo (-> @taman-data (::filtteri this) (::arvo this))]
+              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))]
           [:div.osa.osa-teksti {:class (when class
                                          (apply str (interpose " " class)))
                                 :id id
@@ -119,7 +119,7 @@
     (let [taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class]} (:parametrit this)
-              arvo (-> @taman-data (::filtteri this) (::arvo this))]
+              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))]
           [:a.osa.osa-linkki {:class (when class
                                        (apply str (interpose " " class)))
                               :href linkki
@@ -196,7 +196,7 @@
                       checked? default-checked? indeterminate?
                       alt height src width
                       autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
-              arvo (-> @taman-data (::filtteri this) (::arvo this))
+              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))
               parametrit (into {}
                                (remove (fn [[_ arvo]]
                                          (nil? arvo))
@@ -307,7 +307,7 @@
           taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
-              arvo (-> @taman-data (::filtteri this) (::arvo this))
+              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))
               parametrit (into {}
                                (remove (fn [[_ arvo]]
                                          (nil? arvo))
@@ -391,7 +391,7 @@
           taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
       (fn [this]
         (let [{:keys [id class ikoni]} (:parametrit this)
-              arvo (-> @taman-data (::filtteri this) (::arvo this))
+              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))
               ikoni (or ikoni "chevron")
               ikoni-auki (if (= ikoni "chevron")
                            ikonit/livicon-chevron-down

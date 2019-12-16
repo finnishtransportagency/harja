@@ -57,22 +57,22 @@
                                (if-let [maaritetty-leveys (get-in grid-koko [:sarake :leveydet (dec sarake-track-numero)])]
                                  maaritetty-leveys
                                  (get-in grid-koko [:sarake :oletus-leveys])))
-                             (range css-aloitus-sarake css-lopetus-sarake))
+                             (range css-aloitus-sarake (inc css-lopetus-sarake)))
         rivi-korkeudet (map (fn [rivi-track-numero]
                               (if-let [maaritetty-korkeus (get-in grid-koko [:rivi :korkeudet (dec rivi-track-numero)])]
                                 maaritetty-korkeus
                                 (get-in grid-koko [:rivi :oletus-korkeus])))
-                            (range css-aloitus-rivi css-lopetus-rivi))
+                            (range css-aloitus-rivi (inc css-lopetus-rivi)))
         [css-top css-left] [(if (< aloitus-rivi 0)
                               (take (js/Math.abs aloitus-rivi) rivi-korkeudet)
                               ["0px"])
                             (if (< aloitus-sarake 0)
                               (take (js/Math.abs aloitus-sarake) sarake-leveydet)
                               ["0px"])]]
-    {:korkeudet (apply str rivi-korkeudet)
-     :leveydet (apply str sarake-leveydet)
-     :top (str "calc(" (apply str (interpose " + " css-top)) ")")
-     :left (str "calc(" (apply str (interpose " + " css-left)) ")")}))
+    {:korkeudet (clj-str/join " " rivi-korkeudet)
+     :leveydet (clj-str/join " " sarake-leveydet)
+     :top (str "calc(" (clj-str/join " + " css-top) ")")
+     :left (str "calc(" (clj-str/join " + " css-left) ")")}))
 
 (defn- oikea-osa? [osa etsittava-osa]
   (let [id? (symbol? etsittava-osa)]
@@ -300,28 +300,15 @@
     (p/aseta-koko! grid koko)))
 
 (defn aseta-koot! [root-grid]
-  (println "DATAGRID")
-  (cljs.pprint/pprint (dp/root (::data root-grid)))
   (let [kokojen-seuranta (gridin-osat-vektoriin root-grid
                                                 #(satisfies? p/IGrid %)
                                                 (fn [grid]
-                                                  (println "TYYPPI: " (type grid))
                                                   (let [koko (p/koko grid)
                                                         seurattavan-gridin-nimi (get-in koko [:seuraa :seurattava])
-                                                        _ (println "SEURATTAVAN GRIDIN NIMI: " seurattavan-gridin-nimi)
                                                         seurattava-grid (if seurattavan-gridin-nimi
                                                                           (etsi-osa (dp/root (::data grid)) seurattavan-gridin-nimi)
                                                                           grid)]
-                                                    (when-not (and (satisfies? p/IGridOsa grid)
-                                                                   (satisfies? p/IGridOsa seurattava-grid))
-                                                      (println "GRID: ")
-                                                      (cljs.pprint/pprint grid)
-                                                      (println "SEURATTAVA GRID: ")
-                                                      (cljs.pprint/pprint seurattava-grid))
-                                                    (println "SEURATTAVA GRID NIMI: " seurattavan-gridin-nimi)
                                                     [grid [(p/id grid) (p/id seurattava-grid)]])))
-        _ (println "KOKOJEN SEURANTA: ")
-        _ (cljs.pprint/pprint kokojen-seuranta)
         gridit-jarjestetty (loop [jarjestetyt-gridit (filterv (fn [[grid [id seurattavan-id]]]
                                                                 (= id seurattavan-id))
                                                               kokojen-seuranta)
@@ -382,45 +369,42 @@
      [piirra-gridin-osat osat grid]]))
 
 (defn piirra-grid [grid]
-  (fn [grid]
-    (let [luokat (-> grid :parametrit :class)
-          dom-id (-> grid :parametrit :id)
-          seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
-                            (r/cursor (::koko grid) [(:seurattava seuraa-asetukset)]))
-          {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
-      ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
-      (when (and seurattava-koko
-                 (= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
-                 (= (:rivi @seurattava-koko) (:rivi (p/koko grid))))
-        (aseta-seurattava-koko! grid))
-      (when (p/id? grid (p/id (dp/root (::data grid))))
-        (println "TYYPPI: " (type (::data grid)))
-        (p/gridin-pointterit! grid (::data grid)))
-      (println "CSS tyylit: ")
-      (cljs.pprint/pprint [korkeudet leveydet top left])
-      [:div {:style {:overflow "hidden"}}
+  (let [luokat (-> grid :parametrit :class)
+        dom-id (-> grid :parametrit :id)
+        seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
+                          (r/cursor (::koko grid) [(:seurattava seuraa-asetukset)]))
+        aseta-koko-uusiksi? (and seurattava-koko
+                                 (or (not= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
+                                     (not= (:rivi @seurattava-koko) (:rivi (p/koko grid)))))
+        {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
+    ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
+    (when aseta-koko-uusiksi?
+      (aseta-seurattava-koko! grid))
+    (when (p/id? grid (p/id (dp/root (::data grid))))
+      (p/gridin-pointterit! grid (::data grid)))
+    [:div {:style {:overflow "hidden"}}
 
 
 
-       ;; Järjestys ja koko erilleen (relevantteja vain laps'taulukoille)
-       ;; Järjestyksessä joku osa on toisen osan alisteinen
-       ;; Järjestyksessä rivien/sarakkeiden määrä voi poiketa
-       ;; Järjestyksen täytynee olla atomi. Sen takia, että yhdestä osiosta voidaan aiheuttaa sivuvaikutuksena
-       ;; Toisen osan järjestyksen muuttuminen
+     ;; Järjestys ja koko erilleen (relevantteja vain laps'taulukoille)
+     ;; Järjestyksessä joku osa on toisen osan alisteinen
+     ;; Järjestyksessä rivien/sarakkeiden määrä voi poiketa
+     ;; Järjestyksen täytynee olla atomi. Sen takia, että yhdestä osiosta voidaan aiheuttaa sivuvaikutuksena
+     ;; Toisen osan järjestyksen muuttuminen
 
-       ;; data manageri, joka kertoo osille mistä lukea data ja raakadatan munklaa oikeaan muotoon.
-       [:div {:style {:display "grid"
-                      :position "relative"
-                      :top top
-                      :left left
-                      :grid-template-columns leveydet
-                      :grid-template-rows korkeudet}}
-        (if (-> grid meta ::dynaaminen?)
-          ;[dynaaminen-grid grid]
-          ^{:key (str (:id grid) "-dynamic")}
-          [:div "DYNAMIIIIC"]
-          ^{:key (str (:id grid) "-static")}
-          [staattinen-grid grid])]])))
+     ;; data manageri, joka kertoo osille mistä lukea data ja raakadatan munklaa oikeaan muotoon.
+     [:div {:style {:display "grid"
+                    :position "relative"
+                    :top top
+                    :left left
+                    :grid-template-columns leveydet
+                    :grid-template-rows korkeudet}}
+      (if (-> grid meta ::dynaaminen?)
+        ;[dynaaminen-grid grid]
+        ^{:key (str (:id grid) "-dynamic")}
+        [:div "DYNAMIIIIC"]
+        ^{:key (str (:id grid) "-static")}
+        [staattinen-grid grid])]]))
 
 (defn grid-polut
   ([grid] (grid-polut grid [] [0]))
@@ -492,10 +476,7 @@
                                                                           polut))
                                                                   lapset)))))
                                           x))
-                                      this)
-          ]
-      (println "POLUT DATAAN: ")
-      (cljs.pprint/pprint polut-dataan)
+                                      this)]
       (doseq [[solun-id & polku] polut-dataan]
         (dp/aseta-pointteri! datan-kasittelija
                              solun-id
@@ -532,7 +513,6 @@
     (assoc this ::nimi nimi))
   p/IPiirrettava
   (-piirra [this]
-    (println "PIIRRÄ grid")
     [:<>
      [piirra-grid this]]))
 
@@ -590,77 +570,4 @@
         root-grid (assoc root-grid ::data datan-kasittelija)]
     (dp/aseta-root! datan-kasittelija root-grid-ilman-datakasittelijaa)
     (aseta-koot! root-grid)
-    (println "ROOT GRID: " )
-    (cljs.pprint/pprint root-grid)
     root-grid))
-
-#_(let [header-jarjestys (atom [:header-1 :header-2 :header-3])]
-  (paa-grid
-    data-atom
-    data-atom-polku
-    {:nimi "FOOBAR"
-     ;; Alueet
-     :alueet [{:sarakkeet [3 6] :rivit [0 0]}
-              {:sarakkeet [3 6] :rivit [1 10]}]
-     ;; Koko
-     :koko {:class "foo"}
-     :jarjestys nil}
-
-    ;; Gridin ei tulisi välittää minkälaista dataa sille annetaan. Se vain näyttää sen mitä sille välitetään.
-    ;; Ongelmana kumminkin järjestäminen. Osien järjestäminen riippuu hyvinkin pitkälti datasta.
-    ;; Jos dataa järjestetään niin itse osankin pitäisi silloin lähtä liikkeelle (kaiketi?). Jos näin
-    ;; niin kun data liitetään osaan ensimmäisen kerran, niin sen pitäisi leechata siihen.
-
-
-    ;; Osat
-          [(rivi
-             ;;Nimi
-             :otsikko
-             ;;Alueet
-             [{:sarakkeet [0 3] :rivit [0 0]}]
-             ;;Koko
-             {:sarake {:oletus-leveys "5px"
-                       :leveydet {1 "3px"}
-                       :nimet {:foo 0}}
-              :rivi {:oletus-korkeus "3px"
-                     :korkeudet {2 "3px"}
-                     :nimet {:bar 0}}}
-             ;;Järjestys
-             {:sarakkeet [:foo :bar :asd]
-              :rivit ::ei-sorttia}
-             ;;Osat
-                   [(->Osa :header-1
-                           ;;Datapolku
-                           ;; Jos esim. aggregoidaan dataa, niin halutaan joku muu kasa dataa, kuin perus
-                           )
-                    (->Osa :header-2)
-                    (->Osa :header-3)])
-           (->Taulukko
-             ;;Nimi
-             :data
-             ;;Alueet
-             [{:sarakkeet [0 3] :rivit [0 0]}]
-             ;;Koko
-             {:seuraa {:seurattava :otsikko
-                       :sarakkeet :sama
-                       :rivit :sama}}
-             ;;Järjestys
-             {:sarakkeet (fn [])}
-             ;;Osat
-
-                       ^::dynaaminen? [(->Rivi :hederi-id
-                                {:alue {:sarakkeet [0 3] :rivit [0 0]}}
-                                [(->Osa :header-1
-                                        )
-                                 (->Osa :header-2)
-                                 (->Osa :header-3)])])]
-          #_[(->Alue :hederi-id
-                   {:alue {:sarakkeet [3 6] :rivit [0 0]}
-                    :jarjestys header-jarjestys}
-                   [(->Osa :header-1
-                           )
-                    (->Osa :header-2)
-                    (->Osa :header-3)])
-           (->Alue :data-id
-                   {:alue {:sarakkeet [3 6] :rivit [1 10]}
-                    :jarjestys @header-jarjestys})]))

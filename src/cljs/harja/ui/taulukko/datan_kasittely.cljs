@@ -102,12 +102,8 @@
                (assoc kaikki-data :rajapinta uusi-data
                                   :grid-polut grid-polut)))))
   (-root [this]
-    (println "HAE ROOT")
-    (println (:grid this))
-    (println "FOO")
     @(:grid this))
   (-aseta-root! [this annettu-grid]
-    (println "ASETA ROOT")
     (swap! (:grid this) (fn [_] annettu-grid)))
   (-pointterit [this]
     @pointterit)
