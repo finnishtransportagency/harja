@@ -239,7 +239,6 @@
                                                         " AND valtakunnallinen_valitavoite IS NOT NULL
                                                         AND poistettu IS NOT TRUE
                                                         LIMIT 1;"))))
-          _ (println "RANDOM TAVOITE " random-tavoite-id-urakassa)
           _ (is (integer? random-tavoite-id-urakassa))
           _ (u (str "UPDATE valitavoite set muokattu = NOW() WHERE id = " random-tavoite-id-urakassa))
           paivitetyt-valtakunnalliset
