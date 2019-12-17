@@ -13,7 +13,7 @@
             [clj-time.core :as t]))
 
 (defn hae-valtakunnalliset-valitavoitteet [db user]
-  ;(;(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
   (into []
         (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
         (q/hae-valtakunnalliset-valitavoitteet db)))
@@ -121,8 +121,7 @@
                                                        :hoito
                                                        (:tyyppi %)))
                                      (= (pvm/ennen? (t/now) (c/from-date (:loppupvm %)))))
-                               urakat)
-        _ (println " LINKITETTÄVÄ linkitettavat-urakat " linkitettavat-urakat)]
+                               urakat)]
     (doseq [urakka linkitettavat-urakat]
       (let [urakan-jaljella-olevat-vuodet (range (max (t/year (t/now))
                                                       (t/year (c/from-date (:alkupvm urakka))))
