@@ -53,16 +53,24 @@
                                              (inc (- lopetus-sarake aloitus-sarake))
                                              (inc (pienempi 0 aloitus-rivi))
                                                      (inc (- lopetus-rivi aloitus-rivi))]
+        _ (println "NIMI: " (p/nimi grid))
+        _ (println "CSS ARVOT")
+        _ (cljs.pprint/pprint [css-aloitus-sarake css-lopetus-sarake
+                               css-aloitus-rivi css-lopetus-rivi])
         sarake-leveydet (map (fn [sarake-track-numero]
                                (if-let [maaritetty-leveys (get-in grid-koko [:sarake :leveydet (dec sarake-track-numero)])]
                                  maaritetty-leveys
                                  (get-in grid-koko [:sarake :oletus-leveys])))
-                             (range css-aloitus-sarake (inc css-lopetus-sarake)))
+                             (range css-aloitus-sarake css-lopetus-sarake))
         rivi-korkeudet (map (fn [rivi-track-numero]
                               (if-let [maaritetty-korkeus (get-in grid-koko [:rivi :korkeudet (dec rivi-track-numero)])]
                                 maaritetty-korkeus
                                 (get-in grid-koko [:rivi :oletus-korkeus])))
-                            (range css-aloitus-rivi (inc css-lopetus-rivi)))
+                            (range css-aloitus-rivi css-lopetus-rivi))
+        _ (println "SARAKE LEVEYDET")
+        _ (cljs.pprint/pprint sarake-leveydet)
+        _ (println "RIVI KORKEUDET")
+        _ (cljs.pprint/pprint rivi-korkeudet)
         [css-top css-left] [(if (< aloitus-rivi 0)
                               (take (js/Math.abs aloitus-rivi) rivi-korkeudet)
                               ["0px"])
@@ -100,7 +108,7 @@
 
 (defn- gridin-osat-vektoriin
   ([grid pred f]
-   (let [kaikki-gridin-lapset (filter pred (p/lapset grid))
+   (let [kaikki-gridin-lapset (p/lapset grid)
          aloitus (if (pred grid)
                    [(f grid)]
                    [])]
@@ -110,8 +118,9 @@
                                               (remove nil?))
                                         lapset)
          oikeat-osat (reduce (fn [osat osa]
-                               (when (pred osa)
-                                 (conj osat (f osa))))
+                               (if (pred osa)
+                                 (conj osat (f osa))
+                                 osat))
                              []
                              lapset)]
      (if (empty? lapset)
@@ -351,9 +360,10 @@
 
 (defn- piirra-gridin-osat [osat grid]
   [:<>
-   (for [osa osat]
-     (with-meta [p/piirra osa]
-                {:key (p/id osa)}))])
+   (doall
+     (for [osa osat]
+       (with-meta [p/piirra osa]
+                  {:key (p/id osa)})))])
 
 #_(defn- dynaaminen-grid [grid]
   (let [data (p/pointteri (::p/data grid) grid)
@@ -381,7 +391,9 @@
     (when aseta-koko-uusiksi?
       (aseta-seurattava-koko! grid))
     (when (p/id? grid (p/id (dp/root (::data grid))))
-      (p/gridin-pointterit! grid (::data grid)))
+      (p/gridin-pointterit! grid (::data grid))
+      (p/rajapinta-grid-yhdistaminen! grid (::data grid))
+      (p/gridin-muoto! grid (::data grid)))
     [:div {:style {:overflow "hidden"}}
 
 
@@ -407,15 +419,13 @@
         [staattinen-grid grid])]]))
 
 (defn grid-polut
-  ([grid] (grid-polut grid [] [0]))
-  ([grid polut taman-polku]
-   (let [lapset (p/lapset grid)
-         taman-polut (vec (map-indexed (fn [index lapsi]
-                                         (if (satisfies? p/IGrid lapsi)
-                                           (grid-polut lapsi (assoc-in polut taman-polku []) (conj taman-polku index))
-                                           index))
-                                       lapset))]
-     (apply vector (assoc-in polut taman-polku taman-polut)))))
+  ([grid] (grid-polut grid []))
+  ([grid polku]
+   (vec (map-indexed (fn [index lapsi]
+                       (if (satisfies? p/IGrid lapsi)
+                         (grid-polut lapsi (conj polku index))
+                         (dk/->Jarjestys (vec (cons :muu (conj polku index))))))
+                     (p/lapset grid)))))
 
 (defn grid-koko [grid]
   (let [koko @(::koko grid)]
@@ -470,27 +480,70 @@
                                             (if lehti?
                                               [[id]]
                                               (vec (apply concat
-                                                     (map-indexed (fn [index polut]
-                                                                    (mapv (fn [polku]
-                                                                            (conj polku index))
-                                                                          polut))
-                                                                  lapset)))))
+                                                          [[id]]
+                                                          (map-indexed (fn [index polut]
+                                                                         (mapv (fn [polku]
+                                                                                 (conj polku index))
+                                                                               polut))
+                                                                       lapset)))))
                                           x))
                                       this)]
       (doseq [[solun-id & polku] polut-dataan]
         (dp/aseta-pointteri! datan-kasittelija
                              solun-id
-                             (vector (reverse polku))))))
+                             {:polku-dataan (vec (reverse polku))}))))
   (-gridin-muoto! [this datan-kasittelija]
-    (let [grid-polut (grid-polut this)]
-      (dp/aseta-grid-polut! datan-kasittelija grid-polut)))
+    (let [grid-polut (grid-polut this)
+          rajapinta-polut (mapv (fn [polku]
+                                  (vec polku))
+                                (reduce (fn [polut [_ polkuja]]
+                                          (concat polut polkuja))
+                                        []
+                                        (walk/postwalk (fn [x]
+                                                         (if (map-entry? x)
+                                                           (let [[k v] x]
+                                                             (if (map? v)
+                                                               (first {k (reduce (fn [polut [_ v1]]
+                                                                                   (if (sequential? v1)
+                                                                                     (concat polut (map #(cons k %) v1))
+                                                                                     (conj polut [k v1])))
+                                                                                 []
+                                                                                 v)})
+                                                               (first {k [[k]]})))
+                                                           x))
+                                                       (dp/rajapinta datan-kasittelija))))
+          pointterit (dp/pointterit datan-kasittelija)
+          rajapinta-grid-id (dp/grid-rajapinta datan-kasittelija)
+          _ (println "RAJAPINTA GRID")
+          _ (cljs.pprint/pprint rajapinta-grid-id)
+          _ (println "POINTTERIT")
+          _ (cljs.pprint/pprint pointterit)
+          rajapinnat-asetettu (loop [[rajapinnan-polku & loput-polut] rajapinta-polut
+                                     grid-polut grid-polut]
+                                (println "GRID POLUT")
+                                (cljs.pprint/pprint grid-polut)
+                                (println "RAJAPINNAN POLKU " rajapinnan-polku)
+                                (if (nil? rajapinnan-polku)
+                                  grid-polut
+                                  (let [rajapinnan-polku-gridissa (:polku-dataan (get pointterit (get rajapinta-grid-id rajapinnan-polku)))
+                                        _ (println "RAJAPINNAN POLKU GRIDSSÄ")
+                                        _ (cljs.pprint/pprint rajapinnan-polku-gridissa)
+                                        polut (:polut (dk/jarjesta-rajapintadata-ja-grid-polut (get-in grid-polut rajapinnan-polku-gridissa)
+                                                                                               rajapinnan-polku
+                                                                                               (dp/rajapinta-data datan-kasittelija rajapinnan-polku)
+                                                                                               []))]
+                                    (recur loput-polut
+                                           (assoc-in grid-polut rajapinnan-polku-gridissa polut)))))]
+      (println "RAJAPINNAT ASETETTU")
+      (cljs.pprint/pprint rajapinnat-asetettu)
+      (dp/aseta-grid-polut! datan-kasittelija rajapinnat-asetettu)))
   (-rajapinta-grid-yhdistaminen! [this datan-kasittelija]
     (dp/aseta-grid-rajapinta! datan-kasittelija
       (into {}
             (gridin-osat-vektoriin this
-                                   :rajapinnan-polku
+                                   ::rajapinnan-polku
                                    (fn [osa]
-                                     [(:rajapinnan-polku osa) (p/id osa)])))))
+                                     [(::rajapinnan-polku osa) (p/id osa)])))))
   (-vanhempi [this datan-kasittelija solun-id]
     (let [polku-vanhempaan (vec (drop-last (get @(dp/pointterit datan-kasittelija) solun-id)))]
       (if (empty? polku-vanhempaan)
@@ -531,7 +584,7 @@
        (or (nil? osat) (s/valid? ::osat osat))))
 
 (defn grid
-  [{:keys [nimi alueet koko osat] :as asetukset}]
+  [{:keys [nimi alueet koko osat rajapinnan-polku] :as asetukset}]
   {:pre [(validi-grid-asetukset? asetukset)]
    :post [(instance? Grid %)
           (symbol? (p/id %))]}
@@ -540,7 +593,8 @@
         gridi (cond-> (->Grid id)
                       nimi (assoc ::nimi nimi)
                       alueet (assoc ::alueet alueet)
-                      osat (assoc ::osat osat))
+                      osat (assoc ::osat osat)
+                      rajapinnan-polku (assoc ::rajapinnan-polku rajapinnan-polku))
         gridi (paivita-kaikki-lapset (assoc gridi ::koko koko)
                                      (fn [& _] true)
                                      (fn [lapsi]

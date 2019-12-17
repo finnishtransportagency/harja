@@ -1556,5 +1556,7 @@
     app)
   ASDPaivitaSolunArvo
   (process-event [{:keys [solu arvo]} app]
+    (println "SOLU: " solu)
+    (println "ARVO: " arvo)
     (dp/aseta-osan-data! (::grid/data solu) (gp/id solu) arvo)
     app))

@@ -115,10 +115,10 @@
 
 (defn rivi
   "Rivi on grid, mutta varmistetaan, että alueessa on vain yksi rivi."
-  [{:keys [nimi koko osat] :as asetukset} alueet]
+  [{:keys [nimi koko osat rajapinnan-polku] :as asetukset} alueet]
   {:pre [(g/validi-grid-asetukset? (assoc asetukset :alueet alueet))
          (= (count alueet) 1)
-         (apply = (:rivit (first alueet)))]
+         #_(= -1 (apply - (:rivit (first alueet))))]
    :post [(instance? Rivi %)
           (symbol? (p/id %))]}
   (let [id (gensym "rivi")
@@ -126,7 +126,8 @@
         rivi (cond-> (->Rivi id)
                      nimi (assoc ::g/nimi nimi)
                      alueet (assoc ::g/alueet alueet)
-                     osat (assoc ::g/osat osat))
+                     osat (assoc ::g/osat osat)
+                     rajapinnan-polku (assoc ::g/rajapinnan-polku rajapinnan-polku))
         rivi (g/paivita-kaikki-lapset (assoc rivi ::g/koko koko)
                                       (fn [& _] true)
                                       (fn [lapsi]
@@ -141,7 +142,7 @@
 
 (defn taulukko
   "Taulukko on grid, mutta varmistetaan, että kaikki osat ovat samanlaisia"
-  [{:keys [nimi alueet koko] :as asetukset} osat]
+  [{:keys [nimi alueet koko rajapinnan-polku] :as asetukset} osat]
   {:pre [(g/validi-grid-asetukset? (assoc asetukset :osat osat))
          (samat-osat? osat)]
    :post [(instance? Taulukko %)
@@ -151,7 +152,8 @@
         taulukko (cond-> (->Taulukko id)
                          nimi (assoc ::g/nimi nimi)
                          alueet (assoc ::g/alueet alueet)
-                         osat (assoc ::g/osat osat))
+                         osat (assoc ::g/osat osat)
+                         rajapinnan-polku (assoc ::g/rajapinnan-polku rajapinnan-polku))
         taulukko (g/paivita-kaikki-lapset (assoc taulukko ::g/koko koko)
                                           (fn [& _] true)
                                           (fn [lapsi]

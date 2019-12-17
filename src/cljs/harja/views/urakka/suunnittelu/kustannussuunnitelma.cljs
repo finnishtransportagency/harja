@@ -2027,7 +2027,7 @@
   (grid/paa-grid! tila/suunnittelu-kustannussuunnitelma
                  [:gridit :hoidonjohtopalkkio]
                  {:nimi :hoidonjohtopalkkio-root
-                  :alueet [{:sarakkeet [0 0] :rivit [0 3]}]
+                  :alueet [{:sarakkeet [0 1] :rivit [0 3]}]
                   :koko (assoc-in konf/auto
                                   [:rivi :nimet]
                                   {:otsikko 0
@@ -2049,15 +2049,16 @@
                                               (solu/teksti {:parametrit {:class #{"table-default" "table-default-header" "harmaa-teksti"}}})
                                               (solu/teksti {:parametrit {:class #{"table-default" "table-default-header"}}})))
                                           (range 4))}
-                             [{:sarakkeet [0 4] :rivit [0 0]}])
+                             [{:sarakkeet [0 4] :rivit [0 1]}])
                   (grid/grid {:nimi :data
-                              :alueet [{:sarakkeet [0 0] :rivit [0 2]}]
+                              :alueet [{:sarakkeet [0 1] :rivit [0 2]}]
                               :koko (assoc-in konf/auto
                                               [:rivi :nimet]
                                               {:data-yhteenveto 0
                                                :data-sisalto 1})
                               #_#_:jarjestys {:rivit [:data-yhteenveto :data-sisalto]}
                               :osat [(alue/rivi {:nimi :data-yhteenveto
+                                                 :rajapinnan-polku [:data-yhteenveto]
                                                  :koko {:seuraa {:seurattava :otsikko
                                                                  :sarakkeet :sama
                                                                  :rivit :sama}}
@@ -2086,9 +2087,10 @@
                                                                                       :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}})
                                                         (solu/teksti {:parametrit {:class #{"table-default"}}})
                                                         (solu/teksti {:parametrit {:class #{"table-default" "harmaa-teksti"}}})]}
-                                                [{:sarakkeet [0 4] :rivit [0 0]}])
+                                                [{:sarakkeet [0 4] :rivit [0 1]}])
                                      (alue/taulukko {:nimi :data-sisalto
-                                                     :alueet [{:sarakkeet [0 0] :rivit [0 12]}]
+                                                     :rajapinnan-polku [:data-sisalto]
+                                                     :alueet [{:sarakkeet [0 1] :rivit [0 12]}]
                                                      :koko konf/auto}
                                                     (mapv (fn [kuukausi]
                                                             (alue/rivi {#_#_:nimi (keyword (str "hoidonjohtopalkkio-datarivi" kuukausi))
@@ -2117,9 +2119,10 @@
                                                                                                              :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}})
                                                                                (solu/teksti {:parametrit {:class #{"table-default"}}})
                                                                                (solu/teksti {:parametrit {:class #{"table-default" "harmaa-teksti"}}})]}
-                                                                       [{:sarakkeet [0 4] :rivit [0 0]}]))
+                                                                       [{:sarakkeet [0 4] :rivit [0 1]}]))
                                                           (range 1 13)))]})
                   (alue/rivi {:nimi :yhteenveto
+                              :rajapinnan-polku [:yhteenveto]
                               :koko {:seuraa {:seurattava :otsikko
                                               :sarakkeet :sama
                                               :rivit :sama}}

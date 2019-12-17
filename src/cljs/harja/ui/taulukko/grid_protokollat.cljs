@@ -32,10 +32,6 @@
   (-nimi [this] "Palauttaa osa nimen")
   (-aseta-nimi [this nimi] "Asettaa nimen"))
 
-(defprotocol IOsanRajapinta
-  (-rajapinta [this] "Palauttaa rajapinnan nimen, jota tämä osa seuraa")
-  (-aseta-rajapinta [this nimi] "Asettaa rajapinnan nimen, jota tämä osa seuraa"))
-
 (defprotocol IFmt
   (-lisaa-fmt [this f] "Lisää asiaan formatointi funktion")
   (-lisaa-fmt-aktiiviselle [this f] "Jos osa on aktiivinen, minkälainen formatointi?"))
@@ -174,11 +170,3 @@
   {:pre [(satisfies? IGridOsa solu)
          (fn? f)]}
   (-lisaa-arvo solu f))
-
-(defn rajapinta [this]
-  ;; TODO pre ja post
-  (-rajapinta this))
-
-(defn aseta-rajapinta [this nimi]
-  ;;TODO pre ja post
-  (-aseta-rajapinta this nimi))

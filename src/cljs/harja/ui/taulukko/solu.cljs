@@ -70,11 +70,6 @@
                                 :id id
                                 :data-cy (::nimi this)}
            ((::fmt this) arvo)]))))
-  p/IOsanRajapinta
-  (-rajapinta [this]
-    (get this ::rajapinta))
-  (-aseta-rajapinta [this nimi]
-    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -110,8 +105,7 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)
-             rajapinta (p/aseta-rajapinta rajapinta)))))
+             nimi (p/aseta-nimi nimi)))))
 
 (defrecord Linkki [id linkki parametrit]
   p/IPiirrettava
@@ -126,11 +120,6 @@
                               :id id
                               :data-cy (::nimi this)}
            ((::fmt this) arvo)]))))
-  p/IOsanRajapinta
-  (-rajapinta [this]
-    (get this ::rajapinta))
-  (-aseta-rajapinta [this nimi]
-    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -167,8 +156,7 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)
-             rajapinta (p/aseta-rajapinta rajapinta)))))
+             nimi (p/aseta-nimi nimi)))))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
 ;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
@@ -250,11 +238,6 @@
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
           [:input.osa.osa-syote parametrit]))))
-  p/IOsanRajapinta
-  (-rajapinta [this]
-    (get this ::rajapinta))
-  (-aseta-rajapinta [this nimi]
-    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -293,8 +276,7 @@
              fmt (p/lisaa-fmt fmt)
              (nil? fmt-aktiivinen) (p/lisaa-fmt-aktiiviselle identity)
              fmt-aktiivinen (p/lisaa-fmt-aktiiviselle fmt-aktiivinen)
-             nimi (p/aseta-nimi nimi)
-             rajapinta (p/aseta-rajapinta rajapinta)))))
+             nimi (p/aseta-nimi nimi)))))
 
 
 
@@ -340,11 +322,6 @@
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
           [:button.osa.osa-nappi parametrit sisalto]))))
-  p/IOsanRajapinta
-  (-rajapinta [this]
-    (get this ::rajapinta))
-  (-aseta-rajapinta [this nimi]
-    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -381,8 +358,7 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)
-             rajapinta (p/aseta-rajapinta rajapinta)))))
+             nimi (p/aseta-nimi nimi)))))
 
 (defrecord Laajenna [id aukaise-fn auki-alussa? parametrit]
   p/IPiirrettava
@@ -414,11 +390,6 @@
              [ikoni-auki]
              ^{:key "laajenna-kiini"}
              [ikoni-kiinni])]))))
-  p/IOsanRajapinta
-  (-rajapinta [this]
-    (get this ::rajapinta))
-  (-aseta-rajapinta [this nimi]
-    (assoc this ::rajapinta nimi))
   p/IGridOsa
   (-id [this]
     (:id this))
@@ -456,5 +427,4 @@
              arvo (p/lisaa-arvo arvo)
              (nil? fmt) (p/lisaa-fmt identity)
              fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)
-             rajapinta (p/aseta-rajapinta rajapinta)))))
+             nimi (p/aseta-nimi nimi)))))

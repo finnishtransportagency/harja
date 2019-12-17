@@ -14,6 +14,8 @@
   ;; TODO muokkaa-pointteri!
   (-aseta-grid-polut! [this polut])
   (-aseta-grid-rajapinta! [this grid-rajapinta])
+  (-grid-rajapinta [this])
+  (-rajapinta-data [this rajapinta-polku])
   (-osan-derefable [this id])
   (-aseta-datan-jarjestys! [this nimi jarjestys])
   (-jarjesta-data! [this]))
@@ -52,6 +54,8 @@
   {:pre [(satisfies? IGridDatanKasittely datan-kasittelija)
          ;;TODO tarkista id
          ]}
+  (println "ID: " id)
+  (println "UUSI DATA: " uusi-data)
   (-aseta-osan-data! datan-kasittelija id uusi-data))
 
 (defn muokkaa-rajapinnan-data! [datan-kasittelija polku f]
@@ -74,7 +78,8 @@
 (defn aseta-pointteri! [datan-kasittelija id polku]
   {:pre [(satisfies? IGridDatanKasittely datan-kasittelija)
          ;;TODO tarkista id
-         (vector polku)]}
+         ;; TODO tarkista polku {:polku-dataan [..] :polku-pointtereihin ?}
+         ]}
   (-aseta-pointteri! datan-kasittelija id polku))
 
 (defn aseta-grid-polut! [datan-kasittelija polut]
@@ -82,6 +87,14 @@
 
 (defn aseta-grid-rajapinta! [datan-kasittelija grid-rajapinta]
   (-aseta-grid-rajapinta! datan-kasittelija grid-rajapinta))
+
+(defn grid-rajapinta [datan-kasittelija]
+  {:pre [(satisfies? IGridDatanKasittely datan-kasittelija)]}
+  (-grid-rajapinta datan-kasittelija))
+
+(defn rajapinta-data [datan-kasittelija rajapinta-polku]
+  ;;TODO :pre ja :post
+  (-rajapinta-data datan-kasittelija rajapinta-polku))
 
 (defn osan-derefable [datan-kasittelija id]
   {:pre [(satisfies? IGridDatanKasittely datan-kasittelija)
