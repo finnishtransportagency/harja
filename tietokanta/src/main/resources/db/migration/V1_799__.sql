@@ -1,4 +1,4 @@
-CREATE FUNCTION laske_tr_tiedot(tie_ INTEGER, osa_ INTEGER)
+CREATE OR REPLACE FUNCTION laske_tr_tiedot(tie_ INTEGER, osa_ INTEGER)
   RETURNS JSONB
 AS $$
 DECLARE
