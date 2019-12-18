@@ -144,25 +144,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE MATERIALIZED VIEW tr_tiedot AS
-SELECT
-  "tr-numero",
-  "tr-osa",
-  laske_tr_tiedot("tr-numero", "tr-osa") AS pituudet
-FROM (SELECT DISTINCT
-        "tr-numero",
-        "tr-osa"
-      FROM tr_osoitteet) AS tien_osat;
-
-CREATE INDEX tr_tiedot_idx
-  ON tr_tiedot ("tr-numero", "tr-osa");
-
-CREATE FUNCTION paivita_tr_tiedot()
-  RETURNS VOID
-  SECURITY DEFINER
-AS $$
-BEGIN
-  REFRESH MATERIALIZED VIEW tr_tiedot;
-  RETURN;
-END;
-$$ LANGUAGE plpgsql;
