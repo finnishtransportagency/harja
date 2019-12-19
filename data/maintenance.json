@@ -2,12 +2,12 @@
   {
     "date": "2019-12-19",
     "title": "HARJAan on tammikuussa luvassa seuraavat uudistukset",
-    "body": "MHU urakoiden kustannussuunnittelunäkymässä voi muokata kaikki tiedot kuukausitasolla. \nPäällystysurakoiden Kaistamuutokset tulevat voimaan. Muutoksen jälkeen kaistaluku muodostuu siten, että ensimmäinen numero kertoo ajosuunnan ja toinen numero kaistan sijainnin pääkaistaan nähden."  
+    "body": "<ul><li>MHU urakoiden kustannussuunnittelunäkymässä voi muokata kaikki tiedot kuukausitasolla. <li>Päällystysurakoiden Kaistamuutokset tulevat voimaan. Muutoksen jälkeen kaistaluku muodostuu siten, että ensimmäinen numero kertoo ajosuunnan ja toinen numero kaistan sijainnin pääkaistaan nähden."  
   },
   {
     "date": "2019-12-19",
     "title": "Valtakunnalliset välitavoitteet on päivitetty",
-    "body": "Määräaikaan mennessä tehtävät työt löytyvät nyt myös uusista hoitourakoista. <br>Myös vanhoihin urakoihin on päivitetty tavoitteita."   
+    "body": "Määräaikaan mennessä tehtävät työt löytyvät nyt uusista hoitourakoista. <br><br>Myös vanhoihin urakoihin on päivitetty tavoitteita: <ul><li>Sadevesikaivot ja -viemärit sekä salaojakaivot on tarkastettava, tyhjennettävä ja puhdistettava keväisin hiekoitushiekan poiston jälkeen 31.5. mennessä<li>Aurausviitat poistettava 31.5. mennessä<li>Tilapäisten paikkausten korvaus kuumamassalla 30.6. mennessä<li>Siltojen pienet kunnostustoimenpiteet 30.9. mennessä<li>Päällystettyjen teiden sorapientareiden laadunalitusten korjaukset 30.9. mennessä (liikennettä vaarantavat korjattava viipymättä).<li>Reunakivien korjaus paikalleen</ul>"   
   },
     {
     "date": "2019-11-29",
@@ -92,7 +92,7 @@
   {
     "date": "2017-06-05",
     "title": "Harja API: Osoitemuunnokset eri päivän verkolta toiselle",
-    "body": "Jatkossa on mahdollista ilmoittaa Harja API:n ylläpitokohteiden osoitteiden mukana lähdejärjestelmän päivän verkko, jonka mukaisesti Harja muuntaa osoitteen uusimman päivän verkolle. Mikäli osoitetta ei anneta oletetaan, että osoite on uusimmalla verkolla ja muunnosta ei tehdä."
+    "body": "Jatkossa on mahdollista ilmoittaa Harja API:n ylläpitokohteiden osoitteiden mukana lähdejärjestelmän päivän verkko, jonka mukaisesti Harja muuntaa osoitteen uusimman päivän verkolle. Mikäli osoitetta ei anneta oletetaan, että osoite on uusimmalla verkolla ja muunnosta ei tehdä.</ul>"
   },
   {
     "date": "2017-05-11",
