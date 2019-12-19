@@ -1,8 +1,13 @@
 [
-      {
+  {
     "date": "2019-12-19",
     "title": "HARJAan on tammikuussa luvassa seuraavat uudistukset",
-    "body": "MHU urakoiden kustannussuunnittelunäkymässä voi muokata kaikki tiedot kuukausitasolla. Päällystysurakoiden Kaistamuutokset tulevat voimaan. Muutoksen jälkeen kaistaluku muodostuu siten, että ensimmäinen numero kertoo ajosuunnan ja toinen numero kaistan sijainnin pääkaistaan nähden."  
+    "body": "MHU urakoiden kustannussuunnittelunäkymässä voi muokata kaikki tiedot kuukausitasolla. \nPäällystysurakoiden Kaistamuutokset tulevat voimaan. Muutoksen jälkeen kaistaluku muodostuu siten, että ensimmäinen numero kertoo ajosuunnan ja toinen numero kaistan sijainnin pääkaistaan nähden."  
+  },
+  {
+    "date": "2019-12-19",
+    "title": "Valtakunnalliset välitavoitteet on päivitetty",
+    "body": "Määräaikaan mennessä tehtävät työt löytyvät nyt myös uusista hoitourakoista. <br>Myös vanhoihin urakoihin on päivitetty tavoitteita."   
   },
     {
     "date": "2019-11-29",
