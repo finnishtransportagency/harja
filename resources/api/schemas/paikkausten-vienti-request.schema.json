@@ -1,21 +1,22 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "$id": "http://www.vayla.fi/json/harja",
   "title": "Paikkausten teknisten tietojen vienti",
   "description": "Urakoitsijat lähettävät Harjaan paikkauksista mm. tekniset tiedot ja tämä osa lähetetään Harjasta eteenpäin tarkastuksen jälkeen",
   "$comment": "Tämä skeema on lähestulkoon kopio Harjaan tulevasta teknisestä tiedosta urakoitsijoilta. Ainoana poikkeuksena sijainnin ajorata.",
   "definitions": {
-    "organisaatio": {
+    "urakka": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ytunnus"
+        "harja-id",
+        "nimi"
       ],
       "properties": {
-        "nimi": {
-          "type": "string"
+        "harja-id": {
+          "type": "integer"
         },
-        "ytunnus": {
+        "nimi": {
           "type": "string"
         }
       }
@@ -155,7 +156,7 @@
         "id": {
           "type": "integer",
           "maximum": 2147483647,
-          "description": "HARJA:n paikkaus id",
+          "description": "HARJA:n paikkaus id"
         },
         "alkuaika": {
           "type": [
@@ -264,19 +265,71 @@
           }
         }
       }
+    },
+    "paikkaukset": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paikkaus"
+        ],
+        "properties": {
+          "paikkaus": {
+            "$ref": "#/definitions/paikkaus"
+          }
+        }
+      }
+    },
+    "paikkauskohde": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "harja-id",
+        "nimi",
+        "paikkaukset"
+      ],
+      "properties": {
+        "harja-id": {
+          "type": "integer"
+        },
+        "nimi": {
+          "type": "string"
+        },
+        "paikkaukset": {
+          "$ref": "#/definitions/paikkaukset"
+        }
+      }
+    },
+    "paikkauskohteet": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paikkauskohde"
+        ],
+        "properties": {
+          "paikkauskohde": {
+            "$ref": "#/definitions/paikkauskohde"
+          }
+        }
+      }
     }
   },
-  "type": "object",
-  "required": [
-    "organisaatio",
-    "paikkaus"
-  ],
-  "properties": {
-    "organisaatio": {
-      "$ref": "#/definitions/organisaatio"
-    },
-    "paikkaus": {
-      "$ref": "#/definitions/paikkaus"
-    }
-  }
+"type": "object",
+"required": [
+"urakka",
+"paikkauskohteet"
+],
+"properties": {
+"urakka": {
+"$ref": "#/definitions/urakka"
+},
+"paikkauskohteet": {
+"$ref": "#/definitions/paikkauskohteet"
+}
+}
 }
