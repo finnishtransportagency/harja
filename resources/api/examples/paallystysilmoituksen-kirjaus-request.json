@@ -32,7 +32,7 @@
             "tunnus": "A",
             "sijainti": {
               "numero": 21,
-              "kaista": 1,
+              "kaista": 11,
               "ajr": 1,
               "aosa": 1,
               "aet": 1,
@@ -69,7 +69,7 @@
         "alustatoimenpide": {
           "sijainti": {
             "numero": 21,
-            "kaista": 1,
+            "kaista": 11,
             "ajr": 1,
             "aosa": 1,
             "aet": 1,
