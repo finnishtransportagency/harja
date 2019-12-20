@@ -262,7 +262,7 @@ yllapitoluokkanimi->numero
 
 (s/def ::tr-numero ::positive-int?)
 (s/def ::tr-ajorata #{0 1 2})
-(s/def ::tr-kaista #{1 11 12 13 14 15 21 22 23 24 25})
+(s/def ::tr-kaista #{1 11 12 13 14 15 21 22 23 24 25 31})
 (s/def ::tr-alkuosa ::positive-int?)
 (s/def ::tr-alkuetaisyys ::positive-int?)
 (s/def ::tr-loppuosa ::positive-int?)

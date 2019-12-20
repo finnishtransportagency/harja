@@ -14,7 +14,7 @@
       "id": "urn:harja/tiesijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+      "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
     },
     "linkki": {
       "id": "urn:harja/tiesijainti",
