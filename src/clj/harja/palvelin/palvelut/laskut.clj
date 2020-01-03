@@ -37,28 +37,29 @@
   (map
     (fn [[id kohdistukset]]
       (let [lasku (first kohdistukset)]
-        (into {} {:id            id
-                  :viite         (:viite lasku)
-                  :tyyppi        (:tyyppi lasku)
-                  :kokonaissumma (:kokonaissumma lasku)
-                  :erapaiva      (:erapaiva lasku)
-                  :liite-id      (:liite-id lasku)
-                  :liite-nimi    (:liite-nimi lasku)
-                  :liite-tyyppi  (:liite-tyyppi lasku)
-                  :liite-koko    (:liite-koko lasku)
-                  :liite-oid     (:liite-oid lasku)
-                  :kohdistukset  (into []
-                                       (map (fn [v]
-                                              (dissoc v :viite
-                                                      :tyyppi
-                                                      :kokonaissumma
-                                                      :erapaiva
-                                                      :liite-id
-                                                      :liite-nimi
-                                                      :liite-tyyppi
-                                                      :liite-koko
-                                                      :liite-oid))
-                                            kohdistukset))})))
+        (into {} {:id             id
+                  :viite          (:viite lasku)
+                  :tyyppi         (:tyyppi lasku)
+                  :kokonaissumma  (:kokonaissumma lasku)
+                  :erapaiva       (:erapaiva lasku)
+                  :laskun-numero (:laskun-numero lasku)
+                  :liite-id       (:liite-id lasku)
+                  :liite-nimi     (:liite-nimi lasku)
+                  :liite-tyyppi   (:liite-tyyppi lasku)
+                  :liite-koko     (:liite-koko lasku)
+                  :liite-oid      (:liite-oid lasku)
+                  :kohdistukset   (into []
+                                        (map (fn [v]
+                                               (dissoc v :viite
+                                                       :tyyppi
+                                                       :kokonaissumma
+                                                       :erapaiva
+                                                       :liite-id
+                                                       :liite-nimi
+                                                       :liite-tyyppi
+                                                       :liite-koko
+                                                       :liite-oid))
+                                             kohdistukset))})))
     laskukohdistukset))
 
 
@@ -131,7 +132,7 @@
                                              :kokonaissumma (:kokonaissumma laskuerittely)
                                              :urakka        (:urakka laskuerittely)
                                              :tyyppi        (:tyyppi laskuerittely)
-                                             :numero (:laskun-numero laskuerittely)
+                                             :numero        (:laskun-numero laskuerittely)
                                              :lisatieto     (:lisatieto laskuerittely)
                                              :kayttaja      (:id user)})]
     (doseq [kohdistusrivi (:kohdistukset laskuerittely)]

@@ -3,7 +3,8 @@
    joku rivi näyttää vaan jätetään se käyttäjän vastuulle"
   (:require [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko-debug :as debug]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [harja.loki :as loki]))
 
 (defonce tyhja-arvo (gensym))
 
@@ -47,10 +48,10 @@
         (jana-fn rivi)
         (let [a (first args)
               osa-fn (first a)
-              osa-parametrit (vec (rest a))]
+              [osa-id osa-arvo osa-params] (vec (rest a))]
           (recur (conj rivi (apply
                               osa-fn
-                              (conj osa-parametrit {:class #{"osa" "osa-teksti"}})))
+                              [osa-id osa-arvo (merge {:class #{"osa" "osa-teksti"}} osa-params)]))
                  (rest args)))))))
 
 (defonce muuta-avain
@@ -121,20 +122,31 @@
 
   (lisaa-rivi! [this rivin-tiedot a1 a2 a3 a4 a5 a6 a7]
     (let [paivita-taulukko! (:taulukon-paivitys-fn! parametrit)
-          {:keys [avain rivi alkuun? rivin-parametrit]} rivin-tiedot
-          {:keys [on-click]} rivin-parametrit
+          {:keys [rivi alkuun? pelkka-palautus? rivin-parametrit]} rivin-tiedot
+          {:keys [on-click class]} rivin-parametrit
           args (remove #(= tyhja-arvo %) [a1 a2 a3 a4 a5 a6 a7])
+          aseta-arvot (fn [rivi & params]
+                        (let [filtteroitu (->> params
+                                               (partition 2)
+                                               (filter #(not (nil? (second %))))
+                                               flatten)]
+                          (if (empty? filtteroitu)
+                            rivi
+                            (apply p/aseta-arvo rivi filtteroitu))))
           paivitetty-taulukko (update this
                                       :rivit
                                       (fn [m]
                                         (into []
                                               (let [rivi (-> rivi
                                                              (tee-rivi args)
-                                                             (p/aseta-arvo :on-click on-click))]
+                                                             (aseta-arvot :on-click on-click
+                                                                          :class class))]
                                                 (if alkuun?
                                                   (cons rivi m)
                                                   (conj m rivi))))))]
-      (paivita-taulukko! paivitetty-taulukko)))
+      (if pelkka-palautus?
+        paivitetty-taulukko
+        (paivita-taulukko! paivitetty-taulukko))))
   (lisaa-rivi! [this rivin-avain a1 a2 a3 a4 a5 a6]
     (p/lisaa-rivi! this rivin-avain a1 a2 a3 a4 a5 a6 tyhja-arvo))
   (lisaa-rivi! [this rivin-avain a1 a2 a3 a4 a5]

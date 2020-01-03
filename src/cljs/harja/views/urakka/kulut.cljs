@@ -38,29 +38,13 @@
         propit (apply dissoc propit #{:komponentti :tyylit})]
     [:div {:class (or (:kontti tyylit)
                       #{"kulukentta"})}
-     [:label {:id id
+     [:label {:id    id
               :class (or (:otsikko tyylit)
                          #{})} otsikko]
      (if komponentti
        [komponentti]
        [:input.input-default.komponentin-input
         propit])]))
-
-(defn- osien-paivitys-fn
-  [funktiot]
-  (fn [osat]
-    (mapv
-      (fn [osa]
-        (let [paivitys (partial (get funktiot (p/osan-id osa)))]
-          (paivitys osa)))
-      osat)))
-
-(defn- luo-paivitys-fn
-  [& avain-arvot]
-  (fn [osa]
-    (apply
-      (partial p/aseta-arvo osa)
-      avain-arvot)))
 
 (defn aliurakoitsija-modaali
   [_ _]
@@ -124,6 +108,12 @@
                      :marraskuu "Marraskuu"
                      :joulukuu  "Joulukuu"})
 
+(def hoitovuodet-strs {:1-hoitovuosi "1. hoitovuosi"
+                       :2-hoitovuosi "2. hoitovuosi"
+                       :3-hoitovuosi "3. hoitovuosi"
+                       :4-hoitovuosi "4. hoitovuosi"
+                       :5-hoitovuosi "5. hoitovuosi"})
+
 (defn lisaa-kohdistus [m]
   (conj m {:tehtavaryhma        nil
            :toimenpideinstanssi nil
@@ -172,8 +162,26 @@
                                                        {:vayla-tyyli? true
                                                         :valinta      koontilaskun-kuukausi
                                                         :valitse-fn   #(paivitys-fn :koontilaskun-kuukausi %)
-                                                        :format-fn    #(get kuukaudet-strs %)}
-                                                       kuukaudet])]
+                                                        :format-fn    (fn [a]
+                                                                        (if (nil? a)
+                                                                          "Ei valittu"
+                                                                          (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
+                                                       (flatten
+                                                         (mapv
+                                                           (fn [kk]
+                                                             (map
+                                                               (fn [hv]
+                                                                 (keyword
+                                                                   (str
+                                                                     (name kk)
+                                                                     "/"
+                                                                     (name hv))))
+                                                               (sort #{:1-hoitovuosi
+                                                                 :2-hoitovuosi
+                                                                 :3-hoitovuosi
+                                                                 :4-hoitovuosi
+                                                                 :5-hoitovuosi})))
+                                                           kuukaudet))])]
    [kulukentta "Laskun pvm" :komponentti (fn []
                                            [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :erapaiva %)
                                                                                         :luokat        #{"input-default" "komponentin-input"}
@@ -211,8 +219,8 @@
   (let [kohdistukset-lkm (count kohdistukset)]
     [:div.col-xs-12
      [:h2 [:span "Mihin työhön kulu liittyy?" [:input#kulut-kohdistuvat-useammalle.vayla-checkbox {:type      :radio
-                                                          :on-change #(paivitys-fn :kohdistukset lisaa-kohdistus)}]
-     [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]]]
+                                                                                                   :on-change #(paivitys-fn :kohdistukset lisaa-kohdistus)}]
+           [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]]]
      (into [:div] (map-indexed (r/partial tehtavaryhma-maara {:tehtavaryhmat tehtavaryhmat :kohdistukset-lkm kohdistukset-lkm :paivitys-fn paivitys-fn}) kohdistukset))
      (when (> kohdistukset-lkm 1)
        [:div.lomake-sisempi-osio
@@ -251,63 +259,16 @@
   [e! app]
   [kulujen-syottolomake e! app])
 
-(defn- luo-kulutaulukko
-  []
-  (loki/log "taulukon luonti")
-  (let [paivitysfunktiot {"Pvm"          (luo-paivitys-fn
-                                           :id :pvm
-                                           :arvo "Pvm")
-                          "Maksuerä"     (luo-paivitys-fn
-                                           :id :maksuera
-                                           :arvo "Maksuerä")
-                          "Toimenpide"   (luo-paivitys-fn
-                                           :id :toimenpide
-                                           :arvo "Toimenpide")
-                          "Tehtäväryhmä" (luo-paivitys-fn
-                                           :id :tehtavaryhma
-                                           :arvo "Tehtäväryhmä")
-                          "Määrä"        (luo-paivitys-fn
-                                           :id :maara
-                                           :arvo "Määrä")}
-        otsikot-rivi (fn [rivi]
-                       (-> rivi
-                           (p/aseta-arvo :id :otsikko-rivi
-                                         :class #{"table-default" "table-default-header"})
-                           (p/paivita-arvo :lapset
-                                           (osien-paivitys-fn paivitysfunktiot))))
-        kulut-rivi (fn [rivi]
-                     (-> rivi
-                         (p/aseta-arvo :id :kulut-rivi
-                                       :class #{"table-default-even"})))
-        paivita-riveilla (fn [uudet-rivit rivit]
-                           (loki/log "paivita" uudet-rivit rivit)
-                           rivit)]
-    (muodosta-taulukko :kohdistetut-kulut-taulukko
-                       {:otsikot     {:janan-tyyppi jana/Rivi
-                                      :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}
-                        :valiotsikot {:janan-tyyppi jana/Rivi
-                                      :osat         [osa/Teksti osa/Teksti]}
-                        :kulut       {:janan-tyyppi jana/Rivi
-                                      :osat         [osa/Teksti osa/Teksti osa/Teksti osa/Teksti osa/Teksti]}}
-                       ["Pvm" "Maksuerä" "Toimenpide" "Tehtäväryhmä" "Määrä"]
-                       [:otsikot otsikot-rivi]
-                       {:class                 #{}
-                        :taulukon-paivitys-fn! (fn [taulukko rivit]
-                                                 (loki/log "UUSI" taulukko "UUSI" rivit)
-                                                 (let [uusi (p/paivita-arvo taulukko :lapset (r/partial paivita-riveilla rivit))]
-                                                   (->
-                                                     tila/laskutus-kohdistetut-kulut
-                                                     (swap! assoc-in [:taulukko] uusi)
-                                                     :taulukko)))})))
+
 
 (defn- kohdistetut*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeAliurakoitsijat))
-                      (e! (tiedot/->HaeUrakanLaskut (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
-                      (e! (tiedot/->HaeUrakanToimenpiteetJaTehtavaryhmat (-> @tila/yleiset :urakka :id)))
-                      (e! (tiedot/->LuoKulutaulukko (luo-kulutaulukko)))))
+                      (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
+                      #_(e! (tiedot/->HaeUrakanToimenpiteetJaTehtavaryhmat (-> @tila/yleiset :urakka :id)))
+                      #_(e! (tiedot/->LuoKulutaulukko))))
     (fn [e! {:keys [taulukko syottomoodi laskut] :as app}]
       [:div
        (if syottomoodi
