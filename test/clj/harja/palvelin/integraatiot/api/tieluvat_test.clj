@@ -82,7 +82,7 @@
                     ::tielupa/tie 20
                     ::tielupa/aosa 6
                     ::tielupa/aet 2631
-                    ::tielupa/kaista 1}]
+                    ::tielupa/kaista 11}]
                   ::tielupa/urakoitsija-puhelinnumero "987-7889087"
                   ::tielupa/otsikko "Lupa lisätä mainos tielle"
                   ::tielupa/hakija-postinosoite "Liitintie 1"
@@ -204,7 +204,7 @@
                                                                  :aosa 6,
                                                                  :aet 2631,
                                                                  :ajorata 0,
-                                                                 :kaista 1}],
+                                                                 :kaista 11}],
                                         :hakija-tyyppi "kotitalous",
                                         :kaapeliasennukset [],
                                         :liikenneohjaajan-nimi "Liikenneohjaus Oy",
