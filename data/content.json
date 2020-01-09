@@ -33,5 +33,12 @@
     "short": "",
     "body": "Harjan ongelmanselvitysprosessia avaavat kuvat",
     "images": ["images/harjan-ongelmanselvitysprosessi_2017-12.png", "images/harjan-ongelmanselvitysprosessi_tloik_2017-12.png"]
+  },
+  {
+    "category": "roadmap",
+    "title": "Aikataulu",
+    "short": "",
+    "body": "Suunnitelma HARJAn kehitystyöstä seuraavan kuuden kuukauden aikana.",
+    "images": ["images/roadmap-harja.png"]
   }
 ]

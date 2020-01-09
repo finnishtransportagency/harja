@@ -4,7 +4,8 @@ export const Category = {
   FAQ: 'faq',
   CONTENT: 'content',
   WATERWAYS: 'waterways',
-  PROBLEMSOLVING: 'problemsolving-process'
+  PROBLEMSOLVING: 'problemsolving-process',
+  ROADMAP: 'roadmap'
 };
 
 export const Events = {

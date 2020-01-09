@@ -52499,6 +52499,7 @@ exports.default = _react2.default.createClass({
     var faqUrl = test + 'faq.json';
     var waterUrl = test + 'waterways.json';
     var problemsolvingUrl = test + 'problemsolving-process.json';
+    var roadmapUrl = test + 'roadmap.json';
 
     if (param === 'test') {
       // Slow down fetching for development
@@ -53901,7 +53902,8 @@ var Category = exports.Category = {
   FAQ: 'faq',
   CONTENT: 'content',
   WATERWAYS: 'waterways',
-  PROBLEMSOLVING: 'problemsolving-process'
+  PROBLEMSOLVING: 'problemsolving-process',
+  ROADMAP: 'roadmap'
 };
 
 var Events = exports.Events = {
