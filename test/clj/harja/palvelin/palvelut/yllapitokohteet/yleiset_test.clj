@@ -14,7 +14,7 @@
              [{:nimi "Testi 1"
                :tr-numero 20
                :tr-ajorata 1
-               :tr-kaista 1
+               :tr-kaista 11
                :tr-alkuosa 1
                :tr-alkuetaisyys 1
                :tr-loppuosa 1
@@ -30,7 +30,7 @@
               :id 10001
               :tr-numero 20
               :tr-ajorata 1
-              :tr-kaista 1
+              :tr-kaista 11
               :tr-alkuosa 1
               :tr-alkuetaisyys 1
               :tr-loppuosa 1
@@ -59,7 +59,7 @@
                 [{:nimi "Testi 1"
                   :tr-numero 4
                   :tr-ajorata 1
-                  :tr-kaista 1
+                  :tr-kaista 11
                   :tr-alkuosa 101
                   :tr-alkuetaisyys 1
                   :tr-loppuosa 101
@@ -75,7 +75,7 @@
              [{:nimi "Validi"
                :tr-numero 4
                :tr-ajorata 1
-               :tr-kaista 1
+               :tr-kaista 11
                :tr-alkuosa 101
                :tr-alkuetaisyys 1
                :tr-loppuosa 101
@@ -83,7 +83,7 @@
               {:nimi "Ei-validi"
                :tr-numero 20
                :tr-ajorata 1
-               :tr-kaista 1
+               :tr-kaista 11
                :tr-alkuosa 1
                :tr-alkuetaisyys 1
                :tr-loppuosa 1
