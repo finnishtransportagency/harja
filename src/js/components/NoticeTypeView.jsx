@@ -41,7 +41,7 @@ export default React.createClass({
         const imageList = (
           content.images.map( (url, index) =>
             <div className="harja-notice-image column row" key={index}>
-              <img src={url} />
+              <img src={url} width="100%"/>
             </div>
           )
         );
