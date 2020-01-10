@@ -31,7 +31,7 @@ export default React.createClass({
 
       // If either content or body text is missing, use the whole row.
       // Otherwise split the display area
-      let className = 'small-12 medium-12 large-6 column';
+      let className = 'small-12 medium-12 large-12 column';
 
       if (!content.images || !content.body) {
         className = 'small-12 medium-12 large-12 column';
