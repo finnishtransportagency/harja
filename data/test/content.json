@@ -26,5 +26,19 @@
     "short": "",
     "body": "Uutisia Harjan käytöstä vesiväylillä",
     "images": []
+  },
+  {
+    "category": "problemsolving-process",
+    "title": "Ongelmanselvitysprosessi",
+    "short": "Ongelmanselvitysprosessi",
+    "body": "Harjan ongelmanselvitysprosessi",
+    "images": []
+  },
+  {
+    "category": "roadmap",
+    "title": "Aikataulu",
+    "short": "Aikataulu",
+    "body": "Harjan päivittyvä aikataulusuunnitelma",
+    "images": []
   }
 ]
