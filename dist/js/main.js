@@ -53696,7 +53696,7 @@ exports.default = _react2.default.createClass({
 
       // If either content or body text is missing, use the whole row.
       // Otherwise split the display area
-      var _className = 'small-12 medium-12 large-6 column';
+      var _className = 'small-12 medium-12 large-12 column';
 
       if (!content.images || !content.body) {
         _className = 'small-12 medium-12 large-12 column';

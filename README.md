@@ -40,7 +40,9 @@ To add notice edit following files on data-folder:
 - care.json (hoitotiedotteet)
 - maintenance.json (ylläpitotiedotteet)
 - faq.json  (koulutusvideot)
-- waterways.json  (vesiväylät
+- waterways.json  (vesiväylät)
+- problemsolving-process.json (ongelmanselvitysprosessi)
+- roadmap.json (aikataulusuunnitelmat)
 
 New notices can be added anywhere in the list, they will be arranged by date automatically.
 
