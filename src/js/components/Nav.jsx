@@ -17,6 +17,7 @@ export default React.createClass({
       {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}, buttonStyle: 'large button'},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'},
       {title: 'ONGELMANSELVITYSPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}, buttonStyle: 'large button'}
+      {title: 'AIKATAULU', data: {action: Events.CATEGORY, category: Category.ROADMAP}, buttonStyle: 'large button'}
     ];
 
     const normalButtonLinks = [
@@ -26,6 +27,7 @@ export default React.createClass({
       {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}},
       {title: 'ONGELMANSELVITYSPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}}
+      {title: 'AIKATAULU', data: {action: Events.CATEGORY, category: Category.ROADMAP}}
     ];
 
     const feedbackAddress = "harjapalaute@solita.fi";
