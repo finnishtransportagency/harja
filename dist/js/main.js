@@ -52519,6 +52519,9 @@ exports.default = _react2.default.createClass({
         _this.getNotices(problemsolvingUrl, _enums.Category.PROBLEMSOLVING);
       }, 5000);
       setTimeout(function () {
+        _this.getNotices(roadmapUrl, _enums.Category.ROADMAP);
+      }, 5000);
+      setTimeout(function () {
         _this.getContent();
       }, 5000);
     } else {
@@ -52527,6 +52530,7 @@ exports.default = _react2.default.createClass({
       this.getNotices(faqUrl, _enums.Category.FAQ);
       this.getNotices(waterUrl, _enums.Category.WATERWAYS);
       this.getNotices(problemsolvingUrl, _enums.Category.PROBLEMSOLVING);
+      this.getNotices(roadmapUrl, _enums.Category.ROADMAP);
       this.getContent();
     }
   },
@@ -52542,6 +52546,8 @@ exports.default = _react2.default.createClass({
         return 'Vesiväylät';
       case _enums.Category.PROBLEMSOLVING:
         return 'Ongelmanselvitys';
+      case _enums.Category.ROADMAP:
+        return 'Aikataulu';
       default:
         return 'Tiedote';
     }
@@ -53015,7 +53021,7 @@ exports.default = _react2.default.createClass({
   render: function render() {
     var largeButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME }, buttonStyle: 'large button' }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE }, buttonStyle: 'large button' }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE }, buttonStyle: 'large button' }, { title: 'VESIVÄYLÄT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.WATERWAYS }, buttonStyle: 'large button' }, { title: 'KOULUTUSVIDEOT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ }, buttonStyle: 'large button' }, { title: 'ONGELMANSELVITYSPROSESSI', data: { action: _enums.Events.CATEGORY, category: _enums.Category.PROBLEMSOLVING }, buttonStyle: 'large button' }, { title: 'AIKATAULU', data: { action: _enums.Events.CATEGORY, category: _enums.Category.ROADMAP }, buttonStyle: 'large button' }];
 
-    var normalButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME } }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE } }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE } }, { title: 'VESIVÄYLÄT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.WATERWAYS } }, { title: 'KOULUTUSVIDEOT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ } }, { title: 'ONGELMANSELVITYSPROSESSI', data: { action: _enums.Events.CATEGORY, category: _enums.Category.PROBLEMSOLVING }, { title: 'AIKATAULU', data: { action: _enums.Events.CATEGORY, category: _enums.Category.ROADMAP } }];
+    var normalButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME } }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE } }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE } }, { title: 'VESIVÄYLÄT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.WATERWAYS } }, { title: 'KOULUTUSVIDEOT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ } }, { title: 'ONGELMANSELVITYSPROSESSI', data: { action: _enums.Events.CATEGORY, category: _enums.Category.PROBLEMSOLVING }}, { title: 'AIKATAULU', data: { action: _enums.Events.CATEGORY, category: _enums.Category.ROADMAP } }];
 
     var feedbackAddress = "harjapalaute@solita.fi";
     var feedbackSubject = "";
