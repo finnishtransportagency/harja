@@ -41,7 +41,7 @@ export default React.createClass({
         const imageList = (
           content.images.map( (url, index) =>
             <div className="harja-notice-image column row" key={index}>
-              <img src={url} width="100%" onClick={window.open(url, 'Image', 'width=100%,resizable=1')}/>
+              <img src={url}/>
             </div>
           )
         );
