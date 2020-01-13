@@ -366,6 +366,7 @@
           paallystysilmoitus (-> pot-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
+
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
