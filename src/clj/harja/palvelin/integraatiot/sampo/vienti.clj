@@ -12,7 +12,7 @@
 (def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn kasittele-kuittaus [integraatioloki db viesti jono]
-  (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
+  (log/warn "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
   (let [kuittaus-xml (.getText viesti)]
     ;; Validointia ei tehdä, koska jostain syystä Sampon itsensä lähettämät kuittaukset eivät mene läpi validoinnista
     ;; (if (xml/validi-xml? +xsd-polku+ "status.xsd" kuittaus-xml)
@@ -40,7 +40,7 @@
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
         urakoiden-summat (group-by :urakka_id (mapcat #(qm/hae-urakan-maksueran-summat db %) urakkaidt))]
-    (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
+    (log/warn "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
 
     (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
       (try
