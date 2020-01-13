@@ -266,9 +266,7 @@
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeAliurakoitsijat))
-                      (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
-                      #_(e! (tiedot/->HaeUrakanToimenpiteetJaTehtavaryhmat (-> @tila/yleiset :urakka :id)))
-                      #_(e! (tiedot/->LuoKulutaulukko))))
+                      (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (fn [e! {:keys [taulukko syottomoodi laskut] :as app}]
       [:div
        (if syottomoodi
