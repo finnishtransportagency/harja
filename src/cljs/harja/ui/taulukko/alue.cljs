@@ -3,7 +3,8 @@
             [harja.loki :refer [log]]
             [reagent.core :as r]
             [cljs.spec.alpha :as s]
-            [harja.ui.taulukko.grid-protokollat :as p]))
+            [harja.ui.taulukko.grid-protokollat :as p]
+            [harja.ui.taulukko.grid-osa-protokollat :as gop]))
 
 (defn alue-nollakohtaan [alue]
   (let [nollakohtaan (fn [[alku loppu]]
@@ -31,12 +32,30 @@
 
 (defrecord Rivi [id]
   p/IGrid
-  (-solut [this]
+  (-osat [this]
     (::g/osat this))
-  (-aseta-solut [this solut]
-    (assoc this ::g/osat solut))
-  (-paivita-solut [this f]
-    (update this ::g/osat f))
+  (-osat [this polku]
+    (get-in (::g/osat this) polku))
+  (-aseta-osat [this osat]
+    (g/aseta-osat this osat))
+  (-aseta-osat [this polku osat]
+    (g/aseta-osat this polku osat))
+  (-paivita-osat [this f]
+    (g/paivita-osat this f))
+  (-paivita-osat [this polku f]
+    (g/paivita-osat this polku f))
+
+  (-lisaa-rivi [this solu]
+    (p/lisaa-rivi this solu (count (p/lapset this))))
+  (-lisaa-rivi [this solu index]
+    (g/lisaa-rivi this solu index))
+  (-lisaa-sarake [this solu]
+    (p/lisaa-rivi this solu (count (p/lapset this))))
+  (-lisaa-sarake [this solu index]
+    (g/lisaa-sarake this solu index))
+  (-aseta-root-fn [this f]
+    (g/aseta-root-fn this f))
+
   (-koko [this]
     (g/grid-koko this))
   (-koot [this]
@@ -57,7 +76,8 @@
   (-rivi [this tunniste] (log "KUTSUTTIIN -rivi FUNKTIOTA Grid:ille"))
   (-sarake [this tunniste] (log "KUTSUTTIIN -sarake FUNKTIOTA Grid:ille"))
   (-solu [this tunniste] (log "KUTSUTTIIN -solu FUNKTIOTA Grid:ille"))
-  p/IGridOsa
+
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -66,21 +86,39 @@
     (::g/nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::g/nimi nimi))
-  p/IPiirrettava
+  gop/IPiirrettava
   (-piirra [this]
     [:<>
      [g/piirra-grid this]]))
 
 (defrecord Taulukko [id]
   p/IGrid
-  (-solut [this]
+  (-osat [this]
     (::g/osat this))
-  (-aseta-solut [this solut]
+  (-osat [this polku]
+    (get-in (::g/osat this) polku))
+  (-aseta-osat [this osat]
     ;;TODO Rajoita solujen asettamista
-    (assoc this ::g/osat solut))
-  (-paivita-solut [this f]
+    (g/aseta-osat this osat))
+  (-aseta-osat [this polku osat]
     ;;TODO Rajoita solujen asettamista
-    (update this ::g/osat f))
+    (g/aseta-osat this polku osat))
+  (-paivita-osat [this f]
+    ;;TODO Rajoita solujen asettamista
+    (g/paivita-osat this f))
+  (-paivita-osat [this polku f]
+    ;;TODO Rajoita solujen asettamista
+    (g/paivita-osat this polku f))
+
+  (-lisaa-rivi [this solu]
+    (p/lisaa-rivi this solu (count (p/lapset this))))
+  (-lisaa-rivi [this solu index]
+    (g/lisaa-rivi this solu index))
+  (-lisaa-sarake [this solu]
+    (p/lisaa-rivi this solu (count (p/lapset this))))
+  (-lisaa-sarake [this solu index]
+    (g/lisaa-sarake this solu index))
+
   (-koko [this]
     (g/grid-koko this))
   (-koot [this]
@@ -96,10 +134,13 @@
   (-paivita-alueet [this f]
     (update this ::g/alueet f))
 
+  (-aseta-root-fn [this f]
+    (g/aseta-root-fn this f))
   (-rivi [this tunniste] (log "KUTSUTTIIN -rivi FUNKTIOTA Grid:ille"))
   (-sarake [this tunniste] (log "KUTSUTTIIN -sarake FUNKTIOTA Grid:ille"))
   (-solu [this tunniste] (log "KUTSUTTIIN -solu FUNKTIOTA Grid:ille"))
-  p/IGridOsa
+
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -108,7 +149,7 @@
     (::g/nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::g/nimi nimi))
-  p/IPiirrettava
+  gop/IPiirrettava
   (-piirra [this]
     [:<>
      [g/piirra-grid this]]))
@@ -120,8 +161,9 @@
          (= (count alueet) 1)
          #_(= -1 (apply - (:rivit (first alueet))))]
    :post [(instance? Rivi %)
-          (symbol? (p/id %))]}
-  (let [id (gensym "rivi")
+          (symbol? (gop/id %))]}
+  (g/grid-c ->Rivi (assoc asetukset :alueet alueet))
+  #_(let [id (gensym "rivi")
         koko (r/atom {id koko})
         rivi (cond-> (->Rivi id)
                      nimi (assoc ::g/nimi nimi)
@@ -142,22 +184,24 @@
 
 (defn taulukko
   "Taulukko on grid, mutta varmistetaan, että kaikki osat ovat samanlaisia"
-  [{:keys [nimi alueet koko rajapinnan-polku] :as asetukset} osat]
+  [{:keys [nimi alueet koko] :as asetukset} osat]
   {:pre [(g/validi-grid-asetukset? (assoc asetukset :osat osat))
          (samat-osat? osat)]
    :post [(instance? Taulukko %)
-          (symbol? (p/id %))]}
-  (let [id (gensym "rivi")
+          (symbol? (gop/id %))]}
+  (g/grid-c ->Taulukko (assoc asetukset :osat osat))
+  #_(let [id (gensym "rivi")
         koko (r/atom {id koko})
         taulukko (cond-> (->Taulukko id)
                          nimi (assoc ::g/nimi nimi)
                          alueet (assoc ::g/alueet alueet)
-                         osat (assoc ::g/osat osat)
-                         rajapinnan-polku (assoc ::g/rajapinnan-polku rajapinnan-polku))
+                         osat (assoc ::g/osat osat))
         taulukko (g/paivita-kaikki-lapset (assoc taulukko ::g/koko koko)
-                                          (fn [& _] true)
+                                          (constantly true)
                                           (fn [lapsi]
                                             (let [koot (when (satisfies? p/IGrid lapsi)
+                                                         (println "LAPSI GRIDI")
+                                                         (cljs.pprint/pprint lapsi)
                                                          (p/koot lapsi))
                                                   _ (when koot
                                                       (swap! koko (fn [koko]

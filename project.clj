@@ -80,7 +80,7 @@
 
                  [cljs-ajax "0.8.0"]
 
-                 [reagent "0.8.1"]
+                 [reagent "0.9.0-rc4"]
 
                  [alandipert/storage-atom "2.0.1"]
 

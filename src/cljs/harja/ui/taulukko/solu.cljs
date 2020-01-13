@@ -2,10 +2,11 @@
   "Määritellään taulukon osat täällä."
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom] :as r]
+            [harja.loki :refer [warn]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.taulukko.grid-protokollat :as p]
-            [harja.ui.taulukko.datan-kasittely-protokollat :as dp]
+            [harja.ui.taulukko.grid-osa-protokollat :as gop]
+            [harja.ui.taulukko.solu-protokollat :as sp]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]))
 
@@ -58,19 +59,24 @@
   (and (or (nil? filtteri) (fn? filtteri))
        (or (nil? arvo) (fn? arvo))))
 
+(defn korjaa-NaN [arvo solu]
+  (if (js/isNaN arvo)
+    (do (warn (str "Osan " (or (gop/nimi solu) "Nimetön") " (" (gop/id solu) ") arvo on NaN!"))
+        nil)
+    arvo))
+
 (defrecord Teksti [id parametrit]
-  p/IPiirrettava
+  gop/IPiirrettava
   (-piirra [this]
-    (let [taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
-      (fn [this]
-        (let [{:keys [id class]} (:parametrit this)
-              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))]
-          [:div.osa.osa-teksti {:class (when class
-                                         (apply str (interpose " " class)))
-                                :id id
-                                :data-cy (::nimi this)}
-           ((::fmt this) arvo)]))))
-  p/IGridOsa
+    (let [{:keys [id class]} (:parametrit this)
+          taman-data (::grid/osan-derefable this)
+          arvo (korjaa-NaN @taman-data this)]
+      [:div.osa.osa-teksti {:class (when class
+                                     (apply str (interpose " " class)))
+                            :id id
+                            :data-cy (::nimi this)}
+       ((::fmt this) arvo)]))
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -79,16 +85,12 @@
     (::nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::nimi nimi))
-  p/IFmt
+  sp/ISolu
+  sp/IFmt
   (-lisaa-fmt [this f]
     (assoc this ::fmt f))
   (-lisaa-fmt-aktiiviselle [this f]
-    this)
-  p/IDatanKasittely
-  (-lisaa-filtteri [this f]
-    (assoc this ::filtteri f))
-  (-lisaa-arvo [this f]
-    (assoc this ::arvo f)))
+    this))
 
 (defn teksti
   ([] (teksti nil))
@@ -99,28 +101,42 @@
     :post [(instance? Teksti %)]}
    (let [id (gensym "teksti")]
      (cond-> (->Teksti id parametrit)
-             (nil? filtteri) (p/lisaa-filtteri identity)
-             filtteri (p/lisaa-filtteri filtteri)
-             (nil? arvo) (p/lisaa-arvo identity)
-             arvo (p/lisaa-arvo arvo)
-             (nil? fmt) (p/lisaa-fmt identity)
-             fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             nimi (gop/aseta-nimi nimi)))))
+
+(defrecord Tyhja [id]
+  sp/ISolu
+  gop/IPiirrettava
+  (-piirra [this]
+    [:div ""])
+  gop/IGridOsa
+  (-id [this]
+    (:id this))
+  (-id? [this id]
+    (= (:id this) id))
+  (-nimi [this]
+    (::nimi this))
+  (-aseta-nimi [this nimi]
+    (assoc this ::nimi nimi)))
+
+(defn tyhja []
+  (->Tyhja (gensym "tyhja")))
 
 (defrecord Linkki [id linkki parametrit]
-  p/IPiirrettava
+  sp/ISolu
+  gop/IPiirrettava
   (-piirra [this]
-    (let [taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
-      (fn [this]
-        (let [{:keys [id class]} (:parametrit this)
-              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))]
-          [:a.osa.osa-linkki {:class (when class
-                                       (apply str (interpose " " class)))
-                              :href linkki
-                              :id id
-                              :data-cy (::nimi this)}
-           ((::fmt this) arvo)]))))
-  p/IGridOsa
+    (let [{:keys [id class]} (:parametrit this)
+          taman-data (::grid/osan-derefable this)
+          arvo (korjaa-NaN @taman-data this)]
+      [:a.osa.osa-linkki {:class (when class
+                                   (apply str (interpose " " class)))
+                          :href linkki
+                          :id id
+                          :data-cy (::nimi this)}
+       ((::fmt this) arvo)]))
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -129,16 +145,11 @@
     (::nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::nimi nimi))
-  p/IFmt
+  sp/IFmt
   (-lisaa-fmt [this f]
     (assoc this ::fmt f))
   (-lisaa-fmt-aktiiviselle [this f]
-    this)
-  p/IDatanKasittely
-  (-lisaa-filtteri [this f]
-    (assoc this ::filtteri f))
-  (-lisaa-arvo [this f]
-    (assoc this ::arvo f)))
+    this))
 
 (defn linkki
   ([] (linkki nil))
@@ -150,23 +161,19 @@
     :post [(instance? Linkki %)]}
    (let [id (gensym "linkki")]
      (cond-> (->Linkki id linkki parametrit)
-             (nil? filtteri) (p/lisaa-filtteri identity)
-             filtteri (p/lisaa-filtteri filtteri)
-             (nil? arvo) (p/lisaa-arvo identity)
-             arvo (p/lisaa-arvo arvo)
-             (nil? fmt) (p/lisaa-fmt identity)
-             fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             nimi (gop/aseta-nimi nimi)))))
 
 ;; Syote record toimii geneerisenä input elementtinä. Jotkin toiminnot tehdään usein
 ;; (kuten tarkastetaan, että input on positiivinen), niin tällaiset yleiset käyttäytymiset
 ;; voidaan wrapata johonkin 'toiminnot' funktioon 'kayttaytymiset' parametrien avulla.
 ;; Käyttäytymiset määritellään eri ns:ssa.
 (defrecord Syote [id toiminnot kayttaytymiset parametrit]
-  p/IPiirrettava
+  sp/ISolu
+  gop/IPiirrettava
   (-piirra [this]
     (let [aktiivinen? (atom false)
-          taman-data (dp/osan-derefable (::grid/data this) (p/id this))
           {:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
                   on-key-up]} (lisaa-kaytokset (merge-with (fn [kayttajan-lisaama tassa-lisatty]
                                                              (comp kayttajan-lisaama
@@ -184,7 +191,9 @@
                       checked? default-checked? indeterminate?
                       alt height src width
                       autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
-              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))
+              taman-data (::grid/osan-derefable this)
+              _ (println "---- > SOLU tunniste: " (::grid/tunniste-rajapinnan-dataan this))
+              arvo (korjaa-NaN @taman-data this)
               parametrit (into {}
                                (remove (fn [[_ arvo]]
                                          (nil? arvo))
@@ -238,7 +247,7 @@
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
           [:input.osa.osa-syote parametrit]))))
-  p/IGridOsa
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -247,16 +256,11 @@
     (::nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::nimi nimi))
-  p/IFmt
+  sp/IFmt
   (-lisaa-fmt [this f]
     (assoc this ::fmt f))
   (-lisaa-fmt-aktiiviselle [this f]
-    (assoc this ::fmt-aktiivinen f))
-  p/IDatanKasittely
-  (-lisaa-filtteri [this f]
-    (assoc this ::filtteri f))
-  (-lisaa-arvo [this f]
-    (assoc this ::arvo f)))
+    (assoc this ::fmt-aktiivinen f)))
 
 (defn syote
   ([] (syote nil))
@@ -268,28 +272,23 @@
     :post [(instance? Syote %)]}
    (let [id (gensym "syote")]
      (cond-> (->Syote id toiminnot kayttaytymiset parametrit)
-             (nil? filtteri) (p/lisaa-filtteri identity)
-             filtteri (p/lisaa-filtteri filtteri)
-             (nil? arvo) (p/lisaa-arvo identity)
-             arvo (p/lisaa-arvo arvo)
-             (nil? fmt) (p/lisaa-fmt identity)
-             fmt (p/lisaa-fmt fmt)
-             (nil? fmt-aktiivinen) (p/lisaa-fmt-aktiiviselle identity)
-             fmt-aktiivinen (p/lisaa-fmt-aktiiviselle fmt-aktiivinen)
-             nimi (p/aseta-nimi nimi)))))
-
-
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             (nil? fmt-aktiivinen) (sp/lisaa-fmt-aktiiviselle identity)
+             fmt-aktiivinen (sp/lisaa-fmt-aktiiviselle fmt-aktiivinen)
+             nimi (gop/aseta-nimi nimi)))))
 
 (defrecord Nappi [id toiminnot kayttaytymiset sisalto parametrit]
-  p/IPiirrettava
+  sp/ISolu
+  gop/IPiirrettava
   (-piirra [this]
     (let [{:keys [on-blur on-change on-click on-focus on-input on-key-down on-key-press
                   on-key-up]} (lisaa-kaytokset (:toiminnot this)
-                                               (:kayttaytymiset this))
-          taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
+                                               (:kayttaytymiset this))]
       (fn [this]
         (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
-              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))
+              taman-data (::grid/osan-derefable this)
+              arvo (korjaa-NaN @taman-data this)
               parametrit (into {}
                                (remove (fn [[_ arvo]]
                                          (nil? arvo))
@@ -322,7 +321,7 @@
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
           [:button.osa.osa-nappi parametrit sisalto]))))
-  p/IGridOsa
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -331,16 +330,11 @@
     (::nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::nimi nimi))
-  p/IFmt
+  sp/IFmt
   (-lisaa-fmt [this f]
     (assoc this ::fmt f))
   (-lisaa-fmt-aktiiviselle [this f]
-    this)
-  p/IDatanKasittely
-  (-lisaa-filtteri [this f]
-    (assoc this ::filtteri f))
-  (-lisaa-arvo [this f]
-    (assoc this ::arvo f)))
+    this))
 
 (defn nappi
   ([] (nappi nil))
@@ -352,22 +346,19 @@
     :post [(instance? Nappi %)]}
    (let [id (gensym "nappi")]
      (cond-> (->Nappi id toiminnot kayttaytymiset sisalto parametrit)
-             (nil? filtteri) (p/lisaa-filtteri identity)
-             filtteri (p/lisaa-filtteri filtteri)
-             (nil? arvo) (p/lisaa-arvo identity)
-             arvo (p/lisaa-arvo arvo)
-             (nil? fmt) (p/lisaa-fmt identity)
-             fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             nimi (gop/aseta-nimi nimi)))))
 
 (defrecord Laajenna [id aukaise-fn auki-alussa? parametrit]
-  p/IPiirrettava
+  sp/ISolu
+  gop/IPiirrettava
   (-piirra [this]
-    (let [auki? (atom auki-alussa?)
-          taman-data (dp/osan-derefable (::grid/data this) (p/id this))]
+    (let [auki? (atom auki-alussa?)]
       (fn [this]
         (let [{:keys [id class ikoni]} (:parametrit this)
-              arvo (-> @taman-data ((::filtteri this)) ((::arvo this)))
+              taman-data (::grid/osan-derefable this)
+              arvo (korjaa-NaN @taman-data this)
               ikoni (or ikoni "chevron")
               ikoni-auki (if (= ikoni "chevron")
                            ikonit/livicon-chevron-down
@@ -390,7 +381,7 @@
              [ikoni-auki]
              ^{:key "laajenna-kiini"}
              [ikoni-kiinni])]))))
-  p/IGridOsa
+  gop/IGridOsa
   (-id [this]
     (:id this))
   (-id? [this id]
@@ -399,16 +390,11 @@
     (::nimi this))
   (-aseta-nimi [this nimi]
     (assoc this ::nimi nimi))
-  p/IFmt
+  sp/IFmt
   (-lisaa-fmt [this f]
     (assoc this ::fmt f))
   (-lisaa-fmt-aktiiviselle [this f]
-    this)
-  p/IDatanKasittely
-  (-lisaa-filtteri [this f]
-    (assoc this ::filtteri f))
-  (-lisaa-arvo [this f]
-    (assoc this ::arvo f)))
+    this))
 
 (defn laajenna
   ([] (laajenna nil))
@@ -421,10 +407,6 @@
     :post [(instance? Laajenna %)]}
    (let [id (gensym "laajenna")]
      (cond-> (->Laajenna id aukaise-fn auki-alussa? parametrit)
-             (nil? filtteri) (p/lisaa-filtteri identity)
-             filtteri (p/lisaa-filtteri filtteri)
-             (nil? arvo) (p/lisaa-arvo identity)
-             arvo (p/lisaa-arvo arvo)
-             (nil? fmt) (p/lisaa-fmt identity)
-             fmt (p/lisaa-fmt fmt)
-             nimi (p/aseta-nimi nimi)))))
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             nimi (gop/aseta-nimi nimi)))))
