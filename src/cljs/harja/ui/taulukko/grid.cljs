@@ -700,16 +700,10 @@
   p/IGridDataYhdistaminen
   (-rajapinta-grid-yhdistaminen! [this rajapinta datan-kasittelija grid-kasittelija]
     (let [grid-rajapintakasittelijat (reduce-kv (fn [m polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
-                                                  (println "--> reduce-kv")
                                                   (let [rajapintakasittelija (reaction (let [rajapinnan-data @(dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)
                                                                                              rajapinnan-dataf (if *jarjesta-data?*
                                                                                                                (jarjesta-data rajapinnan-data jarjestys)
                                                                                                                rajapinnan-data)]
-                                                                                         (println (str "grid-rajapintakasittelija: " polku))
-                                                                                         (println "rajapinnan-data")
-                                                                                         (cljs.pprint/pprint rajapinnan-data)
-                                                                                         (println "rajapinnan järjestetty data")
-                                                                                         (cljs.pprint/pprint rajapinnan-dataf)
                                                                                          (datan-kasittely rajapinnan-dataf)))
                                                         tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
                                                     (assoc m polku (assoc kasittelija
@@ -744,17 +738,6 @@
                                                                             (warn (str "Osan " (or (gop/nimi osa) (gop/id osa)) " polku ei ole oikein."
                                                                                        " Nimi polku: " (::nimi-polku osa)
                                                                                        " Index polku: " (::index-polku osa))))
-                                                                        (comment (println "---------")
-                                                                                 (println "OSAN DEREFABLE")
-                                                                                 (cljs.pprint/pprint @osan-derefable)
-                                                                                 (println "-> rajapintakasittelija")
-                                                                                 (cljs.pprint/pprint @rajapintakasittelija)
-                                                                                 (println "-> osien-tunnisteet")
-                                                                                 (cljs.pprint/pprint osien-tunnisteet)
-                                                                                 (println "-> polut")
-                                                                                 (println "--> nimipolku " (::nimi-polku osa))
-                                                                                 (println "--> nimipolku ilman loppuindexeja " nimipolku-ilman-loppuindexeja)
-                                                                                 (println "--> osan polku dataan " osan-polku-dataan))
                                                                         (assoc osa ::osan-derefable osan-derefable
                                                                                ::tunniste-rajapinnan-dataan (get-in osien-tunnisteet osan-polku-dataan)
                                                                                ::triggeroi-seuranta! (when seuranta

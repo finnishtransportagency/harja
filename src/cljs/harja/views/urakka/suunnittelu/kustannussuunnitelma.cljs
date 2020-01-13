@@ -2091,8 +2091,6 @@
                                                                                           (gov/tyhja->syote (get osat 1)
                                                                                                             {:on-change (fn [arvo]
                                                                                                                           (when arvo
-                                                                                                                            (println "TUNNISTE RAJAPINNAN DATAAN: " (::grid/tunniste-rajapinnan-dataan solu/*this*))
-                                                                                                                            (println "ARVO: " arvo)
                                                                                                                             (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this*)))
                                                                                                              :on-blur (fn [arvo]
                                                                                                                         #_(when arvo
@@ -2165,15 +2163,12 @@
                                                                                                                   (pvm/ennen? aika-1 aika-2))}
                                                                                                          [:aika :maara :yhteensa :indeksikorjattu]]
                                                                                              :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
-                                                                                                                (println "VUODEN HOIDONJOHTOPALKKIO: " vuoden-hoidonjohtopalkkiot)
                                                                                                                 (mapv (fn [rivi]
                                                                                                                         (mapv (fn [[_ v]]
                                                                                                                                 v)
                                                                                                                               rivi))
                                                                                                                       vuoden-hoidonjohtopalkkiot))
                                                                                              :tunnisteen-kasittely (fn [data-sisalto data]
-                                                                                                                     (println "--------->RIVIT ")
-                                                                                                                     (cljs.pprint/pprint (gp/lapset data-sisalto))
                                                                                                                      (vec
                                                                                                                        (map-indexed (fn [i rivi]
                                                                                                                                       (vec
@@ -2204,21 +2199,16 @@
   (komp/luo
     (komp/piirretty (fn [_]
                       (e! (t/->Hoitokausi))
-                      (println "1")
                       (e! (t/->YleisSuodatinArvot))
-                      (println "2")
                       (e! (t/->Oikeudet))
-                      (println "3")
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
-                      (println "4")
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
                                                        (partial rahavarausten-taulukko e! (:kaskytyskanava app))
                                                        (partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))
                                                        (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
-                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))
-                      (println "5")))
+                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
     (fn [e! {:keys [kuluva-hoitokausi] :as app}]
       (let [tavoite-ja-kattohinta-argumentit (select-keys app #{:tavoite-ja-kattohinta :kuluva-hoitokausi :indeksit})
             suunnitelmien-argumentit (select-keys app #{:kaskytyskanava :suunnitelmien-tila-taulukko :suunnitelmien-tila-taulukon-tilat-luotu-kerran? :kirjoitusoikeus? :hankintakustannukset :hallinnolliset-toimenpiteet})
