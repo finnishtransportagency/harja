@@ -107,10 +107,10 @@
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "maksuera-lahetys") sonja jono))
 
 (defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero summat]
-  (log/warn (format "Halutaan lähettää maksuera (numero: %s) Sampoon" numero))
+  (log/warn (format "Halutaan lähettää maksuera (numero: %s) Sampoon." numero))
   (if (maksuerat/onko-olemassa? db numero)
-    (log/warn (format "Lähetetään maksuera (numero: %s) Sampoon" numero))
     (try
+      (log/warn (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
       (if (lukitse-maksuera db numero)
         (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
               muodosta-sanoma (fn []
@@ -119,6 +119,7 @@
                                   (maksuera-sanoma/maksuera-xml maksuera)))]
 
           (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
+            (log/warn (format "Maksuerän viesti-id on %s ." viesti-id))
             (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
             (log/warn (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
         (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
