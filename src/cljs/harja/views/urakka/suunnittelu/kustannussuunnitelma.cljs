@@ -34,6 +34,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
+(defonce e! nil)
+
 (declare hoidonjohtopalkkio-grid)
 
 (defn summa-formatointi [teksti]
@@ -585,10 +587,7 @@
 
 (defn suunnitelmien-tila
   [e! suunnitelmien-argumentit]
-  (let [paivitetyt-taulukot (cljs.core/atom {})
-        foo (gp/aseta-root-fn (hoidonjohtopalkkio-grid e!)
-                              (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid])))]
-    (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] foo))
+  (let [paivitetyt-taulukot (cljs.core/atom {})]
     (komp/luo
       (komp/piirretty (fn [this]
                         (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
@@ -608,10 +607,7 @@
       (fn [e! {:keys [kaskytyskanava suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran? kirjoitusoikeus? hankintakustannukset hallinnolliset-toimenpiteet]}]
         (when (and (:toimenpiteet hankintakustannukset) (:johtopalkkio hallinnolliset-toimenpiteet))
           (go (>! kaskytyskanava [:suunnitelmien-tila-render (t/->PaivitaSuunnitelmienTila paivitetyt-taulukot)])))
-        [:div
-         [debug/debug foo]
-         [gop/piirra foo]]
-        #_(if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
+        (if (and suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat-luotu-kerran?)
           [p/piirra-taulukko (aseta-rivien-taustavari suunnitelmien-tila-taulukko 1)]
           [yleiset/ajax-loader])))))
 
@@ -1989,15 +1985,21 @@
        [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn hoidonjohtopalkkio [johtopalkkio]
-  [maara-kk johtopalkkio])
+(defn hoidonjohtopalkkio [_]
+  (go (let [g (gp/aseta-root-fn (hoidonjohtopalkkio-grid e!)
+                                (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid])))]
+        (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g))))
+  (fn [johtopalkkio]
+    (if johtopalkkio
+      [gop/piirra johtopalkkio]
+      [yleiset/ajax-loader])))
 
-(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin]
+(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin johtopalkkio-grid]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
    [yleis-suodatin e! suodatin]
-   [hoidonjohtopalkkio johtopalkkio]])
+   [hoidonjohtopalkkio johtopalkkio-grid]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
   (if (and erillishankinnat jh-yhteenveto johtopalkkio)
@@ -2022,13 +2024,14 @@
 (defn hallinnolliset-toimenpiteet-sisalto [e!
                                            {{:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
                                                     toimistokulut johtopalkkio erillishankinnat menneet-vuodet]} :hallinnolliset-toimenpiteet
-                                            :keys [kuluva-hoitokausi indeksit suodatin]}]
+                                            :keys [kuluva-hoitokausi indeksit suodatin]}
+                                           johtopalkkio-grid]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
    [erillishankinnat-sisalto e! erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
    [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
-   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin]])
+   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid]])
 
 (defn identity-print
   ([x] (println "----> " x) x)
@@ -2124,6 +2127,10 @@
                                                                       :solun-polun-pituus 1
                                                                       :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
                                                                       :datan-kasittely (fn [otsikot]
+                                                                                         (println "OTSIKOT: " otsikot)
+                                                                                         (println (mapv (fn [otsikko]
+                                                                                                          otsikko)
+                                                                                                        (vals otsikot)))
                                                                                          (mapv (fn [otsikko]
                                                                                                  otsikko)
                                                                                                (vals otsikot)))}
@@ -2195,9 +2202,10 @@
     g))
 
 (defn kustannussuunnitelma*
-  [e! app]
+  [e*! app]
   (komp/luo
     (komp/piirretty (fn [_]
+                      (e! (t/->TaulukoidenVakioarvot))
                       (e! (t/->Hoitokausi))
                       (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))
@@ -2209,7 +2217,8 @@
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
-    (fn [e! {:keys [kuluva-hoitokausi] :as app}]
+    (fn [e*! {:keys [kuluva-hoitokausi] :as app}]
+      (set! e! e*!)
       (let [tavoite-ja-kattohinta-argumentit (select-keys app #{:tavoite-ja-kattohinta :kuluva-hoitokausi :indeksit})
             suunnitelmien-argumentit (select-keys app #{:kaskytyskanava :suunnitelmien-tila-taulukko :suunnitelmien-tila-taulukon-tilat-luotu-kerran? :kirjoitusoikeus? :hankintakustannukset :hallinnolliset-toimenpiteet})
             hankintakustannusten-argumentit (select-keys app #{:hankintakustannukset :kuluva-hoitokausi :kirjoitusoikeus? :indeksit :suodatin})
@@ -2235,7 +2244,7 @@
          [:span.viiva-alas]
          [hankintakustannukset-taulukot e! hankintakustannusten-argumentit]
          [:span.viiva-alas]
-         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit]]))))
+         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit (get-in app [:gridit :hoidonjohtopalkkio :grid])]]))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

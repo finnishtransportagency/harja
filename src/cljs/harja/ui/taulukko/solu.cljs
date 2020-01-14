@@ -60,7 +60,7 @@
        (or (nil? arvo) (fn? arvo))))
 
 (defn korjaa-NaN [arvo solu]
-  (if (js/isNaN arvo)
+  (if (.isNaN js/Number arvo)
     (do (warn (str "Osan " (or (gop/nimi solu) "Nimetön") " (" (gop/id solu) ") arvo on NaN!"))
         nil)
     arvo))

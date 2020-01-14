@@ -116,8 +116,11 @@
                                                               (map merge
                                                                    arvot
                                                                    johdetut-arvot))))}
-                         :yhteensa {:polut [[:gridit :hoidonjohtopalkkio :yhteensa]]
-                                    :haku identity}}
+                         :yhteensa {:polut [[:gridit :hoidonjohtopalkkio :yhteensa]
+                                            [:domain :hoitokausi :hoitokauden-numero]]
+                                    :haku (fn [{:keys [nimi maara yhteensa indeksikorjattu]}
+                                               hoitokauden-numero]
+                                            (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}))}}
                         {:aseta-hoidonjohtopalkkio! (fn [tila arvo {:keys [aika osa osan-paikka]}]
                                                       ;; TODO käytä aikaa tuon random 3 tilalla
                                                       (-> tila
@@ -258,6 +261,7 @@
                   (conj ajat tuleva-v-kk))))
             [] muokatun-summan-ajat-vuosittain)))
 
+(defrecord TaulukoidenVakioarvot [])
 (defrecord Hoitokausi [])
 (defrecord YleisSuodatinArvot [])
 (defrecord HaeIndeksitOnnistui [vastaus])
@@ -770,6 +774,12 @@
             suunnitelmien-tila-taulukko (:hallinnolliset paivitetyt-taulukot-instanssi))))
 
 (extend-protocol tuck/Event
+  TaulukoidenVakioarvot
+  (process-event [_ app]
+    (-> app
+        (assoc-in [:gridit :hoidonjohtopalkkio :otsikot] {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjatu"})
+        (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto] {:nimi "Hoidonjohtopalkkio"})
+        (assoc-in [:gridit :hoidonjohtopalkkio :yhteensa] {:nimi "Yhteensä"})))
   Hoitokausi
   (process-event [_ app]
     (assoc app :kuluva-hoitokausi (kuluva-hoitokausi)))

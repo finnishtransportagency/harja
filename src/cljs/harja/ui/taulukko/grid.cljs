@@ -9,7 +9,8 @@
             [clojure.string :as clj-str]
             [reagent.core :as r]
             [reagent.ratom :as ratom]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [harja.ui.grid-debug :as g-debug])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
@@ -398,8 +399,19 @@
                                      #js {:error error})
      :component-did-catch (fn [error error-info]
                             (warn (str "Komponentti kaatui virheeseen: "
-                                       error-info)))
-     :display-name (str (or (gop/nimi grid) "Nimetön ") "(" (gop/id grid) ")")
+                                       error-info
+                                       (when g-debug/GRID_DEBUG
+                                         (apply str "\n---- VIIMEISIMMÄT DATA MUUTOKSET ----"
+                                                (str "\nGRID: " (or (gop/nimi grid) "Nimetön") "(" (gop/id grid) ")")
+                                                (for [lapsi (p/lapset grid)]
+                                                  (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
+                                                                   (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
+                                                    (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
+                                                         "\n" (with-out-str (cljs.pprint/pprint
+                                                                              {:data-rajapinnasta (first data)
+                                                                               :grid-data (second data)
+                                                                               :osan-derefable (get data 2)}))))))))))
+     :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
      :render (fn [this]
                (if-let [error (.. this -state -error)]
                  [virhekasittely/rendaa-virhe error]
@@ -704,6 +716,17 @@
                                                                                              rajapinnan-dataf (if *jarjesta-data?*
                                                                                                                (jarjesta-data rajapinnan-data jarjestys)
                                                                                                                rajapinnan-data)]
+                                                                                         (when g-debug/GRID_DEBUG
+                                                                                           (swap! g-debug/debug
+                                                                                                  (fn [tila]
+                                                                                                    (update-in tila
+                                                                                                               [:rajapinnat rajapinta]
+                                                                                                               (fn [taman-tila]
+                                                                                                                 (let [taman-tila (or taman-tila
+                                                                                                                                      (vec (repeat 2 nil)))]
+                                                                                                                   (assoc taman-tila
+                                                                                                                          0 rajapinnan-data
+                                                                                                                          1 rajapinnan-dataf)))))))
                                                                                          (datan-kasittely rajapinnan-dataf)))
                                                         tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
                                                     (assoc m polku (assoc kasittelija
@@ -721,7 +744,7 @@
                                                   @(dk/seuranta datan-kasittelija seurannan-nimi)))
                              (constantly true)
                              (fn [osa]
-                               (assoc (if-let [loydetty-osa (some (fn [[grid-polku {:keys [rajapintakasittelija osien-tunnisteet solun-polun-pituus seuranta]}]]
+                               (assoc (if-let [loydetty-osa (some (fn [[grid-polku {:keys [rajapintakasittelija osien-tunnisteet solun-polun-pituus seuranta rajapinta]}]]
                                                                     (let [grid-polku-sopii-osaan? (every? true? (map (fn [gp op]
                                                                                                                        (= gp op))
                                                                                                                      grid-polku
@@ -730,6 +753,14 @@
                                                                           osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
                                                                                                        (::index-polku osa)))
                                                                           solun-polun-pituus-oikein? (= solun-polun-pituus (count osan-polku-dataan))
+                                                                          #_#__ (when (and grid-polku-sopii-osaan?
+                                                                                       solun-polun-pituus-oikein?
+                                                                                       (= rajapinta :yhteensa))
+                                                                              (println "------->")
+                                                                              (println nimipolku-ilman-loppuindexeja)
+                                                                              (println osan-polku-dataan)
+                                                                              (println @rajapintakasittelija)
+                                                                              (println "<-------"))
                                                                           osan-derefable (r/cursor rajapintakasittelija osan-polku-dataan)]
                                                                       (when (and grid-polku-sopii-osaan?
                                                                                  solun-polun-pituus-oikein?)
@@ -738,6 +769,15 @@
                                                                             (warn (str "Osan " (or (gop/nimi osa) (gop/id osa)) " polku ei ole oikein."
                                                                                        " Nimi polku: " (::nimi-polku osa)
                                                                                        " Index polku: " (::index-polku osa))))
+                                                                        (when g-debug/GRID_DEBUG
+                                                                          (swap! g-debug/debug
+                                                                                 (fn [tila]
+                                                                                   (update-in tila
+                                                                                              [:osat (gop/id osa)]
+                                                                                              (fn [taman-tila]
+                                                                                                (assoc taman-tila
+                                                                                                       :derefable osan-derefable
+                                                                                                       :rajapinta rajapinta))))))
                                                                         (assoc osa ::osan-derefable osan-derefable
                                                                                ::tunniste-rajapinnan-dataan (get-in osien-tunnisteet osan-polku-dataan)
                                                                                ::triggeroi-seuranta! (when seuranta
