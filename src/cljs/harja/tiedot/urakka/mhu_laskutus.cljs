@@ -28,6 +28,7 @@
 
 (defrecord KutsuEpaonnistui [tulos])
 
+(defrecord MaksueraHakuOnnistui [tulos])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
 (defrecord LaskuhakuOnnistui [tulos])
@@ -78,7 +79,7 @@
       avain-arvot)))
 
 (defn- luo-kulutaulukko
-  [{:keys [toimenpiteet tehtavaryhmat]}]
+  [{:keys [toimenpiteet tehtavaryhmat maksuerat]}]
   (loki/log "taulukon luonti")
   (let [e! (tuck/current-send-function)
         paivitysfunktiot {"Pvm"          (luo-paivitys-fn
@@ -138,6 +139,15 @@
                   (let [flatatut (reduce (r/partial flattaus-fn (dissoc (first flatattavat) :kohdistukset)) [] flatattavat)]
                     (sort-by :toimenpideinstanssi flatatut)))
         even? (r/atom true)
+        hae-avaimella-fn (fn [verrattava haettava palautettava]
+                           (fn [kohde]
+                             (let [palautuksen-avain (or palautettava
+                                                         haettava)]
+                               (when (= verrattava (if (or (vector? haettava)
+                                                           (seq? haettava))
+                                                     (get-in kohde haettava)
+                                                     (haettava kohde)))
+                                 (palautuksen-avain kohde)))))
         luo-taulukon-summarivi (fn [toimenpiteet tehtavaryhmat taulukko [tpi rivit]]
                                  (loki/log "RR" rivit taulukko @even?)
                                  (let [taulukko (if-not (= 1 (count rivit))
@@ -151,19 +161,19 @@
                                                                                                                 "even"
                                                                                                                 "odd"))}}}
                                                                    [osa/->Teksti
-                                                                    (keyword (gensym "erap"))
+                                                                    (keyword (gensym "lbl-erapv-"))
                                                                     (str (pvm/pvm (-> rivit first :erapaiva)))
                                                                     {:class #{"col-xs-2"}}]
                                                                    [osa/->Teksti
-                                                                    (keyword (gensym "erap"))
+                                                                    (keyword (gensym "lbl-tpi-"))
                                                                     (str (some #(when (= tpi (:toimenpideinstanssi %)) (:toimenpide %)) toimenpiteet))
                                                                     {:class #{"col-xs-offset-1 col-xs-4"}}]
                                                                    [osa/->Teksti
-                                                                    (keyword (gensym "erap"))
+                                                                    (keyword (gensym "lbl-yht-"))
                                                                     (str "Yhteensä ")
                                                                     {:class #{"col-xs-offset-3 col-xs-1"}}]
                                                                    [osa/->Teksti
-                                                                    (keyword (gensym "erap"))
+                                                                    (keyword (gensym "lbl-sum-"))
                                                                     (str (reduce #(+ %1 (:summa %2)) 0 rivit))
                                                                     {:class #{"col-xs-1"}}]))
                                                   taulukko)]
@@ -179,24 +189,24 @@
                                                                                                             "even"
                                                                                                             "odd"))}}}
                                                             [osa/->Teksti
-                                                             (keyword (gensym "erap"))
+                                                             (keyword (gensym "erapv-"))
                                                              (str
                                                                (when (= 1 (count rivit)) (pvm/pvm erapaiva)))
                                                              {:class #{"col-xs-1"}}]
                                                             [osa/->Teksti
-                                                             (keyword (gensym "maksuera"))
-                                                             (str "<Koodi>")
+                                                             (keyword (gensym "maksuera-"))
+                                                             (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
                                                              {:class #{"col-xs-2"}}]
                                                             [osa/->Teksti
-                                                             (keyword (gensym "toimenpideinstanssi"))
-                                                             (str (some #(when (= toimenpideinstanssi (:toimenpideinstanssi %)) (:toimenpide %)) toimenpiteet))
+                                                             (keyword (gensym "toimenpideinstanssi-"))
+                                                             (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
                                                              {:class #{"col-xs-4"}}]
                                                             [osa/->Teksti
-                                                             (keyword (gensym "tehtavaryhma"))
-                                                             (str (some #(when (= tehtavaryhma (:id %)) (:tehtavaryhma %)) tehtavaryhmat))
+                                                             (keyword (gensym "tehtavaryhma-"))
+                                                             (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
                                                              {:class #{"col-xs-4"}}]
                                                             [osa/->Teksti
-                                                             (keyword (gensym "summa"))
+                                                             (keyword (gensym "summa-"))
                                                              (str summa)
                                                              {:class #{"col-xs-1"}}]))
                                            taulukko
@@ -289,6 +299,9 @@
 
   ;; SUCCESS
 
+  MaksueraHakuOnnistui
+  (process-event [{tulos :tulos} app]
+    (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tuloksen-tallennus-fn]} :parametrit} app]
     (loki/log avain tulos)
@@ -298,7 +311,9 @@
             assoc)]
       (-> app
           (assoc-fn avain tulos)
-          (assoc :taulukko (p/paivita-taulukko! (luo-kulutaulukko app) (formatoi-tulos tulos)))
+          (assoc :taulukko (p/paivita-taulukko!
+                             (luo-kulutaulukko app)
+                             (formatoi-tulos tulos)))
           (assoc :syottomoodi false))))
   AliurakoitsijahakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -308,52 +323,13 @@
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
     (loki/log "laskut haettu")
-    (let
-      [;e! (tuck/current-send-function)
-       ;u-k-lkm (count kulut)
-       #_(reduce
-           (fn [koko {:keys [summa viite erapaiva kohdistukset] :as l}]
-             (loki/log "kohdistukset" l)
-             (loop
-               [taul koko
-                kohd kohdistukset]
-               (loki/log "KOHD" kohd)
-               (if (nil? (first kohd))
-                 taul
-                 (recur
-                   (let [{:keys [tehtava tehtavaryhma toimenpideinstanssi summa]} (first kohd)]
-                     (p/lisaa-rivi! koko
-                                    {:avain            :kulut
-                                     :rivi             jana/->Rivi
-                                     :alkuun?          true
-                                     :rivin-parametrit {:on-click #(e! (->AvaaLasku l))}}
-                                    [osa/->Teksti
-                                     (keyword (str "kk-hv-" u-k-lkm))
-                                     (or (pvm/kuukausi-ja-vuosi erapaiva)
-                                         "Eräpäivä") #_(:koontilaskun-kuukausi (first kohd))]
-                                    [osa/->Teksti
-                                     (keyword (str "era-" u-k-lkm))
-                                     (or (pvm/kuukausi-ja-vuosi erapaiva)
-                                         "Eräpäivä") #_(:koontilaskun-pvm (first kohd))]
-                                    [osa/->Teksti
-                                     (keyword (str "toimenpide-" u-k-lkm))
-                                     (some #(when (= (:toimenpideinstanssi %) toimenpideinstanssi) (:tpi-nimi %)) toimenpiteet) #_(:tehtava (first kohd))]
-                                    [osa/->Teksti
-                                     (keyword (str "tehtavaryhma-" u-k-lkm))
-                                     (or tehtavaryhma
-                                         "Tehtäväryhmä") #_(:tehtavaryhma (first kohd))]
-                                    [osa/->Teksti
-                                     (keyword (str "maara-" u-k-lkm))
-                                     summa]))
-                   (rest kohd)))))
-           taulukko
-           tulos)]
-      (loki/log "LASKUT" tulos)
-      (-> app
-          (assoc :laskut tulos
-                 :taulukko (p/paivita-taulukko! (luo-kulutaulukko app) (formatoi-tulos tulos))
-                 )
-          (update-in [:meta :haetaan] dec))))
+    (loki/log "LASKUT" tulos)
+    (-> app
+        (assoc :laskut tulos
+               :taulukko (p/paivita-taulukko!
+                           (luo-kulutaulukko app)
+                           (formatoi-tulos tulos)))
+        (update-in [:meta :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
     (loki/log "Tulo!!!s  " tulos)
@@ -394,6 +370,11 @@
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
                          {:urakka-id (:id hakuparametrit)}
                          {:onnistui           ->ToimenpidehakuOnnistui
+                          :epaonnistui        ->KutsuEpaonnistui
+                          :paasta-virhe-lapi? true})
+      (tuck-apurit/post! :hae-urakan-maksuerat
+                         (:id hakuparametrit)
+                         {:onnistui           ->MaksueraHakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
                           :paasta-virhe-lapi? true})
       (tuck-apurit/post! :kaikki-laskuerittelyt
