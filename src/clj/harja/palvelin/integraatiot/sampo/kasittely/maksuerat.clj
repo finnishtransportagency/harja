@@ -107,8 +107,9 @@
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "maksuera-lahetys") sonja jono))
 
 (defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero summat]
-  (log/warn (format "Lähetetäänkö maksuera (numero: %s) Sampoon? %" numero (maksuerat/onko-olemassa? db numero)))
+  (log/warn (format "Halutaan lähettää maksuera (numero: %s) Sampoon" numero))
   (if (maksuerat/onko-olemassa? db numero)
+    (log/warn (format "Lähetetään maksuera (numero: %s) Sampoon" numero))
     (try
       (if (lukitse-maksuera db numero)
         (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
