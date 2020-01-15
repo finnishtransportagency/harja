@@ -1,20 +1,7 @@
 (ns harja.ui.taulukko.kaytokset
   (:require [harja.loki :as loki]
-            [clojure.string :as clj-str]))
-
-(defn numero-re
-  ([] (numero-re {}))
-  ([{kokonaisosan-maara :kokonaisosan-maara desimaalien-maara :desimaalien-maara
-     positiivinen? :positiivinen? kokonaisluku? :kokonaisluku?
-     :or {kokonaisosan-maara 10 desimaalien-maara 10 positiivinen? false kokonaisluku? false}}]
-   (str (when-not positiivinen? "-?")
-        "\\d{1," kokonaisosan-maara "}"
-        (when-not kokonaisluku? (str "((\\.|,)\\d{0," desimaalien-maara "})?")))))
-
-(defn positiivinen-numero-re
-  ([] (positiivinen-numero-re {}))
-  ([asetukset]
-   (numero-re (assoc asetukset :positiivinen? true))))
+            [clojure.string :as clj-str]
+            [harja.tyokalut.regex :as re]))
 
 (defmulti lisaa-kaytos
           (fn [kaytos _]
@@ -36,7 +23,7 @@
   [{{:keys [kokonaisosan-maara desimaalien-maara]} :positiivinen-numero} toiminto]
   (comp toiminto
         (fn [arvo]
-          (let [positiivinen-arvo? (re-matches (re-pattern (positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
+          (let [positiivinen-arvo? (re-matches (re-pattern (re/positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
                                                                                     :desimaalien-maara desimaalien-maara}))
                                                arvo)]
             (when (or (= "" arvo) positiivinen-arvo?)
@@ -53,14 +40,14 @@
   [_ toiminto]
   (comp toiminto
         (fn [arvo]
-          (when (re-matches (re-pattern (numero-re)) arvo)
+          (when (re-matches (re-pattern (re/numero-re)) arvo)
             (js/parseInt arvo)))))
 
 (defmethod lisaa-kaytos :str->number
   [_ toiminto]
   (comp toiminto
         (fn [arvo]
-          (when (re-matches (re-pattern (numero-re)) arvo)
+          (when (re-matches (re-pattern (re/numero-re)) arvo)
             (js/Number arvo)))))
 
 (defmethod lisaa-kaytos :default

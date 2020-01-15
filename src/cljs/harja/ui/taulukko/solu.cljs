@@ -192,7 +192,6 @@
                       alt height src width
                       autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
               taman-data (::grid/osan-derefable this)
-              _ (println "---- > SOLU tunniste: " (::grid/tunniste-rajapinnan-dataan this))
               arvo (korjaa-NaN @taman-data this)
               parametrit (into {}
                                (remove (fn [[_ arvo]]

@@ -50,6 +50,7 @@
 (defn rajapinnan-kuuntelijat [data-atom seurannan-tila rajapinta kuvaus]
   (let [tila (reaction (let [tila @data-atom
                              seurannat @seurannan-tila]
+                         (println "SEURANNAT NIL?: " (nil? seurannat))
                          (if (nil? seurannat)
                            tila
                            (binding [*lisataan-seuranta?* true]
@@ -64,8 +65,8 @@
                        rajapinnan-nimi
                        (reaction (let [rajapinnan-data (apply haku (mapv deref kursorit))]
                                    (when-not (s/valid? (get rajapinta rajapinnan-nimi) rajapinnan-data)
-                                     (warn "Rajapinnan " (str rajapinnan-nimi) " data " rajapinnan-data " ei vastaa spekkiin. "
-                                           (str (s/conform (get rajapinta rajapinnan-nimi) rajapinnan-data))))
+                                     (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (cljs.pprint/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
+                                           (str (s/explain (get rajapinta rajapinnan-nimi) rajapinnan-data))))
                                    rajapinnan-data)))))
             {}
             kuvaus)))
@@ -90,6 +91,7 @@
                           (merge tila (init tila)))))
                (let [seuranta-fn! (fn [{:keys [aseta polut]} uusi-data]
                                     (binding [*suoritettava-seuranta* seurannan-nimi]
+                                      (println "SUORITETAAN SEURANTA: " seurannan-nimi)
                                       (swap! seurannan-tila
                                              (fn [tila]
                                                (let [seurattava-data (or tila uusi-data @data-atom)]

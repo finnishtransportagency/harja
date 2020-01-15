@@ -1985,21 +1985,21 @@
        [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn hoidonjohtopalkkio [_]
+(defn hoidonjohtopalkkio [_ _]
   (go (let [g (gp/aseta-root-fn (hoidonjohtopalkkio-grid e!)
                                 (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid])))]
         (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g))))
-  (fn [johtopalkkio]
-    (if johtopalkkio
+  (fn [johtopalkkio kantahaku-valmis?]
+    (if (and johtopalkkio kantahaku-valmis?)
       [gop/piirra johtopalkkio]
       [yleiset/ajax-loader])))
 
-(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin johtopalkkio-grid]
+(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
    [hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
    [yleis-suodatin e! suodatin]
-   [hoidonjohtopalkkio johtopalkkio-grid]])
+   [hoidonjohtopalkkio johtopalkkio-grid kantahaku-valmis?]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
   (if (and erillishankinnat jh-yhteenveto johtopalkkio)
@@ -2025,22 +2025,18 @@
                                            {{:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
                                                     toimistokulut johtopalkkio erillishankinnat menneet-vuodet]} :hallinnolliset-toimenpiteet
                                             :keys [kuluva-hoitokausi indeksit suodatin]}
-                                           johtopalkkio-grid]
+                                           johtopalkkio-grid
+                                           kantahaku-valmis?]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
-   [hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
-   [erillishankinnat-sisalto e! erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
-   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
-   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid]])
-
-(defn identity-print
-  ([x] (println "----> " x) x)
-  ([x txt]
-   (println txt)
-   x))
+   #_[hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
+   #_[erillishankinnat-sisalto e! erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
+   #_[johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
+   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]])
 
 (defn hoidonjohtopalkkio-grid [e!]
-  (let [g (-> (grid/grid-pohjasta g-pohjat/grid-pohja-4)
+  (let [nyt (pvm/nyt)
+        g (-> (grid/grid-pohjasta g-pohjat/grid-pohja-4)
               (gp/paivita-lapset [::g-pohjat/otsikko]
                                  (fn [lapset]
                                    (vec
@@ -2090,10 +2086,21 @@
                                                             (mapv (fn [rivi]
                                                                     (gp/paivita-lapset rivi
                                                                                        (fn [osat]
-                                                                                         [(gov/tyhja->teksti (get osat 0) {:class #{"table-default" "table-default-header"}})
+                                                                                         [(gov/tyhja->teksti (get osat 0)
+                                                                                                             {:class #{"table-default" "table-default-header"}}
+                                                                                                             {:fmt (fn [paivamaara]
+                                                                                                                     (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                                                                           mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                                                                        (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                                                                            (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                                                                       (if mennyt?
+                                                                                                                         (str teksti " (mennyt)")
+                                                                                                                         teksti)))})
                                                                                           (gov/tyhja->syote (get osat 1)
                                                                                                             {:on-change (fn [arvo]
                                                                                                                           (when arvo
+                                                                                                                            (println "TUNNISTE RAJAPINNAN DATAAN: " (::grid/tunniste-rajapinnan-dataan solu/*this*))
+                                                                                                                            (println "ARVO: " arvo)
                                                                                                                             (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this*)))
                                                                                                              :on-blur (fn [arvo]
                                                                                                                         #_(when arvo
@@ -2127,10 +2134,6 @@
                                                                       :solun-polun-pituus 1
                                                                       :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
                                                                       :datan-kasittely (fn [otsikot]
-                                                                                         (println "OTSIKOT: " otsikot)
-                                                                                         (println (mapv (fn [otsikko]
-                                                                                                          otsikko)
-                                                                                                        (vals otsikot)))
                                                                                          (mapv (fn [otsikko]
                                                                                                  otsikko)
                                                                                                (vals otsikot)))}
@@ -2228,7 +2231,7 @@
          [:h1 "Kustannussuunnitelma"]
          [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
          [kuluva-hoitovuosi kuluva-hoitokausi]
-         [haitari-laatikko
+         #_[haitari-laatikko
           "Tavoite- ja kattohinta lasketaan automaattisesti"
           {:alussa-auki? true
            :id "tavoite-ja-kattohinta"}
@@ -2236,15 +2239,15 @@
           [:span#tavoite-ja-kattohinta-huomio
            "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
          [:span.viiva-alas]
-         [haitari-laatikko
+         #_[haitari-laatikko
           "Suunnitelmien tila"
           {:alussa-auki? true
            :otsikko-elementti :h2}
           [suunnitelmien-tila e! suunnitelmien-argumentit]]
          [:span.viiva-alas]
-         [hankintakustannukset-taulukot e! hankintakustannusten-argumentit]
+         #_[hankintakustannukset-taulukot e! hankintakustannusten-argumentit]
          [:span.viiva-alas]
-         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit (get-in app [:gridit :hoidonjohtopalkkio :grid])]]))))
+         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit (get-in app [:gridit :hoidonjohtopalkkio :grid]) (:kantahaku-valmis? app)]]))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

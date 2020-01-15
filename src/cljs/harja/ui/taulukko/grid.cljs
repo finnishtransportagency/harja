@@ -714,8 +714,10 @@
     (let [grid-rajapintakasittelijat (reduce-kv (fn [m polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
                                                   (let [rajapintakasittelija (reaction (let [rajapinnan-data @(dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)
                                                                                              rajapinnan-dataf (if *jarjesta-data?*
-                                                                                                               (jarjesta-data rajapinnan-data jarjestys)
-                                                                                                               rajapinnan-data)]
+                                                                                                                (do (println "JÄRJESTETÄÄN")
+                                                                                                                    (jarjesta-data rajapinnan-data jarjestys))
+                                                                                                                (do (println "EI JÄRJESTETÄ")
+                                                                                                                    rajapinnan-data))]
                                                                                          (when g-debug/GRID_DEBUG
                                                                                            (swap! g-debug/debug
                                                                                                   (fn [tila]
