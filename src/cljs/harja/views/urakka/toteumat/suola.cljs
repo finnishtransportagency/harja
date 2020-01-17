@@ -219,9 +219,7 @@
               }
              [{:otsikko "Määrä t/km"
                :nimi :maara_t_per_km
-               :fmt #((if (= % 0)
-                        ("-")
-                        (fmt/desimaaliluku-opt % 1)))
+               :fmt #(fmt/desimaaliluku-opt % 1)
                :leveys 10}
               {:otsikko "Yhteensä"
                :leveys 10
