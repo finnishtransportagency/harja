@@ -230,6 +230,10 @@
     :hoidonjohtopalkkio (jarjesta-data false
                                        (triggeroi-seurannat false
                                                             (dk/aseta-rajapinnan-data! (::grid/datan-kasittelija solu) :aseta-hoidonjohtopalkkio! arvo (::grid/tunniste-rajapinnan-dataan solu))))))
+
+(defn triggeroi-seuranta [solu seurannan-nimi]
+  (dk/triggeroi-seuranta! (::grid/datan-kasittelija solu) seurannan-nimi))
+
 (defn laajenna-solua-klikattu [solu auki?]
   (let [osa (-> solu grid/vanhempi grid/vanhempi gp/lapset second)]
     (if auki?

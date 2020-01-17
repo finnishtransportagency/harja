@@ -2077,43 +2077,51 @@
                                               :fmt-aktiiviselle summa-formatointi-aktiivinen})
                            (gov/tyhja->teksti (get lapset 2) {:class #{"table-default"}})
                            (gov/tyhja->teksti (get lapset 3) {:class #{"table-default" "harmaa-teksti"}})]))
-    (doseq [rivi (gp/lapset (grid/get-in-grid g [::g-pohjat/data 0 ::g-pohjat/data-sisalto]))]
-      (gp/paivita-lapset! rivi
-                          (fn [osat]
-                            [(gov/tyhja->teksti (get osat 0)
-                                                {:class #{"table-default" "table-default-header"}}
-                                                {:fmt (fn [paivamaara]
-                                                        (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
-                                                              mennyt? (and (pvm/ennen? paivamaara nyt)
-                                                                           (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
-                                                                               (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
-                                                          (if mennyt?
-                                                            (str teksti " (mennyt)")
-                                                            teksti)))})
-                             (gov/tyhja->syote (get osat 1)
-                                               {:on-change (fn [arvo]
-                                                             (when arvo
-                                                               (println "TUNNISTE RAJAPINNAN DATAAN: " (::grid/tunniste-rajapinnan-dataan solu/*this*))
-                                                               (println "ARVO: " arvo)
-                                                               (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this*)))
-                                                :on-blur (fn [arvo]
-                                                           #_(when arvo
-                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                                               (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                                               (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
-                                                :on-key-down (fn [event]
-                                                               (when (= "Enter" (.. event -key))
-                                                                 (.. event -target blur)))}
-                                               {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                            {:eventin-arvo {:f poista-tyhjat}}]
-                                                :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
-                                               {:size 2
-                                                :class #{"input-default"}}
-                                               {:fmt summa-formatointi
-                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})
-                             (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
-                             (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))
+    (doall
+      (map-indexed (fn [index rivi]
+                     (gp/paivita-parametrit! rivi
+                                             (fn [parametrit]
+                                               (update parametrit :class (fn [luokat]
+                                                                           (if (odd? index)
+                                                                             (conj luokat "table-default-odd")
+                                                                             (conj luokat "table-default-even"))))))
+                     (gp/paivita-lapset! rivi
+                                         (fn [osat]
+                                           [(gov/tyhja->teksti (get osat 0)
+                                                               {:class #{"table-default"}}
+                                                               {:fmt (fn [paivamaara]
+                                                                       (let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                             mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                          (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                              (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                         (if mennyt?
+                                                                           (str teksti " (mennyt)")
+                                                                           teksti)))})
+                                            (gov/tyhja->syote (get osat 1)
+                                                              {:on-change (fn [arvo]
+                                                                            (when arvo
+                                                                              (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this*)))
+                                                               :on-blur (fn [arvo]
+                                                                          (when arvo
+                                                                            (t/triggeroi-seuranta solu/*this* :hoidonjohtopalkkio-seuranta))
+                                                                          #_(when arvo
+                                                                              (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                              (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
+                                                                              (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                              (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                               :on-key-down (fn [event]
+                                                                              (when (= "Enter" (.. event -key))
+                                                                                (.. event -target blur)))}
+                                                              {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                           {:eventin-arvo {:f poista-tyhjat}}]
+                                                               :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                              {:size 2
+                                                               :class #{"input-default"}}
+                                                              {:fmt summa-formatointi
+                                                               :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                            (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
+                                            (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))
+                   (gp/lapset (grid/get-in-grid g [::g-pohjat/data 0 ::g-pohjat/data-sisalto]))))
     (gp/paivita-lapset! g [::g-pohjat/yhteenveto]
                         (fn [lapset]
                           [(gov/tyhja->teksti (get lapset 0) {:class #{"table-default" "table-default-sum"}})
