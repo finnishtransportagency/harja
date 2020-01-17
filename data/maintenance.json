@@ -5,11 +5,6 @@
     "body": "<ul><li>Päällystysurakoiden Kaistamuutokset tulevat voimaan. Muutoksen jälkeen kaistaluku muodostuu siten, että ensimmäinen numero kertoo ajosuunnan ja toinen numero kaistan sijainnin pääkaistaan nähden.</ul>" 
   },
   {
-    "date": "2019-12-19",
-    "title": "Valtakunnalliset välitavoitteet on päivitetty",
-    "body": "Määräaikaan mennessä tehtävät työt löytyvät nyt uusista hoitourakoista. <br><br>Myös vanhoihin urakoihin on päivitetty tavoitteita: <ul><li>Sadevesikaivot ja -viemärit sekä salaojakaivot on tarkastettava, tyhjennettävä ja puhdistettava keväisin hiekoitushiekan poiston jälkeen 31.5. mennessä<li>Aurausviitat poistettava 31.5. mennessä<li>Tilapäisten paikkausten korvaus kuumamassalla 30.6. mennessä<li>Siltojen pienet kunnostustoimenpiteet 30.9. mennessä<li>Päällystettyjen teiden sorapientareiden laadunalitusten korjaukset 30.9. mennessä (liikennettä vaarantavat korjattava viipymättä).<li>Reunakivien korjaus paikalleen</ul>"   
-  },
-    {
     "date": "2019-11-29",
     "title": "Harja-API:sta on julkaistu versio 1.0.46.",
     "body": "Työkoneseurantarajapintoihin on lisätty työkoneelle uusi tieto tunnus. Kenttä on alfanumeerinen ja sitä käytetään työkoneen yksilöimiseen. Tieto välittyy Harjan lisäksi Liikennetilannepalveluun."  
