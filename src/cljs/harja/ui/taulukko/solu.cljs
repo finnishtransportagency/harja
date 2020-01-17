@@ -71,10 +71,10 @@
     (let [{:keys [id class]} (:parametrit this)
           taman-data (::grid/osan-derefable this)
           arvo (korjaa-NaN @taman-data this)]
-      [:div.osa.osa-teksti {:class (when class
-                                     (apply str (interpose " " class)))
-                            :id id
-                            :data-cy (::nimi this)}
+      [:div.solu.solu-teksti {:class (when class
+                                       (apply str (interpose " " class)))
+                              :id id
+                              :data-cy (::nimi this)}
        ((::fmt this) arvo)]))
   gop/IGridOsa
   (-id [this]
@@ -130,11 +130,11 @@
     (let [{:keys [id class]} (:parametrit this)
           taman-data (::grid/osan-derefable this)
           arvo (korjaa-NaN @taman-data this)]
-      [:a.osa.osa-linkki {:class (when class
-                                   (apply str (interpose " " class)))
-                          :href linkki
-                          :id id
-                          :data-cy (::nimi this)}
+      [:a.solu.solu-linkki {:class (when class
+                                     (apply str (interpose " " class)))
+                            :href linkki
+                            :id id
+                            :data-cy (::nimi this)}
        ((::fmt this) arvo)]))
   gop/IGridOsa
   (-id [this]
@@ -245,7 +245,7 @@
                                                         (on-key-press this))
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
-          [:input.osa.osa-syote parametrit]))))
+          [:input.solu.solu-syote parametrit]))))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -319,7 +319,7 @@
                                                         (on-key-press this))
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
-          [:button.osa.osa-nappi parametrit sisalto]))))
+          [:button.solu.solu-nappi parametrit sisalto]))))
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -365,7 +365,7 @@
               ikoni-kiinni (if (= ikoni "chevron")
                              ikonit/livicon-chevron-up
                              ikonit/oi-caret-top)]
-          [:span.osa.klikattava.osa-laajenna
+          [:span.solu.klikattava.solu-laajenna
            {:class (when class
                      (apply str (interpose " " class)))
             :id id

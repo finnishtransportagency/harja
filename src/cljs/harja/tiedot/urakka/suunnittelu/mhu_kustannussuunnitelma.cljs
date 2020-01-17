@@ -16,7 +16,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [cljs.spec.alpha :as s]
             [harja.loki :refer [error]]
-            [harja.tyokalut.regex :as re])
+            [harja.tyokalut.regex :as re]
+            [harja.ui.taulukko.grid-osa-protokollat :as gop]
+            [harja.ui.taulukko.grid-protokollat :as gp])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go]]))
@@ -228,6 +230,11 @@
     :hoidonjohtopalkkio (jarjesta-data false
                                        (triggeroi-seurannat false
                                                             (dk/aseta-rajapinnan-data! (::grid/datan-kasittelija solu) :aseta-hoidonjohtopalkkio! arvo (::grid/tunniste-rajapinnan-dataan solu))))))
+(defn laajenna-solua-klikattu [solu auki?]
+  (let [osa (-> solu grid/vanhempi grid/vanhempi gp/lapset second)]
+    (if auki?
+      (gop/nayta! osa)
+      (gop/piillota! osa))))
 
 
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]
@@ -973,11 +980,38 @@
                    {kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-pvmt :pvmt} :kuluva-hoitokausi
                    kirjoitusoikeus? :kirjoitusoikeus? :as app}]
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
-    (let [hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
+    (let [{urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
+          hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
+                                            (:kustannusarvioidut-tyot vastaus))
+          maara-kk-taulukon-data (fn [kustannusarvioidut-tyot haettu-asia asia-nimi-frontilla]
+                                   (let [asia-kannasta (filter (fn [tyo]
+                                                                 (= haettu-asia (:haettu-asia tyo)))
+                                                               kustannusarvioidut-tyot)
+                                         asia-kannasta (vec
+                                                         (reduce (fn [palkkiot hoitokauden-aloitus-vuosi]
+                                                                   (let [vuoden-maara (some (fn [{:keys [vuosi summa kuukausi]}]
+                                                                                              (when (and (= vuosi hoitokauden-aloitus-vuosi)
+                                                                                                         (> kuukausi 9))
+                                                                                                summa))
+                                                                                            asia-kannasta)
+                                                                         maara-kk (or vuoden-maara 0)]
+                                                                     (conj palkkiot {:maara-kk maara-kk
+                                                                                     :nimi asia-nimi-frontilla
+                                                                                     :yhteensa (* 12 maara-kk)})))
+                                                                 []
+                                                                 (range (pvm/vuosi urakan-aloituspvm)
+                                                                        (pvm/vuosi (last kuluvan-hoitovuoden-pvmt)))))]
+                                     [[(last asia-kannasta)] asia-kannasta]))
+          [jh-toimistokulut jh-toimistokulut-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut "Toimistokulut")
+          [johtopalkkio johtopalkkio-kannasta] (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio "Hoidonjohtopalkkio")
+
+          hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                             (:kustannusarvioidut-tyot vastaus))]
       #_(tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
 
       (-> app
+          (assoc-in [:hallinnolliset-toimenpiteet :johtopalkkio] (johtopalkkio-taulukko (first johtopalkkio) :hoidonjohtopalkkio kirjoitusoikeus?))
+          (assoc-in [:hallinnolliset-toimenpiteet :toimistokulut] (toimistokulut-taulukko (first jh-toimistokulut) :toimistokulut kirjoitusoikeus?))
           (assoc-in [:domain :hoidonjohtopalkkio] (vec
                                                     (sort-by #(-> % first :aika)
                                                              (vals

@@ -39,7 +39,8 @@
                                                                                    [{:sarakkeet [0 4] :rivit [0 1]}])
                                                                         (alue/taulukko {:nimi ::data-sisalto
                                                                                         :alueet [{:sarakkeet [0 1] :rivit [0 12]}]
-                                                                                        :koko konf/auto}
+                                                                                        :koko konf/auto
+                                                                                        :luokat #{"piillotettu"}}
                                                                                        (mapv (fn [_]
                                                                                                (alue/rivi {:koko {:seuraa {:seurattava ::otsikko
                                                                                                                            :sarakkeet :sama
@@ -58,17 +59,17 @@
                                                              (range 4))}
                                                 [{:sarakkeet [0 4] :rivit [0 1]}])]}))
 
-(def grid-pohja-5 (let [grid-pohja (gp/lisaa-sarake (grid/grid-pohjasta grid-pohja-4) (solu/tyhja))]
+(def grid-pohja-5 (let [grid-pohja (grid/grid-pohjasta grid-pohja-4)]
+                    (gp/lisaa-sarake! grid-pohja (solu/tyhja))
                     (gp/aseta-koko! grid-pohja (-> konf/livi-oletuskoko
-                                          (assoc-in [:sarake :leveydet] {0 "3fr"
-                                                                         4 "1fr"})
-                                          (assoc-in [:sarake :oletus-leveys] "2fr")))
+                                                   (assoc-in [:sarake :leveydet] {0 "3fr"
+                                                                                  4 "1fr"})
+                                                   (assoc-in [:sarake :oletus-leveys] "2fr")))
                     grid-pohja))
 
-(def grid-pohja-7 (let [grid-pohja (-> grid-pohja-5
-                                       grid/grid-pohjasta
-                                       (gp/lisaa-sarake (solu/tyhja))
-                                       (gp/lisaa-sarake (solu/tyhja)))]
+(def grid-pohja-7 (let [grid-pohja (grid/grid-pohjasta grid-pohja-5)]
+                    (gp/lisaa-sarake! grid-pohja (solu/tyhja))
+                    (gp/lisaa-sarake! grid-pohja (solu/tyhja))
                     (gp/aseta-koko! grid-pohja (-> konf/livi-oletuskoko
                                                    (assoc-in [:sarake :leveydet] {0 "3fr"
                                                                                   1 "1fr"})

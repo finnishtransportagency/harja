@@ -30,31 +30,31 @@
       (apply = (map samat-osat? osat))
       samanlaiset-osat?)))
 
-(defrecord Rivi [id]
+(declare ->Taulukko ->Rivi)
+
+(defrecord Rivi [id alueet koko osat parametrit]
   p/IGrid
   (-osat [this]
-    (::g/osat this))
+    (g/grid-osat this))
   (-osat [this polku]
-    (get-in (::g/osat this) polku))
-  (-aseta-osat [this osat]
-    (g/aseta-osat this osat))
-  (-aseta-osat [this polku osat]
-    (g/aseta-osat this polku osat))
-  (-paivita-osat [this f]
-    (g/paivita-osat this f))
-  (-paivita-osat [this polku f]
-    (g/paivita-osat this polku f))
+    (g/grid-osat this polku))
+  (-aseta-osat! [this osat]
+    (g/aseta-osat! this osat))
+  (-aseta-osat! [this polku osat]
+    (g/aseta-osat! this polku osat))
+  (-paivita-osat! [this f]
+    (g/paivita-osat! this f))
+  (-paivita-osat! [this polku f]
+    (g/paivita-osat! this polku f))
 
-  (-lisaa-rivi [this solu]
-    (p/lisaa-rivi this solu (count (p/lapset this))))
-  (-lisaa-rivi [this solu index]
-    (g/lisaa-rivi this solu index))
-  (-lisaa-sarake [this solu]
-    (p/lisaa-rivi this solu (count (p/lapset this))))
-  (-lisaa-sarake [this solu index]
-    (g/lisaa-sarake this solu index))
-  (-aseta-root-fn [this f]
-    (g/aseta-root-fn this f))
+  (-lisaa-rivi! [this solu]
+    (p/lisaa-rivi! this solu (count (p/lapset this))))
+  (-lisaa-rivi! [this solu index]
+    (g/lisaa-rivi! this solu index))
+  (-lisaa-sarake! [this solu]
+    (p/lisaa-sarake! this solu (count (p/lapset this))))
+  (-lisaa-sarake! [this solu index]
+    (g/lisaa-sarake! this solu index))
 
   (-koko [this]
     (g/grid-koko this))
@@ -65,18 +65,26 @@
   (-paivita-koko! [this f]
     (g/paivita-koko-grid this f))
   (-alueet [this]
-    (::g/alueet this))
-  (-aseta-alueet [this alueet]
+    (g/grid-alueet this))
+  (-aseta-alueet! [this alueet]
     ;;TODO Rajoita alueiden asettamista
-    (assoc this ::g/alueet alueet))
-  (-paivita-alueet [this f]
+    (g/aseta-alueet! this alueet))
+  (-paivita-alueet! [this f]
     ;;TODO Rajoita alueiden asettamista
-    (update this ::g/alueet f))
+    (g/paivita-alueet! this f))
+  (-aseta-root-fn [this f]
+    (g/aseta-root-fn this f))
+
+  (-parametrit [this]
+    (g/grid-parametrit this))
+  (-aseta-parametrit! [this parametrit]
+    (g/aseta-parametrit! this parametrit))
+  (-paivita-parametrit! [this f]
+    (g/paivita-parametrit! this f))
 
   (-rivi [this tunniste] (log "KUTSUTTIIN -rivi FUNKTIOTA Grid:ille"))
   (-sarake [this tunniste] (log "KUTSUTTIIN -sarake FUNKTIOTA Grid:ille"))
   (-solu [this tunniste] (log "KUTSUTTIIN -solu FUNKTIOTA Grid:ille"))
-
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -89,35 +97,45 @@
   gop/IPiirrettava
   (-piirra [this]
     [:<>
-     [g/piirra-grid this]]))
+     [g/piirra-grid this]])
+  gop/IPiillota
+  (-piillota! [this]
+    (g/piillota! this))
+  (-nayta! [this]
+    (g/nayta! this))
+  (-piillotettu? [this]
+    (g/piillotettu? this))
+  gop/IKopioi
+  (-kopioi [this]
+    (g/grid-kopioi this ->Rivi)))
 
-(defrecord Taulukko [id]
+(defrecord Taulukko [id alueet koko osat parametrit]
   p/IGrid
   (-osat [this]
-    (::g/osat this))
+    (g/grid-osat this))
   (-osat [this polku]
-    (get-in (::g/osat this) polku))
-  (-aseta-osat [this osat]
+    (g/grid-osat this polku))
+  (-aseta-osat! [this osat]
     ;;TODO Rajoita solujen asettamista
-    (g/aseta-osat this osat))
-  (-aseta-osat [this polku osat]
+    (g/aseta-osat! this osat))
+  (-aseta-osat! [this polku osat]
     ;;TODO Rajoita solujen asettamista
-    (g/aseta-osat this polku osat))
-  (-paivita-osat [this f]
+    (g/aseta-osat! this polku osat))
+  (-paivita-osat! [this f]
     ;;TODO Rajoita solujen asettamista
-    (g/paivita-osat this f))
-  (-paivita-osat [this polku f]
+    (g/paivita-osat! this f))
+  (-paivita-osat! [this polku f]
     ;;TODO Rajoita solujen asettamista
-    (g/paivita-osat this polku f))
+    (g/paivita-osat! this polku f))
 
-  (-lisaa-rivi [this solu]
-    (p/lisaa-rivi this solu (count (p/lapset this))))
-  (-lisaa-rivi [this solu index]
-    (g/lisaa-rivi this solu index))
-  (-lisaa-sarake [this solu]
-    (p/lisaa-rivi this solu (count (p/lapset this))))
-  (-lisaa-sarake [this solu index]
-    (g/lisaa-sarake this solu index))
+  (-lisaa-rivi! [this solu]
+    (p/lisaa-rivi! this solu (count (p/lapset this))))
+  (-lisaa-rivi! [this solu index]
+    (g/lisaa-rivi! this solu index))
+  (-lisaa-sarake! [this solu]
+    (p/lisaa-sarake! this solu (count (p/lapset this))))
+  (-lisaa-sarake! [this solu index]
+    (g/lisaa-sarake! this solu index))
 
   (-koko [this]
     (g/grid-koko this))
@@ -128,18 +146,24 @@
   (-paivita-koko! [this f]
     (g/paivita-koko-grid this f))
   (-alueet [this]
-    (::g/alueet this))
-  (-aseta-alueet [this alueet]
-    (assoc this ::g/alueet alueet))
-  (-paivita-alueet [this f]
-    (update this ::g/alueet f))
-
+    (g/grid-alueet this))
+  (-aseta-alueet! [this alueet]
+    (g/aseta-alueet! this alueet))
+  (-paivita-alueet! [this f]
+    (g/paivita-alueet! this f))
   (-aseta-root-fn [this f]
     (g/aseta-root-fn this f))
+
+  (-parametrit [this]
+    (g/grid-parametrit this))
+  (-aseta-parametrit! [this parametrit]
+    (g/aseta-parametrit! this parametrit))
+  (-paivita-parametrit! [this f]
+    (g/paivita-parametrit! this f))
+
   (-rivi [this tunniste] (log "KUTSUTTIIN -rivi FUNKTIOTA Grid:ille"))
   (-sarake [this tunniste] (log "KUTSUTTIIN -sarake FUNKTIOTA Grid:ille"))
   (-solu [this tunniste] (log "KUTSUTTIIN -solu FUNKTIOTA Grid:ille"))
-
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -152,7 +176,17 @@
   gop/IPiirrettava
   (-piirra [this]
     [:<>
-     [g/piirra-grid this]]))
+     [g/piirra-grid this]])
+  gop/IPiillota
+  (-piillota! [this]
+    (g/piillota! this))
+  (-nayta! [this]
+    (g/nayta! this))
+  (-piillotettu? [this]
+    (g/piillotettu? this))
+  gop/IKopioi
+  (-kopioi [this]
+    (g/grid-kopioi this ->Taulukko)))
 
 (defn rivi
   "Rivi on grid, mutta varmistetaan, että alueessa on vain yksi rivi."
@@ -170,7 +204,7 @@
                      alueet (assoc ::g/alueet alueet)
                      osat (assoc ::g/osat osat)
                      rajapinnan-polku (assoc ::g/rajapinnan-polku rajapinnan-polku))
-        rivi (g/paivita-kaikki-lapset (assoc rivi ::g/koko koko)
+        rivi (g/paivita-kaikki-lapset! (assoc rivi ::g/koko koko)
                                       (fn [& _] true)
                                       (fn [lapsi]
                                         (let [koot (when (satisfies? p/IGrid lapsi)
@@ -196,7 +230,7 @@
                          nimi (assoc ::g/nimi nimi)
                          alueet (assoc ::g/alueet alueet)
                          osat (assoc ::g/osat osat))
-        taulukko (g/paivita-kaikki-lapset (assoc taulukko ::g/koko koko)
+        taulukko (g/paivita-kaikki-lapset! (assoc taulukko ::g/koko koko)
                                           (constantly true)
                                           (fn [lapsi]
                                             (let [koot (when (satisfies? p/IGrid lapsi)

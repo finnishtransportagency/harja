@@ -1,10 +1,7 @@
 (ns harja.ui.taulukko.datan-kasittely
   (:require [harja.loki :refer [warn]]
             [reagent.core :as r]
-            [reagent.ratom :as ra]
-            [clojure.walk :as walk]
-            [cljs.spec.alpha :as s]
-            [reagent.ratom :as ratom])
+            [cljs.spec.alpha :as s])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (s/def ::keyfn fn?)
