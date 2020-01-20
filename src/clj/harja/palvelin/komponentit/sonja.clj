@@ -190,7 +190,12 @@
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
-    (.setFaultTolerant true)
+    ;; Fault tolerant –asetuksen pois kytkeminen puolestaan johtuu siitä, että jos se on käytössä, client vastaanottaa JMS-”palvelimelta” tiedon siitä,
+    ;; mitä osoitteita ja portteja on käytössä samassa klusterissa – ja ainakin aiemmin Sonja oli konfiguroitu siten, että se antoi täsmälleen yhden osoitteen,
+    ;; johon yhteyden katketessa pantiin sitten hanskat tiskiin.
+    (.setFaultTolerant false)
+    ;; Pingillä pyritään pitämään hengissä olemassa olevaa yhteyttä, vaikka siellä ei varsinaisesti liikettä olisikaan.
+    (.setPingInterval (int 30))
     ;; Yrittää reconnectata loputtomiin. Pitää wrapata intiin, jotta tyypiksi tulee Integer, eikä Float
     (.setFaultTolerantReconnectTimeout (int 0))
     ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
