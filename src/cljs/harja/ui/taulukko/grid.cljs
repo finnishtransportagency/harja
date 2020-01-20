@@ -915,13 +915,15 @@
   (-kopioi [this]
     (grid-kopioi this ->Grid)))
 
-(defn identity-print
-  ([x]
-   (println (str x))
-   x)
-  ([x txt]
-   (println txt)
-   x))
+(defn- muodosta-uusi-polku
+  ([annettu-polku polun-alku] (muodosta-uusi-polku annettu-polku polun-alku false))
+  ([annettu-polku polun-alku muodostetaan-polkua?]
+   (let [ensimmainen-osa (first annettu-polku)]
+     (cond
+       (= ::. ensimmainen-osa) (vec (concat polun-alku (rest annettu-polku)))
+       (= ::.. ensimmainen-osa) (recur (rest annettu-polku) (butlast polun-alku) true)
+       muodostetaan-polkua? (vec (concat polun-alku annettu-polku))
+       :else annettu-polku))))
 
 (defn vaihda-osa! [vaihdettava-osa vaihto-fn & datan-kasittelyt]
   (let [datan-kasittelija (::datan-kasittelija vaihdettava-osa)
@@ -938,10 +940,11 @@
                                                  rajapintakasittelija))
                                              rajapintakasittelijat)]
               (when rajapintakasittelija
+                (println "RAJAPINTAKÄSITTELIJÄLTÄ POISTETAAN")
                 (poista-seuranta-derefable! rajapintakasittelija))))
         polun-alku (::nimi-polku vaihdettava-osa)
-        uudet-gridkasittelijat (reduce (fn [m [polun-loppu kasittelija]]
-                                         (let [polku (vec (concat polun-alku polun-loppu))]
+        uudet-gridkasittelijat (reduce (fn [m [polku kasittelija]]
+                                         (let [polku (muodosta-uusi-polku polku polun-alku)]
                                            (assoc m polku (rajapinnan-grid-kasittelija datan-kasittelija grid polku kasittelija))))
                                        {}
                                        (partition 2 datan-kasittelyt))
@@ -955,35 +958,45 @@
                               (gop/id? osa (gop/id vaihdettava-osa)))
                             (fn [vaihdettava-osa]
                               (let [uusi-osa (vaihto-fn vaihdettava-osa)
-                                    uuden-osan-koot (when (satisfies? p/IGrid uusi-osa)
+                                    uusi-osa-grid? (satisfies? p/IGrid uusi-osa)
+                                    vaihdettava-osa-grid? (satisfies? p/IGrid vaihdettava-osa)
+                                    index-polut (when uusi-osa-grid? (grid-index-polut uusi-osa))
+                                    nimi-polut (when uusi-osa-grid? (grid-nimi-polut uusi-osa))
+                                    uuden-osan-koot (when uusi-osa-grid?
                                                       (p/koot uusi-osa))
-                                    vaihdettavan-osan-koko (p/koko vaihdettava-osa)
+                                    vaihdettavan-osan-koot (when vaihdettava-osa-grid?
+                                                             (select-keys (p/koot vaihdettava-osa)
+                                                                          (into #{}
+                                                                                (gridin-osat-vektoriin vaihdettava-osa #(satisfies? p/IGrid %) gop/id))))
 
-                                    lisattavat-tiedot (select-keys vaihdettava-osa #{::root-fn ::paivita-root! ::root-id ::koko-fn})
+                                    lisattavat-tiedot (select-keys vaihdettava-osa #{::root-fn ::paivita-root! ::root-id ::koko-fn ::datan-kasittelija})
                                     osan-kasittely (fn [osa]
                                                      (let [osa (-> osa
                                                                    (merge lisattavat-tiedot)
                                                                    (update ::index-polku
                                                                            (fn [vanha-index-polku]
                                                                              (vec (concat (::index-polku vaihdettava-osa)
-                                                                                          vanha-index-polku))))
+                                                                                          (get index-polut (gop/id osa))))))
                                                                    (update ::nimi-polku
                                                                            (fn [vanha-nimi-polku]
                                                                              (vec (concat (::nimi-polku vaihdettava-osa)
-                                                                                          vanha-nimi-polku)))))
+                                                                                          (get nimi-polut (gop/id osa)))))))
                                                            osa (if (and (satisfies? p/IGrid osa)
                                                                         (not (= (gop/id osa) (::root-id osa))))
                                                                  (assoc osa :koko nil)
                                                                  osa)
-                                                           osa (if (gop/id? osa (gop/id vaihdettava-osa))
+                                                           osa (if-let [kaytetyn-osan-id (some (fn [vaihdettavan-osan-osan-id]
+                                                                                                 (when (= vaihdettavan-osan-osan-id (gop/id osa))
+                                                                                                   vaihdettavan-osan-osan-id))
+                                                                                               (keys vaihdettavan-osan-koot))]
                                                                  (let [id (gensym "muutettu")]
                                                                    (swap! ((::koko-fn root-grid))
                                                                           (fn [koot]
-                                                                            (assoc koot id vaihdettavan-osan-koko)))
+                                                                            (assoc koot id (get vaihdettavan-osan-koot kaytetyn-osan-id))))
                                                                    (assoc osa :id id))
                                                                  osa)]
                                                        (osan-data-yhdistaminen datan-kasittelija uudet-gridkasittelijat osa)))
-                                    _ (when (satisfies? p/IGrid uusi-osa)
+                                    _ (when uusi-osa-grid?
                                         (pre-walk-grid! uusi-osa
                                                         (fn [osa]
                                                           (when (satisfies? p/IGrid osa)
@@ -993,7 +1006,12 @@
                                     paivitetty-grid (paivita-kaikki-lapset! (osan-kasittely uusi-osa)
                                                                             (constantly true)
                                                                             osan-kasittely)]
-                                (when (satisfies? p/IGrid uusi-osa)
+                                (when-let [poistuvat-osat (and vaihdettava-osa-grid?
+                                                               (gridin-osat-vektoriin vaihdettava-osa #(satisfies? p/IGrid %) gop/id))]
+                                  (swap! ((::koko-fn root-grid))
+                                         (fn [koot]
+                                           (apply dissoc koot poistuvat-osat))))
+                                (when uusi-osa-grid?
                                   (swap! ((::koko-fn root-grid))
                                          (fn [koot]
                                            (assoc koot (gop/id vaihdettava-osa) (get uuden-osan-koot (gop/id uusi-osa))))))

@@ -217,10 +217,9 @@
   (dk/triggeroi-seuranta! (::grid/datan-kasittelija solu) seurannan-nimi))
 
 (defn laajenna-solua-klikattu [solu auki?]
-  (let [osa (-> solu grid/vanhempi grid/vanhempi gp/lapset second)]
-    (if auki?
-      (gop/nayta! osa)
-      (gop/piillota! osa))))
+  (if auki?
+    (gop/nayta! (-> solu grid/vanhempi grid/vanhempi gp/lapset second))
+    (gop/piillota! (-> solu grid/vanhempi grid/vanhempi grid/vanhempi gp/lapset second))))
 
 
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]

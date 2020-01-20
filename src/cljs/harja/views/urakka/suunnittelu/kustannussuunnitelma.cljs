@@ -2033,13 +2033,19 @@
    [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
    [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]])
 
-(defn rivi->rivi-kuukausi-filtterilla [rivi]
+(defn rivi->rivi-kuukausifiltterilla [rivi]
   (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
               :koko (assoc-in konf/auto
                               [:rivi :nimet]
                               {::yhteenveto 0
                                ::valinta 1})
-              :osat [(gop/aseta-nimi rivi ::yhteenveto)
+              :osat [(gp/paivita-lapset! (gop/aseta-nimi rivi ::yhteenveto)
+                                         (fn [osat]
+                                           (mapv (fn [osa]
+                                                   (if (instance? solu/Laajenna osa)
+                                                     (assoc osa :auki-alussa? true)
+                                                     osa))
+                                                 osat)))
                      (alue/rivi {:osat [(solu/teksti)
                                         (solu/tyhja)
                                         (solu/tyhja)
@@ -2050,27 +2056,52 @@
                                  :nimi ::valinta}
                                 [{:sarakkeet [0 4] :rivit [0 1]}])]}))
 
+(defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
+  (gop/aseta-nimi (gp/paivita-lapset! (grid/get-in-grid rivi-kuukausifiltterilla [::yhteenveto])
+                                      (fn [osat]
+                                        (mapv (fn [osa]
+                                                (if (instance? solu/Laajenna osa)
+                                                  (assoc osa :auki-alussa? false)
+                                                  osa))
+                                              osat)))
+                  ::g-pohjat/data-yhteenveto))
+
 (defn hoidonjohtopalkkio-grid []
   (let [nyt (pvm/nyt)
-        rivi-kuukausi-filtterilla! (fn [solu]
-                                     (grid/vaihda-osa! (-> solu grid/vanhempi)
-                                                       rivi->rivi-kuukausi-filtterilla
-                                                       [::yhteenveto] {:rajapinta :yhteenveto
-                                                                       :solun-polun-pituus 1
-                                                                       :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                       :datan-kasittely (fn [yhteenveto]
-                                                                                          (mapv (fn [[_ v]]
-                                                                                                  v)
-                                                                                                yhteenveto))
-                                                                       :tunnisteen-kasittely (fn [osat _]
-                                                                                               (mapv (fn [osa]
-                                                                                                       (when (instance? solu/Syote osa)
-                                                                                                         :maara))
-                                                                                                     osat))}
-                                                       [::valinta] {:rajapinta :kuukausitasolla?
-                                                                    :solun-polun-pituus 1
-                                                                    :datan-kasittely (fn [kuukausitasolla?]
-                                                                                       [kuukausitasolla? nil nil nil])}))
+        rivi-kuukausifiltterilla! (fn [laajennasolu]
+                                    (grid/vaihda-osa! (-> laajennasolu grid/vanhempi)
+                                                      rivi->rivi-kuukausifiltterilla
+                                                      [::grid/. ::yhteenveto] {:rajapinta :yhteenveto
+                                                                               :solun-polun-pituus 1
+                                                                               :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                               :datan-kasittely (fn [yhteenveto]
+                                                                                                  (mapv (fn [[_ v]]
+                                                                                                          v)
+                                                                                                        yhteenveto))
+                                                                               :tunnisteen-kasittely (fn [osat _]
+                                                                                                       (mapv (fn [osa]
+                                                                                                               (when (instance? solu/Syote osa)
+                                                                                                                 :maara))
+                                                                                                             osat))}
+                                                      [::grid/. ::valinta] {:rajapinta :kuukausitasolla?
+                                                                            :solun-polun-pituus 1
+                                                                            :datan-kasittely (fn [kuukausitasolla?]
+                                                                                               [kuukausitasolla? nil nil nil])}))
+        rivi-ilman-kuukausifiltteria! (fn [laajennasolu]
+                                        (grid/vaihda-osa! (-> laajennasolu grid/vanhempi grid/vanhempi)
+                                                          rivi-kuukausifiltterilla->rivi
+                                                          [::grid/.. ::g-pohjat/data-yhteenveto] {:rajapinta :yhteenveto
+                                                                                                  :solun-polun-pituus 1
+                                                                                                  :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                  :datan-kasittely (fn [yhteenveto]
+                                                                                                                     (mapv (fn [[_ v]]
+                                                                                                                             v)
+                                                                                                                           yhteenveto))
+                                                                                                  :tunnisteen-kasittely (fn [osat _]
+                                                                                                                          (mapv (fn [osa]
+                                                                                                                                  (when (instance? solu/Syote osa)
+                                                                                                                                    :maara))
+                                                                                                                                osat))}))
         g (grid/grid-pohjasta g-pohjat/grid-pohja-4)]
     (gp/paivita-lapset! g [::g-pohjat/otsikko]
                         (fn [lapset]
@@ -2084,8 +2115,11 @@
                         (fn [lapset]
                           [(gov/tyhja->laajenna (get lapset 0)
                                                 (fn [this auki?]
-                                                  (rivi-kuukausi-filtterilla! this)
-                                                  (t/laajenna-solua-klikattu this auki?))
+                                                  (println "AUKI?: " auki?)
+                                                  (t/laajenna-solua-klikattu this auki?)
+                                                  (if auki?
+                                                    (rivi-kuukausifiltterilla! this)
+                                                    (rivi-ilman-kuukausifiltteria! this)))
                                                 false
                                                 {:class #{"table-default" "lihavoitu"}})
                            (gov/tyhja->syote (get lapset 1)
