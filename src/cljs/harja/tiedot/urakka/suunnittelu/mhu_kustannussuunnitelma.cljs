@@ -128,8 +128,6 @@
                                                                           (select-keys m #{:maara :aika}))
                                                                         arvot)
                                                             johdetut-arvot (get johdetut-arvot (dec hoitokauden-numero))]
-                                                        (println "ARVOT: " arvot)
-                                                        (println "JOHDETUT ARVOT: " johdetut-arvot)
                                                         (if (nil? johdetut-arvot)
                                                           arvot
                                                           (do
@@ -183,22 +181,6 @@
                                                           (-> tila
                                                               (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :yhteensa (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa)
                                                               (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :indeksikorjattu (dec hoitokauden-numero)] (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)))))}
-                        #_#_ :hoidonjohtopalkkio-maara-seuranta {:polut [[:domain :hoidonjohtopalkkio]
-                                                                     [:domain :hoitokausi :hoitokauden-numero]]
-                                                             :init (fn [tila]
-                                                                     (assoc-in tila
-                                                                               [:gridit :hoidonjohtopalkkio :palkkiot]
-                                                                               (vec (repeatedly 5
-                                                                                                (fn []
-                                                                                                  (vec (repeat 12 nil)))))))
-                                                             :aseta (fn [tila hoidonjohtopalkkio hoitokauden-numero]
-                                                                      (assoc-in tila
-                                                                                [:gridit :hoidonjohtopalkkio :palkkiot (dec hoitokauden-numero)]
-                                                                                (mapv (fn [{maara :maara}]
-                                                                                        (println "SEURANTA MÄÄRÄ: " maara)
-                                                                                        {:yhteensa maara
-                                                                                         :maara (str maara)})
-                                                                                      (get hoidonjohtopalkkio (dec hoitokauden-numero)))))}
                          :hoidonjohtopalkkio-seuranta {:polut [[:domain :hoidonjohtopalkkio]
                                                                [:domain :hoitokausi :hoitokauden-numero]]
                                                        :init (fn [tila]
