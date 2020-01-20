@@ -18,7 +18,9 @@
             [harja.loki :refer [error]]
             [harja.tyokalut.regex :as re]
             [harja.ui.taulukko.grid-osa-protokollat :as gop]
-            [harja.ui.taulukko.grid-protokollat :as gp])
+            [harja.ui.taulukko.grid-protokollat :as gp]
+            [goog.dom :as dom]
+            [reagent.core :as r])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go]]))
@@ -218,7 +220,11 @@
 
 (defn laajenna-solua-klikattu [solu auki?]
   (if auki?
-    (gop/nayta! (-> solu grid/vanhempi grid/vanhempi gp/lapset second))
+    (do (gop/nayta! (-> solu grid/vanhempi grid/vanhempi gp/lapset second))
+        (r/flush)
+        (r/after-render
+          (fn []
+            (.scrollIntoView (dom/getElement "hoidonjohtopalkkio-taulukko") #js {"block" "end" "inline" "nearest" "behavior" "smooth"}))))
     (gop/piillota! (-> solu grid/vanhempi grid/vanhempi grid/vanhempi gp/lapset second))))
 
 

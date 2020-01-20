@@ -2116,10 +2116,10 @@
                           [(gov/tyhja->laajenna (get lapset 0)
                                                 (fn [this auki?]
                                                   (println "AUKI?: " auki?)
-                                                  (t/laajenna-solua-klikattu this auki?)
                                                   (if auki?
                                                     (rivi-kuukausifiltterilla! this)
-                                                    (rivi-ilman-kuukausifiltteria! this)))
+                                                    (rivi-ilman-kuukausifiltteria! this))
+                                                  (t/laajenna-solua-klikattu this auki?))
                                                 false
                                                 {:class #{"table-default" "lihavoitu"}})
                            (gov/tyhja->syote (get lapset 1)
@@ -2202,6 +2202,7 @@
                                                (println "RIVI " rivi)
                                                (assoc rivi :korkeudet {0 "40px"
                                                                        2 "40px"})))))
+    (gp/paivita-parametrit! g (fn [parametrit] (assoc parametrit :id "hoidonjohtopalkkio-taulukko")))
     (-> g
         (gp/rajapinta-grid-yhdistaminen! t/hoidonjohtopalkkion-rajapinta
                                          (t/hoidonjohtopalkkion-dr)
