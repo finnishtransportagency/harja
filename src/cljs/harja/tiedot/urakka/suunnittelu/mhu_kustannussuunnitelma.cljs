@@ -103,49 +103,53 @@
 (defn hoidonjohtopalkkion-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                         hoidonjohtopalkkion-rajapinta
-                        {:otsikot {:polut [[:gridit :hoidonjohtopalkkio :otsikot]]
-                                   :haku identity}
-                         :yhteenveto {:polut [[:gridit :hoidonjohtopalkkio :yhteenveto]
-                                              [:gridit :hoidonjohtopalkkio :kuukausitasolla?]
+                          {:otsikot {:polut [[:gridit :hoidonjohtopalkkio :otsikot]]
+                                     :haku identity}
+                           :yhteenveto {:polut [[:gridit :hoidonjohtopalkkio :yhteenveto]
+                                                [:gridit :hoidonjohtopalkkio :kuukausitasolla?]
+                                                [:domain :hoitokausi :hoitokauden-numero]]
+                                        :haku (fn [{:keys [nimi maara yhteensa indeksikorjattu]}
+                                                   kuukausitasolla?
+                                                   hoitokauden-numero]
+                                                (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}
+                                                       (when kuukausitasolla?
+                                                         {:maara nil})))}
+                           :kuukausitasolla? {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
+                                              :haku identity}
+                           :hoidonjohtopalkkio {:polut [[:domain :hoidonjohtopalkkio] ;; [[{:maara int :aika timestamp} ...] [] ...]
+                                                        [:domain :hoitokausi :hoitokauden-numero]
+                                                        #_[:gridit :hoidonjohtopalkkio :palkkiot]
+                                                        [:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
+                                                :haku (fn [hoidonjohtopalkkio hoitokauden-numero #_johdetut-arvot kuukausitasolla?]
+                                                        (let [arvot (if hoitokauden-numero
+                                                                      (get hoidonjohtopalkkio (dec hoitokauden-numero))
+                                                                      [])
+                                                              arvot (mapv (fn [m]
+                                                                            (let [m (select-keys m #{:maara :aika})]
+                                                                              (if kuukausitasolla?
+                                                                                m
+                                                                                (assoc m :maara nil))))
+                                                                          arvot)
+                                                              johdetut-arvot nil #_(get johdetut-arvot (dec hoitokauden-numero))]
+                                                          (println "KUUKAUSITASOLLA? " kuukausitasolla?)
+                                                          (if (nil? johdetut-arvot)
+                                                            arvot
+                                                            (do
+                                                              (when-not (= (count arvot) (count johdetut-arvot))
+                                                                (error "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
+                                                                       "-> ARVOT\n"
+                                                                       (with-out-str (cljs.pprint/pprint arvot))
+                                                                       "-> JOHDETUT ARVOT\n"
+                                                                       (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                                arvot)
+                                                              (vec
+                                                                (map merge
+                                                                     arvot))))))}
+                           :yhteensa {:polut [[:gridit :hoidonjohtopalkkio :yhteensa]
                                               [:domain :hoitokausi :hoitokauden-numero]]
                                       :haku (fn [{:keys [nimi maara yhteensa indeksikorjattu]}
-                                                 kuukausitasolla?
                                                  hoitokauden-numero]
-                                              (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}
-                                                     (when kuukausitasolla?
-                                                       {:maara nil})))}
-                         :kuukausitasolla? {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
-                                            :haku identity}
-                         :hoidonjohtopalkkio {:polut [[:domain :hoidonjohtopalkkio] ;; [[{:maara int :aika timestamp} ...] [] ...]
-                                                      [:domain :hoitokausi :hoitokauden-numero]
-                                                      [:gridit :hoidonjohtopalkkio :palkkiot]]
-                                              :haku (fn [hoidonjohtopalkkio hoitokauden-numero johdetut-arvot]
-                                                      (let [arvot (if hoitokauden-numero
-                                                                    (get hoidonjohtopalkkio (dec hoitokauden-numero))
-                                                                    [])
-                                                            arvot (mapv (fn [m]
-                                                                          (select-keys m #{:maara :aika}))
-                                                                        arvot)
-                                                            johdetut-arvot (get johdetut-arvot (dec hoitokauden-numero))]
-                                                        (if (nil? johdetut-arvot)
-                                                          arvot
-                                                          (do
-                                                            (when-not (= (count arvot) (count johdetut-arvot))
-                                                              (error "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
-                                                                     "-> ARVOT\n"
-                                                                     (with-out-str (cljs.pprint/pprint arvot))
-                                                                     "-> JOHDETUT ARVOT\n"
-                                                                     (with-out-str (cljs.pprint/pprint johdetut-arvot)))
-                                                              arvot)
-                                                            (vec
-                                                              (map merge
-                                                                   arvot
-                                                                   johdetut-arvot))))))}
-                         :yhteensa {:polut [[:gridit :hoidonjohtopalkkio :yhteensa]
-                                            [:domain :hoitokausi :hoitokauden-numero]]
-                                    :haku (fn [{:keys [nimi maara yhteensa indeksikorjattu]}
-                                               hoitokauden-numero]
-                                            (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}))}}
+                                              (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}))}}
                         {:aseta-hoidonjohtopalkkio! (fn [tila arvo {:keys [aika osa osan-paikka]}]
                                                       (let [hoitokauden-numero (get-in tila [:domain :hoitokausi :hoitokauden-numero])
                                                             arvo (if (re-matches #"\d*,\d+" arvo)
@@ -180,7 +184,7 @@
                                                           (-> tila
                                                               (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :yhteensa (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa)
                                                               (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :indeksikorjattu (dec hoitokauden-numero)] (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)))))}
-                         :hoidonjohtopalkkio-seuranta {:polut [[:domain :hoidonjohtopalkkio]
+                         #_#_:hoidonjohtopalkkio-seuranta {:polut [[:domain :hoidonjohtopalkkio]
                                                                [:domain :hoitokausi :hoitokauden-numero]]
                                                        :init (fn [tila]
                                                                (assoc-in tila
@@ -192,7 +196,7 @@
                                                                 (assoc-in tila
                                                                           [:gridit :hoidonjohtopalkkio :palkkiot (dec hoitokauden-numero)]
                                                                           (mapv (fn [{maara :maara}]
-                                                                                  {:yhteensa maara})
+                                                                                  {})
                                                                                 (get hoidonjohtopalkkio (dec hoitokauden-numero)))))}
                          :yhteensa-seuranta {:polut [[:gridit :hoidonjohtopalkkio :yhteenveto :yhteensa]]
                                              :seurattava-arvo? true
@@ -221,10 +225,10 @@
 (defn laajenna-solua-klikattu [solu auki?]
   (if auki?
     (do (grid/nayta! (grid/osa-polusta solu [:.. :.. 1]) #_(-> solu grid/vanhempi grid/vanhempi gp/lapset second))
+        (r/flush)
         (r/after-render
           (fn []
-            (.scrollIntoView (dom/getElement "hoidonjohtopalkkio-taulukko") #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))
-        (r/flush))
+            (.scrollIntoView (dom/getElement "hoidonjohtopalkkio-taulukko") #js {"block" "end" "inline" "nearest" "behavior" "smooth"}))))
     (grid/piillota! (grid/osa-polusta solu [:.. :.. :.. 1]) #_(-> solu grid/vanhempi grid/vanhempi grid/vanhempi gp/lapset second))))
 
 

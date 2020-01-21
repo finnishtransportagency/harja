@@ -99,6 +99,13 @@
                            "Saatiin: " haettava-asia "\n"
                            "Hyväksytyt avaimet: " (apply str (interpose ", " [:lapset :koko :alueet :parametrit])))))))
 
+; - Root liittyvät haut
+
+(defn root-asia [root haettava-asia]
+  (case haettava-asia
+    :lopeta-rajapinnan-kautta-kuuntelu! (::g/lopeta-rajapinnan-kautta-kuuntelu! root)
+    :grid-rajapintakasittelijat (::g/grid-rajapintakasittelijat root)))
+
 ; - Osaan liittyvät haut
 
 (defn osien-yhteinen-asia [osa haettava-asia]
