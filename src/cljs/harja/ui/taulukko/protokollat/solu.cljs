@@ -1,4 +1,4 @@
-(ns harja.ui.taulukko.solu-protokollat)
+(ns harja.ui.taulukko.protokollat.solu)
 
 (defprotocol IFmt
   (-lisaa-fmt [this f] "Lisää asiaan formatointi funktion")

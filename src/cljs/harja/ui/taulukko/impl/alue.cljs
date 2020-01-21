@@ -1,10 +1,8 @@
-(ns harja.ui.taulukko.alue
-  (:require [harja.ui.taulukko.grid :as g]
-            [harja.loki :refer [log]]
-            [reagent.core :as r]
-            [cljs.spec.alpha :as s]
-            [harja.ui.taulukko.grid-protokollat :as p]
-            [harja.ui.taulukko.grid-osa-protokollat :as gop]))
+(ns harja.ui.taulukko.impl.alue
+  (:require [harja.ui.taulukko.impl.grid :as g]
+            [harja.ui.taulukko.protokollat.grid :as p]
+            [harja.ui.taulukko.protokollat.grid-osa :as gop]
+            [harja.loki :refer [log]]))
 
 (defn alue-nollakohtaan [alue]
   (let [nollakohtaan (fn [[alku loppu]]
@@ -187,40 +185,3 @@
   gop/IKopioi
   (-kopioi [this]
     (g/grid-kopioi this ->Taulukko)))
-
-(defn rivi
-  "Rivi on grid, mutta varmistetaan, että alueessa on vain yksi rivi."
-  [{:keys [nimi koko osat rajapinnan-polku] :as asetukset} alueet]
-  {:pre [(g/validi-grid-asetukset? (assoc asetukset :alueet alueet))
-         (= (count alueet) 1)
-         #_(= -1 (apply - (:rivit (first alueet))))]
-   :post [(instance? Rivi %)
-          (symbol? (gop/id %))]}
-  (g/grid-c ->Rivi (assoc asetukset :alueet alueet))
-  #_(let [id (gensym "rivi")
-        koko (r/atom {id koko})
-        rivi (cond-> (->Rivi id)
-                     nimi (assoc ::g/nimi nimi)
-                     alueet (assoc ::g/alueet alueet)
-                     osat (assoc ::g/osat osat)
-                     rajapinnan-polku (assoc ::g/rajapinnan-polku rajapinnan-polku))
-        rivi (g/paivita-kaikki-lapset! (assoc rivi ::g/koko koko)
-                                      (fn [& _] true)
-                                      (fn [lapsi]
-                                        (let [koot (when (satisfies? p/IGrid lapsi)
-                                                     (p/koot lapsi))
-                                              _ (when koot
-                                                  (swap! koko (fn [koko]
-                                                                (merge koko koot))))
-                                              lapsi (assoc lapsi ::g/koko koko)]
-                                          lapsi)))]
-    rivi))
-
-(defn taulukko
-  "Taulukko on grid, mutta varmistetaan, että kaikki osat ovat samanlaisia"
-  [{:keys [nimi alueet koko] :as asetukset} osat]
-  {:pre [(g/validi-grid-asetukset? (assoc asetukset :osat osat))
-         (samat-osat? osat)]
-   :post [(instance? Taulukko %)
-          (symbol? (gop/id %))]}
-  (g/grid-c ->Taulukko (assoc asetukset :osat osat)))

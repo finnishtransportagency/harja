@@ -1,6 +1,6 @@
-(ns harja.ui.taulukko.grid-protokollat
-  (:require [harja.ui.taulukko.solu-protokollat :as sp]
-            [harja.ui.taulukko.grid-osa-protokollat :as gop]))
+(ns harja.ui.taulukko.protokollat.grid
+  (:require [harja.ui.taulukko.protokollat.solu :as sp]
+            [harja.ui.taulukko.protokollat.grid-osa :as gop]))
 
 (defprotocol IGrid
   (-osat [this] [this polku])

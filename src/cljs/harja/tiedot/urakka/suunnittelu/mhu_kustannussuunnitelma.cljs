@@ -11,14 +11,11 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.protokollat :as p]
             [harja.ui.taulukko.grid :as grid]
-            [harja.ui.taulukko.datan-kasittely :as dk]
             [harja.ui.taulukko.tyokalut :as tyokalut]
             [harja.domain.oikeudet :as oikeudet]
             [cljs.spec.alpha :as s]
             [harja.loki :refer [error]]
             [harja.tyokalut.regex :as re]
-            [harja.ui.taulukko.grid-osa-protokollat :as gop]
-            [harja.ui.taulukko.grid-protokollat :as gp]
             [goog.dom :as dom]
             [reagent.core :as r])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
@@ -104,7 +101,7 @@
                                     :aseta-hoidonjohtopalkkio! any? #_(s/cat :arvo integer? :polku vector?)})
 
 (defn hoidonjohtopalkkion-dr []
-  (dk/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+  (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                         hoidonjohtopalkkion-rajapinta
                         {:otsikot {:polut [[:gridit :hoidonjohtopalkkio :otsikot]]
                                    :haku identity}
@@ -212,20 +209,23 @@
 (defn paivita-solun-arvo [paivitettava-asia arvo solu]
   (case paivitettava-asia
     :hoidonjohtopalkkio (jarjesta-data false
-                                       (triggeroi-seurannat false
-                                                            (dk/aseta-rajapinnan-data! (::grid/datan-kasittelija solu) :aseta-hoidonjohtopalkkio! arvo (::grid/tunniste-rajapinnan-dataan solu))))))
+                          (triggeroi-seurannat false
+                            (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                         :aseta-hoidonjohtopalkkio!
+                                                         arvo
+                                                         (grid/solun-asia solu :tunniste-rajapinnan-dataan))))))
 
 (defn triggeroi-seuranta [solu seurannan-nimi]
-  (dk/triggeroi-seuranta! (::grid/datan-kasittelija solu) seurannan-nimi))
+  (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
 
 (defn laajenna-solua-klikattu [solu auki?]
   (if auki?
-    (do (gop/nayta! (-> solu grid/vanhempi grid/vanhempi gp/lapset second))
-        (r/flush)
+    (do (grid/nayta! (grid/osa-polusta solu [:.. :.. 1]) #_(-> solu grid/vanhempi grid/vanhempi gp/lapset second))
         (r/after-render
           (fn []
-            (.scrollIntoView (dom/getElement "hoidonjohtopalkkio-taulukko") #js {"block" "end" "inline" "nearest" "behavior" "smooth"}))))
-    (gop/piillota! (-> solu grid/vanhempi grid/vanhempi grid/vanhempi gp/lapset second))))
+            (.scrollIntoView (dom/getElement "hoidonjohtopalkkio-taulukko") #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))
+        (r/flush))
+    (grid/piillota! (grid/osa-polusta solu [:.. :.. :.. 1]) #_(-> solu grid/vanhempi grid/vanhempi grid/vanhempi gp/lapset second))))
 
 
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]

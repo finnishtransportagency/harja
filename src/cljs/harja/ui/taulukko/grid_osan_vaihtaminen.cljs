@@ -1,7 +1,7 @@
 (ns harja.ui.taulukko.grid-osan-vaihtaminen
-  (:require [harja.ui.taulukko.solu :as solu]
-            [harja.ui.taulukko.grid-osa-protokollat :as gop]
-            [harja.ui.taulukko.solu-protokollat :as sp]))
+  (:require [harja.ui.taulukko.impl.solu :as solu]
+            [harja.ui.taulukko.protokollat.grid-osa :as gop]
+            [harja.ui.taulukko.protokollat.solu :as sp]))
 
 (defn tyhja->teksti
   ([tyhja parametrit] (tyhja->teksti tyhja parametrit {:fmt identity}))

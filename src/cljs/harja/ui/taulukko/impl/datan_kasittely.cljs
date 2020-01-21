@@ -1,4 +1,4 @@
-(ns harja.ui.taulukko.datan-kasittely
+(ns harja.ui.taulukko.impl.datan-kasittely
   (:require [harja.loki :refer [warn]]
             [reagent.core :as r]
             [cljs.spec.alpha :as s])
@@ -137,12 +137,3 @@
 (defn aseta-rajapinnan-data! [kasittelija rajapinta & args]
   (apply (get-in kasittelija [:asettajat rajapinta]) args)
   (r/flush))
-
-(defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat]
-  (let [seurannan-tila (r/atom nil)
-        seurannat (aseta-seuranta! data-atom seurannan-tila seurannat)
-        kuuntelijat (rajapinnan-kuuntelijat data-atom seurannan-tila rajapinta haku-kuvaus)
-        asettajat (rajapinnan-asettajat data-atom rajapinta asetus-kuvaus)]
-    {:kuuntelijat kuuntelijat
-     :asettajat asettajat
-     :seurannat seurannat}))

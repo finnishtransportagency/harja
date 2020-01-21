@@ -2,11 +2,11 @@
   (:require [clojure.string :as clj-str]))
 
 (defmacro jarjesta-data [jarjestetaan? & body]
-  `(binding [harja.ui.taulukko.grid/*jarjesta-data?* ~jarjestetaan?]
+  `(binding [harja.ui.taulukko.impl.grid/*jarjesta-data?* ~jarjestetaan?]
      ~@body))
 
 (defmacro triggeroi-seurannat [triggeroidaan? & body]
-  `(binding [harja.ui.taulukko.datan-kasittely/*muutetaan-seurattava-arvo?* ~triggeroidaan?]
+  `(binding [harja.ui.taulukko.impl.datan-kasittely/*muutetaan-seurattava-arvo?* ~triggeroidaan?]
      ~@body))
 
 (defn fn-nimi [record-nimi]
@@ -31,16 +31,16 @@
                           (partition 2 protokollat))]
     `(do
        (defrecord ~nimi ~(vec (cons 'id args))
-         harja.ui.taulukko.grid-osa-protokollat/IPiirrettava
+         harja.ui.taulukko.protokollat.grid-osa/IPiirrettava
          (~'-piirra [~'this]
            ~@(rest (drop-while #(not (vector? %))
                                komponentti-fn)))
          ~@(if-let [protokolla-toteutus (some (fn [[protokollan-nimi _ :as protokollan-toteutus]]
-                                                (when (= 'harja.ui.taulukko.grid-osa-protokollat/IGridOsa ~protokollan-nimi)
+                                                (when (= 'harja.ui.taulukko.protokollat.grid-osa/IGridOsa ~protokollan-nimi)
                                                   protokollan-toteutus))
                                               protokollat)]
              protokolla-toteutus
-             '[harja.ui.taulukko.grid-osa-protokollat/IGridOsa
+             '[harja.ui.taulukko.protokollat.grid-osa/IGridOsa
                (-id [this]
                     (:id this))
                (-id? [this id]
@@ -49,9 +49,9 @@
                       (::nimi this))
                (-aseta-nimi [this nimi]
                             (assoc this ::nimi nimi))])
-         harja.ui.taulukko.solu-protokollat/ISolu
+         harja.ui.taulukko.protokollat.solu/ISolu
          ~@(remove (fn [[protokollan-nimi _]]
-                     (= 'harja.ui.taulukko.grid-osa-protokollat/IGridOsa protokollan-nimi))
+                     (= 'harja.ui.taulukko.protokollat.grid-osa/IGridOsa protokollan-nimi))
                    protokollat))
        ~@(if pre-post-annettu?
            `[(defn ~(fn-nimi nimi)

@@ -1,4 +1,4 @@
-(ns harja.ui.taulukko.grid-osa-protokollat)
+(ns harja.ui.taulukko.protokollat.grid-osa)
 
 (defprotocol IPiirrettava
   (-piirra [this]))

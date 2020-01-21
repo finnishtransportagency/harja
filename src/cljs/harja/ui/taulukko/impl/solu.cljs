@@ -1,13 +1,12 @@
-(ns harja.ui.taulukko.solu
+(ns harja.ui.taulukko.impl.solu
   "Määritellään taulukon osat täällä."
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [warn]]
-            [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.taulukko.grid-osa-protokollat :as gop]
-            [harja.ui.taulukko.solu-protokollat :as sp]
-            [harja.ui.taulukko.grid :as grid]
+            [harja.ui.taulukko.protokollat.grid-osa :as gop]
+            [harja.ui.taulukko.protokollat.solu :as sp]
+            [harja.ui.taulukko.impl.grid :as grid]
             [harja.ui.taulukko.kaytokset :as kaytokset]))
 
 (def ^:dynamic *this* nil)
