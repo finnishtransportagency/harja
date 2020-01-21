@@ -223,23 +223,4 @@
          (samat-osat? osat)]
    :post [(instance? Taulukko %)
           (symbol? (gop/id %))]}
-  (g/grid-c ->Taulukko (assoc asetukset :osat osat))
-  #_(let [id (gensym "rivi")
-        koko (r/atom {id koko})
-        taulukko (cond-> (->Taulukko id)
-                         nimi (assoc ::g/nimi nimi)
-                         alueet (assoc ::g/alueet alueet)
-                         osat (assoc ::g/osat osat))
-        taulukko (g/paivita-kaikki-lapset! (assoc taulukko ::g/koko koko)
-                                          (constantly true)
-                                          (fn [lapsi]
-                                            (let [koot (when (satisfies? p/IGrid lapsi)
-                                                         (println "LAPSI GRIDI")
-                                                         (cljs.pprint/pprint lapsi)
-                                                         (p/koot lapsi))
-                                                  _ (when koot
-                                                      (swap! koko (fn [koko]
-                                                                    (merge koko koot))))
-                                                  lapsi (assoc lapsi ::g/koko koko)]
-                                              lapsi)))]
-    taulukko))
+  (g/grid-c ->Taulukko (assoc asetukset :osat osat)))

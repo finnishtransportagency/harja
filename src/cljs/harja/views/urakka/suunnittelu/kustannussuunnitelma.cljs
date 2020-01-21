@@ -31,6 +31,7 @@
             [harja.fmt :as fmt]
             [goog.dom :as dom])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
+                   [harja.ui.taulukko.grid :refer [defsolu]]
                    [cljs.core.async.macros :refer [go]]))
 
 
@@ -651,7 +652,7 @@
           [maksetaan-filter valitse-kausi maksetaan]]
          [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
           {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
-           :on-change (r/partial vaihda-fn)}]
+           :on-change vaihda-fn}]
          [:label {:for "kopioi-tuleville-hoitovuosille"}
           "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]]))))
 
@@ -2033,6 +2034,19 @@
    [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
    [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]])
 
+(defsolu VaylaCheckbox
+         [vaihda-fn]
+         {:pre [(fn? vaihda-fn)]}
+         (fn suunnittele-kuukausitasolla-filter [this]
+           (let [kuukausitasolla? @(::grid/osan-derefable this)]
+             [:<>
+              [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
+               {:type "checkbox" :checked kuukausitasolla?
+                :on-change (:vaihda-fn this)}]
+              [:label {:for "kopioi-tuleville-hoitovuosille"}
+               "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]])))
+
+
 (defn rivi->rivi-kuukausifiltterilla [rivi]
   (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
               :koko (assoc-in konf/auto
@@ -2046,7 +2060,9 @@
                                                      (assoc osa :auki-alussa? true)
                                                      osa))
                                                  osat)))
-                     (alue/rivi {:osat [(solu/teksti)
+                     (alue/rivi {:osat [(vayla-checkbox (fn [event]
+                                                          (.preventDefault event)
+                                                          (e! (tuck-apurit/->PaivitaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] not))))
                                         (solu/tyhja)
                                         (solu/tyhja)
                                         (solu/tyhja)]
@@ -2115,7 +2131,6 @@
                         (fn [lapset]
                           [(gov/tyhja->laajenna (get lapset 0)
                                                 (fn [this auki?]
-                                                  (println "AUKI?: " auki?)
                                                   (if auki?
                                                     (rivi-kuukausifiltterilla! this)
                                                     (rivi-ilman-kuukausifiltteria! this))
@@ -2197,9 +2212,7 @@
                            (gov/tyhja->teksti (get lapset 2) {:class #{"table-default" "table-default-sum"}})
                            (gov/tyhja->teksti (get lapset 3) {:class #{"table-default" "table-default-sum" "harmaa-teksti"}})]))
     (gp/paivita-koko! g (fn [koko]
-                          (println "KOKO: " koko)
                           (update koko :rivi (fn [rivi]
-                                               (println "RIVI " rivi)
                                                (assoc rivi :korkeudet {0 "40px"
                                                                        2 "40px"})))))
     (gp/paivita-parametrit! g (fn [parametrit] (assoc parametrit :id "hoidonjohtopalkkio-taulukko")))
