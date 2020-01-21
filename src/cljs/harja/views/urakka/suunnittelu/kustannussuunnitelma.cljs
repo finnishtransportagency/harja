@@ -2035,16 +2035,15 @@
    [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]])
 
 (defsolu VaylaCheckbox
-         [vaihda-fn]
+         [vaihda-fn txt]
          {:pre [(fn? vaihda-fn)]}
          (fn suunnittele-kuukausitasolla-filter [this]
            (let [kuukausitasolla? @(::grid/osan-derefable this)]
              [:<>
               [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
                {:type "checkbox" :checked kuukausitasolla?
-                :on-change (:vaihda-fn this)}]
-              [:label {:for "kopioi-tuleville-hoitovuosille"}
-               "Kopioi kuluvan hoitovuoden summat tuleville vuosille samoille kuukausille"]])))
+                :on-change (partial (:vaihda-fn this) this)}]
+              [:label {:for "kopioi-tuleville-hoitovuosille"} (:txt this)]])))
 
 
 (defn rivi->rivi-kuukausifiltterilla [rivi]
@@ -2060,9 +2059,18 @@
                                                      (assoc osa :auki-alussa? true)
                                                      osa))
                                                  osat)))
-                     (alue/rivi {:osat [(vayla-checkbox (fn [event]
+                     (alue/rivi {:osat [(vayla-checkbox (fn [this event]
                                                           (.preventDefault event)
-                                                          (e! (tuck-apurit/->PaivitaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] not))))
+                                                          (grid/paivita-osa! (grid/get-in-grid (grid/root this)
+                                                                                               [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
+                                                                             (fn [data-sisalto]
+                                                                               (grid/paivita-kaikki-lapset! data-sisalto
+                                                                                                            (fn [osa]
+                                                                                                              (instance? solu/Syote osa))
+                                                                                                            (fn [solu]
+                                                                                                              (update-in solu [:parametrit :disabled?] not)))))
+                                                          (e! (tuck-apurit/->PaivitaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] not)))
+                                                        "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
                                         (solu/tyhja)
                                         (solu/tyhja)
                                         (solu/tyhja)]
@@ -2199,6 +2207,7 @@
                                                                            {:eventin-arvo {:f poista-tyhjat}}]
                                                                :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                                               {:size 2
+                                                               :disabled? true
                                                                :class #{"input-default"}}
                                                               {:fmt summa-formatointi
                                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})

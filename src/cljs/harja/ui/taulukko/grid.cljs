@@ -1019,6 +1019,23 @@
                                 paivitetty-grid)))
     (aseta-koot! (root vaihdettava-osa))))
 
+(defn paivita-osa! [osa f]
+  {:pre [(satisfies? gop/IGridOsa osa)
+         (fn? f)]
+   :post [(gop/id? % (gop/id osa))]}
+  (if (gop/id? (root osa) (gop/id osa))
+    (paivita-root! osa f)
+    (p/paivita-lapset! (vanhempi osa)
+                       (fn [lapset]
+                         (mapv (fn [lapsi]
+                                 (if (gop/id? lapsi (gop/id osa))
+                                   (f lapsi)
+                                   lapsi))
+                               lapset))))
+  (some #(when (gop/id? % (gop/id osa))
+           %)
+        (p/lapset (vanhempi osa))))
+
 ;; data erilleen, aggregoi hommia datasta, merkkaa alueet aggregoitaviksi
 
 ;; Alue ottaa vektorin vektoreita (tai sittenkin mappeja?) dataa. Voi määritellä x- ja y-suunnissa, että kasvaako alue datan mukana vaiko ei.
