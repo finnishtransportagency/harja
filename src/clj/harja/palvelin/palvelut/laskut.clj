@@ -37,29 +37,31 @@
   (map
     (fn [[id kohdistukset]]
       (let [lasku (first kohdistukset)]
-        (into {} {:id             id
-                  :viite          (:viite lasku)
-                  :tyyppi         (:tyyppi lasku)
-                  :kokonaissumma  (:kokonaissumma lasku)
-                  :erapaiva       (:erapaiva lasku)
+        (into {} {:id            id
+                  :viite         (:viite lasku)
+                  :tyyppi        (:tyyppi lasku)
+                  :kokonaissumma (:kokonaissumma lasku)
+                  :erapaiva      (:erapaiva lasku)
                   :laskun-numero (:laskun-numero lasku)
-                  :liite-id       (:liite-id lasku)
-                  :liite-nimi     (:liite-nimi lasku)
-                  :liite-tyyppi   (:liite-tyyppi lasku)
-                  :liite-koko     (:liite-koko lasku)
-                  :liite-oid      (:liite-oid lasku)
-                  :kohdistukset   (into []
-                                        (map (fn [v]
-                                               (dissoc v :viite
-                                                       :tyyppi
-                                                       :kokonaissumma
-                                                       :erapaiva
-                                                       :liite-id
-                                                       :liite-nimi
-                                                       :liite-tyyppi
-                                                       :liite-koko
-                                                       :liite-oid))
-                                             kohdistukset))})))
+                  :suorittaja    (:suorittaja-id lasku)
+                  :liite-id      (:liite-id lasku)
+                  :liite-nimi    (:liite-nimi lasku)
+                  :liite-tyyppi  (:liite-tyyppi lasku)
+                  :liite-koko    (:liite-koko lasku)
+                  :liite-oid     (:liite-oid lasku)
+                  :kohdistukset  (into []
+                                       (map (fn [v]
+                                              (dissoc v :viite
+                                                      :tyyppi
+                                                      :kokonaissumma
+                                                      :erapaiva
+                                                      :suorittaja-id
+                                                      :liite-id
+                                                      :liite-nimi
+                                                      :liite-tyyppi
+                                                      :liite-koko
+                                                      :liite-oid))
+                                            kohdistukset))})))
     laskukohdistukset))
 
 
@@ -116,7 +118,6 @@
                                             :toimenpideinstanssi (:toimenpideinstanssi laskurivi)
                                             :tehtavaryhma        (:tehtavaryhma laskurivi)
                                             :maksueratyyppi      (laskuerittelyn-maksueratyyppi db (:tehtavaryhma laskurivi) (:tehtava laskurivi))
-                                            :suorittaja          (kasittele-suorittaja db user (:suorittaja-nimi laskurivi))
                                             :alkupvm             (:suoritus-alku laskurivi)
                                             :loppupvm            (:suoritus-loppu laskurivi)
                                             :kayttaja            (:id user)}))
@@ -131,6 +132,7 @@
                                              :erapaiva      (konv/sql-date (:erapaiva laskuerittely))
                                              :kokonaissumma (:kokonaissumma laskuerittely)
                                              :urakka        (:urakka laskuerittely)
+                                             :suorittaja    (kasittele-suorittaja db user (:suorittaja-nimi laskuerittely))
                                              :tyyppi        (:tyyppi laskuerittely)
                                              :numero        (:laskun-numero laskuerittely)
                                              :lisatieto     (:lisatieto laskuerittely)

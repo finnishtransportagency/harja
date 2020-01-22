@@ -120,7 +120,6 @@
 (defn lisaa-kohdistus [m]
   (conj m {:tehtavaryhma        nil
            :toimenpideinstanssi nil
-           :suorittaja-nimi     nil
            :summa               nil
            :rivi                (count m)}))
 
@@ -143,7 +142,7 @@
                         {:valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
                          :valinnat     aliurakoitsijat
                          :valinta-fn   #(paivitys-fn :aliurakoitsija (:id %)
-                                                     :kohdistukset (fn [kohdistukset] (mapv (fn [m] (assoc m :suorittaja-nimi (:nimi %))) kohdistukset)))
+                                                     :suorittaja-nimi (:nimi %))
                          :formaatti-fn #(get % :nimi)}])]
        [:div
         [:label "Aliurakoitsijan y-tunnus"]
@@ -158,7 +157,7 @@
        ;:id,:lahde,:tyyppi, :koko 65528
        ])))
 
-(defn- validi?
+#_(defn- validi?
   [arvo tyyppi]
   (let [validius (case tyyppi
                    :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
@@ -167,7 +166,7 @@
 (defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
   [:div.col-sm-6.col-xs-12
    [:h2 "Koontilaskun tiedot"]
-   [kulukentta "Koontilaskun kuukausi" :komponentti (fn []
+   [kulukentta "Koontilaskun kuukausi *" :komponentti (fn []
                                                       [yleiset/livi-pudotusvalikko
                                                        {:vayla-tyyli? true
                                                         :valinta      koontilaskun-kuukausi
@@ -192,7 +191,7 @@
                                                                        :4-hoitovuosi
                                                                        :5-hoitovuosi})))
                                                            kuukaudet))])]
-   [kulukentta "Laskun pvm" :komponentti (fn []
+   [kulukentta "Laskun pvm *" :komponentti (fn []
                                            [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :erapaiva %)
                                                                                         :luokat        #{"input-default" "komponentin-input"}
                                                                                         :pvm           erapaiva
@@ -201,7 +200,7 @@
    [kulukentta "Laskun viite" :arvo viite :on-change #(paivitys-fn :viite (-> % .-target .-value))]
    [kulukentta "Koontilaskun numero" :arvo laskun-numero :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))]
    [kulukentta
-    "Kustannus €"
+    "Kustannus € *"
     :disabled (or (> (count kohdistukset) 1) false)
     :arvo (or (when (> (count kohdistukset) 1)
                 (reduce (fn [a s]
@@ -223,7 +222,7 @@
   (let [{:keys [tehtavaryhma summa]} t]
     (loki/log "TR" tehtavaryhma (some #(when (= tehtavaryhma (:id %)) (:tehtavaryhma %)) tehtavaryhmat))
     [:div.col-xs-6 {:class (apply conj #{} (filter #(not (nil? %)) (list "" (when (> kohdistukset-lkm 1) "lomake-sisempi-osio"))))}
-     [kulukentta "Tehtäväryhmä" :komponentti (fn []
+     [kulukentta "Tehtäväryhmä *" :komponentti (fn []
                                                [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
                                                                              :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
                                                                              :valitse-fn   #(paivitys-fn [:kohdistukset indeksi :tehtavaryhma] (:id %)
@@ -233,7 +232,7 @@
      (when (> kohdistukset-lkm 1)
        [:<>
         [:div
-         [kulukentta "Kustannus €" :arvo summa
+         [kulukentta "Kustannus € *" :arvo summa
           :on-change #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value))
           :on-blur #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value tiedot/parsi-summa))]
          [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn :kohdistukset (r/partial kohdistuksen-poisto indeksi))} "Poista kohdistus"]]])]))

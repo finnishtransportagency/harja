@@ -25,8 +25,7 @@ SELECT l.id                   as "laskun-id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
-       lk.suorittaja          as "suorittaja-id",
-       a.nimi                 as "suorittaja-nimi",
+       l.suorittaja           as "suorittaja-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
        liite.id               AS "liite-id",
@@ -38,7 +37,7 @@ from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
        LEFT JOIN lasku_liite ll on l.id = ll.lasku
        LEFT JOIN liite liite on ll.liite = liite.id
-       JOIN aliurakoitsija a on lk.suorittaja = a.id
+       JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND l.poistettu IS NOT TRUE;
 
@@ -54,7 +53,7 @@ SELECT l.id                   as "laskun-id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.tehtavaryhma        as "tehtavaryhma",
        lk.tehtava             as "tehtava",
-       lk.suorittaja          as "suorittaja-id",
+       l.suorittaja           as "suorittaja-id",
        a.nimi                 as "suorittaja-nimi",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
@@ -67,22 +66,26 @@ from lasku l
        JOIN lasku_kohdistus lk on l.id = lk.lasku AND lk.poistettu IS NOT TRUE
        LEFT JOIN lasku_liite ll on l.id = ll.lasku
        LEFT JOIN liite liite on ll.liite = liite.id
-       JOIN aliurakoitsija a on lk.suorittaja = a.id
+       JOIN aliurakoitsija a on l.suorittaja = a.id
 WHERE l.urakka = :urakka
   AND lk.suoritus_alku BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
   AND l.poistettu IS NOT TRUE;
 
 -- name: hae-lasku
-SELECT id            as "id",
-       viite         as "viite",
-       urakka        as "urakka",
-       kokonaissumma as "kokonaissumma",
-       erapaiva      as "erapaiva",
-       tyyppi        as "tyyppi"
-FROM lasku
-where urakka = :urakka
-  AND viite = :viite
-  AND poistettu IS NOT TRUE;
+SELECT l.id            as "id",
+       l.viite         as "viite",
+       l.urakka        as "urakka",
+       l.kokonaissumma as "kokonaissumma",
+       l.erapaiva      as "erapaiva",
+       l.laskun_numero as "laskun-numero",
+       l.tyyppi        as "tyyppi",
+       l.suorittaja    as "suorittaja-id",
+       a.nimi          as "suorittaja-nimi"
+FROM lasku l
+  left join aliurakoitsija a on l.suorittaja = a.id
+where l.urakka = :urakka
+  AND l.viite = :viite
+  AND l.poistettu IS NOT TRUE;
 
 -- name: hae-laskun-kohdistukset
 SELECT lk.id                  as "kohdistus-id",
@@ -93,42 +96,39 @@ SELECT lk.id                  as "kohdistus-id",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
-       lk.suorittaja          as "suorittaja-id",
-       a.nimi                 as "suorittaja-nimi",
        lk.luotu               as "luontiaika",
        lk.muokattu            as "muokkausaika"
 from lasku_kohdistus lk
-       LEFT JOIN aliurakoitsija a ON lk.suorittaja = a.id
+       LEFT JOIN aliurakoitsija a ON (select suorittaja from lasku where id = :lasku) = a.id
 WHERE lk.lasku = :lasku
   AND lk.poistettu IS NOT TRUE
 ORDER by lk.id;
 
 -- name: luo-tai-paivita-lasku<!
 INSERT
-INTO lasku (viite, erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, lisatieto, laskun_numero)
-VALUES (:viite, :erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI, current_timestamp, :kayttaja, :lisatieto, :numero)
+INTO lasku (viite, erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto, laskun_numero)
+VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI, current_timestamp, :kayttaja, :lisatieto, :numero)
 ON CONFLICT (viite) DO UPDATE
   SET erapaiva = :erapaiva,
     lisatieto = :lisatieto,
     laskun_numero = :numero,
     kokonaissumma = :kokonaissumma,
-
+    suorittaja = :suorittaja,
     tyyppi = :tyyppi ::LASKUTYYPPI,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja;
 
 -- name: luo-tai-paivita-laskun-kohdistus<!
 INSERT
-INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suorittaja, suoritus_alku,
+INTO lasku_kohdistus (lasku, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
                       suoritus_loppu, luotu, luoja)
-VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :suorittaja, :alkupvm, :loppupvm,
+VALUES (:lasku, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
         current_timestamp, :kayttaja)
 ON CONFLICT (lasku, rivi) DO UPDATE
   SET summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
-    suorittaja = :suorittaja,
     suoritus_alku = :alkupvm,
     suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
