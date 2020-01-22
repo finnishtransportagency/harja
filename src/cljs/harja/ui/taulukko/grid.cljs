@@ -118,6 +118,11 @@
     :tunniste-rajapinnan-dataan (::g/tunniste-rajapinnan-dataan solu)
     :osan-derefable (::g/osan-derefable solu)))
 
+; - Datan käsittelija haut
+
+(defn arvo-rajapinnasta [datan-kasittelija rajapinnan-nimi]
+  @(get-in datan-kasittelija [:kuuntelijat rajapinnan-nimi]))
+
 ;; MUTAATIOT
 
 ; - Grid mutatiot

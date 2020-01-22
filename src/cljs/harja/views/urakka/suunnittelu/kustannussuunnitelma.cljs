@@ -36,6 +36,12 @@
 (declare hoidonjohtopalkkio-grid)
 
 (defn summa-formatointi [teksti]
+  (let [teksti (clj-str/replace (str teksti) "," ".")]
+    (if (or (= "" teksti) (js/isNaN teksti))
+      "0,00"
+      (fmt/desimaaliluku teksti 2 true))))
+
+(defn summa-formatointi-uusi [teksti]
   (if (nil? teksti)
     ""
     (let [teksti (clj-str/replace (str teksti) "," ".")]
@@ -1984,9 +1990,29 @@
        [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
+(declare maara-solujen-disable!)
+
 (defn hoidonjohtopalkkio [_ _]
-  (go (let [g (hoidonjohtopalkkio-grid)]
-        (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g))))
+  (go (let [g (hoidonjohtopalkkio-grid)
+            seuranta-fn (fn [grid kuukausitasolla?]
+                          (go
+                            (maara-solujen-disable! (grid/get-in-grid grid
+                                                                      [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
+                                                    (not kuukausitasolla?))
+                            (maara-solujen-disable! (grid/get-in-grid grid
+                                                                      [::g-pohjat/data 0 0 ::yhteenveto])
+                                                    kuukausitasolla?)))]
+        (add-watch tila/suunnittelu-kustannussuunnitelma
+                   :hoidonjotopalkkion-disablerivit
+                   (fn [_ _ vanha uusi]
+                     (let [kuukausitasolla-muuttui? (not= (get-in vanha [:gridit :hoidonjohtopalkkio :kuukausitasolla?])
+                                                          (get-in uusi [:gridit :hoidonjohtopalkkio :kuukausitasolla?]))]
+                       (when kuukausitasolla-muuttui?
+                         (seuranta-fn (get-in uusi [:gridit :hoidonjohtopalkkio :grid])
+                                      (get-in uusi [:gridit :hoidonjohtopalkkio :kuukausitasolla?]))))))
+        (seuranta-fn g (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :kuukausitasolla?]))
+        (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g))
+        (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid-toimintojen-lopetus!] (fn [] (remove-watch tila/suunnittelu-kustannussuunnitelma :hoidonjotopalkkion-disablerivit))))))
   (fn [johtopalkkio kantahaku-valmis?]
     (if (and johtopalkkio kantahaku-valmis?)
       [grid/piirra johtopalkkio]
@@ -2037,11 +2063,20 @@
   {:pre [(fn? vaihda-fn)]}
   (fn suunnittele-kuukausitasolla-filter [this]
     (let [kuukausitasolla? @(grid/solun-asia this :osan-derefable)]
+      (println "VaylaCheckbox - kuukausitasolla?: " kuukausitasolla?)
       [:<>
        [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
         {:type "checkbox" :checked kuukausitasolla?
          :on-change (partial (:vaihda-fn this) this)}]
        [:label {:for "kopioi-tuleville-hoitovuosille"} (:txt this)]])))
+
+(defn maara-solujen-disable! [data-sisalto disabled?]
+  (grid/post-walk-grid! data-sisalto
+                        (fn [osa]
+                          (when (instance? solu/Syote osa)
+                            (grid/paivita-osa! osa
+                                               (fn [solu]
+                                                 (assoc-in solu [:parametrit :disabled?] disabled?)))))))
 
 
 (defn rivi->rivi-kuukausifiltterilla [rivi]
@@ -2060,22 +2095,9 @@
                                                  osat)))
                      (grid/rivi {:osat [(vayla-checkbox (fn [this event]
                                                           (.preventDefault event)
-                                                          (grid/post-walk-grid! (grid/get-in-grid (grid/root this)
-                                                                                                  [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
-                                                                                (fn [osa]
-                                                                                  (when (instance? solu/Syote osa)
-                                                                                    (grid/paivita-osa! osa
-                                                                                                       (fn [solu]
-                                                                                                         (update-in solu [:parametrit :disabled?] not))))))
-                                                          #_(grid/paivita-osa! (grid/get-in-grid (grid/root this)
-                                                                                                 [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
-                                                                               (fn [data-sisalto])
-                                                                               (grid/paivita-kaikki-lapset! data-sisalto
-                                                                                                            (fn [osa]
-                                                                                                              (instance? solu/Syote osa))
-                                                                                                            (fn [solu]
-                                                                                                              (update-in solu [:parametrit :disabled?] not))))
-                                                          (e! (tuck-apurit/->PaivitaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] not)))
+                                                          (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
+                                                                                                              :kuukausitasolla?))]
+                                                            (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] kuukausitasolla?))))
                                                         "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
                                         (solu/tyhja)
                                         (solu/tyhja)
@@ -2100,6 +2122,13 @@
 (defn hoidonjohtopalkkio-grid []
   (let [nyt (pvm/nyt)
         rivi-kuukausifiltterilla! (fn [laajennasolu]
+                                    (println "KLIKATTU LAAJENNA")
+                                    (println "-> kuukausitasolla? " (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia laajennasolu :datan-kasittelija)
+                                                                                            :kuukausitasolla?))
+                                    #_(maara-solujen-disable! (grid/get-in-grid (grid/root laajennasolu)
+                                                                              [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
+                                                            (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia laajennasolu :datan-kasittelija)
+                                                                                         :kuukausitasolla?)))
                                     (grid/vaihda-osa! (-> laajennasolu grid/vanhempi)
                                                       rivi->rivi-kuukausifiltterilla
                                                       [:. ::yhteenveto] {:rajapinta :yhteenveto
@@ -2117,6 +2146,7 @@
                                                       [:. ::valinta] {:rajapinta :kuukausitasolla?
                                                                       :solun-polun-pituus 1
                                                                       :datan-kasittely (fn [kuukausitasolla?]
+                                                                                         (println "DATAN KÄSITTELY: kuukausitasolla?: " kuukausitasolla?)
                                                                                          [kuukausitasolla? nil nil nil])}))
         rivi-ilman-kuukausifiltteria! (fn [laajennasolu]
                                         (grid/vaihda-osa! (-> laajennasolu grid/vanhempi grid/vanhempi)
@@ -2133,7 +2163,25 @@
                                                                                                                             (when (instance? solu/Syote osa)
                                                                                                                               :maara))
                                                                                                                           osat))}))
-        g (grid/grid-pohjasta g-pohjat/grid-pohja-4)]
+        g (grid/grid-pohjasta g-pohjat/grid-pohja-4)
+        yhteenveto-format (fn [teksti]
+                            (println "-> Teksti " teksti)
+                            (let [teksti (if (or (= "" teksti) (.isNaN js/Number teksti))
+                                           "0,00"
+                                           (str teksti))
+                                  _ (println "-> Teksti " teksti)
+                                  oletettu-numero (clj-str/replace teksti "," ".")
+                                  _ (println "-> oletettu-numero " oletettu-numero)
+                                  numero? (and (not (js/isNaN (js/Number oletettu-numero)))
+                                               (not= "" (clj-str/trim teksti)))
+                                  _ (println "-> numero? " numero?)
+                                  teksti (if numero?
+                                           oletettu-numero
+                                           teksti)]
+                              (println "-> Teksti " teksti)
+                              (if numero?
+                                (fmt/desimaaliluku teksti 2 true)
+                                teksti)))]
     (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/otsikko])
                         :lapset
                         (fn [lapset]
@@ -2173,7 +2221,7 @@
                                               :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                              {:size 2
                                               :class #{"input-default"}}
-                                             {:fmt summa-formatointi
+                                             {:fmt yhteenveto-format
                                               :fmt-aktiiviselle summa-formatointi-aktiivinen})
                            (gov/tyhja->teksti (get lapset 2) {:class #{"table-default"}})
                            (gov/tyhja->teksti (get lapset 3) {:class #{"table-default" "harmaa-teksti"}})]))
@@ -2218,9 +2266,8 @@
                                                                            {:eventin-arvo {:f poista-tyhjat}}]
                                                                :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                                               {:size 2
-                                                               :disabled? true
                                                                :class #{"input-default"}}
-                                                              {:fmt summa-formatointi
+                                                              {:fmt summa-formatointi-uusi
                                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})
                                             (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
                                             (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))
