@@ -31,6 +31,7 @@
 (defonce oletus-koko {:sarake {:oletus-leveys "1fr"}
                       :rivi {:oletus-korkeus "1fr"}})
 
+(def ^:dynamic *ajetaan-tapahtuma?* true)
 (def ^:dynamic *jarjesta-data?* true)
 
 (defprotocol ISeuranta
@@ -891,11 +892,30 @@
                                                                                  (dk/poista-seurannat! datan-kasittelija)
                                                                                  (dk/lopeta-tilan-kuuntelu! datan-kasittelija))
                                      ::grid-rajapintakasittelijat grid-rajapintakasittelijat
-                                     ::datan-kasittelija datan-kasittelija
-                                     #_#_::seurannat (for [[seurannan-nimi _] (:seurannat datan-kasittelija)]
-                                                       @(dk/seuranta datan-kasittelija seurannan-nimi)))
+                                     ::datan-kasittelija datan-kasittelija)
                               (constantly true)
                               (partial osan-data-yhdistaminen datan-kasittelija grid-rajapintakasittelijat))))
+  (-grid-tapahtumat [this data-atom tapahtumat]
+    (assoc this ::grid-tapahtumat (into {}
+                                        (map (fn [[tapahtuman-nimi {:keys [polut toiminto!] :as tapahtuma}]]
+                                               (let [kasittely-fn (fn [uusi-data]
+                                                                    (r/next-tick (fn []
+                                                                                   (apply toiminto! (root this) @data-atom uusi-data))))]
+                                                 (add-watch data-atom
+                                                            tapahtuman-nimi
+                                                            (fn [_ _ vanha uusi]
+                                                              (let [vanha-data (map #(get-in vanha %) polut)
+                                                                    uusi-data (map #(get-in uusi %) polut)
+                                                                    seurattava-data-muuttunut? (not= vanha-data uusi-data)
+                                                                    ajetaan-tapahtuma? (and seurattava-data-muuttunut?
+                                                                                            *ajetaan-tapahtuma?*)]
+                                                                (when ajetaan-tapahtuma?
+                                                                  (kasittely-fn uusi-data)))))
+                                                 [tapahtuman-nimi {:seurannan-lopetus! (fn []
+                                                                                         (remove-watch data-atom tapahtuman-nimi))
+                                                                   :tapahtuma-trigger! (fn []
+                                                                                         (kasittely-fn (map #(get-in @data-atom %) polut)))}]))
+                                             tapahtumat))))
   gop/IGridOsa
   (-id [this]
     (:id this))

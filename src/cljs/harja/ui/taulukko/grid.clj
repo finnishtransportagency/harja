@@ -9,6 +9,10 @@
   `(binding [harja.ui.taulukko.impl.datan-kasittely/*muutetaan-seurattava-arvo?* ~triggeroidaan?]
      ~@body))
 
+(defmacro triggeroi-tapahtumat [triggeroidaan? & body]
+  `(binding [harja.ui.taulukko.impl.datan-kasittely/*ajetaan-tapahtuma?* ~triggeroidaan?]
+     ~@body))
+
 (defn fn-nimi [record-nimi]
   (-> record-nimi
       str

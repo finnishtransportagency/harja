@@ -26,7 +26,8 @@
   (-solu [this tunniste] "Palauttaa solun tunnisteen perusteella"))
 
 (defprotocol IGridDataYhdistaminen
-  (-rajapinta-grid-yhdistaminen! [this rajapinta datan-kasittelija grid-kasittelija]))
+  (-rajapinta-grid-yhdistaminen! [this rajapinta datan-kasittelija grid-kasittelija])
+  (-grid-tapahtumat [this data-atom tapahtumat]))
 
 (defn lapset [osa]
   (when (satisfies? IGrid osa)
@@ -148,6 +149,10 @@
 (defn aseta-root-fn [this f]
   ;; TODO :pre ja :post
   (-aseta-root-fn this f))
+
+(defn grid-tapahtumat [this data-atom tapahtuma-maaritelmat]
+  ;; TODO :pre ja :post
+  (-grid-tapahtumat this data-atom tapahtuma-maaritelmat))
 
 (defn parametrit [grid]
   ;;TODO :pre ja :post

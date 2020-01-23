@@ -101,10 +101,11 @@
 
 ; - Root liittyvät haut
 
-(defn root-asia [root haettava-asia]
+(defn root-asia [root-grid haettava-asia]
   (case haettava-asia
-    :lopeta-rajapinnan-kautta-kuuntelu! (::g/lopeta-rajapinnan-kautta-kuuntelu! root)
-    :grid-rajapintakasittelijat (::g/grid-rajapintakasittelijat root)))
+    :lopeta-rajapinnan-kautta-kuuntelu! (::g/lopeta-rajapinnan-kautta-kuuntelu! root-grid)
+    :grid-rajapintakasittelijat (::g/grid-rajapintakasittelijat root-grid)
+    :tapahtumat (::g/grid-tapahtumat root-grid)))
 
 ; - Osaan liittyvät haut
 
@@ -179,6 +180,8 @@
 ; - Grid päivitykset
 (defn aseta-root-fn [this m]
   (gp/aseta-root-fn this m))
+(defn grid-tapahtumat [this data-atom tapahtuma-maaritelmat]
+  (gp/grid-tapahtumat this data-atom tapahtuma-maaritelmat))
 ; - Osa päivitykset
 (defn aseta-nimi [osa nimi]
   (gop/aseta-nimi osa nimi))
@@ -219,6 +222,14 @@
 
 (defn piillotettu? [grid]
   (gop/piillotettu? grid))
+
+(defn triggeroi-tapahtuma! [osa tapahtuman-nimi]
+  (if-let [tapahtuma (get (root-asia (root osa) :tapahtumat) tapahtuman-nimi)]
+    (binding [g/*ajetaan-tapahtuma?* true]
+      ((:tapahtuma-trigger! tapahtuma)))
+    (throw (js/Error. (str "triggeroi-tapahtuma! funktiolle ei annettu oikeaa tapahtuman-nimi avainta!\n"
+                           "Saatiin: " tapahtuman-nimi "\n"
+                           "Hyväksytyt avaimet: " (apply str (interpose ", " (keys (root-asia (root osa) :tapahtumat)))))))))
 
 ;; PIIRRA
 

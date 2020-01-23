@@ -1993,26 +1993,9 @@
 (declare maara-solujen-disable!)
 
 (defn hoidonjohtopalkkio [_ _]
-  (go (let [g (hoidonjohtopalkkio-grid)
-            seuranta-fn (fn [grid kuukausitasolla?]
-                          (go
-                            (maara-solujen-disable! (grid/get-in-grid grid
-                                                                      [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
-                                                    (not kuukausitasolla?))
-                            (maara-solujen-disable! (grid/get-in-grid grid
-                                                                      [::g-pohjat/data 0 0 ::yhteenveto])
-                                                    kuukausitasolla?)))]
-        (add-watch tila/suunnittelu-kustannussuunnitelma
-                   :hoidonjotopalkkion-disablerivit
-                   (fn [_ _ vanha uusi]
-                     (let [kuukausitasolla-muuttui? (not= (get-in vanha [:gridit :hoidonjohtopalkkio :kuukausitasolla?])
-                                                          (get-in uusi [:gridit :hoidonjohtopalkkio :kuukausitasolla?]))]
-                       (when kuukausitasolla-muuttui?
-                         (seuranta-fn (get-in uusi [:gridit :hoidonjohtopalkkio :grid])
-                                      (get-in uusi [:gridit :hoidonjohtopalkkio :kuukausitasolla?]))))))
-        (seuranta-fn g (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :kuukausitasolla?]))
+  (go (let [g (hoidonjohtopalkkio-grid)]
         (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g))
-        (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid-toimintojen-lopetus!] (fn [] (remove-watch tila/suunnittelu-kustannussuunnitelma :hoidonjotopalkkion-disablerivit))))))
+        (grid/triggeroi-tapahtuma! g :hoidonjotopalkkion-disablerivit)))
   (fn [johtopalkkio kantahaku-valmis?]
     (if (and johtopalkkio kantahaku-valmis?)
       [grid/piirra johtopalkkio]
@@ -2134,10 +2117,6 @@
                                                                                :maara))
                                                                            (grid/hae-grid osat :lapset)))}
         rivi-kuukausifiltterilla! (fn [laajennasolu]
-                                    #_(maara-solujen-disable! (grid/get-in-grid (grid/root laajennasolu)
-                                                                              [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
-                                                            (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia laajennasolu :datan-kasittelija)
-                                                                                         :kuukausitasolla?)))
                                     (grid/vaihda-osa! (-> laajennasolu grid/vanhempi)
                                                       rivi->rivi-kuukausifiltterilla
                                                       [:. ::yhteenveto] yhteenveto-grid-rajapinta-asetukset
@@ -2269,6 +2248,11 @@
                                                                                2 "40px"})))))
     (grid/paivita-grid! g :parametrit (fn [parametrit] (assoc parametrit :id "hoidonjohtopalkkio-taulukko")))
     (-> g
+        (grid/aseta-root-fn {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid]))
+                             :paivita! (fn [f]
+                                         (swap! tila/suunnittelu-kustannussuunnitelma
+                                                (fn [tila]
+                                                  (update-in tila [:gridit :hoidonjohtopalkkio :grid] f))))})
         (grid/rajapinta-grid-yhdistaminen! t/hoidonjohtopalkkion-rajapinta
                                            (t/hoidonjohtopalkkion-dr)
                                            {[::g-pohjat/otsikko] {:rajapinta :otsikot
@@ -2291,7 +2275,7 @@
                                                                                                                             v)
                                                                                                                           rivi))
                                                                                                                   vuoden-hoidonjohtopalkkiot))
-                                                                                         :tunnisteen-kasittely (fn [data-sisalto data]
+                                                                                         :tunnisteen-kasittely (fn [data-sisalto-grid data]
                                                                                                                  (vec
                                                                                                                    (map-indexed (fn [i rivi]
                                                                                                                                   (vec
@@ -2301,7 +2285,7 @@
                                                                                                                                                       :aika (:aika (get data j))
                                                                                                                                                       :osan-paikka [i j]}))
                                                                                                                                                  (grid/hae-grid rivi :lapset))))
-                                                                                                                                (grid/hae-grid data-sisalto :lapset))))}
+                                                                                                                                (grid/hae-grid data-sisalto-grid :lapset))))}
                                             [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
                                                                      :solun-polun-pituus 1
                                                                      :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
@@ -2309,11 +2293,13 @@
                                                                                         (mapv (fn [[_ nimi]]
                                                                                                 nimi)
                                                                                               yhteensa))}})
-        (grid/aseta-root-fn {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid]))
-                             :paivita! (fn [f]
-                                         (swap! tila/suunnittelu-kustannussuunnitelma
-                                                (fn [tila]
-                                                  (update-in tila [:gridit :hoidonjohtopalkkio :grid] f))))}))))
+        (grid/grid-tapahtumat tila/suunnittelu-kustannussuunnitelma
+                              {:hoidonjotopalkkion-disablerivit {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
+                                                                 :toiminto! (fn [g _ kuukausitasolla?]
+                                                                              (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
+                                                                                                      (not kuukausitasolla?))
+                                                                              (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 0 ::yhteenveto])
+                                                                                                      kuukausitasolla?))}}))))
 
 (defn kustannussuunnitelma*
   [e*! app]
