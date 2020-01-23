@@ -2213,9 +2213,10 @@
                                             (gov/tyhja->syote (get osat 1)
                                                               {:on-change (fn [arvo]
                                                                             (when arvo
-                                                                              (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this*)))
+                                                                              (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this* false)))
                                                                :on-blur (fn [arvo]
                                                                           (when arvo
+                                                                            (t/paivita-solun-arvo :hoidonjohtopalkkio arvo solu/*this* true)
                                                                             (t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
                                                                           #_(when arvo
                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
@@ -2227,7 +2228,7 @@
                                                                                 (.. event -target blur)))}
                                                               {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
                                                                            {:eventin-arvo {:f poista-tyhjat}}]
-                                                               :on-blur [:str->number :numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                               :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
                                                               {:size 2
                                                                :class #{"input-default"}}
                                                               {:fmt summa-formatointi-uusi
@@ -2240,8 +2241,8 @@
                         (fn [lapset]
                           [(gov/tyhja->teksti (get lapset 0) {:class #{"table-default" "table-default-sum"}})
                            (gov/tyhja->teksti (get lapset 1) {:class #{"table-default" "table-default-sum"}})
-                           (gov/tyhja->teksti (get lapset 2) {:class #{"table-default" "table-default-sum"}})
-                           (gov/tyhja->teksti (get lapset 3) {:class #{"table-default" "table-default-sum" "harmaa-teksti"}})]))
+                           (gov/tyhja->teksti (get lapset 2) {:class #{"table-default" "table-default-sum"}} {:fmt yhteenveto-format})
+                           (gov/tyhja->teksti (get lapset 3) {:class #{"table-default" "table-default-sum" "harmaa-teksti"}} {:fmt yhteenveto-format})]))
     (grid/paivita-grid! g :koko (fn [koko]
                                   (update koko :rivi (fn [rivi]
                                                        (assoc rivi :korkeudet {0 "40px"
