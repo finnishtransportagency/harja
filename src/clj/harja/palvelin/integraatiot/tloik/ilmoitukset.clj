@@ -97,8 +97,8 @@
                                    "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
 
 (defn- kasittele-ilmoituksessa-kulunut-aika
-  [{:keys [ilmoitettu vastaanotettu viesti-id tapahtuma-id kehitysmoodi? uudelleen-lahetys?]}]
-  (try (let [kulunut-aika (pvm/aikavali-sekuntteina ilmoitettu vastaanotettu)]
+  [{:keys [lahetysaika vastaanotettu viesti-id tapahtuma-id kehitysmoodi? uudelleen-lahetys?]}]
+  (try (let [kulunut-aika (pvm/aikavali-sekuntteina lahetysaika vastaanotettu)]
          ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
          (when (and kulunut-aika (> kulunut-aika 300) (not uudelleen-lahetys?))
            (log/debug "SLACKIIN PITÄS LÄHTÄ VIESTIÄ")
@@ -128,7 +128,7 @@
           uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
           ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
-          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:ilmoitettu (:valitetty ilmoitus) :vastaanotettu vastaanotettu
+          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:lahetysaika (:valitetty ilmoitus) :vastaanotettu vastaanotettu
                                                               :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
                                                               :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
