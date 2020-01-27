@@ -275,6 +275,7 @@ SELECT
   ilmoitusid,
   tunniste,
   ilmoitettu,
+  valitetty,
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
