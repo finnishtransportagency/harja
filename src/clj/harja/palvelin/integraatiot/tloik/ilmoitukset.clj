@@ -127,7 +127,8 @@
                                                             db urakka-id ilmoitus)
           uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
-          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:ilmoitettu (:ilmoitettu ilmoitus) :vastaanotettu vastaanotettu
+          ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
+          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:ilmoitettu (:valitetty ilmoitus) :vastaanotettu vastaanotettu
                                                               :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
                                                               :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
