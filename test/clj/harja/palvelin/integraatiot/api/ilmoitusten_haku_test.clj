@@ -143,9 +143,9 @@
 (deftest kuuntele-urakan-ilmoituksia
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))
         ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 180)))
-        lahetysaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
                                  (t/minus (t/now) (t/minutes 185)))
+        lahetysaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                 (t/minus (t/now) (t/minutes 180)))
         aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
                             (t/now))
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
