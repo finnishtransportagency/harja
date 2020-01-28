@@ -149,7 +149,6 @@
           (laheta-ilmoitus-paivystajille db
                                          (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
                                          paivystajat urakka-id ilmoitusasetukset)))
-
       (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja))))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id

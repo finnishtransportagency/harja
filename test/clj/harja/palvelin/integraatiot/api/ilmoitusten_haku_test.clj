@@ -39,7 +39,6 @@
 
 (defn odotettu-ilmoitus [ilmoitettu lahetetty]
   {"ilmoitettu" ilmoitettu
-   "valitetty" lahetetty
    "ilmoittaja" {"email" "matti.meikalainen@palvelu.fi"
                  "etunimi" "Matti"
                  "matkapuhelin" "08023394852"
