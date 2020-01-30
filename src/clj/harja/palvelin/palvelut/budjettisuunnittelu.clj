@@ -145,6 +145,14 @@
                                         (q/paivita-budjettitavoite<! c hkt))))
                               {:onnistui? true})))
 
+(defn hae-urakan-kiinteahintaiset-tyot [db user urakka-id]
+  (let [kiinteahintaiset-tyot (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)]
+    (map (fn [tyo]
+           (-> tyo
+               (assoc :toimenpide-avain (toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
+               (dissoc :toimenpideinstanssi :toimenpiteen-koodi)))
+         kiinteahintaiset-tyot)))
+
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
   (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)]
@@ -205,7 +213,7 @@
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  {:kiinteahintaiset-tyot       (kiinthint-tyot/hae-urakan-kiinteahintaiset-tyot db user urakka-id)
+  {:kiinteahintaiset-tyot       (hae-urakan-kiinteahintaiset-tyot db user urakka-id)
    :kustannusarvioidut-tyot     (hae-urakan-kustannusarvoidut-tyot db user urakka-id)
    :johto-ja-hallintokorvaukset (hae-urakan-johto-ja-hallintokorvaukset db urakka-id)})
 

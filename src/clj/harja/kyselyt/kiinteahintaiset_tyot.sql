@@ -8,7 +8,8 @@ SELECT kht.id,
        kht.tehtavaryhma,
        kht.toimenpideinstanssi,
        kht.sopimus,
-       tpik.nimi AS toimenpide
+       tpik.nimi AS toimenpide,
+       tpik.koodi AS "toimenpiteen-koodi"
 FROM kiinteahintainen_tyo kht
        LEFT JOIN toimenpideinstanssi tpi ON kht.toimenpideinstanssi = tpi.id
        LEFT JOIN toimenpidekoodi tpik ON tpik.id = tpi.toimenpide

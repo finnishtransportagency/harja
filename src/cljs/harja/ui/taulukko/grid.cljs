@@ -48,9 +48,38 @@
 
 ;; KOPIOINNIT
 
+(defn kopio [osa]
+  (gop/kopioi osa))
+
 (defn grid-pohjasta [grid-pohja]
-  (let [kopio (gop/kopioi grid-pohja)]
-    (g/muuta-id kopio)))
+  (let [kopio (kopio grid-pohja)]
+    (g/muuta-id! kopio)))
+
+(defn samanlainen-osa [osa]
+  (let [kopio (kopio osa)
+        kopioitava-grid? (satisfies? gp/IGrid osa)
+        kopio-eri-idlla (if kopioitava-grid?
+                         (g/paivita-kaikki-lapset! (g/muuta-id! kopio)
+                                                   (constantly true)
+                                                   (fn [lapsi]
+                                                     (g/muuta-id! lapsi)))
+                         (g/muuta-id! kopio))]
+    (if kopioitava-grid?
+      (do
+        (swap! ((::g/koko-fn osa))
+               (fn [koot]
+                 (merge koot (g/grid-koot kopio-eri-idlla))))
+        (g/paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil
+                                         ::g/koko-fn (::g/koko-fn osa)
+                                         ::g/root-id (::g/root-id osa)
+                                         ::g/root-fn (::g/root-fn osa))
+                                  (constantly true)
+                                  (fn [lapsi]
+                                    (assoc lapsi
+                                           ::g/koko-fn (::g/koko-fn osa)
+                                           ::g/root-id (::g/root-id osa)
+                                           ::g/root-fn (::g/root-fn osa)))))
+      kopio-eri-idlla)))
 
 ;; HAUT
 
@@ -112,6 +141,10 @@
 (defn osien-yhteinen-asia [osa haettava-asia]
   (case haettava-asia
     :datan-kasittelija (::g/datan-kasittelija osa)))
+
+(defn hae-osa [osa haettava-asia]
+  (case haettava-asia
+    :nimi (gop/nimi osa)))
 
 ; - Soluun liittyvät haut
 (defn solun-asia [solu haettava-asia]
