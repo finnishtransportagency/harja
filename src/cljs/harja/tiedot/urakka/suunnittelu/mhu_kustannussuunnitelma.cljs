@@ -117,18 +117,16 @@
                                            (merge haut
                                                   {(keyword (str "yhteenveto-" hoitokauden-numero)) {:polut [[:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)]]
                                                                                                      :haku (fn [data]
-                                                                                                             #_(println "YHTEENVETO RAJAPINTA - maara: " (:maara data))
                                                                                                              (-> data
                                                                                                                  (assoc :nimi (str hoitokauden-numero ". hoitovuosi"))
-                                                                                                                 (dissoc :maara)))}
+                                                                                                                 (dissoc :summa)))}
                                                    (keyword (str "suunnittellut-hankinnat-" hoitokauden-numero)) {:polut [[:domain :suunnittellut-hankinnat]
                                                                                                                           [:suodattimet :hankinnat :toimenpide]
                                                                                                                           [:gridit :suunnittellut-hankinnat :hankinnat (dec hoitokauden-numero)]]
                                                                                                                   :haku (fn [suunnittellut-hankinnat valittu-toimenpide johdetut-arvot]
                                                                                                                           (let [arvot (mapv (fn [m]
-                                                                                                                                              (select-keys m #{:maara :aika :yhteensa}))
-                                                                                                                                            (get-in suunnittellut-hankinnat [valittu-toimenpide (dec hoitokauden-numero)]))
-                                                                                                                                johdetut-arvot (get johdetut-arvot (dec hoitokauden-numero))]
+                                                                                                                                              (select-keys m #{:summa :aika :yhteensa}))
+                                                                                                                                            (get-in suunnittellut-hankinnat [valittu-toimenpide (dec hoitokauden-numero)]))]
                                                                                                                             (if (nil? johdetut-arvot)
                                                                                                                               arvot
                                                                                                                               (do
@@ -181,14 +179,15 @@
                                                     tila)))}
                           (reduce (fn [seurannat hoitokauden-numero]
                                     (merge seurannat
-                                           {(keyword (str "yhteenveto-seuranta-" hoitokauden-numero)) {:polut [[:domain :suunnittellut-hankinnat (dec hoitokauden-numero)]]
+                                           {(keyword (str "yhteenveto-seuranta-" hoitokauden-numero)) {:polut [[:domain :suunnittellut-hankinnat]]
                                                                                                        :init (fn [tila]
                                                                                                                (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteenveto :data] (vec (repeat 5 nil))))
                                                                                                        :aseta (fn [tila vuoden-hoidonjohtopalkkio]
-                                                                                                                (let [vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [summa {maara :maara}]
-                                                                                                                                                                    (+ summa maara))
+                                                                                                                (let [valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
+                                                                                                                      vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [yhteensa {summa :summa}]
+                                                                                                                                                                    (+ yhteensa summa))
                                                                                                                                                                   0
-                                                                                                                                                                  vuoden-hoidonjohtopalkkio)]
+                                                                                                                                                                  (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)]))]
                                                                                                                   (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
                                                                                                                                                                                                                 :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})))}
                                             (keyword (str "yhteensa-seuranta-" hoitokauden-numero)) {:polut [[:gridit :suunnittellut-hankinnat :yhteenveto :data]]
@@ -350,7 +349,15 @@
                                        (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                                     :aseta-yhteenveto!
                                                                     arvo
-                                                                    (grid/solun-asia solu :tunniste-rajapinnan-dataan))))))
+                                                                    (grid/solun-asia solu :tunniste-rajapinnan-dataan))))
+    :aseta-suunnittellut-hankinnat! (jarjesta-data false
+                                      (triggeroi-seurannat false
+                                        (apply grid/aseta-rajapinnan-data!
+                                               (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                               :aseta-suunnittellut-hankinnat!
+                                               arvo
+                                               (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                               args)))))
 
 (defn triggeroi-seuranta [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
