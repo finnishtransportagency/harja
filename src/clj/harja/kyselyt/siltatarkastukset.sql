@@ -10,7 +10,9 @@ SELECT s.id,
        s.tr_alkuetaisyys,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
-       s.tr_numero
+       s.tr_numero,
+       s.loppupvm,
+       s.lakkautuspvm
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
   AND s1.poistettu = FALSE)
@@ -68,6 +70,8 @@ SELECT s.id,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
        s.tr_numero,
+       s.loppupvm,
+       s.lakkautuspvm,
        (SELECT array_agg(
                    concat(k.kohde, '=',
                           CASE
@@ -100,6 +104,8 @@ SELECT s.id,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
        s.tr_numero,
+       s.loppupvm,
+       s.lakkautuspvm,
        (SELECT array_agg(
                    concat(k.kohde, '=',
                           CASE
