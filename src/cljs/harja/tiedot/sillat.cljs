@@ -30,10 +30,10 @@
   (-> silta
       (assoc-in [:alue :fill] true)
       (assoc-in [:alue :color] (if (on-tarkastettu-hoitokautena? silta)
-                                 "green"
+                                 "palegreen"
                                  (if (on-poistettu? silta)
                                    "gainsboro"
-                                   "red")))))
+                                   "crimson")))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat
