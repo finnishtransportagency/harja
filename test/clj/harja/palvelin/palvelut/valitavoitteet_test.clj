@@ -32,7 +32,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-oulun-alueurakan-2014-2019-id))]
 
-    (log/debug  vastaus)
+    (log/debug vastaus)
     (is (>= (count vastaus) 4)))
 
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -45,13 +45,13 @@
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
-                         :aloituspvm (c/to-date (t/now))
+        valitavoitteet [{:nimi             "testi566", :takaraja (c/to-date (t/now)),
+                         :aloituspvm       (c/to-date (t/now))
                          :yllapitokohde-id yllapitokohde-id
-                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
-                        {:nimi "testi34554", :takaraja (c/to-date (t/now)),
+                         :valmispvm        (c/to-date (t/now)), :valmis-kommentti "valmis!"}
+                        {:nimi      "testi34554", :takaraja (c/to-date (t/now)),
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}
-                        {:nimi "melko tyhjä vt", :takaraja nil,
+                        {:nimi      "melko tyhjä vt", :takaraja nil,
                          :valmispvm nil, :valmis-kommentti nil}]
         vt-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-urakan-valitavoitteet +kayttaja-jvh+
@@ -60,7 +60,7 @@
             (:http-palvelin jarjestelma)
             :tallenna-urakan-valitavoitteet
             +kayttaja-jvh+
-            {:urakka-id urakka-id
+            {:urakka-id      urakka-id
              :valitavoitteet valitavoitteet})
         vt-lisayksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :hae-urakan-valitavoitteet +kayttaja-jvh+
@@ -117,7 +117,7 @@
               (:http-palvelin jarjestelma)
               :tallenna-urakan-valitavoitteet
               +kayttaja-jvh+
-              {:urakka-id urakka-id
+              {:urakka-id      urakka-id
                :valitavoitteet muokattu-vt})
           vt-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
@@ -139,55 +139,56 @@
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-epaonnistuu-virheelliseen-kohteeseen
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        valitavoitteet [{:nimi "Oops...", :takaraja (c/to-date (t/now)),
-                         :aloituspvm (c/to-date (t/now))
+        valitavoitteet [{:nimi             "Oops...", :takaraja (c/to-date (t/now)),
+                         :aloituspvm       (c/to-date (t/now))
                          :yllapitokohde-id yllapitokohde-id
-                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}]]
+                         :valmispvm        (c/to-date (t/now)), :valmis-kommentti "valmis!"}]]
     (is (thrown? SecurityException
                  (kutsu-palvelua
                    (:http-palvelin jarjestelma)
                    :tallenna-urakan-valitavoitteet
                    +kayttaja-jvh+
-                   {:urakka-id urakka-id
+                   {:urakka-id      urakka-id
                     :valitavoitteet valitavoitteet}))
         "Ei voi lisätä kohdetta, joka ei kuulu urakkaan")))
 
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
+        valitavoitteet [{:nimi      "testi566", :takaraja (c/to-date (t/now)),
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
-                        {:nimi "testi34554", :takaraja (c/to-date (t/now)),
+                        {:nimi      "testi34554", :takaraja (c/to-date (t/now)),
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}]]
     (is (thrown? Exception (kutsu-palvelua
                              (:http-palvelin jarjestelma)
                              :tallenna-urakan-valitavoitteet
                              +kayttaja-ulle+
-                             {:urakka-id urakka-id
+                             {:urakka-id      urakka-id
                               :valitavoitteet valitavoitteet})))))
 
 (deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
   (let [rovaniemen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                           :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                           (hae-rovaniemen-maanteiden-hoitourakan-id))
-        lisatyt-valtakunnalliset
-        (kutsu-palvelua
-          (:http-palvelin jarjestelma)
-          :tallenna-valtakunnalliset-valitavoitteet
-          +kayttaja-jvh+
-          {:valitavoitteet [{:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
-                             :takaraja nil, :tyyppi :toistuva,
-                             :urakkatyyppi :teiden-hoito, :takaraja-toistopaiva 1,
-                             :takaraja-toistokuukausi 7}]})
+                                                                :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                                (hae-rovaniemen-maanteiden-hoitourakan-id))
+        lisatyt-valtakunnalliset (kutsu-palvelua
+                                   (:http-palvelin jarjestelma)
+                                   :tallenna-valtakunnalliset-valitavoitteet
+                                   +kayttaja-jvh+
+                                   {:valitavoitteet [{:id                      -5, :nimi "Sepon mökkitien vuosittainen auraus",
+                                                      :takaraja                nil, :tyyppi :toistuva,
+                                                      :urakkatyyppi            :hoito, ;; Välitavoitteissa vain tyyppi hoito. Tavoitteet kopioituvat myös teiden hoidon urakoille.
+                                                      :takaraja-toistopaiva    1,
+                                                      :takaraja-toistokuukausi 7}]})
         rovaniemen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                               :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                               (hae-rovaniemen-maanteiden-hoitourakan-id))
+                                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                                    (hae-rovaniemen-maanteiden-hoitourakan-id))
         odotetut-toistovuodet (range (t/year (t/now)) (+ (t/year (t/now)) 5))]
 
-    ;; Oulun urakan jäljellä oleville vuosille luotiin uusi välitavoite
+    ;; Rovaniemen urakassa ei entuudestaan ole välitavoitteita.
+    ;; Rovaniemen urakan jäljellä oleville vuosille (5) luotiin uusi välitavoite.
     (is (= (count rovaniemen-urakan-paivitetyt-valitavoitteet)
            (-> (count rovaniemen-urakan-vanhat-valitavoitteet)
                (+ (count odotetut-toistovuodet)))))
-    (is (not (empty? odotetut-toistovuodet))) ;; Urakka päättynyt, päivitä testi
+    (is (not (empty? odotetut-toistovuodet)))               ;; Urakka päättynyt, päivitä testi
 
     (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
     (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
@@ -207,11 +208,11 @@
           +kayttaja-jvh+
           {:valitavoitteet [{:id -2, :nimi "Kertaluontoinen",
                              :takaraja (c/to-date (t/plus (t/now) (t/years 5))),
-                             :tyyppi :kertaluontoinen, :urakkatyyppi :teiden-hoito,
+                             :tyyppi :kertaluontoinen, :urakkatyyppi :hoito,
                              :takaraja-toistopaiva nil, :takaraja-toistokuukausi nil}
                             {:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
                              :takaraja nil, :tyyppi :toistuva,
-                             :urakkatyyppi :teiden-hoito, :takaraja-toistopaiva 1,
+                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
                              :takaraja-toistokuukausi 7}]})
         rovaniemen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                :hae-urakan-valitavoitteet +kayttaja-jvh+

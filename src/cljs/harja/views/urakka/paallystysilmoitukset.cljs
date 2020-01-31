@@ -468,7 +468,7 @@
                :tayta-toistuvasti-fn tayta-raekoko)
         {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
          :nimi :massamenekki
-         :tyyppi :positiivinen-numero :desimaalien-maara 0
+         :tyyppi :positiivinen-numero :desimaalien-maara 2
          :tasaa :oikea :leveys 10
          :tayta-alas? tayta-alas?-fn
          :tayta-fn tayta-massamenekki

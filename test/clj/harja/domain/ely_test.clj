@@ -22,5 +22,5 @@
   (is (= "Pohjois-Savo" (ely/elynumero->nimi 8)))
   (is (= "Keski-Suomi" (ely/elynumero->nimi 9)))
   (is (=  "Etelä-Pohjanmaa" (ely/elynumero->nimi 10)))
-  (is (=  "Pohjois-Pohjanmaa ja Kainuu" (ely/elynumero->nimi 12)))
+  (is (=  "Pohjois-Pohjanmaa" (ely/elynumero->nimi 12)))
   (is (=  "Lappi" (ely/elynumero->nimi 14))))
