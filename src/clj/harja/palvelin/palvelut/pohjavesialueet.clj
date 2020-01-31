@@ -21,11 +21,11 @@
                                                                     :alkupvm       alkupvm
                                                                     :loppupvm      loppupvm}))
         pohjavesialue (first (q/hae-pohjavesialueen-tiedot db {:pohjavesialue pohjavesialueen-tunnus}))]
-    {:yhteensa       (:maara_yhteensa suolatoteuma)
-     :kayttoraja     (:talvisuolan_kayttoraja pohjavesialue)
-     :pituus         (:pituus_km pohjavesialue)
-     :maara_t_per_km (/ (or (:maara_yhteensa suolatoteuma) 0)
-                        (or (:pituus_km pohjavesialue) 0))}))
+    (into [] (list {:yhteensa       (:maara_yhteensa suolatoteuma)
+                    :kayttoraja     (:talvisuolan_kayttoraja pohjavesialue)
+                    :pituus         (:pituus_km pohjavesialue)
+                    :maara_t_per_km (/ (or (:maara_yhteensa suolatoteuma) 0)
+                                       (or (:pituus_km pohjavesialue) 0))}))))
 
 (defrecord Pohjavesialueet []
   component/Lifecycle
