@@ -125,10 +125,11 @@
       sanktiot)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
-  [db sanktiolaji sanktiotyypin-id]
+  [db urakkatyyppi sanktiolaji sanktiotyypin-id]
   (let [mahdolliset-sanktiotyypit (into #{}
                                         (map :id (sanktiot/hae-sanktiotyyppi-sanktiolajilla
-                                                   db {:sanktiolaji (name sanktiolaji)})))]
+                                                   db {:sanktiolaji (name sanktiolaji)
+                                                       :urakkatyyppi urakkatyyppi})))]
     (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
       (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
                                       sanktiotyypin-id))))))
@@ -152,7 +153,7 @@
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
-        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi)
+        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db urakkatyyppi laji sanktiotyyppi)
         params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
@@ -296,7 +297,7 @@
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defn hae-urakkatyypin-sanktiolajit
-  "Palauttaa urakkatyypin sanktiolajit settinä"
+  "Palauttaa urakkatyypin sanktiotyypit [sic] settinä"
   [db user urakka-id urakkatyyppi]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (let [sanktiotyypit (into []
