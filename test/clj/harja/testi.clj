@@ -33,9 +33,6 @@
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
-(defn travis? []
-  (= "true" (System/getenv "TRAVIS")))
-
 (defn circleci? []
   (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
 
@@ -47,7 +44,6 @@
     {:min-level
      (cond
        (or (ollaanko-jenkinsissa?)
-           (travis?)
            (circleci?)
            (= "true" (System/getenv "NOLOG")))
        :fatal
@@ -596,6 +592,20 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024')"))))
 
+(defn hae-rovaniemen-maanteiden-hoitourakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))))
+(defn hae-ivalon-maanteiden-hoitourakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'"))))
+
+(defn hae-pellon-maanteiden-hoitourakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
                    toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
@@ -625,7 +635,7 @@
 
 (defn hae-vapaat-sopimus-idt []
   (map :id (q-map (str "SELECT id FROM sopimus
-                   WHERE urakka IS NULL;"))))
+                   WHERE urakka IS NULL AND harjassa_luotu IS TRUE;"))))
 
 (defn hae-vantaan-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -917,12 +927,10 @@
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (luo-kannat-uudelleen)
   (testit))
 
 (defn urakkatieto-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))

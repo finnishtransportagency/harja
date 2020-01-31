@@ -1,7 +1,5 @@
 # Väylän Harja-järjestelmä #
 
-[![Build Status](https://travis-ci.org/finnishtransportagency/harja.svg?branch=develop)](https://travis-ci.org/finnishtransportagency/harja)
-
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
 
@@ -352,7 +350,7 @@ Oikean FIM:n testikäyttö:
 
 ## Active MQ
 Käynnistys docker imagesta:
-docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
+docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
 
 URL konsoliin:
 localhost:8161/admin/queues.jsp (admin/admin)

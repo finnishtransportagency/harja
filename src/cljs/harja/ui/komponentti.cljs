@@ -47,7 +47,7 @@
          :should-component-update (fn [this old-argv new-argv]
                                     (if-not (empty? should-component-update)
                                       (every? true?
-                                              (map (fn [f should-component-update]
+                                              (map (fn [f]
                                                      (f this old-argv new-argv))
                                                    should-component-update))
                                       true))
@@ -119,7 +119,8 @@
      :component-will-unmount (fn [this _]
                                (let [kuuntelijat (-> this r/state ::dom-kuuntelijat)]
                                  (doseq [[aihe kuuntelija-fn] kuuntelijat]
-                                   (events/unlisten dom-node aihe kuuntelija-fn))))}))
+                                   (events/unlisten dom-node aihe kuuntelija-fn))
+                                 (r/set-state this {::dom-kuuntelijat nil})))}))
 
 (defn sisaan-ulos
   "Mixin, joka käsittelee component-will-mount ja component-will-unmount elinkaaret. Tällä voi kätevästi tehdä jotain

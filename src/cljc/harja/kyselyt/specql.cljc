@@ -11,7 +11,8 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj
-     (:import (org.postgis PGgeometry))))
+     (:import (org.postgis PGgeometry)
+              (java.util UUID))))
 
 (s/def ::d/geometry any?)
 
@@ -54,3 +55,25 @@
   (transform-spec [_ input-spec]
     ;; Ei osata specata geometriatyyppejä, joten spec olkoon any?
     any?))
+
+(defrecord NumberTransform []
+  tx/Transform
+  (from-sql [_ num]
+    (float num))
+  (to-sql [_ num]
+    #?(:clj (bigdec num)
+       :cljs num))
+  (transform-spec [_ input-spec]
+    number?))
+
+(defrecord UUIDTransform []
+  tx/Transform
+  (from-sql [_ uuid]
+    (str uuid))
+  (to-sql [_ uuid]
+    #?(:clj (UUID/fromString uuid)
+       :cljs uuid))
+  (transform-spec [_ input-spec]
+    #?(:clj #(try (uuid? (UUID/fromString %))
+                  (catch Throwable _ false))
+       :cljs any?)))

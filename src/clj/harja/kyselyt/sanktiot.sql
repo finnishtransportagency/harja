@@ -121,13 +121,16 @@ WHERE
 
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
+-- Merkitään vain jos toimenpideinstanssi on voimassa tai sen vanhenemisesta on 3 kk.
 UPDATE maksuera
-SET likainen = TRUE
+SET likainen = TRUE,
+    muokattu = current_timestamp
 WHERE tyyppi = 'sakko' AND
       toimenpideinstanssi IN (
         SELECT toimenpideinstanssi
         FROM sanktio
-        WHERE id = :sanktio);
+        WHERE id = :sanktio) AND
+       toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: hae-sanktiotyypit
 -- Hakee kaikki sanktiotyypit

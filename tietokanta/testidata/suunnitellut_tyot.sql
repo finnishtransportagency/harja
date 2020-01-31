@@ -495,11 +495,990 @@ INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, teht
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 6, 500, 'akillinen-hoitotyo'::TOTEUMATYYPPI, (select id from toimenpidekoodi where nimi = 'Äkillinen hoitotyö' and emo = (select id from toimenpidekoodi where koodi = '23116')), null, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'));
 
 
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 234, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Erillishankinnat'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
+INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 234, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Erillishankinnat erillishinnoin'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi) VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null, (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaukset'), (select id from toimenpideinstanssi where nimi =  'Oulu MHU Hallinnolliset toimenpiteet TP'));
 
 
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 13, 'h', 45, 585, (select id from toimenpidekoodi where nimi = 'Hoitourakan työnjohto'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
-INSERT INTO yksikkohintainen_tyo (vuosi, kuukausi, maara, yksikko, yksikkohinta, arvioitu_kustannus, tehtava, urakka, sopimus) VALUES (2020, 2, 99, 'h', 100, 9900, (select id from toimenpidekoodi where nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut'), (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'), (select id from sopimus where nimi = 'MHU Oulu sopimus'));
+-- Rovaniemen MHU-urakka
+--'Hallinnolliset toimenpiteet TP'
+DO $$
+DECLARE
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
+  hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
+  urakan_nimi TEXT := 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
+  toimenpideinstanssin_nimi TEXT;
+  toimenpidenimi TEXT;
+  urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Rovaniemen MHU testiurakan sopimus');
+  i INTEGER;
+  vuosi_ INTEGER;
+BEGIN
+  -- URAKAN TOIMENPIDEINSTANSSIT
+  FOR i IN 1..6 LOOP
+    INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
+  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
+  FOREACH toimenpidenimi IN ARRAY toimenpidenimet LOOP
+    IF toimenpidenimi = 'Soratien hoito TP' THEN
+      -- Jätetään soratiet suunnittelematta
+      CONTINUE;
+    END IF;
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+    FOR i IN 10..12 LOOP
+      INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+    END LOOP;
+    FOR i IN 1..12 LOOP
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+      END LOOP;
+    END LOOP;
+    FOR i IN 1..9 LOOP
+      INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+    END LOOP;
+  END LOOP;
+
+  -- URAKAN KUSTANNUSARVIOIDUT TYÖT
+  FOREACH toimenpidenimi IN ARRAY hoito_toimenpidenimiet LOOP
+    IF toimenpidenimi = 'Soratien hoito TP' THEN
+      -- Jätetään soratiet suunnittelematta
+      continue;
+    END IF;
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+    -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
+    FOR i IN 10..12 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- kolmansien osapuolien aiheuttamat vahingot
+               ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste = CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste= CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      -- Laskutukseen perustusvat toimenpidekustannukset
+      IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      END IF;
+    END LOOP;
+    FOR i IN 1..12 LOOP
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
+                  'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                   FROM toimenpidekoodi
+                   WHERE yksiloiva_tunniste= CASE
+                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                    END),
+                  NULL,
+                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                 (SELECT id
+                  FROM toimenpidekoodi
+                  WHERE yksiloiva_tunniste = CASE
+                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                   END),
+                 NULL,
+                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+        -- Laskutukseen perustusvat toimenpidekustannukset
+        IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+            VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                    'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+        END IF;
+      END LOOP;
+    END LOOP;
+    FOR i IN 1..9 LOOP
+      -- kolmansien osapuolien aiheuttamat vahingot
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- kolmansien osapuolien aiheuttamat vahingot
+               ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
+                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste = CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste= CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      -- Laskutukseen perustusvat toimenpidekustannukset
+      IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      END IF;
+    END LOOP;
+  END LOOP;
+
+  -- URAKAN 'MHU ja HJU Hoidon johto'
+
+  toimenpidenimi = 'MHU ja HJU Hoidon johto';
+  SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES -- Erillishankinnat
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- Erillishankinnat
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES -- Erillishankinnat
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+  END LOOP;
+END $$;
 
 
+-- Pellon MHU-urakka
+--'Hallinnolliset toimenpiteet TP'
+DO $$
+DECLARE
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
+  hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
+  urakan_nimi TEXT := 'Pellon MHU testiurakka (3. hoitovuosi)';
+  toimenpideinstanssin_nimi TEXT;
+  toimenpidenimi TEXT;
+  urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Pellon MHU testiurakan sopimus');
+  i INTEGER;
+  vuosi_ INTEGER;
+  ennen_urakkaa_id INTEGER;
+BEGIN
+  -- URAKAN TOIMENPIDEINSTANSSIT
+  FOR i IN 1..6 LOOP
+    INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
+  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
+  FOREACH toimenpidenimi IN ARRAY toimenpidenimet LOOP
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+    FOR i IN 10..12 LOOP
+      INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+    END LOOP;
+    FOR i IN 1..12 LOOP
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+      END LOOP;
+    END LOOP;
+    FOR i IN 1..9 LOOP
+      INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+    END LOOP;
+  END LOOP;
+
+  -- URAKAN KUSTANNUSARVIOIDUT TYÖT
+  FOREACH toimenpidenimi IN ARRAY hoito_toimenpidenimiet LOOP
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+    -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
+    FOR i IN 10..12 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- kolmansien osapuolien aiheuttamat vahingot
+               ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste = CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste= CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      -- Laskutukseen perustusvat toimenpidekustannukset
+      IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      END IF;
+    END LOOP;
+    FOR i IN 1..12 LOOP
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
+                  'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                   FROM toimenpidekoodi
+                   WHERE yksiloiva_tunniste= CASE
+                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                    END),
+                  NULL,
+                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                 (SELECT id
+                  FROM toimenpidekoodi
+                  WHERE yksiloiva_tunniste = CASE
+                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                   END),
+                 NULL,
+                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+        -- Laskutukseen perustusvat toimenpidekustannukset
+        IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+            VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                    'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+        END IF;
+      END LOOP;
+    END LOOP;
+    FOR i IN 1..9 LOOP
+      -- kolmansien osapuolien aiheuttamat vahingot
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- kolmansien osapuolien aiheuttamat vahingot
+               ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
+                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste = CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste= CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      -- Laskutukseen perustusvat toimenpidekustannukset
+      IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      END IF;
+    END LOOP;
+  END LOOP;
+
+  -- URAKAN RAHAVARAUKSET LUPAUKSIIN
+
+  toimenpidenimi = 'MHU Ylläpito TP';
+  SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+              'muut-rahavaraukset'::TOTEUMATYYPPI,
+              NULL,
+              (SELECT id
+               FROM tehtavaryhma
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+              urakan_sopimus);
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+              'muut-rahavaraukset'::TOTEUMATYYPPI,
+              NULL,
+              (SELECT id
+               FROM tehtavaryhma
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+              urakan_sopimus);
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+              'muut-rahavaraukset'::TOTEUMATYYPPI,
+              NULL,
+              (SELECT id
+               FROM tehtavaryhma
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+              urakan_sopimus);
+  END LOOP;
+
+  -- URAKAN 'MHU ja HJU Hoidon johto'
+
+  toimenpidenimi = 'MHU ja HJU Hoidon johto';
+  SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES -- Erillishankinnat
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- Erillishankinnat
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES -- Erillishankinnat
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+  END LOOP;
+
+
+  ----------------------------------
+  -- URAKAN YKSIKKÖHINTAISET TYÖT --
+  ----------------------------------
+  INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
+     RETURNING id
+     INTO ennen_urakkaa_id;
+  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  FOR i IN 10..12 LOOP
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+      END IF;
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+      END IF;
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    IF toimenpidenimi = 'Soratien hoito TP'
+      THEN
+        -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
+        EXIT;
+    END IF;
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+      END IF;
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+      END IF;
+  END LOOP;
+END $$;
+
+-- Kemin MHU-urakka
+--'Hallinnolliset toimenpiteet TP'
+DO $$
+DECLARE
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
+  hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
+  urakan_nimi TEXT := 'Kemin MHU testiurakka (5. hoitovuosi)';
+  toimenpideinstanssin_nimi TEXT;
+  toimenpidenimi TEXT;
+  urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Kemin MHU testiurakan sopimus');
+  ennen_urakkaa_id INTEGER;
+  i INTEGER;
+  vuosi_ INTEGER;
+BEGIN
+  -- URAKAN TOIMENPIDEINSTANSSIT
+  FOR i IN 1..6 LOOP
+    INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
+  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
+  FOREACH toimenpidenimi IN ARRAY toimenpidenimet LOOP
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+    FOR i IN 10..12 LOOP
+      INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+    END LOOP;
+    FOR i IN 1..12 LOOP
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+      END LOOP;
+    END LOOP;
+    FOR i IN 1..9 LOOP
+      IF toimenpidenimi = 'Soratien hoito TP'
+        THEN
+          -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
+          EXIT;
+      END IF;
+      INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 8000 + i*100, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi ), null);
+    END LOOP;
+  END LOOP;
+
+  -- URAKAN KUSTANNUSARVIOIDUT TYÖT
+  FOREACH toimenpidenimi IN ARRAY hoito_toimenpidenimiet LOOP
+    SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+    -- UI tarvitsee periaatteessa vain yhden rivin kutakin lajia (kustannussuunnitelmissa), mutta raportoinnissa joka vuoden kuulle pitää olla omansa.
+    FOR i IN 10..12 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- kolmansien osapuolien aiheuttamat vahingot
+               ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste = CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste= CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      -- Laskutukseen perustusvat toimenpidekustannukset
+      IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      END IF;
+    END LOOP;
+    FOR i IN 1..12 LOOP
+      FOR vuosi_ IN 1..4 LOOP
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES -- kolmansien osapuolien aiheuttamat vahingot
+                 ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
+                  'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                  (SELECT id
+                   FROM toimenpidekoodi
+                   WHERE yksiloiva_tunniste= CASE
+                                                      WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                      WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                      WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                    END),
+                  NULL,
+                  (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                 (SELECT id
+                  FROM toimenpidekoodi
+                  WHERE yksiloiva_tunniste = CASE
+                                                     WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                     WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                     WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                   END),
+                 NULL,
+                 (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+        -- Laskutukseen perustusvat toimenpidekustannukset
+        IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+          INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+            VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                    'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+        END IF;
+      END LOOP;
+    END LOOP;
+    FOR i IN 1..9 LOOP
+      -- kolmansien osapuolien aiheuttamat vahingot
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- kolmansien osapuolien aiheuttamat vahingot
+               ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 100,
+                'vahinkojen-korjaukset'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste = CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'b3a7a210-4ba6-4555-905c-fef7308dc5ec'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Äkilliset hoitotyöt
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 20000,
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
+                (SELECT id
+                 FROM toimenpidekoodi
+                 WHERE yksiloiva_tunniste= CASE
+                                                    WHEN (toimenpidenimi = 'Talvihoito TP') THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
+                                                    WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP') THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
+                                                    WHEN (toimenpidenimi = 'Soratien hoito TP') THEN 'd373c08b-32eb-4ac2-b817-04106b862fb1'::UUID
+                                                  END),
+                NULL,
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      -- Laskutukseen perustusvat toimenpidekustannukset
+      IF toimenpidenimi = 'Liikenneympäristön hoito TP' THEN
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+          VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 1000,
+                  'laskutettava-tyo'::TOTEUMATYYPPI, NULL, NULL, (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+      END IF;
+    END LOOP;
+  END LOOP;
+
+    -- URAKAN RAHAVARAUKSET LUPAUKSIIN
+
+  toimenpidenimi = 'MHU Ylläpito TP';
+  SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+              'muut-rahavaraukset'::TOTEUMATYYPPI,
+              NULL,
+              (SELECT id
+               FROM tehtavaryhma
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+              urakan_sopimus);
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+              'muut-rahavaraukset'::TOTEUMATYYPPI,
+              NULL,
+              (SELECT id
+               FROM tehtavaryhma
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+              urakan_sopimus);
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 5000,
+              'muut-rahavaraukset'::TOTEUMATYYPPI,
+              NULL,
+              (SELECT id
+               FROM tehtavaryhma
+               WHERE yksiloiva_tunniste='0e78b556-74ee-437f-ac67-7a03381c64f6'),
+              (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+              urakan_sopimus);
+  END LOOP;
+
+  -- URAKAN 'MHU ja HJU Hoidon johto'
+
+  toimenpidenimi = 'MHU ja HJU Hoidon johto';
+  SELECT urakan_nimi || ' ' || toimenpidenimi INTO toimenpideinstanssin_nimi;
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES -- Erillishankinnat
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES -- Erillishankinnat
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+      VALUES -- Erillishankinnat
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 700,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                NULL,
+                (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste='37d3752c-9951-47ad-a463-c1704cf22f4c'::UUID),
+                (select id from toimenpideinstanssi where nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Toimistokulut
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9000,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus),
+                -- Työnjohto
+                ((SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, 9100,
+                'laskutettava-tyo'::TOTEUMATYYPPI,
+                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744'::UUID),
+                NULL,
+                (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
+                urakan_sopimus);
+  END LOOP;
+  ----------------------------------
+  -- URAKAN YKSIKKÖHINTAISET TYÖT --
+  ----------------------------------
+
+  INSERT INTO johto_ja_hallintokorvaus_ennen_urakkaa ("kk-v") VALUES (4.5)
+     RETURNING id
+     INTO ennen_urakkaa_id;
+  INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, "ennen-urakkaa-id", luotu, "toimenkuva-id")
+    VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 4500, 40, (SELECT extract(year from NOW())), 10, ennen_urakkaa_id, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+  FOR i IN 10..12 LOOP
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+  END LOOP;
+  FOR i IN 1..12 LOOP
+    FOR vuosi_ IN 1..4 LOOP
+      INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+      END IF;
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT vuosi_ + extract(year from (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+      END IF;
+    END LOOP;
+  END LOOP;
+  FOR i IN 1..9 LOOP
+    IF toimenpidenimi = 'Soratien hoito TP'
+      THEN
+        -- Jätetään soratiet suunnittelematta kuluvalle vuodelle
+        EXIT;
+    END IF;
+    INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+      VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'sopimusvastaava')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'päätoiminen apulainen')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'apulainen/työnjohtaja')),
+             ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
+
+      IF (5 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija'));
+      END IF;
+      IF (4 <= i) AND (i <= 8)
+      THEN
+        INSERT INTO johto_ja_hallintokorvaus ("urakka-id", tunnit, tuntipalkka, vuosi, kuukausi, luotu, "toimenkuva-id")
+        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), 1000, 30, (SELECT extract(year from (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi))), i, NOW(), (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö'));
+      END IF;
+  END LOOP;
+
+END $$;
+
+-- Ivalon MHU-urakka
+--'Hallinnolliset toimenpiteet TP'
+DO $$
+DECLARE
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
+  hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
+  urakan_nimi TEXT := 'Ivalon MHU testiurakka (uusi)';
+  toimenpideinstanssin_nimi TEXT;
+  toimenpidenimi TEXT;
+  urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Ivalon MHU testiurakan sopimus');
+  i INTEGER;
+  vuosi_ INTEGER;
+BEGIN
+  -- URAKAN TOIMENPIDEINSTANSSIT
+  FOR i IN 1..6 LOOP
+    INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
+  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+END $$;

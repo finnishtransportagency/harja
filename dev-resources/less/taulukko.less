@@ -1,0 +1,129 @@
+@import "vayla/tables.less";
+@import "vayla/colors.less";
+@import "vayla/buttons-navigation-and-links.less";
+@chevron-suunnat: up, right, down, left;
+@triangle-suunnat: top, right, bottom, left;
+@solu-padding: 5px;
+
+.suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
+  @suunta: extract(@suunnat, @i);
+  .@{ikoni}-@{suunta}{
+    color: @blue;
+  }
+  .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
+}
+
+.taulukko {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: none;
+  word-break: break-all;
+  .piillotettu, &.piillotettu {
+    display:none;
+  }
+
+  /* TAULUKON ELEMENTIT */
+
+  input {
+    border: none;
+  }
+
+/* JANAT */
+  .jana {
+    border: none;
+    padding-bottom:1px;
+  }
+  .janan-rivi {
+    display: flex;
+    flex-direction: row;
+
+    &.piillotettu {
+      display: none;
+    }
+  }
+/* SOLUT */
+  .osa {
+    border-left: none;
+    padding-left: @solu-padding;
+    align-self: center;
+    &.keskita {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    &.alas {
+      align-self: flex-end;
+    }
+  }
+  .osa-laajenna {
+    display: flex;
+    justify-content: space-between;
+    span {
+      align-self: center;
+      &:first-child {
+        flex: 1;
+      }
+    }
+    &.ikoni-vasemmalle {
+      .laajenna-teksti {
+        order: 1;
+        padding-left: @solu-padding;
+      }
+    }
+    .suunta-ikoni-loop(@chevron-suunnat; livicon-chevron);
+    .suunta-ikoni-loop(@triangle-suunnat; glyphicon-triangle);
+  }
+  .osa-otsikko {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .otsikon-jarjestys {
+
+    }
+  }
+  .osa-syote {
+    &.ei-validi {
+      border: 1px solid red;
+      color: red;
+      box-shadow: 0px 0px 2px 2px #ff2200;
+    }
+  }
+
+  .osa-teksti {
+  }
+  .osa-ikoni {
+  }
+  .osa-nappi {
+    &.linkki {
+      background: transparent;
+      border: none;
+      color: blue;
+      text-align: left;
+      .a-link();
+      &:visited {
+        .a-visited();
+      }
+      &:hover {
+        .a-hover();
+      }
+      &:focus {
+        .a-focus();
+      }
+      &:active {
+        .a-active();
+      }
+    }
+  }
+  /* YLEISTÄ */
+  .solu-sisenna-1 {
+    padding-left: (@solu-padding + 20px);
+  }
+  .solu-sisenna-2 {
+    padding-left: (@solu-padding + 40px);
+  }
+  .solu-sisenna-3 {
+    padding-left: (@solu-padding + 60px);
+  }
+}

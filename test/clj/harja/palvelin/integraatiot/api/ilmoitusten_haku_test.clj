@@ -1,6 +1,9 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusten-haku-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [clojure.core.async :refer [<!! timeout]]
+            [clj-time
+             [core :as t]
+             [format :as df]]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-sonja]]
@@ -11,7 +14,8 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as z])
+            [clojure.data.zip.xml :as z]
+            [harja.pvm :as pvm])
   (:import (java.net URLEncoder)
            (java.text SimpleDateFormat)
            (java.util Date)))
@@ -33,8 +37,8 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(def odotettu-ilmoitus
-  {"ilmoitettu" "2015-09-29T14:49:45Z"
+(defn odotettu-ilmoitus [ilmoitettu]
+  {"ilmoitettu" ilmoitettu
    "ilmoittaja" {"email" "matti.meikalainen@palvelu.fi"
                  "etunimi" "Matti"
                  "matkapuhelin" "08023394852"
@@ -129,20 +133,24 @@
                 {"selite" "tapahtumaOhi"}
                 {"selite" "kevyenLiikenteenVaylatOvatjaatymassa"}
                 {"selite" "tietOvatjaisiaJamarkia"}]
-   "sijainti" {"koordinaatit" {"x" 452935.0
-                               "y" 7186873.0}}
-   "tienumero" 4
+   "sijainti" {"koordinaatit" {"x" 443199.0
+                               "y" 7377324.0}}
+   "tienumero" 79
    "yhteydenottopyynto" false})
 
 
 (deftest kuuntele-urakan-ilmoituksia
-  (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode nyt))] kayttaja portti))
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))
+        lahetys-aika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                                 (t/minus (t/now) (t/hours 3)))
+        aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
+                            (t/now))
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
         tloik-kuittaukset (atom [])]
     (sonja/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
     ;; Ennen lähetystä, odotetaan, että api-kutsu on kerennyt jäädä kuuntelemaan
     (<!! (timeout 300))
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
+    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma lahetys-aika))
 
     (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 20000)
     (is (= 200 (:status @vastaus)))
@@ -152,7 +160,7 @@
       (when (not= 1 (count (get vastausdata "ilmoitukset")))
         (println @vastaus))
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
-      (is (= odotettu-ilmoitus ilmoitus)))
+      (is (= (odotettu-ilmoitus (str lahetys-aika "Z")) ilmoitus)))
 
     (odota-ehdon-tayttymista #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 20000)
 

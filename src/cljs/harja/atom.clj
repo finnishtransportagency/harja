@@ -1,7 +1,8 @@
 (ns harja.atom
   "Apureita atomeille."
   (:refer-clojure :exclude [run!])
-  (:require [reagent.ratom :refer [run!]]
+  (:require [cljs.analyzer]
+            [reagent.ratom :refer [run!]]
             [taoensso.truss :refer [have have?]]))
 
 (defn- validit-optiot? [optiot]

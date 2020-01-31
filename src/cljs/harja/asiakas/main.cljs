@@ -21,7 +21,7 @@
 (defn render []
   (reagent/render [#'main-view/main] (.getElementById js/document "app")))
 
-(defn ^:export harja []
+(defn harja []
   (ymparisto/alusta {:on-reload #(try
                                    (render)
                                    (catch js/Error e
@@ -69,3 +69,5 @@
     (k/kysy-pois-kytketyt-ominaisuudet! istunto/pois-kytketyt-ominaisuudet)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))
+
+(harja)

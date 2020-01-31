@@ -1,0 +1,362 @@
+@import "../vayla/colors.less";
+@import "../vayla/typography.less";
+@import "../styles.less";
+
+.intro() {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: @gray25;
+}
+
+#kustannussuunnitelma {
+  display:flex;
+  flex-direction: column;
+
+  .body-text();
+
+  > * {
+    margin-bottom: 15px;
+
+    &:last-child {
+      margin-bottom: inherit;
+    }
+  }
+
+  div, span {
+    word-break: normal;
+  }
+  // Väylän typography hommat. Nämä voi ottaa pois sitten, kun väylän tyylit on otettu kaikkialla käyttöön.
+  h1 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 300;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h2 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h3 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.3125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h4 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: @gray25;
+  }
+  h5 {
+    font-family:  "Open Sans", Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: @gray25;
+  }
+}
+
+.harmaa-teksti {
+  color: @gray125;
+}
+
+.aktiivinen-vuosi {
+  font-weight: bold;
+}
+
+.viiva-alas {
+  border-bottom: 1px solid @gray200;
+  position: relative;
+  left: -(@valilehti-sivu-padding * 2);
+  width: calc(~"100% + " @valilehti-sivu-padding ~" * 4");
+}
+
+.hintalaskuri {
+  background-color: @gray245;
+  padding: 15px;
+  > *:first-child {
+    margin-top: 0;
+  }
+}
+.indeksilaskuri {
+  > span:first-child {
+    font-weight: 700;
+    .harmaa-teksti();
+  }
+  .hintalaskuri-vuodet {
+    padding-top: 0;
+  }
+  .hintalaskurisarake-yla {
+    text-align: center;
+    padding: 5px 0px;
+    .small-text();
+    .harmaa-teksti();
+  }
+  .hintalaskurisarake-ala {
+    padding-top: 0px;
+  }
+}
+
+.summa-ja-indeksilaskuri {
+  > .indeksilaskuri {
+    padding-top: 0;
+  }
+}
+.hintalaskuri-vuodet {
+  display:flex;
+  justify-content: space-evenly;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  > div {
+    flex: 3;
+  }
+}
+.sarake-wrapper {
+  display: inline-block;
+}
+.hintalaskurisarake-yla {
+
+}
+.hintalaskurisarake-ala {
+  color: @gray200;
+  padding-top: 15px;
+}
+
+.hintalaskuri-yhtakuin, .hintalaskuri-yhteensa {
+  display: flex;
+  > div:first-child {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    > * {
+      flex: 1;
+    }
+  }
+}
+
+.hintalaskuri-yhtakuin {
+  .hintalaskurisarake-ala {
+    align-self: end;
+    padding-right: 15px;
+  }
+}
+
+.komponentin-input {
+  width: 100%;
+}
+
+#kuluva-hoitovuosi {
+  display:flex;
+  > span {
+    flex:1;
+    font-weight: bold;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .hoitovuosi-napit {
+    flex:1;
+    display:flex;
+    justify-content: flex-end;
+  }
+}
+
+#tavoite-ja-kattohinta {
+  .intro();
+}
+
+.haitari-laatikko {
+  &#tavoite-ja-kattohinta {
+    background-color: @gray245;
+
+    // Tässä tehdään omat paddingit, hintalaskurin defaultin sijasta,
+    // jotta tuon hintalaskurin alareuna ei ulottuisi haitari-laatikon
+    // päästä päähän
+    > * {
+      padding-left: 15px;
+      padding-right: 15px;
+      &:first-child {
+        padding-top: 15px;
+        padding-bottom: 15px;
+      }
+      .hintalaskuri {
+        padding: 15px 0px 0px 0px;
+      }
+    }
+
+    .hintalaskuri:first-child {
+      padding-top: 0px;
+    }
+  }
+  .livicon-chevron {
+    color: @blue;
+    font-size: 20px;
+  }
+}
+
+#tavoitehinnan-indeksikorjaus {
+  border-bottom: 1px dashed @gray200;
+}
+
+#tavoite-ja-kattohinta-huomio {
+  background-color: @gray250;
+  padding: 0px;
+  display: block;
+}
+
+#suunnitelman-selitteet {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0px;
+  span {
+    padding: 5px;
+    padding-left: inherit;
+  }
+}
+
+.suunnitelma-ikonien-varit {
+  .glyphicon-ok {
+    color: @green;
+  }
+  .livicon-question {
+    color: @blue;
+  }
+  .glyphicon-remove {
+    color: @red;
+  }
+}
+
+.kustannus-syotto {
+  position: relative;
+  padding: 0px;
+  .kopioi-nappi {
+    position: absolute;
+    top: -100%;
+    right: 0px;
+    margin: 0px;
+  }
+}
+
+#laskutukseen-perustuen-filter {
+  padding-top: 10px;
+}
+
+#jh-toimenkuva-laskulla {
+  padding-top: 10px;
+  .jana {
+    display: flex;
+    .osa:nth-child(1) {
+      flex: 4 4 0;
+    }
+    .osa:nth-child(2) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(3) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(4) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(5) {
+      flex: 1 1 0;
+    }
+  }
+}
+
+#jh-toimenkuva-yhteenveto {
+  padding-top: 10px;
+  .jana {
+    display: flex;
+    .osa:nth-child(1) {
+      flex: 6 6 0;
+    }
+    .osa:nth-child(2) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(3) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(4) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(5) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(6) {
+      flex: 2 2 0;
+    }
+    .osa:nth-child(7) {
+      flex: 2 2 0;
+    }
+  }
+}
+
+.maksu-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  > div {
+    display: flex;
+    flex-direction: column;
+    &:nth-child(1) {
+      flex: 1;
+    }
+  }
+}
+
+#suunnitelmien-taulukko {
+  button {
+    text-decoration: none;
+  }
+}
+
+.kustannussuunnitelma-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  > * {
+    &:nth-child(1) {
+      max-width: 400px;
+      min-width: 250px;
+      flex: 1;
+    }
+    &:nth-child(2) {
+      max-width: 400px;
+      flex: 1;
+    }
+  }
+}
+
+.suunnitelma-rivi {
+  &.toimenpide-rivi {
+    > *:first-child {
+      .lihavoitu();
+    }
+  }
+  > *:nth-child(3) {
+    span {
+      // Halutaan harmaa ikoni
+      color: @gray200;
+    }
+  }
+
+  > *:nth-child(4) {
+    color: @gray200;
+  }
+
+  .viimeinen-vuosi {
+    > *:nth-child(4) {
+      .teksti();
+    }
+  }
+}

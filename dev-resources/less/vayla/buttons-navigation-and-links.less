@@ -1,0 +1,348 @@
+@import "colors.less";
+.yhteiset-arvot() {
+  color: @white;
+  height: 40px;
+  outline-style: solid;
+
+  font-family: "Open Sans", sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 0.75rem;
+}
+
+.yhteiset-navigaatio-arvot() {
+  color: @white;
+  height: 60px;
+
+  font-family: "Open Sans", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+/*--------------------------*\
+|       PRIMARY BUTTONS      |
+\*--------------------------*/
+
+.button- {
+  &primary- {
+    &default {
+      .yhteiset-arvot();
+      background-color: @blue;
+      outline-color: @blue;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+    &hover {
+      .yhteiset-arvot();
+      background-color: @blue-dark;
+      outline-color: @blue-dark;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+    &focus {
+      .yhteiset-arvot();
+      background-color: @blue-dark;
+      outline-color: @white;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-arvot();
+      background-color: @blue-darker;
+      outline-color: @blue-darker;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+    &disabled {
+      .yhteiset-arvot();
+      background-color: @gray225;
+      outline-color: @gray225;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+  }
+
+  &positive- {
+    &default {
+      .yhteiset-arvot();
+      background-color: @green;
+      outline-color: @green;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+    &hover {
+      .yhteiset-arvot();
+      background-color: @green-dark;
+      outline-color: @green-dark;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+    &focus {
+      .yhteiset-arvot();
+      background-color: @green-dark;
+      outline-color: @white;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-arvot();
+      background-color: @green-darker;
+      outline-color: @green-darker;
+      outline-width: 3px; // TODO specissä 2. TARKASTA
+      outline-offset: -3px; // TODO specissä -2. TARKASTA
+    }
+    &disabled {
+      .yhteiset-arvot();
+      background-color: @gray225;
+      outline-color: @gray225;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+  }
+
+  &negative- {
+    &default {
+      .yhteiset-arvot();
+      background-color: @red;
+      outline-color: @red;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+    &hover {
+      .yhteiset-arvot();
+      background-color: @red-dark;
+      outline-color: @red-dark;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+    &focus {
+      .yhteiset-arvot();
+      background-color: @red-dark;
+      outline-color: @white;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-arvot();
+      background-color: @red-darker;
+      outline-color: @red-darker;
+      outline-width: 3px; // TODO specissä 2. TARKASTA
+      outline-offset: -3px; // TODO specissä -2. TARKASTA
+    }
+    &disabled {
+      .yhteiset-arvot();
+      background-color: @gray225;
+      outline-color: @gray225;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+  }
+}
+
+
+/*--------------------------*\
+|      SECONDARY BUTTONS     |
+\*--------------------------*/
+
+.button- {
+  &psecondary- {
+    &default {
+      .yhteiset-arvot();
+      color: @blue;
+      background-color: @white;
+      outline-color: @blue;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+    &hover {
+      .yhteiset-arvot();
+      color: @blue-dark;
+      background-color: @white;
+      outline-color: @blue-dark;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+    &focus {
+      .yhteiset-arvot();
+      color: @blue-dark;
+      background-color: @white;
+      outline-color: @blue-dark;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-arvot();
+      color: @blue-darker;
+      background-color: @white;
+      outline-color: @blue-darker;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+    &disabled {
+      .yhteiset-arvot();
+      color: @gray200;
+      background-color: @white;
+      outline-color: @gray200;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+  }
+
+  &invisible- {
+    &default {
+      .yhteiset-arvot();
+      color: @blue;
+      background-color: transparent;
+      outline-color: transparent;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+    &hover {
+      .yhteiset-arvot();
+      color: @blue-dark;
+      background-color: @gray235;
+      outline-color: @gray235;
+      outline-width: 2px;
+      outline-offset: -2px;
+    }
+    &focus {
+      .yhteiset-arvot();
+      color: @blue-dark;
+      background-color: @gray235;
+      outline-color: @blue-dark;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-arvot();
+      color: @blue-darker;
+      background-color: @gray225;
+      outline-color: @gray225;
+      outline-width: 3px;
+      outline-offset: -3px;
+    }
+    &disabled {
+      .yhteiset-arvot();
+      color: @gray200;
+      background-color: transparent;
+      outline-color: transparent;
+      outline-width: 1px;
+      outline-offset: -1px;
+    }
+  }
+}
+
+/*--------------------------*\
+|     NAVIGATION BUTTONS     |
+\*--------------------------*/
+
+.button- {
+  &navigation- {
+    &default {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray25;
+      border-right: 1px solid @black;
+    }
+    &hover {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray50;
+      border-right: 1px solid @black;
+    }
+    &focus {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray50;
+      outline-color: @white;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray75;
+      border-right: 1px solid @black;
+    }
+    &disabled {
+      .yhteiset-navigaatio-arvot();
+      color: @gray75;
+      background-color: @gray25;
+      border-right: 1px solid @black;
+    }
+  }
+
+  &subnavigation- {
+    &default {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray75;
+      border-right: 1px solid @gray25;
+    }
+    &hover {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray100;
+      border-right: 1px solid @gray25;
+    }
+    &focus {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray100;
+      outline-color: @white;
+      outline-width: 2px;
+      outline-offset: -2px;
+      outline-style: dashed;
+    }
+    &active {
+      .yhteiset-navigaatio-arvot();
+      background-color: @gray125;
+      border-right: 1px solid @gray25;
+    }
+    &disabled {
+      .yhteiset-navigaatio-arvot();
+      color: @gray125;
+      background-color: @gray75;
+      border-right: 1px solid @gray25;
+    }
+  }
+}
+
+/*--------------------------*\
+|         TEXT LINKS         |
+\*--------------------------*/
+// Nämä muuttaa tyyliä vähän kaikki alla,
+// niin otetaan käyttöön vasta, kun
+// on aikaa tehdä kunnollinen Harjan kattava
+// tyyli muutos
+
+.a-link() {
+  color: @focus-color;
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+}
+.a-hover() {
+  color: @blue-dark;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-skip-ink: auto;
+}
+.a-focus() {
+  color: @white;
+  background-color: @blue-dark;
+  outline: 2px dashed @blue-dark;
+  text-decoration: none;
+}
+.a-active() {
+  color: @blue-darker;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-skip-ink: auto;
+}
+.a-visited() {
+  color: @focus-color;
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+}

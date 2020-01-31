@@ -12,14 +12,14 @@
 
 (def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
 
-(defn- mailto-kehitystiimi []
+(defn mailto-kehitystiimi []
   (str "mailto:" sahkoposti-kehitystiimi))
 
 (def rivinvaihto "%0A")
 (def koodiblokki "%7Bcode%7D")
 (def valilyonti "%20")
 
-(defn- mailto-paakayttaja []
+(defn mailto-paakayttaja []
   (str "mailto:" sahkoposti-paakayttaja))
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin

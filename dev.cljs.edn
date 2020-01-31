@@ -1,0 +1,17 @@
+^{:watch-dirs ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
+  :css-dirs ["resources/public/css"]
+  :reload-clj-files false
+  :load-warninged-code true
+  :open-url false
+  :ring-server-options {:port 3449}}
+{:main harja.asiakas.main
+ :optimizations :none
+ :source-map true
+ :output-to "dev-resources/js/harja.js"
+ :output-dir "dev-resources/js/out"
+ :asset-path "js/out"
+ :libs ["src/js/kuvataso.js"]
+ :closure-output-charset "US-ASCII"
+ ;Ota tämä kommentista pois, jos eta halua nähdä taulukon debuggia
+ ;:closure-defines {harja.ui.taulukko-debug/TAULUKKO_DEBUG false}
+ }

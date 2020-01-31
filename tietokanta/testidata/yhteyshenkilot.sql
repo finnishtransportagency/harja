@@ -205,6 +205,89 @@ VALUES ((SELECT id
            sukunimi = 'Hurme'
          LIMIT 1));
 
+
+
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Åsa' AND
+           sukunimi = 'Linnasalo'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Åsa' AND
+           sukunimi = 'Linnasalo'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1)),((SELECT id
+         FROM urakka
+         WHERE nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Åsa' AND
+           sukunimi = 'Linnasalo'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Ivalon MHU testiurakka (uusi)'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Åsa' AND
+           sukunimi = 'Linnasalo'
+         LIMIT 1)),
+         ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Ivalon MHU testiurakka (uusi)'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1));
+
 -- Yhteyshenkilöiden organisaatio
 
 UPDATE yhteyshenkilo SET organisaatio=(SELECT id FROM organisaatio WHERE ytunnus='1565583-5');

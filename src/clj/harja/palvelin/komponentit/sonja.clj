@@ -190,7 +190,12 @@
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory tyyppi]
   (doto connection-factory
-    (.setFaultTolerant true)
+    ;; Fault tolerant –asetuksen pois kytkeminen puolestaan johtuu siitä, että jos se on käytössä, client vastaanottaa JMS-”palvelimelta” tiedon siitä,
+    ;; mitä osoitteita ja portteja on käytössä samassa klusterissa – ja ainakin aiemmin Sonja oli konfiguroitu siten, että se antoi täsmälleen yhden osoitteen,
+    ;; johon yhteyden katketessa pantiin sitten hanskat tiskiin.
+    (.setFaultTolerant false)
+    ;; Pingillä pyritään pitämään hengissä olemassa olevaa yhteyttä, vaikka siellä ei varsinaisesti liikettä olisikaan.
+    (.setPingInterval (int 30))
     ;; Yrittää reconnectata loputtomiin. Pitää wrapata intiin, jotta tyypiksi tulee Integer, eikä Float
     (.setFaultTolerantReconnectTimeout (int 0))
     ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
@@ -225,10 +230,10 @@
                                                                '(reify progress.message.jclient.RejectionListener
                                                                   (onRejectedMessage [this msg e]
                                                                     (try
-                                                                      (log/error
+                                                                      (taoensso.timbre/error
                                                                         (str "Harjasta on lähetetty viesti Sonjan kautta jonnekkin, mutta"
                                                                              " sitä viestiä ei saatu vastaanottopäässä käsiteltyä."))
-                                                                      (log/error
+                                                                      (taoensso.timbre/error
                                                                         (str "Sonjalta tullut virhe msg: " msg
                                                                              " Virhekoodi: " (.getErrorCode e)))
                                                                       ;; Halutaan ottaa kaikki virheet kiinni, sillä yksikin käsittelemätön virhe
@@ -236,8 +241,8 @@
 
                                                                       ;; Älä tee mitään aikaa vievää täällä. Muuten yhteyttä tai sessiota ei saada välttämättä kiinni.
                                                                       (catch Throwable t
-                                                                        (log/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
-                                                                                        (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
+                                                                        (taoensso.timbre/error (str "Epäonnistuneen viestin käsittely epäonnistui: "
+                                                                                                    (.getMessage t) "\nStackTrace: " (.printStackTrace t))))))))))
         (.addTransportListener yhteys (tee-activemq-jms-tilanmuutoskuuntelija)))
       yhteys)
     (catch JMSException e
@@ -559,9 +564,11 @@
                ;; Timeoutin lisääminen aiheuttaa
                ;; siinä mielessä harmia, että jms-saikeen täytyy kysyä tältä säikeeltä, onko timeout kerennyt jo tapahuta siinä vaiheessa,
                ;; kun jms-saie olisi valmis käsittelemään tämän viestin.
-               (timeout viestin-kasittely-timeout) (do (async/put! kaskyn-kasittely-jms-saikeelle
-                                                                   :aikakatkaisu)
-                                                       {:kaskytysvirhe :aikakatkaisu})
+               (timeout (if (and (map? kasky)
+                                 (= (first (keys kasky)) :aloita-yhteys))
+                          60000 viestin-kasittely-timeout)) (do (async/put! kaskyn-kasittely-jms-saikeelle
+                                                                            :aikakatkaisu)
+                                                                {:kaskytysvirhe :aikakatkaisu})
                kaskyn-kasittely-kaskytys-saikeelle ([tulos _]
                                                      (case tulos
                                                        :valmis-kasiteltavaksi (do

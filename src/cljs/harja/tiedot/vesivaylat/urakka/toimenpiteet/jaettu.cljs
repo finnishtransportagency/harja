@@ -43,7 +43,7 @@
 (defn arvot-pudotusvalikko-valinnoiksi [kartta]
   (into [nil] (distinct (vals kartta))))
 
-(defn- toimenpiteet-tyolajilla [toimenpiteet tyolaji]
+(defn toimenpiteet-tyolajilla [toimenpiteet tyolaji]
   (filterv #(= (::to/tyolaji %) tyolaji) toimenpiteet))
 
 (defn kaikki-valittu? [toimenpiteet]

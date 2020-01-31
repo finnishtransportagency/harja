@@ -330,7 +330,7 @@
          ryhmahinta
          {::hinta/otsikko hintaryhman-hintakentta-otsikko}))]))
 
-(defn- hinnoittelun-voi-tallentaa? [app]
+(defn hinnoittelun-voi-tallentaa? [app]
   (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
         hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
         komponenttien-hinnat (filter #(= :komponentti (::hinta/ryhma %)) hinnat)

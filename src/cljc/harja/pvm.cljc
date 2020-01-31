@@ -258,6 +258,15 @@
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
         (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
+(defn tiukin-aikavali
+ [[alkupvm loppupvm] [v-alkupvm v-loppupvm]]
+ (let [alkupvm (if (jalkeen? alkupvm v-alkupvm)
+                 alkupvm
+                 v-alkupvm)
+       loppupvm (if (ennen? loppupvm v-loppupvm)
+                  loppupvm
+                  v-loppupvm)]
+   [alkupvm loppupvm]))
 
 #?(:clj
    (defn tanaan? [pvm]
@@ -907,6 +916,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (let [nyt #?(:clj (joda-timeksi (nyt))
                :cljs (nyt))]
     [(t/minus nyt (t/days paivia)) nyt]))
+
+(defn lisaa-vuosia [paiva vuosia]
+  (t/plus paiva (t/years vuosia)))
 
 #?(:clj
    (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm[pvm kk-maara]
