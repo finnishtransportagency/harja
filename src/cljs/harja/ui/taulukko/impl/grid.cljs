@@ -156,7 +156,7 @@
                                             lapset)]
          (recur nil etsittavan-osan-tunniste kaikki-lapsen-lapset))))))
 
-(defn- gridin-osat-vektoriin
+(defn gridin-osat-vektoriin
   ([grid pred f]
    (let [kaikki-gridin-lapset (p/lapset grid)
          aloitus (if (pred grid)
@@ -216,7 +216,9 @@
   (root osa))
 
 (defn vanhempi [osa]
-  (get-in-grid (root osa) (vec (drop-last (::index-polku osa)))))
+  (let [polku (::index-polku osa)]
+    (when-not (empty? polku)
+      (get-in-grid (root osa) (vec (drop-last polku))))))
 
 
 (defn aseta-seurattava-koko! [grid seurattava-id]
@@ -707,7 +709,14 @@
                                 (update parametrit :class disj "piillotettu"))))
 
 (defn piillotettu? [grid]
-  (contains? (get-in (p/parametrit grid) :class) "piillotettu"))
+  (let [pred #(contains? (get (p/parametrit %) :class) "piillotettu")]
+    (loop [grid grid
+           piillotettu? (pred grid)]
+      (if (or (nil? grid)
+              piillotettu?)
+        piillotettu?
+        (recur (vanhempi grid)
+               (pred grid))))))
 
 (defn grid-osat
   ([grid] @(:osat grid))
@@ -929,7 +938,7 @@
                                                (let [kasittely-fn (fn [uusi-data]
                                                                     (r/next-tick (fn []
                                                                                    (apply toiminto! (root this) @data-atom uusi-data))))]
-                                                 (add-watch data-atom
+                                                 #_(add-watch data-atom
                                                             tapahtuman-nimi
                                                             (fn [_ _ vanha uusi]
                                                               (let [vanha-data (map #(get-in vanha %) polut)
