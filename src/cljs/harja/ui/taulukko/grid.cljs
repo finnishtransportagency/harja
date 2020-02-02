@@ -38,10 +38,8 @@
 
 ; - Datan käsittelijä
 (defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat]
-  (let [seurannan-tila (r/atom nil)
-        lisataan-seuranta? (atom false)
-        seurannat (dk/aseta-seuranta! data-atom seurannan-tila seurannat lisataan-seuranta?)
-        kuuntelijat (dk/rajapinnan-kuuntelijat data-atom seurannan-tila rajapinta haku-kuvaus lisataan-seuranta?)
+  (let [seurannat (dk/aseta-seuranta! data-atom seurannat)
+        kuuntelijat (dk/rajapinnan-kuuntelijat data-atom rajapinta haku-kuvaus)
         asettajat (dk/rajapinnan-asettajat data-atom rajapinta asetus-kuvaus)]
     {:kuuntelijat kuuntelijat
      :asettajat asettajat
