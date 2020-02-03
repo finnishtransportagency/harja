@@ -142,7 +142,7 @@
                  (mapv valitavoiterivi toteutumatta))))))
 
 (defn- muodosta-otsikkorivit []
-  [{:otsikko "Välitavoite" :leveys 10}
+  [{:otsikko "Työn kuvaus" :leveys 10}
    {:otsikko "Takaraja" :leveys 5}
    {:otsikko "Valmistunut" :leveys 10}
    {:otsikko "Kommentti" :leveys 10}])
@@ -152,13 +152,13 @@
         valitavoitteet (hae-valitavoitteet db {:urakka urakka-id})
         otsikkorivit (muodosta-otsikkorivit)
         datarivit (muodosta-raportin-rivit valitavoitteet)
-        raportin-nimi "Välitavoiteraportti"
+        raportin-nimi "Määräaikaan mennessä tehtävät työt"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja (when (empty? datarivit) "Ei raportoitavia välitavoitteita.")
+                 :tyhja (when (empty? datarivit) "Ei raportoitavia määräaikaan mennessä tehtäviä töitä.")
                  :sheet-nimi raportin-nimi}
       otsikkorivit
       datarivit]]))
