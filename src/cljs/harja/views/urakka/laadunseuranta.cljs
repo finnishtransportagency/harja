@@ -42,7 +42,7 @@
                     (istunto/ominaisuus-kaytossa? :vesivayla)
                     (urakka/vesivaylaurakka? urakka)
                     (oikeudet/urakat-laadunseuranta-sanktiot id)))
-    :siltatarkastukset (and (= :hoito tyyppi)
+    :siltatarkastukset (and (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
                             (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))))
 
@@ -68,9 +68,7 @@
          [sanktiot/sanktiot])
 
        "Siltatarkastukset" :siltatarkastukset
-       (when (and (= :hoito tyyppi)
-                  (valilehti-mahdollinen? :siltatarkastukset ur)
-                  (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
+       (when (valilehti-mahdollinen? :siltatarkastukset ur)
          ^{:key "siltatarkastukset"}
          [siltatarkastukset/siltatarkastukset])
 
