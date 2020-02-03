@@ -28,7 +28,8 @@ WHERE k.likainen = TRUE;
 UPDATE kustannussuunnitelma
 SET likainen = TRUE,
 muokattu = current_timestamp
-WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi);
+WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi AND
+  toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months'));
 
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
@@ -81,7 +82,15 @@ SELECT
 FROM maksuera m
        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
        JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi
-WHERE m.numero = :maksuera GROUP BY ka.vuosi;
+WHERE m.numero = :maksuera GROUP BY ka.vuosi
+UNION ALL
+SELECT
+  jhk.vuosi as vuosi,
+  Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa1
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- hoidon johto
+       JOIN johto_ja_hallintokorvaus jhk on tpi.urakka = jhk."urakka-id"
+WHERE m.numero = :maksuera GROUP BY jhk.vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT

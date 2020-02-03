@@ -240,7 +240,7 @@
     ; Osoitteelle tehdyt toimenpiteet
     (schema/optional-key :paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi-tai-nil+
     (schema/optional-key :raekoko) (schema/maybe schema/Int)
-    (schema/optional-key :massamenekki) (schema/maybe schema/Int) ;; kg/m2
+    (schema/optional-key :massamenekki) (schema/maybe schema/Num) ;; kg/m2
     (schema/optional-key :rc%) (schema/maybe schema/Int)
     (schema/optional-key :tyomenetelma) +tyomenetelma-tai-nil+
     (schema/optional-key :leveys) (schema/maybe schema/Num) ;; metriä
