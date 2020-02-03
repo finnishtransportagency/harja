@@ -39,8 +39,21 @@
 (defrecord LataaLiite [id])
 (defrecord PoistaLiite [id])
 
-(defn validoi-lomake [lomake]
-  )
+(defn validoi-lomake [lomake & kentat-ja-validaatiot]
+  (let [kentat-ja-validaatiot (partition 2 kentat-ja-validaatiot)
+        validaatiot (:validius (meta lomake))
+        validointi-reduseri (r/partial
+                              (fn [lomake kaikki [kentta validointi-fn]]
+                                (let [assoc-fn (if (vector? kentta) assoc-in assoc)
+                                      get-fn (if (vector? kentta) get-in get)]
+                                  (assoc-fn kaikki kentta (validointi-fn (get-fn lomake kentta)))))
+                              lomake)
+        lasketut-validaatiot (reduce validointi-reduseri
+                                     validaatiot
+                                     kentat-ja-validaatiot)]
+    (vary-meta lomake assoc :validius lasketut-validaatiot)))
+
+(defn lomake-validi? [lomake])
 
 (defn parsi-summa [summa]
   (loki/log "PARSI " summa)
@@ -67,7 +80,8 @@
               (if (vector? polku)
                 (if (fn? arvo) update-in assoc-in)
                 (if (fn? arvo) update assoc))
-              (into [acc polku arvo] (when (fn? arvo) args)))) lomake
+              (into [acc polku arvo] (when (fn? arvo) args))))
+          lomake
           (partition 2 polut-ja-arvot)))
 
 (defn lasku->lomake [{:keys [kohdistukset] :as lasku}]
@@ -135,7 +149,6 @@
         valiotsikko-rivi (fn [lisaa-fn & solut]
                            (apply lisaa-fn (map (fn [solu]
                                                   (let [{:keys [otsikko arvo luokka]} solu]
-                                                    (loki/log "Rivi" otsikko arvo)
                                                     [osa/->Teksti
                                                      (keyword (gensym "vo-rivi-"))
                                                      (str (or otsikko
@@ -158,7 +171,6 @@
                                                      (haettava kohde)))
                                  (palautuksen-avain kohde)))))
         luo-taulukon-summarivi (fn [toimenpiteet tehtavaryhmat taulukko [tpi rivit]]
-                                 (loki/log "RR" rivit taulukko @even?)
                                  (let [taulukko (if-not (= 1 (count rivit))
                                                   (do
                                                     (swap! even? not)
@@ -271,9 +283,7 @@
                                                      :taulukko)))})))
 
 (defn resetoi-kulut []
-  {:kohdistukset [{:rivi         0
-                   :tehtavaryhma nil
-                   :summa        nil}]})
+  tila/kulut-lomake-default)
 
 (defn formatoi-tulos [uudet-rivit]
   (loki/log "uudet" uudet-rivit)
@@ -333,7 +343,7 @@
   (process-event [{tulos :tulos} app]
     (-> app
         (assoc :aliurakoitsijat tulos)
-        (update-in [:meta :haetaan] dec)))
+        (update-in [:parametrit :haetaan] dec)))
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
     (loki/log "laskut haettu")
@@ -343,7 +353,7 @@
                :taulukko (p/paivita-taulukko!
                            (luo-kulutaulukko app)
                            (formatoi-tulos tulos)))
-        (update-in [:meta :haetaan] dec)))
+        (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
     (loki/log "Tulo!!!s  " tulos)
@@ -396,14 +406,14 @@
                          {:onnistui           ->LaskuhakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
                           :paasta-virhe-lapi? true}))
-    (update-in app [:meta :haetaan] inc))
+    (update-in app [:parametrit :haetaan] inc))
   HaeAliurakoitsijat
   (process-event [_ app]
     (tuck-apurit/get! :aliurakoitsijat
                       {:onnistui           ->AliurakoitsijahakuOnnistui
                        :epaonnistui        ->KutsuEpaonnistui
                        :paasta-virhe-lapi? true})
-    (update-in app [:meta :haetaan] inc))
+    (update-in app [:parametrit :haetaan] inc))
   HaeUrakanLaskut
   (process-event [{:keys [hakuparametrit]} app]
     (tuck-apurit/post! :kaikki-laskuerittelyt
@@ -411,7 +421,7 @@
                        {:onnistui           ->LaskuhakuOnnistui
                         :epaonnistui        ->KutsuEpaonnistui
                         :paasta-virhe-lapi? true})
-    (update-in app [:meta :haetaan] inc))
+    (update-in app [:parametrit :haetaan] inc))
   HaeUrakanToimenpiteetJaTehtavaryhmat
   (process-event
     [{:keys [urakka]} app]
@@ -451,43 +461,47 @@
     app)
   TallennaKulu
   (process-event
-    [_ {taulukko :taulukko aliurakoitsijat :aliurakoitsijat {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
-                                                                    laskun-numero lisatieto viite erapaiva]} :lomake :as app}]
+    [_ {aliurakoitsijat :aliurakoitsijat {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
+                                                                    laskun-numero lisatieto viite erapaiva] :as lomake} :lomake :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
-          kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)]
+          kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
+          {validoi-fn :validoi} (meta lomake)
+          validoitu-lomake (validoi-fn lomake)
+          {validi? :validi?} (meta validoitu-lomake)]
       ; { :toimenpideinstanssi :tehtavaryhma
       ;   :tehtava :maksueratyyppi
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
-      (tuck-apurit/post! :tallenna-lasku
-                         {:urakka-id     urakka
-                          :laskuerittely {:kohdistukset    kohdistukset
-                                          :viite           viite
-                                          :erapaiva        erapaiva
-                                          :urakka          urakka
-                                          :suorittaja-nimi (some #(when (= aliurakoitsija (:id %)) (:nimi %)) aliurakoitsijat)
-                                          :kokonaissumma   kokonaissumma
-                                          :laskun-numero   (js/parseFloat laskun-numero)
-                                          :lisatieto       lisatieto
-                                          :tyyppi          "laskutettava"}} ;TODO fix
-                         {:onnistui            ->TallennusOnnistui
-                          :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
-                                                                      (loki/log "app" app (:kulut app))
-                                                                      (as-> app a
-                                                                            (update a :kulut (fn [kulut]
-                                                                                               (conj
-                                                                                                 (filter
-                                                                                                   #(not= (:id tulos) (:id %))
-                                                                                                   kulut)
-                                                                                                  tulos)))
-                                                                            (assoc a :taulukko (p/paivita-taulukko!
-                                                                                                 (luo-kulutaulukko a)
-                                                                                                 (formatoi-tulos (:kulut a)))
-                                                                                     :syottomoodi false)
-                                                                            (update a :lomake resetoi-kulut)))}]
-                          :epaonnistui         ->KutsuEpaonnistui})
-      (assoc app :taulukko taulukko))
-    app)
+      (loki/log "validi?" validi? validoitu-lomake)
+      (when (true? validi?)
+        (tuck-apurit/post! :tallenna-lasku
+                           {:urakka-id     urakka
+                            :laskuerittely {:kohdistukset    kohdistukset
+                                            :viite           viite
+                                            :erapaiva        erapaiva
+                                            :urakka          urakka
+                                            :suorittaja-nimi (some #(when (= aliurakoitsija (:id %)) (:nimi %)) aliurakoitsijat)
+                                            :kokonaissumma   kokonaissumma
+                                            :laskun-numero   (js/parseFloat laskun-numero)
+                                            :lisatieto       lisatieto
+                                            :tyyppi          "laskutettava"}} ;TODO fix
+                           {:onnistui            ->TallennusOnnistui
+                            :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
+                                                                        (loki/log "app" app (:kulut app))
+                                                                        (as-> app a
+                                                                              (update a :kulut (fn [kulut]
+                                                                                                 (conj
+                                                                                                   (filter
+                                                                                                     #(not= (:id tulos) (:id %))
+                                                                                                     kulut)
+                                                                                                   tulos)))
+                                                                              (assoc a :taulukko (p/paivita-taulukko!
+                                                                                                   (luo-kulutaulukko a)
+                                                                                                   (formatoi-tulos (:kulut a)))
+                                                                                       :syottomoodi false)
+                                                                              (update a :lomake resetoi-kulut)))}]
+                            :epaonnistui         ->KutsuEpaonnistui}))
+      (assoc app :lomake validoitu-lomake)))
 
   ;; FORMITOIMINNOT
 

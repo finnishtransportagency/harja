@@ -43,7 +43,6 @@
     (get-in this (muuta-avain-rivi avain)))
 
   (aseta-arvo [this k1 a1]
-    (loki/log "asetetaan")
     (p/aseta-asian-arvo this [k1 a1] muuta-avain-rivi))
   (aseta-arvo [this k1 a1 k2 a2]
     (p/aseta-asian-arvo this [k1 a1 k2 a2] muuta-avain-rivi))

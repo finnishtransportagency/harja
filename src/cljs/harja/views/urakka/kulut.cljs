@@ -22,6 +22,12 @@
 
 (def avaimet->proppi {:arvo :value})
 
+(defn- koskettu-ja-validi? [{:keys [koskettu? validi?]}]
+  (if (not
+        (and
+          (true? koskettu?)
+          (true? validi?))) "-error" ""))
+
 (defn kulukentta
   [otsikko & params]
   (let [id (gensym "kulukentta-")
@@ -117,11 +123,18 @@
                        :4-hoitovuosi "4. hoitovuosi"
                        :5-hoitovuosi "5. hoitovuosi"})
 
+(def validius-oletus {:koskettu false
+                      :validi   false})
+
 (defn lisaa-kohdistus [m]
-  (conj m {:tehtavaryhma        nil
-           :toimenpideinstanssi nil
-           :summa               nil
-           :rivi                (count m)}))
+  (conj m (with-meta
+            {:tehtavaryhma        nil
+             :toimenpideinstanssi nil
+             :summa               nil
+             :rivi                (count m)}
+            {:tehtavaryhma        validius-oletus
+             :toimenpideinstanssi validius-oletus
+             :summa               validius-oletus})))
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
@@ -147,9 +160,9 @@
        [:div
         [:label "Aliurakoitsijan y-tunnus"]
         [:div [:input.input-default.komponentin-input {:disabled true
-                                                     :value (or (some #(when (= aliurakoitsija (:id %)) (:ytunnus %)) aliurakoitsijat)
-                                                                "Y-tunnus puuttuu")
-                                                     :type :text}]]]
+                                                       :value    (or (some #(when (= aliurakoitsija (:id %)) (:ytunnus %)) aliurakoitsijat)
+                                                                     "Y-tunnus puuttuu")
+                                                       :type     :text}]]]
        [kulukentta "Kirjoita tähän halutessasi lisätietoa" :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))]
        [kulukentta "Liite" :komponentti (fn []
                                           [liitteet/lisaa-liite (-> @tila/yleiset :urakka :id) {:liite-ladattu #(e! (tiedot/->LiiteLisatty %))}])]
@@ -158,59 +171,61 @@
        ])))
 
 #_(defn- validi?
-  [arvo tyyppi]
-  (let [validius (case tyyppi
-                   :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
-    (not (nil? validius))))
+    [arvo tyyppi]
+    (let [validius (case tyyppi
+                     :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
+      (not (nil? validius))))
 
 (defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
-  [:div.col-sm-6.col-xs-12
-   [:h2 "Koontilaskun tiedot"]
-   [kulukentta "Koontilaskun kuukausi *" :komponentti (fn []
-                                                      [yleiset/livi-pudotusvalikko
-                                                       {:vayla-tyyli? true
-                                                        :valinta      koontilaskun-kuukausi
-                                                        :valitse-fn   #(paivitys-fn :koontilaskun-kuukausi %)
-                                                        :format-fn    (fn [a]
-                                                                        (if (nil? a)
-                                                                          "Ei valittu"
-                                                                          (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
-                                                       (flatten
-                                                         (mapv
-                                                           (fn [kk]
-                                                             (map
-                                                               (fn [hv]
-                                                                 (keyword
-                                                                   (str
-                                                                     (name kk)
-                                                                     "/"
-                                                                     (name hv))))
-                                                               (sort #{:1-hoitovuosi
-                                                                       :2-hoitovuosi
-                                                                       :3-hoitovuosi
-                                                                       :4-hoitovuosi
-                                                                       :5-hoitovuosi})))
-                                                           kuukaudet))])]
-   [kulukentta "Laskun pvm *" :komponentti (fn []
-                                           [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :erapaiva %)
-                                                                                        :luokat        #{"input-default" "komponentin-input"}
-                                                                                        :pvm           erapaiva
-                                                                                        :pakota-suunta false
-                                                                                        :valittava?-fn #(pvm/jalkeen? % (pvm/nyt))}])]
-   [kulukentta "Laskun viite" :arvo viite :on-change #(paivitys-fn :viite (-> % .-target .-value))]
-   [kulukentta "Koontilaskun numero" :arvo laskun-numero :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))]
-   [kulukentta
-    "Kustannus € *"
-    :disabled (or (> (count kohdistukset) 1) false)
-    :arvo (or (when (> (count kohdistukset) 1)
-                (reduce (fn [a s]
-                          (+ a (tiedot/parsi-summa (:summa s))))
-                        0
-                        kohdistukset))
-              (get-in lomake [:kohdistukset 0 :summa])
-              0)
-    :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
-    :on-blur #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]])
+  (let [{koontilaskun-kuukausi-meta :koontilaskun-kuukausi
+         erapaiva-meta :erapaiva} (:validius (meta lomake))]
+    [:div.col-sm-6.col-xs-12
+     [:h2 "Koontilaskun tiedot"]
+     [kulukentta "Koontilaskun kuukausi *" :komponentti (fn []
+                                                          [yleiset/livi-pudotusvalikko
+                                                           {:vayla-tyyli? true
+                                                            :valinta      koontilaskun-kuukausi
+                                                            :valitse-fn   #(paivitys-fn :koontilaskun-kuukausi %)
+                                                            :format-fn    (fn [a]
+                                                                            (if (nil? a)
+                                                                              "Ei valittu"
+                                                                              (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
+                                                           (flatten
+                                                             (mapv
+                                                               (fn [kk]
+                                                                 (map
+                                                                   (fn [hv]
+                                                                     (keyword
+                                                                       (str
+                                                                         (name kk)
+                                                                         "/"
+                                                                         (name hv))))
+                                                                   (sort #{:1-hoitovuosi
+                                                                           :2-hoitovuosi
+                                                                           :3-hoitovuosi
+                                                                           :4-hoitovuosi
+                                                                           :5-hoitovuosi})))
+                                                               kuukaudet))])]
+     [kulukentta "Laskun pvm *" :komponentti (fn []
+                                               [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :erapaiva %)
+                                                                                            :luokat        #{(str "input" (koskettu-ja-validi? erapaiva-meta) "-default") "komponentin-input"}
+                                                                                            :pvm           erapaiva
+                                                                                            :pakota-suunta false
+                                                                                            :valittava?-fn #(pvm/jalkeen? % (pvm/nyt))}])]
+     [kulukentta "Laskun viite" :arvo viite :on-change #(paivitys-fn :viite (-> % .-target .-value))]
+     [kulukentta "Koontilaskun numero" :arvo laskun-numero :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))]
+     [kulukentta
+      "Kustannus € *"
+      :disabled (or (> (count kohdistukset) 1) false)
+      :arvo (or (when (> (count kohdistukset) 1)
+                  (reduce (fn [a s]
+                            (+ a (tiedot/parsi-summa (:summa s))))
+                          0
+                          kohdistukset))
+                (get-in lomake [:kohdistukset 0 :summa])
+                0)
+      :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
+      :on-blur #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
 
 (defn kohdistuksen-poisto [indeksi kohdistukset]
   (apply conj
@@ -219,20 +234,24 @@
 
 (defn tehtavaryhma-maara
   [{:keys [tehtavaryhmat kohdistukset-lkm paivitys-fn]} indeksi t]
-  (let [{:keys [tehtavaryhma summa]} t]
+  (let [{:keys [tehtavaryhma summa]} t
+        {summa-meta :summa tehtavaryhma-meta :tehtavaryhma} (meta t)]
     (loki/log "TR" tehtavaryhma (some #(when (= tehtavaryhma (:id %)) (:tehtavaryhma %)) tehtavaryhmat))
     [:div.col-xs-6 {:class (apply conj #{} (filter #(not (nil? %)) (list "" (when (> kohdistukset-lkm 1) "lomake-sisempi-osio"))))}
      [kulukentta "Tehtäväryhmä *" :komponentti (fn []
-                                               [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
-                                                                             :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
-                                                                             :valitse-fn   #(paivitys-fn [:kohdistukset indeksi :tehtavaryhma] (:id %)
-                                                                                                         [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
-                                                                             :format-fn    #(get % :tehtavaryhma)}
-                                                tehtavaryhmat])]
+                                                 [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
+                                                                               :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
+                                                                               :valitse-fn   #(paivitys-fn [:kohdistukset indeksi :tehtavaryhma] (:id %)
+                                                                                                           [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
+                                                                               :format-fn    #(get % :tehtavaryhma)}
+                                                  tehtavaryhmat])]
      (when (> kohdistukset-lkm 1)
        [:<>
         [:div
          [kulukentta "Kustannus € *" :arvo summa
+          :class #{(str "input" (if (not (or
+                                           (true? (:koskettu? summa-meta))
+                                           (true? (:validi? summa-meta)))) "-error" "") "-default") "komponentin-input"}
           :on-change #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value))
           :on-blur #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value tiedot/parsi-summa))]
          [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn :kohdistukset (r/partial kohdistuksen-poisto indeksi))} "Poista kohdistus"]]])]))
@@ -257,8 +276,8 @@
   (let [paivitys-fn (fn [& polut-ja-arvot]
                       (e! (tiedot/->PaivitaLomake polut-ja-arvot)))]
     (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
-      (let [{:keys [nayta]} lomake
-            validointi-fn (partial validoi #{:summa :koontilaskun-kuukausi})]
+      (loki/log "metaa " (meta lomake))
+      (let [{:keys [nayta]} lomake]
         [:div
          [debug/debug @tila/yleiset]
          [debug/debug lomake]
@@ -281,22 +300,17 @@
               (paivitys-fn :nayta nil))
             #(paivitys-fn :nayta nil)])]))))
 
-(defn- luo-kulumodaali
-  [e! app]
-  [kulujen-syottolomake e! app])
-
-
-
 (defn- kohdistetut*
   [e! app]
   (komp/luo
     (komp/piirretty (fn [this]
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
-    (fn [e! {:keys [taulukko syottomoodi laskut] :as app}]
+    (fn [e! {:keys [taulukko syottomoodi lomake] :as app}]
+      (loki/log "aa" lomake (meta lomake))
       [:div
        (if syottomoodi
-         [luo-kulumodaali e! app]
+         [kulujen-syottolomake e! app]
          [:div
           [debug/debug app]
           [debug/debug taulukko]
