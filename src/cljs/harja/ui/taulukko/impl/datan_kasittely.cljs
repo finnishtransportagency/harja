@@ -2,7 +2,9 @@
   (:require [harja.loki :refer [warn]]
             [reagent.core :as r]
             [cljs.core.async :as async]
-            [cljs.spec.alpha :as s])
+            [cljs.spec.alpha :as s]
+            [clojure.set :as clj-set]
+            [cljs.pprint :as pp])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -53,7 +55,7 @@
                      rajapinnan-nimi
                      (reaction (let [rajapinnan-data (apply haku (mapv deref kursorit))]
                                  (when-not (s/valid? (get rajapinta rajapinnan-nimi) rajapinnan-data)
-                                   (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (cljs.pprint/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
+                                   (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
                                          (str (s/explain (get rajapinta rajapinnan-nimi) rajapinnan-data))))
                                  rajapinnan-data)))))
           {}
@@ -70,29 +72,48 @@
                                                      (apply f tila args))))])
              kuvaus)))
 
-(defonce kaikki-seurannat (atom #{}))
-(defonce kaydyt-seurannat (atom [#{}]))
+(defonce kaikki-seurannat (atom nil))
+(defonce kaydyt-seurannat (atom nil))
 (defonce seurannan-valitila (atom nil))
+(defonce seurannan-tila (atom {}))
 
+(defn paivita-datanseuranta-atomit [data-atom kaikki-taman-seurannat]
+  (let [datan-kasittelytunniste (get @data-atom ::tunniste)]
+    (swap! kaikki-seurannat (fn [kaikki-seurannat]
+                              (update kaikki-seurannat
+                                      datan-kasittelytunniste
+                                      (fn [seurannat]
+                                        (clj-set/union seurannat kaikki-taman-seurannat)))))))
+
+(defn init-datanseuranta-atomit [data-atom]
+  (let [datan-kasittelytunniste (gensym "datan-kasittely")]
+    (swap! data-atom (fn [tila]
+                       (assoc tila ::tunniste datan-kasittelytunniste)))
+    (swap! kaydyt-seurannat (fn [tila]
+                              (assoc tila datan-kasittelytunniste [#{}])))
+    (swap! seurannan-valitila (fn [tila]
+                                (assoc tila datan-kasittelytunniste nil)))))
 
 (defn aseta-seuranta! [data-atom seurannat]
-  (println (str "ASETA SEURANTA! " (keys seurannat)))
+  (println "AJETAAN INIT ARVOT")
   (doseq [[seurannan-nimi {init :init}] seurannat]
     (when (fn? init)
       (swap! data-atom
              (fn [tila]
-               (println "SUORITETAAN INIT: " seurannan-nimi)
                (merge tila (init tila))))))
-  (let [kaikki-taman-seurannat (into #{} (keys seurannat))
-        _ (swap! kaikki-seurannat (fn [seurannat] (clojure.set/union seurannat kaikki-taman-seurannat)))
+  (when-not (get @data-atom ::tunniste)
+    (init-datanseuranta-atomit data-atom))
+  (paivita-datanseuranta-atomit data-atom (into #{} (keys seurannat)))
+  (let [datan-kasittelytunniste (get @data-atom ::tunniste)
         seuranta-fn! (fn [{:keys [aseta polut]} seurannan-nimi uusi-data]
-                       (println "SUORITETAAN SEURANTA: " seurannan-nimi)
                        (swap! seurannan-valitila
-                              (fn [tila]
-                                (let [seurattava-data (or tila uusi-data)]
-                                  (println "foo")
-                                  (merge tila
-                                         (apply aseta seurattava-data (doall (map #(get-in seurattava-data %) polut))))))))]
+                              (fn [kaikki-tilat]
+                                (update kaikki-tilat
+                                        datan-kasittelytunniste
+                                        (fn [tila]
+                                          (let [seurattava-data (or tila uusi-data)]
+                                            (merge tila
+                                                   (apply aseta seurattava-data (doall (map #(get-in seurattava-data %) polut))))))))))]
 
 
     (into {}
@@ -100,10 +121,6 @@
                         (add-watch data-atom
                                    seurannan-nimi
                                    (fn [_ _ vanha uusi]
-                                     (println (str "SEURANTA: " seurannan-nimi))
-                                     (js/console.log (str "-->- KAIKKI SEURANNAT: " @kaikki-seurannat))
-                                     (js/console.log (str "->- KAYDYT SEURANNAT: " @kaydyt-seurannat))
-
                                      ;; cursorin dereffaaminen ei pelkästään palauta sen nykyistä arvoa, vaan
                                      ;; se saattaa myös asettaa uuden arvon riippuen sen käyttämän ratomin tilasta.
                                      ;; Koska tässä swappaillaan add-watchin sisällä, on ratomilla aina se vanha arvo,
@@ -117,62 +134,64 @@
                                                  uusi))))
 
                                      (swap! kaydyt-seurannat (fn [ks]
-                                                               (vec
-                                                                 (loop [[kierros & loput] (reverse ks)
-                                                                        i (dec (count ks))
-                                                                        kierrokset ks
-                                                                        lisatty? false]
-                                                                   (cond
-                                                                     lisatty? kierrokset
-                                                                     (nil? kierros) (conj kierrokset #{seurannan-nimi})
-                                                                     :else (let [kierros-sisaltaa-seurannan? (contains? kierros seurannan-nimi)]
-                                                                             (recur loput
-                                                                                    (dec i)
-                                                                                    (if kierros-sisaltaa-seurannan?
-                                                                                      kierrokset
-                                                                                      (vec (map-indexed (fn [index kierros]
-                                                                                                          (if (= index i)
-                                                                                                            (conj kierros seurannan-nimi)
-                                                                                                            kierros))
-                                                                                                        kierrokset)))
-                                                                                    (not kierros-sisaltaa-seurannan?))))))))
+                                                               (update ks
+                                                                       datan-kasittelytunniste
+                                                                       (fn [ks]
+                                                                         (vec
+                                                                           (loop [[kierros & loput] (reverse ks)
+                                                                                  i (dec (count ks))
+                                                                                  kierrokset ks
+                                                                                  lisatty? false]
+                                                                             (cond
+                                                                               lisatty? kierrokset
+                                                                               (nil? kierros) (conj kierrokset #{seurannan-nimi})
+                                                                               :else (let [kierros-sisaltaa-seurannan? (contains? kierros seurannan-nimi)]
+                                                                                       (recur loput
+                                                                                              (dec i)
+                                                                                              (if kierros-sisaltaa-seurannan?
+                                                                                                kierrokset
+                                                                                                (vec (map-indexed (fn [index kierros]
+                                                                                                                    (if (= index i)
+                                                                                                                      (conj kierros seurannan-nimi)
+                                                                                                                      kierros))
+                                                                                                                  kierrokset)))
+                                                                                              (not kierros-sisaltaa-seurannan?))))))))))
                                      (let [vanha-data (doall (map #(get-in vanha %) polut))
                                            uusi-data (doall (map #(get-in uusi %) polut))
 
                                            seurattava-data-muuttunut? (not= vanha-data uusi-data)
                                            asetetaan-uusi-data? (and seurattava-data-muuttunut?
                                                                      *muutetaan-seurattava-arvo?*)]
-                                       (js/console.log (str "<->SEURANTA " seurannan-nimi " AJAMINEN, \n"
-                                                            "MUUTETAAN?: " asetetaan-uusi-data? "\n"
-                                                            "seurattava-data-muuttunut?: " seurattava-data-muuttunut? "\n"
-                                                            "*muutetaan-seurattava-arvo?*: " *muutetaan-seurattava-arvo?* "\n"
-                                                            "MUUTTUNUT DATA: "))
+                                       (when (and (#{:hankinnat-yhteensa-seuranta :yhteensa-seuranta} seurannan-nimi)
+                                                  seurattava-data-muuttunut?))
                                        (when asetetaan-uusi-data?
                                          (seuranta-fn! seuranta seurannan-nimi uusi)))
-                                     (when (= @kaikki-seurannat (last @kaydyt-seurannat))
-                                       (js/console.log (str "KAIKKI SEURANNAT KÄYTY"))
-                                       (js/console.log (str "-> KAIKKI SEURANNAT: " @kaikki-seurannat))
-                                       (js/console.log (str "-> KAYDYT SEURANNAT: " @kaydyt-seurannat))
-                                       (when-let [sv @seurannan-valitila]
-                                         (reset! seurannan-valitila nil)
-                                         (println "->SWAPATAAN DATA ATOM")
-                                         (js/console.log (str "DATA " (get-in sv [:gridit :suunnittellut-hankinnat :yhteenveto :data])))
+                                     (when (= (get @kaikki-seurannat datan-kasittelytunniste) (last (get @kaydyt-seurannat datan-kasittelytunniste)))
+                                       (when-let [sv (get @seurannan-valitila datan-kasittelytunniste)]
+                                         (swap! seurannan-valitila #(assoc % datan-kasittelytunniste nil))
                                          (let [data-atom-sisalto (swap! data-atom merge sv)]
-                                           (when (= 1 (count @kaydyt-seurannat))
+                                           (when (= 1 (count (get @kaydyt-seurannat datan-kasittelytunniste)))
                                              ;; Lopullinen muutos data-atomiin pitää tehdä joskus muuloin kuin
                                              ;; add-watchin sisällä, kosksa add-watchin alun perin laukaisema muutos
                                              ;; muutoin lopussa overridaa tuloksen cursoreille.
+                                             (swap! seurannan-tila (fn [kaikki-seurannat]
+                                                                     (update kaikki-seurannat
+                                                                             datan-kasittelytunniste
+                                                                             (fn [vanha-seurannan-tila]
+                                                                               (merge-with (fn [w u]
+                                                                                             (if (and (coll? w)
+                                                                                                      (coll? u))
+                                                                                               (merge w u)
+                                                                                               u))
+                                                                                           vanha-seurannan-tila data-atom-sisalto)))))
                                              (r/next-tick (fn []
-                                                            (reset! data-atom data-atom-sisalto)))))
-                                         (println "<- DATA ATOM SWAPATTU"))
-                                       (swap! kaydyt-seurannat #(vec (butlast %))))
+                                                            (reset! data-atom (get @seurannan-tila datan-kasittelytunniste)))))))
+                                       (swap! kaydyt-seurannat #(update % datan-kasittelytunniste (fn [ks] (vec (butlast ks))))))
                                      (when (instance? reagent.ratom/RCursor data-atom)
-                                       (set! (.-reaction data-atom) nil))
-                                     (println "Done!")))
+                                       (set! (.-reaction data-atom) nil))))
                         [seurannan-nimi {:seurannan-lopetus! (fn []
                                                                (remove-watch data-atom seurannan-nimi))
                                          :seuranta-trigger! (fn []
-                                                              (println "SEURANTA TRIGGERÖITY")
                                                               (seuranta-fn! seuranta seurannan-nimi @data-atom))}])
                       seurannat)))))
 

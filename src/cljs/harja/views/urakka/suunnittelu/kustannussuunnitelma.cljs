@@ -79,13 +79,14 @@
   [vaihda-fn txt]
   {:pre [(fn? vaihda-fn)]}
   (fn suunnittele-kuukausitasolla-filter [this]
-    (let [kuukausitasolla? @(grid/solun-asia this :osan-derefable)]
+    (let [kuukausitasolla? @(grid/solun-asia this :osan-derefable)
+          osan-id (str (grid/hae-osa this :id))]
       (println "VaylaCheckbox - kuukausitasolla?: " kuukausitasolla?)
-      [:<>
-       [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
-        {:type "checkbox" :checked kuukausitasolla?
-         :on-change (partial (:vaihda-fn this) this)}]
-       [:label {:for "kopioi-tuleville-hoitovuosille"} (:txt this)]])))
+      [:div
+       [:input.vayla-checkbox {:id osan-id
+                               :type "checkbox" :checked kuukausitasolla?
+                               :on-change (partial (:vaihda-fn this) this)}]
+       [:label {:for osan-id} (:txt this)]])))
 
 ;"Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
 ;     'Täytä alas' nappi päälle."
@@ -178,8 +179,10 @@
                                                  osat)))
                      (grid/rivi {:osat [(vayla-checkbox (fn [this event]
                                                           (.preventDefault event)
+                                                          (println "KUUKAUSITASOLLA NAPPIA PAINETTU")
                                                           (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
                                                                                                               :kuukausitasolla?))]
+                                                            (println "KUUKAUSITASOLLA? " kuukausitasolla?)
                                                             (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] kuukausitasolla?))))
                                                         "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
                                         (solu/tyhja)

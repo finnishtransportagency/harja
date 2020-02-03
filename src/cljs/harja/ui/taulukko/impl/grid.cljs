@@ -938,7 +938,7 @@
                                                (let [kasittely-fn (fn [uusi-data]
                                                                     (r/next-tick (fn []
                                                                                    (apply toiminto! (root this) @data-atom uusi-data))))]
-                                                 #_(add-watch data-atom
+                                                 (add-watch data-atom
                                                             tapahtuman-nimi
                                                             (fn [_ _ vanha uusi]
                                                               (let [vanha-data (map #(get-in vanha %) polut)

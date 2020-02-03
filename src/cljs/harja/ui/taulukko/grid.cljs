@@ -150,7 +150,8 @@
 
 (defn hae-osa [osa haettava-asia]
   (case haettava-asia
-    :nimi (gop/nimi osa)))
+    :nimi (gop/nimi osa)
+    :id (gop/id osa)))
 
 ; - Soluun liittyvät haut
 (defn solun-asia [solu haettava-asia]
