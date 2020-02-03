@@ -341,12 +341,7 @@ FROM tr_valin_suolatoteumat(:urakka::integer, :tie::integer, :alkuosa::integer, 
 		    :alkupvm, :loppupvm);
 
 -- name: hae-pohjavesialueen-suolatoteuma
-SELECT sum(rp.maara) AS maara_t_per_km,
-       sum(rp.maara)*sum(st_length(pv.alue))/1000 AS yhteensa,
-       ts.talvisuolaraja AS kayttoraja
+SELECT sum(rp.maara) AS maara_yhteensa
 FROM suolatoteuma_reittipiste rp
-  INNER JOIN pohjavesialue pv ON pv.tunnus = rp.pohjavesialue
-  LEFT JOIN pohjavesialue_talvisuola ts on ts.pohjavesialue = rp.pohjavesialue
-WHERE rp.pohjavesialue=:pohjavesialue
+WHERE rp.pohjavesialue = :pohjavesialue
   AND rp.aika BETWEEN :alkupvm AND :loppupvm
-GROUP BY pv.tunnus, ts.talvisuolaraja;
