@@ -294,7 +294,7 @@
                                                                                                                        :class #{"input-default"}}
                                                                                                                       {:fmt summa-formatointi-uusi
                                                                                                                        :fmt-aktiiviselle summa-formatointi-aktiivinen})
-                                                                                                    (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
+                                                                                                    (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}} {:fmt summa-formatointi})
                                                                                                     (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))
                                                                            lapset))))
                                       kopio))

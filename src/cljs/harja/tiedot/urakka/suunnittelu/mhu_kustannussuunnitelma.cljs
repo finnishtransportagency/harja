@@ -132,7 +132,15 @@
                                                                                                                   :haku (fn [suunnittellut-hankinnat valittu-toimenpide johdetut-arvot]
                                                                                                                           (let [arvot (mapv (fn [m]
                                                                                                                                               (select-keys m #{:summa :aika :yhteensa}))
-                                                                                                                                            (get-in suunnittellut-hankinnat [valittu-toimenpide (dec hoitokauden-numero)]))]
+                                                                                                                                            (get-in suunnittellut-hankinnat [valittu-toimenpide (dec hoitokauden-numero)]))
+                                                                                                                                johdetut-arvot (if (nil? johdetut-arvot)
+                                                                                                                                                 (mapv (fn [{summa :summa}]
+                                                                                                                                                         {:yhteensa summa})
+                                                                                                                                                       arvot)
+                                                                                                                                                 (mapv (fn [ja a]
+                                                                                                                                                         (update ja :yhteensa #(or % (get a :summa))))
+                                                                                                                                                       johdetut-arvot
+                                                                                                                                                       arvot))]
                                                                                                                             (println "JOHDETUT ARVOT: " johdetut-arvot)
                                                                                                                             (if (nil? johdetut-arvot)
                                                                                                                               arvot

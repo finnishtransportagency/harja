@@ -29,7 +29,9 @@
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
-  (let [jarjestys-map (zipmap jarjestys (range))]
+  (let [jarjestys-map (zipmap jarjestys (range))
+        data (merge (zipmap jarjestys (repeat nil))
+                    data)]
     (if (or (record? data) (map? data))
       (sort-by key
                #(compare (jarjestys-map %1) (jarjestys-map %2))
