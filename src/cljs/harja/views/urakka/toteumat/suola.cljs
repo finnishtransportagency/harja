@@ -217,11 +217,15 @@
               :tyhja (if (empty? toteuma)
                        "Ei tietoja")
               }
-             [{:otsikko "Määrä t/km"
+             [{:otsikko "Pohjavesialueen pituus (km)"
+               :nimi :pituus
+               :fmt #(fmt/desimaaliluku-opt % 1)
+               :leveys 10}
+              {:otsikko "Määrä t/km"
                :nimi :maara_t_per_km
                :fmt #(fmt/desimaaliluku-opt % 1)
                :leveys 10}
-              {:otsikko "Yhteensä"
+              {:otsikko "Määrä yhteensä"
                :leveys 10
                :fmt #(fmt/desimaaliluku-opt % 1)
                :nimi :yhteensa}
