@@ -1,5 +1,5 @@
 (ns harja.ui.taulukko.impl.datan-kasittely
-  (:require [harja.loki :refer [warn]]
+  (:require [harja.loki :refer [warn error]]
             [reagent.core :as r]
             [cljs.core.async :as async]
             [cljs.spec.alpha :as s]
@@ -71,7 +71,12 @@
                                     (warn "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. "
                                           (s/conform (get rajapinta rajapinnan-nimi) args)))
                                   (swap! data-atom (fn [tila]
-                                                     (apply f tila args))))])
+                                                     (try (apply f tila args)
+                                                          (catch :default e
+                                                            (error (str "RAJAPINNAN ASTTAJA " rajapinnan-nimi " KAATUI VIRHEESEEN " (.-name e) "\n"
+                                                                        "ANNETUT ARGUMENTIT:\n" (with-out-str (pp/pprint args))))
+                                                            (error e)
+                                                            tila)))))])
              kuvaus)))
 
 (defonce kaikki-seurannat (atom nil))

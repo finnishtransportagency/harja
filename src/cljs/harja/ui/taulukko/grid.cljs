@@ -114,12 +114,20 @@
   ([osa etsittavan-osan-tunniste lapset]
    (g/etsi-osa osa etsittavan-osan-tunniste lapset)))
 
-(defn nakyvat-rivit [grid]
+(defn gridin-rivit [grid pred]
+  {:pre [(satisfies? gp/IGrid grid)
+         (fn? pred)]
+   :post [(vector? %)
+          (every? (fn [osa] (satisfies? gop/IGridOsa osa)) %)]}
   (g/gridin-osat-vektoriin grid
-                           (fn [osa]
-                             (and (instance? alue/Rivi osa)
-                                  (not (gop/piillotettu? osa))))
+                           pred
                            identity))
+
+(defn nakyvat-rivit [grid]
+  (gridin-rivit grid
+                (fn [osa]
+                  (and (instance? alue/Rivi osa)
+                       (not (gop/piillotettu? osa))))))
 
 ; - Dataan liittyvät haut
 (defn hae-grid [grid haettava-asia]
@@ -146,7 +154,9 @@
 
 (defn osien-yhteinen-asia [osa haettava-asia]
   (case haettava-asia
-    :datan-kasittelija (::g/datan-kasittelija osa)))
+    :datan-kasittelija (::g/datan-kasittelija osa)
+    :index-polku (::g/index-polku osa)
+    :nimi-polku (::g/nimi-polku osa)))
 
 (defn hae-osa [osa haettava-asia]
   (case haettava-asia

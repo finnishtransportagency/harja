@@ -50,6 +50,11 @@
           (when (re-matches (re-pattern (re/numero-re)) arvo)
             (js/Number arvo)))))
 
+(defmethod lisaa-kaytos :oma
+  [{{f :f} :oma} toiminto]
+  (comp toiminto
+        f))
+
 (defmethod lisaa-kaytos :default
   [kaytos toiminto]
   (loki/warn "KAYTOSTÄ: " kaytos " EI OLE MÄÄRITETTY!")
