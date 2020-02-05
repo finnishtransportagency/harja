@@ -202,8 +202,8 @@
           ur
           paallystys-tiedot/yhan-paallystyskohteet
           {:otsikko (if @tallennus-gif?
-                      [ajax-loader-pieni yha-kohteet-otsikko]
-                      yha-kohteet-otsikko)
+                      [ajax-loader-pieni (yha-kohteet-otsikko @urakka/valittu-urakan-vuosi)]
+                      (yha-kohteet-otsikko @urakka/valittu-urakan-vuosi))
            :kohdetyyppi :paallystys
            :yha-sidottu? true
            :piilota-tallennus? (when (< @urakka/valittu-urakan-vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.

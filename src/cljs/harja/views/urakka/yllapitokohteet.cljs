@@ -943,7 +943,7 @@
   piilota-tallennus?  True jos tallennusnappi piilotetaan
   tallenna            Funktio tallennusnapille
   kun-onnistuu        Funktio tallennuksen onnistumiselle"
-  [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus? piilota-toiminnot?] :as optiot}]
+  [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus?] :as optiot}]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         g (grid/grid-ohjaus)
