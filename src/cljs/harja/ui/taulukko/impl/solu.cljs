@@ -64,11 +64,19 @@
         nil)
     arvo))
 
+(defn taman-derefable [this]
+  (let [osan-derefable (::grid/osan-derefable this)]
+    (if osan-derefable
+      osan-derefable
+      (do
+        (warn (str "Solulle ") (type this) (str " (" (:id this) ") ei ole annettu osan-derefablea!"))
+        (r/atom nil)))))
+
 (defrecord Teksti [id parametrit]
   gop/IPiirrettava
   (-piirra [this]
     (let [{:keys [id class]} (:parametrit this)
-          taman-data (::grid/osan-derefable this)
+          taman-data (taman-derefable this)
           arvo (korjaa-NaN @taman-data this)]
       [:div.solu.solu-teksti {:class (when class
                                        (apply str (interpose " " class)))
@@ -127,7 +135,7 @@
   gop/IPiirrettava
   (-piirra [this]
     (let [{:keys [id class]} (:parametrit this)
-          taman-data (::grid/osan-derefable this)
+          taman-data (taman-derefable this)
           arvo (korjaa-NaN @taman-data this)]
       [:a.solu.solu-linkki {:class (when class
                                      (apply str (interpose " " class)))
@@ -190,7 +198,7 @@
                       checked? default-checked? indeterminate?
                       alt height src width
                       autocomplete max max-length min min-length pattern placeholder size]} (:parametrit this)
-              taman-data (::grid/osan-derefable this)
+              taman-data (taman-derefable this)
               arvo (korjaa-NaN @taman-data this)
               parametrit (into {}
                                (remove (fn [[_ arvo]]
@@ -285,7 +293,7 @@
                                                (:kayttaytymiset this))]
       (fn [this]
         (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
-              taman-data (::grid/osan-derefable this)
+              taman-data (taman-derefable this)
               arvo (korjaa-NaN @taman-data this)
               parametrit (into {}
                                (remove (fn [[_ arvo]]
@@ -355,7 +363,7 @@
     (let [auki? (atom auki-alussa?)]
       (fn [this]
         (let [{:keys [id class ikoni]} (:parametrit this)
-              taman-data (::grid/osan-derefable this)
+              taman-data (taman-derefable this)
               arvo (korjaa-NaN @taman-data this)
               ikoni (or ikoni "chevron")
               ikoni-auki (if (= ikoni "chevron")

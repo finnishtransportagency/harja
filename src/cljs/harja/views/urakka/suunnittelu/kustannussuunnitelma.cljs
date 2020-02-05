@@ -254,8 +254,14 @@
 
 (defn suunnittellut-hankinnat-grid []
   (let [nyt (pvm/nyt)
-        g (grid/grid-pohjasta g-pohjat/grid-pohja-4)
-        g (grid/aseta-root-fn g {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid]))
+        g (grid/grid-pohjasta g-pohjat/grid-pohja-4
+                              (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnittellut-hankinnat :grid] g)))
+                              {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid]))
+                                                     :paivita! (fn [f]
+                                                                 (swap! tila/suunnittelu-kustannussuunnitelma
+                                                                        (fn [tila]
+                                                                          (update-in tila [:gridit :suunnittellut-hankinnat :grid] f))))})
+        #_#_g (grid/aseta-root-fn g {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid]))
                                  :paivita! (fn [f]
                                              (swap! tila/suunnittelu-kustannussuunnitelma
                                                     (fn [tila]
@@ -350,7 +356,7 @@
                                                                                                                                                          (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
                                                                                                                                                          (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
                                                                                                                                                          (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
-                                                                                                                                          #_#_:on-key-down (fn [event]
+                                                                                                                                          :on-key-down (fn [event]
                                                                                                                                                              (when (= "Enter" (.. event -key))
                                                                                                                                                                (.. event -target blur)))}
                                                                                                                               :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
@@ -360,30 +366,6 @@
                                                                                                                                            :class #{"input-default"}}
                                                                                                                               :fmt summa-formatointi-uusi
                                                                                                                               :fmt-aktiiviselle summa-formatointi-aktiivinen})
-                                                                                                    #_(gov/tyhja->syote (get osat 1)
-                                                                                                                      {#_#_:on-change (fn [arvo]
-                                                                                                                                    (when arvo
-                                                                                                                                      (t/paivita-solun-arvo :aseta-suunnittellut-hankinnat! arvo solu/*this* false hoitokauden-numero)))
-                                                                                                                       :on-focus (fn [_] (maara-taytalaatikolla! solu/*this*))
-                                                                                                                       #_#_:on-blur (fn [arvo]
-                                                                                                                                  (when arvo
-                                                                                                                                    (t/paivita-solun-arvo :aseta-suunnittellut-hankinnat! arvo solu/*this* true hoitokauden-numero)
-                                                                                                                                    (t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
-                                                                                                                                  #_(when arvo
-                                                                                                                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                                                                                                                      (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                                                                                                                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
-                                                                                                                       #_#_:on-key-down (fn [event]
-                                                                                                                                      (when (= "Enter" (.. event -key))
-                                                                                                                                        (.. event -target blur)))}
-                                                                                                                       {} #_{:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                                   {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                                       :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
-                                                                                                                      {:size 2
-                                                                                                                       :class #{"input-default"}}
-                                                                                                                      {:fmt summa-formatointi-uusi
-                                                                                                                       :fmt-aktiiviselle summa-formatointi-aktiivinen})
                                                                                                     (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}} {:fmt summa-formatointi})
                                                                                                     (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))
                                                                            lapset))))
@@ -400,9 +382,262 @@
                                   (update koko :rivi (fn [rivi]
                                                        (assoc rivi :korkeudet {0 "40px"
                                                                                2 "40px"})))))
+    #_(println "suunnittellut-hankinnat-grid GRIDIN MUOTO")
+    #_(grid/pre-walk-grid! g
+                         (fn [osa]
+                           (println (or (grid/hae-osa osa :nimi)
+                                        (grid/hae-osa osa :id)))))
     (grid/paivita-grid! g :parametrit (fn [parametrit] (assoc parametrit :id "suunnittellut-hankinnat-taulukko")))
+    (grid/rajapinta-grid-yhdistaminen! g
+                                       t/suunnittellut-hankinnat-rajapinta
+                                       (t/suunnittellut-hankinnat-dr)
+                                       (doall (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
+                                                                            :solun-polun-pituus 1
+                                                                            :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                            :datan-kasittely (fn [otsikot]
+                                                                                               (mapv (fn [otsikko]
+                                                                                                       otsikko)
+                                                                                                     (vals otsikot)))}
+                                                      [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
+                                                                               :solun-polun-pituus 1
+                                                                               :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                               :datan-kasittely (fn [yhteensa]
+                                                                                                  (mapv (fn [[_ nimi]]
+                                                                                                          nimi)
+                                                                                                        yhteensa))}}
+
+                                                     (doall
+                                                       (reduce (fn [grid-kasittelijat hoitokauden-numero]
+                                                                 (merge grid-kasittelijat
+                                                                        {[::g-pohjat/data (dec hoitokauden-numero) ::g-pohjat/data-yhteenveto] {:rajapinta (keyword (str "yhteenveto-" hoitokauden-numero))
+                                                                                                                                                :solun-polun-pituus 1
+                                                                                                                                                :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                                                                :datan-kasittely (fn [yhteenveto]
+                                                                                                                                                                   (mapv (fn [[_ v]]
+                                                                                                                                                                           v)
+                                                                                                                                                                         yhteenveto))
+                                                                                                                                                :tunnisteen-kasittely (fn [osat _]
+                                                                                                                                                                        (mapv (fn [osa]
+                                                                                                                                                                                (when (instance? solu/Syote osa)
+                                                                                                                                                                                  :maara))
+                                                                                                                                                                              (grid/hae-grid osat :lapset)))}
+                                                                         [::g-pohjat/data (dec hoitokauden-numero) ::g-pohjat/data-sisalto] {:rajapinta (keyword (str "suunnittellut-hankinnat-" hoitokauden-numero))
+                                                                                                                                             :solun-polun-pituus 2
+                                                                                                                                             :jarjestys [{:keyfn :aika
+                                                                                                                                                          :comp (fn [aika-1 aika-2]
+                                                                                                                                                                  (pvm/ennen? aika-1 aika-2))}
+                                                                                                                                                         [:aika :maara :yhteensa :indeksikorjattu]]
+                                                                                                                                             :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
+                                                                                                                                                                (mapv (fn [rivi]
+                                                                                                                                                                        (mapv (fn [[_ v]]
+                                                                                                                                                                                v)
+                                                                                                                                                                              rivi))
+                                                                                                                                                                      vuoden-hoidonjohtopalkkiot))
+                                                                                                                                             :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                                                                     (vec
+                                                                                                                                                                       (map-indexed (fn [i rivi]
+                                                                                                                                                                                      (vec
+                                                                                                                                                                                        (map-indexed (fn [j osa]
+                                                                                                                                                                                                       (when (or (instance? solu/Syote osa)
+                                                                                                                                                                                                                 (instance? SyoteTaytaAlas osa))
+                                                                                                                                                                                                         {:osa :maara
+                                                                                                                                                                                                          :aika (:aika (get data j))
+                                                                                                                                                                                                          :osan-paikka [i j]}))
+                                                                                                                                                                                                     (grid/hae-grid rivi :lapset))))
+                                                                                                                                                                                    (grid/hae-grid data-sisalto-grid :lapset))))}}))
+                                                               {}
+                                                               (range 1 6))))))))
+
+(defn johto-ja-hallintokorvaus-laskulla-grid []
+  (let [nyt (pvm/nyt)
+        g (grid/grid-pohjasta g-pohjat/grid-pohja-5
+                              (fn [g]
+                                (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaus :grid] g)))
+                              {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :johto-ja-hallintokorvaus :grid]))
+                                                     :paivita! (fn [f]
+                                                                 (swap! tila/suunnittelu-kustannussuunnitelma
+                                                                        (fn [tila]
+                                                                          (update-in tila [:gridit :johto-ja-hallintokorvaus :grid] f))))})
+        #_#_g (grid/aseta-root-fn g {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :johto-ja-hallintokorvaus :grid]))
+                                 :paivita! (fn [f]
+                                             (swap! tila/suunnittelu-kustannussuunnitelma
+                                                    (fn [tila]
+                                                      (update-in tila [:gridit :johto-ja-hallintokorvaus :grid] f))))})]
+    (grid/poista-rivi! g (grid/get-in-grid g [::g-pohjat/yhteenveto]))
+    (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/otsikko])
+                        :lapset
+                        (fn [lapset]
+                          (mapv (fn [lapsi]
+                                  (gov/tyhja->teksti lapsi {:class #{"table-default" "table-default-header"}}))
+                                lapset)))
+    (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/data])
+                        :lapset
+                        (fn [lapset]
+                          (let [otsikko-data-pohja (first lapset)]
+                            #_(println "OTSIKKO DATA POHJA")
+                            #_(grid/pre-walk-grid! otsikko-data-pohja
+                                                   (fn [osa]
+                                                     (println (str "-> " (or (grid/hae-osa osa :nimi) "Nimetön") " - koko: " (get @((:harja.ui.taulukko.impl.grid/koko-fn osa)) (:id osa))))))
+                            (mapv (fn [_]
+                                    (let [kopio (grid/samanlainen-osa otsikko-data-pohja)]
+                                      (grid/paivita-grid! (grid/get-in-grid kopio [::g-pohjat/data-yhteenveto])
+                                                          :lapset
+                                                          (fn [lapset]
+                                                            [(gov/tyhja->laajenna (get lapset 0)
+                                                                                  (fn [this auki?]
+                                                                                    (t/laajenna-solua-klikattu this auki? "johto-ja-hallintokorvaus-laskulla-taulukko"))
+                                                                                  false
+                                                                                  {:class #{"table-default" "lihavoitu"}})
+                                                             (gov/tyhja->syote (get lapset 1)
+                                                                               {:on-change (fn [arvo]
+                                                                                             (when arvo
+                                                                                               (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                      :arvo arvo
+                                                                                                                      :solu solu/*this*}
+                                                                                                                     false)))
+                                                                                :on-blur (fn [arvo]
+                                                                                           (when arvo
+                                                                                             (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                    :arvo arvo
+                                                                                                                    :solu solu/*this*
+                                                                                                                    :jarjesta-data? true
+                                                                                                                    :triggeroi-seuranta? true}
+                                                                                                                   true)
+                                                                                             #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
+                                                                                           #_(when arvo
+                                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
+                                                                                               (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                               (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                :on-key-down (fn [event]
+                                                                                               (when (= "Enter" (.. event -key))
+                                                                                                 (.. event -target blur)))}
+                                                                               {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                            {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                               {:size 2
+                                                                                :class #{"input-default"}}
+                                                                               {:fmt summa-formatointi-uusi
+                                                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                             (gov/tyhja->syote (get lapset 2)
+                                                                               {:on-change (fn [arvo]
+                                                                                             (when arvo
+                                                                                               (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                      :arvo arvo
+                                                                                                                      :solu solu/*this*}
+                                                                                                                     false)))
+                                                                                :on-blur (fn [arvo]
+                                                                                           (when arvo
+                                                                                             (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                    :arvo arvo
+                                                                                                                    :solu solu/*this*
+                                                                                                                    :jarjesta-data? true
+                                                                                                                    :triggeroi-seuranta? true}
+                                                                                                                   true)
+                                                                                             #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
+                                                                                           #_(when arvo
+                                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
+                                                                                               (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                               (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                :on-key-down (fn [event]
+                                                                                               (when (= "Enter" (.. event -key))
+                                                                                                 (.. event -target blur)))}
+                                                                               {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                            {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                               {:size 2
+                                                                                :class #{"input-default"}}
+                                                                               {:fmt summa-formatointi-uusi
+                                                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                             (gov/tyhja->teksti (get lapset 3) {:class #{"table-default"}} {:fmt yhteenveto-format})
+                                                             (gov/tyhja->teksti (get lapset 4) {:class #{"table-default"}})]))
+                                      (grid/paivita-grid! (grid/get-in-grid kopio [::g-pohjat/data-sisalto])
+                                                          :lapset
+                                                          (fn [lapset]
+                                                            (vec
+                                                              (map-indexed (fn [index rivi]
+                                                                             (grid/paivita-grid! rivi
+                                                                                                 :lapset
+                                                                                                 (fn [osat]
+                                                                                                   [(gov/tyhja->teksti (get osat 0)
+                                                                                                                       {:class #{"table-default"}}
+                                                                                                                       {:fmt (fn [paivamaara]
+                                                                                                                               paivamaara
+                                                                                                                               #_(let [teksti (-> paivamaara pvm/kuukausi pvm/kuukauden-lyhyt-nimi (str "/" (pvm/vuosi paivamaara)))
+                                                                                                                                     mennyt? (and (pvm/ennen? paivamaara nyt)
+                                                                                                                                                  (or (not= (pvm/kuukausi nyt) (pvm/kuukausi paivamaara))
+                                                                                                                                                      (not= (pvm/vuosi nyt) (pvm/vuosi paivamaara))))]
+                                                                                                                                 (if mennyt?
+                                                                                                                                   (str teksti " (mennyt)")
+                                                                                                                                   teksti)))})
+                                                                                                    (tyhja->syote-tayta-alas (get osat 1)
+                                                                                                                             {:nappi-nakyvilla? false
+                                                                                                                              :nappia-painettu! (fn [rivit-alla arvo]
+                                                                                                                                                  (when (and arvo (not (empty? rivit-alla)))
+                                                                                                                                                    (doseq [rivi rivit-alla
+                                                                                                                                                            :let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                                                                                                  piillotettu? (grid/piillotettu? rivi)]]
+                                                                                                                                                      (when-not piillotettu?
+                                                                                                                                                        (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                                                                               :arvo arvo
+                                                                                                                                                                               :solu maara-solu}
+                                                                                                                                                                              true)))))
+                                                                                                                              :toiminnot {:on-change (fn [arvo]
+                                                                                                                                                       (when arvo
+                                                                                                                                                         (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                                                                                :arvo arvo
+                                                                                                                                                                                :solu solu/*this*}
+                                                                                                                                                                               false)))
+                                                                                                                                          :on-focus (fn [_]
+                                                                                                                                                      (grid/paivita-osa! solu/*this*
+                                                                                                                                                                         (fn [solu]
+                                                                                                                                                                           (assoc solu :nappi-nakyvilla? true))))
+                                                                                                                                          :on-blur (fn [arvo]
+                                                                                                                                                     (grid/paivita-osa! solu/*this*
+                                                                                                                                                                        (fn [solu]
+                                                                                                                                                                          (assoc solu :nappi-nakyvilla? false)))
+                                                                                                                                                     (when arvo
+                                                                                                                                                       (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
+                                                                                                                                                                              :arvo arvo
+                                                                                                                                                                              :solu solu/*this*
+                                                                                                                                                                              :jarjesta-data? true
+                                                                                                                                                                              :triggeroi-seuranta? true}
+                                                                                                                                                                             true)
+                                                                                                                                                       #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
+                                                                                                                                                     #_(when arvo
+                                                                                                                                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                                                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
+                                                                                                                                                         (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                                                                                         (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                                                                          :on-key-down (fn [event]
+                                                                                                                                                         (when (= "Enter" (.. event -key))
+                                                                                                                                                           (.. event -target blur)))}
+                                                                                                                              :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                                                           {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                                                               :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                                                                              :parametrit {:size 2
+                                                                                                                                           :class #{"input-default"}}
+                                                                                                                              :fmt summa-formatointi-uusi
+                                                                                                                              :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                                    (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
+                                                                                                    (gov/tyhja->teksti (get osat 3) {:class #{"table-default"}})
+                                                                                                    (gov/tyhja->teksti (get osat 4) {:class #{"table-default"}})])))
+                                                                           lapset))))
+                                      kopio))
+                                  t/jh-korvaukset))))
+    (grid/aseta-gridin-polut g)
+    (grid/paivita-grid! g :koko (fn [koko]
+                                  (update koko :rivi (fn [rivi]
+                                                       (assoc rivi :korkeudet {0 "40px"})))))
+    (grid/paivita-grid! g :parametrit (fn [parametrit] (assoc parametrit :id "johto-ja-hallintokorvaus-laskulla-taulukko")))
+    #_(println "johto-ja-hallintokorvaus-laskulla-grid GRIDIN MUOTO")
+    #_(grid/pre-walk-grid! g
+                         (fn [osa]
+                           (println (or (grid/hae-osa osa :nimi)
+                                        (grid/hae-osa osa :id)))))
     (-> g
-        (grid/rajapinta-grid-yhdistaminen! t/suunnittellut-hankinnat-rajapinta
+        #_(grid/rajapinta-grid-yhdistaminen! t/suunnittellut-hankinnat-rajapinta
                                            (t/suunnittellut-hankinnat-dr)
                                            (doall (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                                                 :solun-polun-pituus 1
@@ -488,7 +723,18 @@
                                         (grid/vaihda-osa! (-> laajennasolu grid/vanhempi grid/vanhempi)
                                                           rivi-kuukausifiltterilla->rivi
                                                           [:.. ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
-        g (grid/grid-pohjasta g-pohjat/grid-pohja-4)]
+        g (grid/grid-pohjasta g-pohjat/grid-pohja-4
+                              (fn [g]
+                                (println "ASETETAAN HOIDONJOHTOPALKKIO GRID")
+                                (swap! tila/suunnittelu-kustannussuunnitelma
+                                       (fn [tila]
+                                         (assoc-in tila [:gridit :hoidonjohtopalkkio :grid] g)))
+                                #_(e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g)))
+                              {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid]))
+                               :paivita! (fn [f]
+                                           (swap! tila/suunnittelu-kustannussuunnitelma
+                                                  (fn [tila]
+                                                    (update-in tila [:gridit :hoidonjohtopalkkio :grid] f))))})]
     (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/otsikko])
                         :lapset
                         (fn [lapset]
@@ -604,59 +850,55 @@
                                                        (assoc rivi :korkeudet {0 "40px"
                                                                                2 "40px"})))))
     (grid/paivita-grid! g :parametrit (fn [parametrit] (assoc parametrit :id "hoidonjohtopalkkio-taulukko")))
-    (-> g
-        (grid/aseta-root-fn {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :hoidonjohtopalkkio :grid]))
-                             :paivita! (fn [f]
-                                         (swap! tila/suunnittelu-kustannussuunnitelma
-                                                (fn [tila]
-                                                  (update-in tila [:gridit :hoidonjohtopalkkio :grid] f))))})
-        (grid/rajapinta-grid-yhdistaminen! t/hoidonjohtopalkkion-rajapinta
-                                           (t/hoidonjohtopalkkion-dr)
-                                           {[::g-pohjat/otsikko] {:rajapinta :otsikot
-                                                                  :solun-polun-pituus 1
-                                                                  :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                  :datan-kasittely (fn [otsikot]
-                                                                                     (mapv (fn [otsikko]
-                                                                                             otsikko)
-                                                                                           (vals otsikot)))}
-                                            [::g-pohjat/data 0 ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset
-                                            [::g-pohjat/data 0 ::g-pohjat/data-sisalto] {:rajapinta :hoidonjohtopalkkio
-                                                                                         :solun-polun-pituus 2
-                                                                                         :jarjestys [{:keyfn :aika
-                                                                                                      :comp (fn [aika-1 aika-2]
-                                                                                                              (pvm/ennen? aika-1 aika-2))}
-                                                                                                     [:aika :maara :yhteensa :indeksikorjattu]]
-                                                                                         :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
-                                                                                                            (mapv (fn [rivi]
-                                                                                                                    (mapv (fn [[_ v]]
-                                                                                                                            v)
-                                                                                                                          rivi))
-                                                                                                                  vuoden-hoidonjohtopalkkiot))
-                                                                                         :tunnisteen-kasittely (fn [data-sisalto-grid data]
-                                                                                                                 (vec
-                                                                                                                   (map-indexed (fn [i rivi]
-                                                                                                                                  (vec
-                                                                                                                                    (map-indexed (fn [j osa]
-                                                                                                                                                   (when (instance? solu/Syote osa)
-                                                                                                                                                     {:osa :maara
-                                                                                                                                                      :aika (:aika (get data j))
-                                                                                                                                                      :osan-paikka [i j]}))
-                                                                                                                                                 (grid/hae-grid rivi :lapset))))
-                                                                                                                                (grid/hae-grid data-sisalto-grid :lapset))))}
-                                            [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
-                                                                     :solun-polun-pituus 1
-                                                                     :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                     :datan-kasittely (fn [yhteensa]
-                                                                                        (mapv (fn [[_ nimi]]
-                                                                                                nimi)
-                                                                                              yhteensa))}})
-        (grid/grid-tapahtumat tila/suunnittelu-kustannussuunnitelma
-                              {:hoidonjotopalkkion-disablerivit {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
-                                                                 :toiminto! (fn [g _ kuukausitasolla?]
-                                                                              (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
-                                                                                                      (not kuukausitasolla?))
-                                                                              (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 0 ::yhteenveto])
-                                                                                                      kuukausitasolla?))}}))))
+    (grid/rajapinta-grid-yhdistaminen! g
+                                       t/hoidonjohtopalkkion-rajapinta
+                                       (t/hoidonjohtopalkkion-dr)
+                                       {[::g-pohjat/otsikko] {:rajapinta :otsikot
+                                                              :solun-polun-pituus 1
+                                                              :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                              :datan-kasittely (fn [otsikot]
+                                                                                 (mapv (fn [otsikko]
+                                                                                         otsikko)
+                                                                                       (vals otsikot)))}
+                                        [::g-pohjat/data 0 ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset
+                                        [::g-pohjat/data 0 ::g-pohjat/data-sisalto] {:rajapinta :hoidonjohtopalkkio
+                                                                                     :solun-polun-pituus 2
+                                                                                     :jarjestys [{:keyfn :aika
+                                                                                                  :comp (fn [aika-1 aika-2]
+                                                                                                          (pvm/ennen? aika-1 aika-2))}
+                                                                                                 [:aika :maara :yhteensa :indeksikorjattu]]
+                                                                                     :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
+                                                                                                        (mapv (fn [rivi]
+                                                                                                                (mapv (fn [[_ v]]
+                                                                                                                        v)
+                                                                                                                      rivi))
+                                                                                                              vuoden-hoidonjohtopalkkiot))
+                                                                                     :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                             (vec
+                                                                                                               (map-indexed (fn [i rivi]
+                                                                                                                              (vec
+                                                                                                                                (map-indexed (fn [j osa]
+                                                                                                                                               (when (instance? solu/Syote osa)
+                                                                                                                                                 {:osa :maara
+                                                                                                                                                  :aika (:aika (get data j))
+                                                                                                                                                  :osan-paikka [i j]}))
+                                                                                                                                             (grid/hae-grid rivi :lapset))))
+                                                                                                                            (grid/hae-grid data-sisalto-grid :lapset))))}
+                                        [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
+                                                                 :solun-polun-pituus 1
+                                                                 :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                 :datan-kasittely (fn [yhteensa]
+                                                                                    (mapv (fn [[_ nimi]]
+                                                                                            nimi)
+                                                                                          yhteensa))}})
+    (grid/grid-tapahtumat g
+                          tila/suunnittelu-kustannussuunnitelma
+                          {:hoidonjotopalkkion-disablerivit {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
+                                                             :toiminto! (fn [g _ kuukausitasolla?]
+                                                                          (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
+                                                                                                  (not kuukausitasolla?))
+                                                                          (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 0 ::yhteenveto])
+                                                                                                  kuukausitasolla?))}})))
 
 (defn virhe-datassa
   [data]
@@ -2566,17 +2808,19 @@
        [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit suodatin]
+(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit suodatin johto-ja-hallintokorvaus-grid kantahaku-valmis?]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
-   [johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
+   #_[johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
    [:h3 "Tuntimäärät ja -palkat"]
-   [yleis-suodatin e! suodatin]
-   [jh-toimenkuva-laskulla jh-laskulla]
-   [jh-toimenkuva-yhteenveto jh-yhteenveto]
+   #_[yleis-suodatin e! suodatin]
+   (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+     [grid/piirra johto-ja-hallintokorvaus-grid]
+     [yleiset/ajax-loader])
+   #_[jh-toimenkuva-yhteenveto jh-yhteenveto]
    [:h3 "Johto ja hallinto: muut kulut"]
-   [yleis-suodatin e! suodatin]
-   [maara-kk toimistokulut]
+   #_[yleis-suodatin e! suodatin]
+   #_[maara-kk toimistokulut]
    [:span
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
@@ -2603,7 +2847,6 @@
 
 (defn hoidonjohtopalkkio [_ _]
   (go (let [g (hoidonjohtopalkkio-grid)]
-        (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :grid] g))
         (grid/triggeroi-tapahtuma! g :hoidonjotopalkkion-disablerivit)))
   (fn [johtopalkkio kantahaku-valmis?]
     (if (and johtopalkkio kantahaku-valmis?)
@@ -2642,12 +2885,13 @@
                                                     toimistokulut johtopalkkio erillishankinnat menneet-vuodet]} :hallinnolliset-toimenpiteet
                                             :keys [kuluva-hoitokausi indeksit suodatin]}
                                            johtopalkkio-grid
+                                           johto-ja-hallintokorvaus-grid
                                            kantahaku-valmis?]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    #_[hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
    #_[erillishankinnat-sisalto e! erillishankinnat (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
-   #_[johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin]
+   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin johto-ja-hallintokorvaus-grid kantahaku-valmis?]
    [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]])
 
 
@@ -2662,7 +2906,8 @@
                       (e! (t/->Oikeudet))
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
                       (go (let [g (suunnittellut-hankinnat-grid)]
-                            (e! (tuck-apurit/->MuutaTila [:gridit :suunnittellut-hankinnat :grid] g))
+                            (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))
+                      (go (let [g (johto-ja-hallintokorvaus-laskulla-grid)]
                             (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
                                                        (partial rahavarausten-taulukko e! (:kaskytyskanava app))
@@ -2699,7 +2944,7 @@
          #_(println "VALINNAT: " (get app :valinnat))
          [hankintakustannukset-taulukot e! hankintakustannusten-argumentit (get-in app [:gridit :suunnittellut-hankinnat :grid]) (:kantahaku-valmis? app) (:hankinnat suodattimet)]
          [:span.viiva-alas]
-         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit (get-in app [:gridit :hoidonjohtopalkkio :grid]) (:kantahaku-valmis? app)]]))))
+         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit (get-in app [:gridit :hoidonjohtopalkkio :grid]) (get-in app [:gridit :johto-ja-hallintokorvaus :grid]) (:kantahaku-valmis? app)]]))))
 
 (defn kustannussuunnitelma []
   [tuck/tuck tila/suunnittelu-kustannussuunnitelma kustannussuunnitelma*])

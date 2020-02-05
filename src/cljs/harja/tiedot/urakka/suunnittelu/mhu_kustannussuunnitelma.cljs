@@ -65,6 +65,18 @@
     :kolmansien-osapuolten-aiheuttamat-vahingot
     :akilliset-hoitotyot})
 
+(def jh-korvaukset
+  [{:toimenkuva "sopimusvastaava" :kk-v 12}
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12}
+   {:toimenkuva "päätoiminen apulainen" :kk-v 7}
+   {:toimenkuva "päätoiminen apulainen" :kk-v 5}
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 7}
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 5}
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5}
+   {:toimenkuva "hankintavastaava" :kk-v 4.5}
+   {:toimenkuva "hankintavastaava" :kk-v 12}
+   {:toimenkuva "harjoittelija" :kk-v 4}])
+
 (def talvikausi [10 11 12 1 2 3 4])
 (def kesakausi (into [] (range 5 10)))
 (def hoitokausi (concat talvikausi kesakausi))

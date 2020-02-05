@@ -655,8 +655,68 @@
                                                          (> i index) (get lapset (dec i))))
                                                      (range (inc (count lapset))))))))))
 
+
+(defn aseta-gridin-polut [gridi]
+  (let [index-polut (grid-index-polut gridi)
+        nimi-polut (grid-nimi-polut gridi)]
+    (paivita-kaikki-lapset! (assoc gridi
+                                   ::index-polku []
+                                   ::nimi-polku [])
+                            (constantly true)
+                            (fn [osa]
+                              (let [grid? (satisfies? p/IGrid osa)
+                                    id (gop/id osa)]
+                                (assoc osa
+                                       ::index-polku (get index-polut id)
+                                       ::nimi-polku (get nimi-polut id)))))))
+
+(defn poista-rivi! [grid rivi]
+  {:pre [(satisfies? p/IGrid grid)
+         (satisfies? p/IGrid rivi)]
+   :post [(nil? (etsi-osa grid (gop/id rivi)))]}
+  (let [grid (aseta-gridin-polut grid)
+        rivi (etsi-osa grid (gop/id rivi))
+        rivin-vanhempi (vanhempi rivi)
+        rivin-index-polku (::index-polku rivi)]
+    (post-walk-grid! grid
+                     (fn [osa]
+                       (let [osan-index-polku (::index-polku osa)
+                             osa-solun-jalkelainen? (and (>= (count osan-index-polku)
+                                                             (count rivin-index-polku))
+                                                         (every? true?
+                                                                 (map #(= %1 %2)
+                                                                      rivin-index-polku
+                                                                      osan-index-polku)))
+                             root-grid? (gop/id? osa (::root-id osa))]
+                         (when osa-solun-jalkelainen?
+                           (when-not root-grid?
+                             (p/paivita-lapset! (vanhempi osa)
+                                                (fn [lapset]
+                                                  (vec
+                                                    (keep (fn [lapsi]
+                                                            (when (and (gop/id? lapsi (gop/id osa))
+                                                                       (satisfies? p/IGrid lapsi))
+                                                              (p/aseta-alueet! lapsi [])
+                                                              (p/aseta-lapset! lapsi nil)
+                                                              (p/aseta-parametrit! lapsi nil))
+                                                            (when-not (gop/id? lapsi (gop/id osa))
+                                                              lapsi))
+                                                          lapset)))))))))
+    (p/paivita-alueet! rivin-vanhempi
+                       (fn [alueet]
+                             (mapv (fn [alue]
+                                     (update alue :rivit (fn [[alku loppu]]
+                                                           [alku (dec loppu)])))
+                                   alueet)))))
+
+(defn poista-sarake! [grid solu]
+  ;; TODO
+  )
+
 (defn aseta-osat!
-  ([grid osat] (swap! (:osat grid) (fn [_] osat)) grid)
+  ([grid osat]
+   (swap! (:osat grid) (fn [_] osat))
+   grid)
   ([grid polku osat]
    (let [osa (get-in-grid grid polku)]
      (p/aseta-lapset! osa osat)
@@ -850,19 +910,7 @@
            osa)
          ::datan-kasittelija datan-kasittelija))
 
-(defn aseta-gridin-polut [gridi]
-  (let [index-polut (grid-index-polut gridi)
-        nimi-polut (grid-nimi-polut gridi)]
-    (paivita-kaikki-lapset! (assoc gridi
-                                   ::index-polku []
-                                   ::nimi-polku [])
-                            (constantly true)
-                            (fn [osa]
-                              (let [grid? (satisfies? p/IGrid osa)
-                                    id (gop/id osa)]
-                                (assoc osa
-                                       ::index-polku (get index-polut id)
-                                       ::nimi-polku (get nimi-polut id)))))))
+
 
 (declare ->Grid)
 
@@ -889,6 +937,10 @@
     (p/lisaa-sarake! this solu (count (p/lapset this))))
   (-lisaa-sarake! [this solu index]
     (lisaa-sarake! this solu index))
+  (-poista-rivi! [this solu]
+    (poista-rivi! this solu))
+  (-poista-sarake! [this solu]
+    (poista-sarake! this solu))
 
   (-koko [this]
     (grid-koko this))
@@ -920,39 +972,45 @@
 
   p/IGridDataYhdistaminen
   (-rajapinta-grid-yhdistaminen! [this rajapinta datan-kasittelija grid-kasittelija]
-    (let [this (aseta-gridin-polut this)
+    (let [this (aseta-gridin-polut (root this))
           grid-rajapintakasittelijat (reduce-kv (fn [m polku kasittelija]
                                                   (assoc m polku (rajapinnan-grid-kasittelija datan-kasittelija this polku kasittelija)))
                                                 {}
                                                 grid-kasittelija)]
-      (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn []
-                                                                                 (dk/poista-seurannat! datan-kasittelija)
-                                                                                 (dk/lopeta-tilan-kuuntelu! datan-kasittelija))
-                                     ::grid-rajapintakasittelijat grid-rajapintakasittelijat
-                                     ::datan-kasittelija datan-kasittelija)
-                              (constantly true)
-                              (partial osan-data-yhdistaminen datan-kasittelija grid-rajapintakasittelijat))))
+      (paivita-root! this
+                     (fn [_]
+                       (println "DATAN YHDISTÄMINEN")
+                       (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn []
+                                                                                                  (dk/poista-seurannat! datan-kasittelija)
+                                                                                                  (dk/lopeta-tilan-kuuntelu! datan-kasittelija))
+                                                      ::grid-rajapintakasittelijat grid-rajapintakasittelijat
+                                                      ::datan-kasittelija datan-kasittelija)
+                                               (constantly true)
+                                               (partial osan-data-yhdistaminen datan-kasittelija grid-rajapintakasittelijat))))))
   (-grid-tapahtumat [this data-atom tapahtumat]
-    (assoc this ::grid-tapahtumat (into {}
-                                        (map (fn [[tapahtuman-nimi {:keys [polut toiminto!] :as tapahtuma}]]
-                                               (let [kasittely-fn (fn [uusi-data]
-                                                                    (r/next-tick (fn []
-                                                                                   (apply toiminto! (root this) @data-atom uusi-data))))]
-                                                 (add-watch data-atom
-                                                            tapahtuman-nimi
-                                                            (fn [_ _ vanha uusi]
-                                                              (let [vanha-data (map #(get-in vanha %) polut)
-                                                                    uusi-data (map #(get-in uusi %) polut)
-                                                                    seurattava-data-muuttunut? (not= vanha-data uusi-data)
-                                                                    ajetaan-tapahtuma? (and seurattava-data-muuttunut?
-                                                                                            *ajetaan-tapahtuma?*)]
-                                                                (when ajetaan-tapahtuma?
-                                                                  (kasittely-fn uusi-data)))))
-                                                 [tapahtuman-nimi {:seurannan-lopetus! (fn []
-                                                                                         (remove-watch data-atom tapahtuman-nimi))
-                                                                   :tapahtuma-trigger! (fn []
-                                                                                         (kasittely-fn (map #(get-in @data-atom %) polut)))}]))
-                                             tapahtumat))))
+    (let [this (root this)]
+      (paivita-root! this
+                     (fn [_]
+                       (assoc this ::grid-tapahtumat (into {}
+                                                           (map (fn [[tapahtuman-nimi {:keys [polut toiminto!] :as tapahtuma}]]
+                                                                  (let [kasittely-fn (fn [uusi-data]
+                                                                                       (r/next-tick (fn []
+                                                                                                      (apply toiminto! (root this) @data-atom uusi-data))))]
+                                                                    (add-watch data-atom
+                                                                               tapahtuman-nimi
+                                                                               (fn [_ _ vanha uusi]
+                                                                                 (let [vanha-data (map #(get-in vanha %) polut)
+                                                                                       uusi-data (map #(get-in uusi %) polut)
+                                                                                       seurattava-data-muuttunut? (not= vanha-data uusi-data)
+                                                                                       ajetaan-tapahtuma? (and seurattava-data-muuttunut?
+                                                                                                               *ajetaan-tapahtuma?*)]
+                                                                                   (when ajetaan-tapahtuma?
+                                                                                     (kasittely-fn uusi-data)))))
+                                                                    [tapahtuman-nimi {:seurannan-lopetus! (fn []
+                                                                                                            (remove-watch data-atom tapahtuman-nimi))
+                                                                                      :tapahtuma-trigger! (fn []
+                                                                                                            (kasittely-fn (map #(get-in @data-atom %) polut)))}]))
+                                                                tapahtumat)))))))
   gop/IGridOsa
   (-id [this]
     (:id this))

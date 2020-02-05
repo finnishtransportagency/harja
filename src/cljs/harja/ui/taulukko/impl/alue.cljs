@@ -134,6 +134,10 @@
     (p/lisaa-sarake! this solu (count (p/lapset this))))
   (-lisaa-sarake! [this solu index]
     (g/lisaa-sarake! this solu index))
+  (-poista-rivi! [this solu]
+    (g/poista-rivi! this solu))
+  (-poista-sarake! [this solu]
+    (g/poista-sarake! this solu))
 
   (-koko [this]
     (g/grid-koko this))

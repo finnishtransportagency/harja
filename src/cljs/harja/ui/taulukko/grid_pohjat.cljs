@@ -1,7 +1,12 @@
 (ns harja.ui.taulukko.grid-pohjat
   (:require [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.grid-oletusarvoja :as konf]
-            [harja.ui.taulukko.impl.solu :as solu]))
+            [harja.ui.taulukko.impl.solu :as solu]
+            [harja.ui.taulukko.impl.grid :as g]))
+
+(defn grid-pohjasta [grid-pohja]
+  (let [kopio (grid/kopio grid-pohja)]
+    (g/muuta-id! kopio)))
 
 (def grid-pohja-4 (grid/grid {:nimi ::root
                               :alueet [{:sarakkeet [0 1] :rivit [0 3]}]
@@ -62,23 +67,35 @@
                                                              (range 4))}
                                                 [{:sarakkeet [0 4] :rivit [0 1]}])]}))
 
-(def grid-pohja-5 (let [grid-pohja (grid/grid-pohjasta grid-pohja-4)]
+(def grid-pohja-5 (let [grid-pohja (grid-pohjasta grid-pohja-4)]
                     (grid/lisaa-sarake! grid-pohja (solu/tyhja))
-                    (grid/aseta-grid! grid-pohja
+                    (grid/aseta-grid! (grid/get-in-grid grid-pohja [::otsikko])
                                       :koko
                                       (-> konf/livi-oletuskoko
-                                                   (assoc-in [:sarake :leveydet] {0 "3fr"
-                                                                                  4 "1fr"})
-                                                   (assoc-in [:sarake :oletus-leveys] "2fr")))
+                                          (assoc-in [:sarake :leveydet] {0 "3fr"
+                                                                         4 "1fr"})
+                                          (assoc-in [:sarake :oletus-leveys] "2fr")))
+                    (grid/aseta-grid! (grid/get-in-grid grid-pohja [::data 0 ::data-yhteenveto])
+                                      :koko
+                                      (-> konf/livi-oletuskoko
+                                          (assoc-in [:sarake :leveydet] {0 "3fr"
+                                                                         4 "1fr"})
+                                          (assoc-in [:sarake :oletus-leveys] "2fr")))
+                    (grid/aseta-grid! (grid/get-in-grid grid-pohja [::data 0 ::data-sisalto])
+                                      :koko
+                                      (-> konf/livi-oletuskoko
+                                          (assoc-in [:sarake :leveydet] {0 "3fr"
+                                                                         4 "1fr"})
+                                          (assoc-in [:sarake :oletus-leveys] "2fr")))
                     grid-pohja))
 
-(def grid-pohja-7 (let [grid-pohja (grid/grid-pohjasta grid-pohja-5)]
+(def grid-pohja-7 (let [grid-pohja (grid-pohjasta grid-pohja-5)]
                     (grid/lisaa-sarake! grid-pohja (solu/tyhja))
                     (grid/lisaa-sarake! grid-pohja (solu/tyhja))
-                    (grid/aseta-grid! grid-pohja
-                                      :koko
-                                      (-> konf/livi-oletuskoko
-                                                   (assoc-in [:sarake :leveydet] {0 "3fr"
-                                                                                  1 "1fr"})
-                                                   (assoc-in [:sarake :oletus-leveys] "2fr")))
+                    #_(grid/aseta-grid! grid-pohja
+                                        :koko
+                                        (-> konf/livi-oletuskoko
+                                            (assoc-in [:sarake :leveydet] {0 "3fr"
+                                                                           1 "1fr"})
+                                            (assoc-in [:sarake :oletus-leveys] "2fr")))
                     grid-pohja))

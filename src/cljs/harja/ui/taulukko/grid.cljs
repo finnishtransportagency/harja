@@ -7,6 +7,8 @@
             [harja.ui.taulukko.impl.datan-kasittely :as dk]
             [reagent.core :as r]))
 
+(declare aseta-root-fn)
+
 ;; KONSTRUKTORIT
 
 ; - Grid
@@ -50,9 +52,12 @@
 (defn kopio [osa]
   (gop/kopioi osa))
 
-(defn grid-pohjasta [grid-pohja]
-  (let [kopio (kopio grid-pohja)]
-    (g/muuta-id! kopio)))
+(defn grid-pohjasta [grid-pohja root-asetus! root-asetukset]
+  (let [kopio (kopio grid-pohja)
+        g (g/muuta-id! kopio)
+        g (aseta-root-fn g root-asetukset)]
+    (root-asetus! g)
+    g))
 
 (defn samanlainen-osa [osa]
   (let [kopio (kopio osa)
@@ -194,6 +199,9 @@
   ([grid solu] (gp/lisaa-sarake! grid solu))
   ([grid solu index] (gp/lisaa-sarake! grid solu index)))
 
+(defn poista-rivi! [grid rivi]
+  (gp/poista-rivi! grid rivi))
+
 (defn paivita-root! [osa f]
   (g/paivita-root! osa f))
 
@@ -288,4 +296,11 @@
 
 (defn piirra [osa]
   (gop/piirra osa))
+
+;; MISC
+
+(defn aseta-gridin-polut
+  "Tätä ei tulisi tarvita kutsua erikseen. Kehityksessä voi olla ihan hyödyllinen, kun ei ole vielä liitetty dataa taulukkoon."
+  [grid]
+  (g/aseta-gridin-polut grid))
 

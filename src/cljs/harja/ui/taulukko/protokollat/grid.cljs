@@ -20,6 +20,8 @@
 
   (-lisaa-rivi! [this solu] [this solu index])
   (-lisaa-sarake! [this solu] [this solu index])
+  (-poista-rivi! [this solu])
+  (-poista-sarake! [this solu])
 
   (-rivi [this tunniste] "Palauttaa rivin tunnisteen perusteella")
   (-sarake [this tunniste] "Palauttaa sarakkeen tunnisteen perusteella")
@@ -99,6 +101,16 @@
               (inc (count (lapset %))))]}
    (-lisaa-rivi! grid solu index)))
 
+(defn poista-rivi!
+  ;; TODO :PRE :POST
+  [grid solu]
+  (-poista-rivi! grid solu))
+
+(defn poista-sarake!
+  ;; TODO :PRE :POST
+  [grid solu]
+  (-poista-sarake! grid solu))
+
 (defn koko [osa]
   {:pre [(satisfies? gop/IGridOsa osa)]}
   (when (satisfies? IGrid osa)
@@ -131,7 +143,7 @@
          ]
    ;; TODO :post
    :post [
-          (= (alueet %) alueet)]}
+          (= % alueet)]}
   (-aseta-alueet! grid alueet))
 
 (defn paivita-alueet! [grid f]
