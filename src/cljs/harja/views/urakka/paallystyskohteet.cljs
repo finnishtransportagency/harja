@@ -159,8 +159,10 @@
                               :paikkaus
                               #(reset! paallystys-tiedot/yllapitokohteet %) ;; TODO TESTI TÄLLE TALLENNUKSELLE (backend)
                               #(constantly nil)))
-        yha-kohteet-otsikko (if (< 1 2020)  "YHA:sta tuodut päällystyskohteet (kaistatiedot edeltävät kaistauudistusta)"
-                                                               "YHA:sta tuodut päällystyskohteet")]
+        yha-kohteet-otsikko (fn [vuosi]
+                              (if (< vuosi 2020)
+                                "YHA:sta tuodut päällystyskohteet (kaistatiedot edeltävät kaistauudistusta)"
+                                "YHA:sta tuodut päällystyskohteet"))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
@@ -204,21 +206,21 @@
                       yha-kohteet-otsikko)
            :kohdetyyppi :paallystys
            :yha-sidottu? true
-           :tallenna (when (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur)
-                                                          (< 1 2020))) ;; Vuoden 2020 kaistamuutosta vanhempia kohteita ei saa tallentaa
+           :piilota-tallennus? (when (< @urakka/valittu-urakan-vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.
+           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
                        tallenna-kohde)
            :kun-onnistuu kohteen-tallennus-onnistui}]
 
          [yllapitokohteet-view/yllapitokohteet
           ur
           paallystys-tiedot/harjan-paikkauskohteet
-          {:otsikko      (if (< 1 2020)
+          {:otsikko      (if (< @urakka/valittu-urakan-vuosi 2020)
                            "Harjan paikkauskohteet ja muut kohteet (kaistatiedot edeltävät kaistauudistusta)"
                            "Harjan paikkauskohteet ja muut kohteet")
            :kohdetyyppi  :paikkaus
            :yha-sidottu? false
-           :tallenna     (when (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur)
-                                                              (< 1 2020))) ;; Vuoden 2020 kaistamuutosta vanhempia kohteita ei saa tallentaa
+           :piilota-tallennus? (when (< @urakka/valittu-urakan-vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.
+           :tallenna     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
                            tallenna-muukohde)}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
 
          [muut-kustannukset-view/muut-kustannukset ur]
