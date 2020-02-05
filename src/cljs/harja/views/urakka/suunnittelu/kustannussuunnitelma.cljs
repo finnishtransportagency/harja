@@ -2661,16 +2661,9 @@
                       (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
-                      (go (let [g (suunnittellut-hankinnat-grid)
-                                tuck-tapahtuma-kuuntelija (async/chan)]
-                            (async/sub t/ajax-tapahutmat :tuck tuck-tapahtuma-kuuntelija)
+                      (go (let [g (suunnittellut-hankinnat-grid)]
                             (e! (tuck-apurit/->MuutaTila [:gridit :suunnittellut-hankinnat :grid] g))
-                            (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))
-                            (go (let [{tapahtuma :tapahtuma} (<! tuck-tapahtuma-kuuntelija)]
-                                  (println "---> TAPAHTUMA: " tapahtuma)
-                                  (when (= tapahtuma :hankintakustannukset-haettu)
-                                    (doseq [hoitokauden-numero (range 1 6)]
-                                      (t/triggeroi-seuranta g (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero)))))))))
+                            (t/paivita-raidat! (grid/osa-polusta g [::g-pohjat/data]))))
                       (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
                                                        (partial rahavarausten-taulukko e! (:kaskytyskanava app))
                                                        (partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))

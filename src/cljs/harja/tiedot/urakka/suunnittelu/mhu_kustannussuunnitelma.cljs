@@ -31,10 +31,6 @@
 (s/def ::hoidonjohtopalkkiot-vuodelle (s/coll-of ::hoidonjohtopalkkio :type vector? :min-count 0))
 (s/def ::hoidonjohtopalkkiot-urakalle (s/coll-of ::hoidonjohtopalkkiot-vuodelle :type vector?))
 
-(defonce tapahtumat (chan))
-
-(defonce ajax-tapahutmat (async/pub tapahtumat :ajax))
-
 (def toimenpiteet #{:talvihoito
                     :liikenneympariston-hoito
                     :sorateiden-hoito
@@ -97,7 +93,6 @@
        :pvmt hoitovuoden-pvmt})))
 
 (def suunnittellut-hankinnat-rajapinta (merge {:otsikot any?
-                                               #_#_:yhteenveto any?
                                                :yhteensa any?
 
                                                :aseta-suunnittellut-hankinnat! any?
@@ -199,7 +194,14 @@
                                                                       (println (str "-> " {:yhteensa hoidonjohtopalkkiot-yhteensa
                                                                                            :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)}))
                                                                       (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
-                                                                                                                                         :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)})))}}
+                                                                                                                                         :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)})))}
+                             :valittu-toimenpide-seuranta {:polut [[:suodattimet :hankinnat :toimenpide]]
+                                                           :aseta (fn [tila _]
+                                                                    (update-in tila [:gridit :suunnittellut-hankinnat :hankinnat]
+                                                                               (fn [kaikki-hankinnat]
+                                                                                 (mapv (fn [hoitokauden-hankinnat]
+                                                                                         (vec (repeat 12 {})))
+                                                                                       kaikki-hankinnat))))}}
                             (doall
                               (reduce (fn [seurannat hoitokauden-numero]
                                         (merge seurannat
@@ -211,8 +213,7 @@
                                                                                                                                                                                                       (vec (repeat 5 nil))
                                                                                                                                                                                                       data))))
                                                                                                                      :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
-                                                                                                                              (let [#_#_valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
-                                                                                                                                    vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [yhteensa {maara :maara}]
+                                                                                                                              (let [vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [yhteensa {maara :maara}]
                                                                                                                                                                                   (+ yhteensa maara))
                                                                                                                                                                                 0
                                                                                                                                                                                 (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)]))]
