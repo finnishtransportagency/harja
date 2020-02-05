@@ -169,6 +169,9 @@
     :tunniste-rajapinnan-dataan (::g/tunniste-rajapinnan-dataan solu)
     :osan-derefable (::g/osan-derefable solu)))
 
+(defn solun-arvo [solu]
+  @(solun-asia solu :osan-derefable))
+
 ; - Datan käsittelija haut
 
 (defn arvo-rajapinnasta [datan-kasittelija rajapinnan-nimi]

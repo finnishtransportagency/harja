@@ -48,6 +48,21 @@
     (sequential? data) (vec data)
     :else data))
 
+(defn merge-recur [& ms]
+  (if (every? (fn [x]
+                (and (seq? x) (map-entry? (first x))))
+              ms)
+    (try (apply merge-with
+                (fn [& xs]
+                  (apply merge-recur xs))
+                ms)
+         (catch :default e
+           (println "ERROR ")
+           (println (str ms))
+           (println (every? associative? ms))
+           (throw e)))
+    (last ms)))
+
 (defn rajapinnan-kuuntelijat [data-atom rajapinta kuvaus]
   (reduce (fn [kuuntelijat [rajapinnan-nimi {:keys [polut haku]}]]
             (let [kursorit (mapv (fn [polku]
@@ -119,8 +134,9 @@
                                         datan-kasittelytunniste
                                         (fn [tila]
                                           (let [seurattava-data (or tila uusi-data)]
-                                            (merge tila
-                                                   (apply aseta seurattava-data (doall (map #(get-in seurattava-data %) polut))))))))))]
+                                            (merge-recur
+                                                        tila
+                                                        (apply aseta seurattava-data (doall (map #(get-in seurattava-data %) polut))))))))))]
 
 
     (into {}
@@ -128,74 +144,74 @@
                         (add-watch data-atom
                                    seurannan-nimi
                                    (fn [_ _ vanha uusi]
-                                     ;; cursorin dereffaaminen ei pelkästään palauta sen nykyistä arvoa, vaan
-                                     ;; se saattaa myös asettaa uuden arvon riippuen sen käyttämän ratomin tilasta.
-                                     ;; Koska tässä swappaillaan add-watchin sisällä, on ratomilla aina se vanha arvo,
-                                     ;; jonka deref cursorille yrittää myös asettaa. Tätä ei kuitenkaan haluta, joten
-                                     ;; käytetään tämmöistä haksia, että cursorin dereffaaminen ei aiheuta tilan muutosta.
-                                     (when (instance? reagent.ratom/RCursor data-atom)
-                                       (set! (.-reaction data-atom)
-                                             (reify
-                                               IDeref
-                                               (-deref [_]
-                                                 uusi))))
+                                     (let [reaction (.-reaction data-atom)]
+                                       ;; cursorin dereffaaminen ei pelkästään palauta sen nykyistä arvoa, vaan
+                                       ;; se saattaa myös asettaa uuden arvon riippuen sen käyttämän ratomin tilasta.
+                                       ;; Koska tässä swappaillaan add-watchin sisällä, on ratomilla aina se vanha arvo,
+                                       ;; jonka deref cursorille yrittää myös asettaa. Tätä ei kuitenkaan haluta, joten
+                                       ;; käytetään tämmöistä haksia, että cursorin dereffaaminen ei aiheuta tilan muutosta.
+                                       (when (instance? reagent.ratom/RCursor data-atom)
+                                         (set! (.-reaction data-atom)
+                                               (reify
+                                                 IDeref
+                                                 (-deref [_]
+                                                   uusi))))
 
-                                     (swap! kaydyt-seurannat (fn [ks]
-                                                               (update ks
-                                                                       datan-kasittelytunniste
-                                                                       (fn [ks]
-                                                                         (vec
-                                                                           (loop [[kierros & loput] (reverse ks)
-                                                                                  i (dec (count ks))
-                                                                                  kierrokset ks
-                                                                                  lisatty? false]
-                                                                             (cond
-                                                                               lisatty? kierrokset
-                                                                               (nil? kierros) (conj kierrokset #{seurannan-nimi})
-                                                                               :else (let [kierros-sisaltaa-seurannan? (contains? kierros seurannan-nimi)]
-                                                                                       (recur loput
-                                                                                              (dec i)
-                                                                                              (if kierros-sisaltaa-seurannan?
-                                                                                                kierrokset
-                                                                                                (vec (map-indexed (fn [index kierros]
-                                                                                                                    (if (= index i)
-                                                                                                                      (conj kierros seurannan-nimi)
-                                                                                                                      kierros))
-                                                                                                                  kierrokset)))
-                                                                                              (not kierros-sisaltaa-seurannan?))))))))))
-                                     (let [vanha-data (doall (map #(get-in vanha %) polut))
-                                           uusi-data (doall (map #(get-in uusi %) polut))
+                                       (swap! kaydyt-seurannat (fn [ks]
+                                                                 (update ks
+                                                                         datan-kasittelytunniste
+                                                                         (fn [ks]
+                                                                           (vec
+                                                                             (loop [[kierros & loput] (reverse ks)
+                                                                                    i (dec (count ks))
+                                                                                    kierrokset ks
+                                                                                    lisatty? false]
+                                                                               (cond
+                                                                                 lisatty? kierrokset
+                                                                                 (nil? kierros) (conj kierrokset #{seurannan-nimi})
+                                                                                 :else (let [kierros-sisaltaa-seurannan? (contains? kierros seurannan-nimi)]
+                                                                                         (recur loput
+                                                                                                (dec i)
+                                                                                                (if kierros-sisaltaa-seurannan?
+                                                                                                  kierrokset
+                                                                                                  (vec (map-indexed (fn [index kierros]
+                                                                                                                      (if (= index i)
+                                                                                                                        (conj kierros seurannan-nimi)
+                                                                                                                        kierros))
+                                                                                                                    kierrokset)))
+                                                                                                (not kierros-sisaltaa-seurannan?))))))))))
+                                       (let [vanha-data (doall (map #(get-in vanha %) polut))
+                                             uusi-data (doall (map #(get-in uusi %) polut))
 
-                                           seurattava-data-muuttunut? (not= vanha-data uusi-data)
-                                           asetetaan-uusi-data? (and seurattava-data-muuttunut?
-                                                                     *muutetaan-seurattava-arvo?*)]
-                                       (when (and (#{:hankinnat-yhteensa-seuranta :yhteensa-seuranta} seurannan-nimi)
-                                                  seurattava-data-muuttunut?))
-                                       (when asetetaan-uusi-data?
-                                         (seuranta-fn! seuranta seurannan-nimi uusi)))
-                                     (when (= (get @kaikki-seurannat datan-kasittelytunniste) (last (get @kaydyt-seurannat datan-kasittelytunniste)))
-                                       (when-let [sv (get @seurannan-valitila datan-kasittelytunniste)]
-                                         (swap! seurannan-valitila #(assoc % datan-kasittelytunniste nil))
-                                         (let [data-atom-sisalto (swap! data-atom merge sv)]
-                                           (when (= 1 (count (get @kaydyt-seurannat datan-kasittelytunniste)))
-                                             ;; Lopullinen muutos data-atomiin pitää tehdä joskus muuloin kuin
-                                             ;; add-watchin sisällä, kosksa add-watchin alun perin laukaisema muutos
-                                             ;; muutoin lopussa overridaa tuloksen cursoreille.
+                                             seurattava-data-muuttunut? (not= vanha-data uusi-data)
+                                             asetetaan-uusi-data? (and seurattava-data-muuttunut?
+                                                                       *muutetaan-seurattava-arvo?*)]
+                                         (when asetetaan-uusi-data?
+                                           (seuranta-fn! seuranta seurannan-nimi uusi)))
+                                       (when (= (get @kaikki-seurannat datan-kasittelytunniste) (last (get @kaydyt-seurannat datan-kasittelytunniste)))
+                                         (if-let [sv (get @seurannan-valitila datan-kasittelytunniste)]
+                                           (do
+                                             (swap! seurannan-valitila #(assoc % datan-kasittelytunniste nil))
+                                             (swap! data-atom (fn [da]
+                                                                (merge-recur da sv))))
+                                           ;; Halutaan lukea vain state eikä laukaista _set-state:a
+                                           (let [data-atom-sisalto (.-state data-atom)]
                                              (swap! seurannan-tila (fn [kaikki-seurannat]
                                                                      (update kaikki-seurannat
                                                                              datan-kasittelytunniste
                                                                              (fn [vanha-seurannan-tila]
-                                                                               (merge-with (fn [w u]
-                                                                                             (if (and (coll? w)
-                                                                                                      (coll? u))
-                                                                                               (merge w u)
-                                                                                               u))
-                                                                                           vanha-seurannan-tila data-atom-sisalto)))))
+                                                                               (merge-recur vanha-seurannan-tila data-atom-sisalto)))))
+                                             ;; Lopullinen muutos data-atomiin pitää tehdä joskus muuloin kuin
+                                             ;; add-watchin sisällä, kosksa add-watchin alun perin laukaisema muutos
+                                             ;; muutoin lopussa overridaa tuloksen cursoreille.
+
+                                             ;; Pitää käyttää seurannan-tila atomia, koska next-tick ei välttämättä laukea ennen kuin
+                                             ;; data-atom:ia on muutettu useammin kuin kerran
                                              (r/next-tick (fn []
-                                                            (reset! data-atom (get @seurannan-tila datan-kasittelytunniste)))))))
-                                       (swap! kaydyt-seurannat #(update % datan-kasittelytunniste (fn [ks] (vec (butlast ks))))))
-                                     (when (instance? reagent.ratom/RCursor data-atom)
-                                       (set! (.-reaction data-atom) nil))))
+                                                            (reset! data-atom (get @seurannan-tila datan-kasittelytunniste))))))
+                                         (swap! kaydyt-seurannat #(update % datan-kasittelytunniste (fn [ks] (vec (butlast ks))))))
+                                       (when (instance? reagent.ratom/RCursor data-atom)
+                                         (set! (.-reaction data-atom) reaction)))))
                         [seurannan-nimi {:seurannan-lopetus! (fn []
                                                                (remove-watch data-atom seurannan-nimi))
                                          :seuranta-trigger! (fn []

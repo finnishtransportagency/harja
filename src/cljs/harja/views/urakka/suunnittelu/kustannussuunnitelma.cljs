@@ -313,12 +313,14 @@
                                                                                                                               :nappia-painettu! (fn [rivit-alla arvo]
                                                                                                                                                   (when (and arvo (not (empty? rivit-alla)))
                                                                                                                                                     (doseq [rivi rivit-alla
-                                                                                                                                                            :let [maara-solu (grid/get-in-grid rivi [1])]]
-                                                                                                                                                      (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
-                                                                                                                                                                             :arvo arvo
-                                                                                                                                                                             :solu maara-solu}
-                                                                                                                                                                            true
-                                                                                                                                                                            hoitokauden-numero))))
+                                                                                                                                                            :let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                                                                                                  piillotettu? (grid/piillotettu? rivi)]]
+                                                                                                                                                      (when-not piillotettu?
+                                                                                                                                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
+                                                                                                                                                                               :arvo arvo
+                                                                                                                                                                               :solu maara-solu}
+                                                                                                                                                                              true
+                                                                                                                                                                              hoitokauden-numero)))))
                                                                                                                               :toiminnot {:on-change (fn [arvo]
                                                                                                                                                        (when arvo
                                                                                                                                                          (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
@@ -1227,18 +1229,25 @@
                                      :vayla-tyyli? true}
         [:kesakausi :talvikausi :molemmat]]])))
 
-(defn hankintojen-filter [e! _]
+(defn hankintojen-filter [_]
   (let [toimenpide-tekstiksi (fn [toimenpide]
                                (-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/upper-case))
-        valitse-toimenpide (fn [toimenpide]
-                             (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :toimenpide] toimenpide)))
-        valitse-kausi (fn [kausi]
-                        (e! (tuck-apurit/->MuutaTila [:hankintakustannukset :valinnat :maksetaan] kausi))
-                        (e! (t/->MaksukausiValittu)))
+        valitse-toimenpide (r/partial (fn [toimenpide]
+                                        (println "TOIMENPIDE VALITTU: " toimenpide)
+                                        (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :toimenpide] toimenpide))
+                                        #_(doseq [hoitokauden-numero (range 1 6)]
+                                          (t/triggeroi-seuranta (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid])
+                                                                (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
+                                        #_(t/triggeroi-seuranta (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid])
+                                                              :hankinnat-yhteensa-seuranta)))
+        valitse-kausi (r/partial (fn [kausi]
+                                   (println "KAUSI VALITTU: " kausi)
+                                   (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :maksetaan] kausi))
+                                   (e! (t/->MaksukausiValittu))))
         vaihda-fn (fn [event]
                     (.preventDefault event)
-                    (e! (tuck-apurit/->PaivitaTila [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?] not)))]
-    (fn [_ {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
+                    (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] not)))]
+    (fn [{:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
         [:div
          [:div.kustannussuunnitelma-filter
@@ -2448,10 +2457,11 @@
     [yleiset/ajax-loader]))
 
 (defn hankintakustannukset-taulukot [e!
-                                     {{:keys [valinnat yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset} :hankintakustannukset
+                                     {{:keys [yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset} :hankintakustannukset
                                       :keys [kuluva-hoitokausi kirjoitusoikeus? indeksit suodatin]}
                                      suunnittellut-hankinnat-grid
-                                     kantahaku-valmis?]
+                                     kantahaku-valmis?
+                                     suodattimet]
   [:<>
    [:h2#hankintakustannukset "Hankintakustannukset"]
    (if yhteenveto
@@ -2465,20 +2475,20 @@
      ^{:key "hankintakustannusten-loader"}
      [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
    [:h3 "Suunnitellut hankinnat"]
-   [hankintojen-filter e! valinnat]
+   [hankintojen-filter suodattimet]
    (if (and suunnittellut-hankinnat-grid kantahaku-valmis?)
      [grid/piirra suunnittellut-hankinnat-grid]
      [yleiset/ajax-loader])
-   [suunnitellut-hankinnat e! toimenpiteet valinnat]
+   #_[suunnitellut-hankinnat e! toimenpiteet valinnat]
    ;; TODO: Korjaa oikeus
-   [arvioidaanko-laskutukseen-perustuen e! valinnat kirjoitusoikeus?]
-   [laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
-   (when (t/toimenpiteet-rahavarauksilla (:toimenpide valinnat))
+   #_[arvioidaanko-laskutukseen-perustuen e! valinnat kirjoitusoikeus?]
+   #_[laskutukseen-perustuvat-kustannukset e! toimenpiteet-laskutukseen-perustuen valinnat]
+   #_(when (t/toimenpiteet-rahavarauksilla (:toimenpide valinnat))
      ^{:key "rahavaraukset-otsikko"}
      [:<>
       [:h3 "Rahavarukset"]
       [yleis-suodatin e! suodatin]])
-   [suunnitellut-rahavaraukset e! rahavaraukset valinnat]])
+   #_[suunnitellut-rahavaraukset e! rahavaraukset valinnat]])
 
 (defn jh-toimenkuva-laskulla [jh-laskulla]
   (if jh-laskulla
@@ -2668,7 +2678,7 @@
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
                                                        (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
-    (fn [e*! {:keys [kuluva-hoitokausi] :as app}]
+    (fn [e*! {:keys [kuluva-hoitokausi suodattimet] :as app}]
       (set! e! e*!)
       (let [tavoite-ja-kattohinta-argumentit (select-keys app #{:tavoite-ja-kattohinta :kuluva-hoitokausi :indeksit})
             suunnitelmien-argumentit (select-keys app #{:kaskytyskanava :suunnitelmien-tila-taulukko :suunnitelmien-tila-taulukon-tilat-luotu-kerran? :kirjoitusoikeus? :hankintakustannukset :hallinnolliset-toimenpiteet})
@@ -2693,7 +2703,8 @@
              :otsikko-elementti :h2}
             [suunnitelmien-tila e! suunnitelmien-argumentit]]
          [:span.viiva-alas]
-         [hankintakustannukset-taulukot e! hankintakustannusten-argumentit (get-in app [:gridit :suunnittellut-hankinnat :grid]) (:kantahaku-valmis? app)]
+         #_(println "VALINNAT: " (get app :valinnat))
+         [hankintakustannukset-taulukot e! hankintakustannusten-argumentit (get-in app [:gridit :suunnittellut-hankinnat :grid]) (:kantahaku-valmis? app) (:hankinnat suodattimet)]
          [:span.viiva-alas]
          [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit (get-in app [:gridit :hoidonjohtopalkkio :grid]) (:kantahaku-valmis? app)]]))))
 
