@@ -129,10 +129,23 @@
                            identity))
 
 (defn nakyvat-rivit [grid]
-  (gridin-rivit grid
-                (fn [osa]
-                  (and (instance? alue/Rivi osa)
-                       (not (gop/piillotettu? osa))))))
+  (vec (sort-by ::g/index-polku
+                (fn [polku-a polku-b]
+                  (let [polun-osat-vertailtu (map (fn [i j]
+                                                    (cond
+                                                      (= i j) 0
+                                                      (< i j) -1
+                                                      (> i j) 1))
+                                                  polku-a
+                                                  polku-b)
+                        ensimmainen-eri-arvo (first (drop-while #(= 0 %) polun-osat-vertailtu))]
+                    (if (nil? ensimmainen-eri-arvo)
+                      (< (count polku-a) (count polku-b))
+                      ensimmainen-eri-arvo)))
+                (gridin-rivit grid
+                              (fn [osa]
+                                (and (instance? alue/Rivi osa)
+                                     (not (gop/piillotettu? osa))))))))
 
 ; - Dataan liittyvät haut
 (defn hae-grid [grid haettava-asia]

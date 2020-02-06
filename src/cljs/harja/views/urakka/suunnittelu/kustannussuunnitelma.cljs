@@ -215,7 +215,7 @@
                                 [:rivi :nimet]
                                 {::yhteenveto 0
                                  ::valinta 1})
-                :osat [(grid/paivita-grid! (grid/aseta-nimi rivi ::yhteenveto)
+                :osat [(grid/paivita-grid! (grid/aseta-nimi rivi ::t/yhteenveto)
                                            :lapset
                                            (fn [osat]
                                              (mapv (fn [osa]
@@ -234,7 +234,7 @@
                                    :koko {:seuraa {:seurattava ::g-pohjat/otsikko
                                                    :sarakkeet :sama
                                                    :rivit :sama}}
-                                   :nimi ::valinta}
+                                   :nimi ::t/valinta}
                                   [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})))
 
 (defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
@@ -254,6 +254,7 @@
          (-> laajennasolu grid/vanhempi)
          rivi->rivi-kuukausifiltterilla
          datan-kasittely))
+
 (defn rivi-ilman-kuukausifiltteria!
   [laajennasolu & datan-kasittely]
   (apply grid/vaihda-osa!
@@ -463,20 +464,14 @@
                                                                (range 1 6))))))))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
-  (let [nyt (pvm/nyt)
-        g (grid/grid-pohjasta g-pohjat/grid-pohja-5
+  (let [g (grid/grid-pohjasta g-pohjat/grid-pohja-5
                               (fn [g]
                                 (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaus :grid] g)))
                               {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :johto-ja-hallintokorvaus :grid]))
                                                      :paivita! (fn [f]
                                                                  (swap! tila/suunnittelu-kustannussuunnitelma
                                                                         (fn [tila]
-                                                                          (update-in tila [:gridit :johto-ja-hallintokorvaus :grid] f))))})
-        #_#_g (grid/aseta-root-fn g {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :johto-ja-hallintokorvaus :grid]))
-                                 :paivita! (fn [f]
-                                             (swap! tila/suunnittelu-kustannussuunnitelma
-                                                    (fn [tila]
-                                                      (update-in tila [:gridit :johto-ja-hallintokorvaus :grid] f))))})]
+                                                                          (update-in tila [:gridit :johto-ja-hallintokorvaus :grid] f))))})]
     (grid/poista-rivi! g (grid/get-in-grid g [::g-pohjat/yhteenveto]))
     (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/otsikko])
                         :lapset

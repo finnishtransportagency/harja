@@ -395,15 +395,29 @@
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
 
 (defn paivita-raidat! [g]
-  (doall (map-indexed (fn [index rivi]
-                        (grid/paivita-grid! rivi
-                                            :parametrit
-                                            (fn [parametrit]
-                                              (update parametrit :class (fn [luokat]
-                                                                          (if (odd? index)
-                                                                            (conj luokat "table-default-odd")
-                                                                            (conj luokat "table-default-even")))))))
-                      (grid/nakyvat-rivit g))))
+  (let [paivita-luokat (fn [luokat odd?]
+                         (if odd?
+                           (-> luokat
+                               (conj "table-default-odd")
+                               (disj "table-default-even"))
+                           (-> luokat
+                               (conj "table-default-even")
+                               (disj "table-default-odd"))))]
+    (loop [[rivi & loput-rivit] (grid/nakyvat-rivit g)
+           index 0]
+      (when rivi
+        (let [rivin-nimi (grid/hae-osa rivi :nimi)]
+          (grid/paivita-grid! rivi
+                              :parametrit
+                              (fn [parametrit]
+                                (update parametrit :class (fn [luokat]
+                                                            (if (= ::valinta rivin-nimi)
+                                                              (paivita-luokat luokat (not (odd? index)))
+                                                              (paivita-luokat luokat (odd? index)))))))
+          (recur loput-rivit
+                 (if (= ::valinta rivin-nimi)
+                   index
+                   (inc index))))))))
 
 (defn laajenna-solua-klikattu
   ([solu auki? dom-id] (laajenna-solua-klikattu solu auki? dom-id nil))

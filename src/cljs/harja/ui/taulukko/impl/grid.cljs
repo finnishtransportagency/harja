@@ -25,7 +25,6 @@
 
 (s/def ::alueet any?)
 (s/def ::koko any?)
-(s/def ::jarjestys any?)
 (s/def ::osat any?)
 
 (defonce oletus-koko {:sarake {:oletus-leveys "1fr"}
@@ -1246,11 +1245,10 @@
       osa)))
 
 (defn validi-grid-asetukset?
-  [{:keys [nimi alueet koko jarjestys osat]}]
+  [{:keys [nimi alueet koko osat root-fn luokat]}]
   (and (or (nil? nimi) (satisfies? IEquiv nimi))
        (or (nil? alueet) (s/valid? ::alueet alueet))
        (or (nil? koko) (s/valid? ::koko koko))
-       (or (nil? jarjestys) (s/valid? ::jarjestys jarjestys))
        (or (nil? osat) (s/valid? ::osat osat))))
 
 (defn grid-c [record {:keys [nimi alueet koko osat root-fn luokat] :as asetukset}]
@@ -1258,7 +1256,7 @@
         koko (r/atom {root-id koko})
         osat (r/atom osat)
         alueet (r/atom alueet)
-        parametrit (r/atom {:class luokat})
+        parametrit (r/atom {:class (or luokat #{})})
         koko-fn (constantly koko)
         gridi (cond-> (record root-id alueet koko osat parametrit)
                       true (assoc ::koko-fn koko-fn
