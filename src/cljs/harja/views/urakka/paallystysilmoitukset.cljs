@@ -1162,7 +1162,7 @@
          :leveys           45
          :komponentti      edellinen-yha-lahetys-komponentti
          :komponentti-args [kohteet-yha-lahetyksessa]}
-        (when (> 2019 valittu-urakan-vuosi)
+        (when (< 2019 valittu-urakan-vuosi)
         {:otsikko          "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
          :komponentti      laheta-yhaan-komponentti
          :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
