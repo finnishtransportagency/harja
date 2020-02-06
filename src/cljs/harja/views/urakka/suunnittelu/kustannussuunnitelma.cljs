@@ -80,7 +80,8 @@
   [vaihda-fn txt]
   {:pre [(fn? vaihda-fn)]}
   (fn suunnittele-kuukausitasolla-filter [this]
-    (let [kuukausitasolla? @(grid/solun-asia this :osan-derefable)
+    (let [taman-data (solu/taman-derefable this)
+          kuukausitasolla? @taman-data
           osan-id (str (grid/hae-osa this :id))]
       [:div
        [:input.vayla-checkbox {:id osan-id
@@ -208,33 +209,33 @@
 
 
 (defn rivi->rivi-kuukausifiltterilla [rivi]
-  (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
-              :koko (assoc-in konf/auto
-                              [:rivi :nimet]
-                              {::yhteenveto 0
-                               ::valinta 1})
-              :osat [(grid/paivita-grid! (grid/aseta-nimi rivi ::yhteenveto)
-                                         :lapset
-                                         (fn [osat]
-                                           (mapv (fn [osa]
-                                                   (if (instance? solu/Laajenna osa)
-                                                     (assoc osa :auki-alussa? true)
-                                                     osa))
-                                                 osat)))
-                     (grid/rivi {:osat [(vayla-checkbox (fn [this event]
-                                                          (.preventDefault event)
-                                                          (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
-                                                                                                              :kuukausitasolla?))]
-                                                            (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] kuukausitasolla?))))
-                                                        "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
-                                        (solu/tyhja)
-                                        (solu/tyhja)
-                                        (solu/tyhja)]
-                                 :koko {:seuraa {:seurattava ::g-pohjat/otsikko
-                                                 :sarakkeet :sama
-                                                 :rivit :sama}}
-                                 :nimi ::valinta}
-                                [{:sarakkeet [0 4] :rivit [0 1]}])]}))
+  (let [sarakkeiden-maara (count (grid/hae-grid rivi :lapset))]
+    (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
+                :koko (assoc-in konf/auto
+                                [:rivi :nimet]
+                                {::yhteenveto 0
+                                 ::valinta 1})
+                :osat [(grid/paivita-grid! (grid/aseta-nimi rivi ::yhteenveto)
+                                           :lapset
+                                           (fn [osat]
+                                             (mapv (fn [osa]
+                                                     (if (instance? solu/Laajenna osa)
+                                                       (assoc osa :auki-alussa? true)
+                                                       osa))
+                                                   osat)))
+                       (grid/rivi {:osat (vec
+                                           (cons (vayla-checkbox (fn [this event]
+                                                                   (.preventDefault event)
+                                                                   (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
+                                                                                                                       :kuukausitasolla?))]
+                                                                     (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] kuukausitasolla?))))
+                                                                 "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
+                                                 (repeatedly sarakkeiden-maara (fn [] (solu/tyhja)))))
+                                   :koko {:seuraa {:seurattava ::g-pohjat/otsikko
+                                                   :sarakkeet :sama
+                                                   :rivit :sama}}
+                                   :nimi ::valinta}
+                                  [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})))
 
 (defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
   (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::yhteenveto])
@@ -246,6 +247,19 @@
                                                    osa))
                                                osat)))
                    ::g-pohjat/data-yhteenveto))
+
+(defn rivi-kuukausifiltterilla!
+  [laajennasolu & datan-kasittely]
+  (apply grid/vaihda-osa!
+         (-> laajennasolu grid/vanhempi)
+         rivi->rivi-kuukausifiltterilla
+         datan-kasittely))
+(defn rivi-ilman-kuukausifiltteria!
+  [laajennasolu & datan-kasittely]
+  (apply grid/vaihda-osa!
+         (-> laajennasolu grid/vanhempi grid/vanhempi)
+         rivi-kuukausifiltterilla->rivi
+         datan-kasittely))
 
 
 (defn tyhja->syote-tayta-alas [tyhja {:keys [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiiviselle]}]
@@ -485,7 +499,17 @@
                                                           (fn [lapset]
                                                             [(gov/tyhja->laajenna (get lapset 0)
                                                                                   (fn [this auki?]
-                                                                                    (t/laajenna-solua-klikattu this auki? "johto-ja-hallintokorvaus-laskulla-taulukko"))
+                                                                                    (if auki?
+                                                                                      (rivi-kuukausifiltterilla! this
+                                                                                                                 #_#_[:. ::yhteenveto] yhteenveto-grid-rajapinta-asetukset
+                                                                                                                 #_#_[:. ::valinta] {:rajapinta :kuukausitasolla?
+                                                                                                                                 :solun-polun-pituus 1
+                                                                                                                                 :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                                    (println "DATAN KÄSITTELY: kuukausitasolla?: " kuukausitasolla?)
+                                                                                                                                                    [kuukausitasolla? nil nil nil])})
+                                                                                      (rivi-ilman-kuukausifiltteria! this
+                                                                                                                     #_#_[:.. ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
+                                                                                    (t/laajenna-solua-klikattu this auki? "johto-ja-hallintokorvaus-laskulla-taulukko" {:sulkemis-polku [:.. :.. :.. 1]}))
                                                                                   false
                                                                                   {:class #{"table-default" "lihavoitu"}})
                                                              (gov/tyhja->syote (get lapset 1)
@@ -710,19 +734,6 @@
                                                                              (when (instance? solu/Syote osa)
                                                                                :maara))
                                                                            (grid/hae-grid osat :lapset)))}
-        rivi-kuukausifiltterilla! (fn [laajennasolu]
-                                    (grid/vaihda-osa! (-> laajennasolu grid/vanhempi)
-                                                      rivi->rivi-kuukausifiltterilla
-                                                      [:. ::yhteenveto] yhteenveto-grid-rajapinta-asetukset
-                                                      [:. ::valinta] {:rajapinta :kuukausitasolla?
-                                                                      :solun-polun-pituus 1
-                                                                      :datan-kasittely (fn [kuukausitasolla?]
-                                                                                         (println "DATAN KÄSITTELY: kuukausitasolla?: " kuukausitasolla?)
-                                                                                         [kuukausitasolla? nil nil nil])}))
-        rivi-ilman-kuukausifiltteria! (fn [laajennasolu]
-                                        (grid/vaihda-osa! (-> laajennasolu grid/vanhempi grid/vanhempi)
-                                                          rivi-kuukausifiltterilla->rivi
-                                                          [:.. ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
         g (grid/grid-pohjasta g-pohjat/grid-pohja-4
                               (fn [g]
                                 (println "ASETETAAN HOIDONJOHTOPALKKIO GRID")
@@ -750,8 +761,15 @@
                           [(gov/tyhja->laajenna (get lapset 0)
                                                 (fn [this auki?]
                                                   (if auki?
-                                                    (rivi-kuukausifiltterilla! this)
-                                                    (rivi-ilman-kuukausifiltteria! this))
+                                                    (rivi-kuukausifiltterilla! this
+                                                                               [:. ::yhteenveto] yhteenveto-grid-rajapinta-asetukset
+                                                                               [:. ::valinta] {:rajapinta :kuukausitasolla?
+                                                                                               :solun-polun-pituus 1
+                                                                                               :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                  (println "DATAN KÄSITTELY: kuukausitasolla?: " kuukausitasolla?)
+                                                                                                                  [kuukausitasolla? nil nil nil])})
+                                                    (rivi-ilman-kuukausifiltteria! this
+                                                                                   [:.. ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
                                                   (t/laajenna-solua-klikattu this auki? "hoidonjohtopalkkio-taulukko" {:sulkemis-polku [:.. :.. :.. 1]}))
                                                 false
                                                 {:class #{"table-default" "lihavoitu"}})
