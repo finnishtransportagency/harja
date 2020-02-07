@@ -67,7 +67,7 @@ SET likainen = TRUE,
     muokattu = current_timestamp
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
-                     JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                     JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi AND tpi. loppupvm > current_timestamp - INTERVAL '3 months'
                      JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
                      JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                    WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka AND tpk.id IN (:tehtavat));
