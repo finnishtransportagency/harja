@@ -1689,7 +1689,7 @@
                                yhteenvedot paivitettavien-yhteenvetojen-hoitokaudet))))))
   ToggleHankintakustannuksetOtsikko
   (process-event [{:keys [kylla?]} app]
-    (let [toimenpide-avain (get-in app [:hankintakustannukset :valinnat :toimenpide])
+    (let [toimenpide-avain (get-in app [:suodattimet :hankinnat :toimenpide])
           polku [:hankintakustannukset :toimenpiteet toimenpide-avain]
           taulukko (get-in app polku)
           uusi-taulukko (tyokalut/paivita-asiat-taulukossa taulukko [0 "Nimi"]
