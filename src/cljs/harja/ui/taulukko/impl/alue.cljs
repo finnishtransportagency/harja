@@ -46,7 +46,7 @@
     (g/paivita-osat! this polku f))
 
   (-lisaa-rivi! [this solu]
-    (p/lisaa-rivi! this solu (count (p/lapset this))))
+    (g/lisaa-rivi! this solu))
   (-lisaa-rivi! [this solu index]
     (g/lisaa-rivi! this solu index))
   (-lisaa-sarake! [this solu]
@@ -127,7 +127,7 @@
     (g/paivita-osat! this polku f))
 
   (-lisaa-rivi! [this solu]
-    (p/lisaa-rivi! this solu (count (p/lapset this))))
+    (g/lisaa-rivi! this solu))
   (-lisaa-rivi! [this solu index]
     (g/lisaa-rivi! this solu index))
   (-lisaa-sarake! [this solu]

@@ -616,24 +616,34 @@
                                         (fn [data _]
                                           (dk/jarjesta-data jarjestys data))))))))
 
-(defn lisaa-rivi! [grid solu index]
-  (pre-walk-grid! grid
-                  (fn [osa]
-                    (when (and (satisfies? p/IGrid osa)
-                               (every? #(satisfies? sp/ISolu %)
-                                       (p/lapset osa)))
-                      (p/paivita-alueet! osa (fn [alueet]
-                                               (mapv (fn [alue]
-                                                       (update alue :rivit (fn [[alku loppu]]
-                                                                             [alku (inc loppu)])))
-                                                     alueet)))
-                      (p/paivita-lapset! osa (fn [lapset]
-                                               (mapv (fn [i]
-                                                       (cond
-                                                         (< i index) (get lapset i)
-                                                         (= i index) solu
-                                                         (> i index) (get lapset (inc i))))
-                                                     (range (inc (count lapset))))))))))
+(defn lisaa-rivi!
+  ([grid rivi]
+   (let [index-polku-viimeiseen (->> (gridin-osat-vektoriin grid (constantly true) identity)
+                                     (sort-by ::index-polku compare)
+                                     last
+                                     butlast
+                                     vec)]
+     (lisaa-rivi! grid rivi (update index-polku-viimeiseen (dec (count index-polku-viimeiseen)) inc))))
+  ([grid rivi index-vector]
+   {:pre [(satisfies? p/IGrid grid)
+          (every? #(satisfies? p/IGrid %)
+                  (p/lapset grid))
+          (satisfies? p/IGrid rivi)
+          (every? #(integer? %) index-vector)]}
+   (let [g (get-in-grid grid (vec (butlast index-vector)))
+         index (last index-vector)]
+     (p/paivita-alueet! g (fn [alueet]
+                            (mapv (fn [alue]
+                                    (update alue :rivit (fn [[alku loppu]]
+                                                          [alku (inc loppu)])))
+                                  alueet)))
+     (p/paivita-lapset! g (fn [lapset]
+                            (mapv (fn [i]
+                                    (cond
+                                      (< i index) (get lapset i)
+                                      (= i index) rivi
+                                      (> i index) (get lapset (inc i))))
+                                  (range (inc (count lapset)))))))))
 
 (defn lisaa-sarake! [grid solu index]
   (pre-walk-grid! grid
@@ -929,7 +939,7 @@
     (paivita-osat! this polku f))
 
   (-lisaa-rivi! [this solu]
-    (p/lisaa-rivi! this solu (count (p/lapset this))))
+    (lisaa-rivi! this solu))
   (-lisaa-rivi! [this solu index]
     (lisaa-rivi! this solu index))
   (-lisaa-sarake! [this solu]
@@ -1251,12 +1261,13 @@
        (or (nil? koko) (s/valid? ::koko koko))
        (or (nil? osat) (s/valid? ::osat osat))))
 
-(defn grid-c [record {:keys [nimi alueet koko osat root-fn luokat] :as asetukset}]
+(defn grid-c [record {:keys [nimi alueet koko osat root-fn luokat dom-id] :as asetukset}]
   (let [root-id (gensym "grid")
         koko (r/atom {root-id koko})
         osat (r/atom osat)
         alueet (r/atom alueet)
-        parametrit (r/atom {:class (or luokat #{})})
+        parametrit (r/atom {:class (or luokat #{})
+                            :id dom-id})
         koko-fn (constantly koko)
         gridi (cond-> (record root-id alueet koko osat parametrit)
                       true (assoc ::koko-fn koko-fn

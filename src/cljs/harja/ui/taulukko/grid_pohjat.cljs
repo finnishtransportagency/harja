@@ -45,19 +45,17 @@
                                                                                     :luokat #{"salli-ylipiirtaminen"}}
                                                                                    [{:sarakkeet [0 4] :rivit [0 1]}])
                                                                         (grid/taulukko {:nimi ::data-sisalto
-                                                                                        :alueet [{:sarakkeet [0 1] :rivit [0 12]}]
+                                                                                        :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
                                                                                         :koko konf/auto
                                                                                         :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
-                                                                                       (mapv (fn [_]
-                                                                                               (grid/rivi {:koko {:seuraa {:seurattava ::otsikko
-                                                                                                                           :sarakkeet :sama
-                                                                                                                           :rivit :sama}}
-                                                                                                           :osat (mapv (fn [_]
-                                                                                                                         (solu/tyhja))
-                                                                                                                       (range 4))
-                                                                                                           :luokat #{"salli-ylipiirtaminen"}}
-                                                                                                          [{:sarakkeet [0 4] :rivit [0 1]}]))
-                                                                                             (range 12)))]})])
+                                                                                       [(grid/rivi {:koko {:seuraa {:seurattava ::otsikko
+                                                                                                                    :sarakkeet :sama
+                                                                                                                    :rivit :sama}}
+                                                                                                    :osat (mapv (fn [_]
+                                                                                                                  (solu/tyhja))
+                                                                                                                (range 4))
+                                                                                                    :luokat #{"salli-ylipiirtaminen"}}
+                                                                                                   [{:sarakkeet [0 4] :rivit [0 1]}])])]})])
                                      (grid/rivi {:nimi ::yhteenveto
                                                  :koko {:seuraa {:seurattava ::otsikko
                                                                  :sarakkeet :sama
