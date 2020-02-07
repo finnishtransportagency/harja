@@ -249,7 +249,7 @@
          [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn {:ohita-meta-paivitys? true
                                                                      :jalkiprosessointi-fn (fn [lomake]
                                                                                              (vary-meta lomake update :validius (fn [validius]
-                                                                                                                                  )))} :kohdistukset (r/partial kohdistuksen-poisto indeksi))} "Poista kohdistus"]]])]))
+                                                                                                                                  (dissoc validius [:kohdistukset indeksi :summa] [:kohdistukset indeksi :tehtavaryhma]))))} :kohdistukset (r/partial kohdistuksen-poisto indeksi))} "Poista kohdistus"]]])]))
 
 (defn lisaa-validointi [lomake-meta validoinnit]
   (reduce (fn [kaikki {:keys [polku validointi-fn]}]
