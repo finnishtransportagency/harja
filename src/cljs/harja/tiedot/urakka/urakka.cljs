@@ -28,74 +28,64 @@
                                         (range 0 12)))
                                  (range (harja.pvm/vuosi (harja.pvm/nyt)) (+ (harja.pvm/vuosi (harja.pvm/nyt)) 6)))))))
 
+(def validoinnit {:summa (fn [summa]
+                           (not (nil? summa)))
+                  :tehtavaryhma (fn [ryhma]
+                                  (loki/log "Valid ryhma " ryhma)
+                                  (not (nil? ryhma)))})
+
 (defn validoi-fn
   [lomake]
   (loki/log "Validointi tehdään" (meta lomake))
   (loki/log "onko validoitavia lapsia")
   (if (nil? (meta lomake))
     lomake
-    (let [lomake (with-meta
-                   (reduce (fn [lomake [avain arvo]]
-                             (loki/log lomake avain arvo)
-                             (assoc lomake avain
-                                           (cond
-                                             (vector? arvo) (mapv validoi-fn arvo)
-                                             (map? arvo) (validoi-fn arvo)
-                                             :else (do
-                                                     (loki/log "assosioin " lomake avain arvo)
-                                                     arvo))))
-                           {}
-                           lomake)
-                   (meta lomake))]
-      (vary-meta lomake (fn [{:keys [validius validi?] :as lomake-meta} lomake]
-                          (loki/log lomake-meta)
-                          (reduce (fn [kaikki [avain {:keys [validointi] :as validius}]]
-                                    (as-> kaikki kaikki
-                                          (update
-                                            kaikki
-                                            :validius
-                                            (fn [vs]
-                                              (update vs
-                                                      avain (fn [kentta]
-                                                              (loki/log "avain" avain "lomake" lomake "avainlomake" (avain lomake))
-                                                              (assoc kentta
-                                                                :validointi validointi
-                                                                :validi? (validointi
-                                                                           (avain lomake)))))))
-                                          (update
-                                            kaikki
-                                            :validi?
-                                            (fn [v?]
-                                              (not
-                                                (some (fn [[avain {validi? :validi?}]]
-                                                        (false? validi?)) (:validius kaikki)))))))
-                                  lomake-meta
-                                  validius))
-                 lomake))))
+    (let [lomake (vary-meta
+                   lomake
+                   (fn [{:keys [validius validi?] :as lomake-meta} lomake]
+                     (loki/log "methaa" lomake-meta)
+                     (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
+                               (as-> kaikki kaikki
+                                     (update
+                                       kaikki
+                                       :validius
+                                       (fn [vs]
+                                         (loki/log "vallut" vs "polku" polku)
+                                         (update vs
+                                                 polku (fn [kentta]
+                                                         (loki/log "kentta" kentta "avain" polku "lomake" lomake "avainlomake" (get polku lomake))
+                                                         (assoc kentta
+                                                           :validointi validointi
+                                                           :validi? (validointi
+                                                                      (get-in lomake polku)))))))
+                                     (update
+                                       kaikki
+                                       :validi?
+                                       (fn [v?]
+                                         (not
+                                           (some (fn [[avain {validi? :validi?}]]
+                                                   (false? validi?)) (:validius kaikki)))))))
+                             lomake-meta
+                             validius))
+                   lomake)]
+      (loki/log "lomake meta" (meta lomake))
+      lomake)))
 
 (defn luo-validius-meta [& kentat-ja-validaatiot]
   (assoc {} :validius
-            (reduce (fn [k [avain validointi-fn]]
-                      (assoc k avain {:validointi validointi-fn
+            (reduce (fn [k [polku validointi-fn]]
+                      (assoc k polku {:validointi validointi-fn
                                       :validi?    false
                                       :koskettu?  false}))
                     {}
                     (partition 2 kentat-ja-validaatiot))
             :validi? false
-            :validoi validoi-fn
-            ))
+            :validoi validoi-fn))
 
-(def kulut-lomake-default (with-meta {:kohdistukset          [(with-meta
-                                                                {:tehtavaryhma        nil
-                                                                 :toimenpideinstanssi nil
-                                                                 :summa               nil
-                                                                 :rivi                0}
-                                                                (luo-validius-meta
-                                                                  :summa (fn [summa]
-                                                                           (not (nil? summa)))
-                                                                  :tehtavaryhma (fn [ryhma]
-                                                                                  (loki/log "Valid ryhma " ryhma)
-                                                                                  (not (nil? ryhma)))))]
+(def kulut-lomake-default (with-meta {:kohdistukset          [{:tehtavaryhma        nil
+                                                               :toimenpideinstanssi nil
+                                                               :summa               nil
+                                                               :rivi                0}]
                                       :aliurakoitsija        nil
                                       :koontilaskun-kuukausi nil
                                       :viite                 nil
@@ -104,26 +94,29 @@
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil}
                                      (luo-validius-meta
-                                       :koontilaskun-kuukausi (fn [kk]
-                                                                (loki/log "Valid kk " kk)
-                                                                (not (nil? kk)))
-                                       :erapaiva (fn [pvm]
-                                                   (loki/log "Valid pvm " pvm)
-                                                   (and (not (nil? pvm))))
-                                       :kohdistukset (fn [kohdistukset]
-                                                       (loki/log "Valid kohdistukset " kohdistukset)
-                                                       (some false?
-                                                             (mapv
-                                                               (fn [kohdistus]
-                                                                 (let [{validius :validius validoi :validoi} (meta kohdistus)]
-                                                                   (some false?
-                                                                         (map (fn [[avain validiudet]]
-                                                                                (let [{:keys [validointi validi? koskettu?]}
-                                                                                      validiudet]
-                                                                                  (and
-                                                                                    (true? koskettu?)
-                                                                                    (validointi (avain kohdistus))))) validius))))
-                                                               kohdistukset))))))
+                                       [:koontilaskun-kuukausi] (fn [kk]
+                                                                  (loki/log "Valid kk " kk)
+                                                                  (not (nil? kk)))
+                                       [:erapaiva] (fn [pvm]
+                                                     (loki/log "Valid pvm " pvm)
+                                                     (and (not (nil? pvm))))
+
+                                       [:kohdistukset 0 :summa] (:summa validoinnit)
+                                       [:kohdistukset 0 :tehtavaryhma] (:tehtavaryhma validoinnit)
+                                       #_[:kohdistukset] #_(fn [kohdistukset]
+                                                             (loki/log "Valid kohdistukset " kohdistukset)
+                                                             (some false?
+                                                                   (mapv
+                                                                     (fn [kohdistus]
+                                                                       (let [{validius :validius validoi :validoi} (meta kohdistus)]
+                                                                         (some false?
+                                                                               (map (fn [[avain validiudet]]
+                                                                                      (let [{:keys [validointi validi? koskettu?]}
+                                                                                            validiudet]
+                                                                                        (and
+                                                                                          (true? koskettu?)
+                                                                                          (validointi (avain kohdistus))))) validius))))
+                                                                     kohdistukset))))))
 
 (def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
                                         :taulukko    nil

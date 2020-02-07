@@ -16,7 +16,7 @@
 (defrecord LuoKulutaulukko [])
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
-(defrecord PaivitaLomake [polut-ja-arvot])
+(defrecord PaivitaLomake [polut-ja-arvot optiot])
 (defrecord AvaaLasku [lasku])
 
 (defrecord LiiteLisatty [liite])
@@ -57,12 +57,14 @@
 
 (defn parsi-summa [summa]
   (loki/log "PARSI " summa)
-  (if (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
+  (cond
+    (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
         (string/replace "," ".")
         js/parseFloat)
-    0))
+    (not (nil? summa)) summa
+    :else 0))
 
 (defn- osien-paivitys-fn
   [funktiot]
@@ -73,16 +75,30 @@
           (paivitys osa)))
       osat)))
 
+(defn redusoi-lomake
+  [{:keys [ohita-meta-paivitys?]} args acc [polku arvo]]
+  (loki/log "ohtia" ohita-meta-paivitys?)
+  (let [paivitetty-lomake
+        (apply
+          (cond (and
+                  (vector? polku)
+                  (fn? arvo)) update-in
+                (vector? polku) assoc-in
+                (fn? arvo) update
+                :else assoc)
+          (into [acc polku arvo] (when (fn? arvo) args)))]
+    (if (true? ohita-meta-paivitys?)
+      paivitetty-lomake
+      (vary-meta paivitetty-lomake assoc-in (conj [:validius] polku :koskettu?) true))))
+
 (defn lomakkeen-paivitys
-  [lomake polut-ja-arvot & args]
-  (reduce (fn [acc [polku arvo]]
-            (apply
-              (if (vector? polku)
-                (if (fn? arvo) update-in assoc-in)
-                (if (fn? arvo) update assoc))
-              (into [acc polku arvo] (when (fn? arvo) args))))
-          lomake
-          (partition 2 polut-ja-arvot)))
+  [lomake polut-ja-arvot {:keys [jalkiprosessointi-fn] :as optiot} & args]
+  (let [jalkiprosessointi (or jalkiprosessointi-fn
+                              identity)]
+    (jalkiprosessointi
+      (reduce (r/partial redusoi-lomake optiot args)
+              lomake
+              (partition 2 polut-ja-arvot)))))
 
 (defn lasku->lomake [{:keys [kohdistukset] :as lasku}]
   (let [{aliurakoitsija :suorittaja} lasku]
@@ -440,9 +456,9 @@
   ;; VIENNIT
 
   PaivitaLomake
-  (process-event [{polut-ja-arvot :polut-ja-arvot} app]
+  (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
     (apply loki/log "päivitetään" polut-ja-arvot)
-    (update app :lomake lomakkeen-paivitys polut-ja-arvot))
+    (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot))
   LuoUusiAliurakoitsija
   (process-event [{aliurakoitsija :aliurakoitsija} app]
     (loki/log "!" aliurakoitsija)
@@ -462,7 +478,7 @@
   TallennaKulu
   (process-event
     [_ {aliurakoitsijat :aliurakoitsijat {:keys [kohdistukset koontilaskun-kuukausi aliurakoitsija
-                                                                    laskun-numero lisatieto viite erapaiva] :as lomake} :lomake :as app}]
+                                                 laskun-numero lisatieto viite erapaiva] :as lomake} :lomake :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (:summa %2)) 0 kohdistukset)
           {validoi-fn :validoi} (meta lomake)
