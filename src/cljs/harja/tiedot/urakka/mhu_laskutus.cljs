@@ -76,8 +76,8 @@
       osat)))
 
 (defn redusoi-lomake
-  [{:keys [ohita-meta-paivitys?]} args acc [polku arvo]]
-  (loki/log "ohtia" ohita-meta-paivitys?)
+  [{:keys [validoitava?]} args acc [polku arvo]]
+  (loki/log "ohtia" polku validoitava?)
   (let [paivitetty-lomake
         (apply
           (cond (and
@@ -87,9 +87,9 @@
                 (fn? arvo) update
                 :else assoc)
           (into [acc polku arvo] (when (fn? arvo) args)))]
-    (if (true? ohita-meta-paivitys?)
-      paivitetty-lomake
-      (vary-meta paivitetty-lomake assoc-in (conj [:validius] polku :koskettu?) true))))
+    (if (true? validoitava?)
+      (vary-meta paivitetty-lomake assoc-in (conj [:validius] (if (keyword? polku) (vector polku) polku) :koskettu?) true)
+      paivitetty-lomake)))
 
 (defn lomakkeen-paivitys
   [lomake polut-ja-arvot {:keys [jalkiprosessointi-fn] :as optiot} & args]

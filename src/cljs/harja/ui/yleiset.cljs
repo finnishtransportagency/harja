@@ -291,7 +291,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
-                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli?] :as asetukset} vaihtoehdot]
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -299,7 +299,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div (merge
                   {:class (str (if vayla-tyyli?
-                                 "select-default"
+                                 (str "select-" (if virhe? "error-" "") "default")
                                  "dropdown livi-alasveto")
                                (when class (str " " class))
                                (when @auki? " open"))}

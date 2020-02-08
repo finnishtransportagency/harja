@@ -28,16 +28,18 @@
                                         (range 0 12)))
                                  (range (harja.pvm/vuosi (harja.pvm/nyt)) (+ (harja.pvm/vuosi (harja.pvm/nyt)) 6)))))))
 
-(def validoinnit {:summa (fn [summa]
-                           (not (nil? summa)))
-                  :tehtavaryhma (fn [ryhma]
-                                  (loki/log "Valid ryhma " ryhma)
-                                  (not (nil? ryhma)))})
+(defn ei-nil [arvo] (not (nil? arvo)))
+(defn ei-nil-ei-tyhja [arvo] (and
+                        (ei-nil arvo)
+                        (not (empty? arvo))))
+
+(def validoinnit {:summa        ei-nil
+                  :tehtavaryhma ei-nil
+                  :erapaiva     ei-nil-ei-tyhja
+                  :koontilaskun-kuukausi ei-nil})
 
 (defn validoi-fn
   [lomake]
-  (loki/log "Validointi tehdään" (meta lomake))
-  (loki/log "onko validoitavia lapsia")
   (if (nil? (meta lomake))
     lomake
     (let [lomake (vary-meta
@@ -68,7 +70,6 @@
                              lomake-meta
                              validius))
                    lomake)]
-      (loki/log "lomake meta" (meta lomake))
       lomake)))
 
 (defn luo-validius-meta [& kentat-ja-validaatiot]
@@ -94,29 +95,10 @@
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil}
                                      (luo-validius-meta
-                                       [:koontilaskun-kuukausi] (fn [kk]
-                                                                  (loki/log "Valid kk " kk)
-                                                                  (not (nil? kk)))
-                                       [:erapaiva] (fn [pvm]
-                                                     (loki/log "Valid pvm " pvm)
-                                                     (and (not (nil? pvm))))
-
+                                       [:koontilaskun-kuukausi] (:koontilaskun-kuukausi validoinnit)
+                                       [:erapaiva] (:erapaiva validoinnit)
                                        [:kohdistukset 0 :summa] (:summa validoinnit)
-                                       [:kohdistukset 0 :tehtavaryhma] (:tehtavaryhma validoinnit)
-                                       #_[:kohdistukset] #_(fn [kohdistukset]
-                                                             (loki/log "Valid kohdistukset " kohdistukset)
-                                                             (some false?
-                                                                   (mapv
-                                                                     (fn [kohdistus]
-                                                                       (let [{validius :validius validoi :validoi} (meta kohdistus)]
-                                                                         (some false?
-                                                                               (map (fn [[avain validiudet]]
-                                                                                      (let [{:keys [validointi validi? koskettu?]}
-                                                                                            validiudet]
-                                                                                        (and
-                                                                                          (true? koskettu?)
-                                                                                          (validointi (avain kohdistus))))) validius))))
-                                                                     kohdistukset))))))
+                                       [:kohdistukset 0 :tehtavaryhma] (:tehtavaryhma validoinnit))))
 
 (def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
                                         :taulukko    nil

@@ -2,22 +2,22 @@
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.ui.debug :as debug]
-            [harja.pvm :as pvm]
-            [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.mhu-laskutus :as tiedot]
+            [harja.ui.debug :as debug]
+            [harja.ui.komponentti :as komp]
             [harja.ui.taulukko.taulukko :as taulukko]
             [harja.ui.taulukko.jana :as jana]
             [harja.ui.taulukko.osa :as osa]
             [harja.ui.taulukko.tyokalut :as tyokalu]
             [harja.ui.taulukko.protokollat :as p]
-            [harja.ui.modal :as modal]
-            [harja.ui.liitteet :as liitteet]
-            [harja.loki :refer [log]]
-            [harja.loki :as loki]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.modal :as modal]
+            [harja.ui.liitteet :as liitteet]
+            [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
+            [harja.loki :as loki])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (def avaimet->proppi {:arvo :value})
@@ -173,37 +173,41 @@
         summa-meta (get validius [:kohdistukset 0 :summa])]
     [:div.col-sm-6.col-xs-12
      [:h2 "Koontilaskun tiedot"]
-     [kulukentta "Koontilaskun kuukausi *" :komponentti (fn []
-                                                          [yleiset/livi-pudotusvalikko
-                                                           {:vayla-tyyli? true
-                                                            :valinta      koontilaskun-kuukausi
-                                                            :valitse-fn   #(paivitys-fn :koontilaskun-kuukausi %)
-                                                            :format-fn    (fn [a]
-                                                                            (if (nil? a)
-                                                                              "Ei valittu"
-                                                                              (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
-                                                           (flatten
-                                                             (mapv
-                                                               (fn [kk]
-                                                                 (map
-                                                                   (fn [hv]
-                                                                     (keyword
-                                                                       (str
-                                                                         (name kk)
-                                                                         "/"
-                                                                         (name hv))))
-                                                                   (sort #{:1-hoitovuosi
-                                                                           :2-hoitovuosi
-                                                                           :3-hoitovuosi
-                                                                           :4-hoitovuosi
-                                                                           :5-hoitovuosi})))
-                                                               kuukaudet))])]
-     [kulukentta "Laskun pvm *" :komponentti (fn []
-                                               [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn :erapaiva %)
-                                                                                            :luokat        #{(str "input" (ei-koskettu-tai-validi? erapaiva-meta) "-default") "komponentin-input"}
-                                                                                            :pvm           erapaiva
-                                                                                            :pakota-suunta false
-                                                                                            :valittava?-fn #(pvm/jalkeen? % (pvm/nyt))}])]
+     [kulukentta "Koontilaskun kuukausi *"
+      :komponentti (fn []
+                     [yleiset/livi-pudotusvalikko
+                      {:virhe?       (not (ei-koskettu-tai-validi? summa-meta))
+                       :vayla-tyyli? true
+                       :valinta      koontilaskun-kuukausi
+                       :valitse-fn   #(paivitys-fn {:validoitava? true}
+                                                   :koontilaskun-kuukausi %)
+                       :format-fn    (fn [a]
+                                       (if (nil? a)
+                                         "Ei valittu"
+                                         (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
+                      (flatten
+                        (mapv
+                          (fn [kk]
+                            (map
+                              (fn [hv]
+                                (keyword
+                                  (str
+                                    (name kk)
+                                    "/"
+                                    (name hv))))
+                              (sort #{:1-hoitovuosi
+                                      :2-hoitovuosi
+                                      :3-hoitovuosi
+                                      :4-hoitovuosi
+                                      :5-hoitovuosi})))
+                          kuukaudet))])]
+     [kulukentta "Laskun pvm *"
+      :komponentti (fn []
+                     [pvm-valinta/pvm-valintakalenteri-inputilla {:valitse       #(paivitys-fn {:validoitava? true} :erapaiva %)
+                                                                  :luokat        #{(str "input" (ei-koskettu-tai-validi? erapaiva-meta) "-default") "komponentin-input"}
+                                                                  :pvm           erapaiva
+                                                                  :pakota-suunta false
+                                                                  :valittava?-fn #(pvm/jalkeen? % (pvm/nyt))}])]
      [kulukentta "Laskun viite" :arvo viite :on-change #(paivitys-fn :viite (-> % .-target .-value))]
      [kulukentta "Koontilaskun numero" :arvo laskun-numero :on-change #(paivitys-fn :laskun-numero (-> % .-target .-value))]
      [kulukentta
@@ -218,7 +222,7 @@
                 (get-in lomake [:kohdistukset 0 :summa])
                 0)
       :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
-      :on-blur #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
+      :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset 0 :summa] (-> % .-target .-value tiedot/parsi-summa))]]))
 
 (defn kohdistuksen-poisto [indeksi kohdistukset]
   (apply conj
@@ -235,26 +239,30 @@
      [kulukentta "Tehtäväryhmä *" :komponentti (fn []
                                                  [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
                                                                                :valinta      (some #(when (= tehtavaryhma (:id %)) %) tehtavaryhmat)
-                                                                               :valitse-fn   #(paivitys-fn [:kohdistukset indeksi :tehtavaryhma] (:id %)
-                                                                                                           [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
+                                                                               :valitse-fn   #(do
+                                                                                                (paivitys-fn
+                                                                                                  [:kohdistukset indeksi :toimenpideinstanssi] (:toimenpideinstanssi %))
+                                                                                                (paivitys-fn {:validoitava? true}
+                                                                                                             [:kohdistukset indeksi :tehtavaryhma] (:id %)))
                                                                                :format-fn    #(get % :tehtavaryhma)}
                                                   tehtavaryhmat])]
      (when (> kohdistukset-lkm 1)
        [:<>
         [:div
-         [kulukentta "Kustannus € *" :arvo summa
+         [kulukentta "Kustannus € *"
+          {:validoitava? true}
+          :arvo summa
           :class #{(str "input" (if (ei-koskettu-tai-validi? summa-meta) "" "-error") "-default") "komponentin-input"}
           :on-change #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value))
-          :on-blur #(paivitys-fn [:kohdistukset indeksi :summa] (-> % .-target .-value tiedot/parsi-summa))]
-         [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn {:ohita-meta-paivitys? true
-                                                                     :jalkiprosessointi-fn (fn [lomake]
+          :on-blur #(paivitys-fn {:validoitava? true} [:kohdistukset indeksi :summa] (-> % .-target .-value tiedot/parsi-summa))]
+         [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn {:jalkiprosessointi-fn (fn [lomake]
                                                                                              (vary-meta lomake update :validius (fn [validius]
                                                                                                                                   (dissoc validius [:kohdistukset indeksi :summa] [:kohdistukset indeksi :tehtavaryhma]))))} :kohdistukset (r/partial kohdistuksen-poisto indeksi))} "Poista kohdistus"]]])]))
 
 (defn lisaa-validointi [lomake-meta validoinnit]
   (reduce (fn [kaikki {:keys [polku validointi-fn]}]
-            (assoc-in kaikki [:validius polku] {:validi? false
-                                                :koskettu? false
+            (assoc-in kaikki [:validius polku] {:validi?    false
+                                                :koskettu?  false
                                                 :validointi validointi-fn}))
           lomake-meta
           validoinnit))
@@ -272,19 +280,17 @@
                                                                                                         resetoi-kohdistukset)
                                                                              jalkiprosessointi-fn (if (.. % -target -checked)
                                                                                                     (fn [{:keys [kohdistukset] :as lomake}]
-                                                                                                      (vary-meta lomake lisaa-validointi [{:polku         [:kohdistukset (count kohdistukset) :summa]
+                                                                                                      (vary-meta lomake lisaa-validointi [{:polku         [:kohdistukset kohdistukset-lkm :summa]
                                                                                                                                            :validointi-fn (:summa tila/validoinnit)}
-                                                                                                                                          {:polku         [:kohdistukset (count kohdistukset) :tehtavaryhma]
+                                                                                                                                          {:polku         [:kohdistukset kohdistukset-lkm :tehtavaryhma]
                                                                                                                                            :validointi-fn (:tehtavaryhma tila/validoinnit)}]))
                                                                                                     resetoi-kohdistukset)]
-                                                                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn
-                                                                                       :ohita-meta-paivitys? true} :kohdistukset kohdistusten-paivitys-fn))}]
+                                                                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
        [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]]]
      (into [:div.col-xs-12] (map-indexed (r/partial tehtavaryhma-maara {:tehtavaryhmat tehtavaryhmat :kohdistukset-lkm kohdistukset-lkm :paivitys-fn paivitys-fn}) kohdistukset))
      (when (> kohdistukset-lkm 1)
        [:div.lomake-sisempi-osio
-        [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn {:ohita-meta-paivitys? true
-                                                                    :jalkiprosessointi-fn (fn [{:keys [kohdistukset] :as lomake}]
+        [:button.nappi.nappi-toissijainen {:on-click #(paivitys-fn {:jalkiprosessointi-fn (fn [{:keys [kohdistukset] :as lomake}]
                                                                                             (vary-meta lomake lisaa-validointi [{:polku         [:kohdistukset (count kohdistukset) :summa]
                                                                                                                                  :validointi-fn (:summa tila/validoinnit)}
                                                                                                                                 {:polku         [:kohdistukset (count kohdistukset) :tehtavaryhma]
@@ -292,7 +298,9 @@
 
 (defn- lomakkeen-osio [{:keys [otsikko osiot]}]
   [:div.col-sm-6.col-xs-12
-   [:h2 otsikko]])
+   [:h2 otsikko]
+   (for [osio osiot]
+     [osio])])
 
 (defn- kulujen-syottolomake
   [e! _]
