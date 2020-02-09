@@ -114,7 +114,8 @@
    sticky?                    Jos true, nappi naulataan selaimen yläreunaan scrollatessa alas.
    title                      Nappiin liitettävä title-teksti (tooltip)
    style                      Nappiin liitettävä style
-   tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
+   tallennus-kaynnissa?       Jos true, piirretään ajax-loader.
+   vayla-tyyli?               Käyttää tuoreempaa Väylä-tyyliä"
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
                             sticky? ikoninappi? title style] :as optiot}]
@@ -177,7 +178,7 @@
 (defn takaisin
   ([toiminto] (takaisin "Takaisin" toiminto {}))
   ([teksti toiminto] (takaisin teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)
@@ -196,7 +197,7 @@
 (defn hyvaksy
   ([toiminto] (hyvaksy "OK" toiminto {}))
   ([teksti toiminto] (hyvaksy teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-myonteinen" " " luokka)
@@ -205,10 +206,12 @@
 (defn peruuta
   ([toiminto] (peruuta "Peruuta" toiminto {}))
   ([teksti toiminto] (peruuta teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-kielteinen" " " luokka)
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-negative-default"
+                                            "nappi-kielteinen") " " luokka)
                              :ikoni (ikonit/livicon-ban)})]))
 
 (defn yleinen
@@ -223,18 +226,22 @@
 
 (defn yleinen-ensisijainen
   ([teksti toiminto] (yleinen-ensisijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-ensisijainen" " " luokka)
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-primary-default"
+                                            "nappi-ensisijainen") " " luokka)
                              :disabled disabled})]))
 
 (defn yleinen-toissijainen
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)})]))
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-secondary-default"
+                                            "nappi-toissijainen") " " luokka)})]))
 
 (defn kielteinen
   ([teksti toiminto] (kielteinen teksti toiminto {}))
@@ -246,21 +253,25 @@
 
 (defn sulje
   ([toiminto] (yleinen-toissijainen "Sulje" toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)})]))
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-secondary-default"
+                                            "nappi-toissijainen") " " luokka)})]))
 
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-ensisijainen" " " luokka)})]))
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-primary-default"
+                                            "nappi-ensisijainen") " " luokka)})]))
 
 (defn kumoa
   ([teksti toiminto] (kumoa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:ikoni (ikonit/kumoa)
@@ -274,23 +285,27 @@
 
 (defn poista
   ([teksti toiminto] (poista teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-kielteinen" " " luokka)
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-negative-default"
+                                            "nappi-kielteinen") " " luokka)
                              :ikoni (ikonit/livicon-trash)})]))
 
 (defn tarkasta
   ([teksti toiminto] (tarkasta teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)
+                            {:luokka (str (if vayla-tyyli?
+                                            "button-secondary-default"
+                                            "nappi-toissijainen") " " luokka)
                              :ikoni (ikonit/eye-open)})]))
 
 (defn muokkaa
   ([teksti toiminto] (muokkaa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)
@@ -298,7 +313,7 @@
 
 (defn avaa
   ([teksti toiminto] (avaa teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka vayla-tyyli?] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)

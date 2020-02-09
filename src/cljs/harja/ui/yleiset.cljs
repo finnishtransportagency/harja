@@ -334,6 +334,28 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    [:span.alasvedon-otsikko otsikko]
    [livi-pudotusvalikko optiot valinnat]])
 
+(defn alasveto-toiminnolla
+  [_ _]
+  (let [auki? (r/atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [toiminto {:keys [valittu valinnat valinta-fn formaatti-fn]}]
+        [:div {:class #{(str "select-default") (when @auki? "open")}}
+         [:button.nappi-alasveto
+          [:div.valittu {:on-click #(swap! auki? not)}
+           (or (formaatti-fn valittu)
+               "Ei valittu")]]
+         [:ul {:style {:display (if @auki?
+                                  "block"
+                                  "none")}}
+          (for [v valinnat]
+            [:li.harja-alasvetolistaitemi
+             {:on-click #(do
+                           (swap! auki? not)
+                           (valinta-fn v))}
+             [:span (formaatti-fn v)]])
+          [:li.harja-alasvetolistaitemi [toiminto {:sulje #(swap! auki? not)}]]]]))))
+
 
 (defn kaksi-palstaa-otsikkoja-ja-arvoja
   "Tekee geneeriset kaksi palstaa. Optiossa voi olla :class, joka asetaan containerin lisäluokaksi."

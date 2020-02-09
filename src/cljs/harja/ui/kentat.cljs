@@ -1427,3 +1427,31 @@
                                   paalle-teksti)
      (or toggle! #(swap! data not))
      {:luokka "btn-xs"}]))
+
+(defn vayla-lomakekentta
+  "Väylä-tyylinen tekstikenttä"
+  [otsikko & params]
+  (let [avaimet->proppi {:arvo :value}
+        id (gensym "kulukentta-")
+        propit (apply assoc {:type :text
+                             :for  id}
+                      (flatten
+                        (mapv
+                          (fn [[avain arvo]]
+                            [(if (contains? avaimet->proppi avain)
+                               (avain avaimet->proppi)
+                               avain)
+                             arvo])
+                          (partition 2 params))))
+        {komponentti :komponentti
+         tyylit :tyylit} propit
+        propit (apply dissoc propit #{:komponentti :tyylit})]
+    [:div {:class (or (:kontti tyylit)
+                      #{"kulukentta"})}
+     [:label {:id    id
+              :class (or (:otsikko tyylit)
+                         #{})} otsikko]
+     (if komponentti
+       [komponentti]
+       [:input.input-default.komponentin-input
+        propit])]))

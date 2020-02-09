@@ -33,10 +33,10 @@
                         (ei-nil arvo)
                         (not (empty? arvo))))
 
-(def validoinnit {:summa        ei-nil
-                  :tehtavaryhma ei-nil
-                  :erapaiva     ei-nil-ei-tyhja
-                  :koontilaskun-kuukausi ei-nil})
+(def validoinnit {:kulut/summa        ei-nil
+                  :kulut/tehtavaryhma ei-nil
+                  :kulut/erapaiva     ei-nil-ei-tyhja
+                  :kulut/koontilaskun-kuukausi ei-nil})
 
 (defn validoi-fn
   [lomake]
@@ -95,10 +95,10 @@
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil}
                                      (luo-validius-meta
-                                       [:koontilaskun-kuukausi] (:koontilaskun-kuukausi validoinnit)
-                                       [:erapaiva] (:erapaiva validoinnit)
-                                       [:kohdistukset 0 :summa] (:summa validoinnit)
-                                       [:kohdistukset 0 :tehtavaryhma] (:tehtavaryhma validoinnit))))
+                                       [:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
+                                       [:erapaiva] (:kulut/erapaiva validoinnit)
+                                       [:kohdistukset 0 :summa] (:kulut/summa validoinnit)
+                                       [:kohdistukset 0 :tehtavaryhma] (:kulut/tehtavaryhma validoinnit))))
 
 (def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
                                         :taulukko    nil
