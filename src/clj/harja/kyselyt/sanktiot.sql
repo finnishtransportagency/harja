@@ -149,8 +149,8 @@ SELECT id, nimi, sanktiolaji, urakkatyyppi
 --name: hae-sanktiotyyppi-sanktiolajilla
 SELECT id
   FROM sanktiotyyppi
- WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji] AND
- urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi];
+ WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji];
+
 
 --name: hae-sanktion-urakka-id
 SELECT urakka FROM laatupoikkeama lp

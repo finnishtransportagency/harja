@@ -125,11 +125,10 @@
       sanktiot)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
-  [db urakkatyyppi sanktiolaji sanktiotyypin-id]
+  [db sanktiolaji sanktiotyypin-id]
   (let [mahdolliset-sanktiotyypit (into #{}
                                         (map :id (sanktiot/hae-sanktiotyyppi-sanktiolajilla
-                                                   db {:sanktiolaji (name sanktiolaji)
-                                                       :urakkatyyppi urakkatyyppi})))]
+                                                   db {:sanktiolaji (name sanktiolaji)})))]
     (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
       (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
                                       sanktiotyypin-id))))))
@@ -153,7 +152,7 @@
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
-        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db urakkatyyppi laji sanktiotyyppi)
+        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi)
         params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
