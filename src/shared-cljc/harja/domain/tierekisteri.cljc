@@ -1,6 +1,7 @@
 (ns harja.domain.tierekisteri
   "Apufunktioita tierekisteriosoitteiden (TIE / AOSA / AET / LOSA LET) käsittelyyn."
   (:require [clojure.spec.alpha :as s]
+            [clojure.set :as clj-set]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
     #?@(:clj [
