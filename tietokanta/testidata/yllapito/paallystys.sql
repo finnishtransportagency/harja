@@ -23,7 +23,7 @@ VALUES
       20, 1, 0, 3, 0, 1, 11, (SELECT id
                              FROM urakka
                              WHERE nimi =
-                                   'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                                   'Oulun tiemerkinnän palvelusopimus 2013-2022'),
    '{2017}', 500, FALSE),
   (8, (SELECT id
        FROM urakka
@@ -38,7 +38,7 @@ VALUES
       20, 4, 334, 10, 10, 0, 11, (SELECT id
                                  FROM urakka
                                  WHERE nimi =
-                                       'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                                       'Oulun tiemerkinnän palvelusopimus 2013-2022'),
    '{2017}', 605, FALSE),
   (9, (SELECT id
        FROM urakka
@@ -53,7 +53,7 @@ VALUES
       20, 12, 1, 19, 2, 0, 11, (SELECT id
                                FROM urakka
                                WHERE nimi =
-                                     'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                                     'Oulun tiemerkinnän palvelusopimus 2013-2022'),
    '{2017}', 605, FALSE),
   (10, (SELECT id
         FROM urakka
@@ -204,7 +204,7 @@ VALUES
       20, 1, 0, 3, 0, (SELECT id
                        FROM urakka
                        WHERE nimi =
-                             'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                             'Oulun tiemerkinnän palvelusopimus 2013-2022'),
    '{2018}', 500, FALSE),
   (8, (SELECT id
        FROM urakka
@@ -219,7 +219,7 @@ VALUES
       20, 4, 334, 10, 10, (SELECT id
                            FROM urakka
                            WHERE nimi =
-                                 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                                 'Oulun tiemerkinnän palvelusopimus 2013-2022'),
    '{2018}', 605, FALSE),
   (9, (SELECT id
        FROM urakka
@@ -234,7 +234,7 @@ VALUES
       20, 12, 1, 19, 2, (SELECT id
                          FROM urakka
                          WHERE nimi =
-                               'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                               'Oulun tiemerkinnän palvelusopimus 2013-2022'),
    '{2018}', 605, FALSE),
   (10, (SELECT id
         FROM urakka
