@@ -192,7 +192,7 @@
                        (if-not (sanktio-domain/sakko? paivitetty)
                          (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                          paivitetty)))
-            :valinnat mahdolliset-sanktiolajit
+            :valinnat (sort mahdolliset-sanktiolajit)
             :valinta-nayta #(case %
                               :A "Ryhmä A"
                               :B "Ryhmä B"
