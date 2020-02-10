@@ -222,7 +222,7 @@
                        :toimenpideinstanssi
                        (when tpk
                          (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-            ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
+            ;; Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata.
             :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
             :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
             :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
