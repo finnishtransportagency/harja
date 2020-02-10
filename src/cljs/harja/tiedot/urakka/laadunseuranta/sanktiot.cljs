@@ -19,7 +19,7 @@
   {:suorasanktio true
    :laji (cond
            (= (or (:hoito urakkatyyppi)
-                  (:teiden-hoito urakkatyyppi)) :A
+                  (:teiden-hoito urakkatyyppi))) :A
            (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
            ;; Luultavasti ylläpidon urakka
            :default :yllapidon_sakko)
