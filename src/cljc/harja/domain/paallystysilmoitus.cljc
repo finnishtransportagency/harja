@@ -6,6 +6,7 @@
             [specql.data-types]
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.tierekisteri :as tr]
             [clojure.spec.alpha :as s]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
               ]))
@@ -339,7 +340,7 @@
 (s/def ::urakka-id integer?)
 ;; Tässä on paljon muutakin, mutta tuo päällystyskohteen id pitää olla ainakin
 (s/def ::paallystysilmoitus #(and (integer? (:paallystyskohde-id %))
-                                  (every? integer? (vals (select-keys (:perustiedot %) #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})))))
+                                  (every? integer? (vals (select-keys (:perustiedot %) tr/paaluvali-avaimet)))))
 
 (s/def ::tallenna-paallystysilmoitus-kysely
   (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))
