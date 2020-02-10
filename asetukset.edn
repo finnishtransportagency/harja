@@ -19,16 +19,16 @@
 
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
-              :portti 7731
+              :portti 5432
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana "s_harja"}
+              :salasana "harja"}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
-                      :portti 7731
+                      :portti 5432
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana "s_harja"}
+                      :salasana "harja"}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
