@@ -188,7 +188,16 @@
             :palstoja 1 :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                     (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)
+                           sanktiotyypit (sanktiot/lajin-sanktiotyypit arvo)
+                           paivitetty (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count sanktiotyypit)) (first sanktiotyypit))]
+                                          (assoc paivitetty
+                                            :tyyppi tyyppi
+                                            :toimenpideinstanssi
+                                            (when tpk
+                                              (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                        paivitetty)]
+
                        (if-not (sanktio-domain/sakko? paivitetty)
                          (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                          paivitetty)))
