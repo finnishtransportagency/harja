@@ -371,7 +371,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                :sopimus-id sopimus-id
-                                                                               :vuosi 2020
+                                                                               :vuosi (pvm/vuosi (pvm/nyt))
                                                                                :paallystysilmoitus paallystysilmoitus})]
 
       ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
