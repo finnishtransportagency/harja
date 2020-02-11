@@ -47,25 +47,6 @@ http://leiningen.org/
 Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8.
 Vaihtoehtoisesti voit käyttää dockeria.
 
-### VirtualBox
-
-Käynnistä VirtualBox<br/>
-<code>
-cd vagrant<br/>
-vagrant up
-</code>
-
-Jos vagrant up epäonnistuu, aja ensin:<br/>
-<code>
-vagrant box add geerlingguy/centos7 https://github.com/tommy-muehle/puppet-vagrant-boxes/releases/download/1.1.0/centos-7.0-x86_64.box
-</code>
-
-VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaksi eri kantaa:
-- **harja** - Varsinaista kehitystyötä varten
-- **harjatest** - Testit ajetaan tätä kantaa vasten
-
-Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
-
 ### Tunnukset ulkoisiin järjestelmiin
 
 Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
@@ -79,10 +60,10 @@ lein do clean, compile, repl
 
 Käännä frontend ja käynnistä Figwheel:<br/>
 <code>
-lein figwheel
+sh kaynnista_harja_front_dev.sh
 </code>
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000 tai localhost:3000
+Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:3000
 
 ### Kehitystyötä helpottavat työkalut
 
