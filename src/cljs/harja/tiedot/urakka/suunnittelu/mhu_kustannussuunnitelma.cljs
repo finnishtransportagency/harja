@@ -43,6 +43,14 @@
                                     :sorateiden-hoito
                                     :mhu-yllapito})
 
+(defn aakkosta [sana]
+  (get {"kesakausi" "kesäkausi"
+        "liikenneympariston hoito" "liikenneympäristön hoito"
+        "mhu yllapito" "mhu-ylläpito"
+        "paallystepaikkaukset" "päällystepaikkaukset"}
+       sana
+       sana))
+
 (def toimenpiteiden-avaimet
   {:paallystepaikkaukset "Päällysteiden paikkaus (hoidon ylläpito)"
    :mhu-yllapito "MHU Ylläpito"
@@ -234,6 +242,40 @@
                                       {}
                                       (range 1 6))))))
 
+(def rahavarausten-rajapinta {:otsikot any?
+                              :yhteensa any?
+                              :rahavaraukset any?})
+
+(defn rahavarausten-dr []
+  (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+                          rahavarausten-rajapinta
+                          (merge {:otsikot {:polut [[:gridit :rahavaraukset :otsikot]]
+                                            :haku identity}
+                                  :yhteensa {:polut [[:gridit :rahavaraukset :yhteensa :data]
+                                                     [:gridit :rahavaraukset :yhteensa :nimi]]
+                                             :haku (fn [data nimi]
+                                                     (println (str "YHTEENSÄ: " data))
+                                                     (assoc data :nimi nimi))}
+                                  :rahavaraukset {:polut [[:domain :rahavaraukset]
+                                                          [:suodattimet :hankinnat :toimenpide]
+                                                          [:suodattimet :hoitokauden-numero]]
+                                                  :haku (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
+                                                          (let [arvot (into {}
+                                                                            (mapv (fn [[tyyppi data]]
+                                                                                    [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
+                                                                                                  (get data (dec hoitokauden-numero)))])
+                                                                                  (get rahavaraukset valittu-toimenpide)))]
+                                                            arvot))
+                                                  #_#_:dynamic-fns [(fn [[tyyppi data]]
+                                                                      {tyyppi data})]}}
+                                 ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
+                                 ;              "akillinen-hoitotyo" [{:maara 1}]}
+                                 )
+                          {}
+                          {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
+                                                 :aseta (fn [tila valittu-toimenpide]
+                                                          (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)))}}))
+
 (def hoidonjohtopalkkion-rajapinta {:otsikot any?
                                     ;; {:nimi string? :maara vector :yhteensa vector :indeksikorjattu vector}
                                     :yhteenveto any?
@@ -420,13 +462,13 @@
                    (inc index))))))))
 
 (defn laajenna-solua-klikattu
-  ([solu auki? dom-id] (laajenna-solua-klikattu solu auki? dom-id nil))
-  ([solu auki? dom-id {:keys [aukeamis-polku sulkemis-polku]
+  ([solu auki? dom-id polku-dataan] (laajenna-solua-klikattu solu auki? dom-id polku-dataan nil))
+  ([solu auki? dom-id polku-dataan {:keys [aukeamis-polku sulkemis-polku]
                        :or {aukeamis-polku [:.. :.. 1]
                             sulkemis-polku [:.. :.. 1]}}]
    (if auki?
      (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
-         (paivita-raidat! (grid/osa-polusta (grid/root solu) [::g-pohjat/data]))
+         (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
          (r/flush)
          (r/after-render
            (fn []
@@ -563,7 +605,7 @@
 (defrecord ASDLaajennaSoluaKlikattu [solu auki?])
 (defrecord ASDPaivitaSolunArvo [solu arvo])
 
-(defn hankinnat-pohjadata []
+(defn urakan-ajat []
   (let [urakan-aloitus-pvm (-> @tiedot/tila :yleiset :urakka :alkupvm)]
     (into []
           (drop 9
@@ -1055,6 +1097,9 @@
                                                  :yhteenveto {:nimi "Hoidonjohtopalkkio"}
                                                  :yhteensa {:nimi "Yhteensä"}
                                                  :kuukausitasolla? false})
+        (assoc-in [:gridit :rahavaraukset] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                            :yhteensa {:nimi "Yhteensä"}
+                                            :kuukausitasolla? false})
         (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
                                                       :yhteensa {:nimi "Yhteensä"}})))
   FiltereidenAloitusarvot
@@ -1068,7 +1113,8 @@
           ;;TODO tämä rivi on wanhaa
           (assoc :kuluva-hoitokausi kh)
           (assoc-in [:domain :hoitokausi] {:hoitokauden-numero vuosi
-                                           :pvmt pvmt}))))
+                                           :pvmt pvmt})
+          (assoc-in [:suodattimet :hoitokauden-numero] vuosi))))
   YleisSuodatinArvot
   (process-event [_ {{hoitovuosi :vuosi} :kuluva-hoitokausi :as app}]
     (assoc app :suodatin {:hoitovuosi hoitovuosi :kopioidaan-tuleville-vuosille? true}))
@@ -1187,59 +1233,95 @@
                    kirjoitusoikeus? :kirjoitusoikeus? :as app}]
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [{urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
-          hankintojen-pohjadata (hankinnat-pohjadata)
-          hankintojen-taydennys-fn (fn [hankinnat kustannusarvoitu?]
-                                     (reduce (fn [hankinnat-toimenpiteittain toimenpide]
-                                               (let [sort-fn (juxt :vuosi :kuukausi)
-                                                     hankinnat-backilta (vec (sort-by sort-fn (filter #(= (:toimenpide-avain %) toimenpide) hankinnat)))
-                                                     hankinnat (loop [[hp & hp-loput] (sort-by sort-fn hankintojen-pohjadata)
-                                                                      muodostettu []
-                                                                      i 0]
-                                                                 (if (nil? hp)
-                                                                   muodostettu
-                                                                   (let [tarkasteltava-hankinta (get hankinnat-backilta i)
-                                                                         loydetty-hankinta? (and (= (:vuosi hp) (:vuosi tarkasteltava-hankinta ))
-                                                                                                 (= (:kuukausi hp) (:kuukausi tarkasteltava-hankinta )))]
-                                                                     (recur hp-loput
-                                                                            (conj muodostettu
-                                                                                  (if loydetty-hankinta?
-                                                                                    tarkasteltava-hankinta
-                                                                                    hp))
-                                                                            (if loydetty-hankinta?
-                                                                              (inc i)
-                                                                              i)))))
-                                                     hankinnat (map (fn [{:keys [vuosi kuukausi summa] :as data}]
-                                                                      (-> data
-                                                                          (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                 :maara summa)
-                                                                          (dissoc :summa)))
-                                                                    hankinnat)
-                                                     #_(eduction (filter #(= (:toimenpide-avain %) toimenpide))
-                                                                         (map (fn [{:keys [vuosi kuukausi summa] :as data}]
-                                                                                (-> data
-                                                                                    (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                           :maara summa)
-                                                                                    (dissoc :summa))))
-                                                                         hankinnat)]
-                                                 (merge hankinnat-toimenpiteittain
-                                                        {toimenpide (vec (vals (sort-by #(-> % key first)
-                                                                                        (fn [aika-1 aika-2]
-                                                                                          (pvm/ennen? aika-1 aika-2))
-                                                                                        (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
-                                                                                                  hankinnat))))})))
-                                             {}
-                                             toimenpiteet))
+          pohjadata (urakan-ajat)
+          pohjadatan-taydennys-toimenpiteittain (fn [data toimenpiteet rikastamis-fn]
+                                                  (reduce (fn [data-toimenpiteittain toimenpide]
+                                                            (let [sort-fn (juxt :vuosi :kuukausi)
+                                                                  data-backilta (vec (sort-by sort-fn (filter #(= (:toimenpide-avain %) toimenpide) data)))
+                                                                  data (loop [[pd & pd-loput] (sort-by sort-fn pohjadata)
+                                                                              muodostettu []
+                                                                              i 0]
+                                                                         (if (nil? pd)
+                                                                           muodostettu
+                                                                           (let [tarkasteltava-data (get data-backilta i)
+                                                                                 loydetty-data? (and (= (:vuosi pd) (:vuosi tarkasteltava-data))
+                                                                                                         (= (:kuukausi pd) (:kuukausi tarkasteltava-data)))]
+                                                                             (recur pd-loput
+                                                                                    (conj muodostettu
+                                                                                          (if loydetty-data?
+                                                                                            tarkasteltava-data
+                                                                                            pd))
+                                                                                    (if loydetty-data?
+                                                                                      (inc i)
+                                                                                      i)))))
+                                                                  data (map rikastamis-fn data)]
+                                                              (merge data-toimenpiteittain
+                                                                     {toimenpide data})))
+                                                          {}
+                                                          toimenpiteet))
           hankinnat (:kiinteahintaiset-tyot vastaus)
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
                                                    (:kustannusarvioidut-tyot vastaus))
-          hankinnat-hoitokausille (hankintojen-taydennys-fn hankinnat false)
-          hankinnat-laskutukseen-perustuen-hoitokausille (hankintojen-taydennys-fn hankinnat-laskutukseen-perustuen true)
+          rahavaraukset (distinct (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} (:haettu-asia %))
+                                           (select-keys % #{:tyyppi :summa :toimenpide-avain :vuosi :kuukausi}))
+                                        (:kustannusarvioidut-tyot vastaus)))
+          hankinnat-toimenpiteittain (pohjadatan-taydennys-toimenpiteittain hankinnat
+                                                                            toimenpiteet
+                                                                            (fn [{:keys [vuosi kuukausi summa] :as data}]
+                                                                              (-> data
+                                                                                  (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                         :maara summa)
+                                                                                  (dissoc :summa))))
+          hankinnat-hoitokausille (into {}
+                                        (map (fn [[toimenpide hankinnat]]
+                                               [toimenpide (vec (vals (sort-by #(-> % key first)
+                                                                               (fn [aika-1 aika-2]
+                                                                                 (pvm/ennen? aika-1 aika-2))
+                                                                               (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                                         hankinnat))))])
+                                             hankinnat-toimenpiteittain))
+          hankinnat-laskutukseen-perustuen-toimenpiteittain (pohjadatan-taydennys-toimenpiteittain hankinnat-laskutukseen-perustuen
+                                                                                                   toimenpiteet
+                                                                                                   (fn [{:keys [vuosi kuukausi summa] :as data}]
+                                                                                                     (-> data
+                                                                                                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                                                :maara summa)
+                                                                                                         (dissoc :summa))))
+          rahavaraukset-toimenpiteittain (apply merge-with
+                                                (fn [a b]
+                                                  (concat a b))
+                                                (map (fn [tyyppi]
+                                                       (pohjadatan-taydennys-toimenpiteittain (filter #(= (:tyyppi %) tyyppi) rahavaraukset)
+                                                                                              toimenpiteet-rahavarauksilla
+                                                                                              (fn [{:keys [vuosi kuukausi summa tyyppi] :as data}]
+                                                                                                (-> data
+                                                                                                    (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                                           :maara summa
+                                                                                                           :tyyppi tyyppi)
+                                                                                                    (dissoc :summa)))))
+                                                     (distinct (map :tyyppi rahavaraukset))))
+          ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
+          ;              "akillinen-hoitotyo" [{:maara 1}]}
+          rahavaraukset-hoitokausille (into {}
+                                            (map (fn [[toimenpide rahavaraukset]]
+                                                   [toimenpide
+                                                    (into {}
+                                                          (map (fn [[tyyppi rahavaraukset]]
+                                                                 [tyyppi (vec (vals (sort-by #(-> % key first)
+                                                                                             (fn [aika-1 aika-2]
+                                                                                               (pvm/ennen? aika-1 aika-2))
+                                                                                             (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                                                       rahavaraukset))))])
+                                                               (group-by :tyyppi
+                                                                         rahavaraukset)))])
+                                                 rahavaraukset-toimenpiteittain))
           hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                             (:kustannusarvioidut-tyot vastaus))
           hoidonjohtopalkkio-kuukausitasolla? (not (apply = (map :maara hoidon-johto-kustannukset)))
           app (-> app
                   (assoc-in [:domain :suunnittellut-hankinnat] hankinnat-hoitokausille)
+                  (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausille)
                   (assoc-in [:domain :hoidonjohtopalkkio] (vec
                                                             (sort-by #(-> % first :aika)
                                                                      (vals
@@ -1260,7 +1342,7 @@
       ;(async/put! tapahtumat {:ajax :tuck :tapahtuma :hankintakustannukset-haettu})
       app)
     #_(println-c)
-    #_(time (let [hankintojen-pohjadata (hankinnat-pohjadata)
+    #_(time (let [hankintojen-pohjadata (urakan-ajat)
                 {urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
                 hankintojen-taydennys-fn (fn [hankinnat kustannusarvoitu?]
                                            (sequence

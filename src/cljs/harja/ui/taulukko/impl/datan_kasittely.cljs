@@ -11,7 +11,8 @@
 (s/def ::keyfn fn?)
 (s/def ::comp fn?)
 
-(s/def ::jarjestys (s/or :sort-by-with-comp (s/keys :req-un [::keyfn ::comp])
+(s/def ::jarjestys (s/or :sort-by fn?
+                         :sort-by-with-comp (s/keys :req-un [::keyfn ::comp])
                          :mapit-avainten-mukaan (s/coll-of any? :kind vector?)))
 
 (def ^:dynamic *muutetaan-seurattava-arvo?* true)
@@ -21,6 +22,10 @@
             (let [c (s/conform ::jarjestys jarjestys)]
               (when-not (= ::s/invalid c)
                 (first c)))))
+
+(defmethod jarjesta-data :sort-by
+  [f data]
+  (vec (sort-by f data)))
 
 (defmethod jarjesta-data :sort-by-with-comp
   [{:keys [keyfn comp]} data]
@@ -71,10 +76,34 @@
               (assoc kuuntelijat
                      rajapinnan-nimi
                      (reaction (let [rajapinnan-data (apply haku (mapv deref kursorit))]
+                                 (when (nil? (get rajapinta rajapinnan-nimi))
+                                   (warn "Rajapinnan kuuntelijalle " (str rajapinnan-nimi) " ei ole määritetty rajapinnan skeemaa!\n"
+                                         "Rajapinta:\n" (with-out-str (pp/pprint rajapinta))))
                                  (when-not (s/valid? (get rajapinta rajapinnan-nimi) rajapinnan-data)
                                    (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
                                          (str (s/explain (get rajapinta rajapinnan-nimi) rajapinnan-data))))
                                  rajapinnan-data)))))
+          {}
+          kuvaus))
+#_(defn rajapinnan-kuuntelijat [data-atom rajapinta kuvaus]
+  (reduce (fn [kuuntelijat [rajapinnan-nimi {:keys [polut haku dynamic-fns]}]]
+            (let [kursorit (mapv (fn [polku]
+                                   (r/cursor data-atom polku))
+                                 polut)
+                  haku-tulos (reaction (let [rajapinnan-data (apply haku (mapv deref kursorit))]
+                                         (when-not (s/valid? (get rajapinta rajapinnan-nimi) rajapinnan-data)
+                                           (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
+                                                 (str (s/explain (get rajapinta rajapinnan-nimi) rajapinnan-data))))
+                                         rajapinnan-data))]
+              (assoc kuuntelijat
+                     rajapinnan-nimi
+                     (if dynamic-fns
+                       (loop [[f & fs] dynamic-fns
+                              tulos @haku-tulos]
+                         (if (nil? f)
+                           (mapv #(r/atom %) tulos)
+                           (recur fs (f tulos))))
+                       haku-tulos))))
           {}
           kuvaus))
 

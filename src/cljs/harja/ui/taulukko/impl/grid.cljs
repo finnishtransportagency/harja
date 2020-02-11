@@ -74,6 +74,16 @@
       osa
       (recur loydetty-osa polku))))
 
+(defn- muodosta-uusi-polku
+  ([annettu-polku polun-alku] (muodosta-uusi-polku annettu-polku polun-alku false))
+  ([annettu-polku polun-alku muodostetaan-polkua?]
+   (let [ensimmainen-osa (first annettu-polku)]
+     (cond
+       (= :. ensimmainen-osa) (vec (concat polun-alku (rest annettu-polku)))
+       (= :.. ensimmainen-osa) (recur (rest annettu-polku) (butlast polun-alku) true)
+       muodostetaan-polkua? (vec (concat polun-alku annettu-polku))
+       :else annettu-polku))))
+
 (defn- laske-gridin-css-tiedot [grid]
   (let [grid-koko (p/koko grid)
         gridin-alueet (p/alueet grid)
@@ -386,6 +396,26 @@
     ;(println (str (gop/nimi grid) " gridin koko on " koko))
     (p/aseta-koko! grid koko)))
 
+(defn muuta-id! [kopio]
+  (let [id (gensym "muuta-id")
+        osa (assoc kopio :id id)
+        grid? (satisfies? p/IGrid kopio)
+        root-grid? (gop/id? kopio (::root-id kopio))
+        paivita-grid (fn [gridi]
+                       (swap! ((::koko-fn gridi)) (fn [koot]
+                                                    (-> koot
+                                                        (dissoc (gop/id kopio))
+                                                        (assoc id (get koot (gop/id kopio))))))
+                       (if root-grid?
+                         (paivita-kaikki-lapset! (assoc gridi ::root-id id)
+                                                 (constantly true)
+                                                 (fn [lapsi]
+                                                   (assoc lapsi ::root-id id)))
+                         gridi))]
+    (if grid?
+      (paivita-grid osa)
+      osa)))
+
 (defn aseta-koot! [root-grid]
   (let [kokojen-seuranta (gridin-osat-vektoriin root-grid
                                                 #(satisfies? p/IGrid %)
@@ -427,139 +457,40 @@
         (aseta-seurattava-koko! grid seurattava-id)))
     #_(p/aseta-lapset root-grid root-gridin-lapset)))
 
+(defn osa-polussa
+  ([grid koko-polku] (osa-polussa grid koko-polku koko-polku))
+  ([grid [polun-osa & polku] koko-polku]
+   (if (nil? polun-osa)
+     grid
+     (let [loydetyt-osat (keep-indexed (fn [index lapsi]
+                                         (when (or (= (gop/nimi lapsi) polun-osa)
+                                                   (and (integer? polun-osa)
+                                                        (= index polun-osa)))
+                                           lapsi))
+                                       (p/lapset grid))]
+       (when-not (= 1 (count loydetyt-osat))
+         (warn (str "Polun (" koko-polku ") osalle " polun-osa " ei löytynyt vain yhtä osaa. Löydetyt osat: " loydetyt-osat "\n"
+                    "OSA: " (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")" "\n"
+                    "-> " (apply str (interpose "\n-> " (map (fn [lapsi]
+                                                               (str (or (gop/nimi lapsi) "Nimetön") " (" (gop/id lapsi) ")"))
+                                                             (p/lapset grid)))))))
+       (recur (first loydetyt-osat) polku koko-polku)))))
 
-(defn- piirra-gridin-osat [osat grid]
-  [:<>
-   (doall
-     (for [osa osat]
-       (with-meta [gop/piirra osa]
-                  {:key (gop/id osa)})))])
+(defn- grid-polku-sopii-osaan?
+  [grid-polku osa]
+  (let [nimi-polku (::nimi-polku osa)]
+    (and (every? true? (map (fn [gp op]
+                              (= gp op))
+                            grid-polku
+                            nimi-polku))
+         (>= (count nimi-polku) (count grid-polku)))))
 
-#_(defn- dynaaminen-grid [grid]
-    (let [data (p/pointteri (::p/data grid) grid)
-          osa (first (::osat grid))
-          osat (map (fn [osan-id]
-                      (p/aseta-id osa osan-id))
-                    data)]
-      [piirra-gridin-osat osat grid]))
-
-(defn- staattinen-grid [grid]
-  (let [osat (p/lapset grid)]
-    [:<>
-     [piirra-gridin-osat osat grid]]))
-
-(defn seurattava-koko [grid seurattava]
-  (let [seurattavan-id (gop/id (etsi-osa ((::root-fn grid)) seurattava))
-        kursori (r/cursor ((::koko-fn grid)) [seurattavan-id])]
-    (reaction @kursori)))
-
-(defn piirra-grid [grid]
-  (r/create-class
-    {:constructor (fn [this props]
-                    (when (= (gop/id grid) (::root-id grid))
-                      (aseta-koot! grid))
-                    (set! (.-state this) #js {:error nil}))
-     :get-derived-state-from-error (fn [error]
-                                     #js {:error error})
-     :component-did-catch (fn [error error-info]
-                            (warn (str "Komponentti kaatui virheeseen: "
-                                       error-info "\n"
-                                       (when g-debug/GRID_DEBUG
-                                         (apply str "\n---- VIIMEISIMMÄT DATA MUUTOKSET ----"
-                                                (str "\nGRID: " (or (gop/nimi grid) "Nimetön") "(" (gop/id grid) ")")
-                                                (for [lapsi (p/lapset grid)]
-                                                  (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
-                                                                   (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
-                                                    (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
-                                                         "\n" (with-out-str (cljs.pprint/pprint
-                                                                              {:data-rajapinnasta (first data)
-                                                                               :grid-data (second data)
-                                                                               :osan-derefable (get data 2)}))))))))))
-     :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
-     :render (fn [this]
-               (if-let [error (.. this -state -error)]
-                 [virhekasittely/rendaa-virhe error]
-                 (let [[_ grid] (r/argv this)
-                       {luokat :class dom-id :id} @(:parametrit grid)
-                       #_#__ (when-let [koko-fn (:koko-fn grid)]
-                               @(koko-fn))
-                       #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
-                                             (seurattava-koko grid (:seurattava seuraa-asetukset)))
-                       #_#_aseta-koko-uusiksi? (and seurattava-koko
-                                                    (or (not= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
-                                                        (not= (:rivi @seurattava-koko) (:rivi (p/koko grid)))))
-                       {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
-                   ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
-                   #_(when aseta-koko-uusiksi?
-                       (aseta-seurattava-koko! grid))
-                   [:div.grid-taulukko {:class (apply str (interpose " " luokat))
-                                        :id dom-id}
-
-
-
-                    ;; Järjestys ja koko erilleen (relevantteja vain laps'taulukoille)
-                    ;; Järjestyksessä joku osa on toisen osan alisteinen
-                    ;; Järjestyksessä rivien/sarakkeiden määrä voi poiketa
-                    ;; Järjestyksen täytynee olla atomi. Sen takia, että yhdestä osiosta voidaan aiheuttaa sivuvaikutuksena
-                    ;; Toisen osan järjestyksen muuttuminen
-
-                    ;; data manageri, joka kertoo osille mistä lukea data ja raakadatan munklaa oikeaan muotoon.
-                    [:div {:style {:display "grid"
-                                   :position "relative"
-                                   :top top
-                                   :left left
-                                   :grid-template-columns leveydet
-                                   :grid-template-rows korkeudet}}
-                     (if (-> grid meta ::dynaaminen?)
-                       ;[dynaaminen-grid grid]
-                       ^{:key (str (:id grid) "-dynamic")}
-                       [:div "DYNAMIIIIC"]
-                       ^{:key (str (:id grid) "-static")}
-                       [staattinen-grid grid])]])))}))
-
-(defn grid-index-polut
-  ([grid] (grid-index-polut (p/lapset grid) [] {}))
-  ([osat polku polut]
-   (apply merge
-          (map-indexed (fn [index osa]
-                         (let [grid? (satisfies? p/IGrid osa)
-                               uusi-polku (conj polku index)
-                               id (gop/id osa)
-                               polku-osalle (assoc polut id uusi-polku)]
-                           (if grid?
-                             (grid-index-polut (p/lapset osa) uusi-polku polku-osalle)
-                             polku-osalle)))
-                       osat))))
-
-(defn grid-nimi-polut
-  ([grid] (grid-nimi-polut (p/lapset grid) [] {}))
-  ([osat polku polut]
-   (apply merge
-          (map-indexed (fn [index osa]
-                         (let [grid? (satisfies? p/IGrid osa)
-                               uusi-polku (conj polku (or (gop/nimi osa) index))
-                               id (gop/id osa)
-                               polku-osalle (assoc polut id uusi-polku)]
-                           (if grid?
-                             (grid-nimi-polut (p/lapset osa) uusi-polku polku-osalle)
-                             polku-osalle)))
-                       osat))))
-
-(defn aseta-koko-grid [grid koko]
-  (swap! ((::koko-fn grid))
-         (fn [koot]
-           (assoc koot (gop/id grid) koko))))
-
-(defn paivita-koko-grid [grid f]
-  (swap! ((::koko-fn grid))
-         (fn [koot]
-           (update koot (gop/id grid) f))))
-
-(defn grid-koko [grid]
-  (get @((::koko-fn grid)) (gop/id grid)))
-
-(defn grid-koot [grid]
-  @((::koko-fn grid)))
+(defn- solun-polun-pituus-oikein?
+  [solun-polun-pituus osa]
+  (let [nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
+        osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
+                                     (::index-polku osa)))]
+    (= solun-polun-pituus (count osan-polku-dataan))))
 
 (defn muuta-vektoreiksi [data syvyys]
   (if (= 1 syvyys)
@@ -615,6 +546,295 @@
                                         tulos
                                         (fn [data _]
                                           (dk/jarjesta-data jarjestys data))))))))
+
+(defn samanlainen-osa [osa]
+  (let [kopio (gop/kopioi osa)
+        kopioitava-grid? (satisfies? p/IGrid osa)
+        kopio-eri-idlla (if kopioitava-grid?
+                          (paivita-kaikki-lapset! (muuta-id! kopio)
+                                                    (constantly true)
+                                                    (fn [lapsi]
+                                                      (muuta-id! lapsi)))
+                          (muuta-id! kopio))]
+    (if kopioitava-grid?
+      (do
+        (swap! ((::koko-fn osa))
+               (fn [koot]
+                 (merge koot (p/koot kopio-eri-idlla))))
+        (paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil
+                                         ::koko-fn (::koko-fn osa)
+                                         ::root-id (::root-id osa)
+                                         ::root-fn (::root-fn osa))
+                                  (constantly true)
+                                  (fn [lapsi]
+                                    (assoc lapsi
+                                           ::koko-fn (::koko-fn osa)
+                                           ::root-id (::root-id osa)
+                                           ::root-fn (::root-fn osa)))))
+      kopio-eri-idlla)))
+
+(defn- rajapinnan-grid-kasittelija
+  [datan-kasittelija grid grid-kasittelijan-polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
+  (let [rajapintakasittelija (seuranta (reaction (let [rajapinnan-data @(dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)
+                                                       rajapinnan-dataf (if *jarjesta-data?*
+                                                                          (do (println "JÄRJESTETÄÄN")
+                                                                              (jarjesta-data rajapinnan-data jarjestys))
+                                                                          (do (println "EI JÄRJESTETÄ")
+                                                                              rajapinnan-data))]
+                                                   (when g-debug/GRID_DEBUG
+                                                     (swap! g-debug/debug
+                                                            (fn [tila]
+                                                              (update-in tila
+                                                                         [:rajapinnat rajapinta]
+                                                                         (fn [taman-tila]
+                                                                           (let [taman-tila (or taman-tila
+                                                                                                (vec (repeat 2 nil)))]
+                                                                             (assoc taman-tila
+                                                                                    0 rajapinnan-data
+                                                                                    1 rajapinnan-dataf)))))))
+                                                   (datan-kasittely rajapinnan-dataf))))
+        tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
+    (assoc kasittelija
+           :rajapintakasittelija rajapintakasittelija
+           :osien-tunnisteet (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @rajapintakasittelija))))
+
+(defn- rajapinnan-grid-kasittelija-dynaaminen
+  [dynaamisen-osan-derefable i grid grid-kasittelijan-polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
+  (let [rajapintakasittelija (seuranta (reaction (let [rajapinnan-data (get @dynaamisen-osan-derefable i)
+                                                       rajapinnan-dataf (if *jarjesta-data?*
+                                                                          (do (println "JÄRJESTETÄÄN DYNAAMINEN")
+                                                                              (jarjesta-data rajapinnan-data jarjestys))
+                                                                          (do (println "EI JÄRJESTETÄ")
+                                                                              rajapinnan-data))]
+                                                   (when g-debug/GRID_DEBUG
+                                                     (swap! g-debug/debug
+                                                            (fn [tila]
+                                                              (update-in tila
+                                                                         [:rajapinnat rajapinta]
+                                                                         (fn [taman-tila]
+                                                                           (let [taman-tila (or taman-tila
+                                                                                                (vec (repeat 2 nil)))]
+                                                                             (assoc taman-tila
+                                                                                    0 rajapinnan-data
+                                                                                    1 rajapinnan-dataf)))))))
+                                                   (datan-kasittely rajapinnan-dataf))))
+        tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
+    (assoc kasittelija
+           :rajapintakasittelija rajapintakasittelija
+           :osien-tunnisteet (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @rajapintakasittelija))))
+
+(defn- osan-data-yhdistaminen [datan-kasittelija grid-rajapintakasittelijat osa]
+  (assoc (if-let [loydetty-osa (some (fn [[grid-polku {:keys [rajapintakasittelija osien-tunnisteet solun-polun-pituus seuranta rajapinta]}]]
+                                       (let [grid-polku-sopii-osaan? (grid-polku-sopii-osaan? grid-polku osa)
+                                             nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
+                                             osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
+                                                                          (::index-polku osa)))
+                                             solun-polun-pituus-oikein? (solun-polun-pituus-oikein? solun-polun-pituus osa)
+                                             yhdista-derefable-tahan-osaan? (or (and grid-polku-sopii-osaan?
+                                                                                     solun-polun-pituus-oikein?)
+                                                                                (and (:derefable (meta grid-polku))
+                                                                                     grid-polku-sopii-osaan?))]
+                                         (when yhdista-derefable-tahan-osaan?
+                                           #_(when-not (or (= solun-polun-pituus (count osan-polku-dataan))
+                                                           (nil? solun-polun-pituus))
+                                               (warn (str "Osan " (or (gop/nimi osa) (gop/id osa)) " polku ei ole oikein."
+                                                          " Nimi polku: " (::nimi-polku osa)
+                                                          " Index polku: " (::index-polku osa))))
+                                           (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
+                                             (when g-debug/GRID_DEBUG
+                                               (swap! g-debug/debug
+                                                      (fn [tila]
+                                                        (update-in tila
+                                                                   [:osat (gop/id osa)]
+                                                                   (fn [taman-tila]
+                                                                     (assoc taman-tila
+                                                                            :derefable osan-derefable
+                                                                            :rajapinta rajapinta))))))
+                                             (assoc osa ::osan-derefable osan-derefable
+                                                    ::tunniste-rajapinnan-dataan (get-in osien-tunnisteet osan-polku-dataan)
+                                                    ::triggeroi-seuranta! (when seuranta
+                                                                            (fn [] (dk/triggeroi-seuranta! datan-kasittelija seuranta))))))))
+                                     grid-rajapintakasittelijat)]
+           loydetty-osa
+           osa)
+         ::datan-kasittelija datan-kasittelija))
+
+(declare aseta-gridin-polut)
+
+(defn muodosta-dynaamisten-gridkasittelijapolut [polku polun-alku i]
+  (let [polku (mapv (fn [polun-osa]
+                      (if (fn? polun-osa)
+                        ;; TODO Onko toi fn tarpeellinen? Ny sitä ei käytetä
+                        i
+                        polun-osa))
+                    polku)]
+    (muodosta-uusi-polku polku polun-alku)))
+
+(defn uudet-gridkasittelijat-dynaaminen [grid lisattava-maara]
+  (let [polun-alku (::nimi-polku grid)
+        grid-kasittelijat (:grid-kasittelijat grid)
+        kasittelijat-per-osa (partition 2 grid-kasittelijat)]
+    (loop [j lisattava-maara
+           i (- (count (p/lapset grid)) lisattava-maara)
+           uudet-grid-kasittelijat {}]
+      (if (= 0 j)
+        uudet-grid-kasittelijat
+        (recur (dec j)
+               (inc i)
+               (reduce (fn [m [polku kasittelija]]
+                         (let [polku (muodosta-dynaamisten-gridkasittelijapolut polku polun-alku i)]
+                           (assoc m polku (rajapinnan-grid-kasittelija-dynaaminen (::osan-derefable grid) i (root grid) polku kasittelija))))
+                       uudet-grid-kasittelijat
+                       kasittelijat-per-osa))))))
+
+(defn kasittele-koot! [grid lisatyt-osat lisattyjen-osien-idt]
+  (let [lisattavien-osien-koot (transduce (comp
+                                            (filter (fn [osa]
+                                                      (satisfies? p/IGrid osa)))
+                                            (map (fn [osa]
+                                                   (p/koot osa))))
+                                          merge
+                                          {}
+                                          lisatyt-osat)
+
+        lisattavat-tiedot (select-keys grid #{::root-fn ::paivita-root! ::root-id ::koko-fn ::datan-kasittelija})
+        osan-kasittely (fn [osa]
+                         (let [osa (merge osa lisattavat-tiedot)]
+                           (if (satisfies? p/IGrid osa)
+                             (assoc osa :koko nil)
+                             osa)))
+        _ (swap! ((::koko-fn grid))
+                 (fn [koot]
+                   (merge koot lisattavien-osien-koot)))]
+    (paivita-kaikki-lapset! (osan-kasittely grid)
+                            (fn [osa]
+                              (contains? lisattyjen-osien-idt (gop/id osa)))
+                            osan-kasittely)))
+
+(defn lisaa-osia! [grid lisattava-maara]
+  (let [uudet-osat (repeatedly lisattava-maara
+                               (fn []
+                                 (let [kopio (gop/kopioi (:toistettava-osa grid))]
+                                   (paivita-kaikki-lapset! (muuta-id! kopio)
+                                                           (constantly true)
+                                                           (fn [lapsi]
+                                                             (muuta-id! lapsi))))))
+        _ (p/paivita-lapset! grid
+                             (fn [lapset]
+                               (vec
+                                 (concat lapset
+                                         uudet-osat))))
+        lisattyjen-osien-idt (into #{}
+                                   (mapcat (fn [osa]
+                                             (if (satisfies? p/IGrid osa)
+                                               (gridin-osat-vektoriin osa (constantly true) gop/id)
+                                               [(gop/id osa)]))
+                                           uudet-osat))
+        grid (kasittele-koot! grid uudet-osat lisattyjen-osien-idt)
+        uudet-gridkasittelijat (uudet-gridkasittelijat-dynaaminen grid lisattava-maara)
+        osan-kasittely (fn [osa]
+                         (osan-data-yhdistaminen (::datan-kasittelija grid) uudet-gridkasittelijat osa))
+        _ (paivita-kaikki-lapset! (osan-kasittely grid)
+                                  (fn [osa]
+                                    (contains? lisattyjen-osien-idt (gop/id osa)))
+                                  osan-kasittely)
+        _ (paivita-root! grid (fn [vanha-grid]
+                                (update (aseta-gridin-polut vanha-grid) ::grid-rajapintakasittelijat (fn [rk]
+                                                                                                       (merge rk
+                                                                                                              uudet-gridkasittelijat)))))]
+    (when-let [f (get-in grid [:osien-maara-muuttui :lisattiin-osia!])]
+      (f grid lisattyjen-osien-idt))))
+
+(defn poista-osia! [grid poistettava-maara]
+  (let [polun-alku (::nimi-polku grid)
+        ;; TODO TÄä on väärin. Ei poista kaikkia
+        poistettavat-polut (keep-indexed (fn [i polku]
+                                           (when (even? i)
+                                             (muodosta-dynaamisten-gridkasittelijapolut polku polun-alku i)))
+                                         (:grid-kasittelijat grid))
+        rajapintakasittelijat (::grid-rajapintakasittelijat (root grid))]
+    (doseq [poistettava-polku poistettavat-polut]
+      (poista-seuranta-derefable! (get rajapintakasittelijat poistettava-polku)))
+    (p/paivita-lapset! grid
+                       (fn [lapset]
+                         (vec (drop-last poistettava-maara lapset))))
+    (when-let [f (get-in grid [:osien-maara-muuttui :poistettiin-osia!])]
+      (f grid poistettavat-polut))))
+
+(defn- piirra-gridin-osat [osat grid]
+  [:<>
+   (doall
+     (for [osa osat]
+       (with-meta [gop/piirra osa]
+                  {:key (gop/id osa)})))])
+
+(defn- dynaaminen-grid [grid]
+    (let [gridin-derefable (::osan-derefable grid)]
+      (fn [grid]
+        (let [datan-maara (count @gridin-derefable)
+              osien-maara (count (p/lapset grid))]
+          (when-not (= osien-maara datan-maara)
+            (if (> osien-maara datan-maara)
+              (poista-osia! grid (- osien-maara datan-maara))
+              (lisaa-osia! grid (- datan-maara osien-maara)))
+            (aseta-koot! (root grid))
+            (swap! (get-in grid [:osien-maara-muuttui :trigger]) not))
+          [piirra-gridin-osat (p/lapset grid) grid]))))
+
+(defn- staattinen-grid [grid]
+  (let [osat (p/lapset grid)]
+    [:<>
+     [piirra-gridin-osat osat grid]]))
+
+(defn seurattava-koko [grid seurattava]
+  (let [seurattavan-id (gop/id (etsi-osa ((::root-fn grid)) seurattava))
+        kursori (r/cursor ((::koko-fn grid)) [seurattavan-id])]
+    (reaction @kursori)))
+
+
+(defn grid-index-polut
+  ([grid] (grid-index-polut (p/lapset grid) [] {}))
+  ([osat polku polut]
+   (apply merge
+          (map-indexed (fn [index osa]
+                         (let [grid? (satisfies? p/IGrid osa)
+                               uusi-polku (conj polku index)
+                               id (gop/id osa)
+                               polku-osalle (assoc polut id uusi-polku)]
+                           (if (and grid? (not (empty? (p/lapset osa))))
+                             (grid-index-polut (p/lapset osa) uusi-polku polku-osalle)
+                             polku-osalle)))
+                       osat))))
+
+(defn grid-nimi-polut
+  ([grid] (grid-nimi-polut (p/lapset grid) [] {}))
+  ([osat polku polut]
+   (apply merge
+          (map-indexed (fn [index osa]
+                         (let [grid? (satisfies? p/IGrid osa)
+                               uusi-polku (conj polku (or (gop/nimi osa) index))
+                               id (gop/id osa)
+                               polku-osalle (assoc polut id uusi-polku)]
+                           (if (and grid? (not (empty? (p/lapset osa))))
+                             (grid-nimi-polut (p/lapset osa) uusi-polku polku-osalle)
+                             polku-osalle)))
+                       osat))))
+
+(defn aseta-koko-grid [grid koko]
+  (swap! ((::koko-fn grid))
+         (fn [koot]
+           (assoc koot (gop/id grid) koko))))
+
+(defn paivita-koko-grid [grid f]
+  (swap! ((::koko-fn grid))
+         (fn [koot]
+           (update koot (gop/id grid) f))))
+
+(defn grid-koko [grid]
+  (get @((::koko-fn grid)) (gop/id grid)))
+
+(defn grid-koot [grid]
+  @((::koko-fn grid)))
 
 (defn lisaa-rivi!
   ([grid rivi]
@@ -750,25 +970,6 @@
                             (assoc osa ::root-fn haku
                                    ::paivita-root! paivita!))))
 
-(defn osa-polussa
-  ([grid koko-polku] (osa-polussa grid koko-polku koko-polku))
-  ([grid [polun-osa & polku] koko-polku]
-   (if (nil? polun-osa)
-     grid
-     (let [loydetyt-osat (keep-indexed (fn [index lapsi]
-                                         (when (or (= (gop/nimi lapsi) polun-osa)
-                                                   (and (integer? polun-osa)
-                                                        (= index polun-osa)))
-                                           lapsi))
-                                       (p/lapset grid))]
-       (when-not (= 1 (count loydetyt-osat))
-         (warn (str "Polun (" koko-polku ") osalle " polun-osa " ei löytynyt vain yhtä osaa. Löydetyt osat: " loydetyt-osat "\n"
-                    "OSA: " (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")" "\n"
-                    "-> " (apply str (interpose "\n-> " (map (fn [lapsi]
-                                                               (str (or (gop/nimi lapsi) "Nimetön") " (" (gop/id lapsi) ")"))
-                                                             (p/lapset grid)))))))
-       (recur (first loydetyt-osat) polku koko-polku)))))
-
 (defn piillota! [grid]
   (p/paivita-parametrit! grid (fn [parametrit]
                                 (update parametrit :class conj "piillotettu"))))
@@ -845,81 +1046,7 @@
     (merge (assoc grid :osat (r/atom (p/lapset grid)))
            (dissoc kopioitava-grid :id :alueet :koko :osat :parametrit ::koko-fn))))
 
-(defn- grid-polku-sopii-osaan?
-  [grid-polku osa]
-  (let [nimi-polku (::nimi-polku osa)]
-    (and (every? true? (map (fn [gp op]
-                              (= gp op))
-                            grid-polku
-                            nimi-polku))
-         (>= (count nimi-polku) (count grid-polku)))))
-
-(defn- solun-polun-pituus-oikein?
-  [solun-polun-pituus osa]
-  (let [nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
-        osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
-                                     (::index-polku osa)))]
-    (= solun-polun-pituus (count osan-polku-dataan))))
-
-(defn- rajapinnan-grid-kasittelija
-  [datan-kasittelija grid grid-kasittelijan-polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
-  (let [rajapintakasittelija (seuranta (reaction (let [rajapinnan-data @(dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)
-                                                       rajapinnan-dataf (if *jarjesta-data?*
-                                                                          (do (println "JÄRJESTETÄÄN")
-                                                                              (jarjesta-data rajapinnan-data jarjestys))
-                                                                          (do (println "EI JÄRJESTETÄ")
-                                                                              rajapinnan-data))]
-                                                   (when g-debug/GRID_DEBUG
-                                                     (swap! g-debug/debug
-                                                            (fn [tila]
-                                                              (update-in tila
-                                                                         [:rajapinnat rajapinta]
-                                                                         (fn [taman-tila]
-                                                                           (let [taman-tila (or taman-tila
-                                                                                                (vec (repeat 2 nil)))]
-                                                                             (assoc taman-tila
-                                                                                    0 rajapinnan-data
-                                                                                    1 rajapinnan-dataf)))))))
-                                                   (datan-kasittely rajapinnan-dataf))))
-        tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
-    (assoc kasittelija
-           :rajapintakasittelija rajapintakasittelija
-           :osien-tunnisteet (tunnisteen-kasittely (osa-polussa grid grid-kasittelijan-polku) @rajapintakasittelija))))
-
-(defn- osan-data-yhdistaminen [datan-kasittelija grid-rajapintakasittelijat osa]
-  (assoc (if-let [loydetty-osa (some (fn [[grid-polku {:keys [rajapintakasittelija osien-tunnisteet solun-polun-pituus seuranta rajapinta]}]]
-                                       (let [grid-polku-sopii-osaan? (grid-polku-sopii-osaan? grid-polku osa)
-                                             nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
-                                             osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
-                                                                          (::index-polku osa)))
-                                             solun-polun-pituus-oikein? (solun-polun-pituus-oikein? solun-polun-pituus osa)]
-                                         (when (and grid-polku-sopii-osaan?
-                                                    solun-polun-pituus-oikein?)
-                                           #_(when-not (or (= solun-polun-pituus (count osan-polku-dataan))
-                                                           (nil? solun-polun-pituus))
-                                               (warn (str "Osan " (or (gop/nimi osa) (gop/id osa)) " polku ei ole oikein."
-                                                          " Nimi polku: " (::nimi-polku osa)
-                                                          " Index polku: " (::index-polku osa))))
-                                           (let [osan-derefable (seuranta-derefable! rajapintakasittelija osan-polku-dataan)]
-                                             (when g-debug/GRID_DEBUG
-                                               (swap! g-debug/debug
-                                                      (fn [tila]
-                                                        (update-in tila
-                                                                   [:osat (gop/id osa)]
-                                                                   (fn [taman-tila]
-                                                                     (assoc taman-tila
-                                                                            :derefable osan-derefable
-                                                                            :rajapinta rajapinta))))))
-                                             (assoc osa ::osan-derefable osan-derefable
-                                                    ::tunniste-rajapinnan-dataan (get-in osien-tunnisteet osan-polku-dataan)
-                                                    ::triggeroi-seuranta! (when seuranta
-                                                                            (fn [] (dk/triggeroi-seuranta! datan-kasittelija seuranta))))))))
-                                     grid-rajapintakasittelijat)]
-           loydetty-osa
-           osa)
-         ::datan-kasittelija datan-kasittelija))
-
-
+(declare piirra-grid dynaamisen-jalkelainen?)
 
 (declare ->Grid)
 
@@ -988,13 +1115,13 @@
                                                 grid-kasittelija)]
       (paivita-root! this
                      (fn [_]
-                       (println "DATAN YHDISTÄMINEN")
                        (paivita-kaikki-lapset! (assoc this ::lopeta-rajapinnan-kautta-kuuntelu! (fn []
                                                                                                   (dk/poista-seurannat! datan-kasittelija)
                                                                                                   (dk/lopeta-tilan-kuuntelu! datan-kasittelija))
                                                       ::grid-rajapintakasittelijat grid-rajapintakasittelijat
                                                       ::datan-kasittelija datan-kasittelija)
-                                               (constantly true)
+                                               (fn [osa]
+                                                 (not (dynaamisen-jalkelainen? osa)))
                                                (partial osan-data-yhdistaminen datan-kasittelija grid-rajapintakasittelijat))))))
   (-grid-tapahtumat [this data-atom tapahtumat]
     (let [this (root this)]
@@ -1044,15 +1171,162 @@
   (-kopioi [this]
     (grid-kopioi this ->Grid)))
 
-(defn- muodosta-uusi-polku
-  ([annettu-polku polun-alku] (muodosta-uusi-polku annettu-polku polun-alku false))
-  ([annettu-polku polun-alku muodostetaan-polkua?]
-   (let [ensimmainen-osa (first annettu-polku)]
-     (cond
-       (= :. ensimmainen-osa) (vec (concat polun-alku (rest annettu-polku)))
-       (= :.. ensimmainen-osa) (recur (rest annettu-polku) (butlast polun-alku) true)
-       muodostetaan-polkua? (vec (concat polun-alku annettu-polku))
-       :else annettu-polku))))
+(declare ->DynaaminenGrid)
+
+(defrecord DynaaminenGrid [id toistettava-osa grid-kasittelijat osien-maara-muuttui alueet koko osat parametrit]
+  p/IGrid
+  (-osat [this]
+    (grid-osat this))
+  (-osat [this polku]
+    (grid-osat this polku))
+  (-aseta-osat! [this osat]
+    (aseta-osat! this osat))
+  (-aseta-osat! [this polku osat]
+    (aseta-osat! this polku osat))
+  (-paivita-osat! [this f]
+    (paivita-osat! this f))
+  (-paivita-osat! [this polku f]
+    (paivita-osat! this polku f))
+
+  (-lisaa-rivi! [this solu]
+    (lisaa-rivi! this solu))
+  (-lisaa-rivi! [this solu index]
+    (lisaa-rivi! this solu index))
+  (-lisaa-sarake! [this solu]
+    (p/lisaa-sarake! this solu (count (p/lapset this))))
+  (-lisaa-sarake! [this solu index]
+    (lisaa-sarake! this solu index))
+  (-poista-rivi! [this solu]
+    (poista-rivi! this solu))
+  (-poista-sarake! [this solu]
+    (poista-sarake! this solu))
+
+  (-koko [this]
+    (grid-koko this))
+  (-koot [this]
+    (grid-koot this))
+  (-aseta-koko! [this koko]
+    (aseta-koko-grid this koko))
+  (-paivita-koko! [this f]
+    (paivita-koko-grid this f))
+  (-alueet [this]
+    (grid-alueet this))
+  (-aseta-alueet! [this alueet]
+    (aseta-alueet! this alueet))
+  (-paivita-alueet! [this f]
+    (paivita-alueet! this f))
+  (-aseta-root-fn [this f]
+    (aseta-root-fn this f))
+
+  (-parametrit [this]
+    (grid-parametrit this))
+  (-aseta-parametrit! [this parametrit]
+    (aseta-parametrit! this parametrit))
+  (-paivita-parametrit! [this f]
+    (paivita-parametrit! this f))
+
+  (-rivi [this tunniste] (log "KUTSUTTIIN -rivi FUNKTIOTA Grid:ille"))
+  (-sarake [this tunniste] (log "KUTSUTTIIN -sarake FUNKTIOTA Grid:ille"))
+  (-solu [this tunniste] (log "KUTSUTTIIN -solu FUNKTIOTA Grid:ille"))
+
+  gop/IGridOsa
+  (-id [this]
+    (:id this))
+  (-id? [this id]
+    (= (:id this) id))
+  (-nimi [this]
+    (::nimi this))
+  (-aseta-nimi [this nimi]
+    (assoc this ::nimi nimi))
+  gop/IPiirrettava
+  (-piirra [this]
+    [:<>
+     [piirra-grid this]])
+  gop/IPiillota
+  (-piillota! [this]
+    (piillota! this))
+  (-nayta! [this]
+    (nayta! this))
+  (-piillotettu? [this]
+    (piillotettu? this))
+  gop/IKopioi
+  (-kopioi [this]
+    (grid-kopioi this ->Grid)))
+
+(defn dynaamisen-jalkelainen?
+  ([osa] (dynaamisen-jalkelainen? osa false))
+  ([osa dynaaminen?]
+   (let [vanhempi (vanhempi osa)]
+     (if (and vanhempi (false? dynaaminen?))
+       (recur vanhempi (instance? DynaaminenGrid vanhempi))
+       dynaaminen?))))
+
+(defn piirra-grid [grid]
+  (r/create-class
+    {:constructor (fn [this props]
+                    (when (= (gop/id grid) (::root-id grid))
+                      (aseta-koot! grid))
+                    (set! (.-state this) #js {:error nil}))
+     :get-derived-state-from-error (fn [error]
+                                     #js {:error error})
+     :component-did-catch (fn [error error-info]
+                            #_(warn (str "Komponentti kaatui virheeseen: "
+                                         error-info "\n"
+                                         (when g-debug/GRID_DEBUG
+                                           (apply str "\n---- VIIMEISIMMÄT DATA MUUTOKSET ----"
+                                                  (str "\nGRID: " (or (gop/nimi grid) "Nimetön") "(" (gop/id grid) ")")
+                                                  (for [lapsi (p/lapset grid)]
+                                                    (let [data (conj (get-in @g-debug/debug [:rajapinnat (get-in @g-debug/debug [:osat (gop/id lapsi) :rajapinta])])
+                                                                     (get-in @g-debug/debug [:osat (gop/id lapsi) :derefable]))]
+                                                      (str "\n--> " (or (gop/nimi lapsi) (gop/id lapsi))
+                                                           "\n" (with-out-str (cljs.pprint/pprint
+                                                                                {:data-rajapinnasta (first data)
+                                                                                 :grid-data (second data)
+                                                                                 :osan-derefable (get data 2)}))))))))))
+     :display-name (str (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")")
+     :render (fn [this]
+               (if-let [error (.. this -state -error)]
+                 [virhekasittely/rendaa-virhe error]
+                 (let [[_ grid] (r/argv this)
+                       _ (when (instance? DynaaminenGrid grid)
+                           @(get-in grid [:osien-maara-muuttui :trigger]))
+                       {luokat :class dom-id :id} @(:parametrit grid)
+                       #_#__ (when-let [koko-fn (:koko-fn grid)]
+                               @(koko-fn))
+                       #_#_seurattava-koko (when-let [seuraa-asetukset (:seuraa (p/koko grid))]
+                                             (seurattava-koko grid (:seurattava seuraa-asetukset)))
+                       #_#_aseta-koko-uusiksi? (and seurattava-koko
+                                                    (or (not= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
+                                                        (not= (:rivi @seurattava-koko) (:rivi (p/koko grid)))))
+                       _ (when (instance? DynaaminenGrid grid) (println "LASKETAAN GRIDTIEDOT"))
+                       {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
+                   ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
+                   #_(when aseta-koko-uusiksi?
+                       (aseta-seurattava-koko! grid))
+                   [:div.grid-taulukko {:class (apply str (interpose " " luokat))
+                                        :id dom-id}
+
+
+
+                    ;; Järjestys ja koko erilleen (relevantteja vain laps'taulukoille)
+                    ;; Järjestyksessä joku osa on toisen osan alisteinen
+                    ;; Järjestyksessä rivien/sarakkeiden määrä voi poiketa
+                    ;; Järjestyksen täytynee olla atomi. Sen takia, että yhdestä osiosta voidaan aiheuttaa sivuvaikutuksena
+                    ;; Toisen osan järjestyksen muuttuminen
+
+                    ;; data manageri, joka kertoo osille mistä lukea data ja raakadatan munklaa oikeaan muotoon.
+                    [:div {:style {:display "grid"
+                                   :position "relative"
+                                   :top top
+                                   :left left
+                                   :grid-template-columns leveydet
+                                   :grid-template-rows korkeudet}}
+
+                     (if (instance? DynaaminenGrid grid)
+                       ^{:key (str (:id grid) "-dynamic")}
+                       [dynaaminen-grid grid]
+                       ^{:key (str (:id grid) "-static")}
+                       [staattinen-grid grid])]])))}))
 
 (defn vaihda-osa! [vaihdettava-osa vaihto-fn & datan-kasittelyt]
   (let [root-grid (root vaihdettava-osa)
@@ -1204,56 +1478,6 @@
 ;; Alue ottaa vektorin vektoreita (tai sittenkin mappeja?) dataa. Voi määritellä x- ja y-suunnissa, että kasvaako alue datan mukana vaiko ei.
 
 
-#_(defn muuta-id! [kopio]
-  (let [id (gensym "grid")
-        gridi (assoc kopio :id id
-                     ::root-id id)
-        _ (println "ROOT GRID?: " (gop/id? kopio (::root-id kopio)))
-        _ (println "KOPIO ID: " (gop/id kopio))
-        _ (println "ROOT ID: " (::root-id kopio))
-        kopioitavan-gridin-koko (get (p/koot kopio) (gop/id kopio))
-        koko (r/atom (-> (p/koot kopio)
-                         (dissoc (gop/id kopio))
-                         (assoc id kopioitavan-gridin-koko)))
-        koko-fn (constantly koko)]
-    (paivita-kaikki-lapset! (assoc gridi ::koko-fn koko-fn)
-                            (constantly true)
-                            (fn [lapsi]
-                              (assoc lapsi ::koko-fn koko-fn
-                                     ::root-id id)))))
-
-(defn muuta-id! [kopio]
-  (let [id (gensym "muuta-id")
-        osa (assoc kopio :id id)
-        grid? (satisfies? p/IGrid kopio)
-        root-grid? (gop/id? kopio (::root-id kopio))
-        paivita-grid #_(fn [gridi]
-                       (let [kopioitavan-gridin-koko (get (p/koot kopio) (gop/id kopio))
-                             koko (r/atom (-> (p/koot kopio)
-                                              (dissoc (gop/id kopio))
-                                              (assoc id kopioitavan-gridin-koko)))
-                             koko-fn (constantly koko)]
-                         (paivita-kaikki-lapset! (cond-> (assoc gridi ::koko-fn koko-fn)
-                                                         root-grid? (assoc ::root-id id))
-                                                 (constantly true)
-                                                 (fn [lapsi]
-                                                   (cond-> (assoc lapsi ::koko-fn koko-fn)
-                                                           root-grid? (assoc ::root-id id))))))
-        (fn [gridi]
-          (swap! ((::koko-fn gridi)) (fn [koot]
-                                       (-> koot
-                                           (dissoc (gop/id kopio))
-                                           (assoc id (get koot (gop/id kopio))))))
-          (if root-grid?
-            (paivita-kaikki-lapset! (assoc gridi ::root-id id)
-                                    (constantly true)
-                                    (fn [lapsi]
-                                      (assoc lapsi ::root-id id)))
-            gridi))]
-    (if grid?
-      (paivita-grid osa)
-      osa)))
-
 (defn validi-grid-asetukset?
   [{:keys [nimi alueet koko osat root-fn luokat]}]
   (and (or (nil? nimi) (satisfies? IEquiv nimi))
@@ -1261,7 +1485,7 @@
        (or (nil? koko) (s/valid? ::koko koko))
        (or (nil? osat) (s/valid? ::osat osat))))
 
-(defn grid-c [record {:keys [nimi alueet koko osat root-fn luokat dom-id] :as asetukset}]
+(defn grid-c [record {:keys [nimi alueet koko osat root-fn paivita-root! luokat dom-id toistettava-osa grid-kasittelijat lisattiin-osia! poistettiin-osia!] :as asetukset}]
   (let [root-id (gensym "grid")
         koko (r/atom {root-id koko})
         osat (r/atom osat)
@@ -1269,20 +1493,28 @@
         parametrit (r/atom {:class (or luokat #{})
                             :id dom-id})
         koko-fn (constantly koko)
-        gridi (cond-> (record root-id alueet koko osat parametrit)
+        dynaaminen-grid? (and toistettava-osa grid-kasittelijat)
+        gridi (cond-> (if dynaaminen-grid?
+                        (record root-id
+                                toistettava-osa
+                                grid-kasittelijat
+                                {:trigger (r/atom false) :lisattiin-osia! lisattiin-osia! :poistettiin-osia! poistettiin-osia!}
+                                alueet
+                                koko
+                                osat
+                                parametrit)
+                        (record root-id alueet koko osat parametrit))
                       true (assoc ::koko-fn koko-fn
                                   ::root-fn root-fn
+                                  ::paivita-root! paivita-root!
                                   ::root-id root-id)
-                      nimi (assoc ::nimi nimi))
-        #_#_index-polut (grid-index-polut gridi)
-        #_#_nimi-polut (grid-nimi-polut gridi)]
+                      nimi (assoc ::nimi nimi))]
     (paivita-kaikki-lapset! gridi
                             (constantly true)
                             (fn [osa]
                               (let [grid? (satisfies? p/IGrid osa)
                                     koot (when grid?
                                            (p/koot osa))
-                                    id (gop/id osa)
                                     _ (when koot
                                         (swap! koko (fn [koko]
                                                       (merge koko koot))))]
@@ -1291,6 +1523,5 @@
                                        ::koko-fn koko-fn
                                        ::root-id root-id
                                        ::root-fn root-fn
-                                       #_#_::index-polku (get index-polut id)
-                                       #_#_::nimi-polku (get nimi-polut id)))))
+                                       ::paivita-root! paivita-root!))))
     gridi))

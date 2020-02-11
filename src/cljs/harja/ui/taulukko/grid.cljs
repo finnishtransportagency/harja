@@ -19,6 +19,13 @@
           (symbol? (gop/id %))]}
   (g/grid-c g/->Grid asetukset))
 
+(defn dynamic-grid
+  [asetukset]
+  {:pre [(g/validi-grid-asetukset? asetukset)]
+   :post [(instance? g/DynaaminenGrid %)
+          (symbol? (gop/id %))]}
+  (g/grid-c g/->DynaaminenGrid asetukset))
+
 (defn rivi
   "Rivi on grid, mutta varmistetaan, että alueessa on vain yksi rivi."
   [asetukset alueet]
@@ -60,30 +67,7 @@
     g))
 
 (defn samanlainen-osa [osa]
-  (let [kopio (kopio osa)
-        kopioitava-grid? (satisfies? gp/IGrid osa)
-        kopio-eri-idlla (if kopioitava-grid?
-                         (g/paivita-kaikki-lapset! (g/muuta-id! kopio)
-                                                   (constantly true)
-                                                   (fn [lapsi]
-                                                     (g/muuta-id! lapsi)))
-                         (g/muuta-id! kopio))]
-    (if kopioitava-grid?
-      (do
-        (swap! ((::g/koko-fn osa))
-               (fn [koot]
-                 (merge koot (g/grid-koot kopio-eri-idlla))))
-        (g/paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil
-                                         ::g/koko-fn (::g/koko-fn osa)
-                                         ::g/root-id (::g/root-id osa)
-                                         ::g/root-fn (::g/root-fn osa))
-                                  (constantly true)
-                                  (fn [lapsi]
-                                    (assoc lapsi
-                                           ::g/koko-fn (::g/koko-fn osa)
-                                           ::g/root-id (::g/root-id osa)
-                                           ::g/root-fn (::g/root-fn osa)))))
-      kopio-eri-idlla)))
+  (g/samanlainen-osa osa))
 
 ;; HAUT
 
@@ -129,6 +113,7 @@
                            identity))
 
 (defn nakyvat-rivit [grid]
+  (println "NÄKYÄVT RIVIT GRID TYYPPI: " (with-out-str (pr (type grid))))
   (vec (sort-by ::g/index-polku
                 (fn [polku-a polku-b]
                   (let [polun-osat-vertailtu (map (fn [i j]
