@@ -119,7 +119,9 @@
                                             (konv/string->keyword tarkka-aikataulu :toimenpide))
                                           (:tarkka-aikataulu rivi))))
                        aikataulu)
-        aikataulu (map #(yy/lisaa-yllapitokohteelle-pituus db %) aikataulu)]
+        aikataulu (map #(yy/lisaa-yllapitokohteelle-pituus db %) aikataulu)
+        ;; Liitetään kohdeosat, koska Tiemerkintäurakan aikataulusta halutaan nähdä ne (VHAR-1131)
+        aikataulu (q/liita-kohdeosat-kohteisiin db aikataulu :id)]
     aikataulu))
 
 (defn- lisaa-yllapitokohteille-valitavoitteet
