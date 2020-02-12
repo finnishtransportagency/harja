@@ -43,6 +43,7 @@
     "kaista": {
       "id": "urn:harja/sijainti/tie/kaista",
       "enum": [
+        1,
         11,
         12,
         13,

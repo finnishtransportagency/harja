@@ -55,8 +55,8 @@
         muutokset-kokonaishintaan (:maaramuutokset lomakedata-nyt)
         toteuman-kokonaishinta (+ urakkasopimuksen-mukainen-kokonaishinta muutokset-kokonaishintaan)]
     {:urakkasopimuksen-mukainen-kokonaishinta urakkasopimuksen-mukainen-kokonaishinta
-     :muutokset-kokonaishintaan muutokset-kokonaishintaan
-     :toteuman-kokonaishinta toteuman-kokonaishinta}))
+     :muutokset-kokonaishintaan               muutokset-kokonaishintaan
+     :toteuman-kokonaishinta                  toteuman-kokonaishinta}))
 
 (defn yhteenveto [lomakedata-nyt]
   (let [{:keys [urakkasopimuksen-mukainen-kokonaishinta
@@ -98,35 +98,35 @@
      [:h3 "Asiatarkastus"]
 
      [lomake/lomake
-      {:otsikko ""
-       :muokkaa! (fn [uusi]
-                   (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
-       :validoi-alussa? true
+      {:otsikko              ""
+       :muokkaa!             (fn [uusi]
+                               (muokkaa! assoc-in [:perustiedot :asiatarkastus] uusi))
+       :validoi-alussa?      true
        :validoitavat-avaimet #{:pakollinen :validoi}
-       :voi-muokata? muokattava?
-       :data-cy "paallystysilmoitus-asiatarkastus"}
-      [{:otsikko "Tarkastettu"
-        :nimi :tarkastusaika
+       :voi-muokata?         muokattava?
+       :data-cy              "paallystysilmoitus-asiatarkastus"}
+      [{:otsikko     "Tarkastettu"
+        :nimi        :tarkastusaika
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastusaika)
-        :tyyppi :pvm
-        :huomauta tarkastusaika}
-       {:otsikko "Tarkastaja"
-        :nimi :tarkastaja
+        :tyyppi      :pvm
+        :huomauta    tarkastusaika}
+       {:otsikko     "Tarkastaja"
+        :nimi        :tarkastaja
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :tarkastaja)
-        :tyyppi :string
-        :huomauta tarkastaja
-        :pituus-max 1024}
+        :tyyppi      :string
+        :huomauta    tarkastaja
+        :pituus-max  1024}
        {:teksti "Hyväksytty"
-        :nimi :hyvaksytty
+        :nimi   :hyvaksytty
         :tyyppi :checkbox
-        :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
-       {:otsikko "Lisätiedot"
-        :nimi :lisatiedot
+        :fmt    #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
+       {:otsikko     "Lisätiedot"
+        :nimi        :lisatiedot
         :pakollinen? (pakollinen-kentta? pakolliset-kentat :lisatiedot)
-        :tyyppi :text
-        :koko [60 3]
-        :pituus-max 4096
-        :palstoja 2}]
+        :tyyppi      :text
+        :koko        [60 3]
+        :pituus-max  4096
+        :palstoja    2}]
       asiatarkastus]]))
 
 (defn kasittely
@@ -144,36 +144,36 @@
 
      [:h3 "Käsittely"]
      [lomake/lomake
-      {:otsikko "Tekninen osa"
-       :muokkaa! #(muokkaa! assoc-in [:perustiedot :tekninen-osa] %)
-       :validoi-alussa? true
+      {:otsikko              "Tekninen osa"
+       :muokkaa!             #(muokkaa! assoc-in [:perustiedot :tekninen-osa] %)
+       :validoi-alussa?      true
        :validoitavat-avaimet #{:pakollinen :validoi}
-       :voi-muokata? muokattava?
-       :data-cy "paallystysilmoitus-kasittelytiedot"}
-      [{:otsikko "Käsitelty"
-        :nimi :kasittelyaika
-        :tyyppi :pvm
+       :voi-muokata?         muokattava?
+       :data-cy              "paallystysilmoitus-kasittelytiedot"}
+      [{:otsikko  "Käsitelty"
+        :nimi     :kasittelyaika
+        :tyyppi   :pvm
         :huomauta kasittelyaika}
 
-       {:otsikko "Päätös"
-        :nimi :paatos
-        :tyyppi :valinta
-        :valinnat [:hyvaksytty :hylatty]
-        :huomauta paatos
+       {:otsikko       "Päätös"
+        :nimi          :paatos
+        :tyyppi        :valinta
+        :valinnat      [:hyvaksytty :hylatty]
+        :huomauta      paatos
         :valinta-nayta #(cond
                           % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
                           muokattava? "- Valitse päätös -"
                           :default "-")
-        :palstoja 1}
+        :palstoja      1}
 
        (when (:paatos tekninen-osa)
-         {:otsikko "Selitys"
-          :nimi :perustelu
-          :tyyppi :text
-          :koko [60 3]
+         {:otsikko    "Selitys"
+          :nimi       :perustelu
+          :tyyppi     :text
+          :koko       [60 3]
           :pituus-max 2048
-          :palstoja 2
-          :huomauta perustelu})]
+          :palstoja   2
+          :huomauta   perustelu})]
       tekninen-osa]]))
 
 (defn tallennus
@@ -194,14 +194,14 @@
       ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
       #(go
          (e! (paallystys/->TallennaPaallystysilmoitus)))
-      {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
-       :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
+      {:luokka      "nappi-ensisijainen"
+       :data-cy     "pot-tallenna"
+       :id          "tallenna-paallystysilmoitus"
+       :disabled    (or (false? valmis-tallennettavaksi?)
+                        (not (oikeudet/voi-kirjoittaa?
+                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                               urakka-id kayttaja)))
+       :ikoni       (ikonit/tallenna)
        :virheviesti "Tallentaminen epäonnistui"}]]))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
@@ -213,7 +213,7 @@
 
 (defn tr-kentta [{:keys [muokkaa-lomaketta data]} e!
                  {{:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} :perustiedot
-                  ohjauskahvat :ohjauskahvat}]
+                  ohjauskahvat                                                                                     :ohjauskahvat}]
   (let [muuta! (fn [kentta]
                  #(do
                     (.preventDefault %)
@@ -281,29 +281,29 @@
                      (muokkaa! update :perustiedot (fn [vanha]
                                                      (merge vanha uusi))))
         kohde-hae-fn (fn [{:keys [kohdenumero tunnus kohdenimi]}]
-                 (str "#" kohdenumero " " tunnus " " kohdenimi))
+                       (str "#" kohdenumero " " tunnus " " kohdenimi))
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)
         kommentit-komponentti (fn [lomakedata]
                                 (let [uusi-kommentti-atom (atom (get-in lomakedata [:data :uusi-kommentti]))]
                                   (komp/luo
                                     (komp/sisaan-ulos #(add-watch uusi-kommentti-atom :pot-perustiedot-uusi-kommentti
-                                                                 (fn [_ _ _ uusi-arvo]
-                                                                   (muokkaa! assoc-in [:perustiedot :uusi-kommentti] uusi-arvo)))
+                                                                  (fn [_ _ _ uusi-arvo]
+                                                                    (muokkaa! assoc-in [:perustiedot :uusi-kommentti] uusi-arvo)))
                                                       #(remove-watch uusi-kommentti-atom :pot-perustiedot-uusi-kommentti))
-                                    (fn [{muokkaa-lomaketta :muokkaa-lomaketta
+                                    (fn [{muokkaa-lomaketta                       :muokkaa-lomaketta
                                           {:keys [tila uusi-kommentti kommentit]} :data}]
                                       [kommentit/kommentit
                                        {:voi-kommentoida?
-                                        (not= :lukittu tila)
-                                        :voi-liittaa? false
-                                        :palstoja 40
-                                        :placeholder "Kirjoita kommentti..."
+                                                        (not= :lukittu tila)
+                                        :voi-liittaa?   false
+                                        :palstoja       40
+                                        :placeholder    "Kirjoita kommentti..."
                                         :uusi-kommentti uusi-kommentti-atom}
                                        kommentit]))))]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                      takuupvm] :as perustiedot-nyt}
-             :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
+                          :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu?
          muokkaa!
@@ -315,65 +315,65 @@
         [:div.row
          [:div.col-sm-12.col-md-6
           [:h3 "Perustiedot"]
-          [lomake/lomake {:voi-muokata? muokattava?
-                          :muokkaa! muokkaa-fn
+          [lomake/lomake {:voi-muokata?              muokattava?
+                          :muokkaa!                  muokkaa-fn
                           :kutsu-muokkaa-renderissa? true
-                          :validoi-alussa? true
-                          :data-cy "paallystysilmoitus-perustiedot"}
-           [{:otsikko "Kohde" :nimi :kohde
-             :hae kohde-hae-fn
-             :muokattava? false-fn
+                          :validoi-alussa?           true
+                          :data-cy                   "paallystysilmoitus-perustiedot"}
+           [{:otsikko            "Kohde" :nimi :kohde
+             :hae                kohde-hae-fn
+             :muokattava?        false-fn
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
             (merge
-              {:nimi :tr-osoite
+              {:nimi               :tr-osoite
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
               (if muokattava?
-                {:tyyppi :reagent-komponentti
-                 :piilota-label? true
-                 :komponentti tr-kentta
+                {:tyyppi           :reagent-komponentti
+                 :piilota-label?   true
+                 :komponentti      tr-kentta
                  :komponentti-args [e! paallystysilmoituksen-osa]
-                 :validoi (get-in validoinnit [:perustiedot :tr-osoite])
+                 :validoi          (get-in validoinnit [:perustiedot :tr-osoite])
                  :sisallon-leveys? true}
-                {:otsikko "Tierekisteriosoite"
-                 :hae identity
-                 :fmt tr/tierekisteriosoite-tekstina
+                {:otsikko     "Tierekisteriosoite"
+                 :hae         identity
+                 :fmt         tr/tierekisteriosoite-tekstina
                  :muokattava? false-fn}))
             (when (or tr-ajorata tr-kaista)
-              {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :string
+              {:otsikko            "Ajorata" :nimi :tr-ajorata :tyyppi :string
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
 
             (when (or tr-ajorata tr-kaista)
-              {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :string
+              {:otsikko            "Kaista" :nimi :tr-kaista :tyyppi :string
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
-            {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
+            {:otsikko            "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
-            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm
+            {:otsikko            "Takuupvm" :nimi :takuupvm :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-             :varoita [tarkista-takuu-pvm]}
-            {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm
+             :varoita            [tarkista-takuu-pvm]}
+            {:otsikko            "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
-            {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
+            {:otsikko            "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-             :tyyppi :pvm :muokattava? false-fn}
-            {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
-             :hae toteuman-kokonaishinta-hae-fn
-             :fmt fmt/euro-opt :tyyppi :numero
-             :muokattava? false-fn
+             :tyyppi             :pvm :muokattava? false-fn}
+            {:otsikko            "Toteutunut hinta" :nimi :toteuman-kokonaishinta
+             :hae                toteuman-kokonaishinta-hae-fn
+             :fmt                fmt/euro-opt :tyyppi :numero
+             :muokattava?        false-fn
              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
             (when (and (not= :valmis tila)
                        (not= :lukittu tila))
-              {:otsikko "Käsittely"
-               :teksti "Valmis tilaajan käsiteltäväksi"
-               :nimi :valmis-kasiteltavaksi
-               :nayta-rivina? true
+              {:otsikko            "Käsittely"
+               :teksti             "Valmis tilaajan käsiteltäväksi"
+               :nimi               :valmis-kasiteltavaksi
+               :nayta-rivina?      true
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-               :tyyppi :checkbox})
+               :tyyppi             :checkbox})
             (when (or (= :valmis tila)
                       (= :lukittu tila))
-              {:otsikko "Kommentit" :nimi :kommentit
+              {:otsikko            "Kommentit" :nimi :kommentit
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-               :tyyppi :reagent-komponentti
-               :komponentti kommentit-komponentti})]
+               :tyyppi             :reagent-komponentti
+               :komponentti        kommentit-komponentti})]
            perustiedot-nyt]]
 
          [:div.col-md-6
@@ -392,10 +392,10 @@
       "Avaa lukitus"
       #(go
          (e! (paallystys/->AvaaPaallystysilmoituksenLukitus)))
-      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
-       :id "poista-paallystysilmoituksen-lukitus"
-       :disabled (not paatosoikeus?)
-       :ikoni (ikonit/livicon-wrench)
+      {:luokka      "nappi-kielteinen avaa-lukitus-nappi"
+       :id          "poista-paallystysilmoituksen-lukitus"
+       :disabled    (not paatosoikeus?)
+       :ikoni       (ikonit/livicon-wrench)
        :virheviesti "Lukituksen avaaminen epäonnistui"}]]))
 
 (defn tayta-fn [avain]
@@ -427,106 +427,106 @@
     (fn [yllapitokohdeosat-tila paallystystoimenpiteen-tiedot-ohjauskahva false-fn muokkaus-mahdollista?
          paallystystoimenpide-virhe tekninen-osa-voi-muokata? tietojen-validointi]
       [grid/muokkaus-grid
-       {:otsikko "Päällystystoimenpiteen tiedot"
-        :id "paallystysilmoitus-paallystystoimenpiteet"
-        :data-cy "paallystystoimenpiteen-tiedot"
-        :ohjaus paallystystoimenpiteen-tiedot-ohjauskahva
-        :voi-lisata? false
-        :voi-kumota? false
-        :voi-poistaa? false-fn
-        :voi-muokata? muokkaus-mahdollista?
-        :disable-input? true
-        :virheet paallystystoimenpide-virhe
-        :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                 tekninen-osa-voi-muokata?)
-                        "Tarkista kohteen tr-osoite ennen tallentamista")
-        :rivinumerot? true
+       {:otsikko                 "Päällystystoimenpiteen tiedot"
+        :id                      "paallystysilmoitus-paallystystoimenpiteet"
+        :data-cy                 "paallystystoimenpiteen-tiedot"
+        :ohjaus                  paallystystoimenpiteen-tiedot-ohjauskahva
+        :voi-lisata?             false
+        :voi-kumota?             false
+        :voi-poistaa?            false-fn
+        :voi-muokata?            muokkaus-mahdollista?
+        :disable-input?          true
+        :virheet                 paallystystoimenpide-virhe
+        :virhe-viesti            (when (and (not muokkaus-mahdollista?)
+                                            tekninen-osa-voi-muokata?)
+                                   "Tarkista kohteen tr-osoite ennen tallentamista")
+        :rivinumerot?            true
         :jarjesta-avaimen-mukaan identity
-        :rivin-avaimet #{:toimenpide-paallystetyyppi :toimenpide-raekoko :massamenekki :rc% :toimenpide-tyomenetelma
-                         :leveys :kokonaismassamaara :pinta-ala :kuulamylly}
-        :validoi-alussa? true}
+        :rivin-avaimet           #{:toimenpide-paallystetyyppi :toimenpide-raekoko :massamenekki :rc% :toimenpide-tyomenetelma
+                                   :leveys :kokonaismassamaara :pinta-ala :kuulamylly}
+        :validoi-alussa?         true}
        [(assoc paallystys/paallyste-grid-skeema
-               :nimi :toimenpide-paallystetyyppi
-               :fokus-klikin-jalkeen? true
-               :leveys 30
-               :tayta-alas? tayta-alas?-fn
-               :tayta-fn tayta-toimenpide-paallystetyyppi
-               :tayta-sijainti :ylos
-               :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille"
-               :tayta-alas-toistuvasti? tayta-alas?-fn
-               :kentta-arity-3? true
-               :valinta-nayta toimenpide-paallystetyyppi-valinta-nayta
-               :tayta-toistuvasti-fn tayta-toimenpide-paallystetyyppi)
+          :nimi :toimenpide-paallystetyyppi
+          :fokus-klikin-jalkeen? true
+          :leveys 30
+          :tayta-alas? tayta-alas?-fn
+          :tayta-fn tayta-toimenpide-paallystetyyppi
+          :tayta-sijainti :ylos
+          :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille"
+          :tayta-alas-toistuvasti? tayta-alas?-fn
+          :kentta-arity-3? true
+          :valinta-nayta toimenpide-paallystetyyppi-valinta-nayta
+          :tayta-toistuvasti-fn tayta-toimenpide-paallystetyyppi)
         (assoc paallystys/raekoko-grid-skeema
-               :validoi (:toimenpide-raekoko tietojen-validointi)
-               :nimi :toimenpide-raekoko :leveys 10
-               :tayta-alas? tayta-alas?-fn
-               :tayta-fn tayta-raekoko
-               :tayta-sijainti :ylos
-               :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
-               :tayta-alas-toistuvasti? tayta-alas?-fn
-               :tayta-toistuvasti-fn tayta-raekoko)
-        {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
-         :nimi :massamenekki
-         :tyyppi :positiivinen-numero :desimaalien-maara 2
-         :tasaa :oikea :leveys 10
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-massamenekki
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
+          :validoi (:toimenpide-raekoko tietojen-validointi)
+          :nimi :toimenpide-raekoko :leveys 10
+          :tayta-alas? tayta-alas?-fn
+          :tayta-fn tayta-raekoko
+          :tayta-sijainti :ylos
+          :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
+          :tayta-alas-toistuvasti? tayta-alas?-fn
+          :tayta-toistuvasti-fn tayta-raekoko)
+        {:otsikko                 "Massa\u00ADmenek\u00ADki (kg/m²)"
+         :nimi                    :massamenekki
+         :tyyppi                  :positiivinen-numero :desimaalien-maara 2
+         :tasaa                   :oikea :leveys 10
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-massamenekki
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama massamenekki alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
-         :tasaa :oikea :pituus-max 100
-         :validoi (:rc tietojen-validointi)
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-rc
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"
+        {:otsikko                 "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
+         :tasaa                   :oikea :pituus-max 100
+         :validoi                 (:rc tietojen-validointi)
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-rc
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama RC-% alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
         (assoc paallystys/tyomenetelma-grid-skeema
-               :nimi :toimenpide-tyomenetelma
-               :fokus-klikin-jalkeen? true
-               :leveys 30
-               :tayta-alas? tayta-alas?-fn
-               :tayta-fn tayta-toimenpide-tyomenetelma
-               :tayta-sijainti :ylos
-               :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
-               :tayta-alas-toistuvasti? tayta-alas?-fn
-               :valinta-nayta toimenpide-tyomenetelma-valinta-nayta)
-        {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
-         :tasaa :oikea
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-leveys
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama leveys alla oleville riveille"
+          :nimi :toimenpide-tyomenetelma
+          :fokus-klikin-jalkeen? true
+          :leveys 30
+          :tayta-alas? tayta-alas?-fn
+          :tayta-fn tayta-toimenpide-tyomenetelma
+          :tayta-sijainti :ylos
+          :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
+          :tayta-alas-toistuvasti? tayta-alas?-fn
+          :valinta-nayta toimenpide-tyomenetelma-valinta-nayta)
+        {:otsikko                 "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
+         :tasaa                   :oikea
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-leveys
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama leveys alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
-         :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-kokonaismassamaara
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama kokonaismassamäärä alla oleville riveille"
+        {:otsikko                 "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
+         :tyyppi                  :positiivinen-numero :tasaa :oikea :leveys 10
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-kokonaismassamaara
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama kokonaismassamäärä alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
-         :tasaa :oikea
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-pinta-ala
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama pinta-ala alla oleville riveille"
+        {:otsikko                 "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
+         :tasaa                   :oikea
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-pinta-ala
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama pinta-ala alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Kuulamylly"
-         :nimi :kuulamylly
-         :fokus-klikin-jalkeen? true
-         :tyyppi :valinta
-         :kentta-arity-3? true
-         :valinta-arvo :koodi
-         :valinta-nayta kuulamylly-valinta-nayta
-         :valinnat pot/+kyylamyllyt-ja-nil+
-         :leveys 30
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-kuulamylly
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
+        {:otsikko                 "Kuulamylly"
+         :nimi                    :kuulamylly
+         :fokus-klikin-jalkeen?   true
+         :tyyppi                  :valinta
+         :kentta-arity-3?         true
+         :valinta-arvo            :koodi
+         :valinta-nayta           kuulamylly-valinta-nayta
+         :valinnat                pot/+kyylamyllyt-ja-nil+
+         :leveys                  30
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-kuulamylly
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama kuulamylly alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}]
        yllapitokohdeosat-tila])))
 
@@ -541,65 +541,65 @@
         tayta-alas?-fn #(not (nil? %))]
     (fn [yllapitokohdeosat-tila kiviaines-ja-sideaine-ohjauskahva false-fn muokkaus-mahdollista? tekninen-osa-voi-muokata? kiviaines-virhe]
       [grid/muokkaus-grid
-       {:otsikko "Kiviaines ja sideaine"
-        :data-cy "kiviaines-ja-sideaine"
-        :ohjaus kiviaines-ja-sideaine-ohjauskahva
-        :rivinumerot? true
-        :voi-lisata? false
-        :voi-kumota? false
-        :voi-poistaa? false-fn
-        :voi-muokata? muokkaus-mahdollista?
-        :disable-input? true
-        :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                 tekninen-osa-voi-muokata?)
-                        "Tarkista kohteen tr-osoite ennen tallentamista")
-        :validoi-alussa? true
-        :virheet kiviaines-virhe
+       {:otsikko                 "Kiviaines ja sideaine"
+        :data-cy                 "kiviaines-ja-sideaine"
+        :ohjaus                  kiviaines-ja-sideaine-ohjauskahva
+        :rivinumerot?            true
+        :voi-lisata?             false
+        :voi-kumota?             false
+        :voi-poistaa?            false-fn
+        :voi-muokata?            muokkaus-mahdollista?
+        :disable-input?          true
+        :virhe-viesti            (when (and (not muokkaus-mahdollista?)
+                                            tekninen-osa-voi-muokata?)
+                                   "Tarkista kohteen tr-osoite ennen tallentamista")
+        :validoi-alussa?         true
+        :virheet                 kiviaines-virhe
         :jarjesta-avaimen-mukaan identity
-        :rivin-avaimet #{:esiintyma :km-arvo :muotoarvo :sideainetyyppi :pitoisuus :lisaaineet}}
-       [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
-         :leveys 30
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-esiintyma
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama esiintymä alla oleville riveille"
+        :rivin-avaimet           #{:esiintyma :km-arvo :muotoarvo :sideainetyyppi :pitoisuus :lisaaineet}}
+       [{:otsikko                 "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
+         :leveys                  30
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-esiintyma
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama esiintymä alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-km-arvo
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama KM-arvo alla oleville riveille"
+        {:otsikko                 "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-km-arvo
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama KM-arvo alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
-         :leveys 20
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-muotoarvo
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama muotoarvo alla oleville riveille"
+        {:otsikko                 "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
+         :leveys                  20
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-muotoarvo
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama muotoarvo alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
-         :tyyppi :valinta
-         :fokus-klikin-jalkeen? true
-         :valinta-arvo :koodi
-         :valinta-nayta #(:nimi %)
-         :valinnat pot/+sideainetyypit-ja-nil+
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-sideainetyyppi
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama sideainetyyppi alla oleville riveille"
+        {:otsikko                 "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
+         :tyyppi                  :valinta
+         :fokus-klikin-jalkeen?   true
+         :valinta-arvo            :koodi
+         :valinta-nayta           #(:nimi %)
+         :valinnat                pot/+sideainetyypit-ja-nil+
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-sideainetyyppi
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama sideainetyyppi alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-pitoisuus
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama pitoisuus alla oleville riveille"
+        {:otsikko                 "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-pitoisuus
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama pitoisuus alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}
-        {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
-         :pituus-max 256
-         :tayta-alas? tayta-alas?-fn
-         :tayta-fn tayta-lisaaineet
-         :tayta-sijainti :ylos
-         :tayta-tooltip "Kopioi sama tieto alla oleville riveille"
+        {:otsikko                 "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
+         :pituus-max              256
+         :tayta-alas?             tayta-alas?-fn
+         :tayta-fn                tayta-lisaaineet
+         :tayta-sijainti          :ylos
+         :tayta-tooltip           "Kopioi sama tieto alla oleville riveille"
          :tayta-alas-toistuvasti? tayta-alas?-fn}]
        yllapitokohdeosat-tila])))
 
@@ -609,100 +609,100 @@
   [:div
    [debug @alustan-toimet-tila {:otsikko "Alustatoimenpiteet"}]
    [:div [grid/muokkaus-grid
-          {:otsikko "Alustalle tehdyt toimet"
-           :data-cy "alustalle-tehdyt-toimet"
-           :rivi-validointi (:rivi alustatoimien-validointi)
-           :taulukko-validointi (:taulukko alustatoimien-validointi)
-           :ohjaus alustalle-tehdyt-toimet-ohjauskahva
+          {:otsikko                 "Alustalle tehdyt toimet"
+           :data-cy                 "alustalle-tehdyt-toimet"
+           :rivi-validointi         (:rivi alustatoimien-validointi)
+           :taulukko-validointi     (:taulukko alustatoimien-validointi)
+           :ohjaus                  alustalle-tehdyt-toimet-ohjauskahva
            :jarjesta-avaimen-mukaan identity
-           :voi-muokata? alustatoimet-voi-muokata?
-           :voi-kumota? false
-           :validoi-alussa? true
-           :uusi-id (inc (count @alustan-toimet-tila))
-           :virheet alustan-toimet-virheet}
-          [{:otsikko "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
-            :pituus-max 256
-            :validoi (:tr-numero alustatoimien-validointi)
-            :tasaa :oikea
+           :voi-muokata?            alustatoimet-voi-muokata?
+           :voi-kumota?             false
+           :validoi-alussa?         true
+           :uusi-id                 (inc (count @alustan-toimet-tila))
+           :virheet                 alustan-toimet-virheet}
+          [{:otsikko       "Tie" :nimi :tr-numero :tyyppi :positiivinen-numero :leveys 10
+            :pituus-max    256
+            :validoi       (:tr-numero alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero :leveys 10
-            :pituus-max 256
-            :validoi (:tr-ajorata alustatoimien-validointi)
-            :tasaa :oikea
+           {:otsikko       "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero :leveys 10
+            :pituus-max    256
+            :validoi       (:tr-ajorata alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero :leveys 10
-            :pituus-max 256
-            :validoi (:tr-kaista alustatoimien-validointi)
-            :tasaa :oikea
+           {:otsikko       "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero :leveys 10
+            :pituus-max    256
+            :validoi       (:tr-kaista alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
-            :pituus-max 256
-            :validoi (:tr-alkuosa alustatoimien-validointi)
-            :tasaa :oikea
+           {:otsikko       "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
+            :pituus-max    256
+            :validoi       (:tr-alkuosa alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-            :validoi (:tr-alkuetaisyys alustatoimien-validointi)
-            :tasaa :oikea
+           {:otsikko       "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
+            :validoi       (:tr-alkuetaisyys alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-            :validoi (:tr-loppuosa alustatoimien-validointi)
-            :tasaa :oikea
+           {:otsikko       "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
+            :validoi       (:tr-loppuosa alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-            :validoi (:tr-loppuetaisyys alustatoimien-validointi)
-            :tasaa :oikea
+           {:otsikko       "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
+            :validoi       (:tr-loppuetaisyys alustatoimien-validointi)
+            :tasaa         :oikea
             :kokonaisluku? true}
-           {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
+           {:otsikko     "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
             :muokattava? false-fn
-            :hae (fn [rivi]
-                   (tr/laske-tien-pituus (into {}
-                                               (map (juxt key (comp :pituus val)))
-                                               (get tr-osien-pituudet (:tr-numero rivi)))
-                                         rivi))
-            :validoi (:pituus alustatoimien-validointi)}
-           {:otsikko "Käsittely\u00ADmenetelmä"
-            :nimi :kasittelymenetelma
-            :tyyppi :valinta
-            :valinta-arvo :koodi
+            :hae         (fn [rivi]
+                           (tr/laske-tien-pituus (into {}
+                                                       (map (juxt key (comp :pituus val)))
+                                                       (get tr-osien-pituudet (:tr-numero rivi)))
+                                                 rivi))
+            :validoi     (:pituus alustatoimien-validointi)}
+           {:otsikko       "Käsittely\u00ADmenetelmä"
+            :nimi          :kasittelymenetelma
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
             :valinta-nayta (fn [rivi]
                              (if rivi
                                (str (:lyhenne rivi) " - " (:nimi rivi))
                                "- Valitse menetelmä -"))
-            :valinnat pot/+alustamenetelmat+
-            :leveys 30
-            :validoi (:kasittelymenetelma alustatoimien-validointi)}
-           {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
-            :tyyppi :positiivinen-numero :tasaa :oikea
+            :valinnat      pot/+alustamenetelmat+
+            :leveys        30
+            :validoi       (:kasittelymenetelma alustatoimien-validointi)}
+           {:otsikko           "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
+            :tyyppi            :positiivinen-numero :tasaa :oikea
             :desimaalien-maara 0
-            :validoi (:paksuus alustatoimien-validointi)}
-           {:otsikko "Verkko\u00ADtyyppi"
-            :nimi :verkkotyyppi
-            :tyyppi :valinta
-            :valinta-arvo :koodi
+            :validoi           (:paksuus alustatoimien-validointi)}
+           {:otsikko       "Verkko\u00ADtyyppi"
+            :nimi          :verkkotyyppi
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
             :valinta-nayta #(:nimi %)
-            :valinnat pot/+verkkotyypit-ja-nil+
-            :leveys 25}
-           {:otsikko "Verkon sijainti"
-            :nimi :verkon-sijainti
-            :tyyppi :valinta
-            :valinta-arvo :koodi
+            :valinnat      pot/+verkkotyypit-ja-nil+
+            :leveys        25}
+           {:otsikko       "Verkon sijainti"
+            :nimi          :verkon-sijainti
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
             :valinta-nayta #(:nimi %)
-            :valinnat pot/+verkon-sijainnit-ja-nil+
-            :leveys 25}
-           {:otsikko "Verkon tarkoitus"
-            :nimi :verkon-tarkoitus
-            :tyyppi :valinta
-            :valinta-arvo :koodi
+            :valinnat      pot/+verkon-sijainnit-ja-nil+
+            :leveys        25}
+           {:otsikko       "Verkon tarkoitus"
+            :nimi          :verkon-tarkoitus
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
             :valinta-nayta #(:nimi %)
-            :valinnat pot/+verkon-tarkoitukset-ja-nil+
-            :leveys 25}
-           {:otsikko "Tekninen toimen\u00ADpide"
-            :nimi :tekninen-toimenpide
-            :tyyppi :valinta
-            :valinta-arvo :koodi
+            :valinnat      pot/+verkon-tarkoitukset-ja-nil+
+            :leveys        25}
+           {:otsikko       "Tekninen toimen\u00ADpide"
+            :nimi          :tekninen-toimenpide
+            :tyyppi        :valinta
+            :valinta-arvo  :koodi
             :valinta-nayta #(:nimi %)
-            :valinnat pot/+tekniset-toimenpiteet-ja-nil+
-            :leveys 30}]
+            :valinnat      pot/+tekniset-toimenpiteet-ja-nil+
+            :leveys        30}]
           alustan-toimet-tila]]])
 
 (defn paallystysilmoitus-tekninen-osa
@@ -804,8 +804,8 @@
                            (remove-watch alustan-toimet-tila :pot-alustan-toimet-tila)
                            (remove-watch alustan-toimet-virheet :pot-alustan-toimet-virheet)))
       (fn [e! {{:keys [tr-osien-pituudet tr-numero tr-ajorata tr-kaista]} :perustiedot
-               tr-osien-pituudet :tr-osien-pituudet
-               :as lomakedata-nyt}
+               tr-osien-pituudet                                          :tr-osien-pituudet
+               :as                                                        lomakedata-nyt}
            urakka
            muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata?
            {{tietojen-validointi :paallystystoimenpiteen-tiedot alustatoimien-validointi :alustatoimenpiteet} :tekninen-osa :as validoinnit}]
@@ -822,7 +822,7 @@
              [:div
               [:h6 "Arvon kopiointi alaspäin"]
               [:figure
-               [:img {:src "images/pot_taytto1.gif"
+               [:img {:src   "images/pot_taytto1.gif"
                       ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
                       :style {:height "260px"}}]
                [:figcaption
@@ -830,25 +830,25 @@
              [:div
               [:h6 "Arvojen toistaminen alaspäin"]
               [:figure
-               [:img {:src "images/pot_taytto2.gif"
+               [:img {:src   "images/pot_taytto2.gif"
                       :style {:height "260px"}}]
                [:figcaption
                 [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
            [yllapitokohteet/yllapitokohdeosat-tuck lomakedata-nyt urakka
-            {:rivinumerot? true
-             :voi-muokata? tekninen-osa-voi-muokata?
-             :validoinnit {:tr-osoitteet (-> validoinnit :tekninen-osa :tr-osoitteet (dissoc :taulukko :rivi))
-                           :taulukko (-> validoinnit :tekninen-osa :tr-osoitteet :taulukko)
-                           :rivi (-> validoinnit :tekninen-osa :tr-osoitteet :rivi)}
-             :vain-nama-validoinnit? true
-             :hae-tr-osien-pituudet hae-tr-osien-pituudet
-             :muokattava-tie? false-fn
-             :kohdeosat yllapitokohdeosat-tila
-             :kohdeosat-virheet yllapitokohdeosat-virhe
-             :ohjauskahvan-asetus ohjauskahvan-asetus-fn
+            {:rivinumerot?                  true
+             :voi-muokata?                  tekninen-osa-voi-muokata?
+             :validoinnit                   {:tr-osoitteet (-> validoinnit :tekninen-osa :tr-osoitteet (dissoc :taulukko :rivi))
+                                             :taulukko     (-> validoinnit :tekninen-osa :tr-osoitteet :taulukko)
+                                             :rivi         (-> validoinnit :tekninen-osa :tr-osoitteet :rivi)}
+             :vain-nama-validoinnit?        true
+             :hae-tr-osien-pituudet         hae-tr-osien-pituudet
+             :muokattava-tie?               false-fn
+             :kohdeosat                     yllapitokohdeosat-tila
+             :kohdeosat-virheet             yllapitokohdeosat-virhe
+             :ohjauskahvan-asetus           ohjauskahvan-asetus-fn
              :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?-fn
-             :otsikko "Tierekisteriosoitteet"
-             :jarjesta-kun-kasketaan first}]
+             :otsikko                       "Tierekisteriosoitteet"
+             :jarjesta-kun-kasketaan        first}]
 
            [paallystystoimenpiteen-tiedot yllapitokohdeosat-tila paallystystoimenpiteen-tiedot-ohjauskahva false-fn muokkaus-mahdollista?
             paallystystoimenpide-virhe tekninen-osa-voi-muokata? tietojen-validointi]
@@ -893,7 +893,7 @@
        [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])))
 
 
-(defn paallystysilmoitus [e! {yllapitokohde-id :yllapitokohde-id
+(defn paallystysilmoitus [e! {yllapitokohde-id                           :yllapitokohde-id
                               {:keys [tr-alkuosa tr-loppuosa tr-numero]} :perustiedot}
                           lukko urakka kayttaja]
   (let [lukon-id (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id)
@@ -946,128 +946,128 @@
                        (when-not (<= min-arvo data max-arvo)
                          (str "Anna arvo välillä " min-arvo " - " max-arvo "")))]
     (komp/luo
-     ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
-     (komp/lukko lukon-id)
-     (komp/sisaan #(do
-                     (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
-                     (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
-                     (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))
-     (fn [e! {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet historia
-                     ohjauskahvat validoi-lomake?] :as lomakedata-nyt}
-          lukko urakka kayttaja]
-       (when validoi-lomake?
-         (when-let [ohjauskahva (:tierekisteriosoitteet ohjauskahvat)]
-           (grid/validoi-grid ohjauskahva))
-         (when-let [ohjauskahva (:paallystystoimenpiteen-tiedotin ohjauskahvat)]
-           (grid/validoi-grid ohjauskahva))
-         (when-let [ohjauskahva (:kiviaines-ja-sideaine ohjauskahvat)]
-           (grid/validoi-grid ohjauskahva))
-         (when-let [ohjauskahva (:alustalle-tehdyt-toimet ohjauskahvat)]
-           (grid/validoi-grid ohjauskahva))
-         (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :validoi-lomake?] false)))
-       (let [{:keys [tila yllapitokohdetyyppi tekninen-osa asiatarkastus
-                     valmispvm-kohde]} perustiedot
-             lukittu? (lukko/nakyma-lukittu? lukko)
-             virheet (conj []
-                           (-> perustiedot :tekninen-osa ::lomake/virheet)
-                           (-> perustiedot :asiatarkastus ::lomake/virheet)
-                           (-> perustiedot ::lomake/virheet)
-                           (reduce (fn [kaikki-virheet [taulukon-avain taulukon-virheet]]
-                                     (let [taulukon-virheviestit (apply concat
-                                                                        (keep #(let [rivin-virheviestit (flatten (vals %))]
-                                                                                 (when-not (empty? rivin-virheviestit)
-                                                                                   rivin-virheviestit))
-                                                                              (vals taulukon-virheet)))]
-                                       (if-not (empty? taulukon-virheviestit)
-                                         (assoc kaikki-virheet taulukon-avain taulukon-virheviestit)
-                                         kaikki-virheet)))
-                                   {} (:virheet ilmoitustiedot)))
-             tekninen-osa-voi-muokata? (and (not= :lukittu tila)
-                                            (not= :hyvaksytty
-                                                  (:paatos tekninen-osa))
-                                            (false? lukittu?)
-                                            kirjoitusoikeus?)
-             alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
-                                            (not (= "sora" yllapitokohdetyyppi)))
-             tr-validaattori (partial tr/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
-             ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä.
+      ;; Tässä ilmoituksessa on lukko, jotta vain yksi käyttäjä voi muokata yhtä ilmoitusta kerralla.
+      (komp/lukko lukon-id)
+      (komp/sisaan #(do
+                      (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
+                      (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
+                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))
+      (fn [e! {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet historia
+                      ohjauskahvat validoi-lomake?] :as lomakedata-nyt}
+           lukko urakka kayttaja]
+        (when validoi-lomake?
+          (when-let [ohjauskahva (:tierekisteriosoitteet ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (when-let [ohjauskahva (:paallystystoimenpiteen-tiedotin ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (when-let [ohjauskahva (:kiviaines-ja-sideaine ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (when-let [ohjauskahva (:alustalle-tehdyt-toimet ohjauskahvat)]
+            (grid/validoi-grid ohjauskahva))
+          (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :validoi-lomake?] false)))
+        (let [{:keys [tila yllapitokohdetyyppi tekninen-osa asiatarkastus
+                      valmispvm-kohde]} perustiedot
+              lukittu? (lukko/nakyma-lukittu? lukko)
+              virheet (conj []
+                            (-> perustiedot :tekninen-osa ::lomake/virheet)
+                            (-> perustiedot :asiatarkastus ::lomake/virheet)
+                            (-> perustiedot ::lomake/virheet)
+                            (reduce (fn [kaikki-virheet [taulukon-avain taulukon-virheet]]
+                                      (let [taulukon-virheviestit (apply concat
+                                                                         (keep #(let [rivin-virheviestit (flatten (vals %))]
+                                                                                  (when-not (empty? rivin-virheviestit)
+                                                                                    rivin-virheviestit))
+                                                                               (vals taulukon-virheet)))]
+                                        (if-not (empty? taulukon-virheviestit)
+                                          (assoc kaikki-virheet taulukon-avain taulukon-virheviestit)
+                                          kaikki-virheet)))
+                                    {} (:virheet ilmoitustiedot)))
+              tekninen-osa-voi-muokata? (and (not= :lukittu tila)
+                                             (not= :hyvaksytty
+                                                   (:paatos tekninen-osa))
+                                             (false? lukittu?)
+                                             kirjoitusoikeus?)
+              alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
+                                             (not (= "sora" yllapitokohdetyyppi)))
+              tr-validaattori (partial tr/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
+              ;; Koko POT-lomakkeen validoinnit ja huomautukset on selkeämpää pitää yhdessä paikassa, joten pidetään ne tässä.
 
-             validoinnit {:tekninen-osa {:tr-osoitteet {:rivi [{:fn alikohteen-validointi
-                                                                :sarakkeet {:tr-numero :tr-numero
-                                                                            :tr-ajorata :tr-ajorata
-                                                                            :tr-kaista :tr-kaista
-                                                                            :tr-alkuosa :tr-alkuosa
-                                                                            :tr-alkuetaisyys :tr-alkuetaisyys
-                                                                            :tr-loppuosa :tr-loppuosa
-                                                                            :tr-loppuetaisyys :tr-loppuetaisyys}}]
-                                                        :taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi true)
-                                                                    :sarakkeet {:tr-numero :tr-numero
-                                                                                :tr-ajorata :tr-ajorata
-                                                                                :tr-kaista :tr-kaista
-                                                                                :tr-alkuosa :tr-alkuosa
-                                                                                :tr-alkuetaisyys :tr-alkuetaisyys
-                                                                                :tr-loppuosa :tr-loppuosa
-                                                                                :tr-loppuetaisyys :tr-loppuetaisyys}}]}
-                                         :paallystystoimenpiteen-tiedot {:rc [{:fn (r/partial arvo-valilta 0 100)}]
-                                                                         :toimenpide-raekoko [{:fn (r/partial arvo-valilta 0 99)}]}
-                                         :alustatoimenpiteet {:rivi [{:fn alustatoimen-validointi
-                                                                      :sarakkeet {:tr-numero :tr-numero
-                                                                                  :tr-ajorata :tr-ajorata
-                                                                                  :tr-kaista :tr-kaista
-                                                                                  :tr-alkuosa :tr-alkuosa
-                                                                                  :tr-alkuetaisyys :tr-alkuetaisyys
-                                                                                  :tr-loppuosa :tr-loppuosa
-                                                                                  :tr-loppuetaisyys :tr-loppuetaisyys
-                                                                                  :kasittelymenetelma :kasittelymenetelma
-                                                                                  :paksuus :paksuus}}]
-                                                              :taulukko [{:fn (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
-                                                                          :sarakkeet {:tr-numero :tr-numero
-                                                                                      :tr-ajorata :tr-ajorata
-                                                                                      :tr-kaista :tr-kaista
-                                                                                      :tr-alkuosa :tr-alkuosa
-                                                                                      :tr-alkuetaisyys :tr-alkuetaisyys
-                                                                                      :tr-loppuosa :tr-loppuosa
-                                                                                      :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
-                          :perustiedot {:tr-osoite [{:fn paakohteen-validointi}]}}
-             ;; Tarkista pitäisikö näiden olla ihan virheitä
-             huomautukset {:perustiedot {:tekninen-osa {:kasittelyaika (if (:paatos tekninen-osa)
-                                                                         [[:ei-tyhja "Anna käsittelypvm"]
+              validoinnit {:tekninen-osa {:tr-osoitteet                  {:rivi     [{:fn        alikohteen-validointi
+                                                                                      :sarakkeet {:tr-numero        :tr-numero
+                                                                                                  :tr-ajorata       :tr-ajorata
+                                                                                                  :tr-kaista        :tr-kaista
+                                                                                                  :tr-alkuosa       :tr-alkuosa
+                                                                                                  :tr-alkuetaisyys  :tr-alkuetaisyys
+                                                                                                  :tr-loppuosa      :tr-loppuosa
+                                                                                                  :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                                                          :taulukko [{:fn        (r/partial kohde-toisten-kanssa-paallekkain-validointi true)
+                                                                                      :sarakkeet {:tr-numero        :tr-numero
+                                                                                                  :tr-ajorata       :tr-ajorata
+                                                                                                  :tr-kaista        :tr-kaista
+                                                                                                  :tr-alkuosa       :tr-alkuosa
+                                                                                                  :tr-alkuetaisyys  :tr-alkuetaisyys
+                                                                                                  :tr-loppuosa      :tr-loppuosa
+                                                                                                  :tr-loppuetaisyys :tr-loppuetaisyys}}]}
+                                          :paallystystoimenpiteen-tiedot {:rc                 [{:fn (r/partial arvo-valilta 0 100)}]
+                                                                          :toimenpide-raekoko [{:fn (r/partial arvo-valilta 0 99)}]}
+                                          :alustatoimenpiteet            {:rivi     [{:fn        alustatoimen-validointi
+                                                                                      :sarakkeet {:tr-numero          :tr-numero
+                                                                                                  :tr-ajorata         :tr-ajorata
+                                                                                                  :tr-kaista          :tr-kaista
+                                                                                                  :tr-alkuosa         :tr-alkuosa
+                                                                                                  :tr-alkuetaisyys    :tr-alkuetaisyys
+                                                                                                  :tr-loppuosa        :tr-loppuosa
+                                                                                                  :tr-loppuetaisyys   :tr-loppuetaisyys
+                                                                                                  :kasittelymenetelma :kasittelymenetelma
+                                                                                                  :paksuus            :paksuus}}]
+                                                                          :taulukko [{:fn        (r/partial kohde-toisten-kanssa-paallekkain-validointi false)
+                                                                                      :sarakkeet {:tr-numero        :tr-numero
+                                                                                                  :tr-ajorata       :tr-ajorata
+                                                                                                  :tr-kaista        :tr-kaista
+                                                                                                  :tr-alkuosa       :tr-alkuosa
+                                                                                                  :tr-alkuetaisyys  :tr-alkuetaisyys
+                                                                                                  :tr-loppuosa      :tr-loppuosa
+                                                                                                  :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
+                           :perustiedot  {:tr-osoite [{:fn paakohteen-validointi}]}}
+              ;; Tarkista pitäisikö näiden olla ihan virheitä
+              huomautukset {:perustiedot {:tekninen-osa  {:kasittelyaika (if (:paatos tekninen-osa)
+                                                                           [[:ei-tyhja "Anna käsittelypvm"]
+                                                                            [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                             "Käsittely ei voi olla ennen valmistumista"]]
+                                                                           [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
+                                                                             "Käsittely ei voi olla ennen valmistumista"]])
+                                                          :paatos        [[:ei-tyhja "Anna päätös"]]
+                                                          :perustelu     [[:ei-tyhja "Anna päätöksen selitys"]]}
+                                          :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
                                                                           [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Käsittely ei voi olla ennen valmistumista"]]
-                                                                         [[:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                           "Käsittely ei voi olla ennen valmistumista"]])
-                                                        :paatos [[:ei-tyhja "Anna päätös"]]
-                                                        :perustelu [[:ei-tyhja "Anna päätöksen selitys"]]}
-                                         :asiatarkastus {:tarkastusaika [[:ei-tyhja "Anna tarkastuspäivämäärä"]
-                                                                         [:pvm-toisen-pvmn-jalkeen valmispvm-kohde
-                                                                          "Tarkastus ei voi olla ennen valmistumista"]]
-                                                         :tarkastaja [[:ei-tyhja "Anna tarkastaja"]]}}}
-             valmis-tallennettavaksi? (and
-                                       (not (= tila :lukittu))
-                                       (empty? (flatten (keep vals virheet)))
-                                       (false? lukittu?))
-             perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})]
-         [:div.paallystysilmoituslomake
+                                                                           "Tarkastus ei voi olla ennen valmistumista"]]
+                                                          :tarkastaja    [[:ei-tyhja "Anna tarkastaja"]]}}}
+              valmis-tallennettavaksi? (and
+                                         (not (= tila :lukittu))
+                                         (empty? (flatten (keep vals virheet)))
+                                         (false? lukittu?))
+              perustiedot-app (select-keys lomakedata-nyt #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})]
+          [:div.paallystysilmoituslomake
 
-          [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
+           [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata] nil))]
 
-          (when lukittu?
-            [lomake/lomake-lukittu-huomautus lukko])
+           (when lukittu?
+             [lomake/lomake-lukittu-huomautus lukko])
 
-          [:h2 "Päällystysilmoitus"]
-          (when (= :lukittu tila)
-            [poista-lukitus e! urakka])
+           [:h2 "Päällystysilmoitus"]
+           (when (= :lukittu tila)
+             [poista-lukitus e! urakka])
 
-          [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
+           [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
 
-          [:div {:style {:float "right"}}
-           [kumoa e! historia ohjauskahvat]]
-          [dom/lataus-komponentille {:viesti "Teknisiätietoja ladataan..."} paallystysilmoitus-tekninen-osa e! lomakedata-nyt urakka muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
+           [:div {:style {:float "right"}}
+            [kumoa e! historia ohjauskahvat]]
+           [dom/lataus-komponentille {:viesti "Teknisiätietoja ladataan..."} paallystysilmoitus-tekninen-osa e! lomakedata-nyt urakka muokkaa! tekninen-osa-voi-muokata? alustatoimet-voi-muokata? validoinnit]
 
-          [yhteenveto lomakedata-nyt]
+           [yhteenveto lomakedata-nyt]
 
-          [debug virheet]
-          [tallennus e! lomakedata-nyt kayttaja urakka valmis-tallennettavaksi?]])))))
+           [debug virheet]
+           [tallennus e! lomakedata-nyt kayttaja urakka valmis-tallennettavaksi?]])))))
 
 ;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;
 
@@ -1081,40 +1081,40 @@
 (defn- paallystysilmoitukset-taulukko [e! {:keys [urakka paallystysilmoitukset] :as app}]
   (let [urakka-id (:id urakka)]
     [grid/grid
-     {:otsikko ""
-      :tunniste :paallystyskohde-id
-      :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-      :tallenna (fn [rivit]
-                  ;; Tässä käytetään go-blockia koska gridi olettaa saavansa kanavan. Paluu arvolla ei tehdä mitään.
-                  ;; 'takuupvm-tallennus-kaynnissa-kanava' käytetään sen takia, että gridi pitää 'tallenna' nappia
-                  ;; disaploituna niin kauan kuin go-block ei palauta arvoa.
-                  (go
-                    (let [takuupvm-tallennus-kaynnissa-kanava (chan)]
-                      (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit takuupvm-tallennus-kaynnissa-kanava))
-                      (<! takuupvm-tallennus-kaynnissa-kanava))))
-      :voi-lisata? false
-      :voi-kumota? false
+     {:otsikko      ""
+      :tunniste     :paallystyskohde-id
+      :tyhja        (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+      :tallenna     (fn [rivit]
+                      ;; Tässä käytetään go-blockia koska gridi olettaa saavansa kanavan. Paluu arvolla ei tehdä mitään.
+                      ;; 'takuupvm-tallennus-kaynnissa-kanava' käytetään sen takia, että gridi pitää 'tallenna' nappia
+                      ;; disaploituna niin kauan kuin go-block ei palauta arvoa.
+                      (go
+                        (let [takuupvm-tallennus-kaynnissa-kanava (chan)]
+                          (e! (paallystys/->TallennaPaallystysilmoitustenTakuuPaivamaarat rivit takuupvm-tallennus-kaynnissa-kanava))
+                          (<! takuupvm-tallennus-kaynnissa-kanava))))
+      :voi-lisata?  false
+      :voi-kumota?  false
       :voi-poistaa? (constantly false)
       :voi-muokata? true
-      :data-cy "paallystysilmoitukset-grid"}
+      :data-cy      "paallystysilmoitukset-grid"}
      [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
       {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
       {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
       {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
       {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-       :hae (fn [rivi]
-              (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-      {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-       :fmt pvm/pvm-opt
-       :tayta-alas? #(not (nil? %))
-       :tayta-fn tayta-takuupvm
+       :hae     (fn [rivi]
+                  (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
+      {:otsikko       "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
+       :fmt           pvm/pvm-opt
+       :tayta-alas?   #(not (nil? %))
+       :tayta-fn      tayta-takuupvm
        :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
-      {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
-       :leveys 20
+      {:otsikko     "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
+       :leveys      20
        :komponentti (fn [rivi]
                       [paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)])}
-      {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
-       :tyyppi :komponentti
+      {:otsikko     "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+       :tyyppi      :komponentti
        :komponentti (fn [rivi]
                       (if (:tila rivi)
                         [:button.nappi-toissijainen.nappi-grid
@@ -1142,33 +1142,36 @@
         edellinen-yha-lahetys-komponentti (fn [rivi _ kohteet-yha-lahetyksessa]
                                             [nayta-lahetystiedot rivi kohteet-yha-lahetyksessa])
         laheta-yhaan-komponentti (fn [rivi _ urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]
-                                   [yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                                                          :vuosi valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
-                                                          :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}])
+                                   (if (> valittu-urakan-vuosi 2019)
+                                     [yha/yha-lahetysnappi {:oikeus       oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
+                                                            :vuosi        valittu-urakan-vuosi :paallystysilmoitukset [rivi] :lahetys-kaynnissa-fn lahetys-kaynnissa-fn
+                                                            :kun-onnistuu kun-onnistuu-fn :kun-virhe kun-virhe-fn :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
+                                     [:div "Kohdetta ei voi enää lähettää."]))
         false-fn (constantly false)]
-    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+    (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       [grid/grid
-       {:otsikko ""
-        :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+       {:otsikko  ""
+        :tyhja    (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
         :tunniste hash}
        [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? false-fn :tyyppi :numero :leveys 12}
         {:otsikko "Tunnus" :nimi :tunnus :muokattava? false-fn :tyyppi :string :leveys 14}
         {:otsikko "YHA-id" :nimi :yhaid :muokattava? false-fn :tyyppi :numero :leveys 15}
         {:otsikko "Nimi" :nimi :nimi :muokattava? false-fn :tyyppi :string :leveys 45}
-        {:otsikko "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
-         :leveys 45
-         :komponentti edellinen-yha-lahetys-komponentti
+        {:otsikko          "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? false-fn :tyyppi :reagent-komponentti
+         :leveys           45
+         :komponentti      edellinen-yha-lahetys-komponentti
          :komponentti-args [kohteet-yha-lahetyksessa]}
-        {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
-         :komponentti laheta-yhaan-komponentti
-         :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]}]
+        (when (< 2019 valittu-urakan-vuosi)
+        {:otsikko          "Lähetä YHAan" :nimi :laheta-yhan :muokattava? false-fn :leveys 20 :tyyppi :reagent-komponentti
+         :komponentti      laheta-yhaan-komponentti
+         :komponentti-args [urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-lahetyksessa]})]
        paallystysilmoitukset])))
 
 (defn- ilmoitusluettelo
   [e! app]
   (komp/luo
-    (fn [e! {urakka :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+    (fn [e! {urakka                :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
              paallystysilmoitukset :paallystysilmoitukset kohteet-yha-lahetyksessa :kohteet-yha-lahetyksessa :as app}]
       (let [urakka-id (:id urakka)
             sopimus-id (first valittu-sopimusnumero)]
@@ -1177,8 +1180,8 @@
          [paallystysilmoitukset-taulukko e! app]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
-         #_[yha/yha-lahetysnappi {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
-                                  :vuosi valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
+         #_[yha/yha-lahetysnappi {:oikeus       oikeudet/urakat-kohdeluettelo-paallystyskohteet :urakka-id urakka-id :sopimus-id sopimus-id
+                                  :vuosi        valittu-urakan-vuosi :paallystysilmoitukset paallystysilmoitukset :lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa] %))
                                   :kun-onnistuu #(e! (paallystys/->YHAVientiOnnistui %)) :kun-virhe #(e! (paallystys/->YHAVientiEpaonnistui %)) :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa}]
          [yha-lahetykset-taulukko e! (select-keys app #{:urakka :urakka-tila :paallystysilmoitukset :kohteet-yha-lahetyksessa})]]))))
 
@@ -1203,11 +1206,11 @@
                                                      (e! (paallystys/->SuodataYllapitokohteet)))]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"
-    {:valinta pot-jarjestys
+    {:valinta    pot-jarjestys
      :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
-     :format-fn {:tila "Tilan mukaan"
-                 :kohdenumero "Kohdenumeron mukaan"
-                 :muokkausaika "Muokkausajan mukaan"}}
+     :format-fn  {:tila         "Tilan mukaan"
+                  :kohdenumero  "Kohdenumeron mukaan"
+                  :muokkausaika "Muokkausajan mukaan"}}
     [:tila :kohdenumero :muokkausaika]]])
 
 (defn paallystysilmoitukset

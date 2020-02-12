@@ -696,7 +696,7 @@
           oletettu-tr-osoite {:aet 10
                               :ajorata 0
                               :aosa 10
-                              :kaista 1
+                              :kaista 11
                               :loppuet 1
                               :losa 12
                               :numero 20}
@@ -704,14 +704,14 @@
           oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 10
                                                      :ajorata 0
                                                      :aosa 10
-                                                     :kaista 1
+                                                     :kaista 11
                                                      :loppuet 666
                                                      :losa 10
                                                      :numero 20}
           oletettu-toisen-alikohteen-tr-osoite {:aet 700
                                                 :ajorata 0
                                                 :aosa 10
-                                                :kaista 1
+                                                :kaista 11
                                                 :loppuet 1
                                                 :losa 12
                                                 :numero 20}]
@@ -949,29 +949,29 @@
 (deftest muutettavat-alikohteet
   (let [alikohteet [{:alikohde {:tunniste {:id 1},
                                 :nimi "1. Testialikohde",
-                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 1},
+                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 11},
                                 :toimenpide "testitoimenpide"}}
                     {:alikohde {:tunniste {:id 2},
                                 :nimi "2. Testialikohde",
-                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 1},
+                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 11},
                                 :toimenpide "testitoimenpide"}}
                     {:alikohde {:tunniste {:id 3},
                                 :nimi "Testiramppi",
-                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 1},
+                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 11},
                                 :toimenpide "testitoimenpide"}}]
         oletetut-muunnettavat [{:tunniste {:id 1},
                                 :nimi "1. Testialikohde",
-                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 1, :numero 666},
+                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 11, :numero 666},
                                 :toimenpide "testitoimenpide",
                                 :ulkoinen-id 1}
                                {:tunniste {:id 2},
                                 :nimi "2. Testialikohde",
-                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 1, :numero 666},
+                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 11, :numero 666},
                                 :toimenpide "testitoimenpide",
                                 :ulkoinen-id 2}
                                {:tunniste {:id 3},
                                 :nimi "Testiramppi",
-                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 1},
+                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 11},
                                 :toimenpide "testitoimenpide",
                                 :ulkoinen-id 3}]]
     (is (= (api-yllapitokohteet/muunnettavat-alikohteet 666 alikohteet) oletetut-muunnettavat)

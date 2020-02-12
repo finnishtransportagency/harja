@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "koordinaatit": {
+      "id": "urn:harja/koordinaattisijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
+    },
+    "tie": {
+      "id": "urn:harja/tiesijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
+    },
+    "linkki": {
+      "id": "urn:harja/tiesijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json"
+    },
+    "viivageometria": {
+      "id": "urn:harja/viivageometria",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json"
+    }
+  }
+}

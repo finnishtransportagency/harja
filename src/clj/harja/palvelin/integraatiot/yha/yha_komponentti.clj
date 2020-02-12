@@ -234,9 +234,8 @@
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet YHA:an. Mikäli kohteiden lähetys epäonnistuu, niiden päällystysilmoituksen
    lukko avataan, jotta mahdollisesti virheelliset tiedot voidaan korjata. Jos lähetys onnistuu, kohteiden
-   päällystysilmoituksen lukitaan.
-
-   Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
+   päällystysilmoituksen lukitaan. Vuotta 2020 edeltäviä kohteita ei kaistamuutoksen jälkeen saa enää siirtää YHA:aan.
+   Tämä on estetty funktiossa tarkista-lahetettavat-kohteet. Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
