@@ -1032,12 +1032,13 @@
   "Ottaa urakan, kohteet atomin ja optiot ja luo taulukon, jossa on listattu kohteen tiedot.
 
   Optiot on map, jossa avaimet:
-  otsikko           Taulukon otsikko
-  kohdetyyppi       Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus)
-  yha-sidottu?      Onko taulukon kohteet tulleet kaikki YHA:sta (vaikuttaa mm. kohteiden muokkaamiseen)
-  tallenna          Funktio tallennusnapille
-  kun-onnistuu      Funktio tallennuksen onnistumiselle"
-  [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
+  otsikko             Taulukon otsikko
+  kohdetyyppi         Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus)
+  yha-sidottu?        Onko taulukon kohteet tulleet kaikki YHA:sta (vaikuttaa mm. kohteiden muokkaamiseen)
+  piilota-tallennus?  True jos tallennusnappi piilotetaan
+  tallenna            Funktio tallennusnapille
+  kun-onnistuu        Funktio tallennuksen onnistumiselle"
+  [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus?] :as optiot}]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         g (grid/grid-ohjaus)
@@ -1081,7 +1082,7 @@
                                    (grid/validoi-grid g)))))]
     (komp/luo
       (komp/piirretty (fn [] (grid/validoi-grid g)))
-      (fn [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
+      (fn [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus?] :as optiot}]
         (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
                                            ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että
                                            ;; ainakin yhdellä kohteella ne on annettu
@@ -1118,7 +1119,7 @@
                                                       nil)
              :rivi-validointi (-> validointi :paakohde :tr-osoite)
              :taulukko-varoitus (-> varoitukset :paakohde :taulukko)
-             :tallenna @tallenna
+             :tallenna (when-not piilota-tallennus? @tallenna)
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (#{:ok :yha-virhe} (:status vastaus)))
              :muutos (fn [grid]
