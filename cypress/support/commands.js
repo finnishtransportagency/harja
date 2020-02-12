@@ -132,7 +132,7 @@ Cypress.Commands.add("POTTestienAlustus", (kohde, alikohde) => {
             '      22, 1, 65, 3, 100, ' + kohde.ajorata + ', ' + kohde.kaista + ', (SELECT id' +
             '                             FROM urakka' +
             '                             WHERE nimi =' +
-            '                                   \'Oulun tiemerkinnän palvelusopimus 2013-2018\'),' +
+            '                                   \'Oulun tiemerkinnän palvelusopimus 2013-2022\'),' +
             '   \'{' + kohde.vuosi + '}\', ' + kohde.kvl + ', FALSE);"';
         let lisaaPaallystyskohteenAlikohdeKomento = '"INSERT INTO yllapitokohdeosa ' +
             '(id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)' +

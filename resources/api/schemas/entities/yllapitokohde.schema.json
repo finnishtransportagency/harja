@@ -56,7 +56,7 @@
       "id": "urn:harja/yllapitokohde/tiesijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+      "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
     },
     "yllapitoluokka": {
       "id": "urn:harja/tarkastus/yllapitoluokka",
