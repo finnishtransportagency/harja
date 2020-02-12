@@ -30,6 +30,8 @@
 (defonce oletus-koko {:sarake {:oletus-leveys "1fr"}
                       :rivi {:oletus-korkeus "1fr"}})
 
+(def ^:dynamic *foo-print* false)
+
 (def ^:dynamic *ajetaan-tapahtuma?* true)
 (def ^:dynamic *jarjesta-data?* true)
 
@@ -634,6 +636,14 @@
                                                                                      solun-polun-pituus-oikein?)
                                                                                 (and (:derefable (meta grid-polku))
                                                                                      grid-polku-sopii-osaan?))]
+                                         #_(when *foo-print*
+                                           (println "---- DATA YHDISTAMINEN ----")
+                                           (println "grid-polku-sopii-osaan?: " grid-polku-sopii-osaan?)
+                                           (println "nimipolku-ilman-loppuindexeja: " nimipolku-ilman-loppuindexeja)
+                                           (println "osan-polku-dataan: " osan-polku-dataan)
+                                           (println "solun-polun-pituus-oikein?: " solun-polun-pituus-oikein?)
+                                           (println "yhdista-derefable-tahan-osaan?: " yhdista-derefable-tahan-osaan?)
+                                           (println "<--------------------------"))
                                          (when yhdista-derefable-tahan-osaan?
                                            #_(when-not (or (= solun-polun-pituus (count osan-polku-dataan))
                                                            (nil? solun-polun-pituus))
@@ -733,15 +743,18 @@
         grid (kasittele-koot! grid uudet-osat lisattyjen-osien-idt)
         uudet-gridkasittelijat (uudet-gridkasittelijat-dynaaminen grid lisattava-maara)
         osan-kasittely (fn [osa]
-                         (osan-data-yhdistaminen (::datan-kasittelija grid) uudet-gridkasittelijat osa))
+                         (binding [*foo-print* true]
+                           (osan-data-yhdistaminen (::datan-kasittelija grid) uudet-gridkasittelijat osa)))
+        _ (paivita-root! grid (fn [vanha-grid]
+                                (aseta-gridin-polut vanha-grid)))
         _ (paivita-kaikki-lapset! (osan-kasittely grid)
                                   (fn [osa]
                                     (contains? lisattyjen-osien-idt (gop/id osa)))
                                   osan-kasittely)
         _ (paivita-root! grid (fn [vanha-grid]
-                                (update (aseta-gridin-polut vanha-grid) ::grid-rajapintakasittelijat (fn [rk]
-                                                                                                       (merge rk
-                                                                                                              uudet-gridkasittelijat)))))]
+                                (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
+                                                                                  (merge rk
+                                                                                         uudet-gridkasittelijat)))))]
     (when-let [f (get-in grid [:osien-maara-muuttui :lisattiin-osia!])]
       (f grid lisattyjen-osien-idt))))
 

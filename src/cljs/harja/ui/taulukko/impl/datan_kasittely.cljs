@@ -1,6 +1,7 @@
 (ns harja.ui.taulukko.impl.datan-kasittely
   (:require [harja.loki :refer [warn error]]
             [reagent.core :as r]
+            [reagent.ratom :as ratom]
             [cljs.core.async :as async]
             [cljs.spec.alpha :as s]
             [clojure.set :as clj-set]
@@ -53,6 +54,7 @@
     (sequential? data) (vec data)
     :else data))
 
+
 (defn merge-recur [& ms]
   (if (every? (fn [x]
                 (and (seq? x) (map-entry? (first x))))
@@ -68,187 +70,285 @@
            (throw e)))
     (last ms)))
 
-(defn rajapinnan-kuuntelijat [data-atom rajapinta kuvaus]
-  (reduce (fn [kuuntelijat [rajapinnan-nimi {:keys [polut haku]}]]
-            (let [kursorit (mapv (fn [polku]
-                                   (r/cursor data-atom polku))
-                                 polut)]
-              (assoc kuuntelijat
-                     rajapinnan-nimi
-                     (reaction (let [rajapinnan-data (apply haku (mapv deref kursorit))]
-                                 (when (nil? (get rajapinta rajapinnan-nimi))
-                                   (warn "Rajapinnan kuuntelijalle " (str rajapinnan-nimi) " ei ole määritetty rajapinnan skeemaa!\n"
-                                         "Rajapinta:\n" (with-out-str (pp/pprint rajapinta))))
-                                 (when-not (s/valid? (get rajapinta rajapinnan-nimi) rajapinnan-data)
-                                   (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
-                                         (str (s/explain (get rajapinta rajapinnan-nimi) rajapinnan-data))))
-                                 rajapinnan-data)))))
-          {}
-          kuvaus))
-#_(defn rajapinnan-kuuntelijat [data-atom rajapinta kuvaus]
-  (reduce (fn [kuuntelijat [rajapinnan-nimi {:keys [polut haku dynamic-fns]}]]
-            (let [kursorit (mapv (fn [polku]
-                                   (r/cursor data-atom polku))
-                                 polut)
-                  haku-tulos (reaction (let [rajapinnan-data (apply haku (mapv deref kursorit))]
-                                         (when-not (s/valid? (get rajapinta rajapinnan-nimi) rajapinnan-data)
-                                           (warn "Rajapinnan " (str rajapinnan-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta rajapinnan-nimi))
-                                                 (str (s/explain (get rajapinta rajapinnan-nimi) rajapinnan-data))))
-                                         rajapinnan-data))]
-              (assoc kuuntelijat
-                     rajapinnan-nimi
-                     (if dynamic-fns
-                       (loop [[f & fs] dynamic-fns
-                              tulos @haku-tulos]
-                         (if (nil? f)
-                           (mapv #(r/atom %) tulos)
-                           (recur fs (f tulos))))
-                       haku-tulos))))
-          {}
-          kuvaus))
 
-(defn rajapinnan-asettajat [data-atom rajapinta kuvaus]
-  (into {}
-        (map (fn [[rajapinnan-nimi f]]
-               [rajapinnan-nimi (fn [& args]
-                                  (when-not (s/valid? (get rajapinta rajapinnan-nimi) args)
-                                    (warn "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. "
-                                          (s/conform (get rajapinta rajapinnan-nimi) args)))
-                                  (swap! data-atom (fn [tila]
-                                                     (try (apply f tila args)
-                                                          (catch :default e
-                                                            (error (str "RAJAPINNAN ASTTAJA " rajapinnan-nimi " KAATUI VIRHEESEEN " (.-name e) "\n"
-                                                                        "ANNETUT ARGUMENTIT:\n" (with-out-str (pp/pprint args))))
-                                                            (error e)
-                                                            tila)))))])
-             kuvaus)))
 
-(defonce kaikki-seurannat (atom nil))
-(defonce kaydyt-seurannat (atom nil))
 (defonce seurannan-valitila (atom nil))
-(defonce seurannan-tila (atom {}))
 
-(defn paivita-datanseuranta-atomit [data-atom kaikki-taman-seurannat]
-  (let [datan-kasittelytunniste (get @data-atom ::tunniste)]
-    (swap! kaikki-seurannat (fn [kaikki-seurannat]
-                              (update kaikki-seurannat
-                                      datan-kasittelytunniste
-                                      (fn [seurannat]
-                                        (clj-set/union seurannat kaikki-taman-seurannat)))))))
+(def ^:dynamic *da-write* false)
+(def ^:dynamic *seuranta-muutos?* false)
 
-(defn init-datanseuranta-atomit [data-atom]
-  (let [datan-kasittelytunniste (gensym "datan-kasittely")]
-    (swap! data-atom (fn [tila]
-                       (assoc tila ::tunniste datan-kasittelytunniste)))
-    (swap! kaydyt-seurannat (fn [tila]
-                              (assoc tila datan-kasittelytunniste [#{}])))
-    (swap! seurannan-valitila (fn [tila]
-                                (assoc tila datan-kasittelytunniste nil)))))
+(defprotocol IKuuntelija
+  (lisaa-kuuntelija! [this rajapinta kuuntelija])
+  (kuuntelijat-lisaaja! [this rajapinta kuuntelija-luonti]))
 
-(defn aseta-seuranta! [data-atom seurannat]
-  (println "AJETAAN INIT ARVOT")
-  (doseq [[seurannan-nimi {init :init}] seurannat]
-    (when (fn? init)
-      (swap! data-atom
-             (fn [tila]
-               (merge tila (init tila))))))
-  (when-not (get @data-atom ::tunniste)
-    (init-datanseuranta-atomit data-atom))
-  (paivita-datanseuranta-atomit data-atom (into #{} (keys seurannat)))
-  (let [datan-kasittelytunniste (get @data-atom ::tunniste)
-        seuranta-fn! (fn [{:keys [aseta polut]} seurannan-nimi uusi-data]
-                       (swap! seurannan-valitila
-                              (fn [kaikki-tilat]
-                                (update kaikki-tilat
-                                        datan-kasittelytunniste
-                                        (fn [tila]
-                                          (let [seurattava-data (or tila uusi-data)]
-                                            (merge-recur
-                                                        tila
-                                                        (apply aseta seurattava-data (doall (map #(get-in seurattava-data %) polut))))))))))]
+(defprotocol ISeuranta
+  (lisaa-seuranta! [this seuranta])
+  (seurannat-lisaaja! [this seurantojen-luonti]))
 
+(defprotocol IAsettaja
+  (lisaa-asettaja! [this rajapinta asettaja]))
 
-    (into {}
-          (doall (map (fn [[seurannan-nimi {:keys [polut] :as seuranta}]]
-                        (add-watch data-atom
-                                   seurannan-nimi
-                                   (fn [_ _ vanha uusi]
-                                     (let [reaction (.-reaction data-atom)]
-                                       ;; cursorin dereffaaminen ei pelkästään palauta sen nykyistä arvoa, vaan
-                                       ;; se saattaa myös asettaa uuden arvon riippuen sen käyttämän ratomin tilasta.
-                                       ;; Koska tässä swappaillaan add-watchin sisällä, on ratomilla aina se vanha arvo,
-                                       ;; jonka deref cursorille yrittää myös asettaa. Tätä ei kuitenkaan haluta, joten
-                                       ;; käytetään tämmöistä haksia, että cursorin dereffaaminen ei aiheuta tilan muutosta.
-                                       (when (instance? reagent.ratom/RCursor data-atom)
-                                         (set! (.-reaction data-atom)
-                                               (reify
-                                                 IDeref
-                                                 (-deref [_]
-                                                   uusi))))
+(deftype DatanKasittelija [data-atom nimi ^:mutable tila ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
+                           ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
+  IKuuntelija
+  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku lisa-argumentit dynaaminen?]}]]
+    (let [kursorit (mapv (fn [polku]
+                           (r/cursor data-atom polku))
+                         polut)]
+      (set! kuuntelijat
+            (assoc kuuntelijat
+                   kuuntelun-nimi
+                   {:r (reaction (let [kursorien-arvot (mapv deref kursorit)
+                                       rajapinnan-data (apply haku (if lisa-argumentit
+                                                                     (conj kursorien-arvot lisa-argumentit)
+                                                                     kursorien-arvot))]
+                                   (when (nil? (get rajapinta kuuntelun-nimi))
+                                     (warn "Rajapinnan kuuntelijalle " (str kuuntelun-nimi) " ei ole määritetty rajapinnan skeemaa!\n"
+                                           "Rajapinta:\n" (with-out-str (pp/pprint rajapinta))))
+                                   (when-not (s/valid? (get rajapinta kuuntelun-nimi) rajapinnan-data)
+                                     (warn "Rajapinnan " (str kuuntelun-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta kuuntelun-nimi))
+                                           (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data))))
+                                   rajapinnan-data))
+                    :dynaaminen? dynaaminen?}))))
+  (kuuntelijat-lisaaja! [this rajapinta [kuuntelun-nimi {:keys [polut luonti haku]}]]
+    (set! kuuntelija-lisaaja
+          (assoc kuuntelija-lisaaja
+                 kuuntelun-nimi
+                 (fn [vanha uusi]
+                   (let [vanha-dynaaminen-data (sequence (comp (filter #(:dynaaminen (meta %)))
+                                                               (map #(get-in vanha %))
+                                                               (map #(count %)))
+                                                         polut)
+                         uusi-dynaaminen-data (sequence (comp (filter #(:dynaaminen (meta %)))
+                                                              (map #(get-in uusi %))
+                                                              (map #(count %)))
+                                                        polut)
+                         vanha-data (sequence (comp (remove #(:dynaaminen (meta %)))
+                                                    (map #(get-in vanha %)))
+                                              polut)
+                         uusi-data (sequence (comp (remove #(:dynaaminen (meta %)))
+                                                   (map #(get-in uusi %)))
+                                             polut)
 
-                                       (swap! kaydyt-seurannat (fn [ks]
-                                                                 (update ks
-                                                                         datan-kasittelytunniste
-                                                                         (fn [ks]
-                                                                           (vec
-                                                                             (loop [[kierros & loput] (reverse ks)
-                                                                                    i (dec (count ks))
-                                                                                    kierrokset ks
-                                                                                    lisatty? false]
-                                                                               (cond
-                                                                                 lisatty? kierrokset
-                                                                                 (nil? kierros) (conj kierrokset #{seurannan-nimi})
-                                                                                 :else (let [kierros-sisaltaa-seurannan? (contains? kierros seurannan-nimi)]
-                                                                                         (recur loput
-                                                                                                (dec i)
-                                                                                                (if kierros-sisaltaa-seurannan?
-                                                                                                  kierrokset
-                                                                                                  (vec (map-indexed (fn [index kierros]
-                                                                                                                      (if (= index i)
-                                                                                                                        (conj kierros seurannan-nimi)
-                                                                                                                        kierros))
-                                                                                                                    kierrokset)))
-                                                                                                (not kierros-sisaltaa-seurannan?))))))))))
-                                       (let [vanha-data (doall (map #(get-in vanha %) polut))
-                                             uusi-data (doall (map #(get-in uusi %) polut))
+                         kuunneltavan-datan-maara-muuttunut? (or (not= vanha-data uusi-data)
+                                                                 (not= vanha-dynaaminen-data uusi-dynaaminen-data))]
+                     (when-let [luodut-polut (and kuunneltavan-datan-maara-muuttunut? (apply luonti (map #(get-in uusi %) polut)))]
+                       (doseq [m luodut-polut
+                               :let [[[kuuntelun-nimi polut]] m
+                                     kuuntelu-luotu-jo? (some #(= (key %) kuuntelun-nimi)
+                                                              kuuntelijat)
+                                     lisa-argumentit (:args (meta polut))]]
+                         (when-not kuuntelu-luotu-jo?
+                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
+                       (doseq [[kuuntelun-nimi {:keys [r dynaaminen?]}] kuuntelijat
+                               :let [kuuntelu-poistettava? (and dynaaminen?
+                                                                (nil? (some #(= (key %) kuuntelun-nimi)
+                                                                            luodut-polut)))]]
+                         (when kuuntelu-poistettava?
+                           (r/dispose! r)
+                           (set! kuuntelijat
+                                 (dissoc kuuntelijat kuuntelun-nimi))))))))))
+  ISeuranta
+  (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen?] :as seuranta}]]
+    (set! seurannat
+          (assoc seurannat
+                 seurannan-nimi
+                (assoc seuranta
+                       :seuranta! (fn [vanha uusi]
+                                    (let [vanha-data (doall (map #(get-in vanha %) polut))
+                                          uusi-data (doall (map #(get-in uusi %) polut))
 
-                                             seurattava-data-muuttunut? (not= vanha-data uusi-data)
-                                             asetetaan-uusi-data? (and seurattava-data-muuttunut?
-                                                                       *muutetaan-seurattava-arvo?*)]
-                                         (when asetetaan-uusi-data?
-                                           (seuranta-fn! seuranta seurannan-nimi uusi)))
-                                       (when (= (get @kaikki-seurannat datan-kasittelytunniste) (last (get @kaydyt-seurannat datan-kasittelytunniste)))
-                                         (if-let [sv (get @seurannan-valitila datan-kasittelytunniste)]
-                                           (do
-                                             (swap! seurannan-valitila #(assoc % datan-kasittelytunniste nil))
-                                             (swap! data-atom (fn [da]
-                                                                (merge-recur da sv))))
-                                           ;; Halutaan lukea vain state eikä laukaista _set-state:a
-                                           (let [data-atom-sisalto (.-state data-atom)]
-                                             (swap! seurannan-tila (fn [kaikki-seurannat]
-                                                                     (update kaikki-seurannat
-                                                                             datan-kasittelytunniste
-                                                                             (fn [vanha-seurannan-tila]
-                                                                               (merge-recur vanha-seurannan-tila data-atom-sisalto)))))
-                                             ;; Lopullinen muutos data-atomiin pitää tehdä joskus muuloin kuin
-                                             ;; add-watchin sisällä, kosksa add-watchin alun perin laukaisema muutos
-                                             ;; muutoin lopussa overridaa tuloksen cursoreille.
+                                          seurattava-data-muuttunut? (not= vanha-data uusi-data)
+                                          asetetaan-uusi-data? (and seurattava-data-muuttunut?
+                                                                    *muutetaan-seurattava-arvo?*)]
+                                      (when asetetaan-uusi-data?
+                                        (println "AJETAAN SEURANTA!")
+                                        (println (str "SEURANTA FN - " seurannan-nimi " - SEURANTA: " *muutetaan-seurattava-arvo?*))
+                                        (println "POLUT: " polut)
+                                        (println "VANHA DATA: " vanha-data)
+                                        (println "UUSI DATA: " uusi-data)
+                                        (let [arvot (mapv #(get-in uusi %) polut)]
+                                          (set! tila
+                                                (apply aseta uusi (if lisa-argumentit
+                                                                    (conj arvot lisa-argumentit)
+                                                                    arvot)))))))))))
+  (seurannat-lisaaja! [this [seurannan-nimi {:keys [polut luonti aseta] :as seuranta}]]
+    (set! seurannat-lisaaja
+          (assoc seurannat-lisaaja
+                 seurannan-nimi
+                (fn [vanha uusi]
+                  (let [vanha-dynaaminen-data (sequence (comp
+                                                          (filter #(:dynaaminen (meta %)))
+                                                          (map #(get-in vanha %))
+                                                          (map #(count %)))
+                                                        polut)
+                        uusi-dynaaminen-data (sequence (comp
+                                                         (filter #(:dynaaminen (meta %)))
+                                                         (map #(get-in uusi %))
+                                                         (map #(count %)))
+                                                       polut)
+                        vanha-data (sequence (comp
+                                               (remove #(:dynaaminen (meta %)))
+                                               (map #(get-in vanha %)))
+                                             polut)
+                        uusi-data (sequence (comp
+                                              (remove #(:dynaaminen (meta %)))
+                                              (map #(get-in uusi %)))
+                                            polut)
 
-                                             ;; Pitää käyttää seurannan-tila atomia, koska next-tick ei välttämättä laukea ennen kuin
-                                             ;; data-atom:ia on muutettu useammin kuin kerran
-                                             (r/next-tick (fn []
-                                                            (reset! data-atom (get @seurannan-tila datan-kasittelytunniste))))))
-                                         (swap! kaydyt-seurannat #(update % datan-kasittelytunniste (fn [ks] (vec (butlast ks))))))
-                                       (when (instance? reagent.ratom/RCursor data-atom)
-                                         (set! (.-reaction data-atom) reaction)))))
-                        [seurannan-nimi {:seurannan-lopetus! (fn []
-                                                               (remove-watch data-atom seurannan-nimi))
-                                         :seuranta-trigger! (fn []
-                                                              (seuranta-fn! seuranta seurannan-nimi @data-atom))}])
-                      seurannat)))))
+                        seurattavan-datan-maara-muuttunut? (or (not= vanha-data uusi-data)
+                                                               (not= vanha-dynaaminen-data uusi-dynaaminen-data))]
+                    (when-let [luodut-polut (and seurattavan-datan-maara-muuttunut? (apply luonti (map #(get-in uusi %) polut)))]
+                      (println "seurattavan-datan-maara-muuttunut?: " seurattavan-datan-maara-muuttunut?)
+                      (println (not= vanha-data uusi-data))
+                      (println (not= vanha-dynaaminen-data uusi-dynaaminen-data))
+                      (println "LUODUT POLUT: " luodut-polut)
+                      (println "VANHA DYNAAMINEN DATA: " vanha-dynaaminen-data)
+                      (println "UUSI DYNAAMINEN DATA: " uusi-dynaaminen-data)
+                      (println "VANHA DATA: " vanha-data)
+                      (println "UUSI DATA: " uusi-data)
+                      (doseq [m luodut-polut
+                              :let [[[seurannan-nimi polut]] (seq m)
+                                    seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
+                                                             seurannat)
+                                    lisa-argumentit (:args (meta polut))]]
+                        (when-not seuranta-luotu-jo?
+                          (println "-> lisataan: " seurannan-nimi)
+                          (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
+                      (println "POISTETAAN SEURANTOJA")
+                      (doseq [[seurannan-nimi {:keys [dynaaminen?]}] seurannat
+                              :let [seuranta-poistettava? (and dynaaminen?
+                                                               (nil? (some #(= (ffirst %) seurannan-nimi)
+                                                                           luodut-polut)))]]
+                        (when seuranta-poistettava?
+                          (println "-> poistetaan: " seurannan-nimi)
+                          (set! seurannat
+                                (dissoc seurannat seurannan-nimi))))))))))
+  IAsettaja
+  (lisaa-asettaja! [this rajapinta [rajapinnan-nimi f]]
+    (set! asettajat
+          (assoc asettajat
+                 rajapinnan-nimi
+                 (fn [& args]
+                   (when-not (s/valid? (get rajapinta rajapinnan-nimi) args)
+                     (warn "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. "
+                           (s/conform (get rajapinta rajapinnan-nimi) args)))
+                   (swap! data-atom (fn [tila]
+                                      (try (apply f tila args)
+                                           (catch :default e
+                                             (error (str "RAJAPINNAN ASTTAJA " rajapinnan-nimi " KAATUI VIRHEESEEN " (.-name e) "\n"
+                                                         "ANNETUT ARGUMENTIT:\n" (with-out-str (pp/pprint args))))
+                                             (error e)
+                                             tila))))))))
+  IDeref
+  (-deref [_]
+    tila)
+
+  IReset
+  (-reset! [this uusi]
+    (let [uusi (or @seurannan-valitila uusi)]
+      (when-not (or *seuranta-muutos?*
+                    (= tila uusi))
+        (let [vanha-tila tila]
+          (doseq [[seurannan-nimi f] seurannat-lisaaja]
+            (f tila uusi))
+          (loop [vanha vanha-tila
+                 uusi uusi
+                 kaydyt-tilat [(hash vanha) (hash uusi)]
+                 muuttunut? (not= (hash vanha) (hash uusi))]
+            (let [kiertava-tila? (> (- (count kaydyt-tilat)
+                                       (count (distinct kaydyt-tilat)))
+                                    3)]
+              (when (and kiertava-tila?
+                         muuttunut?)
+                (error "Huomattiin kiertävä seuranta!\n"
+                       "SEURATTAVAT POLUT"
+                       (apply str (interpose " ->\n" muuttuvien-seurantojen-polut))
+                       "kaydyt tilat " (str kaydyt-tilat)
+                       "\nHypätään seurannasta pois."))
+              (when (and muuttunut?
+                         (not kiertava-tila?))
+                (loop [[seuranta & loput-seurannat] seurannat
+                       vanha vanha
+                       uusi uusi]
+                  (let [[_ {:keys [seuranta! polut]}] seuranta]
+                    (when-not (= (hash vanha) (hash uusi))
+                      (set! muuttuvien-seurantojen-polut
+                            (conj muuttuvien-seurantojen-polut polut)))
+                    (when-not (nil? seuranta!)
+                      (seuranta! vanha uusi)
+                      (recur loput-seurannat
+                             vanha
+                             (if (= tila vanha)
+                               uusi
+                               (merge-recur uusi tila))))))
+                (recur uusi
+                       tila
+                       (conj kaydyt-tilat (hash tila))
+                       (not= (hash uusi) (hash tila))))))
+          (set! muuttuvien-seurantojen-polut [])
+          (if (= vanha-tila tila)
+            (set! tila uusi)
+            (let [tallennettava-tila tila]
+              (reset! seurannan-valitila tila)
+              (r/next-tick (fn []
+                             (binding [*seuranta-muutos?* true]
+                               (reset! seurannan-valitila nil)
+                               (swap! data-atom (fn [entinen-tila]
+                                                  (merge-recur entinen-tila tallennettava-tila))))))))))))
+
+  IPrintWithWriter
+  (-pr-writer [a writer opts]
+    (-write writer (str "#<DatanKasittelija "))
+    (if *da-write*
+      " - recur -"
+      (binding [*da-write* true]
+        (pr-writer [data-atom seurannat-lisaaja kuuntelija-lisaaja kuuntelijat asettajat seurannat] writer opts)))
+    (-write writer ">"))
+
+  IHash
+  (-hash [_] (hash [data-atom seurannat-lisaaja kuuntelija-lisaaja kuuntelijat asettajat seurannat]))
+  ILookup
+  (-lookup [this k] (-lookup this k nil))
+  (-lookup [this ksym else]
+     (if-let [loytyi (and (keyword? ksym) (aget this (name ksym)))]
+       loytyi
+       else))
+  IEquiv
+  (-equiv [this other] (and (= (type this) (type other)) (identical? this other)))
+  ratom/IDisposable
+  (dispose! [this]
+    (remove-watch nimi data-atom)
+    (set! tila nil)
+    (set! muuttuvien-seurantojen-polut nil)
+    (set! seurannat-lisaaja nil)
+    (set! kuuntelija-lisaaja nil)
+    (doseq [[_ {r :r}] kuuntelijat]
+      (r/dispose! r))
+    (set! kuuntelijat nil)
+    (set! asettajat nil)
+    (set! seurannat nil)
+    (when on-dispose
+      (dotimes [f on-dispose]
+        (f this))))
+
+  (add-on-dispose! [this f]
+    (set! on-dispose (conj on-dispose f))))
+
+(defn datan-kasittelija [data-atom]
+  {:pre [(satisfies? ratom/IReactiveAtom data-atom)]
+   :post [(instance? DatanKasittelija %)]}
+  (let [nimi (gensym "datan-kasittelija")
+        dk (->DatanKasittelija data-atom nimi @data-atom [] [] {} {} {} {} {})]
+    (add-watch data-atom
+               nimi
+               (fn [_ _ _ uusi]
+                 (reset! dk uusi)))
+    dk))
+
 
 (defn rajapinnan-kuuntelija [kasittelija rajapinnan-nimi]
-  (get-in kasittelija [:kuuntelijat rajapinnan-nimi]))
+  (get-in kasittelija [:kuuntelijat rajapinnan-nimi :r]))
 
 (defn poista-seurannat! [kasittelija]
   (doseq [[_ {seurannan-lopetus :seurannan-lopetus!}] (get kasittelija :seurannat)]
@@ -259,7 +359,7 @@
     ((get-in kasittelija [:seurannat seurannan-nimi :seuranta-trigger!]))))
 
 (defn lopeta-tilan-kuuntelu! [kasittelija]
-  (doseq [[_ kuuntelija] (:kuuntelijat kasittelija)]
+  (doseq [[_ {kuuntelija :r}] (:kuuntelijat kasittelija)]
     (r/dispose! kuuntelija)))
 
 (defn aseta-rajapinnan-data! [kasittelija rajapinta & args]

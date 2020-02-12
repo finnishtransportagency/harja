@@ -181,8 +181,8 @@
                                                                                     (update-in tila [:gridit :suunnittellut-hankinnat :hankinnat (dec hoitokauden-numero)]
                                                                                                (fn [hoitokauden-hankinnat]
                                                                                                  (let [hoitokauden-hankinnat (if (nil? hoitokauden-hankinnat)
-                                                                                                                              (vec (repeat 12 {}))
-                                                                                                                              hoitokauden-hankinnat)]
+                                                                                                                               (vec (repeat 12 {}))
+                                                                                                                               hoitokauden-hankinnat)]
                                                                                                    (assoc-in hoitokauden-hankinnat [(first osan-paikka) osa] arvo)))))
                                                                    paivita-domain (fn [tila]
                                                                                     (update-in tila [:domain :suunnittellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)]
@@ -267,14 +267,40 @@
                                                                                   (get rahavaraukset valittu-toimenpide)))]
                                                             arvot))
                                                   #_#_:dynamic-fns [(fn [[tyyppi data]]
-                                                                      {tyyppi data})]}}
+                                                                      {tyyppi data})]}
+                                  :rahavaraukset-yhteenveto {:polut [^:dynaaminen [:gridit :rahavaraukset :seurannat]]
+                                                             :luonti (fn [seurannat]
+                                                                       (vec
+                                                                         (mapcat (fn [[tyyppi _]]
+                                                                                   {(keyword (str "rahavaraukset-yhteenveto-" tyyppi)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
+                                                                                 seurannat)))
+                                                             :haku identity}}
                                  ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
                                  ;              "akillinen-hoitotyo" [{:maara 1}]}
                                  )
                           {}
                           {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                  :aseta (fn [tila valittu-toimenpide]
-                                                          (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)))}}))
+                                                          (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)))}
+                           :rahavaraukset-yhteenveto-asettaminen {:polut [^:dynaaminen [:domain :rahavaraukset]
+                                                                          [:suodattimet :hankinnat :toimenpide]]
+                                                                  :luonti (fn [rahavaraukset valittu-toimenpide]
+                                                                            (vec
+                                                                              (mapcat (fn [[tyyppi data]]
+                                                                                        (map (fn [index]
+                                                                                               {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" index)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi index]]})
+                                                                                             (range (count data))))
+                                                                                      (get rahavaraukset valittu-toimenpide))))
+                                                                  :aseta (fn [tila maarat tyyppi]
+                                                                           (let [yhteensa (reduce (fn [yhteensa {maara :maara}]
+                                                                                                    (+ yhteensa maara))
+                                                                                                  0
+                                                                                                  maarat)]
+                                                                             (assoc-in tila
+                                                                                       [:gridit :rahavaraukset :seurannat tyyppi]
+                                                                                       {:nimi tyyppi
+                                                                                        :yhteensa yhteensa
+                                                                                        :indeksikorjattu (indeksikorjaa yhteensa)})))}}))
 
 (def hoidonjohtopalkkion-rajapinta {:otsikot any?
                                     ;; {:nimi string? :maara vector :yhteensa vector :indeksikorjattu vector}
@@ -426,6 +452,8 @@
                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan))))
     :aseta-suunnittellut-hankinnat! (jarjesta-data jarjesta-data?
                                       (triggeroi-seurannat triggeroi-seuranta?
+                                        (println "HoITOKAUDEN NUMERO: " args)
+                                        (println "SOLUN TUNNISTE " (grid/solun-asia solu :tunniste-rajapinnan-dataan))
                                         (apply grid/aseta-rajapinnan-data!
                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                :aseta-suunnittellut-hankinnat!

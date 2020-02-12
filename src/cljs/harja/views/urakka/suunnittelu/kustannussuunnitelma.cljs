@@ -493,6 +493,7 @@
                                      (grid/paivita-osa! solu/*this*
                                                         (fn [solu]
                                                           (assoc solu :nappi-nakyvilla? false)))
+                                     (println "HoITOKAUDEN NUMERO: " hoitokauden-numero)
                                      (when arvo
                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
                                                               :arvo arvo
@@ -538,6 +539,7 @@
                                                                                                                                        :solun-polun-pituus 1
                                                                                                                                        :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
                                                                                                                                        :datan-kasittely (fn [yhteenveto]
+                                                                                                                                                          (println (str "HANKINTOJEN YHTEENVETO DATAN KÄSITTELY: " yhteenveto))
                                                                                                                                                           (mapv (fn [[_ v]]
                                                                                                                                                                   v)
                                                                                                                                                                 yhteenveto))
@@ -714,19 +716,8 @@
                                                  :luokat #{"salli-ylipiirtaminen"}
                                                  :lisattiin-osia! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
                                                  :poistettiin-osia! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
-                                                 :grid-kasittelijat [[:. inc ::data-yhteenveto] {:rajapinta :data-yhteenveto
-                                                                                                 :solun-polun-pituus 1
-                                                                                                 :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                                                 :datan-kasittely (fn [yhteenveto]
-                                                                                                                    (mapv (fn [[_ v]]
-                                                                                                                            v)
-                                                                                                                          yhteenveto))
-                                                                                                 :tunnisteen-kasittely (fn [osat _]
-                                                                                                                         (mapv (fn [osa]
-                                                                                                                                 (when (instance? solu/Syote osa)
-                                                                                                                                   :maara))
-                                                                                                                               (grid/hae-grid osat :lapset)))}
-                                                                     [:. inc ::data-sisalto] {:rajapinta :suunnittellut-hankinnat
+                                                 :grid-kasittelijat [
+                                                                     [:. inc ::data-sisalto] {#_#_:rajapinta :suunnittellut-hankinnat
                                                                                               :solun-polun-pituus 2
                                                                                               :jarjestys [{:keyfn :aika
                                                                                                            :comp (fn [aika-1 aika-2]
@@ -892,7 +883,19 @@
                                                                                                  (mapv (fn [osa]
                                                                                                          (when (instance? solu/Syote osa)
                                                                                                            :maara))
-                                                                                                       (grid/hae-grid osat :lapset)))}}))))
+                                                                                                       (grid/hae-grid osat :lapset)))}
+                                               #_#_[::data inc ::data-yhteenveto] {#_#_:rajapinta :data-yhteenveto
+                                                                           :solun-polun-pituus 1
+                                                                           :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                           :datan-kasittely (fn [yhteenveto]
+                                                                                              (mapv (fn [[_ v]]
+                                                                                                      v)
+                                                                                                    yhteenveto))
+                                                                           :tunnisteen-kasittely (fn [osat _]
+                                                                                                   (mapv (fn [osa]
+                                                                                                           (when (instance? solu/Syote osa)
+                                                                                                             :maara))
+                                                                                                         (grid/hae-grid osat :lapset)))}}))))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
   (let [g (grid/grid-pohjasta g-pohjat/grid-pohja-5

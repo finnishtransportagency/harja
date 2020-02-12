@@ -46,13 +46,24 @@
   (g/grid-c alue/->Taulukko (assoc asetukset :osat osat)))
 
 ; - Datan käsittelijä
-(defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat]
-  (let [seurannat (dk/aseta-seuranta! data-atom seurannat)
-        kuuntelijat (dk/rajapinnan-kuuntelijat data-atom rajapinta haku-kuvaus)
-        asettajat (dk/rajapinnan-asettajat data-atom rajapinta asetus-kuvaus)]
-    {:kuuntelijat kuuntelijat
-     :asettajat asettajat
-     :seurannat seurannat}))
+(defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus]
+  (let [datan-kasittelija (dk/datan-kasittelija data-atom)]
+    ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
+    (println "AJETAAN INIT ARVOT")
+    (doseq [[_ {:keys [init]}] seurannat-kuvaus]
+      (when (fn? init)
+        (swap! data-atom init)))
+    (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
+      (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
+    (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
+      (dk/lisaa-seuranta! datan-kasittelija seuranta))
+    (doseq [kuuntelija-luonti (filter #(contains? (val %) :luonti) haku-kuvaus)]
+      (dk/kuuntelijat-lisaaja! datan-kasittelija rajapinta kuuntelija-luonti))
+    (doseq [kuuntelija (remove #(contains? (val %) :luonti) haku-kuvaus)]
+      (dk/lisaa-kuuntelija! datan-kasittelija rajapinta kuuntelija))
+    (doseq [asettaja asetus-kuvaus]
+      (dk/lisaa-asettaja! datan-kasittelija rajapinta asettaja))
+    datan-kasittelija))
 
 ;; KOPIOINNIT
 
@@ -178,7 +189,7 @@
 ; - Datan käsittelija haut
 
 (defn arvo-rajapinnasta [datan-kasittelija rajapinnan-nimi]
-  @(get-in datan-kasittelija [:kuuntelijat rajapinnan-nimi]))
+  @(get-in datan-kasittelija [:kuuntelijat rajapinnan-nimi :r]))
 
 ;; MUTAATIOT
 
