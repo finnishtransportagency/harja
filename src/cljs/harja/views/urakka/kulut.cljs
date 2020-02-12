@@ -267,16 +267,18 @@
          {:ikoni        ikonit/plus-sign
           :vayla-tyyli? true}]])]))
 
-(defn lisatiedot [paivitys-fn _ e! _]
-  (let [aliurakoitsija-atomi (atom {:nimi "" :ytunnus ""})]
-    (fn [paivitys-fn {:keys [aliurakoitsija] :as lomake} e! aliurakoitsijat]
-      (let [modaalin-sisalto (fn [aliurakoitsija-atomi]
-                               (loki/log "alik" @aliurakoitsija-atomi)
+(defn lisatiedot [paivitys-fn {:keys [aliurakoitsija] :as lomake} e! aliurakoitsijat]
+
+  #_(fn [paivitys-fn {:keys [aliurakoitsija] :as lomake} e! aliurakoitsijat])
+  (let [modaalin-sisalto (fn []
+                           (let [aliurakoitsija-atomi (r/atom {:nimi "" :ytunnus ""})]
+                             (fn []
                                [:div
                                 [kentat/vayla-lomakekentta
-                                 "Yrityksen nimi"
+                                 "Yrityksen nimi *"
                                  :arvo (:nimi @aliurakoitsija-atomi)
-                                 :on-change (fn [event] (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value)))]
+                                 :on-change (fn [event]
+                                              (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value)))]
                                 [kentat/vayla-lomakekentta
                                  "Y-tunnus"
                                  :arvo (:ytunnus @aliurakoitsija-atomi)
@@ -284,49 +286,50 @@
                                 [:div.napit
                                  [napit/tallenna
                                   "Tallenna"
-                                  (fn [] (e! (tiedot/->LuoUusiAliurakoitsija @aliurakoitsija-atomi)))
+                                  (fn [] (do
+                                           (e! (tiedot/->LuoUusiAliurakoitsija @aliurakoitsija-atomi))
+                                           (modal/piilota!)))
                                   {:ikoni        ikonit/ok
                                    :vayla-tyyli? true}]
                                  [napit/sulje
                                   "Sulje"
                                   (fn [] (modal/piilota!))
                                   {:vayla-tyyli? true
-                                   :ikoni        ikonit/remove}]]])
-            lisaa-aliurakoitsija (fn [{sulje :sulje}]
-                                   [:div
-                                    {:on-click #(do
-                                                  (sulje)
-                                                  (modal/nayta! {;:sulje   sulku-fn
-                                                                 :otsikko "Lisää aliurakoitsija"}
-                                                                [modaalin-sisalto aliurakoitsija-atomi])
-                                                  #_(paivitys-fn :nayta :aliurakoitsija-modaali))}
-                                    "Lisää aliurakoitsija"])]
-        [lomakkeen-osio {:otsikko "Lisätiedot"
-                         :osiot   [[kentat/vayla-lomakekentta
-                                    "Aliurakoitsija"
-                                    :komponentti (fn []
-                                                   [yleiset/alasveto-toiminnolla
-                                                    lisaa-aliurakoitsija
-                                                    {:valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
-                                                     :valinnat     aliurakoitsijat
-                                                     :valinta-fn   #(paivitys-fn :aliurakoitsija (:id %)
-                                                                                 :suorittaja-nimi (:nimi %))
-                                                     :formaatti-fn #(get % :nimi)}])]
-                                   [kentat/vayla-lomakekentta
-                                    "Aliurakoitsijan y-tunnus"
-                                    :disabled true
-                                    :arvo (or (some
-                                                #(when (= aliurakoitsija (:id %)) (:ytunnus %))
-                                                aliurakoitsijat)
-                                              "Y-tunnus puuttuu")]
-                                   [kentat/vayla-lomakekentta
-                                    "Kirjoita tähän halutessasi lisätietoa"
-                                    :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))]
-                                   [kentat/vayla-lomakekentta
-                                    "Liite" :komponentti (fn []
-                                                           [liitteet/lisaa-liite
-                                                            (-> @tila/yleiset :urakka :id)
-                                                            {:liite-ladattu #(e! (tiedot/->LiiteLisatty %))}])]]}]))))
+                                   :ikoni        ikonit/remove}]]])))
+        lisaa-aliurakoitsija (fn [{sulje :sulje}]
+                               [:div
+                                {:on-click #(do
+                                              (sulje)
+                                              (modal/nayta! {;:sulje   sulku-fn
+                                                             :otsikko "Lisää aliurakoitsija"}
+                                                            [modaalin-sisalto]))}
+                                "Lisää aliurakoitsija"])]
+    [lomakkeen-osio {:otsikko "Lisätiedot"
+                     :osiot   [[kentat/vayla-lomakekentta
+                                "Aliurakoitsija"
+                                :komponentti (fn []
+                                               [yleiset/alasveto-toiminnolla
+                                                lisaa-aliurakoitsija
+                                                {:valittu      (some #(when (= aliurakoitsija (:id %)) %) aliurakoitsijat)
+                                                 :valinnat     aliurakoitsijat
+                                                 :valinta-fn   #(paivitys-fn :aliurakoitsija (:id %)
+                                                                             :suorittaja-nimi (:nimi %))
+                                                 :formaatti-fn #(get % :nimi)}])]
+                               [kentat/vayla-lomakekentta
+                                "Aliurakoitsijan y-tunnus"
+                                :disabled true
+                                :arvo (or (some
+                                            #(when (= aliurakoitsija (:id %)) (:ytunnus %))
+                                            aliurakoitsijat)
+                                          "Y-tunnus puuttuu")]
+                               [kentat/vayla-lomakekentta
+                                "Kirjoita tähän halutessasi lisätietoa"
+                                :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))]
+                               [kentat/vayla-lomakekentta
+                                "Liite" :komponentti (fn []
+                                                       [liitteet/lisaa-liite
+                                                        (-> @tila/yleiset :urakka :id)
+                                                        {:liite-ladattu #(e! (tiedot/->LiiteLisatty %))}])]]}]))
 
 
 
