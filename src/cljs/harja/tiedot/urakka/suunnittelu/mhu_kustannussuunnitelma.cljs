@@ -265,13 +265,14 @@
                                                                                     [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
                                                                                                   (get data (dec hoitokauden-numero)))])
                                                                                   (get rahavaraukset valittu-toimenpide)))]
+                                                            (println "ARVOT: " arvot)
                                                             arvot))
                                                   #_#_:dynamic-fns [(fn [[tyyppi data]]
                                                                       {tyyppi data})]}
-                                  :rahavaraukset-yhteenveto {:polut [^:dynaaminen [:gridit :rahavaraukset :seurannat]]
+                                  :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]]
                                                              :luonti (fn [seurannat]
                                                                        (vec
-                                                                         (mapcat (fn [[tyyppi _]]
+                                                                         (map (fn [[tyyppi _]]
                                                                                    {(keyword (str "rahavaraukset-yhteenveto-" tyyppi)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
                                                                                  seurannat)))
                                                              :haku identity}}
@@ -282,7 +283,7 @@
                           {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                  :aseta (fn [tila valittu-toimenpide]
                                                           (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)))}
-                           :rahavaraukset-yhteenveto-asettaminen {:polut [^:dynaaminen [:domain :rahavaraukset]
+                           :rahavaraukset-yhteenveto-asettaminen {:polut [[:domain :rahavaraukset]
                                                                           [:suodattimet :hankinnat :toimenpide]]
                                                                   :luonti (fn [rahavaraukset valittu-toimenpide]
                                                                             (vec

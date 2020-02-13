@@ -683,6 +683,9 @@
 (defn rahavarausten-grid []
   (let [nyt (pvm/nyt)
         dom-id "rahavaraukset-taulukko"
+        data-jarjestys {"muut-rahavaraukset" 1
+                        "vahinkojen-korjaukset" 1
+                        "akillinen-hoitotyo" 2}
         g (grid/grid {:nimi ::root
                       :dom-id dom-id
                       :root-fn (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :rahavaraukset :grid]))
@@ -715,32 +718,7 @@
                                                  :koko konf/auto
                                                  :luokat #{"salli-ylipiirtaminen"}
                                                  :lisattiin-osia! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
-                                                 :poistettiin-osia! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
-                                                 :grid-kasittelijat [
-                                                                     [:. inc ::data-sisalto] {#_#_:rajapinta :suunnittellut-hankinnat
-                                                                                              :solun-polun-pituus 2
-                                                                                              :jarjestys [{:keyfn :aika
-                                                                                                           :comp (fn [aika-1 aika-2]
-                                                                                                                   (pvm/ennen? aika-1 aika-2))}
-                                                                                                          [:aika :maara :yhteensa :indeksikorjattu]]
-                                                                                              :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
-                                                                                                                 (mapv (fn [rivi]
-                                                                                                                         (mapv (fn [[_ v]]
-                                                                                                                                 v)
-                                                                                                                               rivi))
-                                                                                                                       vuoden-hoidonjohtopalkkiot))
-                                                                                              :tunnisteen-kasittely (fn [data-sisalto-grid data]
-                                                                                                                      (vec
-                                                                                                                        (map-indexed (fn [i rivi]
-                                                                                                                                       (vec
-                                                                                                                                         (map-indexed (fn [j osa]
-                                                                                                                                                        (when (or (instance? solu/Syote osa)
-                                                                                                                                                                  (instance? SyoteTaytaAlas osa))
-                                                                                                                                                          {:osa :maara
-                                                                                                                                                           :aika (:aika (get data j))
-                                                                                                                                                           :osan-paikka [i j]}))
-                                                                                                                                                      (grid/hae-grid rivi :lapset))))
-                                                                                                                                     (grid/hae-grid data-sisalto-grid :lapset))))}]
+                                                 :poistettiin-osia! (fn [g] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
                                                  :toistettava-osa (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
                                                                               :koko (-> konf/auto
                                                                                         (assoc-in [:rivi :nimet]
@@ -865,37 +843,58 @@
                                                                                   (mapv (fn [[_ nimi]]
                                                                                           nimi)
                                                                                         yhteensa))}
-                                               ^:derefable [::data] {:rajapinta :rahavaraukset
-                                                                     :solun-polun-pituus 0
-                                                                     :jarjestys [{:keyfn key
-                                                                                  :comp (fn [a b]
-                                                                                          (let [jarjestys {"muut-rahavaraukset" 1
-                                                                                                           "vahinkojen-korjaukset" 1
-                                                                                                           "akillinen-hoitotyo" 2}]
-                                                                                            (> (jarjestys a) (jarjestys b))))}]
-                                                                     :datan-kasittely (fn [rahavaraukset]
-                                                                                        (println "---> RAHAVARAUKSET")
-                                                                                        (cljs.pprint/pprint rahavaraukset)
-                                                                                        (mapv (fn [[_ v]]
-                                                                                                v)
-                                                                                              rahavaraukset))
-                                                                     #_#_:tunnisteen-kasittely (fn [osat _]
-                                                                                                 (mapv (fn [osa]
-                                                                                                         (when (instance? solu/Syote osa)
-                                                                                                           :maara))
-                                                                                                       (grid/hae-grid osat :lapset)))}
-                                               #_#_[::data inc ::data-yhteenveto] {#_#_:rajapinta :data-yhteenveto
-                                                                           :solun-polun-pituus 1
-                                                                           :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                           :datan-kasittely (fn [yhteenveto]
-                                                                                              (mapv (fn [[_ v]]
-                                                                                                      v)
-                                                                                                    yhteenveto))
-                                                                           :tunnisteen-kasittely (fn [osat _]
-                                                                                                   (mapv (fn [osa]
-                                                                                                           (when (instance? solu/Syote osa)
-                                                                                                             :maara))
-                                                                                                         (grid/hae-grid osat :lapset)))}}))))
+                                               [::data] {:rajapinta :rahavaraukset
+                                                         :solun-polun-pituus 0
+                                                         :jarjestys [{:keyfn key
+                                                                      :comp (fn [a b]
+                                                                              (> (data-jarjestys a) (data-jarjestys b)))}]
+                                                         :luonti (fn [data]
+                                                                   (transduce (map (fn [[tyyppi _]]
+                                                                                     (let [index (dec (get data-jarjestys tyyppi))]
+                                                                                       {#_#_[:. index ::data-sisalto] {:rajapinta (keyword (str "rahavaraukset-" tyyppi))
+                                                                                                                   :solun-polun-pituus 2
+                                                                                                                   :jarjestys [{:keyfn :aika
+                                                                                                                                :comp (fn [aika-1 aika-2]
+                                                                                                                                        (pvm/ennen? aika-1 aika-2))}
+                                                                                                                               [:aika :maara :yhteensa :indeksikorjattu]]
+                                                                                                                   :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
+                                                                                                                                      (mapv (fn [rivi]
+                                                                                                                                              (mapv (fn [[_ v]]
+                                                                                                                                                      v)
+                                                                                                                                                    rivi))
+                                                                                                                                            vuoden-hoidonjohtopalkkiot))
+                                                                                                                   :tunnisteen-kasittely (fn [data-sisalto-grid data]
+                                                                                                                                           (vec
+                                                                                                                                             (map-indexed (fn [i rivi]
+                                                                                                                                                            (vec
+                                                                                                                                                              (map-indexed (fn [j osa]
+                                                                                                                                                                             (when (or (instance? solu/Syote osa)
+                                                                                                                                                                                       (instance? SyoteTaytaAlas osa))
+                                                                                                                                                                               {:osa :maara
+                                                                                                                                                                                :aika (:aika (get data j))
+                                                                                                                                                                                :osan-paikka [i j]}))
+                                                                                                                                                                           (grid/hae-grid rivi :lapset))))
+                                                                                                                                                          (grid/hae-grid data-sisalto-grid :lapset))))}
+                                                                                        [:. index ::data-yhteenveto] {:rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi))
+                                                                                                                      :solun-polun-pituus 1
+                                                                                                                      :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                                      :datan-kasittely (fn [yhteenveto]
+                                                                                                                                         (mapv (fn [[_ v]]
+                                                                                                                                                 v)
+                                                                                                                                               yhteenveto))
+                                                                                                                      :tunnisteen-kasittely (fn [osat _]
+                                                                                                                                              (mapv (fn [osa]
+                                                                                                                                                      (when (instance? solu/Syote osa)
+                                                                                                                                                        :maara))
+                                                                                                                                                    (grid/hae-grid osat :lapset)))}})))
+                                                                              merge
+                                                                              data))
+                                                         :datan-kasittely identity
+                                                         #_#_:tunnisteen-kasittely (fn [osat _]
+                                                                                     (mapv (fn [osa]
+                                                                                             (when (instance? solu/Syote osa)
+                                                                                               :maara))
+                                                                                           (grid/hae-grid osat :lapset)))}}))))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
   (let [g (grid/grid-pohjasta g-pohjat/grid-pohja-5
