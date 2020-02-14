@@ -132,13 +132,11 @@
                                   :yhteensa {:polut [[:gridit :suunnittellut-hankinnat :yhteensa :data]
                                                      [:gridit :suunnittellut-hankinnat :yhteensa :nimi]]
                                              :haku (fn [data nimi]
-                                                     (println (str "YHTEENSÄ: " data))
                                                      (assoc data :nimi nimi))}}
                                  (reduce (fn [haut hoitokauden-numero]
                                            (merge haut
                                                   {(keyword (str "yhteenveto-" hoitokauden-numero)) {:polut [[:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)]]
                                                                                                      :haku (fn [data]
-                                                                                                             (println (str "DATA: " data))
                                                                                                              (assoc data :nimi (str hoitokauden-numero ". hoitovuosi")))}
                                                    (keyword (str "suunnittellut-hankinnat-" hoitokauden-numero)) {:polut [[:domain :suunnittellut-hankinnat]
                                                                                                                           [:suodattimet :hankinnat :toimenpide]
@@ -209,10 +207,7 @@
                                                            :init (fn [tila]
                                                                    (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteensa :data] nil))
                                                            :aseta (fn [tila data]
-                                                                    (println "HANKINNAT YHTEENSÄ SEURANTA")
                                                                     (let [hoidonjohtopalkkiot-yhteensa (apply + (map :yhteensa data))]
-                                                                      (println (str "-> " {:yhteensa hoidonjohtopalkkiot-yhteensa
-                                                                                           :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)}))
                                                                       (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteensa :data] {:yhteensa hoidonjohtopalkkiot-yhteensa
                                                                                                                                          :indeksikorjattu (indeksikorjaa hoidonjohtopalkkiot-yhteensa)})))}
                              :valittu-toimenpide-seuranta {:polut [[:suodattimet :hankinnat :toimenpide]]
@@ -254,7 +249,6 @@
                                   :yhteensa {:polut [[:gridit :rahavaraukset :yhteensa :data]
                                                      [:gridit :rahavaraukset :yhteensa :nimi]]
                                              :haku (fn [data nimi]
-                                                     (println (str "YHTEENSÄ: " data))
                                                      (assoc data :nimi nimi))}
                                   :rahavaraukset {:polut [[:domain :rahavaraukset]
                                                           [:suodattimet :hankinnat :toimenpide]
@@ -265,10 +259,7 @@
                                                                                     [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
                                                                                                   (get data (dec hoitokauden-numero)))])
                                                                                   (get rahavaraukset valittu-toimenpide)))]
-                                                            (println "ARVOT: " arvot)
-                                                            arvot))
-                                                  #_#_:dynamic-fns [(fn [[tyyppi data]]
-                                                                      {tyyppi data})]}
+                                                            arvot))}
                                   :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]]
                                                              :luonti (fn [seurannat]
                                                                        (vec
@@ -286,12 +277,14 @@
                            :rahavaraukset-yhteenveto-asettaminen {:polut [[:domain :rahavaraukset]
                                                                           [:suodattimet :hankinnat :toimenpide]]
                                                                   :luonti (fn [rahavaraukset valittu-toimenpide]
-                                                                            (vec
-                                                                              (mapcat (fn [[tyyppi data]]
-                                                                                        (map (fn [index]
-                                                                                               {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" index)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi index]]})
-                                                                                             (range (count data))))
-                                                                                      (get rahavaraukset valittu-toimenpide))))
+                                                                            (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
+                                                                              (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
+                                                                                (vec
+                                                                                  (mapcat (fn [[tyyppi data]]
+                                                                                            (map (fn [index]
+                                                                                                   {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" index)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi index]]})
+                                                                                                 (range (count data))))
+                                                                                          toimenpiteen-rahavaraukset)))))
                                                                   :aseta (fn [tila maarat tyyppi]
                                                                            (let [yhteensa (reduce (fn [yhteensa {maara :maara}]
                                                                                                     (+ yhteensa maara))
@@ -453,8 +446,6 @@
                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan))))
     :aseta-suunnittellut-hankinnat! (jarjesta-data jarjesta-data?
                                       (triggeroi-seurannat triggeroi-seuranta?
-                                        (println "HoITOKAUDEN NUMERO: " args)
-                                        (println "SOLUN TUNNISTE " (grid/solun-asia solu :tunniste-rajapinnan-dataan))
                                         (apply grid/aseta-rajapinnan-data!
                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                :aseta-suunnittellut-hankinnat!
@@ -1149,7 +1140,6 @@
     (assoc app :suodatin {:hoitovuosi hoitovuosi :kopioidaan-tuleville-vuosille? true}))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "INDEKSIEN HAKU VASTAUS: " vastaus)
     (assoc app :indeksit vastaus))
   HaeIndeksitEpaonnistui
   (process-event [{:keys [vastaus]} app]

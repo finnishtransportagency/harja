@@ -2,9 +2,8 @@
   (:require [harja.loki :refer [warn error]]
             [reagent.core :as r]
             [reagent.ratom :as ratom]
-            [cljs.core.async :as async]
+            [harja.ui.grid-debug :as g-debug]
             [cljs.spec.alpha :as s]
-            [clojure.set :as clj-set]
             [cljs.pprint :as pp])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -113,36 +112,31 @@
                                    rajapinnan-data))
                     :dynaaminen? dynaaminen?}))))
   (kuuntelijat-lisaaja! [this rajapinta [kuuntelun-nimi {:keys [polut luonti haku]}]]
-    (println "ASETETAAN KUUNTELIJA LISÄÄJÄ " kuuntelun-nimi)
     (set! kuuntelija-lisaaja
           (assoc kuuntelija-lisaaja
                  kuuntelun-nimi
                  (fn [vanha uusi]
-                   (println "--------- AJETAAN KUUNTELIjA LISÄÄJÄ FN - " kuuntelun-nimi)
                    (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
                          uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
                          polut-muuttunut? (not= vanhat-polut uudet-polut)]
-                     (comment (println "-> WANHAT")
-                              (cljs.pprint/pprint vanhat-polut)
-                              (println "-> UUDET")
-                              (cljs.pprint/pprint uudet-polut))
+                     (when g-debug/GRID_DEBUG
+                       (when (some nil? (flatten (mapcat vals uudet-polut)))
+                         (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
+                               (str uudet-polut))))
                      (when polut-muuttunut?
-                       (println "LISÄTÄÄN KUUNTELIJOITA")
                        (doseq [m uudet-polut
                                :let [[[kuuntelun-nimi polut]] (seq m)
                                      kuuntelu-luotu-jo? (some #(= (key %) kuuntelun-nimi)
                                                               kuuntelijat)
                                      lisa-argumentit (:args (meta polut))]]
                          (when-not kuuntelu-luotu-jo?
-                           (println "-> lisätään: " kuuntelun-nimi)
                            (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
                        (doseq [[kuuntelun-nimi {:keys [r dynaaminen?]}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
                                                                 (nil? (some #(= (ffirst %) kuuntelun-nimi)
                                                                             uudet-polut)))]]
                          (when kuuntelu-poistettava?
-                           (println "POISTETAAN: " kuuntelun-nimi)
                            (r/dispose! r)
                            (set! kuuntelijat
                                  (dissoc kuuntelijat kuuntelun-nimi))))))))))
@@ -160,11 +154,6 @@
                                           asetetaan-uusi-data? (and seurattava-data-muuttunut?
                                                                     *muutetaan-seurattava-arvo?*)]
                                       (when asetetaan-uusi-data?
-                                        (comment (println "AJETAAN SEURANTA!")
-                                                 (println (str "SEURANTA FN - " seurannan-nimi " - SEURANTA: " *muutetaan-seurattava-arvo?*))
-                                                 (println "POLUT: " polut)
-                                                 (println "VANHA DATA: " vanha-data)
-                                                 (println "UUSI DATA: " uusi-data))
                                         (let [arvot (mapv #(get-in uusi %) polut)]
                                           (set! tila
                                                 (apply aseta uusi (if lisa-argumentit
@@ -178,29 +167,24 @@
                   (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
                         uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
-                        _ (println "SEURANNAN NIMI: " seurannan-nimi)
-                        _ (println "VANHAT POLUT: " vanhat-polut)
-                        _ (println "UUDeT POLUT: " uudet-polut)
                         polut-muuttunut? (not= vanhat-polut uudet-polut)]
+                    (when g-debug/GRID_DEBUG
+                      (when (some nil? (flatten (mapcat vals uudet-polut)))
+                        (warn "Seurannan luonnissa on uudessa polussa arvo nil:\n"
+                              (str uudet-polut))))
                     (when polut-muuttunut?
-                      (comment (println "seurattavan polut-muuttunut?: " polut-muuttunut?)
-                               (println "vanhat-polut: " vanhat-polut)
-                               (println "uudet-polut: " uudet-polut))
                       (doseq [m uudet-polut
                               :let [[[seurannan-nimi polut]] (seq m)
                                     seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
                                                              seurannat)
                                     lisa-argumentit (:args (meta polut))]]
                         (when-not seuranta-luotu-jo?
-                          (println "-> lisataan: " seurannan-nimi)
                           (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
-                      ;(println "POISTETAAN SEURANTOJA")
                       (doseq [[seurannan-nimi {:keys [dynaaminen?]}] seurannat
                               :let [seuranta-poistettava? (and dynaaminen?
                                                                (nil? (some #(= (ffirst %) seurannan-nimi)
                                                                            uudet-polut)))]]
                         (when seuranta-poistettava?
-                          (println "-> poistetaan: " seurannan-nimi)
                           (set! seurannat
                                 (dissoc seurannat seurannan-nimi))))))))))
   IAsettaja
@@ -275,13 +259,13 @@
             (doseq [[_ f] kuuntelija-lisaaja]
               (f vanha-tila tila))
             (when triggerit-kayty-lapi?
-              (let [tallennettava-tila tila]
-                (reset! seurannan-valitila tila)
-                (r/next-tick (fn []
-                               (binding [*seuranta-muutos?* true]
+              (reset! seurannan-valitila tila)
+              (r/next-tick (fn []
+                             (binding [*seuranta-muutos?* true]
+                               (when-let [seurannan-tila @seurannan-valitila]
                                  (reset! seurannan-valitila nil)
                                  (swap! data-atom (fn [entinen-tila]
-                                                    (merge-recur entinen-tila tallennettava-tila)))))))))))))
+                                                    (merge-recur entinen-tila seurannan-tila)))))))))))))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
