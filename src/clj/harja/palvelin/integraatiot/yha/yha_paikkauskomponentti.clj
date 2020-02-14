@@ -49,26 +49,25 @@
                               :kayttajatunnus kayttajatunnus
                               :salasana       salasana}
               viestisisalto (paikkauskohteen-lahetyssanoma/muodosta db kohde-id)
-              {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)])
-          (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-            (kasittele-paikkauskohteen-lahettamisen-vastaus kohde-id virheet vastaus)
-            false)))))
+              {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)])))
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      (kasittele-paikkauskohteen-lahettamisen-vastaus kohde-id virheet)
+      false)))
 
 (defn laheta-paikkauskohteet-uudelleen
   "Yrittää lähettää edellisellä kerralla virheeseen päätyneet paikkauskohteet uudelleen YHA:aan."
   [integraatioloki db asetukset]
   (let [hakuehdot []                                        ;; TODO: hakuehdoksi virheeseen menneet paikkauskohteiden lähetykset + jokin aikarajaus + toimenpiderajaus
-        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohe db hakuehdot)]) ;; TODO: hae virheeseen menneet paikkaukset
+        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohe db hakuehdot)] ;; TODO: hae virheeseen menneet paikkaukset
   (doseq [paikkauskohde uudelleen-lahetettavat-paikkauskohteet]
-    (laheta-paikkauskohde integraatioloki db asetukset (:id paikkauskohde))))
+    (laheta-paikkauskohde integraatioloki db asetukset (:id paikkauskohde)))))
 
 
-(defn kasittele-paikkauskohteen-lahettamisen-vastaus
+(defn kasittele-paikkauskohteen-poiston-vastaus
   "Päivittää virheeseen menneen paikkauskohteen poiston jälkeen paikkauskohteen lähetystilan virheeksi.
   Poisto yritetään lähettää uudelleen YHA:aan ajastetussa tehtävässä."
-  [kohde-id virheet vastaus]
+  [kohde-id virheet ]
   (log/debug (str "Paikkauskohteen " kohde-id " lähettäminen YHA:an epäonnistui viheeseen " virheet))
-  (log/debug (str "Vastausviesti " vastaus))
   ;;TODO: Päivitä paikkauskohteen lähetystila: VIRHE jos yhteysvirhe KORJAA jos validointiongelma.
   )
 
@@ -76,7 +75,7 @@
 (defn poista-paikkauskohde
   "Lähettää YHA:aan poistosanoman, jolla poistetaan paikkauskohde kokonaisuudesaan.
   YHA:aan lähetetään kohteen kaikkien paikkausten sekä kohteen itsensä harja-id:t."
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} poistettava-kohde]
+  [integraatioloki db {:keys [url kayttajatunnus salasana]} kohde-id]
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "laheta-paikkauskohde" nil
     (fn [konteksti]
@@ -93,9 +92,9 @@
   "Yrittää poistaa YHA:sta paikkauskohteet, jotka edellisellä poistokerralla päätyivät virheeseen."
   [integraatioloki db asetukset]
   (let [hakuehdot []                                        ;; TODO: hakuehdoksi virheeseen menneet paikkauskohteiden lähetykset + jokin aikarajaus + toimenpiderajaus
-        uudelleen-poistettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohe db hakuehdot)]) ;; TODO: hae virheeseen menneet paikkaukset
+        uudelleen-poistettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohe db hakuehdot)];; TODO: hae virheeseen menneet paikkaukset
   (doseq [paikkauskohde uudelleen-poistettavat-paikkauskohteet]
-    (poista-paikkauskohde integraatioloki db asetukset (:id paikkauskohde))))
+    (poista-paikkauskohde integraatioloki db asetukset (:id paikkauskohde)))))
 
 
 (defrecord YhaPaikkaukset [asetukset]
