@@ -54,6 +54,7 @@
       (when (fn? init)
         (swap! data-atom init)))
     (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
+      (println "----> Seurannat lisaaja luonti")
       (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
     (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
       (dk/lisaa-seuranta! datan-kasittelija seuranta))

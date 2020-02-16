@@ -565,7 +565,11 @@
 
 (defn- rajapinnan-grid-kasittelija
   [datan-kasittelija grid grid-kasittelijan-polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
-  (let [rajapintakasittelija (seuranta (reaction (let [rajapinnan-data @(dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)
+  (when g-debug/GRID_DEBUG
+    (when (nil? (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta))
+      (warn (str "Rajapinalle " rajapinta " ei ole määritetty kuuntelijaa datan käsittlijään"))))
+  (let [rajapintakasittelija (seuranta (reaction (let [rajapinnan-data (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
+                                                                         @kuuntelija)
                                                        rajapinnan-dataf (if *jarjesta-data?*
                                                                           (jarjesta-data rajapinnan-data jarjestys)
                                                                           rajapinnan-data)]
@@ -580,7 +584,8 @@
                                                                              (assoc taman-tila
                                                                                     0 rajapinnan-data
                                                                                     1 rajapinnan-dataf)))))))
-                                                   (datan-kasittely rajapinnan-dataf))))
+                                                   (datan-kasittely (with-meta rajapinnan-dataf
+                                                                               (meta rajapinnan-data))))))
         tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
     (assoc kasittelija
            :rajapintakasittelija rajapintakasittelija
@@ -735,7 +740,8 @@
               (not (empty? poistettavat-kasittelijat)))
       (println "---- POISTETAAN ---")
       (println "lkm: " poistettava-maara)
-      (println "POISTETTAVAT KASITTELIJAT: " poistettavat-kasittelijat))
+      )
+    (println "POISTETTAVAT KASITTELIJAT: " poistettavat-kasittelijat)
     (when poistetaan-osia?
       (paivita-kaikki-lapset! grid
                               (fn [osa]
@@ -743,7 +749,6 @@
                                   (some #(= (:r (:rajapintakasittelija (second %))) (.-ratom osan-derefable))
                                         poistettavat-kasittelijat)))
                               (fn [osa]
-                                (println "POISTETAAN DEREFABLE")
                                 (assoc osa ::osan-derefable (r/atom nil))))
       (p/paivita-lapset! grid
                          (fn [lapset]
@@ -783,6 +788,8 @@
                                                       (assoc m polku kasittelija)))
                                                   {}
                                                   (grid-kasittelijoiden-luonti @gridin-derefable))
+              _ (println "MÄÄRÄT: " datan-maara " - " osien-maara)
+              _ (println "LUODUT GK: " luodut-grid-kasittelijat)
               poistettiin? (poista-osia! grid (js/Math.max 0 (- osien-maara datan-maara)) luodut-grid-kasittelijat)
               lisattiin? (lisaa-osia! grid (js/Math.max 0 (- datan-maara osien-maara)) luodut-grid-kasittelijat)]
           (when (or poistettiin? lisattiin?)

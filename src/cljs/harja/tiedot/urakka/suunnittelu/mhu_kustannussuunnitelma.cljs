@@ -43,6 +43,10 @@
                                     :sorateiden-hoito
                                     :mhu-yllapito})
 
+(def rahavaraukset-jarjestys {"muut-rahavaraukset" 1
+                              "vahinkojen-korjaukset" 1
+                              "akillinen-hoitotyo" 2})
+
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
         "liikenneympariston hoito" "liikenneympäristön hoito"
@@ -259,21 +263,37 @@
                                                                                     [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
                                                                                                   (get data (dec hoitokauden-numero)))])
                                                                                   (get rahavaraukset valittu-toimenpide)))]
-                                                            arvot))}
-                                  :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]]
-                                                             :luonti (fn [seurannat]
+                                                            (with-meta arvot {:valittu-toimenpide valittu-toimenpide})))}
+                                  :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]
+                                                                     [:suodattimet :hankinnat :toimenpide]]
+                                                             :luonti (fn [seurannat valittu-toimenpide]
                                                                        (vec
                                                                          (map (fn [[tyyppi _]]
-                                                                                   {(keyword (str "rahavaraukset-yhteenveto-" tyyppi)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
-                                                                                 seurannat)))
-                                                             :haku identity}}
+                                                                                ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
+                                                                                {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
+                                                                              seurannat)))
+                                                             :haku identity}
+                                  #_#_:rahavaraukset-data {:polut [[:domain :rahavaraukset]
+                                                                   [:suodattimet :hankinnat :toimenpide]
+                                                                   [:suodattimet :hoitokauden-numero]]
+                                                           :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
+                                                                     (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
+                                                                       (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
+                                                                         (vec
+                                                                           (mapcat (fn [[tyyppi data]]
+                                                                                     {(keyword (str "rahavaraukset-data-" tyyppi)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
+                                                                                   toimenpiteen-rahavaraukset)))))
+                                                           :haku (fn [rahavaraukset _ _]
+                                                                   rahavaraukset)}}
                                  ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
                                  ;              "akillinen-hoitotyo" [{:maara 1}]}
                                  )
                           {}
                           {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                  :aseta (fn [tila valittu-toimenpide]
-                                                          (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)))}
+                                                          (if valittu-toimenpide
+                                                            (assoc-in tila [:gridit :rahavaraukset :otsikot :nimi] (-> valittu-toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize))
+                                                            tila))}
                            :rahavaraukset-yhteenveto-asettaminen {:polut [[:domain :rahavaraukset]
                                                                           [:suodattimet :hankinnat :toimenpide]]
                                                                   :luonti (fn [rahavaraukset valittu-toimenpide]
@@ -282,10 +302,12 @@
                                                                                 (vec
                                                                                   (mapcat (fn [[tyyppi data]]
                                                                                             (map (fn [index]
-                                                                                                   {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" index)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi index]]})
+                                                                                                   ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
+                                                                                                   {(keyword (str "rahavaraukset-yhteenveto-" valittu-toimenpide "-" tyyppi "-" index)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi index]
+                                                                                                                                                                                                           [:suodattimet :hankinnat :toimenpide]]})
                                                                                                  (range (count data))))
                                                                                           toimenpiteen-rahavaraukset)))))
-                                                                  :aseta (fn [tila maarat tyyppi]
+                                                                  :aseta (fn [tila maarat valittu-toimenpide tyyppi]
                                                                            (let [yhteensa (reduce (fn [yhteensa {maara :maara}]
                                                                                                     (+ yhteensa maara))
                                                                                                   0
@@ -1311,15 +1333,21 @@
                                                 (fn [a b]
                                                   (concat a b))
                                                 (map (fn [tyyppi]
-                                                       (pohjadatan-taydennys-toimenpiteittain (filter #(= (:tyyppi %) tyyppi) rahavaraukset)
-                                                                                              toimenpiteet-rahavarauksilla
-                                                                                              (fn [{:keys [vuosi kuukausi summa tyyppi] :as data}]
-                                                                                                (-> data
-                                                                                                    (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                                           :maara summa
-                                                                                                           :tyyppi tyyppi)
-                                                                                                    (dissoc :summa)))))
-                                                     (distinct (map :tyyppi rahavaraukset))))
+                                                       (let [tyypin-toimenpiteet (if (#{"vahinkojen-korjaukset" "akillinen-hoitotyo"} tyyppi)
+                                                                                   #{:talvihoito
+                                                                                     :liikenneympariston-hoito
+                                                                                     :sorateiden-hoito}
+                                                                                   #{:mhu-yllapito})
+                                                             rahavaraukset-tyypille (filter #(= tyyppi (:tyyppi %)) rahavaraukset)]
+                                                         (pohjadatan-taydennys-toimenpiteittain rahavaraukset-tyypille
+                                                                                                tyypin-toimenpiteet
+                                                                                                (fn [{:keys [vuosi kuukausi summa] :as data}]
+                                                                                                  (-> data
+                                                                                                      (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                                             :maara summa
+                                                                                                             :tyyppi tyyppi)
+                                                                                                      (dissoc :summa))))))
+                                                     (keys rahavaraukset-jarjestys)))
           ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
           ;              "akillinen-hoitotyo" [{:maara 1}]}
           rahavaraukset-hoitokausille (into {}
