@@ -243,7 +243,8 @@
 
 (def rahavarausten-rajapinta {:otsikot any?
                               :yhteensa any?
-                              :rahavaraukset any?})
+                              :rahavaraukset any?
+                              :kuukausitasolla? any?})
 
 (defn rahavarausten-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
@@ -254,6 +255,8 @@
                                                      [:gridit :rahavaraukset :yhteensa :nimi]]
                                              :haku (fn [data nimi]
                                                      (assoc data :nimi nimi))}
+                                  :kuukausitasolla? {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
+                                                     :haku identity}
                                   :rahavaraukset {:polut [[:domain :rahavaraukset]
                                                           [:suodattimet :hankinnat :toimenpide]
                                                           [:suodattimet :hoitokauden-numero]]
@@ -287,7 +290,39 @@
                                  ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
                                  ;              "akillinen-hoitotyo" [{:maara 1}]}
                                  )
-                          {}
+                          {:aseta-rahavaraukset! (fn [tila arvo {:keys [osa osan-paikka tyyppi]} paivitetaan-domain?]
+                                                   (let [hoitokauden-numero (get-in tila [:domain :hoitokausi :hoitokauden-numero])
+                                                         valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
+                                                         arvo (if (re-matches #"\d*,\d+" arvo)
+                                                                (clj-str/replace arvo #"," ".")
+                                                                arvo)
+                                                         paattyy-desimaalierottajaan? (re-matches #"\d*(,|\.)$" arvo)
+                                                         paivita-gridit (fn [tila]
+                                                                          (update-in tila [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                     (fn [hoitokauden-varaukset]
+                                                                                       (let [hoitokauden-varaukset (if (nil? hoitokauden-varaukset)
+                                                                                                                     (vec (repeat 12 {}))
+                                                                                                                     hoitokauden-varaukset)]
+                                                                                         (if osan-paikka
+                                                                                           (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
+                                                                                           (mapv (fn [varaus]
+                                                                                                   (assoc varaus osa arvo))
+                                                                                                 hoitokauden-varaukset))))))
+                                                         paivita-domain (fn [tila]
+                                                                          (update-in tila [:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                     (fn [hoitokauden-varaukset]
+                                                                                       (if osan-paikka
+                                                                                         (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] (js/Number arvo))
+                                                                                         (mapv (fn [varaus]
+                                                                                                 (assoc varaus osa (js/Number arvo)))
+                                                                                               hoitokauden-varaukset)))))]
+                                                     ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
+                                                     (if hoitokauden-numero
+                                                       (if (and paivitetaan-domain?
+                                                                (not paattyy-desimaalierottajaan?))
+                                                         (-> tila paivita-domain paivita-gridit)
+                                                         (paivita-gridit tila))
+                                                       tila)))}
                           {:otsikon-asettaminen {:polut [[:suodattimet :hankinnat :toimenpide]]
                                                  :aseta (fn [tila valittu-toimenpide]
                                                           (if valittu-toimenpide
@@ -451,28 +486,30 @@
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu jarjesta-data? triggeroi-seuranta?]
                            :or {jarjesta-data? false triggeroi-seuranta? false}}
                           & args]
-  (case paivitettava-asia
-    :hoidonjohtopalkkio (jarjesta-data jarjesta-data?
-                          (triggeroi-seurannat triggeroi-seuranta?
-                            (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
+  (jarjesta-data jarjesta-data?
+    (triggeroi-seurannat triggeroi-seuranta?
+      (case paivitettava-asia
+        :hoidonjohtopalkkio (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                          :aseta-hoidonjohtopalkkio!
                                                          arvo
                                                          (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                         (first args))))
-    :hoidonjohtopalkkio-yhteenveto (jarjesta-data jarjesta-data?
-                                     (triggeroi-seurannat triggeroi-seuranta?
-                                       (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                         (first args))
+        :hoidonjohtopalkkio-yhteenveto (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                                     :aseta-yhteenveto!
                                                                     arvo
-                                                                    (grid/solun-asia solu :tunniste-rajapinnan-dataan))))
-    :aseta-suunnittellut-hankinnat! (jarjesta-data jarjesta-data?
-                                      (triggeroi-seurannat triggeroi-seuranta?
-                                        (apply grid/aseta-rajapinnan-data!
+                                                                    (grid/solun-asia solu :tunniste-rajapinnan-dataan))
+        :aseta-suunnittellut-hankinnat! (apply grid/aseta-rajapinnan-data!
                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                :aseta-suunnittellut-hankinnat!
                                                arvo
                                                (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                               args)))))
+                                               args)
+        :aseta-rahavaraukset! (apply grid/aseta-rajapinnan-data!
+                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                     :aseta-rahavaraukset!
+                                     arvo
+                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                     args)))))
 
 (defn triggeroi-seuranta [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))

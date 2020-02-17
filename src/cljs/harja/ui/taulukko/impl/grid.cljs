@@ -466,11 +466,8 @@
          (>= (count nimi-polku) (count grid-polku)))))
 
 (defn- solun-polun-pituus-oikein?
-  [solun-polun-pituus osa]
-  (let [nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
-        osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
-                                     (::index-polku osa)))]
-    (= solun-polun-pituus (count osan-polku-dataan))))
+  [grid-polku solun-polun-pituus osa]
+  (= (+ (count grid-polku) solun-polun-pituus) (count (::nimi-polku osa))))
 
 (defn muuta-vektoreiksi [data syvyys]
   (if (= 1 syvyys)
@@ -583,8 +580,10 @@
                                                                              (assoc taman-tila
                                                                                     0 rajapinnan-data
                                                                                     1 rajapinnan-dataf)))))))
-                                                   (datan-kasittely (with-meta rajapinnan-dataf
-                                                                               (meta rajapinnan-data))))))
+                                                   (datan-kasittely (if (satisfies? IWithMeta rajapinnan-dataf)
+                                                                      (with-meta rajapinnan-dataf
+                                                                                 (meta rajapinnan-data))
+                                                                      rajapinnan-dataf)))))
         tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
     (assoc kasittelija
            :rajapintakasittelija rajapintakasittelija
@@ -596,7 +595,7 @@
                                              nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
                                              osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
                                                                           (::index-polku osa)))
-                                             solun-polun-pituus-oikein? (solun-polun-pituus-oikein? solun-polun-pituus osa)
+                                             solun-polun-pituus-oikein? (solun-polun-pituus-oikein? grid-polku solun-polun-pituus osa)
                                              yhdista-derefable-tahan-osaan? (or (and grid-polku-sopii-osaan?
                                                                                      solun-polun-pituus-oikein?)
                                                                                 (and (:derefable (meta grid-polku))
@@ -674,6 +673,9 @@
                                            uudet-osat))))
             (paivita-root! grid (fn [vanha-grid]
                                   (aseta-gridin-polut vanha-grid))))
+        #_#__ (pre-walk-grid! (root grid)
+                          (fn [osa]
+                            (println (::nimi-polku osa) " " (gop/nimi osa) )))
         lisattyjen-osien-idt (into #{}
                                    (mapcat (fn [osa]
                                              (if (satisfies? p/IGrid osa)
@@ -1043,7 +1045,7 @@
                                                                (assoc koko id osan-koko))))]
                                          (assoc osa ::koko-fn koko-fn
                                                 :koko nil))))]
-    (merge (assoc grid :osat (r/atom (p/lapset grid)))
+    (merge grid #_(assoc grid :osat (r/atom (p/lapset grid)))
            (dissoc kopioitava-grid :id :alueet :koko :osat :parametrit ::koko-fn))))
 
 (declare piirra-grid dynaamisen-jalkelainen?)
@@ -1330,6 +1332,52 @@
 (defn vaihda-osa! [vaihdettava-osa vaihto-fn & datan-kasittelyt]
   (let [root-grid (root vaihdettava-osa)
         vaihdettavan-osan-id (gop/id vaihdettava-osa)
+
+        vanhat-osat (if (satisfies? p/IGrid vaihdettava-osa)
+                      (gridin-osat-vektoriin vaihdettava-osa (constantly true) identity)
+                      [vaihdettava-osa])
+        #_#__ (println "VANHAT OSAT: " (mapv #(dissoc % :osat ::datan-kasittelija) vanhat-osat))
+        #_#__ (println "RAJAPINTAKÄSITTELIJÄT: " rajapintakasittelijat)
+        ;; Pitää tehdä ennen kuin päivitetään uudet osat. Se kun mutatoi.
+        vaihdettavat-rajapintakasittelijat (distinct
+                                             (keep (fn [vanha-osa]
+                                                     (let [osan-polku (::nimi-polku vanha-osa)
+                                                           kasittelija #_(keep (fn [[grid-polku {:keys [solun-polun-pituus] :as kasittelija}]]
+                                                                                 (comment (println "VANHA OSA: " (dissoc vanha-osa :osat ::datan-kasittelija))
+                                                                                          (println "rajapintakäsittelijän polku: " grid-polku)
+                                                                                          (println "RAJAPINTAKÄSITTELIJÄ: " (dissoc kasittelija :osien-tunnisteet))
+                                                                                          (println "grid-polku-sopii-osaan?: " (grid-polku-sopii-osaan? grid-polku vanha-osa))
+                                                                                          (println "solun-polun-pituus-oikein?: " (solun-polun-pituus-oikein? grid-polku solun-polun-pituus vanha-osa)))
+                                                                                 (when (and (grid-polku-sopii-osaan? grid-polku vanha-osa)
+                                                                                            (solun-polun-pituus-oikein? grid-polku solun-polun-pituus vanha-osa))
+                                                                                   [grid-polku kasittelija]))
+                                                                               rajapintakasittelijat)
+                                                           (some (fn [[grid-polku {:keys [solun-polun-pituus] :as kasittelija}]]
+                                                                   (comment (println "VANHA OSA: " (dissoc vanha-osa :osat ::datan-kasittelija))
+                                                                            (println "rajapintakäsittelijän polku: " grid-polku)
+                                                                            (println "RAJAPINTAKÄSITTELIJÄ: " (dissoc kasittelija :osien-tunnisteet))
+                                                                            (println "grid-polku-sopii-osaan?: " (grid-polku-sopii-osaan? grid-polku vanha-osa))
+                                                                            (println "solun-polun-pituus-oikein?: " (solun-polun-pituus-oikein? grid-polku solun-polun-pituus vanha-osa)))
+                                                                   (when (and (grid-polku-sopii-osaan? grid-polku vanha-osa)
+                                                                              (solun-polun-pituus-oikein? grid-polku solun-polun-pituus vanha-osa))
+                                                                     kasittelija))
+                                                                 (::grid-rajapintakasittelijat root-grid))]
+                                                       ;; käsittelijöitä voi osua useampi. Otetaan se, joka on lähimpänän käsiteltävä osaa siten, että
+                                                       ;; osan-polku on pitempi kuin käsittelijän
+                                                       (comment (println "KÄSITTELIJÄT")
+                                                                (println kasittelija)
+                                                                (println "---"))
+                                                       #_(println (first (drop-while #(> (count (first %))
+                                                                                         (count osan-polku))
+                                                                                     (reverse (sort-by #(count (first %))
+                                                                                                       kasittelijat)))))
+                                                       kasittelija
+                                                       #_(when-not (empty? kasittelijat)
+                                                           (first (drop-while #(> (count (first %))
+                                                                                  (count osan-polku))
+                                                                              (reverse (sort-by #(count (first %))
+                                                                                                kasittelijat)))))))
+                                                   vanhat-osat))
         ;; OSAN PÄIVITTÄMINEN
         uusi-grid (paivita-kaikki-lapset! root-grid
                                           (fn [osa]
@@ -1340,6 +1388,8 @@
                                                   vaihdettava-osa-grid? (satisfies? p/IGrid vaihdettava-osa)
                                                   index-polut (when uusi-osa-grid? (grid-index-polut uusi-osa))
                                                   nimi-polut (when uusi-osa-grid? (grid-nimi-polut uusi-osa))
+                                                  vanha-index-polku (::index-polku vaihdettava-osa)
+                                                  vanha-nimi-polku (::nimi-polku vaihdettava-osa)
                                                   uuden-osan-nimi (gop/nimi uusi-osa)
                                                   uuden-osan-koot (when uusi-osa-grid?
                                                                     (p/koot uusi-osa))
@@ -1353,13 +1403,13 @@
                                                                    (let [osa (-> osa
                                                                                  (merge lisattavat-tiedot)
                                                                                  (update ::index-polku
-                                                                                         (fn [vanha-index-polku]
-                                                                                           (vec (concat (::index-polku vaihdettava-osa)
+                                                                                         (fn [_]
+                                                                                           (vec (concat vanha-index-polku
                                                                                                         (get index-polut (gop/id osa))))))
                                                                                  (update ::nimi-polku
-                                                                                         (fn [vanha-nimi-polku]
-                                                                                           (vec (concat (butlast (::nimi-polku vaihdettava-osa))
-                                                                                                        [(or uuden-osan-nimi (last (::index-polku vaihdettava-osa)))]
+                                                                                         (fn [_]
+                                                                                           (vec (concat (butlast vanha-nimi-polku)
+                                                                                                        [(or uuden-osan-nimi (last vanha-nimi-polku) )]
                                                                                                         (get nimi-polut (gop/id osa)))))))
                                                                          osa (if (and (satisfies? p/IGrid osa)
                                                                                       (not (= (gop/id osa) (::root-id osa))))
@@ -1421,25 +1471,25 @@
                                                                                       index))
                                                                                   (p/lapset (get-in-grid uusi-grid vaihdettavan-osan-polun-osa))))))
             datan-kasittelija (::datan-kasittelija uusi-grid)
-            rajapintakasittelijat (::grid-rajapintakasittelijat uusi-grid)
-            vanhat-osat (if (satisfies? p/IGrid vaihdettava-osa)
-                          (gridin-osat-vektoriin vaihdettava-osa (constantly true) identity)
-                          [vaihdettava-osa])
+            #_#_rajapintakasittelijat (::grid-rajapintakasittelijat uusi-grid)
+
             uudet-gridkasittelijat (reduce (fn [m [polku kasittelija]]
-                                             (let [polku (muodosta-uusi-polku polku polun-alku)]
+                                             (println "<<-<-<-<-<-< ")
+                                             (println "polku: " (muodosta-uusi-polku polku polun-alku))
+                                             (println vaihdettavat-rajapintakasittelijat)
+                                             (let [kasittelija (if (fn? kasittelija)
+                                                                 (kasittelija vaihdettavat-rajapintakasittelijat #_(map second vaihdettavat-rajapintakasittelijat))
+                                                                 kasittelija)
+                                                   polku (muodosta-uusi-polku polku polun-alku)]
                                                (assoc m polku (rajapinnan-grid-kasittelija datan-kasittelija uusi-grid polku kasittelija))))
                                            {}
                                            (partition 2 datan-kasittelyt))
+            _ (doseq [#_[_ {:keys [rajapintakasittelija]}] {:keys [rajapintakasittelija]} vaihdettavat-rajapintakasittelijat]
+                (println "POISTETAAN RAJAPINTAKÄSITTELIJÄ: " rajapintakasittelija)
+                (while (> (:n rajapintakasittelija) 0)
+                  (poista-seuranta-derefable! rajapintakasittelija)))
             osan-kasittely (fn [osa]
                              (osan-data-yhdistaminen datan-kasittelija uudet-gridkasittelijat osa))
-            _ (doseq [vanha-osa vanhat-osat]
-                (let [rajapintakasittelija (some (fn [[grid-polku {:keys [rajapintakasittelija solun-polun-pituus]}]]
-                                                   (when (and (grid-polku-sopii-osaan? grid-polku vanha-osa)
-                                                              (solun-polun-pituus-oikein? solun-polun-pituus vanha-osa))
-                                                     rajapintakasittelija))
-                                                 rajapintakasittelijat)]
-                  (when rajapintakasittelija
-                    (poista-seuranta-derefable! rajapintakasittelija))))
             uusi-grid (paivita-root! uusi-grid (fn [vanha-grid]
                                                  (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
                                                                                                    (merge rk
