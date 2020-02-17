@@ -28,14 +28,33 @@
                                         (range 0 12)))
                                  (range (harja.pvm/vuosi (harja.pvm/nyt)) (+ (harja.pvm/vuosi (harja.pvm/nyt)) 6)))))))
 
-(defn ei-nil [arvo] (not (nil? arvo)))
-(defn ei-nil-ei-tyhja [arvo] (and
-                        (ei-nil arvo)
-                        (not (empty? arvo))))
+(defn ei-nil [arvo]
+  (loki/log "Ei nil?" arvo)
+  (when
+    (not (nil? arvo))
+    arvo))
 
-(def validoinnit {:kulut/summa        ei-nil
-                  :kulut/tehtavaryhma ei-nil
-                  :kulut/erapaiva     ei-nil-ei-tyhja
+(defn ei-tyhja [arvo]
+  (loki/log "Ei tyhjä?" arvo)
+  (when
+    (not (empty? arvo))
+    arvo))
+
+(defn numero [arvo]
+  (loki/log "Numero?" arvo)
+  (when
+    (number? arvo)
+    arvo))
+
+(def validoinnit {:kulut/summa                 (fn [arvo]
+                                                 (some-> arvo
+                                                         ei-nil
+                                                         numero))
+                  :kulut/tehtavaryhma          ei-nil
+                  :kulut/erapaiva              (fn [arvo]
+                                                 (some-> arvo
+                                                         ei-nil
+                                                         ei-tyhja))
                   :kulut/koontilaskun-kuukausi ei-nil})
 
 (defn validoi-fn
@@ -75,7 +94,10 @@
 (defn luo-validius-meta [& kentat-ja-validaatiot]
   (assoc {} :validius
             (reduce (fn [k [polku validointi-fn]]
-                      (assoc k polku {:validointi validointi-fn
+                      (assoc k polku {:validointi (fn [arvo]
+                                                    (not
+                                                      (nil?
+                                                        (validointi-fn arvo))))
                                       :validi?    false
                                       :koskettu?  false}))
                     {}
@@ -93,7 +115,8 @@
                                       :laskun-numero         nil
                                       :lisatieto             nil
                                       :suorittaja-nimi       nil
-                                      :erapaiva              nil}
+                                      :erapaiva              nil
+                                      :paivita 0}
                                      (luo-validius-meta
                                        [:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
                                        [:erapaiva] (:kulut/erapaiva validoinnit)

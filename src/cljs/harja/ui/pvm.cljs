@@ -173,7 +173,9 @@
       [:div.kalenteri-kontti
        [:input {:type     :text
                 :class    (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                :value    (when-not (nil? pvm) (pvm/pvm pvm))
+                :value    (if-not (nil? pvm)
+                            (pvm/pvm pvm)
+                            "")
                 :on-focus #(reset! auki? true)
                 :on-blur  (fn [] (js/setTimeout #(reset! auki? false) 100))}]
        (when @auki? [pvm-valintakalenteri {:vayla-tyyli? true

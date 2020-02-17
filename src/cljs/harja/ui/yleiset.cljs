@@ -349,6 +349,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   "block"
                                   "none")}}
           (for [v valinnat]
+            ^{:key (gensym "alasveto-item-")}
             [:li.harja-alasvetolistaitemi
              {:on-click #(do
                            (swap! auki? not)

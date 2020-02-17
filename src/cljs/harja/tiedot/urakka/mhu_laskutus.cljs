@@ -77,7 +77,6 @@
 
 (defn redusoi-lomake
   [{:keys [validoitava?]} args acc [polku arvo]]
-  (loki/log "ohtia" polku validoitava?)
   (let [paivitetty-lomake
         (apply
           (cond (and
@@ -119,7 +118,6 @@
 
 (defn- luo-kulutaulukko
   [{:keys [toimenpiteet tehtavaryhmat maksuerat]}]
-  (loki/log "taulukon luonti")
   (let [e! (tuck/current-send-function)
         paivitysfunktiot {"Pvm"          (luo-paivitys-fn
                                            :id :pvm
@@ -250,7 +248,6 @@
                                            rivit)))
 
         luo-laskun-nro-otsikot (fn [rs [laskun-nro {summa :summa rivit :rivit}]]
-                                 (loki/log (flattaa rivit))
                                  (reset! even? true)
                                  (let [flatatut (flattaa rivit)]
                                    (reduce
@@ -276,7 +273,6 @@
         jaottele-riveiksi-taulukkoon (fn [taulukko rivit {toimenpiteet :toimenpiteet tehtavaryhmat :tehtavaryhmat}]
                                        (let [taulukko-rivit (reduce luo-paivamaara-otsikot
                                                                     taulukko rivit)]
-                                         (loki/log "RIVIT" rivit)
                                          (p/paivita-taulukko! taulukko-rivit)))]
     (muodosta-taulukko :kohdistetut-kulut-taulukko
                        {:otsikot     {:janan-tyyppi jana/Rivi
@@ -289,7 +285,6 @@
                        [:otsikot otsikot-rivi]
                        {:class                 #{}
                         :taulukon-paivitys-fn! (fn [taulukko rivit]
-                                                 (loki/log "UUSI" taulukko "UUSI" rivit)
                                                  (let [uusi (if (nil? rivit)
                                                               taulukko
                                                               (jaottele-riveiksi-taulukkoon taulukko rivit @tila/laskutus-kohdistetut-kulut))]
@@ -302,7 +297,6 @@
   tila/kulut-lomake-default)
 
 (defn formatoi-tulos [uudet-rivit]
-  (loki/log "uudet" uudet-rivit)
   (let [reduseri (fn [k [avain arvo]]
                    (update k avain
                            (fn [m]
@@ -316,7 +310,6 @@
                                                                                     (group-by #(or (:laskun-numero %)
                                                                                                    0) (:rivit rivit-ja-summa))))])
                                  pvm-mukaan))]
-    (loki/log "paivita" uudet-rivit nro-mukaan)
     nro-mukaan))
 
 (extend-protocol tuck/Event
@@ -345,7 +338,6 @@
     (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
-    (loki/log avain tulos)
     (let [tilan-paivitys-fn (or tilan-paivitys-fn
                                 #(identity %2))
           assoc-fn (cond
@@ -362,8 +354,6 @@
         (update-in [:parametrit :haetaan] dec)))
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
-    (loki/log "laskut haettu")
-    (loki/log "LASKUT" tulos)
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
@@ -372,7 +362,6 @@
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
-    (loki/log "Tulo!!!s  " tulos)
     (let [kasitelty (set
                       (flatten
                         (mapv
@@ -399,7 +388,6 @@
 
   KutsuEpaonnistui
   (process-event [{:keys [tulos]} app]
-    (loki/log "tai ulos!!!!!! " tulos)
     app)
 
   ;; HAUT
@@ -449,7 +437,6 @@
     app)
   AvaaLasku
   (process-event [{lasku :lasku} app]
-    (loki/log "avaan laskun" lasku app)
     (assoc app :syottomoodi true
                :lomake (lasku->lomake lasku)))
 
@@ -457,18 +444,15 @@
 
   PaivitaLomake
   (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
-    (apply loki/log "päivitetään" polut-ja-arvot)
     (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot))
   LuoUusiAliurakoitsija
   (process-event [{aliurakoitsija :aliurakoitsija} app]
-    (loki/log "!" aliurakoitsija)
     (tuck-apurit/post! :tallenna-aliurakoitsija
                        aliurakoitsija
                        {:onnistui            ->TallennusOnnistui
                         :onnistui-parametrit [{:avain             :aliurakoitsijat
                                                :tilan-paivitys-fn (fn [{:keys [aliurakoitsijat] :as app} _]
                                                                     (let [alik-id (some #(when (= (:nimi aliurakoitsija) (:nimi %)) (:id %)) aliurakoitsijat)]
-                                                                      (loki/log "alik tulos" alik-id)
                                                                       (update app :lomake (fn [lomake]
                                                                                             (assoc lomake :aliurakoitsija alik-id
                                                                                                           :suorittaja-nimi (:nimi aliurakoitsija))))))}]
@@ -488,7 +472,6 @@
       ;   :tehtava :maksueratyyppi
       ;   :suorittaja :suoritus_alku :suoritus_loppu
       ;   :muokkaaja
-      (loki/log "validi?" validi? validoitu-lomake)
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-lasku
                            {:urakka-id     urakka
@@ -503,7 +486,6 @@
                                             :tyyppi          "laskutettava"}} ;TODO fix
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
-                                                                        (loki/log "app" app (:kulut app))
                                                                         (as-> app a
                                                                               (update a :kulut (fn [kulut]
                                                                                                  (conj
@@ -517,7 +499,7 @@
                                                                                        :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))
-      (assoc app :lomake validoitu-lomake)))
+      (assoc app :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))))
 
   ;; FORMITOIMINNOT
 
