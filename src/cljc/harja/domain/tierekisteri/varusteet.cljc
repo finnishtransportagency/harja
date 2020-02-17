@@ -58,8 +58,8 @@
    "Tekninen piste" "tl523"})
 (def puolet
   {0 "Määrittämätön"
-   1 "Oik."
-   2 "Vas."
+   1 "Oikea"
+   2 "Vasen"
    3 "Ajoratojen välissä"
    7 "Tien päässä"
    8 "Tien/ajoradan keskellä"
