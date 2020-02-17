@@ -169,10 +169,10 @@
                                 :disabled (or (> (count kohdistukset) 1) false)
                                 :arvo (or (when (> (count kohdistukset) 1)
                                             (gstring/format "%.2f" (reduce
-                                                             (fn [a s]
-                                                               (+ a (tiedot/parsi-summa (:summa s))))
-                                                             0
-                                                             kohdistukset)))
+                                                                     (fn [a s]
+                                                                       (+ a (tiedot/parsi-summa (:summa s))))
+                                                                     0
+                                                                     kohdistukset)))
                                           (get-in lomake [:kohdistukset 0 :summa])
                                           0)
                                 :on-change #(paivitys-fn [:kohdistukset 0 :summa] (-> % .-target .-value))
@@ -241,6 +241,26 @@
           lomake-meta
           validoinnit))
 
+(defn polku-olemassa?
+  [lomake polku]
+  (not
+    (false?
+      (reduce (fn [l avain]
+                (if (contains? l avain)
+                  (get l avain)
+                  false)) lomake polku))))
+
+(defn paivita-validoinnit [lomake-meta lomake]
+  (update
+    lomake-meta
+    :validius
+    #(into {}
+           (filter
+             (fn [[polku _]]
+               (loki/log polku (get-in lomake polku))
+               (polku-olemassa? lomake polku))
+             %))))
+
 (defn tehtavien-syotto [paivitys-fn {:keys [kohdistukset] :as lomake} tehtavaryhmat]
   (let [kohdistukset-lkm (count kohdistukset)
         resetoi-kohdistukset (fn [kohdistukset]
@@ -254,12 +274,13 @@
                                                                                                          lisaa-kohdistus
                                                                                                          resetoi-kohdistukset)
                                                                               jalkiprosessointi-fn (if (.. % -target -checked)
-                                                                                                     (fn [{:keys [kohdistukset] :as lomake}]
+                                                                                                     (fn [lomake]
                                                                                                        (vary-meta lomake lisaa-validointi [{:polku         [:kohdistukset kohdistukset-lkm :summa]
                                                                                                                                             :validointi-fn (:kulut/summa tila/validoinnit)}
                                                                                                                                            {:polku         [:kohdistukset kohdistukset-lkm :tehtavaryhma]
                                                                                                                                             :validointi-fn (:kulut/tehtavaryhma tila/validoinnit)}]))
-                                                                                                     resetoi-kohdistukset)]
+                                                                                                     (fn [lomake]
+                                                                                                       (vary-meta lomake paivita-validoinnit lomake)))]
                                                                           (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
         [:label {:for "kulut-kohdistuvat-useammalle"} "Kulut kohdistuvat useammalle eri tehtävälle"]]]]
      (into [:div.row] (map-indexed
