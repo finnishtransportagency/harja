@@ -92,7 +92,7 @@
 (deftype DatanKasittelija [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
                            ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
   IKuuntelija
-  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku lisa-argumentit dynaaminen?]}]]
+  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku lisa-argumentit dynaaminen? vanhemman-kuuntelijan-nimi]}]]
     (let [kursorit (mapv (fn [polku]
                            (r/cursor data-atom polku))
                          polut)]
@@ -112,16 +112,23 @@
                                        (warn "Rajapinnan " (str kuuntelun-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta kuuntelun-nimi))
                                              (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data)))))
                                    rajapinnan-data))
-                    :dynaaminen? dynaaminen?}))))
-  (kuuntelijat-lisaaja! [this rajapinta [kuuntelun-nimi {:keys [polut luonti haku]}]]
+                    :dynaaminen? dynaaminen?
+                    :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}))))
+  (kuuntelijat-lisaaja! [this rajapinta [vanhemman-kuuntelijan-nimi {:keys [polut luonti haku]}]]
     (set! kuuntelija-lisaaja
           (assoc kuuntelija-lisaaja
-                 kuuntelun-nimi
+                 vanhemman-kuuntelijan-nimi
                  (fn [vanha uusi]
                    (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
                          uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
                          polut-muuttunut? (not= vanhat-polut uudet-polut)]
+                     (assert (or (nil? uudet-polut)
+                                 (empty? uudet-polut)
+                                 (every? map? uudet-polut))
+                             (str "Kuuntelun lisaaja: " vanhemman-kuuntelijan-nimi " antamat polut eivät ole oikean muotoiset!\n"
+                                  "Polkujen tulisi olla vektori mappeja. Saatiin:\n"
+                                  uudet-polut))
                      (when g-debug/GRID_DEBUG
                        (when (some nil? (flatten (mapcat vals uudet-polut)))
                          (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
@@ -133,11 +140,12 @@
                                                               kuuntelijat)
                                      lisa-argumentit (:args (meta polut))]]
                          (when-not kuuntelu-luotu-jo?
-                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
-                       (doseq [[kuuntelun-nimi {:keys [r dynaaminen?]}] kuuntelijat
+                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}])))
+                       (doseq [[kuuntelun-nimi {:keys [r dynaaminen?] kuuntelijan-vanhemman-kuuntelijan-nimi :vanhemman-kuuntelijan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
                                                                 (nil? (some #(= (ffirst %) kuuntelun-nimi)
-                                                                            uudet-polut)))]]
+                                                                            uudet-polut))
+                                                                (= vanhemman-kuuntelijan-nimi kuuntelijan-vanhemman-kuuntelijan-nimi))]]
                          (when kuuntelu-poistettava?
                            (r/dispose! r)
                            (set! kuuntelijat
@@ -171,6 +179,12 @@
                         uudet-polut (apply luonti (map #(get-in uusi %) polut))
 
                         polut-muuttunut? (not= vanhat-polut uudet-polut)]
+                    (assert (or (nil? uudet-polut)
+                                (empty? uudet-polut)
+                                (every? map? uudet-polut))
+                            (str "Seurannan lisaaja: " seurannan-nimi " antamat polut eivät ole oikean muotoiset!\n"
+                                 "Polkujen tulisi olla vektori mappeja. Saatiin:\n"
+                                 uudet-polut))
                     (when g-debug/GRID_DEBUG
                       (when (some nil? (flatten (mapcat vals uudet-polut)))
                         (warn "Seurannan luonnissa on uudessa polussa arvo nil:\n"
@@ -207,43 +221,28 @@
                                                          "ANNETUT ARGUMENTIT:\n" (with-out-str (pp/pprint args))))
                                              (error e)
                                              tila))))))))
-  #_#_IDeref
-  (-deref [_]
-    tila)
 
   IReset
   (-reset! [this uusi]
     (when-not *seuranta-muutos?*
-      (let [uusi-hash (hash uusi #_(clojure.walk/prewalk (fn [x]
-                                                     (when-not (instance? DatanKasittelija x)
-                                                       x))
-                                                   uusi))
+      (let [uusi-hash (hash uusi)
             data-atom-hash (str (hash data-atom))
             valitilan-hash (get-in @seurannan-valitila [data-atom-hash ::kaytavan-datan-hash])
             edellisen-kieroksen-tila (get-in @seurannan-valitila [data-atom-hash ::tila])
             uusi (cond
                    ;; Ensimmäinen kierros
-                   (nil? valitilan-hash) (do (println "(nil? valitila-hash)")
-                                             (swap! seurannan-vanha-cache assoc data-atom-hash edellisen-kieroksen-tila)
+                   (nil? valitilan-hash) (do (swap! seurannan-vanha-cache assoc data-atom-hash edellisen-kieroksen-tila)
                                              (swap! seurannan-valitila assoc-in [data-atom-hash ::kaytavan-datan-hash] uusi-hash)
                                              uusi)
                    ;; Mahdollista, että tulee uusi tila, ennen next tickiä
-                   (not= uusi-hash valitilan-hash) (do (println "(not= uusi-hash valitilan-hash)")
-                                                       (swap! seurannan-valitila assoc data-atom-hash
+                   (not= uusi-hash valitilan-hash) (do (swap! seurannan-valitila assoc data-atom-hash
                                                               {::tila (get @seurannan-vanha-cache data-atom-hash)
                                                                ::kaytavan-datan-hash uusi-hash})
-                                                       #_(set! tila (get @seurannan-vanha-cache nimi))
-                                                       #_(swap! seurannan-valitila assoc ::kaytavan-datan-hash uusi-hash
-                                                              ::kaydaan-uutta-dataa-ennen-tick? true)
                                                        uusi)
-                   #_#_(::kaydaan-uutta-dataa-ennen-tick? @seurannan-valitila) (do (println "(::kaydaan-uutta-dataa-ennen-tick? @seurannan-valitila)")
-                                                                               #_(set! tila (get @seurannan-vanha-cache nimi))
-                                                                               (::tila @seurannan-valitila))
                    ;; Käsitellään vielä saman muutoksen triggereitä
-                   (= uusi-hash valitilan-hash) (do (println "(= uusi-hash valitilan-hash)")
-                                                    (get-in @seurannan-valitila [data-atom-hash ::tila])))
+                   (= uusi-hash valitilan-hash) (get-in @seurannan-valitila [data-atom-hash ::tila]))
             vanha-tila (get @seurannan-vanha-cache data-atom-hash)]
-        (when-not false #_(= vanha-tila uusi)
+        (when-not (= vanha-tila uusi)
           (let [paivitetty-tila (loop [vanha vanha-tila
                                        uusi uusi
                                        seurannat-lisatty (mapv (fn [[_ f]]
@@ -299,13 +298,9 @@
                 (r/next-tick (fn []
                                (binding [*seuranta-muutos?* true]
                                  (when-let [seurannan-tila (get-in @seurannan-valitila [data-atom-hash ::tila])]
-                                   (println "SWAPATAAN DATA ATOM DATAN KÄSITTELYSTÄ ")
-
                                    (swap! seurannan-valitila dissoc data-atom-hash)
                                    (swap! seurannan-vanha-cache dissoc data-atom-hash)
                                    (swap! data-atom (fn [entinen-tila]
-                                                      (println "RAHAVARAUKSET SEURANNAT entine: " (get-in entinen-tila [:gridit :rahavaraukset :seurannat]))
-                                                      (println "RAHAVARAUKSET SEURANNAT: " (get-in seurannan-tila [:gridit :rahavaraukset :seurannat]))
                                                       seurannan-tila)))))))))))))
 
   IPrintWithWriter

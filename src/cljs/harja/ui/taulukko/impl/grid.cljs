@@ -48,7 +48,6 @@
     (set! n (dec n))
     (when (= 0 n)
       (println "--- DISPOSATAAN ---")
-      (cljs.pprint/pprint (:r this))
       (r/dispose! r))
     this)
   IDeref
@@ -694,15 +693,8 @@
                                                               rajapintakasittelijat)
                                                 [polku kasittelija]))
                                             uudet-grid-kasittelijat))
-        _ (when (or (not (empty? uudet-osat))
-                    (not (empty? lisattavat-kasittelijat)))
-            (println "----- LISÄTÄÄN OSIA -----")
-            (println "lkm: " lisattava-maara)
-            (println "UUDET GRID KÄSITTELIJÄT: " uudet-grid-kasittelijat)
-            (println "LISÄTTÄVÄT KÄSITTELIJÄT: " lisattavat-kasittelijat))
         uudet-rajapintakasittelijat (when-not (empty? lisattavat-kasittelijat)
                                       (uudet-gridkasittelijat-dynaaminen grid lisattavat-kasittelijat))
-        _ (println "UUDET RAJAPINTAKÄSITTELIJÄT: " uudet-rajapintakasittelijat)
         osan-kasittely (fn [osa]
                          (binding [*foo-print* false]
                            (osan-data-yhdistaminen (::datan-kasittelija grid) uudet-rajapintakasittelijat osa)))
@@ -736,12 +728,6 @@
                                               [polku kasittelija])))
                                        rajapintakasittelijat)
         poistetaan-osia? (not= 0 poistettava-maara)]
-    (when (or poistetaan-osia?
-              (not (empty? poistettavat-kasittelijat)))
-      (println "---- POISTETAAN ---")
-      (println "lkm: " poistettava-maara)
-      )
-    (println "POISTETTAVAT KASITTELIJAT: " poistettavat-kasittelijat)
     (when poistetaan-osia?
       (paivita-kaikki-lapset! grid
                               (fn [osa]
@@ -788,8 +774,6 @@
                                                       (assoc m polku kasittelija)))
                                                   {}
                                                   (grid-kasittelijoiden-luonti @gridin-derefable))
-              _ (println "MÄÄRÄT: " datan-maara " - " osien-maara)
-              _ (println "LUODUT GK: " luodut-grid-kasittelijat)
               poistettiin? (poista-osia! grid (js/Math.max 0 (- osien-maara datan-maara)) luodut-grid-kasittelijat)
               lisattiin? (lisaa-osia! grid (js/Math.max 0 (- datan-maara osien-maara)) luodut-grid-kasittelijat)]
           (when (or poistettiin? lisattiin?)
@@ -1314,7 +1298,6 @@
                        #_#_aseta-koko-uusiksi? (and seurattava-koko
                                                     (or (not= (:sarake @seurattava-koko) (:sarake (p/koko grid)))
                                                         (not= (:rivi @seurattava-koko) (:rivi (p/koko grid)))))
-                       _ (when (instance? DynaaminenGrid grid) (println "LASKETAAN GRIDTIEDOT"))
                        {:keys [korkeudet leveydet top left]} (laske-gridin-css-tiedot grid)]
                    ;; Mikälisikäli seurattavan koko vaihtuu, niin tämä tulisi renderöidä uudestaan
                    #_(when aseta-koko-uusiksi?

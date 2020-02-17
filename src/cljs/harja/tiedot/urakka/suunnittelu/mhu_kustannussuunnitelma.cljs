@@ -273,18 +273,17 @@
                                                                                 {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
                                                                               seurannat)))
                                                              :haku identity}
-                                  #_#_:rahavaraukset-data {:polut [[:domain :rahavaraukset]
-                                                                   [:suodattimet :hankinnat :toimenpide]
-                                                                   [:suodattimet :hoitokauden-numero]]
-                                                           :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
-                                                                     (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
-                                                                       (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
-                                                                         (vec
-                                                                           (mapcat (fn [[tyyppi data]]
-                                                                                     {(keyword (str "rahavaraukset-data-" tyyppi)) ^{:args [tyyppi]} [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
-                                                                                   toimenpiteen-rahavaraukset)))))
-                                                           :haku (fn [rahavaraukset _ _]
-                                                                   rahavaraukset)}}
+                                  :rahavaraukset-data {:polut [[:domain :rahavaraukset]
+                                                               [:suodattimet :hankinnat :toimenpide]
+                                                               [:suodattimet :hoitokauden-numero]]
+                                                       :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
+                                                                 (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
+                                                                   (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
+                                                                     (mapv (fn [[tyyppi data]]
+                                                                             {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
+                                                                           toimenpiteen-rahavaraukset))))
+                                                       :haku (fn [rahavaraukset _ _]
+                                                               (mapv #(select-keys % #{:aika :maara :yhteensa :indeksikorjattu}) rahavaraukset))}}
                                  ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
                                  ;              "akillinen-hoitotyo" [{:maara 1}]}
                                  )
