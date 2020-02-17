@@ -27,9 +27,8 @@
 (defn kasittele-paikkauskohteen-lahettamisen-vastaus
   "Päivittää virheeseen menneen paikkauskohteen lähteyksen jälkeen paikkauskohteen lähetystilan virheeksi.
    Paikkauskohteen tiedot yritetään lähettää uudelleen YHA:aan ajastetussa tehtävässä."
-  [kohde-id virheet vastaus]
+  [kohde-id virheet ]
   (log/debug (str "Paikkauskohteen " kohde-id " lähettäminen YHA:an epäonnistui viheeseen " virheet))
-  (log/debug (str "Vastausviesti " vastaus))
 
   ;;TODO: Päivitä paikkauskohteen lähetystila: VIRHE jos yhteysvirhe KORJAA jos validointiongelma=
 
