@@ -238,7 +238,7 @@
                                    :nimi ::t/valinta}
                                   [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])]})))
 
-(defn rivi-kuukausifiltterilla->rivi [rivi-kuukausifiltterilla]
+(defn rivi-kuukausifiltterilla->rivi [pohja? rivi-kuukausifiltterilla]
   (grid/aseta-nimi (grid/paivita-grid! (grid/get-in-grid rivi-kuukausifiltterilla [::t/yhteenveto])
                                        :lapset
                                        (fn [osat]
@@ -247,22 +247,22 @@
                                                    (assoc osa :auki-alussa? false)
                                                    osa))
                                                osat)))
-                   ::g-pohjat/data-yhteenveto))
+                   (if pohja?
+                     ::g-pohjat/data-yhteenveto
+                     ::data-yhteenveto)))
 
 (defn rivi-kuukausifiltterilla!
   [laajennasolu pohja? & datan-kasittely]
-  (println "AJETAAN rivi-kuukausifiltterilla!")
   (apply grid/vaihda-osa!
          (-> laajennasolu grid/vanhempi)
          (partial rivi->rivi-kuukausifiltterilla pohja?)
          datan-kasittely))
 
 (defn rivi-ilman-kuukausifiltteria!
-  [laajennasolu & datan-kasittely]
-  (println "AJETAAN rivi-ilman-kuukausifiltteria!")
+  [laajennasolu pohja? & datan-kasittely]
   (apply grid/vaihda-osa!
          (-> laajennasolu grid/vanhempi grid/vanhempi)
-         rivi-kuukausifiltterilla->rivi
+         (partial rivi-kuukausifiltterilla->rivi pohja?)
          datan-kasittely))
 
 
@@ -404,6 +404,7 @@
                                                                                                  :datan-kasittely (fn [kuukausitasolla?]
                                                                                                                     [kuukausitasolla? nil nil nil])})
                                                     (rivi-ilman-kuukausifiltteria! this
+                                                                                   true
                                                                                    [:.. ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
                                                   (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                 false
@@ -686,7 +687,6 @@
   (let [nyt (pvm/nyt)
         dom-id "rahavaraukset-taulukko"
         yhteenveto-grid-rajapinta-asetukset (fn [vanhat-kasittelijat]
-                                              ;(println "VANhAT KÄSITTELIJÄT: " vanhat-kasittelijat)
                                               {:rajapinta (:rajapinta (first vanhat-kasittelijat))
                                                :solun-polun-pituus 1
                                                :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
@@ -754,6 +754,7 @@
                                                                                                                                                                          :datan-kasittely (fn [kuukausitasolla?]
                                                                                                                                                                                             [kuukausitasolla? nil nil nil])})
                                                                                                                             (rivi-ilman-kuukausifiltteria! this
+                                                                                                                                                           false
                                                                                                                                                            [:.. ::data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
                                                                                                                           (t/laajenna-solua-klikattu this auki? dom-id [::data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                                                                                         :auki-alussa? false
@@ -988,6 +989,7 @@
                                                                                                                                                         (println "DATAN KÄSITTELY: kuukausitasolla?: " kuukausitasolla?)
                                                                                                                                                         [kuukausitasolla? nil nil nil])})
                                                                                       (rivi-ilman-kuukausifiltteria! this
+                                                                                                                     true
                                                                                                                      #_#_[:.. ::g-pohjat/data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
                                                                                     (t/laajenna-solua-klikattu this auki? "johto-ja-hallintokorvaus-laskulla-taulukko" [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                                                   false
