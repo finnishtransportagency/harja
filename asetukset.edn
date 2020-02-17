@@ -50,7 +50,7 @@
        }
 
  :sonja
- {:url "tcp://localhost:61616"
+ {:url "tcp://localhost:61617"
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq}
@@ -60,11 +60,11 @@
  ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
  ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
  ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
- ;        :paivittainen-lahetysaika nil}
+ ;        :paivittainen-lahetysaika [16 44 0 ]}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
  ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
- ;        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+ ;        :toimenpideAkuittausjono "Harja.HarjaToT-LOIK.Ack"
  ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 

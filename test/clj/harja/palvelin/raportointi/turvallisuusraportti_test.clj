@@ -110,7 +110,7 @@
         hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
     (= hallintayksikot #{"Uusimaa" "Varsinais-Suomi" "Kaakkois-Suomi"
                          "Pirkanmaa" "Pohjois-Savo" "Keski-Suomi"
-                         "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa ja Kainuu"
+                         "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa"
                          "Lappi" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
                                         {:otsikko "Hallintayksikkö"}

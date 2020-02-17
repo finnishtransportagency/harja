@@ -135,7 +135,7 @@
             "id": "urn:harja/tielupa/sijainnit/0/sijainti",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+            "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
           }
         }
       }
@@ -152,7 +152,7 @@
         },
         "osasto": {
           "id": "urn:harja/tielupa/hakija/osasto",
-          "type": "string"
+          "type": "string"  
         },
         "postiosoite": {
           "id": "urn:harja/tielupa/hakija/postiosoite",
@@ -373,7 +373,7 @@
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
                   },
                   "maakaapelia-metreissa": {
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/maakaapelia-metreissa",
@@ -598,7 +598,7 @@
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
                   }
                 }
               }
@@ -653,7 +653,7 @@
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
                   }
                 }
               }
@@ -756,7 +756,7 @@
                     "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
                   }
                 }
               }
@@ -891,7 +891,7 @@
                     "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
                   }
                 }
               }
@@ -1007,7 +1007,7 @@
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
                     "type": "object",
                     "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti-myos-vanhat-kaistat.schema.json"
                   }
                 }
               }

@@ -114,7 +114,7 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
 VALUES ('4242523-TES4', 'palvelusopimus' :: sopimustyyppi, (SELECT id
                                                             FROM organisaatio
                                                             WHERE lyhenne = 'POP'),
-        'Oulun tiemerkinnän palvelusopimus 2013-2018', '2013-10-01', '2018-12-31', 'tiemerkinta', (SELECT id
+        'Oulun tiemerkinnän palvelusopimus 2013-2022', '2013-10-01', '2022-12-31', 'tiemerkinta', (SELECT id
                                                                                                    FROM organisaatio
                                                                                                    WHERE ytunnus =
                                                                                                          '1234567-8'), 'OULU_TIE',

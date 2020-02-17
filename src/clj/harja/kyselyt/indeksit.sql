@@ -71,3 +71,6 @@ UPDATE SET indeksi = :indeksi,
 SELECT urakka
   FROM paallystysurakan_indeksi
  WHERE id = :id;
+
+-- name: hae-urakan-indeksin-perusluku
+SELECT indeksilaskennan_perusluku(:urakka-id::INTEGER) AS perusluku;
