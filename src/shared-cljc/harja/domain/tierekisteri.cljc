@@ -1,6 +1,7 @@
 (ns harja.domain.tierekisteri
   "Apufunktioita tierekisteriosoitteiden (TIE / AOSA / AET / LOSA LET) käsittelyyn."
   (:require [clojure.spec.alpha :as s]
+            [clojure.set :as clj-set]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
     #?@(:clj [
@@ -470,3 +471,14 @@
                                                                  kohdeosat)]]
                                   (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat id-avain)))]
      (distinct paallekkaiset))))
+
+(def paaluvali-avaimet #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+(def vali-avaimet (clj-set/union paaluvali-avaimet #{:tr-ajorata :tr-kaista}))
+(def alikohteen-tr-sarakkeet-map
+  {:tr-numero :tr-numero
+   :tr-ajorata :tr-ajorata
+   :tr-kaista :tr-kaista
+   :tr-alkuosa :tr-alkuosa
+   :tr-alkuetaisyys :tr-alkuetaisyys
+   :tr-loppuosa :tr-loppuosa
+   :tr-loppuetaisyys :tr-loppuetaisyys})

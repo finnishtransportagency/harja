@@ -13,9 +13,9 @@
 (def nakymassa? (atom false))
 
 (def valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa
-  #{:hoito})
+  #{:hoito :teiden-hoito})
 (def valtakunnalliset-toistuvat-valitavoitteet-kaytossa
-  #{:hoito :tiemerkinta})
+  #{:hoito :teiden-hoito :tiemerkinta})
 
 (defn valtakunnalliset-valitavoitteet-kaytossa? [urakkatyyppi]
   (boolean (or (valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa urakkatyyppi)

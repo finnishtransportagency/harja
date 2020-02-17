@@ -461,9 +461,11 @@
   (process-event [{vastaus :vastaus} app]
     (log "[PÄÄLLYSTYS] Lomakkeen tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (virhe-modal {:virhe [(reduce-kv (fn [m k v]
-                                       (assoc m k (distinct (flatten (vals (if (map? v)
-                                                                             v
-                                                                             (first v)))))))
+                                       (assoc m k (distinct
+                                                    (flatten
+                                                      (vals (if (map? v)
+                                                              v
+                                                              (map (fn [kohde] (second kohde)) v)))))))
                                      {} (:virhe vastaus))]}
                  "Päällystysilmoituksen tallennus epäonnistui!")
     app)

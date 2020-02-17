@@ -459,7 +459,7 @@ WHERE
                           FROM toimenpideinstanssi tpi
                             JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
                             JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
-                          WHERE tpk.id = :toimenpidekoodi);
+                          WHERE tpk.id = :toimenpidekoodi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: merkitse-toteumatehtavien-maksuerat-likaisiksi!
 -- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
@@ -468,7 +468,7 @@ SET likainen = TRUE
 WHERE
   numero IN (SELECT m.numero
              FROM maksuera m
-               JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+               JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months'
                JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
                JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                JOIN toteuma_tehtava tt ON tt.toimenpidekoodi = tpk.id
@@ -484,7 +484,7 @@ WHERE
   tyyppi = 'muu' AND
   toimenpideinstanssi IN (SELECT id
                           FROM toimenpideinstanssi
-                          WHERE id = :toimenpideinstanssi);
+                          WHERE id = :toimenpideinstanssi AND loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: hae-pisteen-hoitoluokat
 SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,

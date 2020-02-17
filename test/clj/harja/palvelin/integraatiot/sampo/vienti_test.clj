@@ -87,8 +87,18 @@
 (deftest kaikkien-maksueran-ja-kustannussuunnitelman-paivittaminen-likaiseksi
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         tpi  (first (q-map "select id from toimenpideinstanssi where nimi = 'Oulu Talvihoito TP' "))]
+
+    ;; Varmistetaan lähtötilanne: maksuerät ja kustannussuunnitelmat eivät ole likaisia.
     (is not(= [{:count 8}] (q-map (str "select count(*) from maksuera where toimenpideinstanssi = 1 AND likainen = TRUE" ))))
     (is not(= [{:count 8}] (q-map (str "select count(*) from kustannussuunnitelma where maksuera in (select numero from maksuera where toimenpideinstanssi = 1 )  AND likainen = TRUE"))))
+
+    ;; Tarkistetaan ettei vanhentuneiden toimenpideinstanssien maksueriä ja kustannussuunnitelmia merkitä likaiseksi
+    (maksuerat/paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi db (:id tpi))
+    (is not(= [{:count 8}] (q-map (str "select count(*) from maksuera where toimenpideinstanssi = 1 AND likainen = TRUE" ))))
+    (is not(= [{:count 8}] (q-map (str "select count(*) from kustannussuunnitelma where maksuera in (select numero from maksuera where toimenpideinstanssi = 1 )  AND likainen = TRUE"))))
+
+    ;; Päivitetään toimenpideinstanssi voimaan ja testataan että voimassaolevan tpi:n maksuerät ja kustannussuunnitelmat päivittyvät
+    (u "update toimenpideinstanssi set loppupvm = NOW() where nimi = 'Oulu Talvihoito TP' ")
     (maksuerat/paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi db (:id tpi))
     (is (= [{:count 8}] (q-map (str "select count(*) from maksuera where toimenpideinstanssi = 1 AND likainen = TRUE"))))
     (is (= [{:count 8}] (q-map (str "select count(*) from kustannussuunnitelma where maksuera in (select numero from maksuera where toimenpideinstanssi = 1 )  AND likainen = TRUE"))))))
