@@ -176,15 +176,16 @@
        [:input {:type      :text
                 :class     (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
                 :value     (cond
-                             (not (nil? pvm)) (pvm/pvm pvm)
                              (not (empty? @suora-syotto-sisalto)) @suora-syotto-sisalto
+                             (not (nil? pvm)) (pvm/pvm pvm)
                              :else "")
 
                 :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
                 :on-focus  #(reset! auki? true)
                 :on-blur   (fn []
                              (if-not (empty? @suora-syotto-sisalto)
-                               (valitse (pvm/->pvm @suora-syotto-sisalto)))
+                               (do (valitse (pvm/->pvm @suora-syotto-sisalto))
+                                   (reset! suora-syotto-sisalto "")))
                              (js/setTimeout #(reset! auki? false) 100))}]
        (when @auki? [pvm-valintakalenteri {:vayla-tyyli?  true
                                            :valitse       valitse
