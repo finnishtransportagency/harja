@@ -8,7 +8,8 @@
             [goog.events :as events]
             [goog.events.EventType :as EventType]
             [harja.ui.dom :as dom]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.fmt :as fmt]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
 
@@ -96,16 +97,16 @@
               naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
           [:table {:class (str tyyli-kalenteri)
                    :style (merge
-                                        {:display (if @sijainti-atom "table" "none")
-                                         ;; Etenkin jos kalenteri avataan ylöspäin, on tärkeää, että korkeus pysyy vakiona
-                                         ;; Muuten otsikkorivi hyppii sen mukaan paljonko kuussa on päiviä.
-                                         :height  "200px"}
-                                        (case @sijainti-atom
-                                          :ylos-oikea {:bottom "100%" :left 0}
-                                          :ylos-vasen {:bottom "100%" :right 0}
-                                          :alas-oikea {:top "100%" :left 0}
-                                          :alas-vasen {:top "100%" :right 0}
-                                          {}))}
+                            {:display (if @sijainti-atom "table" "none")
+                             ;; Etenkin jos kalenteri avataan ylöspäin, on tärkeää, että korkeus pysyy vakiona
+                             ;; Muuten otsikkorivi hyppii sen mukaan paljonko kuussa on päiviä.
+                             :height  "200px"}
+                            (case @sijainti-atom
+                              :ylos-oikea {:bottom "100%" :left 0}
+                              :ylos-vasen {:bottom "100%" :right 0}
+                              :alas-oikea {:top "100%" :left 0}
+                              :alas-vasen {:top "100%" :right 0}
+                              {}))}
            [:thead.pvm-kontrollit
             [:tr
              [:td.pvm-edellinen-kuukausi.klikattava
@@ -140,23 +141,23 @@
                      :let [valittava? (or (not (some? valittava?-fn))
                                           (valittava?-fn paiva))]]
                  ^{:key (pvm/millisekunteina paiva)}
-                 [:td {:class    (str        tyyli-paivasolu
-                                             (if valittava?
-                                               "klikattava "
-                                               "pvm-disabloitu ")
-                                             (when (pvm/sama-pvm? (pvm/nyt) paiva) "pvm-tanaan ")
-                                             (when (and pvm
-                                                        (= (t/day paiva) (t/day pvm))
-                                                        (= (t/month paiva) (t/month pvm))
-                                                        (= (t/year paiva) (t/year pvm)))
-                                               "pvm-valittu ")
-                                             (if (naytettava-kk-paiva? paiva)
-                                               "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
+                 [:td {:class    (str tyyli-paivasolu
+                                      (if valittava?
+                                        "klikattava "
+                                        "pvm-disabloitu ")
+                                      (when (pvm/sama-pvm? (pvm/nyt) paiva) "pvm-tanaan ")
+                                      (when (and pvm
+                                                 (= (t/day paiva) (t/day pvm))
+                                                 (= (t/month paiva) (t/month pvm))
+                                                 (= (t/year paiva) (t/year pvm)))
+                                        "pvm-valittu ")
+                                      (if (naytettava-kk-paiva? paiva)
+                                        "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
-                                 :on-click #(do (.stopPropagation %)
-                                                (when valittava?
-                                                  (valitse paiva))
-                                                nil)}
+                       :on-click #(do (.stopPropagation %)
+                                      (when valittava?
+                                        (valitse paiva))
+                                      nil)}
                   (t/day paiva)])])]
            [:tfoot.pvm-tanaan-text
             [:tr [:td {:colSpan 7}
@@ -168,17 +169,24 @@
 
 (defn pvm-valintakalenteri-inputilla
   [optiot]
-  (let [auki? (atom false)]
+  (let [auki? (r/atom false)
+        suora-syotto-sisalto (r/atom "")]
     (fn [{:keys [pvm valitse luokat valittava?-fn]}]
       [:div.kalenteri-kontti
-       [:input {:type     :text
-                :class    (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                :value    (if-not (nil? pvm)
-                            (pvm/pvm pvm)
-                            "")
-                :on-focus #(reset! auki? true)
-                :on-blur  (fn [] (js/setTimeout #(reset! auki? false) 100))}]
-       (when @auki? [pvm-valintakalenteri {:vayla-tyyli? true
+       [:input {:type      :text
+                :class     (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
+                :value     (cond
+                             (not (nil? pvm)) (pvm/pvm pvm)
+                             (not (empty? @suora-syotto-sisalto)) @suora-syotto-sisalto
+                             :else "")
+
+                :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
+                :on-focus  #(reset! auki? true)
+                :on-blur   (fn []
+                             (if-not (empty? @suora-syotto-sisalto)
+                               (valitse (pvm/->pvm @suora-syotto-sisalto)))
+                             (js/setTimeout #(reset! auki? false) 100))}]
+       (when @auki? [pvm-valintakalenteri {:vayla-tyyli?  true
                                            :valitse       valitse
                                            :valittava?-fn valittava?-fn
                                            :pvm           pvm}])])))
