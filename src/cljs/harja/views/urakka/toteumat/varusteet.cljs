@@ -237,6 +237,8 @@
          :otsikko "Tien puoli"
          :tyyppi :valinta
          :valinnat (tierekisteri-varusteet/tien-puolet tietolaji)
+         :valinta-nayta (fn [arvo]
+                          (str arvo " " (tierekisteri-varusteet/puoli->selitys arvo)))
          :pituus 1
          :pakollinen? muokattava?
          :muokattava? (constantly muokattava?)})

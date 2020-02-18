@@ -62,7 +62,7 @@
                                                       :varusteiden-haun-tila :sijainnilla
                                                       :voimassaolopvm (pvm/nyt)}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
-                                          :tietolaji nil
+                                          :tietolajit nil
                                           :varusteet nil}}))
 
 (defn valitse-toteuman-idlla! [toteumaid]
