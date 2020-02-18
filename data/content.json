@@ -39,6 +39,6 @@
     "title": "Aikataulu",
     "short": "",
     "body": "Suunnitelma HARJAn kehitystyöstä seuraavan kuuden kuukauden aikana.",
-    "images": ["images/roadmap-harja.png", "images/roadmap-harja-legend.png"]
+    "images": ["images/roadmap-harja.png"]
   }
 ]
