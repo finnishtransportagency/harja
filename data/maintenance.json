@@ -1,5 +1,10 @@
 [
   {
+    "date": "2020-2-18",
+    "title": "Alikohteet nyt näkyvissä Ylläpidon aikataulunäkymässä",
+    "body": "<ul><li> Olemme toteuttaneet HARJAan alikohteiden näkymisen aikataulunäkymässä. Ominaisuus on nyt HARJAn tuotantokäytössä Ylläpitourakoissa.</ul>" 
+  },
+  {
     "date": "2020-1-27",
     "title": "Alikohteet näkyviin Ylläpidon aikataulunäkymään",
     "body": "<ul><li>Suunnittelemme parhaillaan alikohteiden näkymistä HARJAn Aikataulu-näkymässä. Toteutustyö tehdään helmikuun aikana. Tavoitteenamme on saada uusi näkymä tuotantokäyttöön helmikuun loppuun mennessä.</ul>" 
