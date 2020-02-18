@@ -51,7 +51,8 @@
   (get {"kesakausi" "kesäkausi"
         "liikenneympariston hoito" "liikenneympäristön hoito"
         "mhu yllapito" "mhu-ylläpito"
-        "paallystepaikkaukset" "päällystepaikkaukset"}
+        "paallystepaikkaukset" "päällystepaikkaukset"
+        "akillinen hoitotyo" "äkillinen hoitotyö"}
        sana
        sana))
 
@@ -246,6 +247,8 @@
                               :rahavaraukset any?
                               :kuukausitasolla? any?})
 
+(declare identity-print)
+
 (defn rahavarausten-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                           rahavarausten-rajapinta
@@ -266,7 +269,9 @@
                                                                                     [tyyppi (mapv #(select-keys % #{:maara :aika :yhteensa})
                                                                                                   (get data (dec hoitokauden-numero)))])
                                                                                   (get rahavaraukset valittu-toimenpide)))]
-                                                            (with-meta arvot {:valittu-toimenpide valittu-toimenpide})))}
+                                                            (println "RAHAVARAUKSET - VALITTU TOIMEINPIDE: " valittu-toimenpide)
+                                                            (with-meta arvot
+                                                                       {:valittu-toimenpide valittu-toimenpide})))}
                                   :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]
                                                                      [:suodattimet :hankinnat :toimenpide]]
                                                              :luonti (fn [seurannat valittu-toimenpide]
@@ -281,12 +286,13 @@
                                                                [:suodattimet :hoitokauden-numero]]
                                                        :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
                                                                  (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
+                                                                   (println "TOIMENPITEEN RAHAVARAUKSET: " toimenpiteen-rahavaraukset)
                                                                    (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
                                                                      (mapv (fn [[tyyppi data]]
                                                                              {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
                                                                            toimenpiteen-rahavaraukset))))
                                                        :haku (fn [rahavaraukset _ _]
-                                                               (mapv #(select-keys % #{:aika :maara :yhteensa :indeksikorjattu}) rahavaraukset))}}
+                                                               (mapv #(select-keys % #{:aika :maara}) rahavaraukset))}}
                                  ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
                                  ;              "akillinen-hoitotyo" [{:maara 1}]}
                                  )
@@ -348,7 +354,7 @@
                                                                                                   maarat)]
                                                                              (assoc-in tila
                                                                                        [:gridit :rahavaraukset :seurannat tyyppi]
-                                                                                       {:nimi tyyppi
+                                                                                       {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
                                                                                         :yhteensa yhteensa
                                                                                         :indeksikorjattu (indeksikorjaa yhteensa)})))}}))
 

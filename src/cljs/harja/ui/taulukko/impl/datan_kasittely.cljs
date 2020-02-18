@@ -111,7 +111,12 @@
                                      (when-not (s/valid? (get rajapinta kuuntelun-nimi) rajapinnan-data)
                                        (warn "Rajapinnan " (str kuuntelun-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta kuuntelun-nimi))
                                              (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data)))))
-                                   rajapinnan-data))
+                                   (when (satisfies? IWithMeta rajapinnan-data)
+                                     (println "---> RAJAPINNAN DATA META: " (str kuuntelun-nimi " ") (meta rajapinnan-data)))
+                                   (if (satisfies? IWithMeta rajapinnan-data)
+                                     {:data rajapinnan-data
+                                      :meta (meta rajapinnan-data)}
+                                     {:data rajapinnan-data})))
                     :dynaaminen? dynaaminen?
                     :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}))))
   (kuuntelijat-lisaaja! [this rajapinta [vanhemman-kuuntelijan-nimi {:keys [polut luonti haku]}]]
@@ -134,22 +139,24 @@
                          (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (when polut-muuttunut?
-                       (doseq [m uudet-polut
-                               :let [[[kuuntelun-nimi polut]] (seq m)
-                                     kuuntelu-luotu-jo? (some #(= (key %) kuuntelun-nimi)
-                                                              kuuntelijat)
-                                     lisa-argumentit (:args (meta polut))]]
-                         (when-not kuuntelu-luotu-jo?
-                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}])))
                        (doseq [[kuuntelun-nimi {:keys [r dynaaminen?] kuuntelijan-vanhemman-kuuntelijan-nimi :vanhemman-kuuntelijan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
                                                                 (nil? (some #(= (ffirst %) kuuntelun-nimi)
                                                                             uudet-polut))
                                                                 (= vanhemman-kuuntelijan-nimi kuuntelijan-vanhemman-kuuntelijan-nimi))]]
                          (when kuuntelu-poistettava?
+                           (println "POISTETAAN KUUNTELIJA: " kuuntelun-nimi)
                            (r/dispose! r)
                            (set! kuuntelijat
-                                 (dissoc kuuntelijat kuuntelun-nimi))))))))))
+                                 (dissoc kuuntelijat kuuntelun-nimi))))
+                       (doseq [m uudet-polut
+                               :let [[[kuuntelun-nimi polut]] (seq m)
+                                     kuuntelu-luotu-jo? (some #(= (key %) kuuntelun-nimi)
+                                                              kuuntelijat)
+                                     lisa-argumentit (:args (meta polut))]]
+                         (when-not kuuntelu-luotu-jo?
+                           (println "LISÄTÄÄN KUUNTELIJA: " kuuntelun-nimi)
+                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}])))))))))
   ISeuranta
   (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen?] :as seuranta}]]
     (set! seurannat
@@ -187,7 +194,7 @@
                                  uudet-polut))
                     (when g-debug/GRID_DEBUG
                       (when (some nil? (flatten (mapcat vals uudet-polut)))
-                        (warn "Seurannan luonnissa on uudessa polussa arvo nil:\n"
+                        (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
                               (str uudet-polut))))
                     (when polut-muuttunut?
                       (doseq [m uudet-polut
@@ -211,9 +218,11 @@
           (assoc asettajat
                  rajapinnan-nimi
                  (fn [& args]
-                   (when-not (s/valid? (get rajapinta rajapinnan-nimi) args)
-                     (warn "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. "
-                           (s/conform (get rajapinta rajapinnan-nimi) args)))
+                   (if-let [spec (get rajapinta rajapinnan-nimi)]
+                     (when-not (s/valid? spec args)
+                       (warn (str "Rajapinnalle " rajapinnan-nimi " annettu data ei vastaa spekkiin. ")
+                             (s/conform (get rajapinta rajapinnan-nimi) args)))
+                     (warn (str "Asettajalle " rajapinnan-nimi " ei ole määritetty spekkiä rajapinnassa.")))
                    (swap! data-atom (fn [tila]
                                       (try (apply f tila args)
                                            (catch :default e

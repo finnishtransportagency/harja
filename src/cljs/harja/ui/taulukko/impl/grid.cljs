@@ -219,6 +219,19 @@
     (when-not (empty? polku)
       (get-in-grid (root osa) (vec (drop-last polku))))))
 
+(defn saman-muotoinen? [osa-a osa-b]
+  (let [osa-a-runko (if (satisfies? p/IGrid osa-a)
+                      (gridin-osat-vektoriin osa-a (constantly true) #(type %))
+                      [(type osa-a)])
+        osa-b-runko (if (satisfies? p/IGrid osa-b)
+                      (gridin-osat-vektoriin osa-b (constantly true) #(type %))
+                      [(type osa-b)])]
+    (println "----- RUGNOT ----")
+    (cljs.pprint/pprint osa-a-runko)
+    (cljs.pprint/pprint osa-b-runko)
+    (println (= osa-a-runko osa-b-runko))
+    (= osa-a-runko osa-b-runko)))
+
 
 (defn aseta-seurattava-koko! [grid seurattava-id]
   (let [koko-conf (p/koko grid)
@@ -409,6 +422,9 @@
                                                                           (etsi-osa ((::root-fn grid)) seurattavan-gridin-nimi)
                                                                           grid)]
                                                     [grid [(gop/id grid) (gop/id seurattava-grid)]])))
+        _ (pre-walk-grid! root-grid
+                          (fn [osa]
+                            (println (gop/nimi osa) "(" (gop/id osa) ")")))
         gridit-jarjestetty (loop [jarjestetyt-gridit (filterv (fn [[grid [id seurattavan-id]]]
                                                                 (= id seurattavan-id))
                                                               kokojen-seuranta)
@@ -449,7 +465,7 @@
                                            lapsi))
                                        (p/lapset grid))]
        (when-not (= 1 (count loydetyt-osat))
-         (warn (str "Polun (" koko-polku ") osalle " polun-osa " ei löytynyt vain yhtä osaa. Löydetyt osat: " loydetyt-osat "\n"
+         (warn (str "Polun " koko-polku " osalle " polun-osa " ei löytynyt vain yhtä osaa. Löydetyt osat: " loydetyt-osat "\n"
                     "OSA: " (or (gop/nimi grid) "Nimetön") " (" (gop/id grid) ")" "\n"
                     "-> " (apply str (interpose "\n-> " (map (fn [lapsi]
                                                                (str (or (gop/nimi lapsi) "Nimetön") " (" (gop/id lapsi) ")"))
@@ -533,7 +549,7 @@
       (recur vanhempi-osa-id vanhempi)
       vanhempi-osa?)))
 
-(defn samanlainen-osa [osa]
+#_(defn samanlainen-osa [osa]
   (let [kopio (gop/kopioi osa)
         kopioitava-grid? (satisfies? p/IGrid osa)
         kopio-eri-idlla (if kopioitava-grid?
@@ -548,24 +564,58 @@
                (fn [koot]
                  (merge koot (p/koot kopio-eri-idlla))))
         (paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil
+                                       ::koko-fn (::koko-fn osa)
+                                       ::root-id (::root-id osa)
+                                       ::root-fn (::root-fn osa)
+                                       ::paivita-root! (::paivita-root! osa))
+                                (constantly true)
+                                (fn [lapsi]
+                                  (assoc lapsi
                                          ::koko-fn (::koko-fn osa)
                                          ::root-id (::root-id osa)
-                                         ::root-fn (::root-fn osa))
-                                  (constantly true)
-                                  (fn [lapsi]
-                                    (assoc lapsi
-                                           ::koko-fn (::koko-fn osa)
-                                           ::root-id (::root-id osa)
-                                           ::root-fn (::root-fn osa)))))
+                                         ::root-fn (::root-fn osa)
+                                         ::paivita-root! (::paivita-root! osa)))))
       kopio-eri-idlla)))
+
+(defn samanlainen-osa
+  ([osa] (samanlainen-osa osa osa))
+  ([osa tiedot-osa]
+   (let [kopio (gop/kopioi osa)
+         kopioitava-grid? (satisfies? p/IGrid osa)
+         kopio-eri-idlla (if kopioitava-grid?
+                           (paivita-kaikki-lapset! (muuta-id! kopio)
+                                                   (constantly true)
+                                                   (fn [lapsi]
+                                                     (muuta-id! lapsi)))
+                           (muuta-id! kopio))]
+     (if kopioitava-grid?
+       (do
+         (swap! ((::koko-fn tiedot-osa))
+                (fn [koot]
+                  (merge koot (p/koot kopio-eri-idlla))))
+         (paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil
+                                        ::koko-fn (::koko-fn tiedot-osa)
+                                        ::root-id (::root-id tiedot-osa)
+                                        ::root-fn (::root-fn tiedot-osa)
+                                        ::paivita-root! (::paivita-root! tiedot-osa))
+                                 (constantly true)
+                                 (fn [lapsi]
+                                   (assoc lapsi
+                                          ::koko-fn (::koko-fn tiedot-osa)
+                                          ::root-id (::root-id tiedot-osa)
+                                          ::root-fn (::root-fn tiedot-osa)
+                                          ::paivita-root! (::paivita-root! tiedot-osa)))))
+       kopio-eri-idlla))))
 
 (defn- rajapinnan-grid-kasittelija
   [datan-kasittelija grid grid-kasittelijan-polku {:keys [rajapinta jarjestys datan-kasittely tunnisteen-kasittely] :as kasittelija}]
   (when g-debug/GRID_DEBUG
     (when (nil? (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta))
       (warn (str "Rajapinalle " rajapinta " ei ole määritetty kuuntelijaa datan käsittlijään"))))
-  (let [rajapintakasittelija (seuranta (reaction (let [rajapinnan-data (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
-                                                                         @kuuntelija)
+  (let [rajapintakasittelija (seuranta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
+                                                                                            @kuuntelija)
+
+                                                       _ (println "--> " (str rajapinta " " rajapinnan-meta))
                                                        rajapinnan-dataf (if *jarjesta-data?*
                                                                           (jarjesta-data rajapinnan-data jarjestys)
                                                                           rajapinnan-data)]
@@ -580,9 +630,9 @@
                                                                              (assoc taman-tila
                                                                                     0 rajapinnan-data
                                                                                     1 rajapinnan-dataf)))))))
-                                                   (datan-kasittely (if (satisfies? IWithMeta rajapinnan-dataf)
+                                                   (datan-kasittely (if (and rajapinnan-meta (satisfies? IWithMeta rajapinnan-dataf))
                                                                       (with-meta rajapinnan-dataf
-                                                                                 (meta rajapinnan-data))
+                                                                                 rajapinnan-meta)
                                                                       rajapinnan-dataf)))))
         tunnisteen-kasittely (or tunnisteen-kasittely (constantly nil))]
     (assoc kasittelija
@@ -658,21 +708,74 @@
                             osan-kasittely)))
 
 (defn lisaa-osia! [grid lisattava-maara uudet-grid-kasittelijat]
-  (let [uudet-osat (repeatedly lisattava-maara
-                               (fn []
-                                 (let [kopio (gop/kopioi (:toistettava-osa grid))]
-                                   (paivita-kaikki-lapset! (muuta-id! kopio)
-                                                           (constantly true)
-                                                           (fn [lapsi]
-                                                             (muuta-id! lapsi))))))
-        _ (when-not (empty? uudet-osat)
+  (println "------- lisaa-osia! ------")
+  (println "::root-fn " (::root-fn grid) " ::paivita-root! " (::paivita-root! grid))
+  (let [uusi-osa (fn []
+                   (samanlainen-osa (:toistettava-osa grid) (root grid))
+                   #_(let [kopio (gop/kopioi (assoc (:toistettava-osa grid)
+                                                  ::root-fn (::root-fn grid)
+                                                  ::paivita-root! (::paivita-root! grid)))
+                         kopio (paivita-kaikki-lapset! (muuta-id! kopio)
+                                                     (constantly true)
+                                                     (fn [lapsi]
+                                                       (muuta-id! lapsi)))]
+                     (swap! ((::koko-fn grid))
+                            (fn [koot]
+                              (merge koot (p/koot kopio))))))
+        #_(defn samanlainen-osa [osa]
+          (let [kopio (gop/kopioi osa)
+                kopioitava-grid? (satisfies? p/IGrid osa)
+                kopio-eri-idlla (if kopioitava-grid?
+                                  (paivita-kaikki-lapset! (muuta-id! kopio)
+                                                          (constantly true)
+                                                          (fn [lapsi]
+                                                            (muuta-id! lapsi)))
+                                  (muuta-id! kopio))]
+            (if kopioitava-grid?
+              (do
+                (swap! ((::koko-fn osa))
+                       (fn [koot]
+                         (merge koot (p/koot kopio-eri-idlla))))
+                (paivita-kaikki-lapset! (assoc kopio-eri-idlla :koko nil
+                                               ::koko-fn (::koko-fn osa)
+                                               ::root-id (::root-id osa)
+                                               ::root-fn (::root-fn osa)
+                                               ::paivita-root! (::paivita-root! osa))
+                                        (constantly true)
+                                        (fn [lapsi]
+                                          (assoc lapsi
+                                                 ::koko-fn (::koko-fn osa)
+                                                 ::root-id (::root-id osa)
+                                                 ::root-fn (::root-fn osa)
+                                                 ::paivita-root! (::paivita-root! osa)))))
+              kopio-eri-idlla)))
+        uudet-osat (repeatedly lisattava-maara
+                               uusi-osa)
+        ;; Osien läpikäynti sen takia, kun dynaamista osaa on saatettu muuttaa
+        lapset-muuttunut? (not (every? (fn [lapsi]
+                                         (saman-muotoinen? lapsi (:toistettava-osa grid)))
+                                       (p/lapset grid)))
+        _ (println "LAPSET MUUTTUNUT? " lapset-muuttunut?)
+        _ (when (or (not (empty? uudet-osat)) lapset-muuttunut?)
+            (println "uudet-osat: " uudet-osat)
+
             (p/paivita-lapset! grid
                                (fn [lapset]
+                                 (println "LASTEN LKM: " (count lapset))
                                  (vec
-                                   (concat lapset
-                                           uudet-osat))))
+                                   (concat
+                                     (mapv (fn [lapsi]
+                                             (if (saman-muotoinen? lapsi (:toistettava-osa grid))
+                                               lapsi
+                                               (do (println "UUSI OSA:")
+                                                   (let [a (uusi-osa)]
+                                                     (println a)
+                                                     a))))
+                                           lapset)
+                                     uudet-osat))))
             (paivita-root! grid (fn [vanha-grid]
                                   (aseta-gridin-polut vanha-grid))))
+        _ (println "LASTEN LKM LISÄYKSEN JÄLKEEN: " (count (p/lapset grid)))
         #_#__ (pre-walk-grid! (root grid)
                           (fn [osa]
                             (println (::nimi-polku osa) " " (gop/nimi osa) )))
@@ -695,6 +798,8 @@
                                                               rajapintakasittelijat)
                                                 [polku kasittelija]))
                                             uudet-grid-kasittelijat))
+        _ (println "LISÄTTÄVÄT KÄSITTELIJÄT")
+        _ (println lisattavat-kasittelijat)
         uudet-rajapintakasittelijat (when-not (empty? lisattavat-kasittelijat)
                                       (uudet-gridkasittelijat-dynaaminen grid lisattavat-kasittelijat))
         osan-kasittely (fn [osa]
@@ -702,6 +807,7 @@
                            (osan-data-yhdistaminen (::datan-kasittelija grid) uudet-rajapintakasittelijat osa)))
         lisataan-osia? (not (empty? uudet-osat))
         _ (when uudet-rajapintakasittelijat
+            (println "uudet-rajapintakasittelijat: " uudet-rajapintakasittelijat)
             (paivita-kaikki-lapset! (osan-kasittely grid)
                                     (fn [osa]
                                       (osan-jalkelainen? (gop/id grid) osa))
@@ -712,9 +818,10 @@
                                                                                              uudet-rajapintakasittelijat))))))]
     (when-let [f (and lisataan-osia? (get-in grid [:osien-maara-muuttui :lisattiin-osia!]))]
       (f grid lisattyjen-osien-idt))
-    lisataan-osia?))
+    (or lisataan-osia? lapset-muuttunut?)))
 
 (defn poista-osia! [grid poistettava-maara luodut-grid-kasittelijat]
+  (println "---- poista-osia! ----")
   (let [polun-alku (::nimi-polku grid)
         rajapintakasittelijat (::grid-rajapintakasittelijat (root grid))
         poistettavat-kasittelijat (keep (fn [[polku kasittelija]]
@@ -725,12 +832,12 @@
                                                                     (and (= luotu-polku polku)
                                                                          (= (:rajapinta luotu-conf)
                                                                             (:rajapinta kasittelija))))
-                                                                  luodut-grid-kasittelijat))
-                                                       (not= (:n (:rajapintakasittelija kasittelija)) 0))
+                                                                  luodut-grid-kasittelijat)))
                                               [polku kasittelija])))
                                        rajapintakasittelijat)
         poistetaan-osia? (not= 0 poistettava-maara)]
     (when poistetaan-osia?
+      (println "lkm: " poistettava-maara)
       (paivita-kaikki-lapset! grid
                               (fn [osa]
                                 (when-let [osan-derefable (::osan-derefable osa)]
@@ -742,9 +849,13 @@
                          (fn [lapset]
                            (vec (drop-last poistettava-maara lapset)))))
     (when-not (empty? poistettavat-kasittelijat)
+      (println "polun-alku: " polun-alku)
+      (println "poistettavat-kasittelijat: " poistettavat-kasittelijat)
       (doseq [[_ {poistettava-kasittelija :rajapintakasittelija}] poistettavat-kasittelijat]
-        (while (> (:n poistettava-kasittelija) 0)
-          (poista-seuranta-derefable! poistettava-kasittelija)))
+        (if (= 0 (:n poistettava-kasittelija))
+          (ratom/dispose! (:r poistettava-kasittelija))
+          (while (> (:n poistettava-kasittelija) 0)
+            (poista-seuranta-derefable! poistettava-kasittelija))))
       (paivita-root! grid (fn [vanha-grid]
                             (update vanha-grid ::grid-rajapintakasittelijat (fn [rk]
                                                                               (apply dissoc rk (map first poistettavat-kasittelijat)))))))
@@ -776,11 +887,27 @@
                                                       (assoc m polku kasittelija)))
                                                   {}
                                                   (grid-kasittelijoiden-luonti @gridin-derefable))
-              poistettiin? (poista-osia! grid (js/Math.max 0 (- osien-maara datan-maara)) luodut-grid-kasittelijat)
-              lisattiin? (lisaa-osia! grid (js/Math.max 0 (- datan-maara osien-maara)) luodut-grid-kasittelijat)]
-          (when (or poistettiin? lisattiin?)
-            (aseta-koot! (root grid))
-            (swap! (get-in grid [:osien-maara-muuttui :trigger]) not))
+              _ (println "LUODUT GRID KÄSITTELIJÄT ")
+              _ (cljs.pprint/pprint luodut-grid-kasittelijat)
+              rajapintakasittelijat-muuttunut? (some (fn [[_ kasittelija]]
+                                                       (nil? (some (fn [[_ olemassa-oleva-kasittelija]]
+                                                                     (= (:rajapinta olemassa-oleva-kasittelija)
+                                                                        (:rajapinta kasittelija)))
+                                                                   (::grid-rajapintakasittelijat (root grid)))))
+                                                     luodut-grid-kasittelijat)]
+          (when (or (not= (- osien-maara datan-maara) 0)
+                    rajapintakasittelijat-muuttunut?)
+            (let [poistettiin? (poista-osia! grid (js/Math.max 0 (- osien-maara datan-maara)) luodut-grid-kasittelijat)
+                  lisattiin? (lisaa-osia! grid (js/Math.max 0 (- datan-maara osien-maara)) luodut-grid-kasittelijat)]
+              (println "POISTETTIIN?: " poistettiin?)
+              (println "LISÄTTIIN?: " lisattiin?)
+              (pre-walk-grid! (root grid)
+                              (fn [osa]
+                                  (println (gop/nimi osa) "(" (gop/id osa) ")")))
+              (println "---------------")
+              (when (or poistettiin? lisattiin?)
+                (aseta-koot! (root grid))
+                (swap! (get-in grid [:osien-maara-muuttui :trigger]) not))))
           [piirra-gridin-osat (p/lapset grid) grid]))))
 
 (defn- staattinen-grid [grid]
@@ -1030,9 +1157,12 @@
         grid (paivita-kaikki-lapset! grid
                                      (constantly true)
                                      (fn [lapsi]
-                                       (if (satisfies? p/IGrid lapsi)
-                                         (gop/kopioi lapsi)
-                                         lapsi)))
+                                       (let [lapsi (assoc lapsi
+                                                          ::root-fn (::root-fn kopioitava-grid)
+                                                          ::paivita-root! (::paivita-root! kopioitava-grid))]
+                                         (if (satisfies? p/IGrid lapsi)
+                                           (gop/kopioi lapsi)
+                                           lapsi))))
         grid (paivita-kaikki-lapset! (assoc grid ::koko-fn koko-fn)
                                      (constantly true)
                                      (fn [osa]
@@ -1267,6 +1397,7 @@
   (r/create-class
     {:constructor (fn [this props]
                     (when (= (gop/id grid) (::root-id grid))
+                      (println "ASETETAAN KOOT GRIDILLE " (gop/nimi grid) " (" (gop/id grid) ")")
                       (aseta-koot! grid))
                     (set! (.-state this) #js {:error nil}))
      :get-derived-state-from-error (fn [error]
@@ -1379,6 +1510,7 @@
                                                                                                 kasittelijat)))))))
                                                    vanhat-osat))
         ;; OSAN PÄIVITTÄMINEN
+
         uusi-grid (paivita-kaikki-lapset! root-grid
                                           (fn [osa]
                                             (gop/id? osa vaihdettavan-osan-id))
