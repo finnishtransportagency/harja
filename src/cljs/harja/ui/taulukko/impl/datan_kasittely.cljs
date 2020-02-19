@@ -96,6 +96,7 @@
     (let [kursorit (mapv (fn [polku]
                            (r/cursor data-atom polku))
                          polut)]
+      (println "Lisätään kuuntelija: " kuuntelun-nimi)
       (set! kuuntelijat
             (assoc kuuntelijat
                    kuuntelun-nimi
@@ -111,8 +112,6 @@
                                      (when-not (s/valid? (get rajapinta kuuntelun-nimi) rajapinnan-data)
                                        (warn "Rajapinnan " (str kuuntelun-nimi) " data:\n" (with-out-str (pp/pprint rajapinnan-data)) " ei vastaa spekkiin. " (str (get rajapinta kuuntelun-nimi))
                                              (str (s/explain (get rajapinta kuuntelun-nimi) rajapinnan-data)))))
-                                   (when (satisfies? IWithMeta rajapinnan-data)
-                                     (println "---> RAJAPINNAN DATA META: " (str kuuntelun-nimi " ") (meta rajapinnan-data)))
                                    (if (satisfies? IWithMeta rajapinnan-data)
                                      {:data rajapinnan-data
                                       :meta (meta rajapinnan-data)}
@@ -145,7 +144,7 @@
                                                                             uudet-polut))
                                                                 (= vanhemman-kuuntelijan-nimi kuuntelijan-vanhemman-kuuntelijan-nimi))]]
                          (when kuuntelu-poistettava?
-                           (println "POISTETAAN KUUNTELIJA: " kuuntelun-nimi)
+                           (println "poistetaan kuuntelija: " kuuntelun-nimi)
                            (r/dispose! r)
                            (set! kuuntelijat
                                  (dissoc kuuntelijat kuuntelun-nimi))))
@@ -155,10 +154,10 @@
                                                               kuuntelijat)
                                      lisa-argumentit (:args (meta polut))]]
                          (when-not kuuntelu-luotu-jo?
-                           (println "LISÄTÄÄN KUUNTELIJA: " kuuntelun-nimi)
                            (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}])))))))))
   ISeuranta
   (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen?] :as seuranta}]]
+    (println "Lisätään seuranta: " seurannan-nimi)
     (set! seurannat
           (assoc seurannat
                  seurannan-nimi
@@ -171,6 +170,7 @@
                                             asetetaan-uusi-data? (and (or seurattava-data-muuttunut?
                                                                           seuranta-lisatty?)
                                                                       *muutetaan-seurattava-arvo?*)]
+                                        ;(println "-> AJETAAN seuranta " seurannan-nimi)
                                         (if asetetaan-uusi-data?
                                           (let [arvot (mapv #(get-in uusi %) polut)]
                                             (apply aseta uusi (if lisa-argumentit
@@ -197,6 +197,14 @@
                         (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
                               (str uudet-polut))))
                     (when polut-muuttunut?
+                      (doseq [[seurannan-nimi {:keys [dynaaminen?]}] seurannat
+                              :let [seuranta-poistettava? (and dynaaminen?
+                                                               (nil? (some #(= (ffirst %) seurannan-nimi)
+                                                                           uudet-polut)))]]
+                        (when seuranta-poistettava?
+                          (println "Poisteteaan seuranta: " seurannan-nimi)
+                          (set! seurannat
+                                (dissoc seurannat seurannan-nimi))))
                       (doseq [m uudet-polut
                               :let [[[seurannan-nimi polut]] (seq m)
                                     seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
@@ -204,13 +212,6 @@
                                     lisa-argumentit (:args (meta polut))]]
                         (when-not seuranta-luotu-jo?
                           (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
-                      (doseq [[seurannan-nimi {:keys [dynaaminen?]}] seurannat
-                              :let [seuranta-poistettava? (and dynaaminen?
-                                                               (nil? (some #(= (ffirst %) seurannan-nimi)
-                                                                           uudet-polut)))]]
-                        (when seuranta-poistettava?
-                          (set! seurannat
-                                (dissoc seurannat seurannan-nimi))))
                       (into #{} (map ffirst uudet-polut))))))))
   IAsettaja
   (lisaa-asettaja! [this rajapinta [rajapinnan-nimi f]]
@@ -292,9 +293,9 @@
                                                                              tila))))))]
                                         (recur uusi
                                                paivitetty-tila
-                                               (apply clojure.set/union (mapv (fn [[_ f]]
-                                                                                (f uusi paivitetty-tila))
-                                                                              seurannat-lisaaja))
+                                               (mapv (fn [[_ f]]
+                                                       (f uusi paivitetty-tila))
+                                                     seurannat-lisaaja)
                                                (conj kaydyt-tilat (hash paivitetty-tila))
                                                (not= (hash uusi) (hash paivitetty-tila))))
                                       uusi)))]
