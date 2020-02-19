@@ -34,7 +34,8 @@
 (def +polku+ (let [host (.-host js/location)]
                (if (or (gstr/startsWith host "10.")
                        (#{"localhost" "localhost:3000" "localhost:8000"
-                          "harja-test.solitaservices.fi"} host))
+                          "harja-test.solitaservices.fi"} host)
+                       (gstr/contains host "googleusercontent"))
                  "/"
                  "/harja/")))
 (defn polku []
