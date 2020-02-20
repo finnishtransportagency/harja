@@ -26,7 +26,7 @@
                [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
          hakuehdot))
 
-(defn hae-paikkaukset-paikkauskohe [db hakuehdot]
+(defn hae-paikkaukset-paikkauskohde [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus
          (conj paikkaus/paikkauksen-perustiedot
@@ -283,7 +283,6 @@
 (defn hae-urakan-paikkaustoteumat [db urakka-id]
   (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id
                             ::muokkaustiedot/poistettu? false}))
-
 
 (defn hae-urakan-paikkauskohteet [db urakka-id]
   (let [paikkauskohteet (fetch db

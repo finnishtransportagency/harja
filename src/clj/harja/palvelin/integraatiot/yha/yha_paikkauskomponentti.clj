@@ -57,7 +57,7 @@
   "Yrittää lähettää edellisellä kerralla virheeseen päätyneet paikkauskohteet uudelleen YHA:aan."
   [integraatioloki db asetukset]
   (let [hakuehdot []                                        ;; TODO: hakuehdoksi virheeseen menneet paikkauskohteiden lähetykset + jokin aikarajaus + toimenpiderajaus
-        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohe db hakuehdot)] ;; TODO: hae virheeseen menneet paikkaukset
+        uudelleen-lahetettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohde db hakuehdot)] ;; TODO: hae virheeseen menneet paikkaukset
   (doseq [paikkauskohde uudelleen-lahetettavat-paikkauskohteet]
     (laheta-paikkauskohde integraatioloki db asetukset (:id paikkauskohde)))))
 
@@ -91,7 +91,7 @@
   "Yrittää poistaa YHA:sta paikkauskohteet, jotka edellisellä poistokerralla päätyivät virheeseen."
   [integraatioloki db asetukset]
   (let [hakuehdot []                                        ;; TODO: hakuehdoksi virheeseen menneet paikkauskohteiden lähetykset + jokin aikarajaus + toimenpiderajaus
-        uudelleen-poistettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohe db hakuehdot)];; TODO: hae virheeseen menneet paikkaukset
+        uudelleen-poistettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohde db hakuehdot)];; TODO: hae virheeseen menneet paikkaukset
   (doseq [paikkauskohde uudelleen-poistettavat-paikkauskohteet]
     (poista-paikkauskohde integraatioloki db asetukset (:id paikkauskohde)))))
 
