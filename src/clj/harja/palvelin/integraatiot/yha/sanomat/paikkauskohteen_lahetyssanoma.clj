@@ -1,9 +1,12 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-lahetyssanoma
   (:require [harja.kyselyt.urakat :as q-urakka]
+            [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.tyokalut.xml :as xml]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [cheshire.core :as cheshire]
+            [namespacefy.core :refer [unnamespacefy]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
@@ -118,25 +121,25 @@
      (reduce conj [:alikohteet]
              (mapv tee-alikohde alikohteet)))])
 
-(defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
-  [:urakan-kohteiden-toteumatietojen-kirjaus
-   {:xmlns "http://www.vayla.fi/xsd/yha"}
-   [:urakka
-    [:yha-id yhaid]
-    [:harja-id harjaid]
-    [:sampotunnus sampoid]
-    [:tunnus yhatunnus]
-    (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
+(defn muodosta-sanoma [urakka kohde paikkaukset]
 
-(defn muodosta [urakka-id kohde-id]
-  (let [urakka (first (q-urakka/hae-urakan-nimi {:urakka urakka-id}))
-        kohde (first (q-urakka/hae-paikkauskohde {:urakka kohde-id}))
-        sisalto (muodosta-sanoma urakka kohde)
+  (println "&%%%%%% URAKKA" (cheshire/encode urakka))
+  (println "&%%%%%% KOHDE" (cheshire/encode kohde))
+  (println  (map #(unnamespacefy %) paikkaukset))
+  (println "&%%%%%% PAIKKAUKSET" (cheshire/encode (unnamespacefy paikkaukset)))
+  )
+
+(defn muodosta [db urakka-id kohde-id]
+  (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
+        kohde nil ;(first (p/hae-paikkauskohde {:urakka kohde-id}))
+        paikkaukset (q-paikkaus/hae-paikkaukset-paikkauskohde db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
+                                                          :harja.domain.muokkaustiedot/poistettu? false})
+        sisalto (muodosta-sanoma urakka kohde paikkaukset)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
-        (throw+ {:type :invalidi-yha-kohde-xml
+        (throw+ {:type  :invalidi-yha-kohde-xml
                  :error virheviesti}))
       xml)))
 
