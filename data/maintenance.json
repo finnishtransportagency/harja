@@ -1,5 +1,11 @@
 [
   {
+    "date": "2020-2-20",
+    "title": "Varusteiden käsittelyyn on tehty parannuksia",
+    "body": 
+    "<p><b>Urakan varustekirjausten tarkastelu:</b><br> Urakan varustekirjauksia voi rajata Lähetyksen tilan mukaan. Vain virheelliset-valinta palauttaa Varustekirjaukset Harjassa-taulukkoon varusteet, joiden lähetys Tierekisteriin ei ole onnistunut. Tämä helpottaa lähettämättä jääneiden varustekirjausten käsittelyä. <br>Lähettämättä jääneet varustekirjaukset tulee korjata, jotta tiedot päivittyvät Tierekisteriin. Siirron estävä virhe löytyy varusteen tiedoista Muokkaa-painikkeen takaa.</p><p><b>Varusteiden haku Tierekisteristä:</b><br><ul><li>Tr-osoitteella Tierekisteristä haetut varusteet listautuvat tieosoitejärjestyksessä.<li>Varusteluettelossa näytetään varusteen Puoli-tieto<li>Liikennemerkistä näytetään myös Liikennemerkin asetusnumero.</ul> </p> <p><b>Muutokset uuden liikennemerkin syöttöön:</b><br>Jotta tietojen syöttäminen olisi nopeampaa, seuraavat tiedot ovat nyt oletusarvoisesti valittuna:<ul><li>Liikennemerkin tyyppi: 1 Tavallinen<li>Liikennemerkin kiinnitys: 1 Putkivarsi<li>Liikennemerkin materiaali: 1 Alumiini<li>Yleinen kuntoluokitus: 5 Eriomainen</ul></p>"
+  },
+  {
     "date": "2020-2-18",
     "title": "Alikohteet nyt näkyvissä Ylläpidon tiemerkintäurakoiden aikataulunäkymässä",
     "body": "Olemme toteuttaneet HARJAan alikohteiden näkymisen tiemerkintäurakoiden aikataulunäkymässä. Ominaisuus on nyt HARJAn tuotantokäytössä Ylläpitourakoissa.<ul><li>Alikohteita ei yhäkään näytetä Päällystyspuolen aikataulussa. Tiemerkintäurakan aikataulunäkymässä alikohteet sen sijaan nyt näkyvät. Tiemerkintäurakasta ei alikohteita pääse kuitenkaan muokkaamaan, vaan muokkaaminen tapahtuu käynnissä olevissa päällystysurakoissa.</ul>" 
