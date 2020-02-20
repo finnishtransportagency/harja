@@ -54,6 +54,7 @@
   (let [teksti-ilman-pilkkua (clj-str/replace (str teksti) "," ".")]
     (cond
       (or (nil? teksti) (= "" teksti)) ""
+      (= t/vaihtelua-teksti teksti) t/vaihtelua-teksti
       (re-matches #".*\.0*$" teksti-ilman-pilkkua) (apply str (fmt/desimaaliluku teksti-ilman-pilkkua nil true)
                                                           (drop 1 (re-find #".*(\.|,)(0*)" teksti)))
       :else (fmt/desimaaliluku teksti-ilman-pilkkua nil true))))
@@ -89,16 +90,20 @@
                                :on-change (partial (:vaihda-fn this) this)}]
        [:label {:for osan-id} (:txt this)]])))
 
-;; Hieman likaisen oloista, mutta tätä käytetään sen takia, että SyoteTaytaAlas komponentitn on-blur eventissä
-;; tarvitsee event arvoa, jotta nähdään, että onko nappia painettu. Halutaan
-;; kummiskin antaa nappia-painettu! funktiolle eventin sijasta se arvo, joka tulle
-;; käyttäytymisistä.
-(defonce ^:mutable rivit-alla_ nil)
+(defonce ^{:mutable true
+           :doc "Hieman likaisen oloista, mutta tätä käytetään sen takia, että SyoteTaytaAlas komponentitn on-blur eventissä
+ tarvitsee event arvoa, jotta nähdään, että onko nappia painettu. Halutaan
+ kummiskin antaa nappia-painettu! funktiolle eventin sijasta se arvo, joka tulle
+ käyttäytymisistä."}
+         rivit-alla_ nil)
+(defonce ^{:mutable true
+          :doc "Jos halutaan estää blur event focus eventin jälkeen, niin tätä voi käyttää"}
+         esta-blur_ false)
 
 ;"Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
 ;     'Täytä alas' nappi päälle."
 (defsolu SyoteTaytaAlas
-  [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiiviselle]
+  [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]
   {:pre [(boolean? nappi-nakyvilla?)]}
   (fn hankintasuunnitelmien-syotto
     [this]
@@ -159,7 +164,7 @@
                                                             kayttaytymiset))
                                  :parametrit parametrit
                                  :fmt fmt
-                                 :fmt-aktiivinen fmt-aktiiviselle}
+                                 :fmt-aktiivinen fmt-aktiivinen}
                                 #_{:toiminnot {:on-change on-change
                                                :on-blur on-blur
                                                :on-focus (fn [event]
@@ -298,8 +303,8 @@
          datan-kasittely))
 
 
-(defn tyhja->syote-tayta-alas [tyhja {:keys [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiiviselle]}]
-  (-> (->SyoteTaytaAlas (grid/hae-osa tyhja :id) nappi-nakyvilla? (or nappia-painettu! identity) toiminnot kayttaytymiset parametrit fmt fmt-aktiiviselle)
+(defn tyhja->syote-tayta-alas [tyhja {:keys [nappi-nakyvilla? nappia-painettu! toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen]}]
+  (-> (->SyoteTaytaAlas (grid/hae-osa tyhja :id) nappi-nakyvilla? (or nappia-painettu! identity) toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
       (merge (dissoc tyhja :id))))
 
 (defn hankintojen-pohja [taulukon-id
@@ -373,7 +378,7 @@
                                                                                                                                     :parametrit {:size 2
                                                                                                                                                  :class #{"input-default"}}
                                                                                                                                     :fmt summa-formatointi-uusi
-                                                                                                                                    :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                                                                    :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                                                                           (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}} {:fmt summa-formatointi})
                                                                                                           (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))))))))
                                       kopio))
@@ -453,7 +458,7 @@
                                              {:size 2
                                               :class #{"input-default"}}
                                              {:fmt yhteenveto-format
-                                              :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                              :fmt-aktiivinen summa-formatointi-aktiivinen})
                            (gov/tyhja->teksti (get lapset 2) {:class #{"table-default"}} {:fmt yhteenveto-format})
                            (gov/tyhja->teksti (get lapset 3) {:class #{"table-default" "harmaa-teksti"}} {:fmt yhteenveto-format})]))
     (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/data 0 ::g-pohjat/data-sisalto])
@@ -488,7 +493,7 @@
                                                                                           {:size 2
                                                                                            :class #{"input-default"}}
                                                                                           {:fmt summa-formatointi-uusi
-                                                                                           :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                           :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                                         (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
                                                                         (gov/tyhja->teksti (get osat 3) {:class #{"table-default" "harmaa-teksti"}})])))))))))
     (grid/paivita-grid! (grid/get-in-grid g [::g-pohjat/yhteenveto])
@@ -534,7 +539,7 @@
                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
                                                               :arvo arvo
                                                               :solu solu/*this*
-                                                              :jarjesta-data? true
+                                                              :jarjesta-data true
                                                               :triggeroi-seuranta? true}
                                                              true
                                                              hoitokauden-numero)
@@ -638,7 +643,7 @@
                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                                               :arvo arvo
                                                               :solu solu/*this*
-                                                              :jarjesta-data? true
+                                                              :jarjesta-data true
                                                               :triggeroi-seuranta? true}
                                                              true
                                                              hoitokauden-numero)
@@ -719,18 +724,20 @@
   (let [nyt (pvm/nyt)
         dom-id "rahavaraukset-taulukko"
         yhteenveto-grid-rajapinta-asetukset (fn [vanhat-kasittelijat]
+                                              (println "VANHAT KÄSITTELIJÄT")
+                                              (println vanhat-kasittelijat)
+                                              (println "VANHA RAJAPINTA: " (:rajapinta (first vanhat-kasittelijat)))
                                               {:rajapinta (:rajapinta (first vanhat-kasittelijat))
                                                :solun-polun-pituus 1
-                                               :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                               :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                :datan-kasittely (fn [yhteenveto]
+                                                                  (println "----- AFJOAJSFOA ----")
+                                                                  (println "YHTEENVETO RAJAPINTA: ")
+                                                                  (println "DATA: " yhteenveto)
                                                                   (mapv (fn [[_ v]]
                                                                           v)
                                                                         yhteenveto))
-                                               :tunnisteen-kasittely (fn [osat _]
-                                                                       (mapv (fn [osa]
-                                                                               (when (instance? solu/Syote osa)
-                                                                                 :maara))
-                                                                             (grid/hae-grid osat :lapset)))})
+                                               :tunnisteen-kasittely (:tunnisteen-kasittely (first vanhat-kasittelijat))})
         g (grid/grid {:nimi ::root
                       :dom-id dom-id
                       :root-fn (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :rahavaraukset :grid]))
@@ -765,11 +772,6 @@
                                                  :lisattiin-osia! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
                                                  :poistettiin-osia! (fn [g] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
                                                  :toistettava-osa (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
-                                                                              #_#_:root-fn (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :rahavaraukset :grid]))
-                                                                              #_#_:paivita-root! (fn [f]
-                                                                                               (swap! tila/suunnittelu-kustannussuunnitelma
-                                                                                                      (fn [tila]
-                                                                                                        (update-in tila [:gridit :rahavaraukset :grid] f))))
                                                                               :koko (-> konf/auto
                                                                                         (assoc-in [:rivi :nimet]
                                                                                                   {::data-yhteenveto 0
@@ -797,19 +799,33 @@
                                                                                                                         :auki-alussa? false
                                                                                                                         :parametrit {:class #{"table-default" "lihavoitu"}}})
                                                                                                         (solu/syote {:toiminnot {:on-change (fn [arvo]
+                                                                                                                                              (println "on-change arvo: " arvo)
                                                                                                                                               (when arvo
+                                                                                                                                                (when esta-blur_
+                                                                                                                                                  (set! esta-blur_ false))
+                                                                                                                                                (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset-yhteenveto!
+                                                                                                                                                                       :arvo arvo
+                                                                                                                                                                       :solu solu/*this*
+                                                                                                                                                                       :jarjesta-data #{:mapit}})))
+                                                                                                                                 :on-focus (fn [event]
+                                                                                                                                             (let [arvo (.. event -target -value)]
+                                                                                                                                               (println "on-focus arvo: " arvo)
+                                                                                                                                               (when (= arvo t/vaihtelua-teksti)
+                                                                                                                                                 (set! esta-blur_ true)
+                                                                                                                                                 (set! (.. event -target -value) nil))))
+                                                                                                                                 :on-blur (fn [arvo]
+                                                                                                                                            (println "on-blur arvo: " arvo)
+                                                                                                                                            (println "TYYPPI: " (type arvo))
+                                                                                                                                            (if esta-blur_
+                                                                                                                                              (set! esta-blur_ false)
+                                                                                                                                              (when arvo
+                                                                                                                                                (println "asetetaann...")
                                                                                                                                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                                                                                        :arvo arvo
-                                                                                                                                                                       :solu solu/*this*}
-                                                                                                                                                                      false)))
-                                                                                                                                 :on-blur (fn [arvo]
-                                                                                                                                            (when arvo
-                                                                                                                                              (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                     :arvo arvo
-                                                                                                                                                                     :solu solu/*this*
-                                                                                                                                                                     :jarjesta-data? true
-                                                                                                                                                                     :triggeroi-seuranta? true}
-                                                                                                                                                                    true))
+                                                                                                                                                                       :solu solu/*this*
+                                                                                                                                                                       :jarjesta-data true
+                                                                                                                                                                       :triggeroi-seuranta? true}
+                                                                                                                                                                      true)))
                                                                                                                                             #_(when arvo
                                                                                                                                                 (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
                                                                                                                                                 (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
@@ -824,7 +840,7 @@
                                                                                                                      :parametrit {:size 2
                                                                                                                                   :class #{"input-default"}}
                                                                                                                      :fmt yhteenveto-format
-                                                                                                                     :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                                                     :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                                                                         (solu/teksti {:parametrit {:class #{"table-default"}}
                                                                                                                       :fmt yhteenveto-format})
                                                                                                         (solu/teksti {:parametrit {:class #{"table-default" "harmaa-teksti"}}
@@ -867,7 +883,8 @@
                                                                                                                                                                        (when arvo
                                                                                                                                                                          (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                                                                                                                 :arvo arvo
-                                                                                                                                                                                                :solu solu/*this*}
+                                                                                                                                                                                                :solu solu/*this*
+                                                                                                                                                                                                :jarjesta-data #{:mapit}}
                                                                                                                                                                                                false)))
                                                                                                                                                           :on-focus (fn [_]
                                                                                                                                                                       (grid/paivita-osa! solu/*this*
@@ -881,7 +898,7 @@
                                                                                                                                                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                                                                                                               :arvo arvo
                                                                                                                                                                                               :solu solu/*this*
-                                                                                                                                                                                              :jarjesta-data? true
+                                                                                                                                                                                              :jarjesta-data true
                                                                                                                                                                                               :triggeroi-seuranta? true}
                                                                                                                                                                                              true)
                                                                                                                                                                        #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
@@ -909,22 +926,25 @@
                                          :koko {:seuraa {:seurattava ::otsikko
                                                          :sarakkeet :sama
                                                          :rivit :sama}}
-                                         :osat (conj (vec (repeatedly 3 (fn []
+                                         :osat (conj (vec (repeatedly 2 (fn []
                                                                           (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum"}}}))))
-                                                     (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}}))}
+                                                     (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum"}}
+                                                                   :fmt yhteenveto-format})
+                                                     (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
+                                                                   :fmt yhteenveto-format}))}
                                         [{:sarakkeet [0 4] :rivit [0 1]}])]})]
     (e! (tuck-apurit/->MuutaTila [:gridit :rahavaraukset :grid] g))
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/rahavarausten-rajapinta
                                        (t/rahavarausten-dr)
-                                       (merge {[::otsikko] {:rajapinta :otsikot
+                                       (merge {[::otsikko] {:rajapinta :rahavaraukset-otsikot
                                                             :solun-polun-pituus 1
                                                             :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
                                                             :datan-kasittely (fn [otsikot]
                                                                                (mapv (fn [otsikko]
                                                                                        otsikko)
                                                                                      (vals otsikot)))}
-                                               [::yhteenveto] {:rajapinta :yhteensa
+                                               [::yhteenveto] {:rajapinta :rahavaraukset-yhteensa
                                                                :solun-polun-pituus 1
                                                                :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
                                                                :datan-kasittely (fn [yhteensa]
@@ -942,7 +962,7 @@
                                                                             (let [index (dec (get t/rahavaraukset-jarjestys tyyppi))]
                                                                               {[:. index ::data-yhteenveto] {:rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide))
                                                                                                              :solun-polun-pituus 1
-                                                                                                             :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                             :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                                                              :datan-kasittely (fn [yhteenveto]
                                                                                                                                 (println "YHTEENVETO RAJAPINTA: " (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)))
                                                                                                                                 (println "DATA: " yhteenveto)
@@ -961,7 +981,7 @@
                                                                                                                        :comp (fn [aika-1 aika-2]
                                                                                                                                (when (and aika-1 aika-2)
                                                                                                                                  (pvm/ennen? aika-1 aika-2)))}
-                                                                                                                      [:aika :maara :yhteensa :indeksikorjattu]]
+                                                                                                                      ^{:nimi :mapit} [:aika :maara :yhteensa :indeksikorjattu]]
                                                                                                           :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
                                                                                                                              (println (str "DATA SISÄLTÖ: " (keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide))))
                                                                                                                              (println vuoden-hoidonjohtopalkkiot)
@@ -1045,7 +1065,7 @@
                                                                                              (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
                                                                                                                     :arvo arvo
                                                                                                                     :solu solu/*this*
-                                                                                                                    :jarjesta-data? true
+                                                                                                                    :jarjesta-data true
                                                                                                                     :triggeroi-seuranta? true}
                                                                                                                    true)
                                                                                              #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
@@ -1063,7 +1083,7 @@
                                                                                {:size 2
                                                                                 :class #{"input-default"}}
                                                                                {:fmt summa-formatointi-uusi
-                                                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                              (gov/tyhja->syote (get lapset 2)
                                                                                {:on-change (fn [arvo]
                                                                                              (when arvo
@@ -1076,7 +1096,7 @@
                                                                                              (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
                                                                                                                     :arvo arvo
                                                                                                                     :solu solu/*this*
-                                                                                                                    :jarjesta-data? true
+                                                                                                                    :jarjesta-data true
                                                                                                                     :triggeroi-seuranta? true}
                                                                                                                    true)
                                                                                              #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
@@ -1094,7 +1114,7 @@
                                                                                {:size 2
                                                                                 :class #{"input-default"}}
                                                                                {:fmt summa-formatointi-uusi
-                                                                                :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                              (gov/tyhja->teksti (get lapset 3) {:class #{"table-default"}} {:fmt yhteenveto-format})
                                                              (gov/tyhja->teksti (get lapset 4) {:class #{"table-default"}})]))
                                       (grid/paivita-grid! (grid/get-in-grid kopio [::g-pohjat/data-sisalto])
@@ -1148,7 +1168,7 @@
                                                                                                                                                              (t/paivita-solun-arvo {:paivitettava-asia :toimenkuva
                                                                                                                                                                                     :arvo arvo
                                                                                                                                                                                     :solu solu/*this*
-                                                                                                                                                                                    :jarjesta-data? true
+                                                                                                                                                                                    :jarjesta-data true
                                                                                                                                                                                     :triggeroi-seuranta? true}
                                                                                                                                                                                    true)
                                                                                                                                                              #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
@@ -1166,7 +1186,7 @@
                                                                                                                                     :parametrit {:size 2
                                                                                                                                                  :class #{"input-default"}}
                                                                                                                                     :fmt summa-formatointi-uusi
-                                                                                                                                    :fmt-aktiiviselle summa-formatointi-aktiivinen})
+                                                                                                                                    :fmt-aktiivinen summa-formatointi-aktiivinen})
                                                                                                           (gov/tyhja->teksti (get osat 2) {:class #{"table-default"}})
                                                                                                           (gov/tyhja->teksti (get osat 3) {:class #{"table-default"}})
                                                                                                           (gov/tyhja->teksti (get osat 4) {:class #{"table-default"}})])))))))))
@@ -1399,7 +1419,7 @@
                                          (t/paivita-solun-arvo {:paivitettava-asia :hoidonjohtopalkkio
                                                                 :arvo arvo
                                                                 :solu solu/*this*
-                                                                :jarjesta-data? true
+                                                                :jarjesta-data true
                                                                 :triggeroi-seuranta? true}
                                                                true)
                                          #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))

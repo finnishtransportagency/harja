@@ -18,6 +18,23 @@
 
 (def ^:dynamic *muutetaan-seurattava-arvo?* true)
 
+(defn j-m-j [jarjestys data]
+  (let [jarjestys-map (zipmap jarjestys (range))
+        data (merge (zipmap jarjestys (repeat nil))
+                    data)]
+    (println "j-m-j")
+    (let [asd (if (or (record? data) (map? data))
+                (into (sorted-map-by #(compare (if-let [n (jarjestys-map %1)] n 9999) (if-let [n (jarjestys-map %2)] n 9999)))
+                      data)
+                (do (warn (str "Yritetään järjestää ei map muotoinen data avainten mukaan. Ei järjestetä."
+                               " Järjestys: " jarjestys
+                               " Data: " data))
+                    data))]
+      (println asd)
+      asd)))
+
+(def jarjestyksen-mukaan-jarejstys (memoize j-m-j))
+
 (defmulti jarjesta-data
           (fn [jarjestys data]
             (let [c (s/conform ::jarjestys jarjestys)]
@@ -35,17 +52,9 @@
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
-  (let [jarjestys-map (zipmap jarjestys (range))
-        data (merge (zipmap jarjestys (repeat nil))
-                    data)]
-    (if (or (record? data) (map? data))
-      (sort-by key
-               #(compare (jarjestys-map %1) (jarjestys-map %2))
-               data)
-      (do (warn (str "Yritetään järjestää ei map muotoinen data avainten mukaan. Ei järjestetä."
-                     " Järjestys: " jarjestys
-                     " Data: " data))
-          data))))
+  (println "JÄRJESTETÄÄN AVAINTEN MUKAAN: " jarjestys)
+  (seq (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
+              data)))
 
 (defmethod jarjesta-data :default
   [_ data]

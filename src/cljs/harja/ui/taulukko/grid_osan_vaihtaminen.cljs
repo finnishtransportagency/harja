@@ -26,13 +26,13 @@
        (merge (dissoc tyhja :id)))))
 
 (defn tyhja->syote
-  ([tyhja toiminnot kayttaytymiset parametrit] (tyhja->syote tyhja toiminnot kayttaytymiset parametrit {:fmt identity :fmt-aktiiviselle identity}))
-  ([tyhja toiminnot kayttaytymiset parametrit {:keys [fmt fmt-aktiiviselle]}]
+  ([tyhja toiminnot kayttaytymiset parametrit] (tyhja->syote tyhja toiminnot kayttaytymiset parametrit {:fmt identity :fmt-aktiivinen identity}))
+  ([tyhja toiminnot kayttaytymiset parametrit {:keys [fmt fmt-aktiivinen]}]
    {:pre [(instance? solu/Tyhja tyhja)
           ;; TODO parametrit spec
           ]
     :post [(instance? solu/Syote %)]}
    (-> (solu/->Syote (gop/id tyhja) toiminnot kayttaytymiset parametrit)
        (sp/lisaa-fmt fmt)
-       (sp/lisaa-fmt-aktiiviselle fmt-aktiiviselle)
+       (sp/lisaa-fmt-aktiiviselle fmt-aktiivinen)
        (merge (dissoc tyhja :id)))))

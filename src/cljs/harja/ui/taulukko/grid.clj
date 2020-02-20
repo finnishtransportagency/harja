@@ -1,8 +1,8 @@
 (ns harja.ui.taulukko.grid
   (:require [clojure.string :as clj-str]))
 
-(defmacro jarjesta-data [jarjestetaan? & body]
-  `(binding [harja.ui.taulukko.impl.grid/*jarjesta-data?* ~jarjestetaan?]
+(defmacro jarjesta-data [jarjestetaan & body]
+  `(binding [harja.ui.taulukko.impl.grid/*jarjesta-data* ~jarjestetaan]
      ~@body))
 
 (defmacro triggeroi-seurannat [triggeroidaan? & body]
