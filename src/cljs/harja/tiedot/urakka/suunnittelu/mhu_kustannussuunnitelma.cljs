@@ -253,8 +253,6 @@
 
                               :aseta-rahavaraukset! any?})
 
-(declare identity-print)
-
 (defn rahavarausten-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                           rahavarausten-rajapinta
@@ -280,13 +278,12 @@
                            :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]
                                                               [:suodattimet :hankinnat :toimenpide]]
                                                       :luonti (fn [seurannat valittu-toimenpide]
-                                                                (println "SEURANNAT: " seurannat)
                                                                 (vec
                                                                   (map (fn [[tyyppi _]]
                                                                          ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
                                                                          {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
                                                                        seurannat)))
-                                                      :haku #(do (println "YHTEENVETO") %) #_identity}
+                                                      :haku identity}
                            :rahavaraukset-data {:polut [[:domain :rahavaraukset]
                                                         [:suodattimet :hankinnat :toimenpide]
                                                         [:suodattimet :hoitokauden-numero]]
@@ -309,7 +306,6 @@
                                                                                   (select-keys #{:aika :maara :yhteensa})))
                                                                             johdetut-arvot
                                                                             rahavaraukset))]
-                                                          (println "ARVOT: " arvot)
                                                           arvot))}}
                           ;{:talvihoito {"vahinkojen-korjaukset" [[{:maara 3} {:maara 2} ...] [{:maara 3} {:maara 2} ...]]
                           ;              "akillinen-hoitotyo" [{:maara 1}]}
@@ -330,8 +326,6 @@
                                                                                          (if osan-paikka
                                                                                            (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
                                                                                            (mapv (fn [varaus]
-                                                                                                   (println "VARAUS: " varaus)
-                                                                                                   (println "OSA: " osa)
                                                                                                    (assoc varaus osa arvo))
                                                                                                  hoitokauden-varaukset))))))
                                                          paivita-domain (fn [tila]
@@ -354,9 +348,7 @@
                                                                            ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
                                                                            (nil? arvo) nil
                                                                            (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
-                                                                           :else arvo)
-                                                                    _ (println "ARVO: " arvo)
-                                                                    _ (println "OSA JA TYYPPI: " osa " " tyyppi)]
+                                                                           :else arvo)]
                                                                 ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
                                                                 (update-in tila [:gridit :rahavaraukset :seurannat tyyppi]
                                                                            (fn [yhteenveto]
@@ -389,10 +381,6 @@
                                                                                                     (+ yhteensa maara))
                                                                                                   0
                                                                                                   maarat)]
-                                                                             (println "YHTEENVETO ASETTAMINEN - maarat:")
-                                                                             (println maarat)
-                                                                             (println (not (every? #(= (:maara (first maarat)) (:maara %))
-                                                                                                   maarat)))
                                                                              (assoc-in tila
                                                                                        [:gridit :rahavaraukset :seurannat tyyppi]
                                                                                        {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
@@ -1211,27 +1199,6 @@
                 taulukko))
             suunnitelmien-tila-taulukko (:hallinnolliset paivitetyt-taulukot-instanssi))))
 
-(defonce print-i (cljs.core/atom 0))
-(defn println-c []
-  (println @print-i)
-  (swap! print-i inc))
-
-(defn identity-print
-  ([x] (println "----> " x) x)
-  ([x txt]
-   (println txt)
-   x))
-
-(defn println-c-> [x]
-  (println "-> " @print-i)
-  (swap! print-i inc)
-  x)
-
-(defn println-c-nollaus
-  ([] (reset! print-i 0))
-  ([x]
-   (reset! print-i 0)
-   x))
 
 (extend-protocol tuck/Event
   TaulukoidenVakioarvot

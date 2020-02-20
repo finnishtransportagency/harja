@@ -724,16 +724,10 @@
   (let [nyt (pvm/nyt)
         dom-id "rahavaraukset-taulukko"
         yhteenveto-grid-rajapinta-asetukset (fn [vanhat-kasittelijat]
-                                              (println "VANHAT KÄSITTELIJÄT")
-                                              (println vanhat-kasittelijat)
-                                              (println "VANHA RAJAPINTA: " (:rajapinta (first vanhat-kasittelijat)))
                                               {:rajapinta (:rajapinta (first vanhat-kasittelijat))
                                                :solun-polun-pituus 1
                                                :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                :datan-kasittely (fn [yhteenveto]
-                                                                  (println "----- AFJOAJSFOA ----")
-                                                                  (println "YHTEENVETO RAJAPINTA: ")
-                                                                  (println "DATA: " yhteenveto)
                                                                   (mapv (fn [[_ v]]
                                                                           v)
                                                                         yhteenveto))
@@ -799,7 +793,6 @@
                                                                                                                         :auki-alussa? false
                                                                                                                         :parametrit {:class #{"table-default" "lihavoitu"}}})
                                                                                                         (solu/syote {:toiminnot {:on-change (fn [arvo]
-                                                                                                                                              (println "on-change arvo: " arvo)
                                                                                                                                               (when arvo
                                                                                                                                                 (when esta-blur_
                                                                                                                                                   (set! esta-blur_ false))
@@ -809,17 +802,13 @@
                                                                                                                                                                        :jarjesta-data #{:mapit}})))
                                                                                                                                  :on-focus (fn [event]
                                                                                                                                              (let [arvo (.. event -target -value)]
-                                                                                                                                               (println "on-focus arvo: " arvo)
                                                                                                                                                (when (= arvo t/vaihtelua-teksti)
                                                                                                                                                  (set! esta-blur_ true)
                                                                                                                                                  (set! (.. event -target -value) nil))))
                                                                                                                                  :on-blur (fn [arvo]
-                                                                                                                                            (println "on-blur arvo: " arvo)
-                                                                                                                                            (println "TYYPPI: " (type arvo))
                                                                                                                                             (if esta-blur_
                                                                                                                                               (set! esta-blur_ false)
                                                                                                                                               (when arvo
-                                                                                                                                                (println "asetetaann...")
                                                                                                                                                 (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                                                                                        :arvo arvo
                                                                                                                                                                        :solu solu/*this*
@@ -964,8 +953,6 @@
                                                                                                              :solun-polun-pituus 1
                                                                                                              :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                                                              :datan-kasittely (fn [yhteenveto]
-                                                                                                                                (println "YHTEENVETO RAJAPINTA: " (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)))
-                                                                                                                                (println "DATA: " yhteenveto)
                                                                                                                                 (mapv (fn [[_ v]]
                                                                                                                                         v)
                                                                                                                                       yhteenveto))
@@ -983,8 +970,6 @@
                                                                                                                                  (pvm/ennen? aika-1 aika-2)))}
                                                                                                                       ^{:nimi :mapit} [:aika :maara :yhteensa :indeksikorjattu]]
                                                                                                           :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
-                                                                                                                             (println (str "DATA SISÄLTÖ: " (keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide))))
-                                                                                                                             (println vuoden-hoidonjohtopalkkiot)
                                                                                                                              (mapv (fn [rivi]
                                                                                                                                      (mapv (fn [[_ v]]
                                                                                                                                              v)

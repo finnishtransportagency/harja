@@ -22,16 +22,13 @@
   (let [jarjestys-map (zipmap jarjestys (range))
         data (merge (zipmap jarjestys (repeat nil))
                     data)]
-    (println "j-m-j")
-    (let [asd (if (or (record? data) (map? data))
-                (into (sorted-map-by #(compare (if-let [n (jarjestys-map %1)] n 9999) (if-let [n (jarjestys-map %2)] n 9999)))
-                      data)
-                (do (warn (str "Yritetään järjestää ei map muotoinen data avainten mukaan. Ei järjestetä."
-                               " Järjestys: " jarjestys
-                               " Data: " data))
-                    data))]
-      (println asd)
-      asd)))
+    (if (or (record? data) (map? data))
+      (into (sorted-map-by #(compare (if-let [n (jarjestys-map %1)] n 9999) (if-let [n (jarjestys-map %2)] n 9999)))
+            data)
+      (do (warn (str "Yritetään järjestää ei map muotoinen data avainten mukaan. Ei järjestetä."
+                     " Järjestys: " jarjestys
+                     " Data: " data))
+          data))))
 
 (def jarjestyksen-mukaan-jarejstys (memoize j-m-j))
 
@@ -52,7 +49,6 @@
 
 (defmethod jarjesta-data :mapit-avainten-mukaan
   [jarjestys data]
-  (println "JÄRJESTETÄÄN AVAINTEN MUKAAN: " jarjestys)
   (seq (merge (jarjestyksen-mukaan-jarejstys jarjestys (reduce-kv (fn [m k _] (assoc m k nil)) {} data))
               data)))
 
@@ -62,24 +58,6 @@
     (or (record? data) (map? data)) (mapv val data)
     (sequential? data) (vec data)
     :else data))
-
-
-(defn merge-recur [& ms]
-  (if (every? (fn [x]
-                (and (seqable? x) (map-entry? (first x))))
-              ms)
-    (try (apply merge-with
-                (fn [& xs]
-                  (apply merge-recur xs))
-                ms)
-         (catch :default e
-           (println "ERROR ")
-           (println (str ms))
-           (println (every? associative? ms))
-           (throw e)))
-    (last ms)))
-
-
 
 (defonce seurannan-valitila (atom {}))
 (defonce seurannan-vanha-cache (atom {}))
@@ -105,7 +83,6 @@
     (let [kursorit (mapv (fn [polku]
                            (r/cursor data-atom polku))
                          polut)]
-      (println "Lisätään kuuntelija: " kuuntelun-nimi)
       (set! kuuntelijat
             (assoc kuuntelijat
                    kuuntelun-nimi
@@ -153,7 +130,6 @@
                                                                             uudet-polut))
                                                                 (= vanhemman-kuuntelijan-nimi kuuntelijan-vanhemman-kuuntelijan-nimi))]]
                          (when kuuntelu-poistettava?
-                           (println "poistetaan kuuntelija: " kuuntelun-nimi)
                            (r/dispose! r)
                            (set! kuuntelijat
                                  (dissoc kuuntelijat kuuntelun-nimi))))
@@ -166,7 +142,6 @@
                            (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}])))))))))
   ISeuranta
   (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen?] :as seuranta}]]
-    (println "Lisätään seuranta: " seurannan-nimi)
     (set! seurannat
           (assoc seurannat
                  seurannan-nimi
@@ -179,7 +154,6 @@
                                             asetetaan-uusi-data? (and (or seurattava-data-muuttunut?
                                                                           seuranta-lisatty?)
                                                                       *muutetaan-seurattava-arvo?*)]
-                                        ;(println "-> AJETAAN seuranta " seurannan-nimi)
                                         (if asetetaan-uusi-data?
                                           (let [arvot (mapv #(get-in uusi %) polut)]
                                             (apply aseta uusi (if lisa-argumentit
@@ -211,7 +185,6 @@
                                                                (nil? (some #(= (ffirst %) seurannan-nimi)
                                                                            uudet-polut)))]]
                         (when seuranta-poistettava?
-                          (println "Poisteteaan seuranta: " seurannan-nimi)
                           (set! seurannat
                                 (dissoc seurannat seurannan-nimi))))
                       (doseq [m uudet-polut
@@ -346,7 +319,6 @@
   (-equiv [this other] (and (= (type this) (type other)) (identical? this other)))
   ratom/IDisposable
   (dispose! [this]
-    (println "DISPOSATAAN DATAN KASITTELIJÄ")
     (remove-watch nimi data-atom)
     #_(set! tila nil)
     (set! muuttuvien-seurantojen-polut nil)
