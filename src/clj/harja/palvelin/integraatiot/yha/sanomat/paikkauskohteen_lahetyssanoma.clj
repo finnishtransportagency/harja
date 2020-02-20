@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-lahetyssanoma
-  (:require [harja.tyokalut.xml :as xml]
+  (:require [harja.kyselyt.urakat as q-urakka]
+            [harja.tyokalut.xml :as xml]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm])
@@ -127,8 +128,10 @@
     [:tunnus yhatunnus]
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
-(defn muodosta [urakka kohteet]
-  (let [sisalto (muodosta-sanoma urakka kohteet)
+(defn muodosta [urakka-id kohde-id]
+  (let [urakka (first (q-urakka/hae-urakan-nimi {:urakka urakka-id}))
+        kohde (first (q-urakka/hae-paikkauskohde {:urakka kohde-id}))
+        sisalto (muodosta-sanoma urakka kohde)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
@@ -137,6 +140,5 @@
                  :error virheviesti}))
       xml)))
 
-(defn muodosta [db kohde-id])
 
 
