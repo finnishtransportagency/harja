@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.paikkauskohteen-lahetyssanoma
-  (:require [harja.kyselyt.urakat as q-urakka]
+  (:require [harja.kyselyt.urakat :as q-urakka]
             [harja.tyokalut.xml :as xml]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
