@@ -2,7 +2,7 @@
   {
     "date": "2020-2-18",
     "title": "Alikohteet nyt näkyvissä Ylläpidon aikataulunäkymässä",
-    "body": "<ul><li> Olemme toteuttaneet HARJAan alikohteiden näkymisen aikataulunäkymässä. Ominaisuus on nyt HARJAn tuotantokäytössä Ylläpitourakoissa.</ul>" 
+    "body": "Olemme toteuttaneet HARJAan alikohteiden näkymisen aikataulunäkymässä. Ominaisuus on nyt HARJAn tuotantokäytössä Ylläpitourakoissa.<ul><li>Alikohteita ei yhäkään näytetä Päällystyspuolen aikataulussa. Tiemerkintäurakan aikataulunäkymässä alikohteet sen sijaan nyt näkyvät. Tiemerkintäurakasta ei alikohteita pääse kuitenkaan muokkaamaan, vaan muokkaaminen tapahtuu käynnissä olevissa päällystysurakoissa.</ul>" 
   },
   {
     "date": "2020-1-27",
