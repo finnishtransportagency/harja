@@ -283,12 +283,12 @@
                                                                          {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
                                                                        seurannat)))
                                                       :haku identity}
-                           :rahavaraukset-kuukausitasolla? {:polut [[:gridit :rahavaraukset :kuukausitasolla?]]
-                                                            :luonti (fn [tyypit]
-                                                                      (mapv (fn [[tyyppi _]]
-                                                                              (println "TYYPPI: " tyyppi)
+                           :rahavaraukset-kuukausitasolla? {:polut [[:domain :rahavaraukset]
+                                                                    [:suodattimet :hankinnat :toimenpide]]
+                                                            :luonti (fn [rahavaraukset valittu-toimenpide]
+                                                                      (mapv (fn [tyyppi]
                                                                               {(keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?")) [[:gridit :rahavaraukset :kuukausitasolla? tyyppi]]})
-                                                                            tyypit))
+                                                                            (distinct (keys (get rahavaraukset valittu-toimenpide)))))
                                                             :haku identity}
                            :rahavaraukset-data {:polut [[:domain :rahavaraukset]
                                                         [:suodattimet :hankinnat :toimenpide]
@@ -391,15 +391,14 @@
                                                                                                   maarat)
                                                                                  kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
                                                                                                                maarat))]
-                                                                             (-> tila
-                                                                                 (assoc-in [:gridit :rahavaraukset :seurannat tyyppi]
-                                                                                           {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
-                                                                                            :yhteensa yhteensa
-                                                                                            :indeksikorjattu (indeksikorjaa yhteensa)
-                                                                                            :maara (if kuukausitasolla?
-                                                                                                     vaihtelua-teksti
-                                                                                                     (:maara (first maarat)))})
-                                                                                 (assoc-in [:gridit :rahavaraukset :kuukausitasolla? tyyppi] kuukausitasolla?))))}
+                                                                             (assoc-in tila
+                                                                                       [:gridit :rahavaraukset :seurannat tyyppi]
+                                                                                       {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
+                                                                                        :yhteensa yhteensa
+                                                                                        :indeksikorjattu (indeksikorjaa yhteensa)
+                                                                                        :maara (if kuukausitasolla?
+                                                                                                 vaihtelua-teksti
+                                                                                                 (:maara (first maarat)))})))}
                            :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
                                                              :init (fn [tila]
                                                                      (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] nil))

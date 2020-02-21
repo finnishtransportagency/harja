@@ -82,7 +82,7 @@
   {:pre [(fn? vaihda-fn)]}
   (fn suunnittele-kuukausitasolla-filter [this]
     (let [taman-data (solu/taman-derefable this)
-          kuukausitasolla? @taman-data
+          kuukausitasolla? (or @taman-data false)
           osan-id (str (grid/hae-osa this :id))]
       [:div
        [:input.vayla-checkbox {:id osan-id
@@ -231,6 +231,7 @@
            :data-attributes {:data-kopioi-allaoleviin true}
            :tabindex 0}]
          [grid/piirra (assoc input-osa ::tama-komponentti this
+                             :parametrit (:parametrit this)
                              :harja.ui.taulukko.impl.grid/osan-derefable (grid/solun-asia this :osan-derefable)) #_(-> input-osa
                                                                       (p/aseta-arvo :arvo value)
                                                                       (assoc ::tama-komponentti this))]]))))
@@ -238,7 +239,8 @@
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
                         (fn [osa]
-                          (when (instance? solu/Syote osa)
+                          (when (or (instance? solu/Syote osa)
+                                    (instance? SyoteTaytaAlas osa))
                             (grid/paivita-osa! osa
                                                (fn [solu]
                                                  (assoc-in solu [:parametrit :disabled?] disabled?)))))))
@@ -263,8 +265,13 @@
                                            (cons (vayla-checkbox (fn [this event]
                                                                    (.preventDefault event)
                                                                    (let [kuukausitasolla? (not (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
-                                                                                                                       :kuukausitasolla?))]
-                                                                     (e! (tuck-apurit/->MuutaTila [:gridit :hoidonjohtopalkkio :kuukausitasolla?] kuukausitasolla?))))
+                                                                                                                       kuukausitasolla?-rajapinta))]
+                                                                     (println " _---- KUUKUAE")
+                                                                     (println (grid/arvo-rajapinnasta (grid/osien-yhteinen-asia this :datan-kasittelija)
+                                                                                                      kuukausitasolla?-rajapinta))
+                                                                     (println "kuukausitasolla?: " kuukausitasolla?)
+                                                                     (println "polku: " kuukausitasolla?-polku)
+                                                                     (e! (tuck-apurit/->MuutaTila kuukausitasolla?-polku kuukausitasolla?))))
                                                                  "Haluan suunnitella jokaiselle kuukaudelle määrän erikseen")
                                                  (repeatedly (dec sarakkeiden-maara) (fn [] (solu/tyhja)))))
                                    :koko {:seuraa {:seurattava (if pohja?
@@ -725,15 +732,6 @@
 (defn rahavarausten-grid []
   (let [nyt (pvm/nyt)
         dom-id "rahavaraukset-taulukko"
-        yhteenveto-grid-rajapinta-asetukset (fn [vanhat-kasittelijat]
-                                              {:rajapinta (:rajapinta (first vanhat-kasittelijat))
-                                               :solun-polun-pituus 1
-                                               :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
-                                               :datan-kasittely (fn [yhteenveto]
-                                                                  (mapv (fn [[_ v]]
-                                                                          v)
-                                                                        yhteenveto))
-                                               :tunnisteen-kasittely (:tunnisteen-kasittely (first vanhat-kasittelijat))})
         g (grid/grid {:nimi ::root
                       :dom-id dom-id
                       :root-fn (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :rahavaraukset :grid]))
@@ -787,27 +785,29 @@
                                                                                                                                                (fn [this auki?]
                                                                                                                                                  (let [rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide))]
                                                                                                                                                    (if auki?
-                                                                                                                                                     (rivi-kuukausifiltterilla! this
-                                                                                                                                                                                false
-                                                                                                                                                                                rajapinta
-                                                                                                                                                                                [:gridit :rahavaraukset :kuukausitasolla? tyyppi]
-                                                                                                                                                                                [:. ::t/yhteenveto] {:rajapinta rajapinta
-                                                                                                                                                                                                     :solun-polun-pituus 1
-                                                                                                                                                                                                     :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                                                                                                                                                     :datan-kasittely (fn [yhteenveto]
-                                                                                                                                                                                                                        (mapv (fn [[_ v]]
-                                                                                                                                                                                                                                v)
-                                                                                                                                                                                                                              yhteenveto))
-                                                                                                                                                                                                     :tunnisteen-kasittely (fn [osat _]
-                                                                                                                                                                                                                             (mapv (fn [osa]
-                                                                                                                                                                                                                                     (when (instance? solu/Syote osa)
-                                                                                                                                                                                                                                       {:osa :maara
-                                                                                                                                                                                                                                        :tyyppi tyyppi}))
-                                                                                                                                                                                                                                   (grid/hae-grid osat :lapset)))}
-                                                                                                                                                                                [:. ::t/valinta] {:rajapinta (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
-                                                                                                                                                                                                  :solun-polun-pituus 1
-                                                                                                                                                                                                  :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                                                                                                     [kuukausitasolla? nil nil nil])})
+                                                                                                                                                     (do
+                                                                                                                                                         (rivi-kuukausifiltterilla! this
+                                                                                                                                                                                    false
+                                                                                                                                                                                    (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
+                                                                                                                                                                                    [:gridit :rahavaraukset :kuukausitasolla? tyyppi]
+                                                                                                                                                                                    [:. ::t/yhteenveto] {:rajapinta rajapinta
+                                                                                                                                                                                                         :solun-polun-pituus 1
+                                                                                                                                                                                                         :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                                                                                                                         :datan-kasittely (fn [yhteenveto]
+                                                                                                                                                                                                                            (mapv (fn [[_ v]]
+                                                                                                                                                                                                                                    v)
+                                                                                                                                                                                                                                  yhteenveto))
+                                                                                                                                                                                                         :tunnisteen-kasittely (fn [osat _]
+                                                                                                                                                                                                                                 (mapv (fn [osa]
+                                                                                                                                                                                                                                         (when (instance? solu/Syote osa)
+                                                                                                                                                                                                                                           {:osa :maara
+                                                                                                                                                                                                                                            :tyyppi tyyppi}))
+                                                                                                                                                                                                                                       (grid/hae-grid osat :lapset)))}
+                                                                                                                                                                                    [:. ::t/valinta] {:rajapinta (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
+                                                                                                                                                                                                      :solun-polun-pituus 1
+                                                                                                                                                                                                      :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                                                                                                         [kuukausitasolla? nil nil nil])})
+                                                                                                                                                         (grid/triggeroi-tapahtuma! this :rahavaraukset-disablerivit))
                                                                                                                                                      (rivi-ilman-kuukausifiltteria! this
                                                                                                                                                                                     false
                                                                                                                                                                                     [:.. ::data-yhteenveto] {:rajapinta rajapinta
@@ -1043,7 +1043,19 @@
                                                                                      (mapv (fn [osa]
                                                                                              (when (instance? solu/Syote osa)
                                                                                                :maara))
-                                                                                           (grid/hae-grid osat :lapset)))}}))))
+                                                                                           (grid/hae-grid osat :lapset)))}}))
+    (grid/grid-tapahtumat g
+                          tila/suunnittelu-kustannussuunnitelma
+                          {:rahavaraukset-disablerivit {:polut [[:gridit :rahavaraukset :kuukausitasolla?]]
+                                                        :toiminto! (fn [g _ kuukausitasolla-kaikki-tyypit]
+                                                                     (println ":rahavaraukset-disablerivit JI")
+                                                                     (doseq [[tyyppi kuukausitasolla?] kuukausitasolla-kaikki-tyypit
+                                                                             :let [index (dec (get t/rahavaraukset-jarjestys tyyppi))]]
+                                                                       (println ":rahavaraukset-disablerivit " kuukausitasolla-kaikki-tyypit)
+                                                                       (maara-solujen-disable! (grid/get-in-grid g [::data index ::data-sisalto])
+                                                                                               (not kuukausitasolla?))
+                                                                       (maara-solujen-disable! (grid/get-in-grid g [::data index ::data-yhteenveto])
+                                                                                               kuukausitasolla?)))}})))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
   (let [g (grid/grid-pohjasta g-pohjat/grid-pohja-5

@@ -189,8 +189,14 @@
 
 ; - Datan käsittelija haut
 
-(defn arvo-rajapinnasta [datan-kasittelija rajapinnan-nimi]
-  @(get-in datan-kasittelija [:kuuntelijat rajapinnan-nimi :r]))
+(defn arvo-rajapinnasta
+  ([datan-kasittelija rajapinnan-nimi] (arvo-rajapinnasta datan-kasittelija rajapinnan-nimi false))
+  ([datan-kasittelija rajapinnan-nimi meta?]
+   (let [arvo (when-let [r (get-in datan-kasittelija [:kuuntelijat rajapinnan-nimi :r])]
+                @r)]
+     (if meta?
+       arvo
+       (:data arvo)))))
 
 ;; MUTAATIOT
 
