@@ -64,6 +64,7 @@
 
 (def ^:dynamic *da-write* false)
 (def ^:dynamic *seuranta-muutos?* false)
+(def ^:dynamic *kaytava-data-atom-hash* nil)
 
 (defprotocol IKuuntelija
   (lisaa-kuuntelija! [this rajapinta kuuntelija])
@@ -79,10 +80,16 @@
 (deftype DatanKasittelija [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
                            ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
   IKuuntelija
-  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku lisa-argumentit dynaaminen? vanhemman-kuuntelijan-nimi]}]]
+  (lisaa-kuuntelija! [this rajapinta [kuuntelun-nimi {:keys [polut haku luonti-init lisa-argumentit dynaaminen? kuuntelija-lisaajan-nimi kuuntelija-lisaajan-polut]}]]
     (let [kursorit (mapv (fn [polku]
                            (r/cursor data-atom polku))
                          polut)]
+      (when luonti-init
+        (swap! seurannan-valitila (fn [valitilat]
+                                    (update-in valitilat
+                                               [*kaytava-data-atom-hash* ::tila]
+                                               (fn [tila]
+                                                 (apply luonti-init tila (map #(get-in tila %) kuuntelija-lisaajan-polut)))))))
       (set! kuuntelijat
             (assoc kuuntelijat
                    kuuntelun-nimi
@@ -103,20 +110,20 @@
                                       :meta (meta rajapinnan-data)}
                                      {:data rajapinnan-data})))
                     :dynaaminen? dynaaminen?
-                    :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}))))
-  (kuuntelijat-lisaaja! [this rajapinta [vanhemman-kuuntelijan-nimi {:keys [polut luonti haku]}]]
+                    :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi}))))
+  (kuuntelijat-lisaaja! [this rajapinta [kuuntelija-lisaajan-nimi {:keys [luonti luonti-init haku] kuuntelija-lisaajan-polut :polut}]]
     (set! kuuntelija-lisaaja
           (assoc kuuntelija-lisaaja
-                 vanhemman-kuuntelijan-nimi
+                 kuuntelija-lisaajan-nimi
                  (fn [vanha uusi]
-                   (let [vanhat-polut (apply luonti (map #(get-in vanha %) polut))
-                         uudet-polut (apply luonti (map #(get-in uusi %) polut))
+                   (let [vanhat-polut (apply luonti (map #(get-in vanha %) kuuntelija-lisaajan-polut))
+                         uudet-polut (apply luonti (map #(get-in uusi %) kuuntelija-lisaajan-polut))
 
                          polut-muuttunut? (not= vanhat-polut uudet-polut)]
                      (assert (or (nil? uudet-polut)
                                  (empty? uudet-polut)
                                  (every? map? uudet-polut))
-                             (str "Kuuntelun lisaaja: " vanhemman-kuuntelijan-nimi " antamat polut eivät ole oikean muotoiset!\n"
+                             (str "Kuuntelun lisaaja: " kuuntelija-lisaajan-nimi " antamat polut eivät ole oikean muotoiset!\n"
                                   "Polkujen tulisi olla vektori mappeja. Saatiin:\n"
                                   uudet-polut))
                      (when g-debug/GRID_DEBUG
@@ -124,11 +131,11 @@
                          (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (when polut-muuttunut?
-                       (doseq [[kuuntelun-nimi {:keys [r dynaaminen?] kuuntelijan-vanhemman-kuuntelijan-nimi :vanhemman-kuuntelijan-nimi}] kuuntelijat
+                       (doseq [[kuuntelun-nimi {:keys [r dynaaminen?] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
                                                                 (nil? (some #(= (ffirst %) kuuntelun-nimi)
                                                                             uudet-polut))
-                                                                (= vanhemman-kuuntelijan-nimi kuuntelijan-vanhemman-kuuntelijan-nimi))]]
+                                                                (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi))]]
                          (when kuuntelu-poistettava?
                            (r/dispose! r)
                            (set! kuuntelijat
@@ -139,7 +146,7 @@
                                                               kuuntelijat)
                                      lisa-argumentit (:args (meta polut))]]
                          (when-not kuuntelu-luotu-jo?
-                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :dynaaminen? true :vanhemman-kuuntelijan-nimi vanhemman-kuuntelijan-nimi}])))))))))
+                           (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :luonti-init luonti-init :dynaaminen? true :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-polut kuuntelija-lisaajan-polut}])))))))))
   ISeuranta
   (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen?] :as seuranta}]]
     (set! seurannat
@@ -284,8 +291,9 @@
             (set! muuttuvien-seurantojen-polut [])
             (let [triggerit-kayty-lapi? (not= paivitetty-tila uusi)]
               (swap! seurannan-valitila assoc-in [data-atom-hash ::tila] paivitetty-tila)
-              (doseq [[_ f] kuuntelija-lisaaja]
-                (f vanha-tila paivitetty-tila))
+              (binding [*kaytava-data-atom-hash* data-atom-hash]
+                (doseq [[_ f] kuuntelija-lisaaja]
+                  (f vanha-tila paivitetty-tila)))
               (when triggerit-kayty-lapi?
                 (r/next-tick (fn []
                                (binding [*seuranta-muutos?* true]
@@ -336,12 +344,10 @@
   (add-on-dispose! [this f]
     (set! on-dispose (conj on-dispose f))))
 
-(defonce ^:dynamic *FOOO* nil)
-
 (defn datan-kasittelija [data-atom]
   {:pre [(satisfies? ratom/IReactiveAtom data-atom)]
    :post [(instance? DatanKasittelija %)]}
-  (let [nimi (or *FOOO* (gensym "datan-kasittelija"))
+  (let [nimi (gensym "datan-kasittelija")
         dk (->DatanKasittelija data-atom nimi [] [] {} {} {} {} {})]
     (add-watch data-atom
                nimi
@@ -359,7 +365,7 @@
 
 (defn triggeroi-seuranta! [kasittelija seurannan-nimi]
   (binding [*muutetaan-seurattava-arvo?* true]
-    ((get-in kasittelija [:seurannat seurannan-nimi :seuranta-trigger!]))))
+    ((get-in kasittelija [:seurannat seurannan-nimi :seuranta-fn]))))
 
 (defn lopeta-tilan-kuuntelu! [kasittelija]
   (doseq [[_ {kuuntelija :r}] (:kuuntelijat kasittelija)]

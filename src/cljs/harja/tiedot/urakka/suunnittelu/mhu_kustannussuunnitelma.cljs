@@ -273,7 +273,8 @@
                                                                                            (get data (dec hoitokauden-numero)))])
                                                                            (get rahavaraukset valittu-toimenpide)))]
                                                      (with-meta arvot
-                                                                {:valittu-toimenpide valittu-toimenpide})))}
+                                                                {:valittu-toimenpide valittu-toimenpide
+                                                                 :hoitokauden-numero hoitokauden-numero})))}
                            :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]
                                                               [:suodattimet :hankinnat :toimenpide]]
                                                       :luonti (fn [seurannat valittu-toimenpide]
@@ -285,6 +286,11 @@
                                                       :haku identity}
                            :rahavaraukset-kuukausitasolla? {:polut [[:domain :rahavaraukset]
                                                                     [:suodattimet :hankinnat :toimenpide]]
+                                                            :luonti-init (fn [tila rahavaraukset valittu-toimenpide]
+                                                                           (reduce (fn [tila tyyppi]
+                                                                                        (assoc-in tila [:gridit :rahavaraukset :kuukausitasolla? tyyppi] false))
+                                                                                      tila
+                                                                                      (distinct (keys (get rahavaraukset valittu-toimenpide)))))
                                                             :luonti (fn [rahavaraukset valittu-toimenpide]
                                                                       (mapv (fn [tyyppi]
                                                                               {(keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?")) [[:gridit :rahavaraukset :kuukausitasolla? tyyppi]]})
@@ -579,7 +585,7 @@
                                   arvo
                                   (grid/solun-asia solu :tunniste-rajapinnan-dataan))))))
 
-(defn triggeroi-seuranta [solu seurannan-nimi]
+(defn triggeroi-seuranta! [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
 
 (defn paivita-raidat! [g]

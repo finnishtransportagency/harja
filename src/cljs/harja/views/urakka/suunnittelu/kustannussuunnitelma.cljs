@@ -236,6 +236,19 @@
                                                                       (p/aseta-arvo :arvo value)
                                                                       (assoc ::tama-komponentti this))]]))))
 
+(defn tayta-alas-napin-toiminto [asettajan-nimi seurannan-nimi maara-solun-index rivit-alla arvo]
+  (when (and arvo (not (empty? rivit-alla)))
+    (doseq [rivi rivit-alla
+            :let [maara-solu (grid/get-in-grid rivi [maara-solun-index])
+                  piillotettu? (grid/piillotettu? rivi)]]
+      (when-not piillotettu?
+        (t/paivita-solun-arvo {:paivitettava-asia asettajan-nimi
+                               :arvo arvo
+                               :solu maara-solu
+                               :ajettavat-jarejestykset #{:mapit}}
+                              true)))
+    (t/triggeroi-seuranta! solu/*this* seurannan-nimi)))
+
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
                         (fn [osa]
@@ -764,10 +777,11 @@
                                                  :koko konf/auto
                                                  :luokat #{"salli-ylipiirtaminen"}
                                                  :osien-maara-muuttui! (fn [g _] (t/paivita-raidat! (grid/osa-polusta (grid/root g) [::data])))
-                                                 :toistettavan-osan-data (fn [{:keys [arvot valittu-toimenpide]}]
+                                                 :toistettavan-osan-data (fn [{:keys [arvot valittu-toimenpide hoitokauden-numero]}]
                                                                            {:valittu-toimenpide valittu-toimenpide
+                                                                            :hoitokauden-numero hoitokauden-numero
                                                                             :tyypit (mapv key arvot)})
-                                                 :toistettava-osa (fn [{:keys [tyypit valittu-toimenpide]}]
+                                                 :toistettava-osa (fn [{:keys [tyypit valittu-toimenpide hoitokauden-numero]}]
                                                                     (mapv (fn [tyyppi]
                                                                             (with-meta
                                                                               (grid/grid {:alueet [{:sarakkeet [0 1] :rivit [0 2]}]
@@ -897,16 +911,10 @@
                                                                                                                                            (with-meta
                                                                                                                                              (->SyoteTaytaAlas (gensym "rahavaraus")
                                                                                                                                                                false
-                                                                                                                                                               (fn [rivit-alla arvo]
-                                                                                                                                                                 (when (and arvo (not (empty? rivit-alla)))
-                                                                                                                                                                   (doseq [rivi rivit-alla
-                                                                                                                                                                           :let [maara-solu (grid/get-in-grid rivi [1])
-                                                                                                                                                                                 piillotettu? (grid/piillotettu? rivi)]]
-                                                                                                                                                                     (when-not piillotettu?
-                                                                                                                                                                       (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                                              :arvo arvo
-                                                                                                                                                                                              :solu maara-solu}
-                                                                                                                                                                                             true)))))
+                                                                                                                                                               (partial tayta-alas-napin-toiminto
+                                                                                                                                                                        :aseta-rahavaraukset!
+                                                                                                                                                                        (keyword (str "rahavaraukset-yhteenveto-" valittu-toimenpide "-" tyyppi "-" (dec hoitokauden-numero)))
+                                                                                                                                                                        1)
                                                                                                                                                                {:on-change (fn [arvo]
                                                                                                                                                                              (when arvo
                                                                                                                                                                                (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
@@ -1038,20 +1046,15 @@
                                                                                                                                                  (grid/hae-grid data-sisalto-grid :lapset))))}})))
                                                                         arvot))
                                                          :datan-kasittely (fn [arvot]
-                                                                            {:arvot arvot :valittu-toimenpide (:valittu-toimenpide (meta arvot))})
-                                                         #_#_:tunnisteen-kasittely (fn [osat _]
-                                                                                     (mapv (fn [osa]
-                                                                                             (when (instance? solu/Syote osa)
-                                                                                               :maara))
-                                                                                           (grid/hae-grid osat :lapset)))}}))
+                                                                            {:arvot arvot
+                                                                             :valittu-toimenpide (:valittu-toimenpide (meta arvot))
+                                                                             :hoitokauden-numero (:hoitokauden-numero (meta arvot))})}}))
     (grid/grid-tapahtumat g
                           tila/suunnittelu-kustannussuunnitelma
                           {:rahavaraukset-disablerivit {:polut [[:gridit :rahavaraukset :kuukausitasolla?]]
                                                         :toiminto! (fn [g _ kuukausitasolla-kaikki-tyypit]
-                                                                     (println ":rahavaraukset-disablerivit JI")
                                                                      (doseq [[tyyppi kuukausitasolla?] kuukausitasolla-kaikki-tyypit
                                                                              :let [index (dec (get t/rahavaraukset-jarjestys tyyppi))]]
-                                                                       (println ":rahavaraukset-disablerivit " kuukausitasolla-kaikki-tyypit)
                                                                        (maara-solujen-disable! (grid/get-in-grid g [::data index ::data-sisalto])
                                                                                                (not kuukausitasolla?))
                                                                        (maara-solujen-disable! (grid/get-in-grid g [::data index ::data-yhteenveto])
