@@ -236,7 +236,10 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
   Todennus
   (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
-          kayttaja-id (headerit "oam_remote_user")]
+          _ (log/warn "TEMP DEBUG. headerit " headerit)
+          kayttaja-id (headerit "oam_remote_user")
+          _ (log/warn "TEMP DEBUG. kayttaja-id " kayttaja-id)
+          ]
 
       (if (nil? kayttaja-id)
         (do
@@ -245,6 +248,9 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
+            (log/warn (str"TEMP DEBUG. kayttajatiedot " (koka->kayttajatiedot db headerit oikeudet)))
+            (log/warn "TEMP DEBUG. oikeudet " oikeudet)
+            (log/warn "TEMP DEBUG. headerit " headerit)
             (log/warn "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
             (throw+ todennusvirhe)))))))
 
