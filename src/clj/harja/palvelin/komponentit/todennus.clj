@@ -245,13 +245,12 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
         (do
           (log/warn "Todennusheader oam_remote_user puuttui kokonaan")
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)
-                 _ (log/warn "TEMP DEBUG. kayttajatiedot " kayttajatiedot)
-                 _ (log/warn "TEMP DEBUG. oikeudet " oikeudet)
-                 _ (log/warn "TEMP DEBUG. headerit " headerit)
-                 ]
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
+            (log/warn (str"TEMP DEBUG. kayttajatiedot " (koka->kayttajatiedot db headerit oikeudet)))
+            (log/warn "TEMP DEBUG. oikeudet " oikeudet)
+            (log/warn "TEMP DEBUG. headerit " headerit)
             (log/warn "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
             (throw+ todennusvirhe)))))))
 
