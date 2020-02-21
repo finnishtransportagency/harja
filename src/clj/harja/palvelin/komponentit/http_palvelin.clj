@@ -316,7 +316,6 @@
                (http/run-server
                  (cookies/wrap-cookies
                    (fn [req]
-                     (log/warn "TEMP DEBUG. Request. " req)
                      (try+
                        (metriikka/inc! mittarit :aktiiviset_pyynnot)
 
@@ -326,7 +325,6 @@
                                    req)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
-                             _ (log/warn "TEMP DEBUG. oam-kayttajanimi " oam-kayttajanimi)
                              random-avain (get (:headers req) "x-csrf-token")
                              csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                              _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
