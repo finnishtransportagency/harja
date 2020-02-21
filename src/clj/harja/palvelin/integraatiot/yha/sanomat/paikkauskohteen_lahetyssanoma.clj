@@ -6,7 +6,8 @@
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [cheshire.core :as cheshire]
-            [namespacefy.core :refer [unnamespacefy]])
+            [namespacefy.core :refer [unnamespacefy]]
+            [clojure.walk :refer [prewalk]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
@@ -121,18 +122,57 @@
      (reduce conj [:alikohteet]
              (mapv tee-alikohde alikohteet)))])
 
+
+
+(defn siivoa-nimiavaruus[data]
+  (prewalk #(if (map? %)
+              (unnamespacefy %)
+              %) data)
+  )
+
 (defn muodosta-sanoma [urakka kohde paikkaukset]
 
   (println "&%%%%%% URAKKA" (cheshire/encode urakka))
-  (println "&%%%%%% KOHDE" (cheshire/encode kohde))
-  (println  (map #(unnamespacefy %) paikkaukset))
-  (println "&%%%%%% PAIKKAUKSET" (cheshire/encode (unnamespacefy paikkaukset)))
+  (println "PAIKKAUKSET count" (count paikkaukset))
+
+
+
+  (let [data (prewalk #(if (map? %)
+                         (unnamespacefy %)
+                         %) paikkaukset)
+        kamat {:urakka urakka
+               :paikkauskohteet [(map #(assoc {} :paikkaus %) data)]
+
+               }
+
+        sanoma (cheshire/encode data)
+
+
+        (map fn[x](
+                   {:paikkauskohde }
+                       (map fn[z]() x)
+
+                        ) data)
+
+
+        ]
+
+
+    (println "DATA count" (count data))
+
+    (println "DATA " data)
+    (println "KAMAT " kamat)
+     (println "SANOMA " sanoma)
+    )
+
+
   )
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde nil ;(first (p/hae-paikkauskohde {:urakka kohde-id}))
-        paikkaukset (q-paikkaus/hae-paikkaukset-paikkauskohde db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id kohde-id
+                                                         :harja.domain.muokkaustiedot/poistettu? false})) ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä
+        paikkaukset (q-paikkaus/hae-paikkaukset db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
                                                           :harja.domain.muokkaustiedot/poistettu? false})
         sisalto (muodosta-sanoma urakka kohde paikkaukset)
         xml (xml/tee-xml-sanoma sisalto)]
