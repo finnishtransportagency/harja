@@ -68,15 +68,20 @@
 
 (defprotocol IKuuntelija
   (lisaa-kuuntelija! [this rajapinta kuuntelija])
+  (poista-kuuntelija! [this kuuntelijan-nimi])
   (kuuntelijat-lisaaja! [this rajapinta kuuntelija-luonti]))
 
 (defprotocol ISeuranta
   (lisaa-seuranta! [this seuranta])
+  (poista-seuranta! [this seurannan-nimi tila])
   (seurannat-lisaaja! [this seurantojen-luonti]))
 
 (defprotocol IAsettaja
   (lisaa-asettaja! [this rajapinta asettaja]))
 
+
+;; TODO kuuntelijoiden tilan init samantapaiseksi kuin seurannan siivoa-tila. Eli muokataan annettua tilaa, eikä swapata valitilaa.
+;; Pitäisikö laittaa siivoamis ja init funktiot molempiin (seurannat ja kuuntelijat)?
 (deftype DatanKasittelija [data-atom nimi ^:mutable muuttuvien-seurantojen-polut ^:mutable on-dispose ^:mutable seurannat-lisaaja
                            ^:mutable kuuntelija-lisaaja ^:mutable kuuntelijat ^:mutable asettajat ^:mutable seurannat]
   IKuuntelija
@@ -111,6 +116,11 @@
                                      {:data rajapinnan-data})))
                     :dynaaminen? dynaaminen?
                     :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi}))))
+  (poista-kuuntelija! [_ kuuntelijan-nimi]
+    (let [{:keys [r]} (get kuuntelijat kuuntelijan-nimi)]
+      (r/dispose! r)
+      (set! kuuntelijat
+            (dissoc kuuntelijat kuuntelijan-nimi))))
   (kuuntelijat-lisaaja! [this rajapinta [kuuntelija-lisaajan-nimi {:keys [luonti luonti-init haku] kuuntelija-lisaajan-polut :polut}]]
     (set! kuuntelija-lisaaja
           (assoc kuuntelija-lisaaja
@@ -131,15 +141,13 @@
                          (warn "Kuuntelijan luonnissa on uudessa polussa arvo nil:\n"
                                (str uudet-polut))))
                      (when polut-muuttunut?
-                       (doseq [[kuuntelun-nimi {:keys [r dynaaminen?] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
+                       (doseq [[kuuntelun-nimi {:keys [dynaaminen?] kuuntelijan-kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-nimi}] kuuntelijat
                                :let [kuuntelu-poistettava? (and dynaaminen?
                                                                 (nil? (some #(= (ffirst %) kuuntelun-nimi)
                                                                             uudet-polut))
                                                                 (= kuuntelija-lisaajan-nimi kuuntelijan-kuuntelija-lisaajan-nimi))]]
                          (when kuuntelu-poistettava?
-                           (r/dispose! r)
-                           (set! kuuntelijat
-                                 (dissoc kuuntelijat kuuntelun-nimi))))
+                           (poista-kuuntelija! this kuuntelun-nimi)))
                        (doseq [m uudet-polut
                                :let [[[kuuntelun-nimi polut]] (seq m)
                                      kuuntelu-luotu-jo? (some #(= (key %) kuuntelun-nimi)
@@ -148,7 +156,7 @@
                          (when-not kuuntelu-luotu-jo?
                            (lisaa-kuuntelija! this rajapinta [kuuntelun-nimi {:polut polut :haku haku :lisa-argumentit lisa-argumentit :luonti-init luonti-init :dynaaminen? true :kuuntelija-lisaajan-nimi kuuntelija-lisaajan-nimi :kuuntelija-lisaajan-polut kuuntelija-lisaajan-polut}])))))))))
   ISeuranta
-  (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen?] :as seuranta}]]
+  (lisaa-seuranta! [this [seurannan-nimi {:keys [polut aseta lisa-argumentit dynaaminen? siivoa-tila] :as seuranta}]]
     (set! seurannat
           (assoc seurannat
                  seurannan-nimi
@@ -167,7 +175,17 @@
                                                                 (concat arvot lisa-argumentit)
                                                                 arvot)))
                                           uusi)))))))
-  (seurannat-lisaaja! [this [seurannan-nimi {:keys [polut luonti aseta] :as seuranta}]]
+  (poista-seuranta! [this seurannan-nimi tila]
+    (let [{:keys [polut lisa-argumentit siivoa-tila]} (get seurannat seurannan-nimi)]
+      (set! seurannat
+            (dissoc seurannat seurannan-nimi))
+      (if siivoa-tila
+        (let [arvot (mapv #(get-in tila %) polut)]
+          (apply siivoa-tila tila (if lisa-argumentit
+                                    (concat arvot lisa-argumentit)
+                                    arvot)))
+        tila)))
+  (seurannat-lisaaja! [this [seurannan-nimi {:keys [polut luonti siivoa-tila aseta] :as seuranta}]]
     (set! seurannat-lisaaja
           (assoc seurannat-lisaaja
                  seurannan-nimi
@@ -186,22 +204,28 @@
                       (when (some nil? (flatten (mapcat vals uudet-polut)))
                         (warn "Seurannan " seurannan-nimi " luonnissa on uudessa polussa arvo nil:\n"
                               (str uudet-polut))))
-                    (when polut-muuttunut?
-                      (doseq [[seurannan-nimi {:keys [dynaaminen?]}] seurannat
-                              :let [seuranta-poistettava? (and dynaaminen?
-                                                               (nil? (some #(= (ffirst %) seurannan-nimi)
-                                                                           uudet-polut)))]]
-                        (when seuranta-poistettava?
-                          (set! seurannat
-                                (dissoc seurannat seurannan-nimi))))
-                      (doseq [m uudet-polut
-                              :let [[[seurannan-nimi polut]] (seq m)
-                                    seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
-                                                             seurannat)
-                                    lisa-argumentit (:args (meta polut))]]
-                        (when-not seuranta-luotu-jo?
-                          (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true}])))
-                      (into #{} (map ffirst uudet-polut))))))))
+                    (if polut-muuttunut?
+                      (let [poiston-jalkeinen-tila (reduce-kv (fn [tila seurannan-nimi {:keys [dynaaminen?]}]
+                                                                (let [seuranta-poistettava? (and dynaaminen?
+                                                                                                 (nil? (some #(= (ffirst %) seurannan-nimi)
+                                                                                                             uudet-polut)))]
+                                                                  (if seuranta-poistettava?
+                                                                    (poista-seuranta! this seurannan-nimi tila)
+                                                                    tila)))
+                                                              uusi
+                                                              seurannat)]
+                        (second (reduce (fn [[vanha uusi] m]
+                                             (let [[[seurannan-nimi polut]] (seq m)
+                                                   seuranta-luotu-jo? (some #(= (key %) seurannan-nimi)
+                                                                            seurannat)
+                                                   lisa-argumentit (:args (meta polut))]
+                                               (if-not seuranta-luotu-jo?
+                                                 (do (lisaa-seuranta! this [seurannan-nimi {:polut polut :aseta aseta :lisa-argumentit lisa-argumentit :dynaaminen? true :siivoa-tila siivoa-tila}])
+                                                     [uusi ((get-in seurannat [seurannan-nimi :seuranta-fn]) true vanha uusi)])
+                                                 [vanha uusi])))
+                                           [vanha poiston-jalkeinen-tila]
+                                           uudet-polut)))
+                      uusi))))))
   IAsettaja
   (lisaa-asettaja! [this rajapinta [rajapinnan-nimi f]]
     (set! asettajat
@@ -243,16 +267,17 @@
             vanha-tila (get @seurannan-vanha-cache data-atom-hash)]
         (when-not (= vanha-tila uusi)
           (let [paivitetty-tila (loop [vanha vanha-tila
-                                       uusi uusi
-                                       seurannat-lisatty (mapv (fn [[_ f]]
-                                                                 (f vanha-tila uusi))
-                                                               seurannat-lisaaja)
+                                       vanhat-seurannat seurannat
+                                       uusi (reduce (fn [uusi [_ f]]
+                                                      (f vanha uusi))
+                                                    uusi
+                                                    seurannat-lisaaja)
                                        kaydyt-tilat [(hash vanha) (hash uusi)]
                                        muuttunut? (not= (hash vanha) (hash uusi))]
                                   (let [kiertava-tila? (> (- (count kaydyt-tilat)
                                                              (count (distinct kaydyt-tilat)))
                                                           3)
-                                        seurannat-lisatty (apply clj-set/union seurannat-lisatty)]
+                                        seurannat-muuttunut? (not= vanhat-seurannat seurannat)]
                                     (when (and kiertava-tila?
                                                muuttunut?)
                                       (error "Huomattiin kiertävä seuranta!\n"
@@ -262,9 +287,8 @@
                                              "\nHypätään seurannasta pois."))
                                     (if (or (and muuttunut?
                                                  (not kiertava-tila?))
-                                            (not (empty? seurannat-lisatty)))
+                                            seurannat-muuttunut?)
                                       (let [paivitetty-tila (loop [[seuranta & loput-seurannat] seurannat
-                                                                   lisatty? (contains? seurannat-lisatty (first seuranta))
                                                                    vanha vanha
                                                                    uusi uusi]
                                                               (let [[_ {:keys [seuranta-fn polut]}] seuranta]
@@ -273,18 +297,18 @@
                                                                         (conj muuttuvien-seurantojen-polut polut)))
                                                                 (if (nil? seuranta)
                                                                   uusi
-                                                                  (let [tila (seuranta-fn lisatty? vanha uusi)]
+                                                                  (let [tila (seuranta-fn false vanha uusi)]
                                                                     (recur loput-seurannat
-                                                                           (contains? seurannat-lisatty (ffirst loput-seurannat))
                                                                            vanha
                                                                            (if (= tila vanha)
                                                                              uusi
                                                                              tila))))))]
                                         (recur uusi
-                                               paivitetty-tila
-                                               (mapv (fn [[_ f]]
-                                                       (f uusi paivitetty-tila))
-                                                     seurannat-lisaaja)
+                                               seurannat
+                                               (reduce (fn [paivitetty-tila [_ f]]
+                                                         (f uusi paivitetty-tila))
+                                                       paivitetty-tila
+                                                       seurannat-lisaaja)
                                                (conj kaydyt-tilat (hash paivitetty-tila))
                                                (not= (hash uusi) (hash paivitetty-tila))))
                                       uusi)))]

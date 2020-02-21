@@ -390,6 +390,11 @@
                                                                                                                                                                                                              [:suodattimet :hankinnat :toimenpide]]})
                                                                                                    (range (count data))))
                                                                                           toimenpiteen-rahavaraukset)))))
+                                                                  :siivoa-tila (fn [tila _ _ tyyppi]
+                                                                                 (update-in tila
+                                                                                           [:gridit :rahavaraukset :seurannat]
+                                                                                            (fn [tyyppien-data]
+                                                                                              (dissoc tyyppien-data tyyppi))))
                                                                   :aseta (fn [tila maarat valittu-toimenpide tyyppi]
                                                                            (let [yhteensa (reduce (fn [yhteensa {maara :maara}]
                                                                                                     (+ yhteensa maara))
