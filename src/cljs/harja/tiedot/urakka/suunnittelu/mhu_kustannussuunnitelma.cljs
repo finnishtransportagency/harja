@@ -325,29 +325,40 @@
                           {:aseta-rahavaraukset! (fn [tila arvo {:keys [osa osan-paikka tyyppi]} paivitetaan-domain?]
                                                    (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                          valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
+                                                         kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+                                                         paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                                                             (range hoitokauden-numero 6)
+                                                                                             [hoitokauden-numero])
+
                                                          arvo (if (re-matches #"\d*,\d+" arvo)
                                                                 (clj-str/replace arvo #"," ".")
                                                                 arvo)
                                                          paattyy-desimaalierottajaan? (re-matches #"\d*(,|\.)$" arvo)
                                                          paivita-gridit (fn [tila]
-                                                                          (update-in tila [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                                                     (fn [hoitokauden-varaukset]
-                                                                                       (let [hoitokauden-varaukset (if (nil? hoitokauden-varaukset)
-                                                                                                                     (vec (repeat 12 {}))
-                                                                                                                     hoitokauden-varaukset)]
-                                                                                         (if osan-paikka
-                                                                                           (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
-                                                                                           (mapv (fn [varaus]
-                                                                                                   (assoc varaus osa arvo))
-                                                                                                 hoitokauden-varaukset))))))
+                                                                          (reduce (fn [tila hoitokauden-numero]
+                                                                                    (update-in tila [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                               (fn [hoitokauden-varaukset]
+                                                                                                 (let [hoitokauden-varaukset (if (nil? hoitokauden-varaukset)
+                                                                                                                               (vec (repeat 12 {}))
+                                                                                                                               hoitokauden-varaukset)]
+                                                                                                   (if osan-paikka
+                                                                                                     (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] arvo)
+                                                                                                     (mapv (fn [varaus]
+                                                                                                             (assoc varaus osa arvo))
+                                                                                                           hoitokauden-varaukset))))))
+                                                                                  tila
+                                                                                  paivitettavat-hoitokauden-numerot))
                                                          paivita-domain (fn [tila]
-                                                                          (update-in tila [:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                                                     (fn [hoitokauden-varaukset]
-                                                                                       (if osan-paikka
-                                                                                         (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] (js/Number arvo))
-                                                                                         (mapv (fn [varaus]
-                                                                                                 (assoc varaus osa (js/Number arvo)))
-                                                                                               hoitokauden-varaukset)))))]
+                                                                          (reduce (fn [tila hoitokauden-numero]
+                                                                                    (update-in tila [:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                               (fn [hoitokauden-varaukset]
+                                                                                                 (if osan-paikka
+                                                                                                   (assoc-in hoitokauden-varaukset [(first osan-paikka) osa] (js/Number arvo))
+                                                                                                   (mapv (fn [varaus]
+                                                                                                           (assoc varaus osa (js/Number arvo)))
+                                                                                                         hoitokauden-varaukset)))))
+                                                                                  tila
+                                                                                  paivitettavat-hoitokauden-numerot))]
                                                      ;; Halutaan pitää data atomissa olevat arvot numeroina kun taasen käyttöliittymässä sen täytyy olla string (desimaalierottajan takia)
                                                      (if hoitokauden-numero
                                                        (if (and paivitetaan-domain?
