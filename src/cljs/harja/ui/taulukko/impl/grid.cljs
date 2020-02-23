@@ -636,6 +636,7 @@
   (assoc (if-let [loydetty-osa (some (fn [[grid-polku {:keys [rajapintakasittelija osien-tunnisteet solun-polun-pituus seuranta rajapinta]}]]
                                        (let [grid-polku-sopii-osaan? (grid-polku-sopii-osaan? grid-polku osa)
                                              nimipolku-ilman-loppuindexeja (->> osa ::nimi-polku reverse (drop-while integer?) reverse vec)
+                                             ;; TODO ehkä tämmönen (vec (take-last solun-polun-pituus (::index-polku osa))) ois parempi
                                              osan-polku-dataan (vec (drop (count nimipolku-ilman-loppuindexeja)
                                                                           (::index-polku osa)))
                                              solun-polun-pituus-oikein? (solun-polun-pituus-oikein? grid-polku solun-polun-pituus osa)

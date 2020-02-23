@@ -323,7 +323,7 @@
                           ;              "akillinen-hoitotyo" [{:maara 1}]}
 
                           {:aseta-rahavaraukset! (fn [tila arvo {:keys [osa osan-paikka tyyppi]} paivitetaan-domain?]
-                                                   (let [hoitokauden-numero (get-in tila [:domain :hoitokausi :hoitokauden-numero])
+                                                   (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                          valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
                                                          arvo (if (re-matches #"\d*,\d+" arvo)
                                                                 (clj-str/replace arvo #"," ".")
@@ -438,7 +438,7 @@
                           {:otsikot {:polut [[:gridit :hoidonjohtopalkkio :otsikot]]
                                      :haku identity}
                            :yhteenveto {:polut [[:gridit :hoidonjohtopalkkio :yhteenveto]
-                                                [:domain :hoitokausi :hoitokauden-numero]]
+                                                [:suodattimet :hoitokauden-numero]]
                                         :haku (fn [{:keys [nimi maara yhteensa indeksikorjattu]}
                                                    hoitokauden-numero]
                                                 (let [i (dec hoitokauden-numero)
@@ -449,7 +449,7 @@
                            :kuukausitasolla? {:polut [[:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
                                               :haku identity}
                            :hoidonjohtopalkkio {:polut [[:domain :hoidonjohtopalkkio] ;; [[{:maara int :aika timestamp} ...] [] ...]
-                                                        [:domain :hoitokausi :hoitokauden-numero]
+                                                        [:suodattimet :hoitokauden-numero]
                                                         ;; Seurataan [:gridit :hoidonjohtopalkkio :palkkiot], koska arvo voi olla tyyliinsä "34," (eli loppuu pilkkuun)
                                                         [:gridit :hoidonjohtopalkkio :palkkiot]
                                                         [:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
@@ -478,12 +478,12 @@
                                                                      arvot
                                                                      johdetut-arvot))))))}
                            :yhteensa {:polut [[:gridit :hoidonjohtopalkkio :yhteensa]
-                                              [:domain :hoitokausi :hoitokauden-numero]]
+                                              [:suodattimet :hoitokauden-numero]]
                                       :haku (fn [{:keys [nimi maara yhteensa indeksikorjattu]}
                                                  hoitokauden-numero]
                                               (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}))}}
                           {:aseta-hoidonjohtopalkkio! (fn [tila arvo {:keys [aika osa osan-paikka]} paivitetaan-domain?]
-                                                        (let [hoitokauden-numero (get-in tila [:domain :hoitokausi :hoitokauden-numero])
+                                                        (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                               arvo (if (re-matches #"\d*,\d+" arvo)
                                                                      (clj-str/replace arvo #"," ".")
                                                                      arvo)
@@ -507,7 +507,7 @@
                                                               (paivita-gridit tila))
                                                             tila)))
                            :aseta-yhteenveto! (fn [tila arvo tunniste]
-                                                (let [hoitokauden-numero (get-in tila [:domain :hoitokausi :hoitokauden-numero])
+                                                (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                       arvo (if (re-matches #"\d*,\d+" arvo)
                                                              (clj-str/replace arvo #"," ".")
                                                              arvo)
@@ -519,7 +519,7 @@
                                                     (paivita-gridit tila)
                                                     tila)))}
                           {:yhteenveto-seuranta {:polut [[:domain :hoidonjohtopalkkio]
-                                                         [:domain :hoitokausi :hoitokauden-numero]
+                                                         [:suodattimet :hoitokauden-numero]
                                                          [:gridit :hoidonjohtopalkkio :kuukausitasolla?]]
                                                  :init (fn [tila]
                                                          (-> tila
@@ -541,7 +541,7 @@
                                                                 (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :yhteensa (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa)
                                                                 (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :indeksikorjattu (dec hoitokauden-numero)] (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)))))}
                            :yhteensa-seuranta {:polut [[:gridit :hoidonjohtopalkkio :yhteenveto :yhteensa]
-                                                       [:domain :hoitokausi :hoitokauden-numero]]
+                                                       [:suodattimet :hoitokauden-numero]]
                                                :init (fn [tila]
                                                        (-> tila
                                                            (assoc-in [:gridit :hoidonjohtopalkkio :yhteensa :yhteensa] (vec (repeat 5 nil)))
@@ -1252,7 +1252,9 @@
           (assoc-in [:suodattimet :hoitokauden-numero] vuosi))))
   YleisSuodatinArvot
   (process-event [_ {{hoitovuosi :vuosi} :kuluva-hoitokausi :as app}]
-    (assoc app :suodatin {:hoitovuosi hoitovuosi :kopioidaan-tuleville-vuosille? true}))
+    (-> app
+        (assoc-in [:suodattimet :hoitokauden-numero] hoitovuosi)
+        (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true)))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app :indeksit vastaus))
