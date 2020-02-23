@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
   (:require [clojure.string :as clj-str]
             [clojure.set :as clj-set]
+            [clojure.walk :as walk]
             [cljs.core.async :as async :refer [<! >! chan timeout]]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
@@ -102,6 +103,13 @@
              :talvi talvikausi
              :kaikki hoitokausi})
 
+(defn summaa-lehtivektorit [puu]
+  (walk/postwalk (fn [x]
+                   (if (and (map? x) (some vector? (vals x)))
+                     (apply mapv + (vals x))
+                     x))
+                 puu))
+
 (defn indeksikorjaa
   ([hinta] (indeksikorjaa hinta (-> @tiedot/suunnittelu-kustannussuunnitelma :kuluva-hoitokausi :vuosi)))
   ([hinta hoitokauden-numero]
@@ -113,12 +121,13 @@
 (defn kuluva-hoitokausi []
   (let [hoitovuoden-pvmt (pvm/paivamaaran-hoitokausi (pvm/nyt))
         urakan-aloitusvuosi (pvm/vuosi (-> @tiedot/yleiset :urakka :alkupvm))
-        kuluva-urakan-vuosi (- (pvm/vuosi (second hoitovuoden-pvmt)) urakan-aloitusvuosi)]
-    (if (> kuluva-urakan-vuosi 5)
+        kuluva-hoitokauden-numero (- (pvm/vuosi (second hoitovuoden-pvmt)) urakan-aloitusvuosi)]
+    (println "KULUVAN HOITOKAUDEN NUMERO: " kuluva-hoitokauden-numero)
+    (if (> kuluva-hoitokauden-numero 5)
       ;; Mikäli on jo loppunut projekti, näytetään viimeisen vuoden tietoja
-      {:vuosi 5
+      {:hoitokauden-numero 5
        :pvmt (pvm/paivamaaran-hoitokausi (-> @tiedot/yleiset :urakka :loppupvm))}
-      {:vuosi kuluva-urakan-vuosi
+      {:hoitokauden-numero kuluva-hoitokauden-numero
        :pvmt hoitovuoden-pvmt})))
 
 (def suunnittellut-hankinnat-rajapinta (merge {:otsikot any?
@@ -241,8 +250,11 @@
                                                                                                                                                                                   (+ yhteensa maara))
                                                                                                                                                                                 0
                                                                                                                                                                                 (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)]))]
-                                                                                                                                (assoc-in tila [:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
-                                                                                                                                                                                                                              :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})))}}))
+                                                                                                                                (-> tila
+                                                                                                                                    (assoc-in [:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
+                                                                                                                                                                                                                             :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})
+                                                                                                                                    ;; Päivitetään myös yhteenvedotkomponentti
+                                                                                                                                    (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat valittu-toimenpide (dec hoitokauden-numero)] vuoden-hoidonjohtopalkkiot-yhteensa))))}}))
                                       {}
                                       (range 1 6))))))
 
@@ -403,7 +415,7 @@
                                                                                           toimenpiteen-rahavaraukset)))))
                                                                   :siivoa-tila (fn [tila _ _ tyyppi]
                                                                                  (update-in tila
-                                                                                           [:gridit :rahavaraukset :seurannat]
+                                                                                            [:gridit :rahavaraukset :seurannat]
                                                                                             (fn [tyyppien-data]
                                                                                               (dissoc tyyppien-data tyyppi))))
                                                                   :aseta (fn [tila maarat valittu-toimenpide tyyppi]
@@ -411,16 +423,19 @@
                                                                                                     (+ yhteensa maara))
                                                                                                   0
                                                                                                   maarat)
+                                                                                 hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                                                  kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
                                                                                                                maarat))]
-                                                                             (assoc-in tila
-                                                                                       [:gridit :rahavaraukset :seurannat tyyppi]
-                                                                                       {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
-                                                                                        :yhteensa yhteensa
-                                                                                        :indeksikorjattu (indeksikorjaa yhteensa)
-                                                                                        :maara (if kuukausitasolla?
-                                                                                                 vaihtelua-teksti
-                                                                                                 (:maara (first maarat)))})))}
+                                                                             (-> tila
+                                                                                 (assoc-in [:gridit :rahavaraukset :seurannat tyyppi]
+                                                                                           {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
+                                                                                            :yhteensa yhteensa
+                                                                                            :indeksikorjattu (indeksikorjaa yhteensa)
+                                                                                            :maara (if kuukausitasolla?
+                                                                                                     vaihtelua-teksti
+                                                                                                     (:maara (first maarat)))})
+                                                                                 ;; Päivitetään myös yhteenvedotkomponentti
+                                                                                 (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)] yhteensa))))}
                            :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
                                                              :init (fn [tila]
                                                                      (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] nil))
@@ -537,6 +552,7 @@
                                                              (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :yhteensa] (vec (repeat 5 nil)))
                                                              (assoc-in [:gridit :hoidonjohtopalkkio :yhteenveto :indeksikorjattu] (vec (repeat 5 nil)))))
                                                  :aseta (fn [tila hoidonjohtopalkkio hoitokauden-numero kuukausitasolla?]
+                                                          (println "hoitokauden-numero: " hoitokauden-numero)
                                                           (let [valitun-vuoden-hoidonjohtopalkkiot (get hoidonjohtopalkkio (dec hoitokauden-numero))
                                                                 vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [summa {maara :maara}]
                                                                                                               (+ summa maara))
@@ -727,7 +743,7 @@
 (defrecord HaeIndeksitOnnistui [vastaus])
 (defrecord HaeIndeksitEpaonnistui [vastaus])
 (defrecord Oikeudet [])
-(defrecord HaeKustannussuunnitelma [hankintojen-taulukko rahavarausten-taulukko
+(defrecord HaeKustannussuunnitelma [] #_[hankintojen-taulukko rahavarausten-taulukko
                                     johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
                                     erillishankinnat-taulukko toimistokulut-taulukko
                                     johtopalkkio-taulukko])
@@ -1254,17 +1270,17 @@
         (assoc-in [:suodattimet :hankinnat :toimenpide] :talvihoito)))
   Hoitokausi
   (process-event [_ app]
-    (let [{:keys [vuosi pvmt] :as kh} (kuluva-hoitokausi)]
-      (-> app
+    (let [{:keys [hoitokauden-numero pvmt] :as kh} (kuluva-hoitokausi)]
+      (assoc-in app [:domain :kuluva-hoitokausi] kh)
+      #_(-> app
           ;;TODO tämä rivi on wanhaa
-          (assoc :kuluva-hoitokausi kh)
-          (assoc-in [:domain :hoitokausi] {:hoitokauden-numero vuosi
-                                           :pvmt pvmt})
-          (assoc-in [:suodattimet :hoitokauden-numero] vuosi))))
+          #_(assoc :kuluva-hoitokausi kh)
+          (assoc-in [:domain :kuluva-hoitokausi] kh #_{:pvmt pvmt})
+          (assoc-in [:suodattimet :hoitokauden-numero] hoitokauden-numero))))
   YleisSuodatinArvot
-  (process-event [_ {{hoitovuosi :vuosi} :kuluva-hoitokausi :as app}]
+  (process-event [_ {{hoitokauden-numero :hoitokauden-numero} :kuluva-hoitokausi :as app}]
     (-> app
-        (assoc-in [:suodattimet :hoitokauden-numero] hoitovuosi)
+        (assoc-in [:suodattimet :hoitokauden-numero] (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero]))
         (assoc-in [:suodattimet :kopioidaan-tuleville-vuosille?] true)))
   HaeIndeksitOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -1322,7 +1338,7 @@
                            (assoc-in yhteenvedot [(dec hoitokausi) :summa] (yhteensa-yhteenveto hoitokausi app)))
                          yhteenvedot (range 1 6)))))
   HaeKustannussuunnitelma
-  (process-event [{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
+  (process-event [_ #_{:keys [hankintojen-taulukko rahavarausten-taulukko johto-ja-hallintokorvaus-laskulla-taulukko
                           johto-ja-hallintokorvaus-yhteenveto-taulukko erillishankinnat-taulukko toimistokulut-taulukko
                           johtopalkkio-taulukko]} app]
     (let [urakka-id (-> @tiedot/tila :yleiset :urakka :id)]
@@ -1340,7 +1356,7 @@
         (tuck-apurit/post! app :budjetoidut-tyot
                            {:urakka-id urakka-id}
                            {:onnistui ->HaeHankintakustannuksetOnnistui
-                            :onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
+                            #_#_:onnistui-parametrit [hankintojen-taulukko rahavarausten-taulukko
                                                   johto-ja-hallintokorvaus-laskulla-taulukko johto-ja-hallintokorvaus-yhteenveto-taulukko
                                                   erillishankinnat-taulukko toimistokulut-taulukko
                                                   johtopalkkio-taulukko]
@@ -1490,6 +1506,29 @@
                                                                                             []
                                                                                             hoidon-johto-kustannukset))))))
                   (assoc-in [:gridit :hoidonjohtopalkkio :kuukausitasolla?] hoidonjohtopalkkio-kuukausitasolla?)
+                  (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat] (reduce (fn [summat [toimenpide summat-hoitokausittain]]
+                                                                                                           (assoc summat toimenpide (mapv (fn [summat-kuukausittain]
+                                                                                                                                            (reduce #(+ %1 (:maara %2)) 0 summat-kuukausittain))
+                                                                                                                                          summat-hoitokausittain)))
+                                                                                                         {}
+                                                                                                         hankinnat-hoitokausille))
+                  (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset] (reduce (fn [summat [toimenpide toimenpiteen-rahavaraukset]]
+                                                                                                  (update summat
+                                                                                                          toimenpide
+                                                                                                          (fn [toimenpiteen-summat]
+                                                                                                            (reduce (fn [toimenpiteen-summat [tyyppi maarat-hoitokausittain]]
+                                                                                                                      (update toimenpiteen-summat
+                                                                                                                              tyyppi
+                                                                                                                              (fn [summat-hoitokausittain]
+                                                                                                                                (mapv +
+                                                                                                                                      (or summat-hoitokausittain (repeat 5 0))
+                                                                                                                                      (map (fn [hoitokauden-maarat]
+                                                                                                                                             (reduce #(+ %1 (:maara %2)) 0 hoitokauden-maarat))
+                                                                                                                                           maarat-hoitokausittain)))))
+                                                                                                                    toimenpiteen-summat
+                                                                                                                    toimenpiteen-rahavaraukset))))
+                                                                                                {}
+                                                                                                rahavaraukset-hoitokausille))
                   (assoc :kantahaku-valmis? true))]
       #_(tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       ;(async/put! tapahtumat {:ajax :tuck :tapahtuma :hankintakustannukset-haettu})

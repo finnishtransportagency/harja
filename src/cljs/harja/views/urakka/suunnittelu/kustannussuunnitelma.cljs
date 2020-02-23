@@ -1650,7 +1650,7 @@
      [:div.hintalaskurisarake-ala ala]]]))
 
 (defn hintalaskuri
-  [{:keys [otsikko selite hinnat]} {:keys [vuosi]}]
+  [{:keys [otsikko selite hinnat]} {kuluva-hoitokauden-numero :hoitokauden-numero}]
   (if (some #(or (nil? (:summa %))
                  (js/isNaN (:summa %)))
             hinnat)
@@ -1661,11 +1661,14 @@
      (when selite
        [:div selite])
      [:div.hintalaskuri-vuodet
-      (for [{:keys [summa hoitokausi teksti]} hinnat]
-        ^{:key hoitokausi}
-        [hintalaskurisarake (or teksti (str hoitokausi ". vuosi"))
-         (fmt/euro summa)
-         (when (= hoitokausi vuosi) {:wrapper-luokat "aktiivinen-vuosi"})])
+      (doall
+        (map-indexed (fn [index {:keys [summa teksti]}]
+                       (let [hoitokauden-numero (inc index)]
+                         ^{:key hoitokauden-numero}
+                         [hintalaskurisarake (or teksti (str hoitokauden-numero ". vuosi"))
+                          (fmt/euro summa)
+                          (when (= hoitokauden-numero kuluva-hoitokauden-numero) {:wrapper-luokat "aktiivinen-vuosi"})]))
+                     hinnat))
       [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
       [hintalaskurisarake "Yhteensä" (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat))]]]))
 
@@ -1722,7 +1725,7 @@
    [:span [ikonit/livicon-question] "Keskeneräinen"]
    [:span [ikonit/remove] "Suunnitelma puuttuu"]])
 
-(defn suunnitelmien-taulukko [e!]
+#_(defn suunnitelmien-taulukko [e!]
   (let [polku-taulukkoon [:suunnitelmien-tila-taulukko]
         osien-paivitys-fn (fn [teksti kuluva-vuosi tuleva-vuosi jakso]
                             (fn [osat]
@@ -2066,7 +2069,7 @@
   [e! suunnitelmien-argumentit]
   (let [paivitetyt-taulukot (cljs.core/atom {})]
     (komp/luo
-      (komp/piirretty (fn [this]
+      #_(komp/piirretty (fn [this]
                         (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
                           (e! (tuck-apurit/->MuutaTila [:suunnitelmien-tila-taulukko] suunnitelmien-taulukko-alkutila)))))
       {:should-component-update (fn [this old-argv new-argv]
@@ -2241,7 +2244,7 @@
                 "Indeksikorjattu" (indeksikorjattu osa))))
           osat)))
 
-(defn hankintojen-taulukko [e! kaskytyskanava toimenpiteet
+#_(defn hankintojen-taulukko [e! kaskytyskanava toimenpiteet
                             {laskutukseen-perustuen :laskutukseen-perustuen
                              valittu-toimenpide :toimenpide}
                             toimenpide-avain
@@ -2476,7 +2479,7 @@
                          {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                           :class #{}}))))
 
-(defn rahavarausten-taulukko [e! kaskytyskanava toimenpiteet
+#_(defn rahavarausten-taulukko [e! kaskytyskanava toimenpiteet
                               {valittu-toimenpide :toimenpide}
                               toimenpide-avain
                               on-oikeus?]
@@ -2710,7 +2713,7 @@
                                                             (str toimenkuva " (" (apply str (interpose ", " (nth sulkutekstit index))) ")"))))
                  hoitokausikohtaiset-rivit)))
 
-(defn johto-ja-hallintokorvaus-laskulla-taulukko
+#_(defn johto-ja-hallintokorvaus-laskulla-taulukko
   [e! kaskytyskanava jh-korvaukset on-oikeus?]
   (let [osien-paivitys-fn (fn [toimenkuva tunnit-kk tuntipalkka yhteensa-kk kk-v]
                             (fn [osat]
@@ -3092,7 +3095,7 @@
                        {:taulukon-paivitys-fn! taulukon-paivitys-fn!
                         :class #{}})))
 
-(defn maara-kk-taulukko [e! kaskytyskanava polku-taulukkoon rivin-nimi taulukko-elementin-id
+#_(defn maara-kk-taulukko [e! kaskytyskanava polku-taulukkoon rivin-nimi taulukko-elementin-id
                          {:keys [maara-kk yhteensa]} tallennettava-asia on-oikeus?]
   (let [sarakkeiden-leveys (fn [sarake]
                              (case sarake
@@ -3328,16 +3331,24 @@
 (defn hankintakustannukset-taulukot [e!
                                      {{:keys [yhteenveto toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset] :as kustannukset} :hankintakustannukset
                                       :keys [kuluva-hoitokausi kirjoitusoikeus? indeksit suodatin]}
+                                     kuluva-hoitokausi
                                      suunnittellut-hankinnat-grid
                                      laskutukseen-perustuvat-hankinnat-grid
                                      rahavaraukset-grid
+                                     hankintakustannukset-yhteenvedot
                                      kantahaku-valmis?
                                      suodattimet]
   (let [{:keys [toimenpide laskutukseen-perustuen-valinta]} (:hankinnat suodattimet)
         suunnitellut-hankinnat-taulukko-valmis? (and suunnittellut-hankinnat-grid kantahaku-valmis?)
         laskutukseen-perustuva-taulukko-valmis? (and laskutukseen-perustuvat-hankinnat-grid kantahaku-valmis?)
         rahavaraukset-taulukko-valmis? (and rahavaraukset-grid kantahaku-valmis?)
-        nayta-laskutukseen-perustuva-taulukko? (contains? laskutukseen-perustuen-valinta toimenpide)]
+        nayta-laskutukseen-perustuva-taulukko? (contains? laskutukseen-perustuen-valinta toimenpide)
+        yhteenveto (mapv (fn [summa]
+                           {:summa summa})
+                         (mapv +
+                               (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :rahavaraukset]))
+                               (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :suunnitellut-hankinnat]))))]
+    (println "YHTEENVETO: " yhteenveto)
     [:<>
      [:h2#hankintakustannukset "Hankintakustannukset"]
      (if yhteenveto
@@ -3347,7 +3358,7 @@
                        :selite "Talvihoito + Liikenneympäristön hoito + Sorateiden hoito + Päällystepaikkaukset + MHU Ylläpito + MHU Korvausinvestoiti"
                        :hinnat yhteenveto}
          kuluva-hoitokausi]
-        [indeksilaskuri yhteenveto indeksit]]
+        #_[indeksilaskuri yhteenveto indeksit]]
        ^{:key "hankintakustannusten-loader"}
        [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
      [:h3 "Suunnitellut hankinnat"]
@@ -3565,13 +3576,13 @@
                                      ::FOOOOOO
                                      (fn [_ _ _ uusi]
                                        (println " ---- FOOO SEURANTA" (get-in uusi [:gridit :rahavaraukset :grid :harja.ui.taulukko.impl.grid/datan-kasittelija])))))
-                      (e! (t/->HaeKustannussuunnitelma (partial hankintojen-taulukko e! (:kaskytyskanava app))
-                                                       (partial rahavarausten-taulukko e! (:kaskytyskanava app))
-                                                       (partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))
-                                                       (partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
-                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
-                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
-                                                       (partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
+                      (e! (t/->HaeKustannussuunnitelma #_(partial hankintojen-taulukko e! (:kaskytyskanava app))
+                                                       #_(partial rahavarausten-taulukko e! (:kaskytyskanava app))
+                                                       #_(partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))
+                                                       #_(partial johto-ja-hallintokorvaus-yhteenveto-taulukko e!)
+                                                       #_(partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :erillishankinnat] "Erillishankinnat" "erillishankinnat-taulukko")
+                                                       #_(partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :toimistokulut] "Toimistokulut, Pientarvikevarasto" (:toimistokulut-taulukko t/hallinnollisten-idt))
+                                                       #_(partial maara-kk-taulukko e! (:kaskytyskanava app) [:hallinnolliset-toimenpiteet :johtopalkkio] "Hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")))))
     (fn [e*! {:keys [kuluva-hoitokausi suodattimet] :as app}]
       (set! e! e*!)
       (let [tavoite-ja-kattohinta-argumentit (select-keys app #{:tavoite-ja-kattohinta :kuluva-hoitokausi :indeksit})
@@ -3599,9 +3610,11 @@
          [:span.viiva-alas]
          #_(println "VALINNAT: " (get app :valinnat))
          [hankintakustannukset-taulukot e! hankintakustannusten-argumentit
+          (get-in app [:domain :kuluva-hoitokausi])
           (get-in app [:gridit :suunnittellut-hankinnat :grid])
           (get-in app [:gridit :laskutukseen-perustuvat-hankinnat :grid])
           (get-in app [:gridit :rahavaraukset :grid])
+          (get-in app [:yhteenvedot :hankintakustannukset])
           (:kantahaku-valmis? app)
           suodattimet]
          [:span.viiva-alas]
