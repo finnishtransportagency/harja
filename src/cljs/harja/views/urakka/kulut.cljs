@@ -359,7 +359,7 @@
          {:vayla-tyyli? true
           :ikoni        ikonit/remove}]]])))
 
-(defn lisatiedot [paivitys-fn {:keys [aliurakoitsija] :as lomake} e! aliurakoitsijat]
+(defn lisatiedot [paivitys-fn {:keys [aliurakoitsija liite-id liite-nimi liite-tyyppi liite-koko] :as lomake} e! aliurakoitsijat]
   (let [lisaa-aliurakoitsija (fn [{sulje :sulje}]
                                [:div
                                 {:on-click #(do
@@ -392,10 +392,22 @@
        :on-change #(paivitys-fn :lisatieto (-> % .-target .-value))]
       [kentat/vayla-lomakekentta
        "Liite" :komponentti (fn [_]
-                              [:div.col-xs-12
-                               [liitteet/lisaa-liite
-                               (-> @tila/yleiset :urakka :id)
-                               {:liite-ladattu #(e! (tiedot/->LiiteLisatty %))}]])])))
+                              [:div.liiterivi
+                               [:div.liitelista
+                                (if-not (nil? liite-id) [liitteet/liitelinkki {:id     liite-id
+                                                                               :nimi   liite-nimi
+                                                                               :tyyppi liite-tyyppi
+                                                                               :koko   liite-koko} (str liite-nimi)]
+                                                        "Ei liitteitä")]
+                               (when-not (nil? liite-id) [:div.liitepoisto
+                                                          [napit/poista "Poista"
+                                                           #(e! (tiedot/->PoistaLiite liite-id))
+                                                           {:vayla-tyyli? true}]])
+                               [:div.liitenappi
+                                [liitteet/lisaa-liite
+                                 (-> @tila/yleiset :urakka :id)
+                                 {:nayta-lisatyt-liitteet? false
+                                  :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]])])))
 
 
 
