@@ -4,7 +4,8 @@
   (:require [reagent.core :refer [atom cursor]]
             [clojure.core.async :refer [chan]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.loki :as loki]))
+            [harja.loki :as loki]
+            [harja.pvm :as pvm]))
 
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-kaikille false
                                                                   :toimenpide     nil
@@ -28,36 +29,88 @@
                                         (range 0 12)))
                                  (range (harja.pvm/vuosi (harja.pvm/nyt)) (+ (harja.pvm/vuosi (harja.pvm/nyt)) 6)))))))
 
+(defn ei-pakollinen [v-fn]
+  (fn [arvo]
+    (loki/log "Ei pakollinen" arvo (not (or (nil? arvo)
+                                            (empty? arvo))))
+    (if-not (or (nil? arvo)
+                (empty? arvo))
+      (v-fn arvo)
+      true)))
+
 (defn ei-nil [arvo]
-  (loki/log "Ei nil?" arvo)
+  (loki/log "Ei nil" arvo)
   (when
     (not (nil? arvo))
     arvo))
 
 (defn ei-tyhja [arvo]
-  (loki/log "Ei tyhjä?" arvo)
+  (loki/log "Ei tyhja" arvo)
   (when
-    (not (empty? arvo))
+    (or
+      (number? arvo)
+      (pvm/pvm? arvo)
+      (not (empty? arvo)))
     arvo))
 
 (defn numero [arvo]
-  (loki/log "Numero?" arvo)
+  (loki/log "Numero" arvo)
   (when
     (number? arvo)
     arvo))
 
-(def validoinnit {:kulut/summa                 (fn [arvo]
-                                                 (some-> arvo
-                                                         ei-nil
-                                                         numero))
-                  :kulut/tehtavaryhma          ei-nil
-                  :kulut/erapaiva              (fn [arvo]
-                                                 (some-> arvo
-                                                         ei-nil
-                                                         ei-tyhja))
-                  :kulut/koontilaskun-kuukausi ei-nil})
+(defn paivamaara [arvo]
+  (loki/log "Paivamaara" arvo)
+  (when
+    (pvm/pvm? arvo)
+    arvo))
+
+(defn y-tunnus [arvo]
+  (loki/log "Y-tunnus" arvo)
+  (re-matches #"\d{7}-\d" (str arvo)))
+
+(defn viite [arvo]                                          ;11
+  (loki/log "Viite" arvo)
+  (let [tarkistusnumero (js/parseInt
+                          (last arvo))                      ;1
+        tarkastettavat-luvut (butlast arvo)]                ;1
+    (loop [luvut (butlast tarkastettavat-luvut)             ;nil
+           tarkasteltava (js/parseInt
+                           (last tarkastettavat-luvut))     ;
+           tarkistussumma 0
+           paino 7]
+      (if (nil? luvut)
+        (let [lopullinen-summa (+ tarkistussumma
+                                  (* tarkasteltava paino))
+              vertailu-summa (+ lopullinen-summa
+                                (- 10
+                                   (js/parseInt
+                                     (last
+                                       (str lopullinen-summa)))))]
+          (when
+            (= tarkistusnumero
+               (- vertailu-summa
+                  lopullinen-summa))
+            arvo))
+        (recur (butlast luvut)
+               (js/parseInt
+                 (last luvut))
+               (+ tarkistussumma
+                  (* tarkasteltava paino))
+               (let [uusi-paino (/ (dec paino) 2)]
+                 (if (zero? uusi-paino)
+                   7
+                   uusi-paino)))))))
+
+(def validoinnit {:kulut/summa                 [ei-nil numero]
+                  :kulut/viite                 [(ei-pakollinen viite)]
+                  :kulut/laskun-numero         [(ei-pakollinen numero)]
+                  :kulut/tehtavaryhma          [ei-nil ei-tyhja]
+                  :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
+                  :kulut/koontilaskun-kuukausi [ei-nil]})
 
 (defn validoi-fn
+  "Kutsuu vain lomakkeen kaikki validointifunktiot ja päivittää koko lomakkeen validiuden"
   [lomake]
   (if (nil? (meta lomake))
     lomake
@@ -74,8 +127,10 @@
                                          (loki/log "vallut" vs "polku" polku)
                                          (update vs
                                                  polku (fn [kentta]
-                                                         (loki/log "kentta" kentta "avain" polku "lomake" lomake "avainlomake" (get polku lomake))
+                                                         (loki/log "kentta" kentta "avain" polku "lomake" lomake "avainlomake" (get polku lomake) (validointi
+                                                                                                                                                    (get-in lomake polku)))
                                                          (assoc kentta
+                                                           :tarkistettu? true
                                                            :validointi validointi
                                                            :validi? (validointi
                                                                       (get-in lomake polku)))))))
@@ -91,15 +146,19 @@
                    lomake)]
       lomake)))
 
-(defn luo-validius-meta [& kentat-ja-validaatiot]
+(defn luo-validius-meta
+  "Ajatus, että lomake tietää itse, miten se validoidaan"
+  [& kentat-ja-validaatiot]
   (assoc {} :validius
-            (reduce (fn [k [polku validointi-fn]]
-                      (assoc k polku {:validointi (fn [arvo]
-                                                    (not
-                                                      (nil?
-                                                        (validointi-fn arvo))))
-                                      :validi?    false
-                                      :koskettu?  false}))
+            (reduce (fn [k [polku validointi-fns]]
+                      (assoc k polku {:validointi   (fn [arvo]
+                                                      (let [validointi-fn (apply comp validointi-fns)]
+                                                        (not
+                                                          (nil?
+                                                            (validointi-fn arvo)))))
+                                      :validi?      false
+                                      :koskettu?    false
+                                      :tarkistettu? false}))
                     {}
                     (partition 2 kentat-ja-validaatiot))
             :validi? false
@@ -116,10 +175,12 @@
                                       :lisatieto             nil
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil
-                                      :paivita 0}
+                                      :paivita               0}
                                      (luo-validius-meta
                                        [:koontilaskun-kuukausi] (:kulut/koontilaskun-kuukausi validoinnit)
                                        [:erapaiva] (:kulut/erapaiva validoinnit)
+                                       [:laskun-numero] (:kulut/laskun-numero validoinnit)
+                                       [:viite] (:kulut/viite validoinnit)
                                        [:kohdistukset 0 :summa] (:kulut/summa validoinnit)
                                        [:kohdistukset 0 :tehtavaryhma] (:kulut/tehtavaryhma validoinnit))))
 

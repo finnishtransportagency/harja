@@ -53,10 +53,7 @@
                                      kentat-ja-validaatiot)]
     (vary-meta lomake assoc :validius lasketut-validaatiot)))
 
-(defn lomake-validi? [lomake])
-
 (defn parsi-summa [summa]
-  (loki/log "PARSI " summa)
   (cond
     (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
@@ -87,7 +84,16 @@
                 :else assoc)
           (into [acc polku arvo] (when (fn? arvo) args)))]
     (if (true? validoitava?)
-      (vary-meta paivitetty-lomake assoc-in (conj [:validius] (if (keyword? polku) (vector polku) polku) :koskettu?) true)
+      (vary-meta paivitetty-lomake (fn [lomake-meta]
+                                     (update-in
+                                       lomake-meta
+                                       (conj [:validius]
+                                             (if (keyword? polku)
+                                               (vector polku)
+                                               polku))
+                                       (fn [meta-kentta]
+                                         (assoc meta-kentta :tarkistettu? false
+                                                            :koskettu? true)))))
       paivitetty-lomake)))
 
 (defn lomakkeen-paivitys
