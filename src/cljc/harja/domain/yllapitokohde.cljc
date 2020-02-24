@@ -262,7 +262,7 @@ yllapitoluokkanimi->numero
 
 (s/def ::tr-numero ::positive-int?)
 (s/def ::tr-ajorata #{0 1 2})
-(s/def ::tr-kaista #{1 11 12 13 14 15 21 22 23 24 25})
+(s/def ::tr-kaista #{1 11 12 13 14 15 21 22 23 24 25 31})
 (s/def ::tr-alkuosa ::positive-int?)
 (s/def ::tr-alkuetaisyys ::positive-int?)
 (s/def ::tr-loppuosa ::positive-int?)
@@ -338,24 +338,9 @@ yllapitoluokkanimi->numero
 
 (s/def ::kohde ::tr)
 
-(def paaluvali-avaimet #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-(def vali-avaimet (clj-set/union paaluvali-avaimet #{:tr-ajorata :tr-kaista}))
-
 (defn kohde-tiedon-mukainen
   ([kohde kohteen-tiedot] (kohde-tiedon-mukainen kohde kohteen-tiedot true))
   ([kohde kohteen-tiedot paakohde?]
-    #_{:pre  [(if paakohde?
-                (s/valid? #(= paaluvali-avaimet
-                              (into #{}
-                                    (keys (select-keys % paaluvali-avaimet))))
-                          kohde)
-                (s/valid? #(= vali-avaimet
-                              (into #{}
-                                    (keys (select-keys % vali-avaimet))))
-                          kohde))
-              (s/valid? ::kohteen-tiedot kohteen-tiedot)]
-       :post [(s/valid? (s/nilable (s/keys :req-un [::kohde ::kohteen-tiedot]))
-                        %)]}
    (let [kohteen-tiedot (sort-by (juxt :tr-numero :tr-osa) kohteen-tiedot)
          tr-alkupiste (dissoc kohde :tr-loppuosa :tr-loppuetaisyys)
          tr-loppupiste (-> kohde
@@ -957,7 +942,7 @@ yllapitoluokkanimi->numero
                                                validoitu-alikohde (validoi-alikohde tr-osoite alikohde toiset-alikohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat eri-urakoiden-alikohteet)]]
                                      (when validoitu-alikohde
                                        (with-meta validoitu-alikohde
-                                                  {:alikohde (select-keys alikohde vali-avaimet)}))))
+                                                  {:alikohde (select-keys alikohde tr-domain/vali-avaimet)}))))
         muutkohteet-validoitu (keep identity
                                     (for [muukohde muutkohteet
                                           :let [toiset-muutkohteet (remove #(= muukohde %)
