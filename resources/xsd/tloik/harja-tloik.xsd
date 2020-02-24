@@ -5,6 +5,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1" />
+                <xs:element name="lahetysaika" type="xs:dateTime" minOccurs="0" maxOccurs="1" />
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
                 <xs:element name="tunniste" minOccurs="1" maxOccurs="1">
                     <xs:simpleType>

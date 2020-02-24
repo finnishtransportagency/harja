@@ -5,7 +5,7 @@
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]))
 
 (defn luo-ilmoitus [ilmoitus-id]
-  (u (format "INSERT INTO ilmoitus (ilmoitusid, ilmoitettu, otsikko) VALUES (%s, now(), 'yksikkotesti');" ilmoitus-id)))
+  (u (format "INSERT INTO ilmoitus (ilmoitusid, ilmoitettu, valitetty, otsikko) VALUES (%s, now(), (now() + interval '30 seconds'), 'yksikkotesti');" ilmoitus-id)))
 
 (defn poista-ilmoitukset []
   (u "DELETE FROM ilmoitus WHERE otsikko = 'yksikkotesti'"))
