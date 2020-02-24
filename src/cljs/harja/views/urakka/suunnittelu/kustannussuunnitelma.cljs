@@ -651,14 +651,19 @@
                                          (when-not piillotettu?
                                            (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                                                   :arvo arvo
-                                                                  :solu maara-solu}
+                                                                  :solu maara-solu
+                                                                  :ajettavat-jarejestykset #{:mapit}
+                                                                  :triggeroi-seuranta? true}
                                                                  true
                                                                  hoitokauden-numero)))))
                                    (fn [hoitokauden-numero arvo]
                                      (when arvo
+                                       (println "CHANGE ARVO: " arvo)
                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                                               :arvo arvo
-                                                              :solu solu/*this*}
+                                                              :solu solu/*this*
+                                                              :ajettavat-jarejestykset #{:mapit}
+                                                              :triggeroi-seuranta? false}
                                                              false
                                                              hoitokauden-numero)))
                                    (fn [hoitokauden-numero arvo]
@@ -686,9 +691,9 @@
                                            (swap! tila/suunnittelu-kustannussuunnitelma
                                                   (fn [tila]
                                                     (update-in tila [:gridit :laskutukseen-perustuvat-hankinnat :grid] f))))})]
-    #_(grid/rajapinta-grid-yhdistaminen! g
-                                       t/suunnittellut-hankinnat-rajapinta
-                                       (t/suunnittellut-hankinnat-dr)
+    (grid/rajapinta-grid-yhdistaminen! g
+                                       t/laskutukseen-perustuvat-hankinnat-rajapinta
+                                       (t/laskutukseen-perustuvat-hankinnat-dr)
                                        (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                                      :solun-polun-pituus 1
                                                                      :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
@@ -708,7 +713,7 @@
                                                         (merge grid-kasittelijat
                                                                {[::g-pohjat/data (dec hoitokauden-numero) ::g-pohjat/data-yhteenveto] {:rajapinta (keyword (str "yhteenveto-" hoitokauden-numero))
                                                                                                                                        :solun-polun-pituus 1
-                                                                                                                                       :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                                                       :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                                                                                        :datan-kasittely (fn [yhteenveto]
                                                                                                                                                           (mapv (fn [[_ v]]
                                                                                                                                                                   v)
@@ -718,12 +723,12 @@
                                                                                                                                                                        (when (instance? solu/Syote osa)
                                                                                                                                                                          :maara))
                                                                                                                                                                      (grid/hae-grid osat :lapset)))}
-                                                                [::g-pohjat/data (dec hoitokauden-numero) ::g-pohjat/data-sisalto] {:rajapinta (keyword (str "suunnittellut-hankinnat-" hoitokauden-numero))
+                                                                [::g-pohjat/data (dec hoitokauden-numero) ::g-pohjat/data-sisalto] {:rajapinta (keyword (str "laskutukseen-perustuvat-hankinnat-" hoitokauden-numero))
                                                                                                                                     :solun-polun-pituus 2
                                                                                                                                     :jarjestys [{:keyfn :aika
                                                                                                                                                  :comp (fn [aika-1 aika-2]
                                                                                                                                                          (pvm/ennen? aika-1 aika-2))}
-                                                                                                                                                [:aika :maara :yhteensa :indeksikorjattu]]
+                                                                                                                                                ^{:nimi :mapit} [:aika :maara :yhteensa :indeksikorjattu]]
                                                                                                                                     :datan-kasittely (fn [vuoden-hoidonjohtopalkkiot]
                                                                                                                                                        (mapv (fn [rivi]
                                                                                                                                                                (mapv (fn [[_ v]]
@@ -743,8 +748,7 @@
                                                                                                                                                                                             (grid/hae-grid rivi :lapset))))
                                                                                                                                                                            (grid/hae-grid data-sisalto-grid :lapset))))}}))
                                                       {}
-                                                      (range 1 6))))
-    (grid/aseta-gridin-polut g)))
+                                                      (range 1 6))))))
 
 (defn rahavarausten-grid []
   (let [nyt (pvm/nyt)
@@ -2112,7 +2116,7 @@
                                      :vayla-tyyli? true}
         [:kesakausi :talvikausi :molemmat]]])))
 
-(defn hankintojen-filter [_ _]
+(defn hankintojen-filter [_ _ _]
   (let [toimenpide-tekstiksi (fn [toimenpide]
                                (-> toimenpide name (clj-str/replace #"-" " ") t/aakkosta clj-str/upper-case))
         valitse-toimenpide (r/partial (fn [toimenpide]
@@ -2122,14 +2126,15 @@
                                                                   (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
                                         #_(t/triggeroi-seuranta (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid])
                                                                 :hankinnat-yhteensa-seuranta)))
-        valitse-kausi (fn [suunnittellut-hankinnat-grid kausi]
+        valitse-kausi (fn [suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid kausi]
                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :maksetaan] kausi))
                         (e! (t/->MaksukausiValittu))
-                        (t/paivita-raidat! (grid/osa-polusta suunnittellut-hankinnat-grid [::g-pohjat/data])))
+                        (t/paivita-raidat! (grid/osa-polusta suunnittellut-hankinnat-grid [::g-pohjat/data]))
+                        (t/paivita-raidat! (grid/osa-polusta laskutukseen-perustuvat-hankinnat-grid [::g-pohjat/data])))
         vaihda-fn (fn [event]
                     (.preventDefault event)
                     (e! (tuck-apurit/->PaivitaTila [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?] not)))]
-    (fn [suunnittellut-hankinnat-grid {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
+    (fn [suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid {:keys [toimenpide maksetaan kopioidaan-tuleville-vuosille?]}]
       (let [toimenpide (toimenpide-tekstiksi toimenpide)]
         [:div
          [:div.kustannussuunnitelma-filter
@@ -2140,7 +2145,7 @@
                                          :format-fn toimenpide-tekstiksi
                                          :vayla-tyyli? true}
             (sort-by toimenpiteiden-jarjestys t/toimenpiteet)]]
-          [maksetaan-filter (r/partial valitse-kausi suunnittellut-hankinnat-grid) maksetaan]]
+          [maksetaan-filter (r/partial valitse-kausi suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
          [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
           {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
            :on-change vaihda-fn}]
@@ -3353,7 +3358,8 @@
                            {:summa summa})
                          (mapv +
                                (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :rahavaraukset]))
-                               (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :suunnitellut-hankinnat]))))]
+                               (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :suunnitellut-hankinnat]))
+                               (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :laskutukseen-perustuvat-hankinnat]))))]
     (println "YHTEENVETO: " yhteenveto)
     [:<>
      [:h2#hankintakustannukset "Hankintakustannukset"]
@@ -3368,7 +3374,7 @@
        ^{:key "hankintakustannusten-loader"}
        [yleiset/ajax-loader "Hankintakustannusten yhteenveto..."])
      [:h3 "Suunnitellut hankinnat"]
-     [hankintojen-filter suunnittellut-hankinnat-grid (:hankinnat suodattimet)]
+     [hankintojen-filter suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid (:hankinnat suodattimet)]
      (if suunnitellut-hankinnat-taulukko-valmis?
        [grid/piirra suunnittellut-hankinnat-grid]
        [yleiset/ajax-loader])
