@@ -81,7 +81,8 @@
         urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
                               %
                               {:nimi "Vesiväylät" :arvo :vesivayla-hoito})
-                           nav/+urakkatyypit+)]
+                           (conj nav/+urakkatyypit+
+                                 {:nimi "Kanavat", :arvo :vesivayla-kanavien-hoito}))] ; Kanavaurakoissa on käytössä eri indeksi kuin vesiväylissä. Tarvitaan oma hallinnointiosuus.
     [:span.indeksit
      [valinnat/urakkatyyppi
       yhteiset/valittu-urakkatyyppi
@@ -89,3 +90,4 @@
       #(reset! yhteiset/valittu-urakkatyyppi %)]
 
      [indeksitaulukot urakkatyyppi indeksit]]))
+
