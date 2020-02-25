@@ -5,9 +5,11 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
+            [harja.domain.paallystysilmoitus :as paallyste] ;; jos
             [cheshire.core :as cheshire]
             [namespacefy.core :refer [unnamespacefy]]
-            [clojure.walk :refer [prewalk]])
+            [clojure.walk :refer [prewalk]]
+            [clojure.set :refer [rename-keys]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
@@ -124,7 +126,7 @@
 
 
 
-(defn siivoa-nimiavaruus[data]
+(defn siivoa-nimiavaruus [data]
   (prewalk #(if (map? %)
               (unnamespacefy %)
               %) data)
@@ -132,48 +134,91 @@
 
 (defn muodosta-sanoma [urakka kohde paikkaukset]
 
-  (println "&%%%%%% URAKKA" (cheshire/encode urakka))
-  (println "PAIKKAUKSET count" (count paikkaukset))
+
+  (let [urakka (prewalk #(if (map? %)
+                           (unnamespacefy %)
+                           %) urakka)
+        paikkaukset (prewalk #(if (map? %)
+                                (unnamespacefy %)
+                                %) paikkaukset)
+        kohde (prewalk #(if (map? %)
+                          (unnamespacefy %)
+                          %) kohde)
+        urakka {:urakka (rename-keys urakka {:id :harja-id})}
+        kasittele-materiaali (fn [m]
+                               {:kivi-ja-sideaine (-> m
+                                                            (dissoc :materiaali-id)
+                                                            (rename-keys {:kuulamylly-arvo :km-arvo})
+                                                            )})
+        kasittele-paikkaus (fn [p] {:paikkaus (-> p
+                                                  (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id )
+                                                  (rename-keys {:tierekisteriosoite :sijainti})
+                                                  (assoc-in [:kuulamylly] (:nimi (first (filter
+                                                                                          #(= (str (:koodi %)) (:kuulamylly p))
+                                                                                          paallyste/+kuulamyllyt+))))
+                                                  (conj {:kivi-ja-sideaineet (into [] (map kasittele-materiaali (:materiaalit p)))})
+                                                  (dissoc :materiaalit)
+                                                  )})
+        kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
+                                                       (dissoc :ulkoinen-id)
+                                                       (rename-keys {:id :harja-id})
+                                                       (conj {:paikkaukset (into [] (map kasittele-paikkaus paikkaukset))}))}]}
+        sanomasisalto (merge urakka kohteet)
 
 
 
-  (let [data (prewalk #(if (map? %)
-                         (unnamespacefy %)
-                         %) paikkaukset)
-        kamat {:urakka urakka
-               :paikkauskohteet [(map #(assoc {} :paikkaus %) data)]
 
-               }
-
-        sanoma (cheshire/encode data)
+        _ (println "*** SISÄLTÖ " (cheshire/encode sanomasisalto))
 
 
-        (map fn[x](
-                   {:paikkauskohde }
-                       (map fn[z]() x)
-
-                        ) data)
-
+        ;;sanoma (cheshire/encode (conj urakka kohde paikkaukset))
 
         ]
 
 
-    (println "DATA count" (count data))
+    ;(keep identity (map #(when (map? %)(conj *k %)) *p))
 
-    (println "DATA " data)
-    (println "KAMAT " kamat)
-     (println "SANOMA " sanoma)
     )
 
+
+  ;; VEKTORIIN conj ja sitten update
+
+  ;(let [data (prewalk #(if (map? %)
+  ;                       (unnamespacefy %)
+  ;                       %) paikkaukset)
+  ;      kamat {:urakka urakka
+  ;             :paikkauskohteet [(map #(assoc {} :paikkaus %) data)]
+  ;
+  ;             }
+  ;
+  ;      sanoma (cheshire/encode data)
+  ;
+  ;
+  ;      (map fn[x](
+  ;                 {:paikkauskohde }
+  ;                     (map fn[z]() x)
+  ;
+  ;                      ) data)
+  ;
+  ;
+  ;      ]
+  ;
+  ;
+  ;  (println "DATA count" (count data))
+  ;
+  ;  (println "DATA " data)
+  ;  (println "KAMAT " kamat)
+  ;   (println "SANOMA " sanoma)
+  ;  )
 
   )
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id kohde-id
-                                                         :harja.domain.muokkaustiedot/poistettu? false})) ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä
-        paikkaukset (q-paikkaus/hae-paikkaukset db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
-                                                          :harja.domain.muokkaustiedot/poistettu? false})
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
+                                                         :harja.domain.muokkaustiedot/poistettu? false}))
+        paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
+                                                                :harja.domain.muokkaustiedot/poistettu? false})
         sisalto (muodosta-sanoma urakka kohde paikkaukset)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
