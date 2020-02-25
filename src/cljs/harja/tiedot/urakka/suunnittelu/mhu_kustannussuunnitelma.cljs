@@ -52,6 +52,34 @@
                               "vahinkojen-korjaukset" 1
                               "akillinen-hoitotyo" 2})
 
+(def jh-toimenkuva-jarjestys {"sopimusvastaava" 0
+                              "vastuunalainen työnjohtaja" 1
+                              "päätoiminen apulainen" 2
+                              "apulainen/työnjohtaja" 3
+                              "viherhoidosta vastaava henkilö" 4
+                              "hankintavastaava" 5
+                              "harjoittelija" 6})
+
+(def jh-maksukausi-jarjestys {:molemmat 0
+                              :kesa 1
+                              :talvi 2})
+
+(defn jh-jarjestys [{:keys [toimenkuva maksukausi hoitokaudet]}]
+  [(get jh-toimenkuva-jarjestys toimenkuva)
+   (get jh-maksukausi-jarjestys maksukausi)
+   (apply min hoitokaudet)])
+
+(def johto-ja-hallintokorvaukset-pohjadata [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "päätoiminen apulainen" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "päätoiminen apulainen" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi :molemmat :hoitokaudet #{0}}
+                                            {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
+                                            {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}])
+
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
         "liikenneympariston hoito" "liikenneympäristön hoito"
@@ -1664,30 +1692,33 @@
     (log "HAE HANKINTAKUSTANNUKSET ONNISTUI")
     (let [{urakan-aloituspvm :alkupvm urakan-lopetuspvm :loppupvm urakka-id :id} (-> @tiedot/tila :yleiset :urakka)
           pohjadata (urakan-ajat)
-          pohjadatan-taydennys (fn [data-backilta rikastamis-fn]
+          pohjadatan-taydennys (fn [data-backilta filter-fn rikastamis-fn]
                                  (let [sort-fn (juxt :vuosi :kuukausi)
                                        data (loop [[pd & pd-loput] (sort-by sort-fn pohjadata)
                                                    muodostettu []
                                                    i 0]
-                                              (if (nil? pd)
-                                                muodostettu
-                                                (let [tarkasteltava-data (get data-backilta i)
-                                                      loydetty-data? (and (= (:vuosi pd) (:vuosi tarkasteltava-data))
-                                                                          (= (:kuukausi pd) (:kuukausi tarkasteltava-data)))]
-                                                  (recur pd-loput
-                                                         (conj muodostettu
-                                                               (if loydetty-data?
-                                                                 tarkasteltava-data
-                                                                 pd))
-                                                         (if loydetty-data?
-                                                           (inc i)
-                                                           i)))))]
+                                              (cond
+                                                (nil? pd) muodostettu
+                                                (filter-fn (:vuosi pd) (:kuukausi pd)) (let [tarkasteltava-data (get data-backilta i)
+                                                                                             loydetty-data? (and (= (:vuosi pd) (:vuosi tarkasteltava-data))
+                                                                                                                 (= (:kuukausi pd) (:kuukausi tarkasteltava-data)))]
+                                                                                         (recur pd-loput
+                                                                                                (conj muodostettu
+                                                                                                      (if loydetty-data?
+                                                                                                        tarkasteltava-data
+                                                                                                        pd))
+                                                                                                (if loydetty-data?
+                                                                                                  (inc i)
+                                                                                                  i)))
+                                                :else (recur pd-loput
+                                                             muodostettu
+                                                             i)))]
                                    (map rikastamis-fn data)))
           pohjadatan-taydennys-toimenpiteittain (fn [data toimenpiteet rikastamis-fn]
                                                   (reduce (fn [data-toimenpiteittain toimenpide]
                                                             (let [sort-fn (juxt :vuosi :kuukausi)
                                                                   data-backilta (vec (sort-by sort-fn (filter #(= (:toimenpide-avain %) toimenpide) data)))
-                                                                  data (pohjadatan-taydennys data-backilta rikastamis-fn)]
+                                                                  data (pohjadatan-taydennys data-backilta (constantly true) rikastamis-fn)]
                                                               (merge data-toimenpiteittain
                                                                      {toimenpide data})))
                                                           {}
@@ -1771,6 +1802,7 @@
                                                                  (= haettu-asia (:haettu-asia tyo)))
                                                                kustannusarvioidut-tyot)]
                                      (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
+                                                           (constantly true)
                                                            (fn [{:keys [vuosi kuukausi summa] :as data}]
                                                              (-> data
                                                                  (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
@@ -1779,6 +1811,41 @@
           erillishankinnat (maara-kk-taulukon-data hoidon-johto-kustannukset :erillishankinnat)
           jh-toimistokulut (maara-kk-taulukon-data hoidon-johto-kustannukset :toimistokulut)
           johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
+
+          jh-korvaukset (reduce (fn [korvaukset {:keys [toimenkuva kk-v maksukausi hoitokaudet]}]
+                                  (let [asia-kannasta (filter (fn [jh-korvaus]
+                                                                (= (:toimenkuva jh-korvaus) toimenkuva))
+                                                              (:johto-ja-hallintokorvaukset vastaus))
+                                        taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
+                                                                               (fn [vuosi kuukausi]
+                                                                                 (println vuosi " " kuukausi)
+                                                                                 (println (cond
+                                                                                            (= maksukausi :kesa) (<= 5 kuukausi 9)
+                                                                                            (= maksukausi :talvi) (or (<= 1 kuukausi 4)
+                                                                                                                      (<= 10 kuukausi 12))
+                                                                                            (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
+                                                                                            (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
+                                                                                            :else true))
+                                                                                 (cond
+                                                                                   (= maksukausi :kesa) (<= 5 kuukausi 9)
+                                                                                   (= maksukausi :talvi) (or (<= 1 kuukausi 4)
+                                                                                                             (<= 10 kuukausi 12))
+                                                                                   (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
+                                                                                   (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
+                                                                                   :else true))
+                                                                               (fn [{:keys [vuosi kuukausi] :as data}]
+                                                                                 (-> data
+                                                                                     (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                            :kk-v kk-v)
+                                                                                     (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka}))))]
+                                    (merge korvaukset
+                                           {toimenkuva (vec (vals (sort-by #(-> % key first)
+                                                                           (fn [aika-1 aika-2]
+                                                                             (pvm/ennen? aika-1 aika-2))
+                                                                           (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                                     taytetty-jh-data))))})))
+                                {}
+                                johto-ja-hallintokorvaukset-pohjadata)
 
           hoidonjohto-jarjestys-fn (fn [data]
                                      (vec
@@ -1793,9 +1860,10 @@
                   (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
                   (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausille)
                   (assoc-in [:domain :erillishankinnat] (hoidonjohto-jarjestys-fn erillishankinnat))
+                  (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
                   (assoc-in [:domain :toimistokulut] (hoidonjohto-jarjestys-fn jh-toimistokulut))
                   (assoc-in [:domain :hoidonjohtopalkkio] (hoidonjohto-jarjestys-fn johtopalkkio))
-                  (assoc-in [:gridit :hoidonjohtopalkkio :kuukausitasolla?] hoidonjohtopalkkio-kuukausitasolla?)
+                  #_(assoc-in [:gridit :hoidonjohtopalkkio :kuukausitasolla?] hoidonjohtopalkkio-kuukausitasolla?)
                   #_(assoc-in [:gridit :erillishankinnat :kuukausitasolla?] erillishankinnat-kuukausitasolla?)
                   (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat] (reduce (fn [summat [toimenpide summat-hoitokausittain]]
                                                                                                            (assoc summat toimenpide (mapv (fn [summat-kuukausittain]

@@ -101,7 +101,7 @@
 
 (defn teksti
   ([] (teksti nil))
-  ([{:keys [parametrit filtteri arvo fmt nimi rajapinta] :as asetukset}]
+  ([{:keys [parametrit fmt nimi] :as asetukset}]
    {:pre [(fmt-asetukset-oikein? asetukset)
           ;; TODO tarkasta parametrit
           (datan-kasittely-asetukset-oikein? asetukset)]
@@ -270,7 +270,7 @@
 
 (defn syote
   ([] (syote nil))
-  ([{:keys [toiminnot kayttaytymiset parametrit filtteri arvo fmt fmt-aktiivinen nimi rajapinta] :as asetukset}]
+  ([{:keys [toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen nimi] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta parametrit, toiminnot ja kayttaytymiset
           (fmt-asetukset-oikein? asetukset)
@@ -404,7 +404,7 @@
 
 (defn laajenna
   ([] (laajenna nil))
-  ([{:keys [aukaise-fn auki-alussa? parametrit filtteri arvo fmt nimi rajapinta] :as asetukset}]
+  ([{:keys [aukaise-fn auki-alussa? parametrit fmt nimi] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta aukaise-fn ja parametrit
           (or (nil? auki-alussa?) (boolean? auki-alussa?))

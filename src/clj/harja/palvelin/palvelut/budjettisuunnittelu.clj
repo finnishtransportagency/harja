@@ -171,9 +171,9 @@
                                                (update :tuntipalkka float)))
                                          (q/hae-johto-ja-hallintokorvaukset db {:urakka-id urakka-id}))
         hoitokauden-numero-lisatty (apply concat
-                                          (map-indexed (fn [index [hoitokausi tiedot]]
+                                          (map-indexed (fn [index [_ tiedot]]
                                                          (map (fn [data]
-                                                                (if-let [kk-v (:kk-v data)]
+                                                                (if (:ennen-urakkaa data)
                                                                   (assoc data :hoitokausi 0)
                                                                   (assoc data :hoitokausi (inc index))))
                                                               tiedot))
@@ -188,26 +188,24 @@
                                            (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
                                        (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
                                       [] hoitokauden-numero-lisatty)
-        tunnit-korjattu (map (fn [{:keys [hoitokausi kk-v] :as johto-ja-hallintokorvaus}]
-                               (if (= 0 hoitokausi)
-                                 (update johto-ja-hallintokorvaus :tunnit (fn [tunnit]
-                                                                            (/ tunnit kk-v)))
-                                 johto-ja-hallintokorvaus))
-                             maksukausi-lisatty)
-        kk-v-lisatty (map (fn [{:keys [kk-v toimenkuva maksukausi] :as johto-ja-hallintokorvaus}]
+        kk-v-lisatty (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
                             (cond
-                              (not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
+                              #_#_(not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
                               (= :kesa maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 5)
                               (= :talvi maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 7)
+                              (and (= toimenkuva "hankintavastaava") (= 0 hoitokausi)) (assoc johto-ja-hallintokorvaus :kk-v 4.5)
                               (= toimenkuva "viherhoidosta vastaava henkilö") (assoc johto-ja-hallintokorvaus :kk-v 5)
                               (= toimenkuva "harjoittelija") (assoc johto-ja-hallintokorvaus :kk-v 4)
                               :else (assoc johto-ja-hallintokorvaus :kk-v 12)))
-                          tunnit-korjattu)
+                          maksukausi-lisatty)
         tarvittavat-tiedot (map (fn [johto-ja-hallintokorvaus]
                                   (select-keys johto-ja-hallintokorvaus
                                                #{:kk-v :hoitokausi :toimenkuva :tunnit :tuntipalkka :maksukausi}))
                                 kk-v-lisatty)]
-    (distinct tarvittavat-tiedot)))
+    #_(distinct tarvittavat-tiedot)
+    #_(println "TARVITTAVAT TIEDOT: " tarvittavat-tiedot)
+    #_tarvittavat-tiedot
+    kk-v-lisatty))
 
 (defn hae-urakan-budjetoidut-tyot
   "Palvelu, joka palauttaa urakan budjetoidut työt. Palvelu palauttaa kiinteähintaiset, kustannusarvioidut ja yksikköhintaiset työt mapissa jäsenneltynä."
@@ -374,22 +372,19 @@
                                               ::bs/muokattu    (pvm/nyt)
                                               ::bs/muokkaaja   (:id user)}
                                              {::bs/id id})))
-                                (doseq [{:keys [kuukausi vuosi tunnit tuntipalkka ennen-urakkaa? kk-v]} jhkt]
-                                  (let [{ennen-urakkaa-id ::bs/id} (when ennen-urakkaa?
-                                                                     (insert! db
-                                                                              ::bs/johto-ja-hallintokorvaus-ennen-urakkaa
-                                                                              {::bs/kk-v kk-v}))]
-                                    (insert! db
-                                             ::bs/johto-ja-hallintokorvaus
-                                             {::bs/urakka-id urakka-id
-                                              ::bs/toimenkuva-id toimenkuva-id
-                                              ::bs/tunnit tunnit
-                                              ::bs/tuntipalkka tuntipalkka
-                                              ::bs/kuukausi kuukausi
-                                              ::bs/vuosi vuosi
-                                              ::bs/ennen-urakkaa-id ennen-urakkaa-id
-                                              ::bs/luotu (pvm/nyt)
-                                              ::bs/luoja (:id user)}))))
+                                (doseq [{:keys [kuukausi vuosi tunnit tuntipalkka ennen-urakkaa? osa-kuukaudesta]} jhkt]
+                                  (insert! db
+                                           ::bs/johto-ja-hallintokorvaus
+                                           {::bs/urakka-id urakka-id
+                                            ::bs/toimenkuva-id toimenkuva-id
+                                            ::bs/tunnit tunnit
+                                            ::bs/tuntipalkka tuntipalkka
+                                            ::bs/kuukausi kuukausi
+                                            ::bs/vuosi vuosi
+                                            ::bs/ennen-urakkaa-id ennen-urakkaa?
+                                            ::bs/osa-kuukaudesta osa-kuukaudesta
+                                            ::bs/luotu (pvm/nyt)
+                                            ::bs/luoja (:id user)})))
                               {:onnistui? true})))
 
 (defn tallenna-kustannusarvioitu-tyo!
