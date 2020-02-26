@@ -1,3 +1,2 @@
-ALTER TABLE paikkauskohde
-ADD COLUMN tila LAHETYKSEN_TILA,
-ADD COLUMN virhe TEXT;
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('yha', 'laheta-paikkauskohde');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('yha', 'poista-lahetetty-paikkauskohde');
