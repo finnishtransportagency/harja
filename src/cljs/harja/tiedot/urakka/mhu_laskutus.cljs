@@ -341,6 +341,7 @@
 
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
+    (loki/log "MAKSUERA")
     (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
@@ -360,6 +361,7 @@
         (update-in [:parametrit :haetaan] dec)))
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
+    (loki/log "LASKUT APP" app)
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
@@ -368,6 +370,7 @@
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
+    (loki/log "TOIMENPIDE")
     (let [kasitelty (set
                       (flatten
                         (mapv
@@ -386,6 +389,11 @@
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
+      (tuck-apurit/post! :kaikki-laskuerittelyt
+                         {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                         {:onnistui           ->LaskuhakuOnnistui
+                          :epaonnistui        ->KutsuEpaonnistui
+                          :paasta-virhe-lapi? true})
       (assoc app
         :toimenpiteet toimenpiteet
         :tehtavaryhmat tehtavaryhmat)))
@@ -394,12 +402,14 @@
 
   KutsuEpaonnistui
   (process-event [{:keys [tulos]} app]
+    (loki/log "VOI EI")
     app)
 
   ;; HAUT
 
   HaeUrakanLaskutJaTiedot
   (process-event [{:keys [hakuparametrit]} app]
+    (loki/log "HAEN KAIKKI")
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
                          {:urakka-id (:id hakuparametrit)}
@@ -409,11 +419,6 @@
       (tuck-apurit/post! :hae-urakan-maksuerat
                          (:id hakuparametrit)
                          {:onnistui           ->MaksueraHakuOnnistui
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :paasta-virhe-lapi? true})
-      (tuck-apurit/post! :kaikki-laskuerittelyt
-                         {:urakka-id (:id hakuparametrit)}
-                         {:onnistui           ->LaskuhakuOnnistui
                           :epaonnistui        ->KutsuEpaonnistui
                           :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] inc))

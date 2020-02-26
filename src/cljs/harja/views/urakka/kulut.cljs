@@ -26,14 +26,10 @@
                    [harja.views.urakka.kulut :refer [lomakkeen-osio]]))
 
 (defn- validi-ei-tarkistettu-tai-ei-koskettu? [{:keys [koskettu? validi? tarkistettu?]}]
-  (loki/log "V? k?" koskettu? "t?" tarkistettu? "v?" validi?)
   (cond
-    (and
-      (false? koskettu?)
-      (false? tarkistettu?)) true
-    (or (true? validi?)
-        (false? tarkistettu?)) true
-    :else false))
+    (and (false? validi?)
+         (true? tarkistettu?)) false
+    :else true))
 
 (defn aliurakoitsija-modaali
   [_ _]
@@ -65,12 +61,6 @@
             {:vayla-tyyli? true
              :ikoni        ikonit/remove}]]]]))))
 
-(defn- validoi
-  [pakolliset objekti]
-  (some #(not (get % pakolliset)) (keys objekti)))
-
-
-
 (def kuukaudet-strs {:tammikuu  "Tammikuu"
                      :helmikuu  "Helmikuu"
                      :maaliskuu "Maaliskuu"
@@ -98,14 +88,6 @@
          :rivi                (count m)}))
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
-
-
-
-#_(defn- validi?
-    [arvo tyyppi]
-    (let [validius (case tyyppi
-                     :numero (re-matches #"\d+(?:\.?,?\d+)?" (str arvo)))]
-      (not (nil? validius))))
 
 (defn paivamaaran-valinta
   [{:keys [paivitys-fn erapaiva erapaiva-meta]}]
@@ -222,7 +204,7 @@
                       {:class #{"lomake-sisempi-osio"}}))
      [kentat/vayla-lomakekentta
       "Tehtäväryhmä *"
-      :tyylit {:kontti #{"kulukentta" "col-xs-12"}}
+      :tyylit {:kontti #{"kulukentta" "col-xs-6"}}
       :komponentti tehtavaryhma-dropdown
       :komponentin-argumentit {:paivitys-fn       paivitys-fn
                                :tehtavaryhma      tehtavaryhma
