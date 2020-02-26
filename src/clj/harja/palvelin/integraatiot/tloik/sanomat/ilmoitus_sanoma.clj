@@ -58,7 +58,9 @@
 (defn lue-viesti [viesti]
   (let [data (xml/lue viesti)
         ilmoitus {:ilmoitettu (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
-                  :valitetty (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
+                  :valitetty (if ((z/xml1-> data :lahetysaika z/text))
+                               (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
+                               (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text)))
                   :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
                   :tunniste (z/xml1-> data :tunniste z/text)
                   :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
