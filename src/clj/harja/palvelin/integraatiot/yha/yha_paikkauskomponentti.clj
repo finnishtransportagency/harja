@@ -19,7 +19,7 @@
 (def +virhe-yha-viestin-lukemisessa+ ::yha-virhe-viestin-lukemisessa)
 
 (defprotocol PaikkaustietojenLahetys
-  (laheta-paikkauskohde [this tunniste])
+  (laheta-paikkauskohde [this urakka tunniste])
   (laheta-paikkauskohteet-uudelleen [this])
   (poista-paikkauskohde [this tunniste])
   (poista-paikkauskohteet-uudelleen [this]))
@@ -33,7 +33,8 @@
    (paivita-lahetyksen-tila db kohde-id tila nil))
   ([db kohde-id tila virheet]
    ;; TODO: Päivitä paikkauskohde-taulun tila ja virhe-sarakkeet id:n perusteella. Käytä toista funktiota, jos tämä ei sovellu.
-   (q-paikkaus/paivita-paikkauskohde db nil nil)))
+   ;;(q-paikkaus/paivita-paikkauskohde db nil nil)
+   ))
 
 (defn kasittele-paikkauskohteen-lahettamisen-vastaus
   "Päivittää virheeseen menneen paikkauskohteen lähteyksen jälkeen paikkauskohteen lähetystilan virheeksi.

@@ -23,41 +23,40 @@
         urakka {:urakka (rename-keys urakka {:id :harja-id})}
         kasittele-materiaali (fn [m]
                                {:kivi-ja-sideaine (-> m
-                                                            (dissoc :materiaali-id)
-                                                            (rename-keys {:kuulamylly-arvo :km-arvo})
-                                                            )})
+                                                      (dissoc :materiaali-id)
+                                                      (rename-keys {:kuulamylly-arvo :km-arvo})
+                                                      )})
         kasittele-paikkaus (fn [p] {:paikkaus (-> p
-                                                  (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id )
+                                                  (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id)
                                                   (rename-keys {:tierekisteriosoite :sijainti})
-                                                  ;(assoc-in [:kuulamylly] (:nimi (first (filter
-                                                  ;                                        #(= (str (:koodi %)) (:kuulamylly p))
-                                                  ;                                        paallyste/+kuulamyllyt+))))
                                                   (conj {:kivi-ja-sideaineet (into [] (map kasittele-materiaali (:materiaalit p)))})
                                                   (dissoc :materiaalit))})
         kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
                                                        (dissoc :ulkoinen-id)
                                                        (rename-keys {:id :harja-id})
-                                                       (conj {:paikkaukset (into [] (map kasittele-paikkaus paikkaukset))}))}]}
+                                                       (conj {:paikkaukset (into [] (map kasittele-paikkaus paikkaukset))}))}]}  ;; into [] mpa => mapv !
         sanomasisalto (merge urakka kohteet)]
 
-    (println "*** SISALTo " (cheshire/encode sanomasisalto))
+    (println "*** SANOMA ***" (cheshire/encode sanomasisalto))
     (cheshire/encode sanomasisalto)))
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id  kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
         json (muodosta-sanoma-json urakka kohde paikkaukset)
 
-        ;; TODO: validoi json
-        _ (println " jSON SANOOO ETTÄ " (json/validoi +paikkauksen-vienti+ json))
+        ;; TODO: Validointi ei hyväksy aikaleimaa, jossa ei näytä olevan mitään vikaa
+        _ (println " JSON-VALIDOINTI SANOOO ETTÄ " (json/validoi +paikkauksen-vienti+ json))]
 
-        ]
     (if-let [virheet (json/validoi +paikkauksen-vienti+ json)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. JSON ei ole validi. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
         (throw+ {:type  :invalidi-yha-paikkaus-json
                  :error virheviesti}))
       json)))
+
+
+;; json-validointi, tarkista aikaleimajuttu. onko päivitystä, eti uus
