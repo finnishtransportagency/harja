@@ -138,6 +138,27 @@
                      x))
                  puu))
 
+(defn summaa-mapin-arvot [arvot avain]
+  (reduce (fn [summa arvo]
+            (+ summa (get arvo avain)))
+          0
+          arvot))
+
+(defn kuukausi-kuuluu-maksukauteen? [kuukausi maksukausi]
+  (cond
+    (= maksukausi :kesa) (<= 5 kuukausi 9)
+    (= maksukausi :talvi) (or (<= 1 kuukausi 4)
+                              (<= 10 kuukausi 12))
+    :else true))
+
+(defn kk-v-toimenkuvan-kuvaukselle [{:keys [toimenkuva maksukausi]}]
+  (cond
+    (= maksukausi :kesa) 5
+    (= maksukausi :talvi) 7
+    (= toimenkuva "harjoittelija") 4
+    (= toimenkuva "viherhoidosta vastaava henkilö") 5
+    :else 12))
+
 (defn aseta-maara!
   ([grid-polku-fn domain-polku-fn tila arvo tunniste paivitetaan-domain?] (aseta-maara! grid-polku-fn domain-polku-fn tila arvo tunniste paivitetaan-domain? nil))
   ([grid-polku-fn domain-polku-fn tila arvo tunniste paivitetaan-domain? hoitokauden-numero]
@@ -292,10 +313,8 @@
                                                                                                                                                                                                           (vec (repeat 5 nil))
                                                                                                                                                                                                           data)))))
                                                                                                                      :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
-                                                                                                                              (let [vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [yhteensa {maara :maara}]
-                                                                                                                                                                                  (+ yhteensa maara))
-                                                                                                                                                                                0
-                                                                                                                                                                                (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)]))]
+                                                                                                                              (let [vuoden-hoidonjohtopalkkiot-yhteensa (summaa-mapin-arvot (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)])
+                                                                                                                                                                                            :maara)]
                                                                                                                                 (-> tila
                                                                                                                                     (assoc-in [:gridit :suunnittellut-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
                                                                                                                                                                                                                              :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})
@@ -403,10 +422,8 @@
                                                                                                                                                                                                                              (vec (repeat 5 nil))
                                                                                                                                                                                                                              data)))))
                                                                                                                                    :aseta (fn [tila vuoden-hoidonjohtopalkkio valittu-toimenpide]
-                                                                                                                                            (let [vuoden-hoidonjohtopalkkiot-yhteensa (reduce (fn [yhteensa {maara :maara}]
-                                                                                                                                                                                                (+ yhteensa maara))
-                                                                                                                                                                                              0
-                                                                                                                                                                                              (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)]))]
+                                                                                                                                            (let [vuoden-hoidonjohtopalkkiot-yhteensa (summaa-mapin-arvot (get-in vuoden-hoidonjohtopalkkio [valittu-toimenpide (dec hoitokauden-numero)])
+                                                                                                                                                                                                          :maara)]
                                                                                                                                               (-> tila
                                                                                                                                                   (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat :yhteenveto :data (dec hoitokauden-numero)] {:yhteensa vuoden-hoidonjohtopalkkiot-yhteensa
                                                                                                                                                                                                                                                      :indeksikorjattu (indeksikorjaa vuoden-hoidonjohtopalkkiot-yhteensa)})
@@ -575,10 +592,7 @@
                                                                                             (fn [tyyppien-data]
                                                                                               (dissoc tyyppien-data tyyppi))))
                                                                   :aseta (fn [tila maarat valittu-toimenpide tyyppi]
-                                                                           (let [yhteensa (reduce (fn [yhteensa {maara :maara}]
-                                                                                                    (+ yhteensa maara))
-                                                                                                  0
-                                                                                                  maarat)
+                                                                           (let [yhteensa (summaa-mapin-arvot maarat :maara)
                                                                                  hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                                                  kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
                                                                                                                maarat))]
@@ -639,13 +653,9 @@
                                                                     (get erillishankinnat (dec hoitokauden-numero))
                                                                     [])
                                                             arvot (mapv (fn [m]
-                                                                          (if kuukausitasolla?
-                                                                            (select-keys m #{:maara :aika})
-                                                                            (select-keys m #{:aika})))
+                                                                          (select-keys m #{:maara :aika}))
                                                                         arvot)
                                                             #_#_johdetut-arvot (get johdetut-arvot (dec hoitokauden-numero))]
-                                                        (println "ARVOT: " arvot)
-                                                        (println "JOHDETUT ARVOT: " johdetut-arvot)
                                                         (if (nil? johdetut-arvot)
                                                           arvot
                                                           (do
@@ -695,10 +705,7 @@
                                                              #_(assoc-in [:gridit :erillishankinnat :yhteenveto :indeksikorjattu] (vec (repeat 5 nil)))))
                                                  :aseta (fn [tila erillishankinnat hoitokauden-numero kuukausitasolla?]
                                                           (let [valitun-vuoden-erillishankinnat (get erillishankinnat (dec hoitokauden-numero))
-                                                                vuoden-erillishankinnat-yhteensa (reduce (fn [summa {maara :maara}]
-                                                                                                           (+ summa maara))
-                                                                                                         0
-                                                                                                         valitun-vuoden-erillishankinnat)
+                                                                vuoden-erillishankinnat-yhteensa (summaa-mapin-arvot valitun-vuoden-erillishankinnat :maara)
                                                                 maarat-samoja? (apply = (map :maara valitun-vuoden-erillishankinnat))
                                                                 maara (if maarat-samoja?
                                                                         (get-in valitun-vuoden-erillishankinnat [0 :maara])
@@ -716,11 +723,137 @@
                                                                #_(assoc-in [:gridit :erillishankinnat :yhteensa :indeksikorjattu] (vec (repeat 5 nil)))))
                                                :aseta (fn [tila erillishankinnat #_hoitokauden-numero]
                                                         (let [#_#_erillishankinnat-yhteensa-cache (get-in tila [:gridit :erillishankinnat :yhteensa :yhteensa-cache])
-                                                              erillishankinnat-yhteensa (reduce #(+ %1 (:maara %2)) 0 (flatten erillishankinnat))]
+                                                              erillishankinnat-yhteensa (summaa-mapin-arvot (flatten erillishankinnat) :maara)]
                                                           (-> tila
                                                               (assoc-in [:gridit :erillishankinnat :yhteensa :yhteensa #_(dec hoitokauden-numero)] erillishankinnat-yhteensa)
                                                               #_(assoc-in [:gridit :erillishankinnat :yhteensa :yhteensa-cache #_(dec hoitokauden-numero)] erillishankinnat-yhteensa)
                                                               (assoc-in [:gridit :erillishankinnat :yhteensa :indeksikorjattu #_(dec hoitokauden-numero)] (indeksikorjaa erillishankinnat-yhteensa)))))}}))
+
+(def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
+
+                                                :aseta-tunnit-yhteenveto! any?
+                                                :aseta-tuntipalkka-yhteenveto! any?
+                                                :aseta-tunnit! any?}
+                                               (reduce (fn [rajapinnat {:keys [toimenkuva maksukausi]}]
+                                                         (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                                                           (assoc rajapinnat
+                                                                  (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?
+                                                                  (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) any?
+                                                                  (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) any?)))
+                                                       {}
+                                                       johto-ja-hallintokorvaukset-pohjadata)))
+
+(defn jh-yhteenvetopaivitys [tila arvo {:keys [osa toimenkuva maksukausi]} paivitetaan-domain?]
+  (println ":aseta-tunnit-yhteenveto! " arvo)
+  (println "PÄIVITETÄÄN DOMAIN? " paivitetaan-domain?)
+  (println {:keys [osa toimenkuva maksukausi]})
+  (let [arvo (cond
+               ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
+               (nil? arvo) nil
+               (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
+               :else arvo)
+        hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+        domain-paivitys (fn [tila]
+                          (update-in tila
+                                     [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)]
+                                     (fn [hoitokauden-jh-korvaukset]
+                                       (mapv (fn [jh-korvaus]
+                                               (assoc jh-korvaus osa (js/Number arvo)))
+                                             hoitokauden-jh-korvaukset))))
+        grid-paivitys (fn [tila kaikki?]
+                        (if kaikki?
+                          (update-in tila
+                                     [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi]
+                                     (fn [hoitokauden-jh-korvaukset]
+                                       (mapv (fn [jh-korvaus]
+                                               (assoc jh-korvaus osa arvo))
+                                             hoitokauden-jh-korvaukset)))
+                          (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto toimenkuva maksukausi osa] arvo)))]
+    (if (and paivitetaan-domain? arvo (not (.isNaN js/Number arvo)))
+      (-> tila domain-paivitys (grid-paivitys true))
+      (grid-paivitys tila false))))
+
+(defn johto-ja-hallintokorvaus-dr []
+  (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+                          johto-ja-hallintokorvaus-rajapinta
+                          (merge
+                            {:otsikot {:polut [[:gridit :johto-ja-hallintokorvaukset :otsikot]]
+                                       :haku identity}}
+                            (apply merge
+                                  (mapv (fn [{:keys [toimenkuva maksukausi]}]
+                                          (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                                            {(keyword (str "yhteenveto" yksiloiva-nimen-paate)) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto toimenkuva maksukausi]]
+                                                                                                 :haku identity}
+                                             (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) {:polut [[:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]]
+                                                                                                       :luonti-init (fn [tila _]
+                                                                                                                      (println "LUODAAN KUUKAUSITASOLLA? ")
+                                                                                                                      (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi] false))
+                                                                                                       :haku identity}
+                                             (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]
+                                                                                                                       [:suodattimet :hoitokauden-numero]
+                                                                                                                       [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi]
+                                                                                                                       [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]]
+                                                                                                               :haku (fn [jh-korvaukset hoitokauden-numero johdetut-arvot kuukausitasolla?]
+                                                                                                                       (let [arvot (if hoitokauden-numero
+                                                                                                                                     (get jh-korvaukset (dec hoitokauden-numero))
+                                                                                                                                     [])
+                                                                                                                             arvot (transduce (comp
+                                                                                                                                                (filter (fn [{:keys [kuukausi]}]
+                                                                                                                                                          (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi)))
+                                                                                                                                                (map (fn [m]
+                                                                                                                                                       (select-keys m #{:tunnit :aika}))))
+                                                                                                                                              conj
+                                                                                                                                              []
+                                                                                                                                              arvot)]
+                                                                                                                         (if (nil? johdetut-arvot)
+                                                                                                                           arvot
+                                                                                                                           (do
+                                                                                                                             (when-not (= (count arvot) (count johdetut-arvot))
+                                                                                                                               (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
+                                                                                                                                     "-> ARVOT\n"
+                                                                                                                                     (with-out-str (cljs.pprint/pprint arvot))
+                                                                                                                                     "-> JOHDETUT ARVOT\n"
+                                                                                                                                     (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                                                                                               arvot)
+                                                                                                                             (vec
+                                                                                                                               (map merge
+                                                                                                                                    arvot
+                                                                                                                                    johdetut-arvot))))))}}))
+                                        johto-ja-hallintokorvaukset-pohjadata)))
+                          {:aseta-tunnit! (partial aseta-maara!
+                                                   (fn [{:keys [osa osan-paikka toimenkuva maksukausi]} hoitokauden-numero valittu-toimenpide]
+                                                     [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi (first osan-paikka) osa])
+                                                   (fn [{:keys [osa osan-paikka toimenkuva maksukausi]} hoitokauden-numero valittu-toimenpide]
+                                                     [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero) (first osan-paikka) osa]))
+                           :aseta-tunnit-yhteenveto! jh-yhteenvetopaivitys
+                           :aseta-tuntipalkka-yhteenveto! jh-yhteenvetopaivitys}
+                          (reduce (fn [seurannat {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
+                                    (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                                      (merge seurannat
+                                             {(keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]
+                                                                                                                      [:suodattimet :hoitokauden-numero]]
+                                                                                                              :init (fn [tila]
+                                                                                                                      (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi] (vec (repeat (kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus) {}))))
+                                                                                                              :aseta (fn [tila jh-korvaukset hoitokauden-numero]
+                                                                                                                       (let [valitun-vuoden-jh-tunnit (get jh-korvaukset (dec hoitokauden-numero))
+                                                                                                                             maksukauden-jh-tunnit (filterv (fn [{:keys [kuukausi]}]
+                                                                                                                                                              (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))
+                                                                                                                                                            valitun-vuoden-jh-tunnit)
+                                                                                                                             tuntipalkka (get-in maksukauden-jh-tunnit [0 :tuntipalkka])
+                                                                                                                             kk-v (get-in maksukauden-jh-tunnit [0 :kk-v])
+                                                                                                                             vuoden-jh-tunnit-yhteensa (summaa-mapin-arvot maksukauden-jh-tunnit :tunnit)
+                                                                                                                             tunnit-samoja? (apply = (map :tunnit maksukauden-jh-tunnit))
+                                                                                                                             tunnit (if tunnit-samoja?
+                                                                                                                                      (get-in maksukauden-jh-tunnit [0 :tunnit])
+                                                                                                                                      vaihtelua-teksti)
+                                                                                                                             yhteensa (* vuoden-jh-tunnit-yhteensa tuntipalkka)]
+                                                                                                                         (update-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto toimenkuva maksukausi] merge {:tunnit tunnit
+                                                                                                                                                                                                                         :yhteensa (when-not (= 0 yhteensa)
+                                                                                                                                                                                                                                     yhteensa)
+                                                                                                                                                                                                                         :tuntipalkka tuntipalkka
+                                                                                                                                                                                                                         :kk-v kk-v})))}})))
+                                  {}
+                                  johto-ja-hallintokorvaukset-pohjadata)))
 
 (def hoidonjohtopalkkion-rajapinta {:otsikot any?
                                     ;; {:nimi string? :maara vector :yhteensa vector :indeksikorjattu vector}
@@ -856,6 +989,7 @@
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
                           & args]
+  (println "PÄIVITETTÄVÄ ASIA: " paivitettava-asia)
   (jarjesta-data ajettavat-jarejestykset
     (triggeroi-seurannat triggeroi-seuranta?
       (case paivitettava-asia
@@ -902,7 +1036,25 @@
                                                    :aseta-erillishankinnat-yhteenveto!
                                                    arvo
                                                    (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                                   args)))))
+                                                   args)
+        :aseta-tunnit! (apply grid/aseta-rajapinnan-data!
+                              (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                              :aseta-tunnit!
+                              arvo
+                              (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                              args)
+        :aseta-tunnit-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                         (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                         :aseta-tunnit-yhteenveto!
+                                         arvo
+                                         (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                         args)
+        :aseta-tuntipalkka-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                              (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                              :aseta-tuntipalkka-yhteenveto!
+                                              arvo
+                                              (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                              args)))))
 
 (defn triggeroi-seuranta! [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
@@ -1557,6 +1709,11 @@
                                                :yhteenveto {:nimi "Erillishankinnat"}
                                                :yhteensa {:nimi "Yhteensä"}
                                                :kuukausitasolla? false})
+        (assoc-in [:gridit :johto-ja-hallintokorvaukset] {:otsikot {:toimenkuva "Toimenkuva" :tunnit "Tunnit/kk, h" :tuntipalkka "Tuntipalkka, €" :yhteensa "Yhteensä/kk" :kk-v "kk/v"}
+                                                          :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi]}]
+                                                                                (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (clj-str/capitalize toimenkuva)))
+                                                                              {}
+                                                                              johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
                                                       :yhteensa {:nimi "Yhteensä"}})))
   FiltereidenAloitusarvot
@@ -1818,14 +1975,6 @@
                                                               (:johto-ja-hallintokorvaukset vastaus))
                                         taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
                                                                                (fn [vuosi kuukausi]
-                                                                                 (println vuosi " " kuukausi)
-                                                                                 (println (cond
-                                                                                            (= maksukausi :kesa) (<= 5 kuukausi 9)
-                                                                                            (= maksukausi :talvi) (or (<= 1 kuukausi 4)
-                                                                                                                      (<= 10 kuukausi 12))
-                                                                                            (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
-                                                                                            (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
-                                                                                            :else true))
                                                                                  (cond
                                                                                    (= maksukausi :kesa) (<= 5 kuukausi 9)
                                                                                    (= maksukausi :talvi) (or (<= 1 kuukausi 4)
@@ -1833,12 +1982,20 @@
                                                                                    (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
                                                                                    (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
                                                                                    :else true))
-                                                                               (fn [{:keys [vuosi kuukausi] :as data}]
+                                                                               (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
                                                                                  (-> data
                                                                                      (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                            :tunnit (or tunnit 0)
+                                                                                            :tuntipalkka (or tuntipalkka 0)
                                                                                             :kk-v kk-v)
-                                                                                     (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka}))))]
-                                    (merge korvaukset
+                                                                                     (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka :kuukausi}))))]
+                                    (update korvaukset toimenkuva (fn [maksukausien-arvot]
+                                                                    (assoc maksukausien-arvot maksukausi (vec (vals (sort-by #(-> % key first)
+                                                                                                                             (fn [aika-1 aika-2]
+                                                                                                                               (pvm/ennen? aika-1 aika-2))
+                                                                                                                             (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
+                                                                                                                                       taytetty-jh-data)))))))
+                                    #_(merge korvaukset
                                            {toimenkuva (vec (vals (sort-by #(-> % key first)
                                                                            (fn [aika-1 aika-2]
                                                                              (pvm/ennen? aika-1 aika-2))

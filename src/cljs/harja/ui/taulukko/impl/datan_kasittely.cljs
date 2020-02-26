@@ -90,11 +90,14 @@
                            (r/cursor data-atom polku))
                          polut)]
       (when luonti-init
-        (swap! seurannan-valitila (fn [valitilat]
-                                    (update-in valitilat
-                                               [*kaytava-data-atom-hash* ::tila]
-                                               (fn [tila]
-                                                 (apply luonti-init tila (map #(get-in tila %) kuuntelija-lisaajan-polut)))))))
+        (if dynaaminen?
+          (swap! seurannan-valitila (fn [valitilat]
+                                      (update-in valitilat
+                                                 [*kaytava-data-atom-hash* ::tila]
+                                                 (fn [tila]
+                                                   (apply luonti-init tila (map #(get-in tila %) kuuntelija-lisaajan-polut))))))
+          (binding [*seuranta-muutos?* true]
+            (swap! data-atom luonti-init))))
       (set! kuuntelijat
             (assoc kuuntelijat
                    kuuntelun-nimi
