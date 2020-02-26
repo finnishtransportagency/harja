@@ -1,2 +1,2 @@
 ALTER TABLE ilmoitus
-    RENAME COLUMN "ilmoitettu-alunperin" TO "vastaanotettu-alunperin";
+  RENAME COLUMN "ilmoitettu-alunperin" TO "vastaanotettu-alunperin";
