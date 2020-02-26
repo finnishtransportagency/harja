@@ -76,7 +76,7 @@
                                             {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6))}
                                             {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6))}
                                             {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
-                                            {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi :molemmat :hoitokaudet #{0}}
+                                            {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi nil :hoitokaudet #{0}}
                                             {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
                                             {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}])
 
@@ -151,8 +151,9 @@
                               (<= 10 kuukausi 12))
     :else true))
 
-(defn kk-v-toimenkuvan-kuvaukselle [{:keys [toimenkuva maksukausi]}]
+(defn kk-v-toimenkuvan-kuvaukselle [{:keys [toimenkuva maksukausi hoitokaudet kk-v]}]
   (cond
+    (= #{0} hoitokaudet) (js/Math.ceil kk-v)
     (= maksukausi :kesa) 5
     (= maksukausi :talvi) 7
     (= toimenkuva "harjoittelija") 4
@@ -1710,8 +1711,15 @@
                                                :yhteensa {:nimi "Yhteensä"}
                                                :kuukausitasolla? false})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset] {:otsikot {:toimenkuva "Toimenkuva" :tunnit "Tunnit/kk, h" :tuntipalkka "Tuntipalkka, €" :yhteensa "Yhteensä/kk" :kk-v "kk/v"}
-                                                          :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi]}]
-                                                                                (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (clj-str/capitalize toimenkuva)))
+                                                          :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi hoitokaudet]}]
+                                                                                (let [nimi (str toimenkuva " "
+                                                                                                (case maksukausi
+                                                                                                  :talvi "(talvikausi)"
+                                                                                                  :kesa "(kesäkausi)"
+                                                                                                  "")
+                                                                                                (when (contains? hoitokaudet 0)
+                                                                                                  "(ennen urakkaa)"))]
+                                                                                  (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (clj-str/capitalize nimi))))
                                                                               {}
                                                                               johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
@@ -1970,25 +1978,50 @@
           johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
 
           jh-korvaukset (reduce (fn [korvaukset {:keys [toimenkuva kk-v maksukausi hoitokaudet]}]
-                                  (let [asia-kannasta (filter (fn [jh-korvaus]
-                                                                (= (:toimenkuva jh-korvaus) toimenkuva))
-                                                              (:johto-ja-hallintokorvaukset vastaus))
-                                        taytetty-jh-data (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
-                                                                               (fn [vuosi kuukausi]
-                                                                                 (cond
-                                                                                   (= maksukausi :kesa) (<= 5 kuukausi 9)
-                                                                                   (= maksukausi :talvi) (or (<= 1 kuukausi 4)
-                                                                                                             (<= 10 kuukausi 12))
-                                                                                   (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
-                                                                                   (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
-                                                                                   :else true))
-                                                                               (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
-                                                                                 (-> data
-                                                                                     (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
-                                                                                            :tunnit (or tunnit 0)
-                                                                                            :tuntipalkka (or tuntipalkka 0)
-                                                                                            :kk-v kk-v)
-                                                                                     (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka :kuukausi}))))]
+                                  (let [asia-kannasta (reverse (sort-by :osa-kuukaudesta (filter (fn [jh-korvaus]
+                                                                                                   (= (:toimenkuva jh-korvaus) toimenkuva))
+                                                                                                 (:johto-ja-hallintokorvaukset vastaus))))
+                                        data-koskee-ennen-urakkaa? (= #{0} hoitokaudet)
+                                        taytetty-jh-data (if data-koskee-ennen-urakkaa?
+                                                           (let [osittainen (some #(when-not (= 1 (get :osa-kuukaudesta %))
+                                                                                     %)
+                                                                                  asia-kannasta)
+                                                                 kokonaiset (keep #(when (= 1 (get :osa-kuukaudesta %))
+                                                                                     %)
+                                                                                  asia-kannasta)
+                                                                 kokonaisten-maara (js/Math.floor kk-v)
+                                                                 uusia-kokonaisia (- kokonaisten-maara (count kokonaiset))
+                                                                 osittaisen-osa-kuukaudesta (- kk-v kokonaisten-maara)]
+                                                             (conj (concat kokonaiset
+                                                                           (repeat uusia-kokonaisia
+                                                                                   {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
+                                                                                    :kk-v kk-v
+                                                                                    :tunnit 0
+                                                                                    :tuntipalkka 0
+                                                                                    :kuukausi 10}))
+                                                                   (or osittainen {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
+                                                                                   :kk-v kk-v
+                                                                                   :tunnit 0
+                                                                                   :tuntipalkka 0
+                                                                                   :osa-kuukaudesta osittaisen-osa-kuukaudesta
+                                                                                   :kuukausi 10})))
+                                                           (pohjadatan-taydennys (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
+                                                                                 (fn [vuosi kuukausi]
+                                                                                   (cond
+                                                                                     (= #{0} hoitokaudet) (= 10 kuukausi)
+                                                                                     (= maksukausi :kesa) (<= 5 kuukausi 9)
+                                                                                     (= maksukausi :talvi) (or (<= 1 kuukausi 4)
+                                                                                                               (<= 10 kuukausi 12))
+                                                                                     (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
+                                                                                     (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
+                                                                                     :else true))
+                                                                                 (fn [{:keys [vuosi kuukausi tunnit tuntipalkka] :as data}]
+                                                                                   (-> data
+                                                                                       (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
+                                                                                              :tunnit (or tunnit 0)
+                                                                                              :tuntipalkka (or tuntipalkka 0)
+                                                                                              :kk-v kk-v)
+                                                                                       (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka :kuukausi})))))]
                                     (update korvaukset toimenkuva (fn [maksukausien-arvot]
                                                                     (assoc maksukausien-arvot maksukausi (vec (vals (sort-by #(-> % key first)
                                                                                                                              (fn [aika-1 aika-2]

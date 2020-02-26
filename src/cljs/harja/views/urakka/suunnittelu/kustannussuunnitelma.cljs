@@ -1187,7 +1187,9 @@
                                                                                                                               t/johto-ja-hallintokorvaukset-pohjadata))]]
                                                                                        (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-sisalto])
                                                                                                                (not kuukausitasolla?))
-                                                                                       (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto])
+                                                                                       (maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 0 1])]
+                                                                                                                 osa
+                                                                                                                 (grid/get-in-grid g [::g-pohjat/data index ::data-yhteenveto 1]))
                                                                                                                kuukausitasolla?))))}})))
 
 (defn johto-ja-hallintokorvaus-laskulla-yhteenveto-grid []
