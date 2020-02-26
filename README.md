@@ -47,25 +47,6 @@ http://leiningen.org/
 Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8.
 Vaihtoehtoisesti voit käyttää dockeria.
 
-### VirtualBox
-
-Käynnistä VirtualBox<br/>
-<code>
-cd vagrant<br/>
-vagrant up
-</code>
-
-Jos vagrant up epäonnistuu, aja ensin:<br/>
-<code>
-vagrant box add geerlingguy/centos7 https://github.com/tommy-muehle/puppet-vagrant-boxes/releases/download/1.1.0/centos-7.0-x86_64.box
-</code>
-
-VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaksi eri kantaa:
-- **harja** - Varsinaista kehitystyötä varten
-- **harjatest** - Testit ajetaan tätä kantaa vasten
-
-Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
-
 ### Tunnukset ulkoisiin järjestelmiin
 
 Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
@@ -79,10 +60,10 @@ lein do clean, compile, repl
 
 Käännä frontend ja käynnistä Figwheel:<br/>
 <code>
-lein figwheel
+sh kaynnista_harja_front_dev.sh
 </code>
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000 tai localhost:3000
+Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:3000
 
 ### Kehitystyötä helpottavat työkalut
 
@@ -95,7 +76,7 @@ Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatio
 logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 
 * Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
-* ActiveMQ: docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
+* ActiveMQ: docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
@@ -350,7 +331,7 @@ Oikean FIM:n testikäyttö:
 
 ## Active MQ
 Käynnistys docker imagesta:
-docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
+docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
 
 URL konsoliin:
-localhost:8161/admin/queues.jsp (admin/admin)
+localhost:8162/admin/queues.jsp (admin/admin)

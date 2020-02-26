@@ -374,9 +374,10 @@
                                                               :tr-loppuosa 6 :tr-loppuetaisyys 5000}
                                                              tr-tieto
                                                              true)]
-      (is (= 1 (count (:kohteen-tiedot virhetiedot))))
-      (is (-> virhetiedot :kohteen-tiedot first meta :ei-osaa))))
-  (testing "Alikohde"
+      ;; Kohde-tiedon-mukainen palauttaa virheelliseksi todeltun kohteen tiedot
+      (is (= (:kohde virhetiedot) {:tr-numero 22, :tr-alkuosa 2, :tr-alkuetaisyys 5000, :tr-loppuosa 6, :tr-loppuetaisyys 5000}))))
+
+      (testing "Alikohde"
     ;; Testataan, että osan vaihtaminen onnistuu, kun ajorata ja kaista pysyy samana
     (is (nil? (yllapitokohteet/kohde-tiedon-mukainen {:tr-numero 22 :tr-ajorata 0 :tr-kaista 1
                                                       :tr-alkuosa 5 :tr-alkuetaisyys 5000

@@ -51,14 +51,14 @@
     (is (vector? vastaus))
     (is (match vastaus
                [:raportti
-                 {:nimi "Välitavoiteraportti"
+                 {:nimi "Määräaikaan mennessä tehtävät työt"
                   :orientaatio :landscape}
                  [:taulukko
-                  {:otsikko (_ :guard #(str/starts-with? % "Oulun alueurakka 2014-2019, Välitavoiteraportti"))
-                   :sheet-nimi "Välitavoiteraportti"
+                  {:otsikko (_ :guard #(str/starts-with? % "Oulun alueurakka 2014-2019, Määräaikaan mennessä tehtävät työt"))
+                   :sheet-nimi "Määräaikaan mennessä tehtävät työt"
                    :tyhja nil}
                   [{:leveys 10
-                    :otsikko "Välitavoite"}
+                    :otsikko "Työn kuvaus"}
                    {:leveys 5
                     :otsikko "Takaraja"}
                    {:leveys 10

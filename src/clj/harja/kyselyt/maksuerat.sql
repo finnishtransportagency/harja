@@ -268,7 +268,7 @@ SELECT
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON m.toimenpideinstanssi = tpi.id
   JOIN urakka u ON tpi.urakka = u.id
-WHERE m.likainen = TRUE;
+WHERE m.likainen IS TRUE;
 
 -- name: lukitse-maksuera!
 -- Lukitsee maksuerän lähetyksen ajaksi
@@ -296,17 +296,19 @@ SET tila = 'virhe', lukko = NULL, lukittu = NULL
 WHERE numero = :numero;
 
 -- name: merkitse-tyypin-maksuerat-likaisiksi!
--- Merkitsee kaikki annetun tyypin mukaiset maksuerät likaisi
+-- Merkitsee kaikki annetun tyypin mukaiset maksuerät likaisi. Vain voimassaolevat tai ne joiden vanhenemisesta on alle 3 kk.
 UPDATE maksuera
 SET likainen = TRUE
-WHERE tyyppi = :tyyppi :: maksueratyyppi;
+WHERE tyyppi = :tyyppi :: maksueratyyppi AND
+      toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: merkitse-toimenpiteen-maksuerat-likaisiksi!
--- Merkitsee kaikki annetun toimenpiteen mukaiset maksuerät likaisi
+-- Merkitsee kaikki annetun toimenpiteen mukaiset maksuerät likaisi, jos toimenpideinstanssi on voimassa tai sen vanhenemisesta on alle 3 kk.
 UPDATE maksuera
 SET likainen = TRUE,
 muokattu = CURRENT_TIMESTAMP
-WHERE toimenpideinstanssi = :tpi;
+WHERE toimenpideinstanssi = :tpi AND
+    toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months');;
 
 -- name: luo-maksuera<!
 -- Luo uuden maksuerän.

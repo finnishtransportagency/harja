@@ -28,10 +28,10 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (defn luo-testi-ilmoitus []
-  (u "INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu)
+  (u "INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty)
       VALUES ((SELECT id
       FROM urakka
-      WHERE nimi = 'Oulun alueurakka 2014-2019'), 987654321, now());"))
+      WHERE nimi = 'Oulun alueurakka 2014-2019'), 987654321, now(), (now() + interval '15 seconds'));"))
 
 
 (defn poista-testi-ilmoitustoimenpide []
