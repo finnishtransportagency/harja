@@ -31,21 +31,17 @@
 
 (defn ei-pakollinen [v-fn]
   (fn [arvo]
-    (loki/log "Ei pakollinen" arvo (not (or (nil? arvo)
-                                            (empty? arvo))))
     (if-not (or (nil? arvo)
                 (empty? arvo))
       (v-fn arvo)
       true)))
 
 (defn ei-nil [arvo]
-  (loki/log "Ei nil" arvo)
   (when
     (not (nil? arvo))
     arvo))
 
 (defn ei-tyhja [arvo]
-  (loki/log "Ei tyhja" arvo)
   (when
     (or
       (number? arvo)
@@ -54,23 +50,19 @@
     arvo))
 
 (defn numero [arvo]
-  (loki/log "Numero" arvo)
   (when
     (number? arvo)
     arvo))
 
 (defn paivamaara [arvo]
-  (loki/log "Paivamaara" arvo)
   (when
     (pvm/pvm? arvo)
     arvo))
 
 (defn y-tunnus [arvo]
-  (loki/log "Y-tunnus" arvo)
-  (re-matches #"\d{7}-\d" (str arvo)))
+  (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (defn viite [arvo]                                          ;11
-  (loki/log "Viite" arvo)
   (let [tarkistusnumero (js/parseInt
                           (last arvo))                      ;1
         tarkastettavat-luvut (butlast arvo)]                ;1
@@ -117,18 +109,14 @@
     (let [lomake (vary-meta
                    lomake
                    (fn [{:keys [validius validi?] :as lomake-meta} lomake]
-                     (loki/log "methaa" lomake-meta)
                      (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
                                (as-> kaikki kaikki
                                      (update
                                        kaikki
                                        :validius
                                        (fn [vs]
-                                         (loki/log "vallut" vs "polku" polku)
                                          (update vs
                                                  polku (fn [kentta]
-                                                         (loki/log "kentta" kentta "avain" polku "lomake" lomake "avainlomake" (get polku lomake) (validointi
-                                                                                                                                                    (get-in lomake polku)))
                                                          (assoc kentta
                                                            :tarkistettu? true
                                                            :validointi validointi

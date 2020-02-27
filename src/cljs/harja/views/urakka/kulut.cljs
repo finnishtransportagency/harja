@@ -99,7 +99,6 @@
 
 (defn koontilaskun-kk-droppari
   [{:keys [koontilaskun-kuukausi paivitys-fn koontilaskun-kuukausi-meta]}]
-  (loki/log koontilaskun-kuukausi-meta)
   [yleiset/livi-pudotusvalikko
    {:virhe?       (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta))
     :vayla-tyyli? true
@@ -199,7 +198,6 @@
   (let [{:keys [tehtavaryhma summa]} t
         summa-meta (get validius [:kohdistukset indeksi :summa])
         tehtavaryhma-meta (get validius [:kohdistukset indeksi :tehtavaryhma])]
-    (loki/log "indeksi " indeksi summa-meta tehtavaryhma-meta (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
     [:div (merge {} (when (> kohdistukset-lkm 1)
                       {:class #{"lomake-sisempi-osio"}}))
      [kentat/vayla-lomakekentta
@@ -258,7 +256,6 @@
     #(into {}
            (filter
              (fn [[polku _]]
-               (loki/log polku (get-in lomake polku))
                (polku-olemassa? lomake polku))
              %))))
 
@@ -400,12 +397,9 @@
                                              opts-polut-ja-arvot)
                             opts (when (odd? (count opts-polut-ja-arvot)) (first opts-polut-ja-arvot))]
                         (e! (tiedot/->PaivitaLomake polut-ja-arvot opts))))]
-    (loki/log "form")
     (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
       (let [{:keys [nayta paivita]} lomake]
         [:div
-         [debug/debug @tila/yleiset]
-         [debug/debug lomake]
          [:div.row
           [:h1 "Uusi kulu"]
           [tehtavien-syotto paivitys-fn lomake tehtavaryhmat]]
@@ -435,7 +429,6 @@
                       (e! (tiedot/->HaeAliurakoitsijat))
                       (e! (tiedot/->HaeUrakanLaskutJaTiedot (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))))
     (fn [e! {:keys [taulukko syottomoodi] :as app}]
-      (loki/log "main")
       [:div
        (if syottomoodi
          [kulujen-syottolomake e! app]

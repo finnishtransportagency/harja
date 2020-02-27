@@ -67,7 +67,7 @@
 
 
 (defn hae-kaikki-urakan-laskuerittelyt
-  "Palauttaa urakan laskut valitulta ajanjaksolta laskuerittelyineen."
+  "Palauttaa urakan laskut laskuerittelyineen."
   [db user hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
   (let [laskukohdistukset (group-by :laskun-id (q/hae-kaikki-urakan-laskuerittelyt db {:urakka (:urakka-id hakuehdot)}))]

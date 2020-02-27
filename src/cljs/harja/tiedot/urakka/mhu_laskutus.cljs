@@ -341,7 +341,6 @@
 
   MaksueraHakuOnnistui
   (process-event [{tulos :tulos} app]
-    (loki/log "MAKSUERA")
     (assoc app :maksuerat tulos))
   TallennusOnnistui
   (process-event [{tulos :tulos {:keys [avain tilan-paivitys-fn]} :parametrit} app]
@@ -361,7 +360,6 @@
         (update-in [:parametrit :haetaan] dec)))
   LaskuhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet laskut] :as app}]
-    (loki/log "LASKUT APP" app)
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
@@ -370,7 +368,6 @@
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
-    (loki/log "TOIMENPIDE")
     (let [kasitelty (set
                       (flatten
                         (mapv
@@ -402,14 +399,12 @@
 
   KutsuEpaonnistui
   (process-event [{:keys [tulos]} app]
-    (loki/log "VOI EI")
     app)
 
   ;; HAUT
 
   HaeUrakanLaskutJaTiedot
   (process-event [{:keys [hakuparametrit]} app]
-    (loki/log "HAEN KAIKKI")
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
                          {:urakka-id (:id hakuparametrit)}
