@@ -310,31 +310,46 @@
 
 (defn aliurakoitsija-lisays-modaali
   [_]
-  (let [aliurakoitsija-atomi (r/atom {:nimi "" :ytunnus ""})]
+  (let [aliurakoitsija-atomi (r/atom {:nimi "" :ytunnus "" :virhe? false :koskettu-nimi? false :koskettu-ytunnus? false})]
     (fn [e!]
-      [:div
-       [kentat/vayla-lomakekentta
-        "Yrityksen nimi *"
-        :arvo (:nimi @aliurakoitsija-atomi)
-        :on-change (fn [event]
-                     (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value)))]
-       [kentat/vayla-lomakekentta
-        "Y-tunnus"
-        :arvo (:ytunnus @aliurakoitsija-atomi)
-        :on-change (fn [event] (swap! aliurakoitsija-atomi assoc :ytunnus (-> event .-target .-value)))]
-       [:div.napit
-        [napit/tallenna
-         "Tallenna"
-         (fn [] (do
-                  (e! (tiedot/->LuoUusiAliurakoitsija @aliurakoitsija-atomi))
-                  (modal/piilota!)))
-         {:ikoni        ikonit/ok
-          :vayla-tyyli? true}]
-        [napit/sulje
-         "Sulje"
-         (fn [] (modal/piilota!))
-         {:vayla-tyyli? true
-          :ikoni        ikonit/remove}]]])))
+      (let [y-tunnus-validi? (not (nil? (-> @aliurakoitsija-atomi :ytunnus tila/ei-tyhja tila/ei-nil tila/y-tunnus)))
+            nimi-validi? (not (nil? (-> @aliurakoitsija-atomi :nimi tila/ei-tyhja tila/ei-nil)))
+            {:keys [koskettu-nimi? koskettu-ytunnus?]} @aliurakoitsija-atomi]
+        [:div
+         [kentat/vayla-lomakekentta
+          "Yrityksen nimi *"
+          :class #{(str "input" (if (or
+                                      (false? koskettu-nimi?)
+                                      (true? nimi-validi?)) "" "-error") "-default") "komponentin-input"}
+          :arvo (:nimi @aliurakoitsija-atomi)
+          :on-change (fn [event]
+                       (swap! aliurakoitsija-atomi assoc :nimi (-> event .-target .-value) :koskettu-nimi? true))]
+         [kentat/vayla-lomakekentta
+          "Y-tunnus *"
+          :class #{(str "input" (if (or
+                                      (false? koskettu-ytunnus?)
+                                      (true? y-tunnus-validi?)) "" "-error") "-default") "komponentin-input"}
+          :arvo (:ytunnus @aliurakoitsija-atomi)
+          :on-change (fn [event] (swap! aliurakoitsija-atomi assoc :ytunnus (-> event .-target .-value) :koskettu-ytunnus? true))]
+         (when (true? (-> @aliurakoitsija-atomi :virhe?))
+           [:div "Tarkista annetut tiedot, tiedoissa virhe. Y-tunnus muotoa nnnnnnn-n"])
+         [:div.napit
+          [napit/tallenna
+           "Tallenna"
+           (fn []
+             (if (and (true? nimi-validi?)
+                      (true? y-tunnus-validi?))
+               (do
+                 (e! (tiedot/->LuoUusiAliurakoitsija (-> @aliurakoitsija-atomi (dissoc :virhe? :koskettu-nimi? :koskettu-ytunnus?))))
+                 (modal/piilota!))
+               (swap! aliurakoitsija-atomi assoc :virhe? true)))
+           {:ikoni        ikonit/ok
+            :vayla-tyyli? true}]
+          [napit/sulje
+           "Sulje"
+           (fn [] (modal/piilota!))
+           {:vayla-tyyli? true
+            :ikoni        ikonit/remove}]]]))))
 
 (defn lisatiedot [paivitys-fn {:keys [aliurakoitsija liite-id liite-nimi liite-tyyppi liite-koko] :as lomake} e! aliurakoitsijat]
   (let [lisaa-aliurakoitsija (fn [{sulje :sulje}]
