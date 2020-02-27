@@ -18,8 +18,10 @@
             [clojure.set :as set]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]))
 
-(def nyt (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                     (t/now)))
+(def ilmoitettu (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                            (t/minus (t/now) (t/minutes 185))))
+(def valitetty (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
+                           (t/minus (t/now) (t/minutes 181))))
 
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
@@ -27,11 +29,12 @@
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
 (defn testi-ilmoitus-sanoma
-  ([] (testi-ilmoitus-sanoma nyt))
-  ([ilmoitettu]
-   ; 2015-09-29T14:49:45
+  ([] (testi-ilmoitus-sanoma ilmoitettu valitetty))
+  ([ilmoitettu valitetty]
+    ; 2015-09-29T14:49:45
    (str "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+  <lahetysaika>" valitetty "</lahetysaika>
   <ilmoitusId>123456789</ilmoitusId>
   <tunniste>UV-1509-1a</tunniste>
   <versionumero>1</versionumero>
@@ -145,11 +148,12 @@
   </seliteet>\n</harja:ilmoitus>")))
 
 (defn testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija
-  ([] (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija nyt))
-  ([ilmoitettu]
+  ([] (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija ilmoitettu valitetty))
+  ([ilmoitettu valitetty]
    (str
      "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
      <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+     <lahetysaika>" valitetty "</lahetysaika>
      <ilmoitusId>123456789</ilmoitusId>
      <tunniste>UV-1509-1a</tunniste>
      <versionumero>1</versionumero>
@@ -185,11 +189,12 @@
   </harja:ilmoitus>")))
 
 (defn testi-valaistusilmoitus-sanoma
-  ([] (testi-valaistusilmoitus-sanoma nyt))
-  ([ilmoitettu]
+  ([] (testi-valaistusilmoitus-sanoma ilmoitettu valitetty))
+  ([ilmoitettu valitetty]
    (str
      "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
       <viestiId>14324234</viestiId>
+      <lahetysaika>" valitetty "</lahetysaika>
       <ilmoitusId>987654321</ilmoitusId>
       <tunniste>UV-1509-1a</tunniste>
       <versionumero>1</versionumero>
@@ -227,6 +232,7 @@
 (def +testi-paallystysilmoitus-sanoma+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
+   <lahetysaika>2016-09-21T10:49:55</lahetysaika>
    <ilmoitusId>987654321</ilmoitusId>
    <tunniste>UV-1509-1a</tunniste>
    <versionumero>1</versionumero>
@@ -261,9 +267,9 @@
    </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []
-  (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
-            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
-            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
+  (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
+            :ilmoituskuittausjono   +tloik-ilmoituskuittausjono+
+            :toimenpidejono         +tloik-ilmoitustoimenpideviestijono+
             :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}
            true))
 
@@ -273,7 +279,7 @@
       (clj-str/replace "7377324" "7345904")))
 
 (def +ilmoitus-hailuodon-jaatiella+
-  (-> (testi-ilmoitus-sanoma "2015-09-29T14:49:45")
+  (-> (testi-ilmoitus-sanoma "2015-09-29T14:49:45" "2015-09-29T15:02:45")
       (clj-str/replace "319130" "7186873")
       (clj-str/replace "414212" "7211797")))
 
@@ -286,8 +292,8 @@
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clj-str/replace (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija)
-                                       "<urakkatyyppi>hoito</urakkatyyppi>"
-                                       "<urakkatyyppi>paallystys</urakkatyyppi>")
+                                "<urakkatyyppi>hoito</urakkatyyppi>"
+                                "<urakkatyyppi>paallystys</urakkatyyppi>")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
