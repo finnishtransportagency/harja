@@ -606,17 +606,23 @@
                                                                            (let [yhteensa (summaa-mapin-arvot maarat :maara)
                                                                                  hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                                                                  kuukausitasolla? (not (every? #(= (:maara (first maarat)) (:maara %))
-                                                                                                               maarat))]
-                                                                             (cond-> (assoc-in tila
-                                                                                               [:gridit :rahavaraukset :seurannat tyyppi]
-                                                                                               {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
-                                                                                                :yhteensa yhteensa
-                                                                                                :indeksikorjattu (indeksikorjaa yhteensa)
-                                                                                                :maara (if kuukausitasolla?
-                                                                                                         vaihtelua-teksti
-                                                                                                         (:maara (first maarat)))})
-                                                                                     ;; Päivitetään myös yhteenvedotkomponentti
-                                                                                     (contains? toimenpiteet-rahavarauksilla valittu-toimenpide) (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)] yhteensa))))}
+                                                                                                               maarat))
+                                                                                 kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+                                                                                 paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                                                                                     (range hoitokauden-numero 6)
+                                                                                                                     [hoitokauden-numero])
+                                                                                 tila (assoc-in tila
+                                                                                                [:gridit :rahavaraukset :seurannat tyyppi]
+                                                                                                {:nimi (-> tyyppi (clj-str/replace #"-" " ") aakkosta clj-str/capitalize)
+                                                                                                 :yhteensa yhteensa
+                                                                                                 :indeksikorjattu (indeksikorjaa yhteensa)
+                                                                                                 :maara (if kuukausitasolla?
+                                                                                                          vaihtelua-teksti
+                                                                                                          (:maara (first maarat)))})]
+                                                                             (reduce (fn [tila hoitokauden-numero]
+                                                                                       (assoc-in tila [:yhteenvedot :hankintakustannukset :summat :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)] yhteensa))
+                                                                                     tila
+                                                                                     paivitettavat-hoitokauden-numerot)))}
                            :rahavaraukset-yhteensa-seuranta {:polut [[:gridit :rahavaraukset :seurannat]]
                                                              :init (fn [tila]
                                                                      (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] nil))
@@ -639,7 +645,7 @@
    aseta-avain any?
    aseta-yhteenveto-avain any?})
 
-(defn maarataulukon-dr [rajapinta polun-osa aseta-avain aseta-yhteenveto-avain]
+(defn maarataulukon-dr [rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain]
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                           rajapinta
                           {:otsikot {:polut [[:gridit polun-osa :otsikot]]
@@ -720,13 +726,20 @@
                                                  :init (fn [tila]
                                                          (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))
                                                  :aseta (fn [tila maarat hoitokauden-numero kuukausitasolla?]
-                                                          (let [valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
+                                                          (let [kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+                                                                paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                                                                    (range hoitokauden-numero 6)
+                                                                                                    [hoitokauden-numero])
+                                                                valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
                                                                 vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)
                                                                 maarat-samoja? (apply = (map :maara valitun-vuoden-maarat))
                                                                 maara (if maarat-samoja?
                                                                         (get-in valitun-vuoden-maarat [0 :maara])
                                                                         vaihtelua-teksti)]
-                                                            (-> tila
+                                                            (-> (reduce (fn [tila hoitokauden-numero]
+                                                                          (assoc-in tila (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)])) vuoden-maarat-yhteensa))
+                                                                        tila
+                                                                        paivitettavat-hoitokauden-numerot)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa)))))}
@@ -2141,13 +2154,14 @@
                                                 (vals
                                                   (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                                             data)))))
+          erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)
 
           hoidonjohtopalkkio-kuukausitasolla? (not (apply = (map :maara hoidon-johto-kustannukset)))
           app (-> app
                   (assoc-in [:domain :suunnittellut-hankinnat] hankinnat-hoitokausille)
                   (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
                   (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausille)
-                  (assoc-in [:domain :erillishankinnat] (hoidonjohto-jarjestys-fn erillishankinnat))
+                  (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain)
                   (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
                   (assoc-in [:domain :toimistokulut] (hoidonjohto-jarjestys-fn jh-toimistokulut))
                   (assoc-in [:domain :hoidonjohtopalkkio] (hoidonjohto-jarjestys-fn johtopalkkio))
@@ -2182,6 +2196,7 @@
                                                                                                                     toimenpiteen-rahavaraukset))))
                                                                                                 {}
                                                                                                 rahavaraukset-hoitokausille))
+                  (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat] (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
                   (assoc :kantahaku-valmis? true))]
       #_(tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       ;(async/put! tapahtumat {:ajax :tuck :tapahtuma :hankintakustannukset-haettu})

@@ -1254,7 +1254,7 @@
                                                         [0 {}]
                                                         t/johto-ja-hallintokorvaukset-pohjadata))))))
 
-(defn maarataulukko [nimi taulukon-id]
+(defn maarataulukko [nimi taulukon-id yhteenvedot-polku]
   (let [polun-osa (keyword nimi)
         disablerivit-avain (keyword (str nimi "-disablerivit"))
         aseta-yhteenveto-avain (keyword (str "aseta-" nimi "-yhteenveto!"))
@@ -1341,7 +1341,7 @@
         rajapinta (t/maarataulukon-rajapinta polun-osa aseta-yhteenveto-avain aseta-avain)]
     (grid/rajapinta-grid-yhdistaminen! g
                                        rajapinta
-                                       (t/maarataulukon-dr rajapinta polun-osa aseta-avain aseta-yhteenveto-avain)
+                                       (t/maarataulukon-dr rajapinta polun-osa yhteenvedot-polku aseta-avain aseta-yhteenveto-avain)
                                        {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                               :solun-polun-pituus 1
                                                               :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
@@ -3371,34 +3371,29 @@
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
-  [erillishankinnat menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi} indeksit]
+  [erillishankinnat indeksit kuluva-hoitokausi]
+  (println "ERILLISHANKINNAT")
+  (println erillishankinnat)
   (if erillishankinnat
-    (let [summarivin-index 1
-          tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [summarivin-index "Yhteensä"])
-                                  :arvo)
-          hinnat (map (fn [hoitokausi]
-                        (if (>= hoitokausi vuosi)
-                          {:summa tamavuosi-summa
-                           :hoitokausi hoitokausi}
-                          {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
-                           :hoitokausi hoitokausi}))
-                      (range 1 6))]
+    (let [yhteenveto (mapv (fn [summa]
+                             {:summa summa})
+                           erillishankinnat)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko nil
                       :selite "Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
-                      :hinnat hinnat}
+                      :hinnat yhteenveto}
         kuluva-hoitokausi]
-       #_[indeksilaskuri hinnat indeksit]])
+       [indeksilaskuri yhteenveto indeksit]])
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat [erillishankinnat]
   [maara-kk erillishankinnat])
 
-(defn erillishankinnat-sisalto [erillishankinnat-grid kantahaku-valmis? suodattimet]
+(defn erillishankinnat-sisalto [erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
      [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
-     #_[erillishankinnat-yhteenveto erillishankinnat-taulukko menneet-suunnitelmat kuluva-hoitokausi indeksit]
+     [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi]
      [yleis-suodatin suodattimet]
      (when nayta-erillishankinnat-grid?
        [grid/piirra erillishankinnat-grid])
@@ -3498,17 +3493,19 @@
     [yleiset/ajax-loader]))
 
 (defn hallinnolliset-toimenpiteet-sisalto [indeksit
+                                           kuluva-hoitokausi
                                            suodattimet
                                            erillishankinnat-grid
                                            johto-ja-hallintokorvaus-grid
                                            johto-ja-hallintokorvaus-yhteenveto-grid
                                            toimistokulut-grid
                                            hoidonjohtopalkkio-grid
+                                           erillishankinnat-yhteensa
                                            kantahaku-valmis?]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    #_[hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
-   [erillishankinnat-sisalto erillishankinnat-grid kantahaku-valmis? suodattimet]
+   [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
    [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet kantahaku-valmis?]])
 
@@ -3526,11 +3523,11 @@
                       (go (let [g-sh (suunnittellut-hankinnat-grid)
                                 g-hlp (hankinnat-laskutukseen-perustuen-grid)
                                 g-r (rahavarausten-grid)
-                                g-er (maarataulukko "erillishankinnat" "erillishankinnat-taulukko")
+                                g-er (maarataulukko "erillishankinnat" "erillishankinnat-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                 g-jhl (johto-ja-hallintokorvaus-laskulla-grid)
                                 g-jhly (johto-ja-hallintokorvaus-laskulla-yhteenveto-grid)
-                                g-t (maarataulukko "toimistokulut" "toimistokulut-taulukko")
-                                g-hjp (maarataulukko "hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")]
+                                g-t (maarataulukko "toimistokulut" "toimistokulut-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])
+                                g-hjp (maarataulukko "hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])]
                             (t/paivita-raidat! (grid/osa-polusta g-sh [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-hlp [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-jhl [::g-pohjat/data]))
@@ -3585,12 +3582,15 @@
          [:span.viiva-alas]
          [hallinnolliset-toimenpiteet-sisalto
           (get-in app [:domain :indeksit])
+          (get-in app [:domain :kuluva-hoitokausi])
           (dissoc suodattimet :hankinnat)
           (get-in app [:gridit :erillishankinnat :grid])
           (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
           (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
           (get-in app [:gridit :toimistokulut :grid])
           (get-in app [:gridit :hoidonjohtopalkkio :grid])
+          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
+          #_(get-in app [:gridit :erillishankinnat :yhteensa :yhteensa])
           (:kantahaku-valmis? app)]]))))
 
 (defn kustannussuunnitelma []
