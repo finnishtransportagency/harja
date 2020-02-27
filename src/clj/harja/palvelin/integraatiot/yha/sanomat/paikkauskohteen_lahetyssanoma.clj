@@ -38,9 +38,11 @@
 
 (defn muodosta [db urakka-id kohde-id]
   (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
-        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id               kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
+        kohde (first (q-paikkaus/hae-paikkauskohteet db {:harja.domain.paikkaus/id kohde-id ;; hakuparametrin nimestä huolimatta haku tehdään paikkauskohteen id:llä - haetaan siis yksittäisen paikkauskohteen tiedot
+                                                         :harja.domain.paikkaus/urakka-id urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {:harja.domain.paikkaus/paikkauskohde-id kohde-id
+                                                                :harja.domain.paikkaus/urakka-id urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
         json (muodosta-sanoma-json urakka kohde paikkaukset)]
 
