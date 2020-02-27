@@ -21,7 +21,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
  kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12345), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-01 10:05:55', 'valitys',
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'mikael.poyta@valittavaurakoitsija.fi',
                                                           'Välittävä Urakoitsija', '9184629-5',  'ulos'::viestisuunta, 'sms'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -30,7 +30,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
  kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12345), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-01 10:05:55', 'valitys',
                                                           'Usko', 'Untamo', '04428121283', '0509288383', 'usko.untamo@valittavaurakoitsija.fi',
                                                           'Välittävä Urakoitsija', '9184629-5',  'ulos'::viestisuunta, 'sahkoposti'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -763,7 +763,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kasittelija_henkilo_etunimi, kasittelija_henkilo_sukunimi, kasittelija_henkilo_matkapuhelin, kasittelija_henkilo_tyopuhelin, kasittelija_henkilo_sahkoposti,
  kasittelija_organisaatio_nimi, kasittelija_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12613), 12613, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12613), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12613), 12613, '2014-11-26 06:07:02', 'valitys',
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
                                                           'Välittävä Urakoitsija', 'Y1242334', 'ulos'::viestisuunta, 'sms'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -792,7 +792,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kasittelija_henkilo_etunimi, kasittelija_henkilo_sukunimi, kasittelija_henkilo_matkapuhelin, kasittelija_henkilo_tyopuhelin, kasittelija_henkilo_sahkoposti,
  kasittelija_organisaatio_nimi, kasittelija_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12614), 12614, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12614), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12614), 12614, '2014-10-26 06:51:32', 'valitys',
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
                                                           'Välittävä Urakoitsija', 'Y1242334', 'ulos'::viestisuunta, 'sms'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -821,7 +821,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kasittelija_henkilo_etunimi, kasittelija_henkilo_sukunimi, kasittelija_henkilo_matkapuhelin, kasittelija_henkilo_tyopuhelin, kasittelija_henkilo_sahkoposti,
  kasittelija_organisaatio_nimi, kasittelija_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12615), 12615, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12615), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12615), 12615, '2015-1-26 16:06:59', 'valitys',
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
                                                           'Välittävä Urakoitsija', 'Y1242334', 'ulos'::viestisuunta, 'sms'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -851,7 +851,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kasittelija_henkilo_etunimi, kasittelija_henkilo_sukunimi, kasittelija_henkilo_matkapuhelin, kasittelija_henkilo_tyopuhelin, kasittelija_henkilo_sahkoposti,
  kasittelija_organisaatio_nimi, kasittelija_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12616), 12616, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12616), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12616), 12616, '2015-3-22 16:06:55', 'valitys',
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
                                                           'Välittävä Urakoitsija', 'Y1242334', 'ulos'::viestisuunta, 'sms'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -880,7 +880,7 @@ INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
  kasittelija_henkilo_etunimi, kasittelija_henkilo_sukunimi, kasittelija_henkilo_matkapuhelin, kasittelija_henkilo_tyopuhelin, kasittelija_henkilo_sahkoposti,
  kasittelija_organisaatio_nimi, kasittelija_organisaatio_ytunnus, suunta, kanava, vapaateksti)
-VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12617), 12617, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=12617), 'valitys',
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12617), 12617, '2015-3-16 11:07:12', 'valitys',
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
                                                           'Välittävä Urakoitsija', 'Y1242334', 'ulos'::viestisuunta, 'sms'::viestikanava,
         'Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin');
@@ -1045,11 +1045,11 @@ VALUES ((SELECT id
 -- muutamia tuoreita ilmoituksia tammikuu 2017
 INSERT INTO ilmoitus (sijainti, id, urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, ilmoitustyyppi, ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti, tr_alkuetaisyys, otsikko, paikankuvaus, lisatieto, luotu, muokattu, tr_lopputienumero, ulkoinen_id, luoja, tila, selitteet, ilmoittaja_tyyppi, urakkatyyppi)
 VALUES
-  (point(431758.24, 7019066.96)::GEOMETRY, 1454926, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 50024789, '2017-01-25 00:08:56', null, false, 4, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Esko Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4 välillä Jyväskylä - Oulu. Tarkempi paikka: Välillä Ilosjoki, Pihtipudas - maakuntaraja Keski-Suomi/Pohjois-Pohjanmaa, Pyhäjärvi. ', null, '2017-01-25 00:08:59', null, null, null, null, 'lopetettu', '{tieOnLiukas,liukkaudentorjuntatarve}', 'tienkayttaja', 'hoito'),
-  (point(357931.18, 6974562.61)::GEOMETRY, 1454927, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 50024790, '2017-01-25 02:03:15', null, true, 697, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Urho Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 697 välillä Seinäjoki - Karstula, Soini. Tarkempi paikka: Välillä Soinin kirkonkylän kiertoliittymä - Kukko. ', null, '2017-01-25 02:03:20', null, null, null, null, 'lopetettu', '{hiekoitustarve}', 'tienkayttaja', 'hoito'),
-  (point(333164.94, 7076607.75)::GEOMETRY, 1454928, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 50024791, '2017-01-25 04:58:43', null, false, 757, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Keksitty Henkilö', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 757 välillä Kälviä - Ullava, Kokkola. Tarkempi paikka: Välillä Välikylä - Lamminkangas. ', 'Tie on liukas ja urainen. Hiekkaa ja höyläystä kaivattaisiin kipeästi.', '2017-01-25 04:58:50', null, null, null, null, 'lopetettu', '{hiekoitustarve,liukkaudentorjuntatarve,hoylaystarve}', 'tienkayttaja', 'hoito'),
-  (point(439180.23, 7095708.49)::GEOMETRY, 1454929, (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 50024792, '2017-01-25 05:39:52', null, false, 4, null, null, null, 'tiedoitus', 'Esimerkkinen', null, null, '123456789', null, 'Luotu Lapiomies', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4, eli Ouluntie , Kärsämäki. Tarkempi paikka: Kärsämäki. Kärsämäen keskustan alueen kiertoliittymät ja risteysalueet.. ', 'Lähestymiset kiertoliittymiin tavattoman liukkaita.', '2017-01-25 05:39:55', null, null, null, null, 'lopetettu', '{liukkaudentorjuntatarve}', 'tienkayttaja', 'hoito'),
-  (point(337374.71, 7108394.69)::GEOMETRY, 1454930, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 50024793, '2017-01-25 06:15:17', null, false, 775, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Leikki Henkilö', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 775 välillä Himanka - Viitasaari. Tarkempi paikka: Välillä Pajala, Kalajoki - Raasakka, Kannus. ', null, '2017-01-25 06:15:19', null, null, null, null, 'lopetettu', '{hoylaystarve}', 'tienkayttaja', 'hoito');
+  (point(431758.24, 7019066.96)::GEOMETRY, 1454926, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 50024789, '2017-01-25 00:08:56', '2017-01-25 00:09:56', false, 4, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Esko Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4 välillä Jyväskylä - Oulu. Tarkempi paikka: Välillä Ilosjoki, Pihtipudas - maakuntaraja Keski-Suomi/Pohjois-Pohjanmaa, Pyhäjärvi. ', null, '2017-01-25 00:08:59', null, null, null, null, 'lopetettu', '{tieOnLiukas,liukkaudentorjuntatarve}', 'tienkayttaja', 'hoito'),
+  (point(357931.18, 6974562.61)::GEOMETRY, 1454927, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 50024790, '2017-01-25 02:03:15', '2017-01-25 02:03:45', true, 697, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Urho Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 697 välillä Seinäjoki - Karstula, Soini. Tarkempi paikka: Välillä Soinin kirkonkylän kiertoliittymä - Kukko. ', null, '2017-01-25 02:03:20', null, null, null, null, 'lopetettu', '{hiekoitustarve}', 'tienkayttaja', 'hoito'),
+  (point(333164.94, 7076607.75)::GEOMETRY, 1454928, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 50024791, '2017-01-25 04:58:43', '2017-01-25 04:58:53', false, 757, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Keksitty Henkilö', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 757 välillä Kälviä - Ullava, Kokkola. Tarkempi paikka: Välillä Välikylä - Lamminkangas. ', 'Tie on liukas ja urainen. Hiekkaa ja höyläystä kaivattaisiin kipeästi.', '2017-01-25 04:58:50', null, null, null, null, 'lopetettu', '{hiekoitustarve,liukkaudentorjuntatarve,hoylaystarve}', 'tienkayttaja', 'hoito'),
+  (point(439180.23, 7095708.49)::GEOMETRY, 1454929, (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 50024792, '2017-01-25 05:39:52', '2017-01-25 05:40:52', false, 4, null, null, null, 'tiedoitus', 'Esimerkkinen', null, null, '123456789', null, 'Luotu Lapiomies', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4, eli Ouluntie , Kärsämäki. Tarkempi paikka: Kärsämäki. Kärsämäen keskustan alueen kiertoliittymät ja risteysalueet.. ', 'Lähestymiset kiertoliittymiin tavattoman liukkaita.', '2017-01-25 05:39:55', null, null, null, null, 'lopetettu', '{liukkaudentorjuntatarve}', 'tienkayttaja', 'hoito'),
+  (point(337374.71, 7108394.69)::GEOMETRY, 1454930, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 50024793, '2017-01-25 06:15:17', '2017-01-25 06:15:37', false, 775, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Leikki Henkilö', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 775 välillä Himanka - Viitasaari. Tarkempi paikka: Välillä Pajala, Kalajoki - Raasakka, Kannus. ', null, '2017-01-25 06:15:19', null, null, null, null, 'lopetettu', '{hoylaystarve}', 'tienkayttaja', 'hoito');
 
 
 -- päällystysurakan ilmoitus
@@ -1057,9 +1057,9 @@ INSERT INTO ilmoitus (sijainti, id, urakka, ilmoitusid, ilmoitettu, valitetty, y
 VALUES
   (point(431758.24, 7019066.96)::GEOMETRY, 1454666,
    (select id from urakka where nimi='Muhoksen päällystysurakka'), 50024666,
-    '2017-06-01 00:08:56', null, false, 4, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Esko Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4 välillä Jyväskylä - Oulu. Tarkempi paikka: Välillä Ilosjoki, Pihtipudas - maakuntaraja Keski-Suomi/Pohjois-Pohjanmaa, Pyhäjärvi. ', null, '2017-01-25 00:08:59', null, null, null, null, 'lopetettu', '{tieOnLiukas,liukkaudentorjuntatarve}', 'tienkayttaja', 'paallystys');
+    '2017-06-01 00:08:56', '2017-06-01 00:09:16', false, 4, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Esko Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4 välillä Jyväskylä - Oulu. Tarkempi paikka: Välillä Ilosjoki, Pihtipudas - maakuntaraja Keski-Suomi/Pohjois-Pohjanmaa, Pyhäjärvi. ', null, '2017-01-25 00:08:59', null, null, null, null, 'lopetettu', '{tieOnLiukas,liukkaudentorjuntatarve}', 'tienkayttaja', 'paallystys');
 
--- ilmoitus, joka on välitetty
+-- ilmoitus, joka on välitetty (huom. ILMOITUS.valitetty ei liity asiaa, kenttään tallennetaan ajankohta, jolloin ilmoitus on välitetty T-LOIKista HARJAan.)
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, paikankuvaus, lisatieto, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
@@ -1067,7 +1067,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2014-2019'), 50024794, '2017-08-01 10:00:00', '2017-08-01 10:05:13', FALSE,
+         WHERE nimi = 'Oulun alueurakka 2014-2019'), 50024794, '2017-08-01 10:00:00', '2017-08-01 10:01:13', FALSE,
         'Tehkää jotain', 'Paikan kuvaus', 'Lisätietoa',
         point(337374.71, 7108394.69)::GEOMETRY, 775, null, null, null, null, 'tiedoitus',
         '{hiekoitustarve,liukkaudentorjuntatarve,hoylaystarve}',
@@ -1084,7 +1084,7 @@ INSERT INTO ilmoitustoimenpide
  kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava)
 VALUES ((SELECT id
          FROM ilmoitus
-         WHERE ilmoitusid = 50024794), 50024794, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=50024794), 'valitys' ,
+         WHERE ilmoitusid = 50024794), 50024794, '2017-08-01 10:05:44', 'valitys' ,
         'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
         'Välittävä Urakoitsija', 'Y1242334', 'sisaan'::viestisuunta, 'sms'::viestikanava);
 

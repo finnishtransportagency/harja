@@ -76,7 +76,7 @@ Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatio
 logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 
 * Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
-* ActiveMQ: docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
+* ActiveMQ: docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
@@ -334,4 +334,4 @@ Käynnistys docker imagesta:
 docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
 
 URL konsoliin:
-localhost:8161/admin/queues.jsp (admin/admin)
+localhost:8162/admin/queues.jsp (admin/admin)
