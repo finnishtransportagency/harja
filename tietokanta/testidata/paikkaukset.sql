@@ -109,7 +109,10 @@ BEGIN
                       6665, NOW() - INTERVAL '1 day', NOW() +
                                                       INTERVAL '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
      'massapintaus', 'asfalttibetoni', 1.3, 2, 1, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
-
+    (destia_kayttaja, NOW(), NULL, NULL, destia_kayttaja, TRUE, oulun_alueurakan_id, hoito_paikkauskohde_id,
+          6666, NOW() - INTERVAL '1 day', NOW() +
+                                          INTERVAL '9 day', ROW (20, 3, 100, 3, 250, NULL) :: TR_OSOITE,
+          'massapintaus', 'asfalttibetoni', 1.3, 2, 1, 'AN7', (SELECT tierekisteriosoitteelle_viiva(20, 3, 100, 3, 250))),
     (destia_kayttaja, NOW() + TIME '00:03:00', NULL, NULL, NULL, FALSE, oulun_alueurakan_id, hoito_paikkauskohde_2_id,
                       133, NOW() + INTERVAL '10 day', NOW() +
                                                       INTERVAL '20 day', ROW (20, 3, 200, 3, 300, NULL) :: TR_OSOITE,
