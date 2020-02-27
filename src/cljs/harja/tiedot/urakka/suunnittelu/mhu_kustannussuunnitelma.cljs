@@ -788,7 +788,7 @@
                             {:otsikot {:polut [[:gridit :johto-ja-hallintokorvaukset :otsikot]]
                                        :haku identity}}
                             (apply merge
-                                  (mapv (fn [{:keys [toimenkuva maksukausi]}]
+                                  (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet]}]
                                           (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                                             {(keyword (str "yhteenveto" yksiloiva-nimen-paate)) {:polut [[:gridit :johto-ja-hallintokorvaukset :yhteenveto toimenkuva maksukausi]]
                                                                                                  :haku identity}
@@ -801,8 +801,11 @@
                                                                                                                        [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi]
                                                                                                                        [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]]
                                                                                                                :haku (fn [jh-korvaukset hoitokauden-numero johdetut-arvot kuukausitasolla?]
-                                                                                                                       (let [arvot (if hoitokauden-numero
-                                                                                                                                     (get jh-korvaukset (dec hoitokauden-numero))
+                                                                                                                       (let [korvauksien-index (if (= hoitokaudet #{0})
+                                                                                                                                                 0
+                                                                                                                                                 (dec hoitokauden-numero))
+                                                                                                                             arvot (if hoitokauden-numero
+                                                                                                                                     (get jh-korvaukset korvauksien-index)
                                                                                                                                      [])
                                                                                                                              arvot (transduce (comp
                                                                                                                                                 (filter (fn [{:keys [kuukausi]}]
@@ -834,7 +837,7 @@
                                                      [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero) (first osan-paikka) osa]))
                            :aseta-tunnit-yhteenveto! jh-yhteenvetopaivitys
                            :aseta-tuntipalkka-yhteenveto! jh-yhteenvetopaivitys}
-                          (reduce (fn [seurannat {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
+                          (reduce (fn [seurannat {:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                                     (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                                       (merge seurannat
                                              {(keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]
@@ -842,7 +845,10 @@
                                                                                                               :init (fn [tila]
                                                                                                                       (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi] (vec (repeat (kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus) {}))))
                                                                                                               :aseta (fn [tila jh-korvaukset hoitokauden-numero]
-                                                                                                                       (let [valitun-vuoden-jh-tunnit (get jh-korvaukset (dec hoitokauden-numero))
+                                                                                                                       (let [korvauksien-index (if (= hoitokaudet #{0})
+                                                                                                                                                 0
+                                                                                                                                                 (dec hoitokauden-numero))
+                                                                                                                             valitun-vuoden-jh-tunnit (get jh-korvaukset korvauksien-index)
                                                                                                                              maksukauden-jh-tunnit (filterv (fn [{:keys [kuukausi]}]
                                                                                                                                                               (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))
                                                                                                                                                             valitun-vuoden-jh-tunnit)
