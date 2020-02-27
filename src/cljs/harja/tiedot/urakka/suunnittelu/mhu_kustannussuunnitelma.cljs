@@ -919,7 +919,7 @@
                                                                                                                        (assoc-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi] yhteensa-arvot)))}}))
                                        johto-ja-hallintokorvaukset-pohjadata))))
 
-(def hoidonjohtopalkkion-rajapinta {:otsikot any?
+#_(def hoidonjohtopalkkion-rajapinta {:otsikot any?
                                     ;; {:nimi string? :maara vector :yhteensa vector :indeksikorjattu vector}
                                     :yhteenveto any?
                                     :kuukausitasolla? any?
@@ -930,7 +930,7 @@
                                     :aseta-hoidonjohtopalkkio! any? #_(s/cat :arvo integer? :polku vector?)
                                     :aseta-yhteenveto! any?})
 
-(defn hoidonjohtopalkkion-dr []
+#_(defn hoidonjohtopalkkion-dr []
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
                           hoidonjohtopalkkion-rajapinta
                           {:otsikot {:polut [[:gridit :hoidonjohtopalkkio :otsikot]]
@@ -1117,7 +1117,31 @@
                                               :aseta-tuntipalkka-yhteenveto!
                                               arvo
                                               (grid/solun-asia solu :tunniste-rajapinnan-dataan)
-                                              args)))))
+                                              args)
+        :aseta-toimistokulut! (apply grid/aseta-rajapinnan-data!
+                                        (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                        :aseta-toimistokulut!
+                                        arvo
+                                        (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                        args)
+        :aseta-toimistokulut-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                   (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                   :aseta-toimistokulut-yhteenveto!
+                                                   arvo
+                                                   (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                   args)
+        :aseta-hoidonjohtopalkkio! (apply grid/aseta-rajapinnan-data!
+                                     (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                     :aseta-hoidonjohtopalkkio!
+                                     arvo
+                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                     args)
+        :aseta-hoidonjohtopalkkio-yhteenveto! (apply grid/aseta-rajapinnan-data!
+                                                (grid/osien-yhteinen-asia solu :datan-kasittelija)
+                                                :aseta-hoidonjohtopalkkio-yhteenveto!
+                                                arvo
+                                                (grid/solun-asia solu :tunniste-rajapinnan-dataan)
+                                                args)))))
 
 (defn triggeroi-seuranta! [solu seurannan-nimi]
   (grid/triggeroi-seuranta! (grid/osien-yhteinen-asia solu :datan-kasittelija) seurannan-nimi))
@@ -1758,10 +1782,6 @@
   TaulukoidenVakioarvot
   (process-event [_ app]
     (-> app
-        (assoc-in [:gridit :hoidonjohtopalkkio] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                                 :yhteenveto {:nimi "Hoidonjohtopalkkio"}
-                                                 :yhteensa {:nimi "Yhteensä"}
-                                                 :kuukausitasolla? false})
         (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
                                                                 :yhteenveto {:nimi "Määrämitattavat"}
                                                                 :yhteensa {:nimi "Yhteensä"}
@@ -1779,7 +1799,15 @@
                                                                               johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto] {:otsikot {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
         (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                                      :yhteensa {:nimi "Yhteensä"}})))
+                                                      :yhteensa {:nimi "Yhteensä"}})
+        (assoc-in [:gridit :toimistokulut] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                            :yhteenveto {:nimi "Toimistokulut, Pientarvikevarasto"}
+                                            :yhteensa {:nimi "Yhteensä"}
+                                            :kuukausitasolla? false})
+        (assoc-in [:gridit :hoidonjohtopalkkio] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                                 :yhteenveto {:nimi "Hoidonjohtopalkkio"}
+                                                 :yhteensa {:nimi "Yhteensä"}
+                                                 :kuukausitasolla? false})))
   FiltereidenAloitusarvot
   (process-event [_ app]
     (-> app

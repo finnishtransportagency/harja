@@ -34,8 +34,6 @@
 
 (defonce e! nil)
 
-(declare hoidonjohtopalkkio-grid)
-
 (defn summa-formatointi [teksti]
   (let [teksti (clj-str/replace (str teksti) "," ".")]
     (if (or (= "" teksti) (js/isNaN teksti))
@@ -1391,7 +1389,7 @@
                                                             (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 0 ::t/yhteenveto])
                                                                                     kuukausitasolla?))}})))
 
-(defn hoidonjohtopalkkio-grid []
+#_(defn hoidonjohtopalkkio-grid []
   (let [yhteenveto-grid-rajapinta-asetukset {:rajapinta :yhteenveto
                                              :solun-polun-pituus 1
                                              :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
@@ -3427,22 +3425,21 @@
        #_[indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [e! jh-laskulla jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit suodatin johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?]
+(defn johto-ja-hallintokorvaus [johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
-   #_[johto-ja-hallintokorvaus-yhteenveto jh-yhteenveto toimistokulut menneet-toimistokulusuunnitelmat kuluva-hoitokausi indeksit]
    [:h3 "Tuntimäärät ja -palkat"]
-   #_[yleis-suodatin suodatin]
+   [yleis-suodatin suodattimet]
    (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
      [grid/piirra johto-ja-hallintokorvaus-grid]
      [yleiset/ajax-loader])
    (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]
      [yleiset/ajax-loader])
-   #_[jh-toimenkuva-yhteenveto jh-yhteenveto]
    [:h3 "Johto ja hallinto: muut kulut"]
-   #_[yleis-suodatin suodatin]
-   #_[maara-kk toimistokulut]
+   (if (and toimistokulut-grid kantahaku-valmis?)
+     [grid/piirra toimistokulut-grid]
+     [yleiset/ajax-loader])
    [:span
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
@@ -3467,20 +3464,17 @@
        #_[indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn hoidonjohtopalkkio [_ _]
-  (go (let [g (hoidonjohtopalkkio-grid)]
-        (grid/triggeroi-tapahtuma! g :hoidonjotopalkkion-disablerivit)))
-  (fn [johtopalkkio kantahaku-valmis?]
-    (if (and johtopalkkio kantahaku-valmis?)
-      [grid/piirra johtopalkkio]
-      [yleiset/ajax-loader])))
+(defn hoidonjohtopalkkio [hoidonjohtopalkkio-grid kantahaku-valmis?]
+  (if (and hoidonjohtopalkkio-grid kantahaku-valmis?)
+    [grid/piirra hoidonjohtopalkkio-grid]
+    [yleiset/ajax-loader]))
 
-(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]
+(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin hoidonjohtopalkkio-grid kantahaku-valmis?]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
    #_[hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
    #_[yleis-suodatin suodatin]
-   #_[hoidonjohtopalkkio johtopalkkio-grid kantahaku-valmis?]])
+   [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
   (if (and erillishankinnat jh-yhteenveto johtopalkkio)
@@ -3509,16 +3503,17 @@
                                            indeksit
                                            suodattimet
                                            erillishankinnat-grid
-                                           johtopalkkio-grid
                                            johto-ja-hallintokorvaus-grid
                                            johto-ja-hallintokorvaus-yhteenveto-grid
+                                           toimistokulut-grid
+                                           hoidonjohtopalkkio-grid
                                            kantahaku-valmis?]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    #_[hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
    [erillishankinnat-sisalto erillishankinnat-grid kantahaku-valmis? (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodattimet]
-   [johto-ja-hallintokorvaus e! johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto toimistokulut (:toimistokulut menneet-vuodet) kuluva-hoitokausi indeksit suodatin johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?]
-   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin johtopalkkio-grid kantahaku-valmis?]])
+   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
+   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
 
 (defn kustannussuunnitelma*
@@ -3536,14 +3531,18 @@
                                 g-r (rahavarausten-grid)
                                 g-er (maarataulukko "erillishankinnat" "erillishankinnat-taulukko")
                                 g-jhl (johto-ja-hallintokorvaus-laskulla-grid)
-                                g-jhly (johto-ja-hallintokorvaus-laskulla-yhteenveto-grid)]
+                                g-jhly (johto-ja-hallintokorvaus-laskulla-yhteenveto-grid)
+                                g-t (maarataulukko "toimistokulut" "toimistokulut-taulukko")
+                                g-hjp (maarataulukko "hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko")]
                             (t/paivita-raidat! (grid/osa-polusta g-sh [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-hlp [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-jhl [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-jhly [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-er [::g-pohjat/data]))
-                            (grid/triggeroi-tapahtuma! g-er :erillishankinnat-disablerivit)
-                            (grid/triggeroi-tapahtuma! g-jhl :johto-ja-hallintokorvaukset-disablerivit)))
+                            (t/paivita-raidat! (grid/osa-polusta g-t [::g-pohjat/data]))
+                            (t/paivita-raidat! (grid/osa-polusta g-hjp [::g-pohjat/data]))
+                            #_(grid/triggeroi-tapahtuma! g-er :erillishankinnat-disablerivit)
+                            #_(grid/triggeroi-tapahtuma! g-jhl :johto-ja-hallintokorvaukset-disablerivit)))
                       (e! (t/->HaeKustannussuunnitelma #_(partial hankintojen-taulukko e! (:kaskytyskanava app))
                                                        #_(partial rahavarausten-taulukko e! (:kaskytyskanava app))
                                                        #_(partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))
@@ -3591,9 +3590,10 @@
           (get-in app [:domain :indeksit])
           (dissoc suodattimet :hankinnat)
           (get-in app [:gridit :erillishankinnat :grid])
-          (get-in app [:gridit :hoidonjohtopalkkio :grid])
           (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
           (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
+          (get-in app [:gridit :toimistokulut :grid])
+          (get-in app [:gridit :hoidonjohtopalkkio :grid])
           (:kantahaku-valmis? app)]]))))
 
 (defn kustannussuunnitelma []
