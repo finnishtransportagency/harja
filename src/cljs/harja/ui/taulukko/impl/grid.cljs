@@ -1192,23 +1192,26 @@
                      (fn [_]
                        (assoc this ::grid-tapahtumat (into {}
                                                            (map (fn [[tapahtuman-nimi {:keys [polut toiminto!] :as tapahtuma}]]
-                                                                  (let [kasittely-fn (fn [uusi-data]
-                                                                                       (r/next-tick (fn []
-                                                                                                      (apply toiminto! (root this) @data-atom uusi-data))))]
+                                                                  (let [kasittely-fn (fn []
+                                                                                       (dk/next-tick (fn []
+                                                                                                      (let [data @data-atom
+                                                                                                            uusi-data (map #(get-in data %) polut)]
+                                                                                                        (apply toiminto! (root this) data uusi-data)))))]
                                                                     (add-watch data-atom
                                                                                tapahtuman-nimi
                                                                                (fn [_ _ vanha uusi]
-                                                                                 (let [vanha-data (map #(get-in vanha %) polut)
-                                                                                       uusi-data (map #(get-in uusi %) polut)
-                                                                                       seurattava-data-muuttunut? (not= vanha-data uusi-data)
-                                                                                       ajetaan-tapahtuma? (and seurattava-data-muuttunut?
-                                                                                                               *ajetaan-tapahtuma?*)]
-                                                                                   (when ajetaan-tapahtuma?
-                                                                                     (kasittely-fn uusi-data)))))
+                                                                                 (when-not dk/*seuranta-muutos?*
+                                                                                   (let [vanha-data (map #(get-in vanha %) polut)
+                                                                                         uusi-data (map #(get-in uusi %) polut)
+                                                                                         seurattava-data-muuttunut? (not= vanha-data uusi-data)
+                                                                                         ajetaan-tapahtuma? (and seurattava-data-muuttunut?
+                                                                                                                 *ajetaan-tapahtuma?*)]
+                                                                                     (when ajetaan-tapahtuma?
+                                                                                       (kasittely-fn))))))
                                                                     [tapahtuman-nimi {:seurannan-lopetus! (fn []
                                                                                                             (remove-watch data-atom tapahtuman-nimi))
                                                                                       :tapahtuma-trigger! (fn []
-                                                                                                            (kasittely-fn (map #(get-in @data-atom %) polut)))}]))
+                                                                                                            (kasittely-fn))}]))
                                                                 tapahtumat)))))))
   gop/IGridOsa
   (-id [this]

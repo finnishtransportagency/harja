@@ -628,117 +628,107 @@
                                                                         (assoc-in tila [:gridit :rahavaraukset :yhteensa :data] {:yhteensa rahavaraukset-yhteensa
                                                                                                                                  :indeksikorjattu (indeksikorjaa rahavaraukset-yhteensa)})))}}))
 
-(def erillishankinnat-rajapinta {:otsikot any?
-                                 :yhteenveto any?
-                                 :kuukausitasolla? any?
-                                 :yhteensa any?
-                                 :erillishankinnat any?
 
-                                 :aseta-erillishankinnat! any?
-                                 :aseta-erillishankinnat-yhteenveto! any?})
+(defn maarataulukon-rajapinta [polun-osa aseta-yhteenveto-avain aseta-avain]
+  {:otsikot any?
+   :yhteenveto any?
+   :kuukausitasolla? any?
+   :yhteensa any?
+   polun-osa any?
 
-(defn erillishankinnat-dr []
+   aseta-avain any?
+   aseta-yhteenveto-avain any?})
+
+(defn maarataulukon-dr [rajapinta polun-osa aseta-avain aseta-yhteenveto-avain]
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
-                          erillishankinnat-rajapinta
-                          {:otsikot {:polut [[:gridit :erillishankinnat :otsikot]]
+                          rajapinta
+                          {:otsikot {:polut [[:gridit polun-osa :otsikot]]
                                      :haku identity}
-                           :yhteenveto {:polut [[:gridit :erillishankinnat :yhteenveto]
-                                                #_[:suodattimet :hoitokauden-numero]]
-                                        :haku identity #_(fn [{:keys [nimi maara yhteensa indeksikorjattu]}
-                                                              hoitokauden-numero]
-                                                           (let [i (dec hoitokauden-numero)
-                                                                 yhteensa (get yhteensa i)
-                                                                 indeksikorjattu (get indeksikorjattu i)
-                                                                 maara (get maara i)]
-                                                             {:nimi nimi :maara maara :yhteensa yhteensa :indeksikorjattu indeksikorjattu}))}
-                           :kuukausitasolla? {:polut [[:gridit :erillishankinnat :kuukausitasolla?]]
+                           :yhteenveto {:polut [[:gridit polun-osa :yhteenveto]]
+                                        :haku identity}
+                           :kuukausitasolla? {:polut [[:gridit polun-osa :kuukausitasolla?]]
                                               :luonti-init (fn [tila _]
-                                                             (assoc-in tila [:gridit :erillishankinnat :kuukausitasolla?] false))
+                                                             (assoc-in tila [:gridit polun-osa :kuukausitasolla?] false))
                                               :haku identity}
-                           :erillishankinnat {:polut [[:domain :erillishankinnat]
-                                                      [:suodattimet :hoitokauden-numero]
-                                                      [:gridit :erillishankinnat :palkkiot]
-                                                      [:gridit :erillishankinnat :kuukausitasolla?]]
-                                              :haku (fn [erillishankinnat hoitokauden-numero johdetut-arvot kuukausitasolla?]
-                                                      (let [arvot (if hoitokauden-numero
-                                                                    (get erillishankinnat (dec hoitokauden-numero))
-                                                                    [])
-                                                            arvot (mapv (fn [m]
-                                                                          (select-keys m #{:maara :aika}))
-                                                                        arvot)
-                                                            #_#_johdetut-arvot (get johdetut-arvot (dec hoitokauden-numero))]
-                                                        (if (nil? johdetut-arvot)
-                                                          arvot
-                                                          (do
-                                                            (when-not (= (count arvot) (count johdetut-arvot))
-                                                              (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
-                                                                    "-> ARVOT\n"
-                                                                    (with-out-str (cljs.pprint/pprint arvot))
-                                                                    "-> JOHDETUT ARVOT\n"
-                                                                    (with-out-str (cljs.pprint/pprint johdetut-arvot)))
-                                                              arvot)
-                                                            (vec
-                                                              (map merge
-                                                                   arvot
-                                                                   johdetut-arvot))))))}
-                           :yhteensa {:polut [[:gridit :erillishankinnat :yhteensa]
-                                              #_[:suodattimet :hoitokauden-numero]]
-                                      :haku identity #_(fn [{:keys [nimi maara yhteensa indeksikorjattu]}
-                                                            hoitokauden-numero]
-                                                         (merge {:nimi nimi :maara (get maara (dec hoitokauden-numero)) :yhteensa (get yhteensa (dec hoitokauden-numero)) :indeksikorjattu (get indeksikorjattu (dec hoitokauden-numero))}))}}
-                          {:aseta-erillishankinnat! (partial aseta-maara!
-                                                             (fn [{:keys [aika osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
-                                                               [:gridit :erillishankinnat :palkkiot #_(dec hoitokauden-numero) (first osan-paikka) osa])
-                                                             (fn [{:keys [aika osa osan-paikka]} hoitokauden-numero valittu-toimenpide]
-                                                               [:domain :erillishankinnat (dec hoitokauden-numero) (first osan-paikka) osa]))
-                           :aseta-erillishankinnat-yhteenveto! (fn [tila arvo tunniste paivitetaan-domain?]
-                                                                 (let [arvo (cond
-                                                                              ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
-                                                                              (nil? arvo) nil
-                                                                              (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
-                                                                              :else arvo)
-                                                                       hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
-                                                                       #_#_hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])]
-                                                                   (if (and paivitetaan-domain? arvo (not (.isNaN js/Number arvo)))
-                                                                     (update-in tila
-                                                                                [:domain :erillishankinnat (dec hoitokauden-numero)]
-                                                                                (fn [hoitokauden-erillishankinnat]
-                                                                                  (mapv (fn [hankinta]
-                                                                                          (assoc hankinta tunniste (js/Number arvo)))
-                                                                                        hoitokauden-erillishankinnat)))
-                                                                     (assoc-in tila [:gridit :erillishankinnat :yhteenveto tunniste #_(dec hoitokauden-numero)] arvo))))}
-                          {:yhteenveto-seuranta {:polut [[:domain :erillishankinnat]
+                           polun-osa {:polut [[:domain polun-osa]
+                                              [:suodattimet :hoitokauden-numero]
+                                              [:gridit polun-osa :palkkiot]
+                                              [:gridit polun-osa :kuukausitasolla?]]
+                                      :haku (fn [osan-arvot hoitokauden-numero johdetut-arvot kuukausitasolla?]
+                                              (let [arvot (if hoitokauden-numero
+                                                            (get osan-arvot (dec hoitokauden-numero))
+                                                            [])
+                                                    arvot (mapv (fn [m]
+                                                                  (select-keys m #{:maara :aika}))
+                                                                arvot)]
+                                                (if (nil? johdetut-arvot)
+                                                  arvot
+                                                  (do
+                                                    (when-not (= (count arvot) (count johdetut-arvot))
+                                                      (warn "JOHDETUT ARVOT EI OLE YHTÄ PITKÄ KUIN ARVOT\n"
+                                                            "-> ARVOT\n"
+                                                            (with-out-str (cljs.pprint/pprint arvot))
+                                                            "-> JOHDETUT ARVOT\n"
+                                                            (with-out-str (cljs.pprint/pprint johdetut-arvot)))
+                                                      arvot)
+                                                    (vec
+                                                      (map merge
+                                                           arvot
+                                                           johdetut-arvot))))))}
+                           :yhteensa {:polut [[:gridit polun-osa :yhteensa]]
+                                      :haku identity}}
+                          {aseta-avain (partial aseta-maara!
+                                                (fn [{:keys [osa osan-paikka]} _ _]
+                                                  [:gridit polun-osa :palkkiot (first osan-paikka) osa])
+                                                (fn [{:keys [osa osan-paikka]} hoitokauden-numero _]
+                                                  [:domain polun-osa (dec hoitokauden-numero) (first osan-paikka) osa]))
+                           aseta-yhteenveto-avain (fn [tila arvo tunniste paivitetaan-domain?]
+                                                    (let [arvo (cond
+                                                                 ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
+                                                                 (nil? arvo) nil
+                                                                 (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
+                                                                 :else arvo)
+                                                          hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+                                                          domain-paivitys (fn [tila]
+                                                                            (update-in tila
+                                                                                       [:domain polun-osa (dec hoitokauden-numero)]
+                                                                                       (fn [hoitokauden-maarat]
+                                                                                         (mapv (fn [maara]
+                                                                                                 (assoc maara tunniste (js/Number arvo)))
+                                                                                               hoitokauden-maarat))))
+                                                          grid-paivitys (fn [tila kaikki?]
+                                                                          (if kaikki?
+                                                                            (update-in tila
+                                                                                       [:gridit polun-osa :palkkiot]
+                                                                                       (fn [hoitokauden-maarat]
+                                                                                         (mapv (fn [maara]
+                                                                                                 (assoc maara tunniste arvo))
+                                                                                               hoitokauden-maarat)))
+                                                                            (assoc-in tila [:gridit polun-osa :yhteenveto tunniste] arvo)))]
+                                                      (if (and paivitetaan-domain? arvo (not (.isNaN js/Number arvo)))
+                                                        (-> tila domain-paivitys (grid-paivitys true))
+                                                        (grid-paivitys tila false))))}
+                          {:yhteenveto-seuranta {:polut [[:domain polun-osa]
                                                          [:suodattimet :hoitokauden-numero]]
                                                  :init (fn [tila]
-                                                         (-> tila
-                                                             (assoc-in [:gridit :erillishankinnat :palkkiot] (vec (repeat 12 {})) #_(vec (repeat 5 (vec (repeat 12 {})))))
-                                                             #_(assoc-in [:gridit :erillishankinnat :yhteenveto :yhteensa] (vec (repeat 5 nil)))
-                                                             #_(assoc-in [:gridit :erillishankinnat :yhteenveto :indeksikorjattu] (vec (repeat 5 nil)))))
-                                                 :aseta (fn [tila erillishankinnat hoitokauden-numero kuukausitasolla?]
-                                                          (let [valitun-vuoden-erillishankinnat (get erillishankinnat (dec hoitokauden-numero))
-                                                                vuoden-erillishankinnat-yhteensa (summaa-mapin-arvot valitun-vuoden-erillishankinnat :maara)
-                                                                maarat-samoja? (apply = (map :maara valitun-vuoden-erillishankinnat))
+                                                         (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))
+                                                 :aseta (fn [tila maarat hoitokauden-numero kuukausitasolla?]
+                                                          (let [valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
+                                                                vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)
+                                                                maarat-samoja? (apply = (map :maara valitun-vuoden-maarat))
                                                                 maara (if maarat-samoja?
-                                                                        (get-in valitun-vuoden-erillishankinnat [0 :maara])
+                                                                        (get-in valitun-vuoden-maarat [0 :maara])
                                                                         vaihtelua-teksti)]
                                                             (-> tila
-                                                                (assoc-in [:gridit :erillishankinnat :yhteenveto :maara #_(dec hoitokauden-numero)] maara)
-                                                                (assoc-in [:gridit :erillishankinnat :yhteenveto :yhteensa #_(dec hoitokauden-numero)] vuoden-erillishankinnat-yhteensa)
-                                                                (assoc-in [:gridit :erillishankinnat :yhteenveto :indeksikorjattu #_(dec hoitokauden-numero)] (indeksikorjaa vuoden-erillishankinnat-yhteensa)))))}
-                           :yhteensa-seuranta {:polut [[:domain :erillishankinnat]
-                                                       #_[:suodattimet :hoitokauden-numero]]
-                                               #_#_:init (fn [tila]
-                                                           (-> tila
-                                                               (assoc-in [:gridit :erillishankinnat :yhteensa :yhteensa-cache] (vec (repeat 5 nil)))
-                                                               #_(assoc-in [:gridit :erillishankinnat :yhteensa :yhteensa] (vec (repeat 5 nil)))
-                                                               #_(assoc-in [:gridit :erillishankinnat :yhteensa :indeksikorjattu] (vec (repeat 5 nil)))))
-                                               :aseta (fn [tila erillishankinnat #_hoitokauden-numero]
-                                                        (let [#_#_erillishankinnat-yhteensa-cache (get-in tila [:gridit :erillishankinnat :yhteensa :yhteensa-cache])
-                                                              erillishankinnat-yhteensa (summaa-mapin-arvot (flatten erillishankinnat) :maara)]
+                                                                (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
+                                                                (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
+                                                                (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa)))))}
+                           :yhteensa-seuranta {:polut [[:domain polun-osa]]
+                                               :aseta (fn [tila maarat]
+                                                        (let [maarat-yhteensa (summaa-mapin-arvot (flatten maarat) :maara)]
                                                           (-> tila
-                                                              (assoc-in [:gridit :erillishankinnat :yhteensa :yhteensa #_(dec hoitokauden-numero)] erillishankinnat-yhteensa)
-                                                              #_(assoc-in [:gridit :erillishankinnat :yhteensa :yhteensa-cache #_(dec hoitokauden-numero)] erillishankinnat-yhteensa)
-                                                              (assoc-in [:gridit :erillishankinnat :yhteensa :indeksikorjattu #_(dec hoitokauden-numero)] (indeksikorjaa erillishankinnat-yhteensa)))))}}))
+                                                              (assoc-in [:gridit polun-osa :yhteensa :yhteensa] maarat-yhteensa)
+                                                              (assoc-in [:gridit polun-osa :yhteensa :indeksikorjattu] (indeksikorjaa maarat-yhteensa)))))}}))
 
 (def johto-ja-hallintokorvaus-rajapinta (merge {:otsikot any?
 

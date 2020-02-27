@@ -66,6 +66,9 @@
 (def ^:dynamic *seuranta-muutos?* false)
 (def ^:dynamic *kaytava-data-atom-hash* nil)
 
+(def ^:mutable ^boolean ajetaan-seurannat? false)
+(def ^:mutable ^array ajettavat-fns (array))
+
 (defprotocol IKuuntelija
   (lisaa-kuuntelija! [this rajapinta kuuntelija])
   (poista-kuuntelija! [this kuuntelijan-nimi])
@@ -262,7 +265,7 @@
                                              uusi)
                    ;; Mahdollista, että tulee uusi tila, ennen next tickiä
                    (not= uusi-hash valitilan-hash) (do (swap! seurannan-valitila assoc data-atom-hash
-                                                              {::tila (get @seurannan-vanha-cache data-atom-hash)
+                                                              {#_#_::tila (get @seurannan-vanha-cache data-atom-hash)
                                                                ::kaytavan-datan-hash uusi-hash})
                                                        uusi)
                    ;; Käsitellään vielä saman muutoksen triggereitä
@@ -322,13 +325,20 @@
                 (doseq [[_ f] kuuntelija-lisaaja]
                   (f vanha-tila paivitetty-tila)))
               (when triggerit-kayty-lapi?
+                (set! ajetaan-seurannat? true)
                 (r/next-tick (fn []
                                (binding [*seuranta-muutos?* true]
                                  (when-let [seurannan-tila (get-in @seurannan-valitila [data-atom-hash ::tila])]
                                    (swap! seurannan-valitila dissoc data-atom-hash)
                                    (swap! seurannan-vanha-cache dissoc data-atom-hash)
                                    (swap! data-atom (fn [entinen-tila]
-                                                      seurannan-tila)))))))))))))
+                                                      seurannan-tila))
+                                   (when (and ajetaan-seurannat? ajettavat-fns)
+                                     (let [fs ajettavat-fns]
+                                       (dotimes [i (alength fs)]
+                                         ((aget fs i)))))
+                                   (set! ajettavat-fns (array))
+                                   (set! ajetaan-seurannat? false))))))))))))
 
   IPrintWithWriter
   (-pr-writer [a writer opts]
@@ -382,6 +392,11 @@
                  (reset! dk uusi)))
     dk))
 
+(defn next-tick [f]
+  (r/next-tick (fn []
+                 (if ajetaan-seurannat?
+                   (.push ajettavat-fns f)
+                   (f)))))
 
 (defn rajapinnan-kuuntelija [kasittelija rajapinnan-nimi]
   (get-in kasittelija [:kuuntelijat rajapinnan-nimi :r]))
