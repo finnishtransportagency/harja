@@ -689,13 +689,20 @@
                                                                  (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
                                                                  :else arvo)
                                                           hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+                                                          kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+                                                          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                                                              (range hoitokauden-numero 6)
+                                                                                              [hoitokauden-numero])
                                                           domain-paivitys (fn [tila]
-                                                                            (update-in tila
-                                                                                       [:domain polun-osa (dec hoitokauden-numero)]
-                                                                                       (fn [hoitokauden-maarat]
-                                                                                         (mapv (fn [maara]
-                                                                                                 (assoc maara tunniste (js/Number arvo)))
-                                                                                               hoitokauden-maarat))))
+                                                                            (reduce (fn [tila hoitokauden-numero]
+                                                                                      (update-in tila
+                                                                                                 [:domain polun-osa (dec hoitokauden-numero)]
+                                                                                                 (fn [hoitokauden-maarat]
+                                                                                                   (mapv (fn [maara]
+                                                                                                           (assoc maara tunniste (js/Number arvo)))
+                                                                                                         hoitokauden-maarat))))
+                                                                                    tila
+                                                                                    paivitettavat-hoitokauden-numerot))
                                                           grid-paivitys (fn [tila kaikki?]
                                                                           (if kaikki?
                                                                             (update-in tila
@@ -751,13 +758,20 @@
                (re-matches #"\d*,\d+" arvo) (clj-str/replace arvo #"," ".")
                :else arvo)
         hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+        kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+        paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                            (range hoitokauden-numero 6)
+                                            [hoitokauden-numero])
         domain-paivitys (fn [tila]
-                          (update-in tila
-                                     [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)]
-                                     (fn [hoitokauden-jh-korvaukset]
-                                       (mapv (fn [jh-korvaus]
-                                               (assoc jh-korvaus osa (js/Number arvo)))
-                                             hoitokauden-jh-korvaukset))))
+                          (reduce (fn [tila hoitokauden-numero]
+                                    (update-in tila
+                                               [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)]
+                                               (fn [hoitokauden-jh-korvaukset]
+                                                 (mapv (fn [jh-korvaus]
+                                                         (assoc jh-korvaus osa (js/Number arvo)))
+                                                       hoitokauden-jh-korvaukset))))
+                                  tila
+                                  paivitettavat-hoitokauden-numerot))
         grid-paivitys (fn [tila kaikki?]
                         (if kaikki?
                           (update-in tila
@@ -1056,12 +1070,12 @@
   (jarjesta-data ajettavat-jarejestykset
     (triggeroi-seurannat triggeroi-seuranta?
       (case paivitettava-asia
-        :hoidonjohtopalkkio (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
+        #_#_:hoidonjohtopalkkio (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                          :aseta-hoidonjohtopalkkio!
                                                          arvo
                                                          (grid/solun-asia solu :tunniste-rajapinnan-dataan)
                                                          (first args))
-        :hoidonjohtopalkkio-yhteenveto (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
+        #_#_:hoidonjohtopalkkio-yhteenveto (grid/aseta-rajapinnan-data! (grid/osien-yhteinen-asia solu :datan-kasittelija)
                                                                     :aseta-yhteenveto!
                                                                     arvo
                                                                     (grid/solun-asia solu :tunniste-rajapinnan-dataan))

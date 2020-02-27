@@ -3394,7 +3394,7 @@
 (defn erillishankinnat [erillishankinnat]
   [maara-kk erillishankinnat])
 
-(defn erillishankinnat-sisalto [erillishankinnat-grid kantahaku-valmis? menneet-suunnitelmat kuluva-hoitokausi indeksit suodattimet]
+(defn erillishankinnat-sisalto [erillishankinnat-grid kantahaku-valmis? suodattimet]
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
      [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
@@ -3437,6 +3437,7 @@
      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]
      [yleiset/ajax-loader])
    [:h3 "Johto ja hallinto: muut kulut"]
+   [yleis-suodatin suodattimet]
    (if (and toimistokulut-grid kantahaku-valmis?)
      [grid/piirra toimistokulut-grid]
      [yleiset/ajax-loader])
@@ -3469,11 +3470,11 @@
     [grid/piirra hoidonjohtopalkkio-grid]
     [yleiset/ajax-loader]))
 
-(defn hoidonjohtopalkkio-sisalto [e! johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit suodatin hoidonjohtopalkkio-grid kantahaku-valmis?]
+(defn hoidonjohtopalkkio-sisalto [hoidonjohtopalkkio-grid suodattimet kantahaku-valmis?]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
    #_[hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
-   #_[yleis-suodatin suodatin]
+   [yleis-suodatin suodattimet]
    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
 (defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
@@ -3496,11 +3497,7 @@
        #_[indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn hallinnolliset-toimenpiteet-sisalto [e!
-                                           {{:keys [johto-ja-hallintokorvaus-laskulla johto-ja-hallintokorvaus-yhteenveto
-                                                    toimistokulut johtopalkkio erillishankinnat menneet-vuodet]} :hallinnolliset-toimenpiteet
-                                            :keys [kuluva-hoitokausi indeksit suodatin]}
-                                           indeksit
+(defn hallinnolliset-toimenpiteet-sisalto [indeksit
                                            suodattimet
                                            erillishankinnat-grid
                                            johto-ja-hallintokorvaus-grid
@@ -3511,9 +3508,9 @@
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    #_[hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
-   [erillishankinnat-sisalto erillishankinnat-grid kantahaku-valmis? (:erillishankinnat menneet-vuodet) kuluva-hoitokausi indeksit suodattimet]
+   [erillishankinnat-sisalto erillishankinnat-grid kantahaku-valmis? suodattimet]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
-   [hoidonjohtopalkkio-sisalto e! johtopalkkio (:johtopalkkio menneet-vuodet) kuluva-hoitokausi indeksit suodatin hoidonjohtopalkkio-grid kantahaku-valmis?]])
+   [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet kantahaku-valmis?]])
 
 
 (defn kustannussuunnitelma*
@@ -3586,7 +3583,7 @@
           (:kantahaku-valmis? app)
           suodattimet]
          [:span.viiva-alas]
-         [hallinnolliset-toimenpiteet-sisalto e! hallinnolliset-argumentit
+         [hallinnolliset-toimenpiteet-sisalto
           (get-in app [:domain :indeksit])
           (dissoc suodattimet :hankinnat)
           (get-in app [:gridit :erillishankinnat :grid])
