@@ -36,3 +36,11 @@
        (sp/lisaa-fmt fmt)
        (sp/lisaa-fmt-aktiiviselle fmt-aktiivinen)
        (merge (dissoc tyhja :id)))))
+
+(defn teksti->tyhja
+  ([teksti] (teksti->tyhja teksti nil))
+  ([teksti luokat]
+   {:pre [(instance? solu/Teksti teksti)
+          (or (nil? luokat) (set? luokat))]
+    :post [(instance? solu/Tyhja %)]}
+   (solu/->Tyhja (gop/id teksti) luokat)))

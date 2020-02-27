@@ -49,12 +49,10 @@
 (defn datan-kasittelija [data-atom rajapinta haku-kuvaus asetus-kuvaus seurannat-kuvaus]
   (let [datan-kasittelija (dk/datan-kasittelija data-atom)]
     ;; Ajetaan init TODO johonkin järkevämpään paikkaan tuo init homma API:ssa
-    (println "AJETAAN INIT ARVOT")
     (doseq [[_ {:keys [init]}] seurannat-kuvaus]
       (when (fn? init)
         (swap! data-atom init)))
     (doseq [seurantojen-luonti (filter #(contains? (val %) :luonti) seurannat-kuvaus)]
-      (println "----> Seurannat lisaaja luonti")
       (dk/seurannat-lisaaja! datan-kasittelija seurantojen-luonti))
     (doseq [seuranta (remove #(contains? (val %) :luonti) seurannat-kuvaus)]
       (dk/lisaa-seuranta! datan-kasittelija seuranta))
@@ -125,7 +123,6 @@
                            identity))
 
 (defn nakyvat-rivit [grid]
-  (println "NÄKYÄVT RIVIT GRID TYYPPI: " (with-out-str (pr (type grid))))
   (vec (sort-by ::g/index-polku
                 (fn [polku-a polku-b]
                   (let [polun-osat-vertailtu (map (fn [i j]
@@ -208,8 +205,8 @@
   (g/post-walk-grid! grid f!))
 
 (defn lisaa-rivi!
-  ([grid solu] (gp/lisaa-rivi! grid solu))
-  ([grid solu index] (gp/lisaa-rivi! grid solu index)))
+  ([grid rivi] (gp/lisaa-rivi! grid rivi))
+  ([grid rivi index-polku] (gp/lisaa-rivi! grid rivi index-polku)))
 
 (defn lisaa-sarake!
   ([grid solu] (gp/lisaa-sarake! grid solu))

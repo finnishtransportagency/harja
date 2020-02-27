@@ -38,6 +38,7 @@
                     :paallystepaikkaukset
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
+(def hoitokausien-maara-urakassa 5)
 
 (def toimenpiteet-rahavarauksilla #{:talvihoito
                                     :liikenneympariston-hoito
@@ -88,6 +89,15 @@
         "akillinen hoitotyo" "äkillinen hoitotyö"}
        sana
        sana))
+
+(defn toimenkuva-formatoitu [{:keys [toimenkuva maksukausi hoitokaudet]}]
+  (str (clj-str/capitalize toimenkuva) " "
+       (case maksukausi
+         :talvi "(talvikausi)"
+         :kesa "(kesäkausi)"
+         "")
+       (when (contains? hoitokaudet 0)
+         "(ennen urakkaa)")))
 
 (def toimenpiteiden-avaimet
   {:paallystepaikkaukset "Päällysteiden paikkaus (hoidon ylläpito)"
@@ -140,7 +150,7 @@
 
 (defn summaa-mapin-arvot [arvot avain]
   (reduce (fn [summa arvo]
-            (+ summa (get arvo avain)))
+            (+ summa (get arvo avain 0)))
           0
           arvot))
 
@@ -745,9 +755,6 @@
                                                        johto-ja-hallintokorvaukset-pohjadata)))
 
 (defn jh-yhteenvetopaivitys [tila arvo {:keys [osa toimenkuva maksukausi]} paivitetaan-domain?]
-  (println ":aseta-tunnit-yhteenveto! " arvo)
-  (println "PÄIVITETÄÄN DOMAIN? " paivitetaan-domain?)
-  (println {:keys [osa toimenkuva maksukausi]})
   (let [arvo (cond
                ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
                (nil? arvo) nil
@@ -787,7 +794,6 @@
                                                                                                  :haku identity}
                                              (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) {:polut [[:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]]
                                                                                                        :luonti-init (fn [tila _]
-                                                                                                                      (println "LUODAAN KUUKAUSITASOLLA? ")
                                                                                                                       (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi] false))
                                                                                                        :haku identity}
                                              (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]
@@ -855,6 +861,67 @@
                                                                                                                                                                                                                          :kk-v kk-v})))}})))
                                   {}
                                   johto-ja-hallintokorvaukset-pohjadata)))
+
+(def johto-ja-hallintokorvaus-yhteenveto-rajapinta (merge {:otsikot any?
+                                                           :yhteensa any?
+                                                           :indeksikorjattu any?}
+                                                          (reduce (fn [rajapinnat {:keys [toimenkuva maksukausi]}]
+                                                                    (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                                                                      (assoc rajapinnat
+                                                                             (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?)))
+                                                                  {}
+                                                                  johto-ja-hallintokorvaukset-pohjadata)))
+
+(defn johto-ja-hallintokorvaus-yhteenveto-dr []
+  (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+                          johto-ja-hallintokorvaus-yhteenveto-rajapinta
+                          (merge
+                            {:otsikot {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :otsikot]]
+                                       :haku identity}
+                             :yhteensa {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
+                                        :haku #(vec (concat ["Yhteensä" ""] %))}
+                             :indeksikorjattu {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu]]
+                                               :haku #(vec (concat ["Indeksikorjattu" ""] %))}}
+                            (apply merge
+                                   (mapv (fn [{:keys [toimenkuva maksukausi kk-v] :as toimenkuva-kuvaus}]
+                                           (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
+                                                 toimenkuva-formatoitu (toimenkuva-formatoitu toimenkuva-kuvaus)]
+                                             {(keyword (str "yhteenveto" yksiloiva-nimen-paate)) {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]]
+                                                                                                  :haku #(vec (concat [toimenkuva-formatoitu kk-v] %))}}))
+                                         johto-ja-hallintokorvaukset-pohjadata)))
+                          {}
+                          (apply merge
+                                 {:yhteensa-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]]
+                                                      :aseta (fn [tila yhteenvedot]
+                                                               (assoc-in tila
+                                                                         [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]
+                                                                         (summaa-lehtivektorit (walk/postwalk (fn [x]
+                                                                                                                (if (and (vector? x) (not= hoitokausien-maara-urakassa (count x)))
+                                                                                                                  (let [vektorin-koko (count x)]
+                                                                                                                    (reduce (fn [valivaihe index]
+                                                                                                                              (if (>= index vektorin-koko)
+                                                                                                                                (conj valivaihe 0)
+                                                                                                                                (conj valivaihe (get x index))))
+                                                                                                                            []
+                                                                                                                            (range hoitokausien-maara-urakassa)))
+                                                                                                                  x))
+                                                                                                              yhteenvedot))))}
+                                  :indeksikorjattu-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
+                                                             :aseta (fn [tila yhteensa]
+                                                                      (assoc-in tila
+                                                                                [:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu]
+                                                                                (mapv indeksikorjaa yhteensa)))}}
+                                 (mapv (fn [{:keys [toimenkuva maksukausi]}]
+                                         (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                                           {(keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta")) {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]]
+                                                                                                            :aseta (fn [tila jh-korvaukset]
+                                                                                                                     (let [yhteensa-arvot (mapv (fn [hoitokauden-arvot]
+                                                                                                                                                  (let [tuntipalkka (get-in hoitokauden-arvot [0 :tuntipalkka])]
+                                                                                                                                                    (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
+                                                                                                                                                       tuntipalkka)))
+                                                                                                                                                jh-korvaukset)]
+                                                                                                                       (assoc-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi] yhteensa-arvot)))}}))
+                                       johto-ja-hallintokorvaukset-pohjadata))))
 
 (def hoidonjohtopalkkion-rajapinta {:otsikot any?
                                     ;; {:nimi string? :maara vector :yhteensa vector :indeksikorjattu vector}
@@ -990,7 +1057,6 @@
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarejestykset triggeroi-seuranta?]
                            :or {ajettavat-jarejestykset false triggeroi-seuranta? false}}
                           & args]
-  (println "PÄIVITETTÄVÄ ASIA: " paivitettava-asia)
   (jarjesta-data ajettavat-jarejestykset
     (triggeroi-seurannat triggeroi-seuranta?
       (case paivitettava-asia
@@ -1711,17 +1777,11 @@
                                                :yhteensa {:nimi "Yhteensä"}
                                                :kuukausitasolla? false})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset] {:otsikot {:toimenkuva "Toimenkuva" :tunnit "Tunnit/kk, h" :tuntipalkka "Tuntipalkka, €" :yhteensa "Yhteensä/kk" :kk-v "kk/v"}
-                                                          :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi hoitokaudet]}]
-                                                                                (let [nimi (str toimenkuva " "
-                                                                                                (case maksukausi
-                                                                                                  :talvi "(talvikausi)"
-                                                                                                  :kesa "(kesäkausi)"
-                                                                                                  "")
-                                                                                                (when (contains? hoitokaudet 0)
-                                                                                                  "(ennen urakkaa)"))]
-                                                                                  (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (clj-str/capitalize nimi))))
+                                                          :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
+                                                                                (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (toimenkuva-formatoitu toimenkuva-kuvaus)))
                                                                               {}
                                                                               johto-ja-hallintokorvaukset-pohjadata)})
+        (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto] {:otsikot {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
         (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
                                                       :yhteensa {:nimi "Yhteensä"}})))
   FiltereidenAloitusarvot

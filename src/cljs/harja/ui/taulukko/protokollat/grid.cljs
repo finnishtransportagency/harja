@@ -83,23 +83,21 @@
    (-lisaa-sarake! grid solu index)))
 
 (defn lisaa-rivi!
-  ([grid solu]
+  ([grid rivi]
    {:pre [(satisfies? IGrid grid)
-          (satisfies? sp/ISolu solu)]
+          (satisfies? IGrid rivi)]
     ;; TODO :post
     :post [
            #_(= (count (lapset grid))
               (inc (count (lapset %))))]}
-   (-lisaa-rivi! grid solu))
-  ([grid solu index]
+   (-lisaa-rivi! grid rivi))
+  ([grid rivi index-polku]
    {:pre [(satisfies? IGrid grid)
-          (satisfies? sp/ISolu solu)
-          (integer? index)]
-    ;; TODO :post
-    :post [
-           #_(= (count (lapset grid))
-              (inc (count (lapset %))))]}
-   (-lisaa-rivi! grid solu index)))
+          (satisfies? IGrid rivi)
+          (vector? index-polku)
+          (every? integer? index-polku)]
+    :post [(satisfies? IGrid %)]}
+   (-lisaa-rivi! grid rivi index-polku)))
 
 (defn poista-rivi!
   ;; TODO :PRE :POST

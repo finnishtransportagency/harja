@@ -608,8 +608,8 @@
                  "Annettu rajapinta: " rajapinta ". Olemassa olevat:\n"
                  (with-out-str (cljs.pprint/pprint (keys (:kuuntelijat datan-kasittelija))))))))
   (let [rajapintakasittelija (seuranta (reaction (let [{rajapinnan-data :data rajapinnan-meta :meta} (when-let [kuuntelija (dk/rajapinnan-kuuntelija datan-kasittelija rajapinta)]
-                                                                                            @kuuntelija)
-                                                       rajapinnan-dataf (if *jarjesta-data*
+                                                                                                       @kuuntelija)
+                                                       rajapinnan-dataf (if (and *jarjesta-data* jarjestys)
                                                                           (jarjesta-data rajapinnan-data jarjestys *jarjesta-data*)
                                                                           rajapinnan-data)]
                                                    (when g-debug/GRID_DEBUG
@@ -872,21 +872,45 @@
   @((::koko-fn grid)))
 
 (defn lisaa-rivi!
-  ([grid rivi]
-   (let [index-polku-viimeiseen (->> (gridin-osat-vektoriin grid (constantly true) identity)
+  ([root-grid rivi]
+   (let [index-polku-viimeiseen (->> (gridin-osat-vektoriin root-grid (constantly true) identity)
                                      (sort-by ::index-polku compare)
                                      last
                                      butlast
                                      vec)]
-     (lisaa-rivi! grid rivi (update index-polku-viimeiseen (dec (count index-polku-viimeiseen)) inc))))
-  ([grid rivi index-vector]
-   {:pre [(satisfies? p/IGrid grid)
+     (lisaa-rivi! root-grid rivi (update index-polku-viimeiseen (dec (count index-polku-viimeiseen)) inc))))
+  ([root-grid rivi index-vector]
+   {:pre [(satisfies? p/IGrid root-grid)
           (every? #(satisfies? p/IGrid %)
-                  (p/lapset grid))
+                  (p/lapset root-grid))
           (satisfies? p/IGrid rivi)
           (every? #(integer? %) index-vector)]}
-   (let [g (get-in-grid grid (vec (butlast index-vector)))
-         index (last index-vector)]
+   (let [g (get-in-grid root-grid (vec (butlast index-vector)))
+         index (last index-vector)
+         paivita-koko-fn (fn [osa]
+                           (let [grid? (satisfies? p/IGrid osa)
+                                 osan-koko (when grid?
+                                             (p/koko osa))
+                                 id (gop/id osa)
+                                 _ (when osan-koko
+                                     (swap! ((::koko-fn root-grid)) (fn [koko]
+                                                                 (assoc koko id osan-koko))))]
+                             (assoc osa ::koko-fn (::koko-fn root-grid)
+                                    :koko nil)))
+         rivi (paivita-kaikki-lapset! (paivita-koko-fn rivi)
+                                      (constantly true)
+                                      (fn [osa]
+                                        (paivita-koko-fn osa)))
+         rivi (paivita-kaikki-lapset! (assoc rivi
+                                             ::root-id (::root-id root-grid)
+                                             ::root-fn (::root-fn root-grid)
+                                             ::paivita-root! (::paivita-root! root-grid))
+                                      (constantly true)
+                                      (fn [lapsi]
+                                        (assoc lapsi
+                                               ::root-id (::root-id root-grid)
+                                               ::root-fn (::root-fn root-grid)
+                                               ::paivita-root! (::paivita-root! root-grid))))]
      (p/paivita-alueet! g (fn [alueet]
                             (mapv (fn [alue]
                                     (update alue :rivit (fn [[alku loppu]]
@@ -898,7 +922,8 @@
                                       (< i index) (get lapset i)
                                       (= i index) rivi
                                       (> i index) (get lapset (inc i))))
-                                  (range (inc (count lapset)))))))))
+                                  (range (inc (count lapset))))))
+     (aseta-gridin-polut root-grid))))
 
 (defn lisaa-sarake! [grid solu index]
   (pre-walk-grid! grid

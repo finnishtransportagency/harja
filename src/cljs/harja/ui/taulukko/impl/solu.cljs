@@ -112,11 +112,13 @@
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
 
-(defrecord Tyhja [id]
+(defrecord Tyhja [id class]
   sp/ISolu
   gop/IPiirrettava
   (-piirra [this]
-    [:div ""])
+    [:div {:class (when class
+                    (apply str (interpose " " class)))}
+     ""])
   gop/IGridOsa
   (-id [this]
     (:id this))
@@ -127,8 +129,10 @@
   (-aseta-nimi [this nimi]
     (assoc this ::nimi nimi)))
 
-(defn tyhja []
-  (->Tyhja (gensym "tyhja")))
+(defn tyhja
+  ([] (tyhja nil))
+  ([luokat]
+   (->Tyhja (gensym "tyhja") luokat)))
 
 (defrecord Linkki [id linkki parametrit]
   sp/ISolu

@@ -178,7 +178,7 @@
                         :fmt fmt :fmt-aktiivinen fmt-aktiivinen :nimi nimi})
     :syote-tayta-alas (syote-tayta-alas nappi-nakyvilla? (or nappia-painettu! identity) toiminnot kayttaytymiset
                                         (merge {:id id :class luokat} parametrit) fmt fmt-aktiivinen)
-    :tyhja (solu/tyhja)
+    :tyhja (solu/tyhja luokat)
     (solu/tyhja)))
 
 (defn otsikkorivi-pohja [otsikkorivi sarakkeiden-maara]
