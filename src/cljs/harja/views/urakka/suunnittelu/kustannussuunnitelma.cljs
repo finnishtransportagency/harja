@@ -1263,6 +1263,7 @@
                                              :solun-polun-pituus 1
                                              :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                              :datan-kasittely (fn [yhteenveto]
+                                                                (println "YHTEENVETO: " yhteenveto)
                                                                 (mapv (fn [[_ v]]
                                                                         v)
                                                                       yhteenveto))
@@ -1505,8 +1506,8 @@
                                                                                                   kuukausitasolla?))}})))
 
 (defn virhe-datassa
-  [data]
-  (log "Virheellinen data:\n" (with-out-str (cljs.pprint/pprint data)))
+  [otsikko selite data]
+  (log "Virheellinen data - " otsikko " " selite ":\n" (with-out-str (cljs.pprint/pprint data)))
   [:span
    [ikonit/warning]
    " Osaa ei voida näyttää.."])
@@ -1618,7 +1619,7 @@
   (if (some #(or (nil? (:summa %))
                  (js/isNaN (:summa %)))
             hinnat)
-    [virhe-datassa hinnat]
+    [virhe-datassa otsikko selite hinnat]
     [:div.hintalaskuri
      (when otsikko
        [:h5 otsikko])
@@ -3371,10 +3372,8 @@
     [yleiset/ajax-loader]))
 
 (defn erillishankinnat-yhteenveto
-  [erillishankinnat indeksit kuluva-hoitokausi]
-  (println "ERILLISHANKINNAT")
-  (println erillishankinnat)
-  (if erillishankinnat
+  [erillishankinnat indeksit kuluva-hoitokausi kantahaku-valmis?]
+  (if (and erillishankinnat kantahaku-valmis?)
     (let [yhteenveto (mapv (fn [summa]
                              {:summa summa})
                            erillishankinnat)]
@@ -3393,7 +3392,7 @@
   (let [nayta-erillishankinnat-grid? (and kantahaku-valmis? erillishankinnat-grid)]
     [:<>
      [:h3 {:id (:erillishankinnat t/hallinnollisten-idt)} "Erillishankinnat"]
-     [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi]
+     [erillishankinnat-yhteenveto erillishankinnat-yhteensa indeksit kuluva-hoitokausi kantahaku-valmis?]
      [yleis-suodatin suodattimet]
      (when nayta-erillishankinnat-grid?
        [grid/piirra erillishankinnat-grid])
@@ -3472,24 +3471,19 @@
    [yleis-suodatin suodattimet]
    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
-(defn hallinnolliset-toimenpiteet-yhteensa [erillishankinnat jh-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
-  (if (and erillishankinnat jh-yhteenveto johtopalkkio)
-    (let [hinnat (map (fn [hoitokausi]
-                        (let [eh (p/arvo (tyokalut/hae-asia-taulukosta erillishankinnat [1 "Yhteensä"])
-                                         :arvo)
-                              jh (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
-                                         :arvo)
-                              jp (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [1 "Yhteensä"])
-                                         :arvo)]
-                          {:summa (+ eh jh jp)
-                           :hoitokausi hoitokausi}))
-                      (range 1 6))]
+(defn hallinnolliset-toimenpiteet-yhteensa [johto-ja-hallintokorvaukset-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+  (if (and kantahaku-valmis? indeksit)
+    (let [hinnat (mapv (fn [jh eh hjp]
+                        {:summa (+ jh eh hjp)})
+                      johto-ja-hallintokorvaukset-yhteensa
+                      erillishankinnat-yhteensa
+                      hoidonjohtopalkkio-yhteensa)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko "Yhteenveto"
                       :selite "Erillishankinnat + Johto-ja hallintokorvaus + Hoidonjohtopalkkio"
                       :hinnat hinnat}
         kuluva-hoitokausi]
-       #_[indeksilaskuri hinnat indeksit]])
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
 (defn hallinnolliset-toimenpiteet-sisalto [indeksit
@@ -3501,10 +3495,13 @@
                                            toimistokulut-grid
                                            hoidonjohtopalkkio-grid
                                            erillishankinnat-yhteensa
+                                           johto-ja-hallintokorvaukset-yhteensa
+                                           toimistokulut-yhteensa
+                                           hoidonjohtopalkkio-yhteensa
                                            kantahaku-valmis?]
   [:<>
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
-   #_[hallinnolliset-toimenpiteet-yhteensa erillishankinnat johto-ja-hallintokorvaus-yhteenveto johtopalkkio kuluva-hoitokausi indeksit]
+   [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
    [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
    [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet kantahaku-valmis?]])
@@ -3590,6 +3587,9 @@
           (get-in app [:gridit :toimistokulut :grid])
           (get-in app [:gridit :hoidonjohtopalkkio :grid])
           (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat])
+          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+          (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
           #_(get-in app [:gridit :erillishankinnat :yhteensa :yhteensa])
           (:kantahaku-valmis? app)]]))))
 

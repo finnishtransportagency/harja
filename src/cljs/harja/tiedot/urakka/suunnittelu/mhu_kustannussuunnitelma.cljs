@@ -689,6 +689,7 @@
                                                 (fn [{:keys [osa osan-paikka]} hoitokauden-numero _]
                                                   [:domain polun-osa (dec hoitokauden-numero) (first osan-paikka) osa]))
                            aseta-yhteenveto-avain (fn [tila arvo tunniste paivitetaan-domain?]
+                                                    (println aseta-yhteenveto-avain " arvo: " arvo " tunniste: " tunniste " paivitetaan-domain? " paivitetaan-domain?)
                                                     (let [arvo (cond
                                                                  ;; Voi olla nil on-focus eventin jälkeen, kun "vaihtelua/kk" teksti otetaan pois
                                                                  (nil? arvo) nil
@@ -725,24 +726,30 @@
                                                          [:suodattimet :hoitokauden-numero]]
                                                  :init (fn [tila]
                                                          (assoc-in tila [:gridit polun-osa :palkkiot] (vec (repeat 12 {}))))
-                                                 :aseta (fn [tila maarat hoitokauden-numero kuukausitasolla?]
-                                                          (let [kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
-                                                                paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
-                                                                                                    (range hoitokauden-numero 6)
-                                                                                                    [hoitokauden-numero])
-                                                                valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
+                                                 :aseta (fn [tila maarat hoitokauden-numero]
+                                                          (let [valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
                                                                 vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)
                                                                 maarat-samoja? (apply = (map :maara valitun-vuoden-maarat))
                                                                 maara (if maarat-samoja?
                                                                         (get-in valitun-vuoden-maarat [0 :maara])
                                                                         vaihtelua-teksti)]
-                                                            (-> (reduce (fn [tila hoitokauden-numero]
-                                                                          (assoc-in tila (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)])) vuoden-maarat-yhteensa))
-                                                                        tila
-                                                                        paivitettavat-hoitokauden-numerot)
+                                                            (-> tila
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :maara] maara)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :yhteensa] vuoden-maarat-yhteensa)
                                                                 (assoc-in [:gridit polun-osa :yhteenveto :indeksikorjattu] (indeksikorjaa vuoden-maarat-yhteensa)))))}
+                           :yhteenveto-komponentin-seuranta {:polut [[:domain polun-osa]]
+                                                             :aseta (fn [tila maarat]
+                                                                      (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
+                                                                            kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
+                                                                            paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                                                                                                (range hoitokauden-numero 6)
+                                                                                                                [hoitokauden-numero])
+                                                                            valitun-vuoden-maarat (get maarat (dec hoitokauden-numero))
+                                                                            vuoden-maarat-yhteensa (summaa-mapin-arvot valitun-vuoden-maarat :maara)]
+                                                                        (reduce (fn [tila hoitokauden-numero]
+                                                                                  (assoc-in tila (vec (concat yhteenvedot-polku [:summat polun-osa (dec hoitokauden-numero)])) vuoden-maarat-yhteensa))
+                                                                                tila
+                                                                                paivitettavat-hoitokauden-numerot)))}
                            :yhteensa-seuranta {:polut [[:domain polun-osa]]
                                                :aseta (fn [tila maarat]
                                                         (let [maarat-yhteensa (summaa-mapin-arvot (flatten maarat) :maara)]
@@ -916,19 +923,20 @@
                           (apply merge
                                  {:yhteensa-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]]
                                                       :aseta (fn [tila yhteenvedot]
-                                                               (assoc-in tila
-                                                                         [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]
-                                                                         (summaa-lehtivektorit (walk/postwalk (fn [x]
-                                                                                                                (if (and (vector? x) (not= hoitokausien-maara-urakassa (count x)))
-                                                                                                                  (let [vektorin-koko (count x)]
-                                                                                                                    (reduce (fn [valivaihe index]
-                                                                                                                              (if (>= index vektorin-koko)
-                                                                                                                                (conj valivaihe 0)
-                                                                                                                                (conj valivaihe (get x index))))
-                                                                                                                            []
-                                                                                                                            (range hoitokausien-maara-urakassa)))
-                                                                                                                  x))
-                                                                                                              yhteenvedot))))}
+                                                               (let [yhteensa-arvot (summaa-lehtivektorit (walk/postwalk (fn [x]
+                                                                                                                           (if (and (vector? x) (not= hoitokausien-maara-urakassa (count x)))
+                                                                                                                             (let [vektorin-koko (count x)]
+                                                                                                                               (reduce (fn [valivaihe index]
+                                                                                                                                         (if (>= index vektorin-koko)
+                                                                                                                                           (conj valivaihe 0)
+                                                                                                                                           (conj valivaihe (get x index))))
+                                                                                                                                       []
+                                                                                                                                       (range hoitokausien-maara-urakassa)))
+                                                                                                                             x))
+                                                                                                                         yhteenvedot))]
+                                                                 (-> tila
+                                                                     (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa] yhteensa-arvot)
+                                                                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot))))}
                                   :indeksikorjattu-seuranta {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
                                                              :aseta (fn [tila yhteensa]
                                                                       (assoc-in tila
@@ -2138,13 +2146,7 @@
                                                                                                                              (fn [aika-1 aika-2]
                                                                                                                                (pvm/ennen? aika-1 aika-2))
                                                                                                                              (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
-                                                                                                                                       taytetty-jh-data)))))))
-                                    #_(merge korvaukset
-                                           {toimenkuva (vec (vals (sort-by #(-> % key first)
-                                                                           (fn [aika-1 aika-2]
-                                                                             (pvm/ennen? aika-1 aika-2))
-                                                                           (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
-                                                                                     taytetty-jh-data))))})))
+                                                                                                                                       taytetty-jh-data)))))))))
                                 {}
                                 johto-ja-hallintokorvaukset-pohjadata)
 
@@ -2155,16 +2157,17 @@
                                                   (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                                             data)))))
           erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn erillishankinnat)
-
-          hoidonjohtopalkkio-kuukausitasolla? (not (apply = (map :maara hoidon-johto-kustannukset)))
+          toimistokulut-hoitokausittain (hoidonjohto-jarjestys-fn jh-toimistokulut)
+          hoidonjohtopalkkio-hoitokausittain (hoidonjohto-jarjestys-fn johtopalkkio)
+          _ (println "ERILLISHANKINNAT HOITOKAUSITTAIN: " erillishankinnat-hoitokausittain)
           app (-> app
                   (assoc-in [:domain :suunnittellut-hankinnat] hankinnat-hoitokausille)
                   (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] hankinnat-laskutukseen-perustuen)
                   (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausille)
                   (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain)
                   (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
-                  (assoc-in [:domain :toimistokulut] (hoidonjohto-jarjestys-fn jh-toimistokulut))
-                  (assoc-in [:domain :hoidonjohtopalkkio] (hoidonjohto-jarjestys-fn johtopalkkio))
+                  (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain)
+                  (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain)
                   #_(assoc-in [:gridit :hoidonjohtopalkkio :kuukausitasolla?] hoidonjohtopalkkio-kuukausitasolla?)
                   #_(assoc-in [:gridit :erillishankinnat :kuukausitasolla?] erillishankinnat-kuukausitasolla?)
                   (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat] (reduce (fn [summat [toimenpide summat-hoitokausittain]]
@@ -2197,6 +2200,26 @@
                                                                                                 {}
                                                                                                 rahavaraukset-hoitokausille))
                   (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat] (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
+                  #_(assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] (reduce (fn [summat [toimenkuva maksukausien-arvot]]
+                                                                                                                       (update summat
+                                                                                                                               toimenkuva
+                                                                                                                               (fn [toimenkuvan-summat]
+                                                                                                                                 (reduce (fn [toimenkuvan-summat [maksukausi arvot-hoitokausittain]]
+                                                                                                                                           (update toimenkuvan-summat
+                                                                                                                                                   maksukausi
+                                                                                                                                                   (fn [summat-hoitokausittain]
+                                                                                                                                                     (mapv +
+                                                                                                                                                           (or summat-hoitokausittain (repeat 5 0))
+                                                                                                                                                           (map (fn [hoitokauden-arvot]
+                                                                                                                                                                  (* (:tuntipalkka (first hoitokauden-arvot))
+                                                                                                                                                                     (reduce #(+ %1 (:tunnit %2)) 0 hoitokauden-arvot)))
+                                                                                                                                                                arvot-hoitokausittain)))))
+                                                                                                                                         toimenkuvan-summat
+                                                                                                                                         maksukausien-arvot))))
+                                                                                                                     {}
+                                                                                                                     jh-korvaukset))
+                  (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut] (mapv #(summaa-mapin-arvot % :maara) toimistokulut-hoitokausittain))
+                  (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio] (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
                   (assoc :kantahaku-valmis? true))]
       #_(tarkista-datan-validius! hankinnat hankinnat-laskutukseen-perustuen)
       ;(async/put! tapahtumat {:ajax :tuck :tapahtuma :hankintakustannukset-haettu})
