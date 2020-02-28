@@ -92,7 +92,14 @@
           :doc "Jos halutaan estää blur event focus eventin jälkeen, niin tätä voi käyttää"}
          esta-blur_ false)
 
-(defn tayta-alas-napin-toiminto [asettajan-nimi seurannan-nimi maara-solun-index rivit-alla arvo]
+(defn esta-blur-ja-lisaa-vaihtelua-teksti [event]
+  (if esta-blur_
+    (do (set! esta-blur_ false)
+        (set! (.. event -target -value) t/vaihtelua-teksti)
+        nil)
+    event))
+
+(defn tayta-alas-napin-toiminto [asettajan-nimi maara-solun-index rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
     (doseq [rivi rivit-alla
             :let [maara-solu (grid/get-in-grid rivi [maara-solun-index])
@@ -102,8 +109,7 @@
                                :arvo arvo
                                :solu maara-solu
                                :ajettavat-jarejestykset #{:mapit}}
-                              true)))
-    (t/triggeroi-seuranta! solu/*this* seurannan-nimi)))
+                              true)))))
 
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
@@ -141,12 +147,10 @@
                                     (set! esta-blur_ true)
                                     (set! (.. event -target -value) nil)))))
                   :on-blur (fn [arvo]
-                             (if nappi?
+                             (when nappi?
                                (grid/paivita-osa! solu/*this*
                                                   (fn [solu]
-                                                    (assoc solu :nappi-nakyvilla? false)))
-                               (when esta-blur_
-                                 (set! esta-blur_ false)))
+                                                    (assoc solu :nappi-nakyvilla? false))))
                              (when arvo
                                (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
                                                       :arvo arvo
@@ -159,7 +163,9 @@
                                    (.. event -target blur)))}
       :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
                                    {:eventin-arvo {:f poista-tyhjat}}]
-                       :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                       :on-blur (if nappi?
+                                  [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]
+                                  [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}} {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}])}
       :parametrit {:size 2}
       :fmt fmt
       :fmt-aktiivinen summa-formatointi-aktiivinen}
@@ -245,7 +251,7 @@
                          on-change
                          on-blur]
   (let [nyt (pvm/nyt)]
-    (g-pohjat/uusi-taulukko {:header [{:tyyppi :laajenna
+    (g-pohjat/uusi-taulukko {:header [{:tyyppi :teksti
                                        :leveys 3
                                        :luokat #{"table-default" "table-default-header" "lihavoitu"}}
                                       {:tyyppi :teksti
@@ -331,10 +337,10 @@
                              :root-asetukset root-asetukset})))
 
 (defn maarataulukon-pohja [taulukon-id
+                           polun-osa
                            root-asetus!
                            root-asetukset
                            kuukausitasolla?-polku
-                           disable-rivit-tapahtuma
                            on-change
                            on-blur
                            nappia-painettu!
@@ -373,19 +379,19 @@
                                                    :osat [{:tyyppi :laajenna
                                                            :aukaise-fn (fn [this auki?]
                                                                          (if auki?
+                                                                           (rivi-kuukausifiltterilla! this
+                                                                                                      true
+                                                                                                      :kuukausitasolla?
+                                                                                                      kuukausitasolla?-polku
+                                                                                                      [:. ::t/yhteenveto] yhteenveto-grid-rajapinta-asetukset
+                                                                                                      [:. ::t/valinta] {:rajapinta :kuukausitasolla?
+                                                                                                                        :solun-polun-pituus 1
+                                                                                                                        :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                           [kuukausitasolla? nil nil nil])})
                                                                            (do
-                                                                             (rivi-kuukausifiltterilla! this
-                                                                                                        true
-                                                                                                        :kuukausitasolla?
-                                                                                                        kuukausitasolla?-polku
-                                                                                                        [:. ::t/yhteenveto] yhteenveto-grid-rajapinta-asetukset
-                                                                                                        [:. ::t/valinta] {:rajapinta :kuukausitasolla?
-                                                                                                                          :solun-polun-pituus 1
-                                                                                                                          :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                             [kuukausitasolla? nil nil nil])})
-                                                                             (grid/triggeroi-tapahtuma! this disable-rivit-tapahtuma))
-                                                                           (rivi-ilman-kuukausifiltteria! this
-                                                                                                          [:.. ::data-yhteenveto] yhteenveto-grid-rajapinta-asetukset))
+                                                                             (rivi-ilman-kuukausifiltteria! this
+                                                                                                            [:.. ::data-yhteenveto] yhteenveto-grid-rajapinta-asetukset)
+                                                                             (e! (tuck-apurit/->MuutaTila [:gridit polun-osa :kuukausitasolla?] false))))
                                                                          (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                            :auki-alussa? false
                                                            :luokat #{"table-default" "lihavoitu"}}
@@ -401,16 +407,17 @@
                                                                                        (set! esta-blur_ true)
                                                                                        (set! (.. event -target -value) nil))))
                                                                        :on-blur (fn [arvo]
-                                                                                  (if esta-blur_
-                                                                                    (set! esta-blur_ false)
-                                                                                    (when arvo
-                                                                                      (on-blur arvo))))
+                                                                                  (when arvo
+                                                                                    (on-blur arvo)))
                                                                        :on-key-down (fn [event]
                                                                                       (when (= "Enter" (.. event -key))
                                                                                         (.. event -target blur)))}
                                                            :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
                                                                                         {:eventin-arvo {:f poista-tyhjat}}]
-                                                                            :on-blur [:numero-pisteella :positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                            :on-blur [:numero-pisteella
+                                                                                      :positiivinen-numero
+                                                                                      {:eventin-arvo {:f poista-tyhjat}}
+                                                                                      {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}]}
                                                            :parametrit {:size 2}
                                                            :fmt yhteenveto-format
                                                            :fmt-aktiivinen summa-formatointi-aktiivinen}
@@ -745,31 +752,31 @@
                                                                                                                                         :rivit :sama}}
                                                                                                                         :osat [(solu/laajenna {:aukaise-fn
                                                                                                                                                (fn [this auki?]
-                                                                                                                                                 (let [rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide))]
+                                                                                                                                                 (let [rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero))]
                                                                                                                                                    (if auki?
                                                                                                                                                      (do
-                                                                                                                                                         (rivi-kuukausifiltterilla! this
-                                                                                                                                                                                    false
-                                                                                                                                                                                    (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
-                                                                                                                                                                                    [:gridit :rahavaraukset :kuukausitasolla? tyyppi]
-                                                                                                                                                                                    [:. ::t/yhteenveto] {:rajapinta rajapinta
-                                                                                                                                                                                                         :solun-polun-pituus 1
-                                                                                                                                                                                                         :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
-                                                                                                                                                                                                         :datan-kasittely (fn [yhteenveto]
-                                                                                                                                                                                                                            (mapv (fn [[_ v]]
-                                                                                                                                                                                                                                    v)
-                                                                                                                                                                                                                                  yhteenveto))
-                                                                                                                                                                                                         :tunnisteen-kasittely (fn [osat _]
-                                                                                                                                                                                                                                 (mapv (fn [osa]
-                                                                                                                                                                                                                                         (when (instance? solu/Syote osa)
-                                                                                                                                                                                                                                           {:osa :maara
-                                                                                                                                                                                                                                            :tyyppi tyyppi}))
-                                                                                                                                                                                                                                       (grid/hae-grid osat :lapset)))}
-                                                                                                                                                                                    [:. ::t/valinta] {:rajapinta (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
-                                                                                                                                                                                                      :solun-polun-pituus 1
-                                                                                                                                                                                                      :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                                                                                                         [kuukausitasolla? nil nil nil])})
-                                                                                                                                                         (grid/triggeroi-tapahtuma! this :rahavaraukset-disablerivit))
+                                                                                                                                                       (rivi-kuukausifiltterilla! this
+                                                                                                                                                                                  false
+                                                                                                                                                                                  (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
+                                                                                                                                                                                  [:gridit :rahavaraukset :kuukausitasolla? tyyppi]
+                                                                                                                                                                                  [:. ::t/yhteenveto] {:rajapinta rajapinta
+                                                                                                                                                                                                       :solun-polun-pituus 1
+                                                                                                                                                                                                       :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                                                                                                                                                       :datan-kasittely (fn [yhteenveto]
+                                                                                                                                                                                                                          (mapv (fn [[_ v]]
+                                                                                                                                                                                                                                  v)
+                                                                                                                                                                                                                                yhteenveto))
+                                                                                                                                                                                                       :tunnisteen-kasittely (fn [osat _]
+                                                                                                                                                                                                                               (mapv (fn [osa]
+                                                                                                                                                                                                                                       (when (instance? solu/Syote osa)
+                                                                                                                                                                                                                                         {:osa :maara
+                                                                                                                                                                                                                                          :tyyppi tyyppi}))
+                                                                                                                                                                                                                                     (grid/hae-grid osat :lapset)))}
+                                                                                                                                                                                  [:. ::t/valinta] {:rajapinta (keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?"))
+                                                                                                                                                                                                    :solun-polun-pituus 1
+                                                                                                                                                                                                    :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                                                                                                       [kuukausitasolla? nil nil nil])})
+                                                                                                                                                       (grid/triggeroi-tapahtuma! this :rahavaraukset-disablerivit))
                                                                                                                                                      (rivi-ilman-kuukausifiltteria! this
                                                                                                                                                                                     [:.. ::data-yhteenveto] {:rajapinta rajapinta
                                                                                                                                                                                                              :solun-polun-pituus 1
@@ -801,15 +808,13 @@
                                                                                                                                                                         (set! esta-blur_ true)
                                                                                                                                                                         (set! (.. event -target -value) nil))))
                                                                                                                                                         :on-blur (fn [arvo]
-                                                                                                                                                                   (if esta-blur_
-                                                                                                                                                                     (set! esta-blur_ false)
-                                                                                                                                                                     (when arvo
-                                                                                                                                                                       (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                                              :arvo arvo
-                                                                                                                                                                                              :solu solu/*this*
-                                                                                                                                                                                              :ajettavat-jarejestykset true
-                                                                                                                                                                                              :triggeroi-seuranta? true}
-                                                                                                                                                                                             true)))
+                                                                                                                                                                   (when arvo
+                                                                                                                                                                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
+                                                                                                                                                                                            :arvo arvo
+                                                                                                                                                                                            :solu solu/*this*
+                                                                                                                                                                                            :ajettavat-jarejestykset true
+                                                                                                                                                                                            :triggeroi-seuranta? true}
+                                                                                                                                                                                           true))
                                                                                                                                                                    #_(when arvo
                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
@@ -820,7 +825,9 @@
                                                                                                                                                                          (.. event -target blur)))}
                                                                                                                                             :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
                                                                                                                                                                          {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                                                                             :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                                                                                                             :on-blur [:positiivinen-numero
+                                                                                                                                                                       {:eventin-arvo {:f poista-tyhjat}}
+                                                                                                                                                                       {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}]}
                                                                                                                                             :parametrit {:size 2
                                                                                                                                                          :class #{"input-default"}}
                                                                                                                                             :fmt yhteenveto-format
@@ -835,7 +842,7 @@
                                                                                                  (with-meta
                                                                                                    (grid/taulukko {:nimi ::data-sisalto
                                                                                                                    :alueet [{:sarakkeet [0 1] :rivit [0 12]}]
-                                                                                                                   #_#_:koko konf/livi-oletuskoko
+                                                                                                                   :koko konf/auto
                                                                                                                    :luokat #{"piillotettu" "salli-ylipiirtaminen"}}
                                                                                                                   (mapv
                                                                                                                     (fn [index]
@@ -857,49 +864,48 @@
                                                                                                                                              {:key (str tyyppi "-" index "-otsikko")})
                                                                                                                                            (with-meta
                                                                                                                                              (g-pohjat/->SyoteTaytaAlas (gensym "rahavaraus")
-                                                                                                                                                               false
-                                                                                                                                                               (partial tayta-alas-napin-toiminto
-                                                                                                                                                                        :aseta-rahavaraukset!
-                                                                                                                                                                        (keyword (str "rahavaraukset-yhteenveto-" valittu-toimenpide "-" tyyppi "-" (dec hoitokauden-numero)))
-                                                                                                                                                                        1)
-                                                                                                                                                               {:on-change (fn [arvo]
-                                                                                                                                                                             (when arvo
-                                                                                                                                                                               (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                                                      :arvo arvo
-                                                                                                                                                                                                      :solu solu/*this*
-                                                                                                                                                                                                      :ajettavat-jarejestykset #{:mapit}}
-                                                                                                                                                                                                     false)))
-                                                                                                                                                                :on-focus (fn [_]
-                                                                                                                                                                            (grid/paivita-osa! solu/*this*
-                                                                                                                                                                                               (fn [solu]
-                                                                                                                                                                                                 (assoc solu :nappi-nakyvilla? true))))
-                                                                                                                                                                :on-blur (fn [arvo]
-                                                                                                                                                                           (grid/paivita-osa! solu/*this*
-                                                                                                                                                                                              (fn [solu]
-                                                                                                                                                                                                (assoc solu :nappi-nakyvilla? false)))
-                                                                                                                                                                           (when arvo
-                                                                                                                                                                             (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
-                                                                                                                                                                                                    :arvo arvo
-                                                                                                                                                                                                    :solu solu/*this*
-                                                                                                                                                                                                    :ajettavat-jarejestykset true
-                                                                                                                                                                                                    :triggeroi-seuranta? true}
-                                                                                                                                                                                                   true)
-                                                                                                                                                                             #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
-                                                                                                                                                                           #_(when arvo
-                                                                                                                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                                                                                               (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                                                                                                                                                               (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                                                                                                                                                               (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
-                                                                                                                                                                :on-key-down (fn [event]
-                                                                                                                                                                               (when (= "Enter" (.. event -key))
-                                                                                                                                                                                 (.. event -target blur)))}
-                                                                                                                                                               {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                                                                                                                                            {:eventin-arvo {:f poista-tyhjat}}]
-                                                                                                                                                                :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
-                                                                                                                                                               {:size 2
-                                                                                                                                                                :class #{"input-default"}}
-                                                                                                                                                               summa-formatointi-uusi
-                                                                                                                                                               summa-formatointi-aktiivinen)
+                                                                                                                                                                        false
+                                                                                                                                                                        (partial tayta-alas-napin-toiminto
+                                                                                                                                                                                 :aseta-rahavaraukset!
+                                                                                                                                                                                 1)
+                                                                                                                                                                        {:on-change (fn [arvo]
+                                                                                                                                                                                      (when arvo
+                                                                                                                                                                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
+                                                                                                                                                                                                               :arvo arvo
+                                                                                                                                                                                                               :solu solu/*this*
+                                                                                                                                                                                                               :ajettavat-jarejestykset #{:mapit}}
+                                                                                                                                                                                                              false)))
+                                                                                                                                                                         :on-focus (fn [_]
+                                                                                                                                                                                     (grid/paivita-osa! solu/*this*
+                                                                                                                                                                                                        (fn [solu]
+                                                                                                                                                                                                          (assoc solu :nappi-nakyvilla? true))))
+                                                                                                                                                                         :on-blur (fn [arvo]
+                                                                                                                                                                                    (grid/paivita-osa! solu/*this*
+                                                                                                                                                                                                       (fn [solu]
+                                                                                                                                                                                                         (assoc solu :nappi-nakyvilla? false)))
+                                                                                                                                                                                    (when arvo
+                                                                                                                                                                                      (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
+                                                                                                                                                                                                             :arvo arvo
+                                                                                                                                                                                                             :solu solu/*this*
+                                                                                                                                                                                                             :ajettavat-jarejestykset true
+                                                                                                                                                                                                             :triggeroi-seuranta? true}
+                                                                                                                                                                                                            true)
+                                                                                                                                                                                      #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
+                                                                                                                                                                                    #_(when arvo
+                                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
+                                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
+                                                                                                                                                                                        (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
+                                                                                                                                                                                        (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                                                                                                         :on-key-down (fn [event]
+                                                                                                                                                                                        (when (= "Enter" (.. event -key))
+                                                                                                                                                                                          (.. event -target blur)))}
+                                                                                                                                                                        {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                                                                                                                                                                     {:eventin-arvo {:f poista-tyhjat}}]
+                                                                                                                                                                         :on-blur [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]}
+                                                                                                                                                                        {:size 2
+                                                                                                                                                                         :class #{"input-default"}}
+                                                                                                                                                                        summa-formatointi-uusi
+                                                                                                                                                                        summa-formatointi-aktiivinen)
                                                                                                                                              {:key (str tyyppi "-" index "-maara")})
                                                                                                                                            (with-meta
                                                                                                                                              (solu/teksti {:parametrit {:class #{"table-default"}}
@@ -949,11 +955,11 @@
                                                   :jarjestys [{:keyfn key
                                                                :comp (fn [a b]
                                                                        (compare (t/rahavaraukset-jarjestys a) (t/rahavaraukset-jarjestys b)))}]
-                                                  :luonti (fn [{:keys [arvot valittu-toimenpide]}]
+                                                  :luonti (fn [{:keys [arvot valittu-toimenpide hoitokauden-numero]}]
                                                             (map (fn [[tyyppi _]]
                                                                    (when-not (nil? tyyppi)
                                                                      (let [index (dec (get t/rahavaraukset-jarjestys tyyppi))]
-                                                                       {[:. index ::data-yhteenveto] {:rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide))
+                                                                       {[:. index ::data-yhteenveto] {:rajapinta (keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero))
                                                                                                       :solun-polun-pituus 1
                                                                                                       :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                                                                                       :datan-kasittely (fn [yhteenveto]
@@ -966,7 +972,7 @@
                                                                                                                                         {:osa :maara
                                                                                                                                          :tyyppi tyyppi}))
                                                                                                                                     (grid/hae-grid osat :lapset)))}
-                                                                        [:. index ::data-sisalto] {:rajapinta (keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide))
+                                                                        [:. index ::data-sisalto] {:rajapinta (keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero))
                                                                                                    :solun-polun-pituus 2
                                                                                                    :jarjestys [{:keyfn :aika
                                                                                                                 :comp (fn [aika-1 aika-2]
@@ -1055,19 +1061,19 @@
                                                             :osat [{:tyyppi :laajenna
                                                                     :aukaise-fn (fn [this auki?]
                                                                                   (if auki?
+                                                                                    (rivi-kuukausifiltterilla! this
+                                                                                                               true
+                                                                                                               (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
+                                                                                                               [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]
+                                                                                                               [:. ::t/yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi)
+                                                                                                               [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
+                                                                                                                                 :solun-polun-pituus 1
+                                                                                                                                 :datan-kasittely (fn [kuukausitasolla?]
+                                                                                                                                                    [kuukausitasolla? nil nil nil])})
                                                                                     (do
-                                                                                      (rivi-kuukausifiltterilla! this
-                                                                                                                 true
-                                                                                                                 (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
-                                                                                                                 [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi]
-                                                                                                                 [:. ::t/yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi)
-                                                                                                                 [:. ::t/valinta] {:rajapinta (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate))
-                                                                                                                                   :solun-polun-pituus 1
-                                                                                                                                   :datan-kasittely (fn [kuukausitasolla?]
-                                                                                                                                                      [kuukausitasolla? nil nil nil])})
-                                                                                      (grid/triggeroi-tapahtuma! this :johto-ja-hallintokorvaukset-disablerivit))
-                                                                                    (rivi-ilman-kuukausifiltteria! this
-                                                                                                                   [:.. ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi)))
+                                                                                      (rivi-ilman-kuukausifiltteria! this
+                                                                                                                     [:.. ::data-yhteenveto] (yhteenveto-grid-rajapinta-asetukset toimenkuva maksukausi))
+                                                                                      (e! (tuck-apurit/->MuutaTila [:gridit :johto-ja-hallintokorvaukset :kuukausitasolla? toimenkuva maksukausi] false))))
                                                                                   (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                                     :auki-alussa? false
                                                                     :luokat #{"table-default"}}
@@ -1263,7 +1269,6 @@
                                              :solun-polun-pituus 1
                                              :jarjestys [^{:nimi :mapit} [:nimi :maara :yhteensa :indeksikorjattu]]
                                              :datan-kasittely (fn [yhteenveto]
-                                                                (println "YHTEENVETO: " yhteenveto)
                                                                 (mapv (fn [[_ v]]
                                                                         v)
                                                                       yhteenveto))
@@ -1273,6 +1278,7 @@
                                                                                :maara))
                                                                            (grid/hae-grid osat :lapset)))}
         g (maarataulukon-pohja taulukon-id
+                               polun-osa
                                (fn [g]
                                  (swap! tila/suunnittelu-kustannussuunnitelma
                                         (fn [tila]
@@ -1283,7 +1289,6 @@
                                                    (fn [tila]
                                                      (update-in tila [:gridit polun-osa :grid] f))))}
                                [:gridit polun-osa :kuukausitasolla?]
-                               disablerivit-avain
                                (fn [arvo]
                                  (when arvo
                                    (t/paivita-solun-arvo {:paivitettava-asia aseta-yhteenveto-avain
@@ -1387,7 +1392,9 @@
                                                :toiminto! (fn [g _ kuukausitasolla?]
                                                             (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 ::data-sisalto])
                                                                                     (not kuukausitasolla?))
-                                                            (maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data 0 0 ::t/yhteenveto])
+                                                            (maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data 0 0 ::t/yhteenveto])]
+                                                                                      osa
+                                                                                      (grid/get-in-grid g [::g-pohjat/data 0 ::data-yhteenveto]))
                                                                                     kuukausitasolla?))}})))
 
 #_(defn hoidonjohtopalkkio-grid []
@@ -3528,8 +3535,10 @@
                             (t/paivita-raidat! (grid/osa-polusta g-er [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-t [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-hjp [::g-pohjat/data]))
-                            #_(grid/triggeroi-tapahtuma! g-er :erillishankinnat-disablerivit)
-                            #_(grid/triggeroi-tapahtuma! g-jhl :johto-ja-hallintokorvaukset-disablerivit)))
+                            (grid/triggeroi-tapahtuma! g-er :erillishankinnat-disablerivit)
+                            (grid/triggeroi-tapahtuma! g-t :toimistokulut-disablerivit)
+                            (grid/triggeroi-tapahtuma! g-hjp :hoidonjohtopalkkio-disablerivit)
+                            (grid/triggeroi-tapahtuma! g-jhl :johto-ja-hallintokorvaukset-disablerivit)))
                       (e! (t/->HaeKustannussuunnitelma #_(partial hankintojen-taulukko e! (:kaskytyskanava app))
                                                        #_(partial rahavarausten-taulukko e! (:kaskytyskanava app))
                                                        #_(partial johto-ja-hallintokorvaus-laskulla-taulukko e! (:kaskytyskanava app))

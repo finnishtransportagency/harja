@@ -371,11 +371,11 @@
               arvo (korjaa-NaN @taman-data this)
               ikoni (or ikoni "chevron")
               ikoni-auki (if (= ikoni "chevron")
-                           ikonit/livicon-chevron-down
-                           ikonit/oi-caret-bottom)
+                           ikonit/livicon-chevron-up
+                           ikonit/oi-caret-top)
               ikoni-kiinni (if (= ikoni "chevron")
-                             ikonit/livicon-chevron-up
-                             ikonit/oi-caret-top)]
+                             ikonit/livicon-chevron-down
+                             ikonit/oi-caret-bottom)]
           [:span.solu.klikattava.solu-laajenna
            {:class (when class
                      (apply str (interpose " " class)))

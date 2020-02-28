@@ -14,18 +14,19 @@
   [{{:keys [f]} :eventin-arvo} toiminto]
   (comp toiminto
         (fn [event]
-          (let [arvo (.. event -target -value)]
-            (if f
-              (f arvo)
-              arvo)))))
+          (when event
+            (let [arvo (.. event -target -value)]
+              (if f
+                (f arvo)
+                arvo))))))
 
 (defmethod lisaa-kaytos :positiivinen-numero
   [{{:keys [kokonaisosan-maara desimaalien-maara]} :positiivinen-numero} toiminto]
   (comp toiminto
         (fn [arvo]
-          (let [positiivinen-arvo? (re-matches (re-pattern (re/positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
-                                                                                    :desimaalien-maara desimaalien-maara}))
-                                               arvo)]
+          (when-let [positiivinen-arvo? (and arvo (re-matches (re-pattern (re/positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
+                                                                                                      :desimaalien-maara desimaalien-maara}))
+                                                              arvo))]
             (when (or (= "" arvo) positiivinen-arvo?)
               arvo)))))
 
@@ -40,14 +41,14 @@
   [_ toiminto]
   (comp toiminto
         (fn [arvo]
-          (when (re-matches (re-pattern (re/numero-re)) arvo)
+          (when (and arvo (re-matches (re-pattern (re/numero-re)) arvo))
             (js/parseInt arvo)))))
 
 (defmethod lisaa-kaytos :str->number
   [_ toiminto]
   (comp toiminto
         (fn [arvo]
-          (when (re-matches (re-pattern (re/numero-re)) arvo)
+          (when (and arvo (re-matches (re-pattern (re/numero-re)) arvo))
             (js/Number arvo)))))
 
 (defmethod lisaa-kaytos :oma

@@ -473,21 +473,22 @@
                                                                 {:valittu-toimenpide valittu-toimenpide
                                                                  :hoitokauden-numero hoitokauden-numero})))}
                            :rahavaraukset-yhteenveto {:polut [[:gridit :rahavaraukset :seurannat]
-                                                              [:suodattimet :hankinnat :toimenpide]]
-                                                      :luonti (fn [seurannat valittu-toimenpide]
+                                                              [:suodattimet :hankinnat :toimenpide]
+                                                              [:suodattimet :hoitokauden-numero]]
+                                                      :luonti (fn [seurannat valittu-toimenpide hoitokauden-numero]
                                                                 (vec
                                                                   (map (fn [[tyyppi _]]
                                                                          ;; Luonnissa, luotavan nimi on tärkeä, sillä sitä vasten tarkistetaan olemassa olo
-                                                                         {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
+                                                                         {(keyword (str "rahavaraukset-yhteenveto-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero)) [[:gridit :rahavaraukset :seurannat tyyppi]]})
                                                                        seurannat)))
                                                       :haku identity}
                            :rahavaraukset-kuukausitasolla? {:polut [[:domain :rahavaraukset]
                                                                     [:suodattimet :hankinnat :toimenpide]]
                                                             :luonti-init (fn [tila rahavaraukset valittu-toimenpide]
                                                                            (reduce (fn [tila tyyppi]
-                                                                                        (assoc-in tila [:gridit :rahavaraukset :kuukausitasolla? tyyppi] false))
-                                                                                      tila
-                                                                                      (distinct (keys (get rahavaraukset valittu-toimenpide)))))
+                                                                                     (assoc-in tila [:gridit :rahavaraukset :kuukausitasolla? tyyppi] false))
+                                                                                   tila
+                                                                                   (distinct (keys (get rahavaraukset valittu-toimenpide)))))
                                                             :luonti (fn [rahavaraukset valittu-toimenpide]
                                                                       (mapv (fn [tyyppi]
                                                                               {(keyword (str "rahavaraukset-kuukausitasolla-" tyyppi "?")) [[:gridit :rahavaraukset :kuukausitasolla? tyyppi]]})
@@ -498,10 +499,14 @@
                                                         [:suodattimet :hoitokauden-numero]]
                                                 :luonti (fn [rahavaraukset valittu-toimenpide hoitokauden-numero]
                                                           (let [toimenpiteen-rahavaraukset (get rahavaraukset valittu-toimenpide)]
-                                                            (when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
+                                                            (mapv (fn [[tyyppi data]]
+                                                                    {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                                                                                                 [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
+                                                                  toimenpiteen-rahavaraukset)
+                                                            #_(when (not (nil? (ffirst toimenpiteen-rahavaraukset)))
                                                               (mapv (fn [[tyyppi data]]
-                                                                      {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
-                                                                                                                                            [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
+                                                                      {(keyword (str "rahavaraukset-data-" tyyppi "-" valittu-toimenpide "-" hoitokauden-numero)) [[:domain :rahavaraukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]
+                                                                                                                                                                   [:gridit :rahavaraukset :varaukset valittu-toimenpide tyyppi (dec hoitokauden-numero)]]})
                                                                     toimenpiteen-rahavaraukset))))
                                                 :haku (fn [rahavaraukset johdetut-arvot]
                                                         (let [arvot (if (nil? johdetut-arvot)
@@ -1192,33 +1197,41 @@
                                (disj "table-default-odd"))))]
     (loop [[rivi & loput-rivit] (grid/nakyvat-rivit g)
            index 0]
-      (when rivi
+      (if rivi
         (let [rivin-nimi (grid/hae-osa rivi :nimi)]
           (grid/paivita-grid! rivi
                               :parametrit
                               (fn [parametrit]
                                 (update parametrit :class (fn [luokat]
                                                             (if (= ::valinta rivin-nimi)
-                                                              (paivita-luokat luokat (not (odd? index)))
+                                                              (do (println "VALINTA RIVI MUKANA")
+                                                                  (paivita-luokat luokat (not (odd? index))))
                                                               (paivita-luokat luokat (odd? index)))))))
           (recur loput-rivit
                  (if (= ::valinta rivin-nimi)
                    index
-                   (inc index))))))))
+                   (inc index))))
+        (println "INDEX: " index)))))
 
 (defn laajenna-solua-klikattu
-  ([solu auki? dom-id polku-dataan] (laajenna-solua-klikattu solu auki? dom-id polku-dataan nil))
-  ([solu auki? dom-id polku-dataan {:keys [aukeamis-polku sulkemis-polku]
-                       :or {aukeamis-polku [:.. :.. 1]
-                            sulkemis-polku [:.. :.. 1]}}]
+  ([solu auki? dom-id polku-dataan] (laajenna-solua-klikattu solu auki? dom-id polku-dataan nil false))
+  ([solu auki? dom-id polku-dataan osien-polut] (laajenna-solua-klikattu solu auki? dom-id polku-dataan osien-polut false))
+  ([solu auki? dom-id polku-dataan
+    {:keys [aukeamis-polku sulkemis-polku]
+     :or {aukeamis-polku [:.. :.. 1]
+          sulkemis-polku [:.. :.. 1]}}
+    scroll?]
    (if auki?
      (do (grid/nayta! (grid/osa-polusta solu aukeamis-polku))
          (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
          (r/flush)
-         (r/after-render
-           (fn []
-             (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"}))))
-     (grid/piillota! (grid/osa-polusta solu sulkemis-polku)))))
+         (when scroll?
+           (r/after-render
+             (fn []
+               (.scrollIntoView (dom/getElement dom-id) #js {"block" "end" "inline" "nearest" "behavior" "smooth"})))))
+     (do (grid/piillota! (grid/osa-polusta solu sulkemis-polku))
+         (paivita-raidat! (grid/osa-polusta (grid/root solu) polku-dataan))
+         (r/flush)))))
 
 
 (defn yhteensa-yhteenveto [paivitetty-hoitokausi app]
