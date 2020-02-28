@@ -254,6 +254,11 @@
   IReset
   (-reset! [this uusi]
     (when-not *seuranta-muutos?*
+      ;; Derefataan data-atom ihan syystä. Jos data-atom on cursor, niin se evaluoituu laiskasti. Eli tämä dereffaus
+      ;; ei välttämättä palauta vain arvoa vaan se saattaa triggeröidä cursorin arvon muutoksen, joka taasen triggeröi
+      ;; seurannat (watch). Näin halutaan käyvän siltä varalta, että taulukon käyttäjä ei triggeröi vahingossa uusia
+      ;; seurantoja dereffatessaan cursoria jossain seuranta funktiossa esim.
+      @data-atom
       (let [uusi-hash (hash uusi)
             data-atom-hash (str (hash data-atom))
             valitilan-hash (get-in @seurannan-valitila [data-atom-hash ::kaytavan-datan-hash])
@@ -265,7 +270,7 @@
                                              uusi)
                    ;; Mahdollista, että tulee uusi tila, ennen next tickiä
                    (not= uusi-hash valitilan-hash) (do (swap! seurannan-valitila assoc data-atom-hash
-                                                              {#_#_::tila (get @seurannan-vanha-cache data-atom-hash)
+                                                              {::tila (get @seurannan-vanha-cache data-atom-hash)
                                                                ::kaytavan-datan-hash uusi-hash})
                                                        uusi)
                    ;; Käsitellään vielä saman muutoksen triggereitä

@@ -3399,29 +3399,32 @@
      [:span "Yhteenlaskettu kk-määrä: Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)"]]))
 
 (defn johto-ja-hallintokorvaus-yhteenveto
-  [jh-yhteenveto toimistokulut menneet-toimistokulut {:keys [vuosi] :as kuluva-hoitokausi} indeksit]
-  (if (and jh-yhteenveto toimistokulut)
-    (let [tamavuosi-toimistokulutsumma (p/arvo (tyokalut/hae-asia-taulukosta toimistokulut [1 "Yhteensä"])
-                                               :arvo)
-          hinnat (map (fn [hoitokausi]
-                        {:summa (+ (p/arvo (tyokalut/hae-asia-taulukosta jh-yhteenveto [last (str hoitokausi ".vuosi/€")])
-                                           :arvo)
-                                   (if (>= hoitokausi vuosi)
-                                     tamavuosi-toimistokulutsumma
-                                     (* (get-in menneet-toimistokulut [(dec hoitokausi) :maara-kk]) 12)))
-                         :hoitokausi hoitokausi})
-                      (range 1 6))]
+  [johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+  (if kantahaku-valmis?
+    (let [hinnat (mapv (fn [jh tk]
+                         {:summa (+ jh tk)})
+                       johto-ja-hallintokorvaukset-yhteensa
+                       toimistokulut-yhteensa)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko nil
                       :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
                       :hinnat hinnat}
         kuluva-hoitokausi]
-       #_[indeksilaskuri hinnat indeksit]])
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
-(defn johto-ja-hallintokorvaus [johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
+(defn johto-ja-hallintokorvaus [johto-ja-hallintokorvaus-grid
+                                johto-ja-hallintokorvaus-yhteenveto-grid
+                                toimistokulut-grid
+                                suodattimet
+                                johto-ja-hallintokorvaukset-yhteensa
+                                toimistokulut-yhteensa
+                                kuluva-hoitokausi
+                                indeksit
+                                kantahaku-valmis?]
   [:<>
    [:h3 {:id (:johto-ja-hallintokorvaus t/hallinnollisten-idt)} "Johto- ja hallintokorvaus"]
+   [johto-ja-hallintokorvaus-yhteenveto johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [:h3 "Tuntimäärät ja -palkat"]
    [yleis-suodatin suodattimet]
    (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
@@ -3439,24 +3442,17 @@
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
 (defn hoidonjohtopalkkio-yhteenveto
-  [johtopalkkio menneet-suunnitelmat {:keys [vuosi] :as kuluva-hoitokausi} indeksit]
-  (if johtopalkkio
-    (let [summarivin-index 1
-          tamavuosi-summa (p/arvo (tyokalut/hae-asia-taulukosta johtopalkkio [summarivin-index "Yhteensä"])
-                                  :arvo)
-          hinnat (map (fn [hoitokausi]
-                        (if (>= hoitokausi vuosi)
-                          {:summa tamavuosi-summa
-                           :hoitokausi hoitokausi}
-                          {:summa (* (get-in menneet-suunnitelmat [(dec hoitokausi) :maara-kk]) 12)
-                           :hoitokausi hoitokausi}))
-                      (range 1 6))]
+  [hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+  (if kantahaku-valmis?
+    (let [hinnat (mapv (fn [hjp]
+                         {:summa hjp})
+                       hoidonjohtopalkkio-yhteensa)]
       [:div.summa-ja-indeksilaskuri
        [hintalaskuri {:otsikko nil
-                      :selite nil
+                      :selite "Palkat + Toimitilat + Kelikeskus- ja keliennustepalvelut + Seurantajärjestelmät"
                       :hinnat hinnat}
         kuluva-hoitokausi]
-       #_[indeksilaskuri hinnat indeksit]])
+       [indeksilaskuri hinnat indeksit]])
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio [hoidonjohtopalkkio-grid kantahaku-valmis?]
@@ -3464,10 +3460,10 @@
     [grid/piirra hoidonjohtopalkkio-grid]
     [yleiset/ajax-loader]))
 
-(defn hoidonjohtopalkkio-sisalto [hoidonjohtopalkkio-grid suodattimet kantahaku-valmis?]
+(defn hoidonjohtopalkkio-sisalto [hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
   [:<>
    [:h3 {:id (:hoidonjohtopalkkio t/hallinnollisten-idt)} "Hoidonjohtopalkkio"]
-   #_[hoidonjohtopalkkio-yhteenveto johtopalkkio menneet-suunnitelmat kuluva-hoitokausi indeksit]
+   [hoidonjohtopalkkio-yhteenveto hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [yleis-suodatin suodattimet]
    [hoidonjohtopalkkio hoidonjohtopalkkio-grid kantahaku-valmis?]])
 
@@ -3503,8 +3499,8 @@
    [:h2#hallinnolliset-toimenpiteet "Hallinnolliset toimenpiteet"]
    [hallinnolliset-toimenpiteet-yhteensa johto-ja-hallintokorvaukset-yhteensa erillishankinnat-yhteensa hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
    [erillishankinnat-sisalto erillishankinnat-grid erillishankinnat-yhteensa indeksit kantahaku-valmis? suodattimet kuluva-hoitokausi]
-   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet kantahaku-valmis?]
-   [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet kantahaku-valmis?]])
+   [johto-ja-hallintokorvaus johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet johto-ja-hallintokorvaukset-yhteensa toimistokulut-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+   [hoidonjohtopalkkio-sisalto hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]])
 
 
 (defn kustannussuunnitelma*
