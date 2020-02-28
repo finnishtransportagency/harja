@@ -20,9 +20,7 @@
                                             count)) "Poistettu paikkaus ei ole palautunut.")))
 
 (deftest ei-voi-lahettaa-vaaran-urakan-kohteita
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
-        vastaus (paikkauskohteen-lahetyssanoma/muodosta db (hae-rovaniemen-maanteiden-hoitourakan-id) 1)] ;; kohde 1 on oulun urakan kohde]
-    (println vastaus)
-    (is (= :harja.palvelin.integraatiot.api.tyokalut.virheet/invalidi-json (:type) vastaus) "Sanoman muodostaminen epäonnistuu.")))
-
+  (let [db (tietokanta/luo-tietokanta testitietokanta)] ;; kohde 1 on oulun urakan kohde]
+    (is (thrown? Exception (paikkauskohteen-lahetyssanoma/muodosta db (hae-rovaniemen-maanteiden-hoitourakan-id) 1))
+        "Sanoman muodostaminen epäonnistuu, kun paikkauskohde ei kuulu urakkaan.")))
 
