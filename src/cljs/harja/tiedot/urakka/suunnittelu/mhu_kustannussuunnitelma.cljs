@@ -38,6 +38,17 @@
                     :paallystepaikkaukset
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
+
+(defn toimenpiteiden-jarjestys
+  [toimenpide]
+  (case toimenpide
+    :talvihoito 0
+    :liikenneympariston-hoito 1
+    :sorateiden-hoito 2
+    :paallystepaikkaukset 3
+    :mhu-yllapito 4
+    :mhu-korvausinvestointi 5))
+
 (def hoitokausien-maara-urakassa 5)
 
 (def toimenpiteet-rahavarauksilla #{:talvihoito

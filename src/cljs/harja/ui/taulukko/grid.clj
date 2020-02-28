@@ -62,4 +62,6 @@
                ~args
               ~args-pre-post
               (~(symbol (str "->" nimi)) (gensym "defsolu") ~@args))]
-           []))))
+           `[(defn ~(fn-nimi nimi)
+               ~args
+               (~(symbol (str "->" nimi)) (gensym "defsolu") ~@args))]))))

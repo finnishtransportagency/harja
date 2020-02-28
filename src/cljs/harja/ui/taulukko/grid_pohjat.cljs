@@ -166,22 +166,27 @@
                                     :harja.ui.taulukko.impl.grid/osan-derefable (grid/solun-asia this :osan-derefable))]]))))
 
 (defn tee-osa [{:keys [tyyppi id luokat parametrit fmt fmt-aktiivinen nimi aukaise-fn auki-alussa? toiminnot kayttaytymiset
-                       nappi-nakyvilla? nappia-painettu!]}]
+                       nappi-nakyvilla? nappia-painettu! ikoni linkki sisalto constructor :as asetukset]}]
   (case tyyppi
     :teksti (solu/teksti {:parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
     :laajenna (solu/laajenna {:aukaise-fn aukaise-fn
                               :auki-alussa? auki-alussa?
-                              :parametrit (merge {:id id :class luokat} parametrit)
+                              :parametrit (merge {:id id :class luokat :ikoni ikoni} parametrit)
                               :fmt fmt
                               :nimi nimi})
     :syote (solu/syote {:toiminnot toiminnot :kayttaytymiset kayttaytymiset :parametrit (merge {:id id :class luokat} parametrit)
                         :fmt fmt :fmt-aktiivinen fmt-aktiivinen :nimi nimi})
     :syote-tayta-alas (syote-tayta-alas nappi-nakyvilla? (or nappia-painettu! identity) toiminnot kayttaytymiset
                                         (merge {:id id :class luokat} parametrit) fmt fmt-aktiivinen)
+    :linkki (solu/linkki {:parametrit (merge {:id id :class luokat} parametrit) :linkki linkki :fmt fmt :nimi nimi})
+    :nappi (solu/nappi {:toiminnot toiminnot :kayttaytymiset kayttaytymiset :parametrit (merge {:id id :class luokat} parametrit)
+                        :sisalto sisalto :fmt fmt :nimi nimi})
+    :ikoni (solu/ikoni {:parametrit (merge {:id id :class luokat} parametrit) :fmt fmt :nimi nimi})
     :tyhja (solu/tyhja luokat)
+    :oma (constructor asetukset)
     (solu/tyhja)))
 
-(defn otsikkorivi-pohja [otsikkorivi sarakkeiden-maara]
+(defn otsikkorivi-pohja [otsikkorivi header-korkeus sarakkeiden-maara]
   (let [vakioleveys 1
         suhteelliset-leveydet-yhteensa (reduce (fn [summa {:keys [leveys] :or {leveys vakioleveys}}]
                                                  (+ summa leveys))
@@ -192,7 +197,12 @@
                                       [index (str (* (/ leveys suhteelliset-leveydet-yhteensa) 100) "%")])
                                     otsikkorivi))]
     (grid/rivi {:nimi ::otsikko
-                :koko (assoc-in konf/livi-oletuskoko [:sarake :leveydet] leveydet)
+                :koko (-> konf/livi-oletuskoko
+                          (assoc-in [:sarake :leveydet] leveydet)
+                          (update-in [:rivi :korkeudet 0] (fn [korkeudet]
+                                                            (if header-korkeus
+                                                              header-korkeus
+                                                              korkeudet))))
                 :osat (mapv tee-osa otsikkorivi)
                 :luokat #{"salli-ylipiirtaminen"}}
                [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])))
@@ -240,7 +250,7 @@
               :osat (mapv tee-osa footer)}
              [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}]))
 
-(defn uusi-taulukko [{:keys [taulukon-id root-asetukset root-asetus! header body footer]}]
+(defn uusi-taulukko [{:keys [taulukon-id root-asetukset root-asetus! header body footer header-korkeus]}]
   {:pre [(vector? header)
          (every? map? header)
 
@@ -252,12 +262,12 @@
              (and (vector? footer)
                   (every? map? footer)))]}
   (let [sarakkeiden-maara (count header)
-        otsikko-ja-data [(otsikkorivi-pohja header sarakkeiden-maara)
-                         (grid/taulukko {:nimi ::data
-                                         :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
-                                         :koko konf/auto
-                                         :luokat #{"salli-ylipiirtaminen"}}
-                                        (mapv #(data-pohja % sarakkeiden-maara) body))]
+        otsikko-ja-data [(otsikkorivi-pohja header header-korkeus sarakkeiden-maara)
+                         (grid/grid {:nimi ::data
+                                     :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
+                                     :koko konf/auto
+                                     :luokat #{"salli-ylipiirtaminen"}
+                                     :osat (mapv #(data-pohja % sarakkeiden-maara) body)})]
         g (grid/grid {:nimi ::root
                       :alueet [{:sarakkeet [0 1] :rivit [0 3]}]
                       :koko (update konf/auto :rivi (fn [rivi-koko]
@@ -267,7 +277,7 @@
                                                                   ::data 1
                                                                   ::yhteenveto 2})
                                                           (assoc :korkeudet
-                                                                 {0 "40px"
+                                                                 {0 (or header-korkeus "40px")
                                                                   2 "40px"}))))
                       :dom-id taulukon-id
                       :osat (if footer

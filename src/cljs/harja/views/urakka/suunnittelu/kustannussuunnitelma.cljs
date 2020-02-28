@@ -244,6 +244,13 @@
   (-> (g-pohjat/->SyoteTaytaAlas (grid/hae-osa tyhja :id) nappi-nakyvilla? (or nappia-painettu! identity) toiminnot kayttaytymiset parametrit fmt fmt-aktiivinen)
       (merge (dissoc tyhja :id))))
 
+(defsolu SuunnitelmienTilaOtsikko []
+  (fn suunnitelman-selitteet [this]
+    [:div#suunnitelman-selitteet
+     [:span [ikonit/ok] "Kaikki kentätä täytetty"]
+     [:span [ikonit/livicon-question] "Keskeneräinen"]
+     [:span [ikonit/remove] "Suunnitelma puuttuu"]]))
+
 (defn hankintojen-pohja [taulukon-id
                          root-asetus!
                          root-asetukset
@@ -482,6 +489,213 @@
                                    :root-asetukset root-asetukset})]
     g))
 
+
+(defn suunnitelmien-tila-grid []
+  (let [taulukon-id "suunnitelmien-taulukko"
+        mene-idlle (fn [id]
+                     (.scrollIntoView (dom/getElement id)))
+        g (g-pohjat/uusi-taulukko {:header [{:tyyppi :oma
+                                             :constructor (fn [_] (suunnitelmien-tila-otsikko))
+                                             :leveys 9}
+                                            {:tyyppi :teksti
+                                             :leveys 1
+                                             :luokat #{"table-default" "lihavoitu" "keskita" "alas"}}
+                                            {:tyyppi :teksti
+                                             :leveys 1
+                                             :luokat #{"table-default" "lihavoitu" "keskita" "alas"}}
+                                            {:tyyppi :teksti
+                                             :leveys 1
+                                             :luokat #{"table-default" "harmaa-teksti"}}]
+                                   :header-korkeus "auto"
+                                   :body (vec
+                                           (concat [{:tyyppi :rivi
+                                                     :nimi ::hankintakustannukset
+                                                     :osat [{:tyyppi :nappi
+                                                             :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                                             :luokat #{"table-default" "linkki"}}
+                                                            {:tyyppi :ikoni
+                                                             #_#_:ikoni ikonit/remove
+                                                             :luokat #{"table-default" "keskita"}}
+                                                            {:tyyppi :ikoni
+                                                             #_#_:ikoni ikonit/remove
+                                                             :luokat #{"table-default" "keskita"}}
+                                                            {:tyyppi :teksti
+                                                             :luokat #{"table-default" "harmaa-teksti"}
+                                                             :fmt yhteenveto-format}]}]
+                                                   (vec (map-indexed (fn [index toimenpide]
+                                                                       (let [rahavarausrivit (case toimenpide
+                                                                                               (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset]
+                                                                                               :mhu-yllapito [:kokonaishintainen-ja-lisatyo :muut-rahavaraukset]
+                                                                                               [:kokonaishintainen-ja-lisatyo])]
+                                                                         {:tyyppi :taulukko
+                                                                          :osat [{:tyyppi :rivi
+                                                                                  :nimi ::toimenpide-yhteenveto
+                                                                                  :luokat #{"toimenpide-rivi"
+                                                                                            "suunnitelma-rivi"}
+                                                                                  :osat [{:tyyppi :laajenna
+                                                                                          :aukaise-fn (fn [this auki?]
+                                                                                                        (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
+                                                                                          :auki-alussa? false
+                                                                                          :ikoni "triangle"
+                                                                                          :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1"}}
+                                                                                         {:tyyppi :teksti
+                                                                                          :luokat #{"table-default"}}
+                                                                                         {:tyyppi :teksti
+                                                                                          :luokat #{"table-default"}
+                                                                                          :fmt yhteenveto-format}
+                                                                                         {:tyyppi :teksti
+                                                                                          :luokat #{"table-default" "harmaa-teksti"}
+                                                                                          :fmt yhteenveto-format}]}
+                                                                                 {:tyyppi :taulukko
+                                                                                  :nimi ::data-sisalto
+                                                                                  :luokat #{"piillotettu"}
+                                                                                  :osat (mapv (fn [_]
+                                                                                                {:tyyppi :rivi
+                                                                                                 :luokat #{"suunnitelma-rivi"}
+                                                                                                 :osat [{:tyyppi :teksti
+                                                                                                         :luokat #{"table-default" "solu-sisenna-2"}}
+                                                                                                        {:tyyppi :ikoni
+                                                                                                         #_#_:ikoni ikonit/remove
+                                                                                                         :luokat #{"table-default" "keskita"}}
+                                                                                                        {:tyyppi :ikoni
+                                                                                                         #_#_:ikoni ikonit/remove
+                                                                                                         :luokat #{"table-default" "keskita"}}
+                                                                                                        {:tyyppi :teksti
+                                                                                                         :luokat #{"table-default" "harmaa-teksti"}
+                                                                                                         :fmt yhteenveto-format}]})
+                                                                                              rahavarausrivit)}]}))
+                                                                     (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)))
+                                                   (vec
+                                                     (cons
+                                                       {:tyyppi :rivi
+                                                        :nimi ::hallinnolliset-toimenpiteet
+                                                        :luokat #{"suunnitelma-rivi"}
+                                                        :osat [{:tyyppi :nappi
+                                                                :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                                                :luokat #{"table-default" "linkki"}}
+                                                               {:tyyppi :ikoni
+                                                                #_#_:ikoni ikonit/remove
+                                                                :luokat #{"table-default" "keskita"}}
+                                                               {:tyyppi :ikoni
+                                                                #_#_:ikoni ikonit/remove
+                                                                :luokat #{"table-default" "keskita"}}
+                                                               {:tyyppi :teksti
+                                                                :luokat #{"table-default" "harmaa-teksti"}
+                                                                :fmt yhteenveto-format}]}
+                                                       (repeat 4 {:tyyppi :rivi
+                                                                  :luokat #{"suunnitelma-rivi"}
+                                                                  :osat [{:tyyppi :nappi
+                                                                          :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                                                          :luokat #{"table-default" "linkki"}}
+                                                                         {:tyyppi :ikoni
+                                                                          #_#_:ikoni ikonit/remove
+                                                                          :luokat #{"table-default" "keskita"}}
+                                                                         {:tyyppi :ikoni
+                                                                          #_#_:ikoni ikonit/remove
+                                                                          :luokat #{"table-default" "keskita"}}
+                                                                         {:tyyppi :teksti
+                                                                          :luokat #{"table-default" "harmaa-teksti"}
+                                                                          :fmt yhteenveto-format}]})))))
+                                   :taulukon-id taulukon-id
+                                   :luokat #{"suunnitelma-ikonien-varit"}
+
+                                   :root-asetus! (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnitelmien-tila :grid] g)))
+                                   :root-asetukset {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnitelmien-tila :grid]))
+                                                    :paivita! (fn [f]
+                                                                (swap! tila/suunnittelu-kustannussuunnitelma
+                                                                       (fn [tila]
+                                                                         (update-in tila [:gridit :suunnitelmien-tila :grid] f))))}})]
+    #_(println "-------- FOOO --------")
+    #_(println (vec
+               (concat [{:tyyppi :rivi
+                         :nimi ::hankintakustannukset
+                         :osat [{:tyyppi :nappi
+                                 :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                 :luokat #{"table-default" "linkki"}}
+                                {:tyyppi :ikoni
+                                 #_#_:ikoni ikonit/remove
+                                 :luokat #{"table-default" "keskita"}}
+                                {:tyyppi :ikoni
+                                 #_#_:ikoni ikonit/remove
+                                 :luokat #{"table-default" "keskita"}}
+                                {:tyyppi :teksti
+                                 :luokat #{"table-default" "harmaa-teksti"}
+                                 :fmt yhteenveto-format}]}]
+                       (vec (map-indexed (fn [index toimenpide]
+                                           (let [rahavarausrivit (case toimenpide
+                                                                   (:talvihoito :liikenneympariston-hoito :sorateiden-hoito) [:kokonaishintainen-ja-lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset]
+                                                                   :mhu-yllapito [:kokonaishintainen-ja-lisatyo :muut-rahavaraukset]
+                                                                   [:kokonaishintainen-ja-lisatyo])]
+                                             {:tyyppi :taulukko
+                                              :osat [{:tyyppi :rivi
+                                                      :nimi ::toimenpide-yhteenveto
+                                                      :luokat #{"toimenpide-rivi"
+                                                                "suunnitelma-rivi"}
+                                                      :osat [{:tyyppi :laajenna
+                                                              :aukaise-fn (fn [this auki?]
+                                                                            (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data]))
+                                                              :auki-alussa? false
+                                                              :ikoni "triangle"
+                                                              :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1"}}
+                                                             {:tyyppi :teksti
+                                                              :luokat #{"table-default"}}
+                                                             {:tyyppi :teksti
+                                                              :luokat #{"table-default"}
+                                                              :fmt yhteenveto-format}
+                                                             {:tyyppi :teksti
+                                                              :luokat #{"table-default" "harmaa-teksti"}
+                                                              :fmt yhteenveto-format}]}
+                                                     {:tyyppi :taulukko
+                                                      :nimi ::data-sisalto
+                                                      :luokat #{"piillotettu"}
+                                                      :osat (mapv (fn [_]
+                                                                    {:tyyppi :rivi
+                                                                     :luokat #{"suunnitelma-rivi"}
+                                                                     :osat [{:tyyppi :teksti
+                                                                             :luokat #{"table-default" "solu-sisenna-2"}}
+                                                                            {:tyyppi :ikoni
+                                                                             #_#_:ikoni ikonit/remove
+                                                                             :luokat #{"table-default" "keskita"}}
+                                                                            {:tyyppi :ikoni
+                                                                             #_#_:ikoni ikonit/remove
+                                                                             :luokat #{"table-default" "keskita"}}
+                                                                            {:tyyppi :teksti
+                                                                             :luokat #{"table-default" "harmaa-teksti"}
+                                                                             :fmt yhteenveto-format}]})
+                                                                  rahavarausrivit)}]}))
+                                         (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)))
+                       (vec
+                         (cons
+                           {:tyyppi :rivi
+                            :nimi ::hallinnolliset-toimenpiteet
+                            :luokat #{"suunnitelma-rivi"}
+                            :osat [{:tyyppi :nappi
+                                    :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                    :luokat #{"table-default" "linkki"}}
+                                   {:tyyppi :ikoni
+                                    #_#_:ikoni ikonit/remove
+                                    :luokat #{"table-default" "keskita"}}
+                                   {:tyyppi :ikoni
+                                    #_#_:ikoni ikonit/remove
+                                    :luokat #{"table-default" "keskita"}}
+                                   {:tyyppi :teksti
+                                    :luokat #{"table-default" "harmaa-teksti"}
+                                    :fmt yhteenveto-format}]}
+                           (repeat 4 {:tyyppi :rivi
+                                      :luokat #{"suunnitelma-rivi"}
+                                      :osat [{:tyyppi :nappi
+                                              :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                              :luokat #{"table-default" "linkki"}}
+                                             {:tyyppi :ikoni
+                                              #_#_:ikoni ikonit/remove
+                                              :luokat #{"table-default" "keskita"}}
+                                             {:tyyppi :ikoni
+                                              #_#_:ikoni ikonit/remove
+                                              :luokat #{"table-default" "keskita"}}
+                                             {:tyyppi :teksti
+                                              :luokat #{"table-default" "harmaa-teksti"}
+                                              :fmt yhteenveto-format}]}))))))
+    (grid/aseta-gridin-polut g)))
 
 (defn suunnittellut-hankinnat-grid []
   (let [g (hankintojen-pohja "suunnittellut-hankinnat-taulukko"
@@ -1544,15 +1758,7 @@
    [ikonit/warning]
    " Osaa ei voida näyttää.."])
 
-(defn toimenpiteiden-jarjestys
-  [toimenpide]
-  (case toimenpide
-    :talvihoito 0
-    :liikenneympariston-hoito 1
-    :sorateiden-hoito 2
-    :paallystepaikkaukset 3
-    :mhu-yllapito 4
-    :mhu-korvausinvestointi 5))
+
 
 (defn haitari-laatikko [_ {:keys [alussa-auki? aukaise-fn otsikko-elementti]} & _]
   (let [auki? (atom alussa-auki?)
@@ -2064,8 +2270,11 @@
                                                                                                                      :johtopalkkio)}))))))
 
 (defn suunnitelmien-tila
-  [e! suunnitelmien-argumentit]
-  (let [paivitetyt-taulukot (cljs.core/atom {})]
+  [suunnitelmien-tila-grid kantahaku-valmis?]
+  (if kantahaku-valmis?
+    [grid/piirra suunnitelmien-tila-grid]
+    [yleiset/ajax-loader])
+  #_(let [paivitetyt-taulukot (cljs.core/atom {})]
     (komp/luo
       #_(komp/piirretty (fn [this]
                         (let [suunnitelmien-taulukko-alkutila (suunnitelmien-taulukko e!)]
@@ -2132,7 +2341,7 @@
                                          :valitse-fn valitse-toimenpide
                                          :format-fn toimenpide-tekstiksi
                                          :vayla-tyyli? true}
-            (sort-by toimenpiteiden-jarjestys t/toimenpiteet)]]
+            (sort-by t/toimenpiteiden-jarjestys t/toimenpiteet)]]
           [maksetaan-filter (r/partial valitse-kausi suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid) maksetaan]]
          [:input#kopioi-tuleville-hoitovuosille.vayla-checkbox
           {:type "checkbox" :checked kopioidaan-tuleville-vuosille?
@@ -3545,7 +3754,8 @@
                       (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))
-                      (go (let [g-sh (suunnittellut-hankinnat-grid)
+                      (go (let [g-s (suunnitelmien-tila-grid)
+                                g-sh (suunnittellut-hankinnat-grid)
                                 g-hlp (hankinnat-laskutukseen-perustuen-grid)
                                 g-r (rahavarausten-grid)
                                 g-er (maarataulukko "erillishankinnat" "erillishankinnat-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])
@@ -3553,6 +3763,7 @@
                                 g-jhly (johto-ja-hallintokorvaus-laskulla-yhteenveto-grid)
                                 g-t (maarataulukko "toimistokulut" "toimistokulut-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                 g-hjp (maarataulukko "hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])]
+                            (t/paivita-raidat! (grid/osa-polusta g-s [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-sh [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-hlp [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-jhl [::g-pohjat/data]))
@@ -3590,11 +3801,13 @@
             [:span#tavoite-ja-kattohinta-huomio
              "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
          [:span.viiva-alas]
-         #_[haitari-laatikko
+         [haitari-laatikko
             "Suunnitelmien tila"
             {:alussa-auki? true
              :otsikko-elementti :h2}
-            [suunnitelmien-tila e! suunnitelmien-argumentit]]
+            [suunnitelmien-tila
+             (get-in app [:gridit :suunnitelmien-tila :grid])
+             (:kantahaku-valmis? app)]]
          [:span.viiva-alas]
          [hankintakustannukset-taulukot
           (get-in app [:domain :kirjoitusoikeus?])

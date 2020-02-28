@@ -164,7 +164,7 @@
 
 (defn linkki
   ([] (linkki nil))
-  ([{:keys [parametrit linkki filtteri arvo fmt nimi rajapinta] :as asetukset}]
+  ([{:keys [parametrit linkki fmt nimi] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta parametrit ja linkki
           (fmt-asetukset-oikein? asetukset)
@@ -348,7 +348,7 @@
 
 (defn nappi
   ([] (nappi nil))
-  ([{:keys [toiminnot kayttaytymiset parametrit sisalto filtteri arvo fmt nimi rajapinta] :as asetukset}]
+  ([{:keys [toiminnot kayttaytymiset parametrit sisalto fmt nimi] :as asetukset}]
    {:pre [
           ;; TODO Tarkasta parametrit, toiminnot, sisalto ja kayttaytymiset
           (fmt-asetukset-oikein? asetukset)
@@ -417,6 +417,46 @@
     :post [(instance? Laajenna %)]}
    (let [id (gensym "laajenna")]
      (cond-> (->Laajenna id aukaise-fn auki-alussa? parametrit)
+             (nil? fmt) (sp/lisaa-fmt identity)
+             fmt (sp/lisaa-fmt fmt)
+             nimi (gop/aseta-nimi nimi)))))
+
+(defrecord Ikoni [id parametrit]
+  gop/IPiirrettava
+  (-piirra [this]
+    (let [{:keys [id class]} (:parametrit this)
+          taman-data (taman-derefable this)
+          {:keys [ikoni teksti]} @taman-data]
+      [:div.osa.osa-ikoni {:class (when class
+                                    (apply str (interpose " " class)))
+                           :id id
+                           :data-cy (::nimi this)}
+       [:span (or ikoni nil) teksti]]))
+  gop/IGridOsa
+  (-id [this]
+    (:id this))
+  (-id? [this id]
+    (= (:id this) id))
+  (-nimi [this]
+    (::nimi this))
+  (-aseta-nimi [this nimi]
+    (assoc this ::nimi nimi))
+  sp/ISolu
+  sp/IFmt
+  (-lisaa-fmt [this f]
+    (assoc this ::fmt f))
+  (-lisaa-fmt-aktiiviselle [this f]
+    this))
+
+(defn ikoni
+  ([] (ikoni nil))
+  ([{:keys [parametrit fmt nimi] :as asetukset}]
+   {:pre [(fmt-asetukset-oikein? asetukset)
+          ;; TODO tarkasta parametrit
+          ]
+    :post [(instance? Ikoni %)]}
+   (let [id (gensym "teksti")]
+     (cond-> (->Ikoni id parametrit)
              (nil? fmt) (sp/lisaa-fmt identity)
              fmt (sp/lisaa-fmt fmt)
              nimi (gop/aseta-nimi nimi)))))
