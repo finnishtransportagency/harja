@@ -431,7 +431,9 @@
                                     (apply str (interpose " " class)))
                            :id id
                            :data-cy (::nimi this)}
-       [:span (or ikoni nil) teksti]]))
+       [:span (when (fn? ikoni)
+                [ikoni])
+        teksti]]))
   gop/IGridOsa
   (-id [this]
     (:id this))
