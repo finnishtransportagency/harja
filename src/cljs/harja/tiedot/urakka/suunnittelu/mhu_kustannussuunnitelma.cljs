@@ -276,11 +276,29 @@
                   (boolean (some #(and (not (nil? (get % avain)))
                                       (not= 0 (get % avain)))
                                  data)))
+        aggregaatti-valmis? (fn [data]
+                              (every? #(= :valmis %)
+                                      data))
+        aggregaatti-kesken? (fn [data]
+                              (boolean (some #(or (= :valmis %)
+                                                  (= :kesken %))
+                                             data)))
         suunnitelman-tila (fn [data avain]
                             (cond
                               (valmis? data avain) :valmis
                               (kesken? data avain) :kesken
                               :else :aloittamatta))
+        aggregaatin-tila (fn [rahavarausten-tilat]
+                           (let [toimenpiteen-tilat-kuluvalle-hoitokaudelle (map #(get % :kuluva-hoitokausi) rahavarausten-tilat)
+                                 toimenpiteen-tilat-seuraavalle-hoitokaudelle (map #(get % :seuraava-hoitokausi) rahavarausten-tilat)]
+                             (cond-> {:kuluva-hoitokausi (cond
+                                                           (aggregaatti-valmis? toimenpiteen-tilat-kuluvalle-hoitokaudelle) :valmis
+                                                           (aggregaatti-kesken? toimenpiteen-tilat-kuluvalle-hoitokaudelle) :kesken
+                                                           :else :aloittamatta)}
+                                     (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (cond
+                                                                                               (aggregaatti-valmis? toimenpiteen-tilat-seuraavalle-hoitokaudelle) :valmis
+                                                                                               (aggregaatti-kesken? toimenpiteen-tilat-seuraavalle-hoitokaudelle) :kesken
+                                                                                               :else :aloittamatta)))))
         suunnitelman-tila-ikoniksi (fn [suunnitelman-tila]
                                      (case suunnitelman-tila
                                        :aloittamatta ikonit/remove
@@ -292,17 +310,17 @@
                                                             (not viimeinen-hoitokausi?) (conj (conj polku (dec toisen-hoitokauden-numero))))
                                              :init (fn [tila]
                                                      (assoc-in tila
-                                                               [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide rahavaraus]
+                                                               [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus]
                                                                (cond-> {:kuluva-hoitokausi :aloittamatta}
                                                                        (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
                                              :aseta (if viimeinen-hoitokausi?
                                                       (fn [tila ensimmaisen-hoitokauden-data]
                                                         (assoc-in tila
-                                                                  [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide rahavaraus :kuluva-hoitokausi]
+                                                                  [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus :kuluva-hoitokausi]
                                                                   (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)))
                                                       (fn [tila ensimmaisen-hoitokauden-data toisen-hoitokauden-data]
                                                         (update-in tila
-                                                                   [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide rahavaraus]
+                                                                   [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus]
                                                                    (fn [hoitokausien-tila]
                                                                      (assoc hoitokausien-tila
                                                                             :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
@@ -317,20 +335,29 @@
                             suunnitelmien-tila-rajapinta
                             (merge {:otsikot {:polut [[:gridit :suunnitelmien-tila :otsikot]]
                                               :haku identity}
-                                    :hankintakustannukset {:polut [[:foo]]
-                                                           :haku identity}
+                                    :hankintakustannukset {:polut (mapv (fn [toimenpide]
+                                                                          [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate])
+                                                                        toimenpiteet)
+                                                           :haku (fn [& toimenpiteiden-aggregatet]
+                                                                   (let [{:keys [kuluva-hoitokausi seuraava-hoitokausi]} (aggregaatin-tila toimenpiteiden-aggregatet)]
+                                                                     (if viimeinen-hoitokausi?
+                                                                       ["Hankintakustannukset" {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi*"]
+                                                                       ["Hankintakustannukset" {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi*"])))}
                                     :hallinnolliset-toimenpiteet {:polut [[:foo]]
                                                                   :haku identity}}
                                    (reduce (fn [haut toimenpide]
                                              (merge haut
-                                                    {(keyword (str "toimenpide-" toimenpide)) {:polut [[:foo]]
-                                                                                               :haku identity}}
+                                                    {(keyword (str "toimenpide-" toimenpide)) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]]
+                                                                                               :haku (fn [{:keys [kuluva-hoitokausi seuraava-hoitokausi]}]
+                                                                                                       (if viimeinen-hoitokausi?
+                                                                                                         [(-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize) {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]
+                                                                                                         [(-> toimenpide name (clj-str/replace #"-" " ") aakkosta clj-str/capitalize) {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]))}}
                                                     (second (reduce (fn [[ensimmainen-rivi? rahavarauksien-haut] rahavaraus]
                                                                       (let [jakso (if ensimmainen-rivi?
                                                                                     "/kk**"
                                                                                     "/kk")]
                                                                         [false (merge rahavarauksien-haut
-                                                                                      {(keyword (str "rahavaraus-" rahavaraus "-" toimenpide)) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide rahavaraus]]
+                                                                                      {(keyword (str "rahavaraus-" rahavaraus "-" toimenpide)) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset rahavaraus]]
                                                                                                                                                 :haku (fn [{:keys [kuluva-hoitokausi seuraava-hoitokausi]}]
                                                                                                                                                         (if viimeinen-hoitokausi?
                                                                                                                                                           [(rahavaraus->nimi rahavaraus) {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} jakso]
@@ -348,6 +375,16 @@
                             {}
                             (reduce (fn [seurannat toimenpide]
                                       (merge seurannat
+                                             {(keyword (str "toimenpide-" toimenpide "-seuranta")) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset]]
+                                                                                                    :init (fn [tila]
+                                                                                                            (assoc-in tila
+                                                                                                                      [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]
+                                                                                                                      (cond-> {:kuluva-hoitokausi :aloittamatta}
+                                                                                                                              (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
+                                                                                                    :aseta (fn [tila rahavarausten-tilat]
+                                                                                                             (assoc-in tila
+                                                                                                                       [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]
+                                                                                                                       (aggregaatin-tila (map val rahavarausten-tilat))))}}
                                              (reduce (fn [rahavarauksien-haut rahavaraus]
                                                        (merge rahavarauksien-haut
                                                               {(keyword (str "rahavaraus-" rahavaraus "-" toimenpide "-seuranta")) (case rahavaraus

@@ -298,7 +298,7 @@
       (fn [this]
         (let [{:keys [id class type value name tabindex disabled? size]} (:parametrit this)
               taman-data (taman-derefable this)
-              arvo (korjaa-NaN @taman-data this)
+              arvo @taman-data
               parametrit (into {}
                                (remove (fn [[_ arvo]]
                                          (nil? arvo))
@@ -308,7 +308,7 @@
                                         :data-cy (:id this)
                                         :id id
                                         :type type
-                                        :value ((::fmt this) arvo)
+                                        #_#_:value ((::fmt this) arvo)
                                         :name name
                                         :tab-index tabindex
                                         :disabled disabled?
@@ -330,7 +330,7 @@
                                                         (on-key-press this))
                                         :on-key-up (when on-key-up
                                                      (on-key-up this))}))]
-          [:button.solu.solu-nappi parametrit sisalto]))))
+          [:button.solu.solu-nappi parametrit arvo]))))
   gop/IGridOsa
   (-id [this]
     (:id this))

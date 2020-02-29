@@ -537,11 +537,12 @@
                                                                                           :auki-alussa? false
                                                                                           :ikoni "triangle"
                                                                                           :luokat #{"table-default" "ikoni-vasemmalle" "solu-sisenna-1"}}
-                                                                                         {:tyyppi :teksti
-                                                                                          :luokat #{"table-default"}}
-                                                                                         {:tyyppi :teksti
-                                                                                          :luokat #{"table-default"}
-                                                                                          :fmt yhteenveto-format}
+                                                                                         {:tyyppi :ikoni
+                                                                                          #_#_:ikoni ikonit/remove
+                                                                                          :luokat #{"table-default" "keskita"}}
+                                                                                         {:tyyppi :ikoni
+                                                                                          #_#_:ikoni ikonit/remove
+                                                                                          :luokat #{"table-default" "keskita"}}
                                                                                          {:tyyppi :teksti
                                                                                           :luokat #{"table-default" "harmaa-teksti"}
                                                                                           :fmt yhteenveto-format}]}
