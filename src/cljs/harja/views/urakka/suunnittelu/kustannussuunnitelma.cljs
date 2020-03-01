@@ -525,7 +525,9 @@
                                                              :luokat #{"table-default" "keskita"}}
                                                             {:tyyppi :ikoni
                                                              #_#_:ikoni ikonit/remove
-                                                             :luokat #{"table-default" "keskita"}}
+                                                             :luokat #{"table-default" "keskita"
+                                                                       (when-not viimeinen-vuosi?
+                                                                         "harmaa-teksti")}}
                                                             {:tyyppi :teksti
                                                              :luokat #{"table-default" "harmaa-teksti"}
                                                              :fmt yhteenveto-format}]}]
@@ -548,7 +550,9 @@
                                                                                           :luokat #{"table-default" "keskita"}}
                                                                                          {:tyyppi :ikoni
                                                                                           #_#_:ikoni ikonit/remove
-                                                                                          :luokat #{"table-default" "keskita"}}
+                                                                                          :luokat #{"table-default" "keskita"
+                                                                                                    (when-not viimeinen-vuosi?
+                                                                                                      "harmaa-teksti")}}
                                                                                          {:tyyppi :teksti
                                                                                           :luokat #{"table-default" "harmaa-teksti"}
                                                                                           :fmt yhteenveto-format}]}
@@ -566,7 +570,9 @@
                                                                                                          :luokat #{"table-default" "keskita"}}
                                                                                                         {:tyyppi :ikoni
                                                                                                          #_#_:ikoni ikonit/remove
-                                                                                                         :luokat #{"table-default" "keskita"}}
+                                                                                                         :luokat #{"table-default" "keskita"
+                                                                                                                   (when-not viimeinen-vuosi?
+                                                                                                                     "harmaa-teksti")}}
                                                                                                         {:tyyppi :teksti
                                                                                                          :luokat #{"table-default" "harmaa-teksti"}
                                                                                                          :fmt yhteenveto-format}]})
@@ -585,7 +591,9 @@
                                                                 :luokat #{"table-default" "keskita"}}
                                                                {:tyyppi :ikoni
                                                                 #_#_:ikoni ikonit/remove
-                                                                :luokat #{"table-default" "keskita"}}
+                                                                :luokat #{"table-default" "keskita"
+                                                                          (when-not viimeinen-vuosi?
+                                                                            "harmaa-teksti")}}
                                                                {:tyyppi :teksti
                                                                 :luokat #{"table-default" "harmaa-teksti"}
                                                                 :fmt yhteenveto-format}]}
@@ -601,7 +609,9 @@
                                                                        :luokat #{"table-default" "keskita"}}
                                                                       {:tyyppi :ikoni
                                                                        #_#_:ikoni ikonit/remove
-                                                                       :luokat #{"table-default" "keskita"}}
+                                                                       :luokat #{"table-default" "keskita"
+                                                                                 (when-not viimeinen-vuosi?
+                                                                                   "harmaa-teksti")}}
                                                                       {:tyyppi :teksti
                                                                        :luokat #{"table-default" "harmaa-teksti"}
                                                                        :fmt yhteenveto-format}]})
@@ -1817,7 +1827,7 @@
   (if (some #(or (nil? (:summa %))
                  (js/isNaN (:summa %)))
             hinnat)
-    [virhe-datassa otsikko selite hinnat]
+    [:div ""]
     [:div.hintalaskuri
      (when otsikko
        [:h5 otsikko])
@@ -1855,11 +1865,11 @@
        [hintalaskurisarake " " "=" {:container-luokat "hintalaskuri-yhtakuin"}]
        [hintalaskurisarake " " (fmt/euro (reduce #(+ %1 (:summa %2)) 0 hinnat)) {:container-luokat "hintalaskuri-yhteensa"}]]])))
 
-(defn kuluva-hoitovuosi [{:keys [vuosi pvmt]}]
-  (if (and vuosi pvmt)
+(defn kuluva-hoitovuosi [{:keys [hoitokauden-numero pvmt]}]
+  (if (and hoitokauden-numero pvmt)
     [:div#kuluva-hoitovuosi
      [:span
-      (str "Kuluva hoitovuosi: " vuosi
+      (str "Kuluva hoitovuosi: " hoitokauden-numero
            ". (" (pvm/pvm (first pvmt))
            " - " (pvm/pvm (second pvmt)) ")")]
      [:div.hoitovuosi-napit
@@ -1867,21 +1877,33 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta-sisalto [{{:keys [tavoitehinnat kattohinnat]} :tavoite-ja-kattohinta
-                                      :keys [kuluva-hoitokausi indeksit]}]
-  (if (and tavoitehinnat kattohinnat indeksit)
+(defn tavoite-ja-kattohinta-sisalto [#_{{:keys [tavoitehinnat kattohinnat]} :tavoite-ja-kattohinta
+                                      :keys [kuluva-hoitokausi indeksit]}
+                                     yhteenvedot
+                                     kuluva-hoitokausi
+                                     indeksit]
+  (let [tavoitehinnat (mapv (fn [summa]
+                              {:summa summa})
+                            (mapv +
+                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :erillishankinnat])
+                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :toimistokulut])
+                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+                                  (t/summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :rahavaraukset]))
+                                  (t/summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :suunnitellut-hankinnat]))
+                                  (t/summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]))))
+        kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)]
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
                     :selite "Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio"
-                    :hinnat (update (vec tavoitehinnat) 0 assoc :teksti "1. vuosi*")}
+                    :hinnat (update tavoitehinnat 0 assoc :teksti "1. vuosi*")}
       kuluva-hoitokausi]
-     #_[indeksilaskuri tavoitehinnat indeksit "tavoitehinnan-indeksikorjaus"]
+     [indeksilaskuri tavoitehinnat indeksit "tavoitehinnan-indeksikorjaus"]
      [hintalaskuri {:otsikko "Kattohinta"
                     :selite "(Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1"
                     :hinnat kattohinnat}
       kuluva-hoitokausi]
-     #_[indeksilaskuri kattohinnat indeksit]]
-    [yleiset/ajax-loader]))
+     [indeksilaskuri kattohinnat indeksit]]))
 
 (defn suunnitelman-selitteet [this luokat _]
   [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
@@ -3752,22 +3774,27 @@
          ;[debug/debug app]
          [:h1 "Kustannussuunnitelma"]
          [:div "Kun kaikki määrät on syötetty, voit seurata kustannuksia. Sampoa varten muodostetaan automaattisesti maksusuunnitelma, jotka löydät Laskutus-osiosta. Kustannussuunnitelmaa tarkennetaan joka hoitovuoden alussa."]
-         [kuluva-hoitovuosi kuluva-hoitokausi]
-         #_[haitari-laatikko
+         [kuluva-hoitovuosi (get-in app [:domain :kuluva-hoitokausi])]
+         [haitari-laatikko
             "Tavoite- ja kattohinta lasketaan automaattisesti"
             {:alussa-auki? true
              :id "tavoite-ja-kattohinta"}
-            [tavoite-ja-kattohinta-sisalto tavoite-ja-kattohinta-argumentit]
+            [tavoite-ja-kattohinta-sisalto #_tavoite-ja-kattohinta-argumentit
+             (get app :yhteenvedot)
+             (get-in app [:domain :kuluva-hoitokausi])
+             (get-in app [:domain :indeksit])]
             [:span#tavoite-ja-kattohinta-huomio
              "*) Vuodet ovat hoitovuosia, ei kalenterivuosia."]]
          [:span.viiva-alas]
          [haitari-laatikko
-            "Suunnitelmien tila"
-            {:alussa-auki? true
-             :otsikko-elementti :h2}
-            [suunnitelmien-tila
-             (get-in app [:gridit :suunnitelmien-tila :grid])
-             (:kantahaku-valmis? app)]]
+          "Suunnitelmien tila"
+          {:alussa-auki? true
+           :otsikko-elementti :h2}
+          [suunnitelmien-tila
+           (get-in app [:gridit :suunnitelmien-tila :grid])
+           (:kantahaku-valmis? app)]
+          [:div "*) Hoitovuosisuunnitelmat lasketaan automaattisesti"]
+          [:div "**) Kuukausisummat syöttää käyttäjä. Kuukausisuunnitelmista muodostuu maksusuunnitelma  Sampoa varten. Ks. Laskutus > Maksuerät."]]
          [:span.viiva-alas]
          [hankintakustannukset-taulukot
           (get-in app [:domain :kirjoitusoikeus?])
