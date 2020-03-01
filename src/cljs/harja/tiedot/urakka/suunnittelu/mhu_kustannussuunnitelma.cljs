@@ -124,7 +124,7 @@
 (def hallinnollisten-idt
   {:erillishankinnat "erillishankinnat"
    :johto-ja-hallintokorvaus "johto-ja-hallintokorvaus"
-   :toimistokulut-taulukko "toimistokulut-taulukko"
+   :toimistokulut "toimistokulut"
    :hoidonjohtopalkkio "hoidonjohtopalkkio"})
 
 (def filteroitavat-tallennettavat-asiat
@@ -268,13 +268,15 @@
         [ensimmainen-hoitokauden-numero toisen-hoitokauden-numero] (if viimeinen-hoitokausi?
                                                                      [nil 5]
                                                                      [kuluvan-hoitokauden-numero (inc kuluvan-hoitokauden-numero)])
+        datan-arvo (fn [data avain]
+                     (if avain (get data avain) data))
         valmis? (fn [data avain]
-                  (every? #(and (not (nil? (get % avain)))
-                               (not= 0 (get % avain)))
+                  (every? #(and (not (nil? (datan-arvo % avain)))
+                                (not= 0 (datan-arvo % avain)))
                           data))
         kesken? (fn [data avain]
-                  (boolean (some #(and (not (nil? (get % avain)))
-                                      (not= 0 (get % avain)))
+                  (boolean (some #(and (not (nil? (datan-arvo % avain)))
+                                       (not= 0 (datan-arvo % avain)))
                                  data)))
         aggregaatti-valmis? (fn [data]
                               (every? #(= :valmis %)
@@ -325,6 +327,28 @@
                                                                      (assoc hoitokausien-tila
                                                                             :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
                                                                             :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))})
+        hallinnollisten-rajapinta-asetukset (fn [hallinto]
+                                              (let [polun-alku [:domain hallinto]]
+                                                {:polut (cond-> [(conj polun-alku (dec ensimmainen-hoitokauden-numero))]
+                                                                (not viimeinen-hoitokausi?) (conj (conj polun-alku (dec toisen-hoitokauden-numero))))
+                                                 :init (fn [tila]
+                                                         (update-in tila
+                                                                   [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet hallinto]
+                                                                    merge
+                                                                   (cond-> {:kuluva-hoitokausi :aloittamatta}
+                                                                           (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
+                                                 :aseta (if viimeinen-hoitokausi?
+                                                          (fn [tila ensimmaisen-hoitokauden-data]
+                                                            (assoc-in tila
+                                                                      [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet hallinto :kuluva-hoitokausi]
+                                                                      (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)))
+                                                          (fn [tila ensimmaisen-hoitokauden-data toisen-hoitokauden-data]
+                                                            (update-in tila
+                                                                       [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet hallinto]
+                                                                       (fn [hoitokausien-tila]
+                                                                         (assoc hoitokausien-tila
+                                                                                :kuluva-hoitokausi (suunnitelman-tila ensimmaisen-hoitokauden-data :maara)
+                                                                                :seuraava-hoitokausi (suunnitelman-tila toisen-hoitokauden-data :maara))))))}))
         rahavaraus->nimi (fn [rahavaraus]
                            (case rahavaraus
                              :kokonaishintainen-ja-lisatyo "Suunnitellut hankinnat"
@@ -343,8 +367,16 @@
                                                                      (if viimeinen-hoitokausi?
                                                                        ["Hankintakustannukset" {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi*"]
                                                                        ["Hankintakustannukset" {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi*"])))}
-                                    :hallinnolliset-toimenpiteet {:polut [[:foo]]
-                                                                  :haku identity}}
+                                    :hallinnolliset-toimenpiteet {:polut (vec
+                                                                           (cons [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :nimi]
+                                                                                 (map (fn [[hallinto _]]
+                                                                                        [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet hallinto])
+                                                                                      hallinnollisten-idt)))
+                                                                  :haku (fn [nimi & hallinnollisten-tila]
+                                                                          (let [{:keys [kuluva-hoitokausi seuraava-hoitokausi]} (aggregaatin-tila hallinnollisten-tila)]
+                                                                            (if viimeinen-hoitokausi?
+                                                                              [nimi {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"]
+                                                                              [nimi {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/vuosi"])))}}
                                    (reduce (fn [haut toimenpide]
                                              (merge haut
                                                     {(keyword (str "toimenpide-" toimenpide)) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]]
@@ -366,36 +398,74 @@
                                                                     (toimenpiteen-rahavaraukset toimenpide)))))
                                            {}
                                            toimenpiteet)
-                                   (reduce (fn [haut [_ id]]
+                                   (reduce (fn [haut [hallinto id]]
                                              (merge haut
-                                                    {(keyword (str "hallinnollinen-" id)) {:polut [[:foo]]
-                                                                                           :haku identity}}))
+                                                    {(keyword (str "hallinnollinen-" id)) {:polut [[:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet hallinto]]
+                                                                                           :haku (fn [{:keys [nimi kuluva-hoitokausi seuraava-hoitokausi]}]
+                                                                                                   (if viimeinen-hoitokausi?
+                                                                                                     [nimi {:ikoni (suunnitelman-tila-ikoniksi nil)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/kk"]
+                                                                                                     [nimi {:ikoni (suunnitelman-tila-ikoniksi kuluva-hoitokausi)} {:ikoni (suunnitelman-tila-ikoniksi seuraava-hoitokausi)} "/kk"]))}}))
                                            {}
                                            hallinnollisten-idt))
                             {}
-                            (reduce (fn [seurannat toimenpide]
-                                      (merge seurannat
-                                             {(keyword (str "toimenpide-" toimenpide "-seuranta")) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset]]
-                                                                                                    :init (fn [tila]
-                                                                                                            (assoc-in tila
-                                                                                                                      [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]
-                                                                                                                      (cond-> {:kuluva-hoitokausi :aloittamatta}
-                                                                                                                              (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
-                                                                                                    :aseta (fn [tila rahavarausten-tilat]
-                                                                                                             (assoc-in tila
-                                                                                                                       [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]
-                                                                                                                       (aggregaatin-tila (map val rahavarausten-tilat))))}}
-                                             (reduce (fn [rahavarauksien-haut rahavaraus]
-                                                       (merge rahavarauksien-haut
-                                                              {(keyword (str "rahavaraus-" rahavaraus "-" toimenpide "-seuranta")) (case rahavaraus
-                                                                                                                                     :kokonaishintainen-ja-lisatyo (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :suunnittellut-hankinnat toimenpide])
-                                                                                                                                     :akillinen-hoitotyo (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "akillinen-hoitotyo"])
-                                                                                                                                     :vahinkojen-korjaukset (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "vahinkojen-korjaukset"])
-                                                                                                                                     :muut-rahavaraukset (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "muut-rahavaraukset"]))}))
-                                                     {}
-                                                     (toimenpiteen-rahavaraukset toimenpide))))
-                                    {}
-                                    toimenpiteet))))
+                            (merge (reduce (fn [seurannat toimenpide]
+                                             (merge seurannat
+                                                    {(keyword (str "toimenpide-" toimenpide "-seuranta")) {:polut [[:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :rahavaraukset]]
+                                                                                                           :init (fn [tila]
+                                                                                                                   (assoc-in tila
+                                                                                                                             [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]
+                                                                                                                             (cond-> {:kuluva-hoitokausi :aloittamatta}
+                                                                                                                                     (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
+                                                                                                           :aseta (fn [tila rahavarausten-tilat]
+                                                                                                                    (assoc-in tila
+                                                                                                                              [:gridit :suunnitelmien-tila :hankintakustannukset :toimenpiteet toimenpide :aggregate]
+                                                                                                                              (aggregaatin-tila (map val rahavarausten-tilat))))}}
+                                                    (reduce (fn [rahavarauksien-haut rahavaraus]
+                                                              (merge rahavarauksien-haut
+                                                                     {(keyword (str "rahavaraus-" rahavaraus "-" toimenpide "-seuranta")) (case rahavaraus
+                                                                                                                                            :kokonaishintainen-ja-lisatyo (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :suunnittellut-hankinnat toimenpide])
+                                                                                                                                            :akillinen-hoitotyo (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "akillinen-hoitotyo"])
+                                                                                                                                            :vahinkojen-korjaukset (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "vahinkojen-korjaukset"])
+                                                                                                                                            :muut-rahavaraukset (rahavarauksen-rajapinta-asetukset toimenpide rahavaraus [:domain :rahavaraukset toimenpide "muut-rahavaraukset"]))}))
+                                                            {}
+                                                            (toimenpiteen-rahavaraukset toimenpide))))
+                                           {}
+                                           toimenpiteet)
+                                   (reduce (fn [haut [h-avain id]]
+                                             (merge haut
+                                                    {(keyword (str "hallinnollinen-" id "-seuranta")) (if (= h-avain :johto-ja-hallintokorvaus)
+                                                                                                        {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]]
+                                                                                                         :init (fn [tila]
+                                                                                                                 (update-in tila
+                                                                                                                            [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
+                                                                                                                            merge
+                                                                                                                            (cond-> {:kuluva-hoitokausi :aloittamatta}
+                                                                                                                                    (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi :aloittamatta))))
+                                                                                                         :aseta (fn [tila johto-ja-hallintokorvauksien-yhteenvedot]
+                                                                                                                  (let [korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle (reduce-kv (fn [tilat _ v]
+                                                                                                                                                                                               (let [maksukausien-arvot-ensimmaiselle-hoitokaudelle (keep (fn [[maksukausi hoitokausien-arvot]]
+                                                                                                                                                                                                                                                            (let [seurataan-ennen-urakkaa-arvoja? (and (nil? maksukausi) (= 1 ensimmainen-hoitokauden-numero))]
+                                                                                                                                                                                                                                                              (if seurataan-ennen-urakkaa-arvoja?
+                                                                                                                                                                                                                                                                (first hoitokausien-arvot)
+                                                                                                                                                                                                                                                                (get hoitokausien-arvot (dec ensimmainen-hoitokauden-numero)))))
+                                                                                                                                                                                                                                                          v)
+                                                                                                                                                                                                     maksukausien-arvot-seuraavalle-hoitokaudelle (when (not viimeinen-hoitokausi?)
+                                                                                                                                                                                                                                                    (map (fn [[_ hoitokausien-arvot]]
+                                                                                                                                                                                                                                                           (get hoitokausien-arvot (dec toisen-hoitokauden-numero)))
+                                                                                                                                                                                                                                                         v))]
+                                                                                                                                                                                                 (cond-> (update tilat :ensimmainen concat maksukausien-arvot-ensimmaiselle-hoitokaudelle)
+                                                                                                                                                                                                         (not viimeinen-hoitokausi?) (update :toinen concat maksukausien-arvot-seuraavalle-hoitokaudelle))))
+                                                                                                                                                                                             {:ensimmainen []
+                                                                                                                                                                                              :toinen []}
+                                                                                                                                                                                             johto-ja-hallintokorvauksien-yhteenvedot)]
+                                                                                                                    (update-in tila
+                                                                                                                               [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :johto-ja-hallintokorvaus]
+                                                                                                                               (fn [hoitokausien-tila]
+                                                                                                                                 (cond-> (assoc hoitokausien-tila :kuluva-hoitokausi (suunnitelman-tila (get korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :ensimmainen) nil))
+                                                                                                                                         (not viimeinen-hoitokausi?) (assoc :seuraava-hoitokausi (suunnitelman-tila (get korvauksien-arvot-ensimmaiselle-ja-toiselle-hoitokaudelle :toinen) nil)))))))}
+                                                                                                        (hallinnollisten-rajapinta-asetukset h-avain))}))
+                                           {}
+                                           hallinnollisten-idt)))))
 
 (def suunnittellut-hankinnat-rajapinta (merge {:otsikot any?
                                                :yhteensa any?
@@ -1731,7 +1801,7 @@
         (paivita-summarivin-osa-automaattisesti! [summa-rivin-index yhteensa-otsikon-index] hoitokaudet-yhteensa)
         (paivita-summarivin-osa-automaattisesti! [summa-rivin-index indeksikorjattu-otsikon-index] indeksikorjattu-kaikki-kaudet-yhteensa))))
 
-(defn suunnitelman-osat
+#_(defn suunnitelman-osat
   [paivitetyt-taulukot-instanssi kuluva-hoitokausi suunnitelmien-tila-taulukko
    entiset-tilat
    {:keys [valinnat toimenpiteet toimenpiteet-laskutukseen-perustuen rahavaraukset]}
@@ -2027,33 +2097,42 @@
 (extend-protocol tuck/Event
   TaulukoidenVakioarvot
   (process-event [_ app]
-    (-> app
-        (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                                                :yhteenveto {:nimi "Määrämitattavat"}
-                                                                :yhteensa {:nimi "Yhteensä"}
-                                                                :kuukausitasolla? false})
-        (assoc-in [:gridit :rahavaraukset] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                            :yhteensa {:nimi "Yhteensä"}})
-        (assoc-in [:gridit :erillishankinnat] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                               :yhteenveto {:nimi "Erillishankinnat"}
-                                               :yhteensa {:nimi "Yhteensä"}
-                                               :kuukausitasolla? false})
-        (assoc-in [:gridit :johto-ja-hallintokorvaukset] {:otsikot {:toimenkuva "Toimenkuva" :tunnit "Tunnit/kk, h" :tuntipalkka "Tuntipalkka, €" :yhteensa "Yhteensä/kk" :kk-v "kk/v"}
-                                                          :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
-                                                                                (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (toimenkuva-formatoitu toimenkuva-kuvaus)))
-                                                                              {}
-                                                                              johto-ja-hallintokorvaukset-pohjadata)})
-        (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto] {:otsikot {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
-        (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                                      :yhteensa {:nimi "Yhteensä"}})
-        (assoc-in [:gridit :toimistokulut] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                            :yhteenveto {:nimi "Toimistokulut, Pientarvikevarasto"}
-                                            :yhteensa {:nimi "Yhteensä"}
-                                            :kuukausitasolla? false})
-        (assoc-in [:gridit :hoidonjohtopalkkio] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
-                                                 :yhteenveto {:nimi "Hoidonjohtopalkkio"}
+    (let [tilan-hallinnollisten-nimet {:erillishankinnat "Erillishankinnat"
+                                       :johto-ja-hallintokorvaus "Johto- ja hallintokorvaus"
+                                       :toimistokulut "Toimistokulut"
+                                       :hoidonjohtopalkkio "Hoidonjohtopalkkio"}
+          app (reduce (fn [app [h-avain _]]
+                        (assoc-in app [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet h-avain :nimi] (get tilan-hallinnollisten-nimet h-avain) ))
+                      app
+                      hallinnollisten-idt)]
+      (-> app
+          (assoc-in [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :nimi] "Hallinnolliset toimenteet")
+          (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                                                  :yhteenveto {:nimi "Määrämitattavat"}
+                                                                  :yhteensa {:nimi "Yhteensä"}
+                                                                  :kuukausitasolla? false})
+          (assoc-in [:gridit :rahavaraukset] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                              :yhteensa {:nimi "Yhteensä"}})
+          (assoc-in [:gridit :erillishankinnat] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                                 :yhteenveto {:nimi "Erillishankinnat"}
                                                  :yhteensa {:nimi "Yhteensä"}
-                                                 :kuukausitasolla? false})))
+                                                 :kuukausitasolla? false})
+          (assoc-in [:gridit :johto-ja-hallintokorvaukset] {:otsikot {:toimenkuva "Toimenkuva" :tunnit "Tunnit/kk, h" :tuntipalkka "Tuntipalkka, €" :yhteensa "Yhteensä/kk" :kk-v "kk/v"}
+                                                            :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
+                                                                                  (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (toimenkuva-formatoitu toimenkuva-kuvaus)))
+                                                                                {}
+                                                                                johto-ja-hallintokorvaukset-pohjadata)})
+          (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto] {:otsikot {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
+          (assoc-in [:gridit :suunnittellut-hankinnat] {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                                        :yhteensa {:nimi "Yhteensä"}})
+          (assoc-in [:gridit :toimistokulut] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                              :yhteenveto {:nimi "Toimistokulut, Pientarvikevarasto"}
+                                              :yhteensa {:nimi "Yhteensä"}
+                                              :kuukausitasolla? false})
+          (assoc-in [:gridit :hoidonjohtopalkkio] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+                                                   :yhteenveto {:nimi "Hoidonjohtopalkkio"}
+                                                   :yhteensa {:nimi "Yhteensä"}
+                                                   :kuukausitasolla? false}))))
   FiltereidenAloitusarvot
   (process-event [_ app]
     (-> app
@@ -2966,7 +3045,7 @@
   PaivitaSuunnitelmienTila
   (process-event [{:keys [paivitetyt-taulukot]} {:keys [kuluva-hoitokausi suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat
                                                         hankintakustannukset hallinnolliset-toimenpiteet] :as app}]
-    (let [paivitetyt-taulukot-instanssi @paivitetyt-taulukot
+    app #_(let [paivitetyt-taulukot-instanssi @paivitetyt-taulukot
           tilat (suunnitelman-osat paivitetyt-taulukot-instanssi kuluva-hoitokausi suunnitelmien-tila-taulukko suunnitelmien-tila-taulukon-tilat hankintakustannukset hallinnolliset-toimenpiteet)
           suunnitelmien-tila-taulukko (paivita-suunnitelmien-tila-taulukko suunnitelmien-tila-taulukko paivitetyt-taulukot-instanssi tilat kuluva-hoitokausi)]
       (swap! paivitetyt-taulukot (fn [edelliset-taulukot]

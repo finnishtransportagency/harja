@@ -572,7 +572,7 @@
                                                         :nimi ::hallinnolliset-toimenpiteet
                                                         :luokat #{"suunnitelma-rivi"}
                                                         :osat [{:tyyppi :nappi
-                                                                :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                                                :toiminnot {:on-click (fn [_] (mene-idlle "hallinnolliset-toimenpiteet"))}
                                                                 :luokat #{"table-default" "linkki"}}
                                                                {:tyyppi :ikoni
                                                                 #_#_:ikoni ikonit/remove
@@ -588,7 +588,7 @@
                                                                :nimi id
                                                                :luokat #{"suunnitelma-rivi"}
                                                                :osat [{:tyyppi :nappi
-                                                                       :toiminnot {:on-click (fn [_] (mene-idlle "hankintakustannukset"))}
+                                                                       :toiminnot {:on-click (fn [_] (mene-idlle id))}
                                                                        :luokat #{"table-default" "linkki"}}
                                                                       {:tyyppi :ikoni
                                                                        #_#_:ikoni ikonit/remove
@@ -622,7 +622,7 @@
                                                [::g-pohjat/data ::hankintakustannukset] {:rajapinta :hankintakustannukset
                                                                                          :solun-polun-pituus 1
                                                                                          :datan-kasittely identity}
-                                               [::g-pohjat/data :hallinnolliset-toimenpiteet] {:rajapinta :hallinnolliset-toimenpiteet
+                                               [::g-pohjat/data ::hallinnolliset-toimenpiteet] {:rajapinta :hallinnolliset-toimenpiteet
                                                                                          :solun-polun-pituus 1
                                                                                          :datan-kasittely identity}}
                                               (reduce (fn [grid-kasittelijat toimenpide]
@@ -1470,7 +1470,7 @@
                                                                              (when (instance? solu/Syote osa)
                                                                                :maara))
                                                                            (grid/hae-grid osat :lapset)))}
-        g (maarataulukon-pohja taulukon-id
+        g (maarataulukon-pohja (t/hallinnollisten-idt polun-osa) #_taulukon-id
                                polun-osa
                                (fn [g]
                                  (swap! tila/suunnittelu-kustannussuunnitelma
@@ -2165,7 +2165,7 @@
                         :id "suunnitelmien-taulukko"
                         :class #{"suunnitelma-ikonien-varit"}})))
 
-(defn suunnitelman-paivitettavat-osat
+#_(defn suunnitelman-paivitettavat-osat
   [edelliset-taulukot vanhat-hankintakustannukset uudet-hankintakustannukset
    vanhat-hallinnolliset-toimenpiteet uudet-hallinnolliset-toimenpiteet]
   (let [toimenpide-muutokset (fn [hankinnat uudet-toimenpiteet vanhat-toimenpiteet muutoksen-avain]
