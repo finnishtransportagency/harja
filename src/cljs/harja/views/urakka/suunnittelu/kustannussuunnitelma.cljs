@@ -493,6 +493,7 @@
 (defn suunnitelmien-tila-grid []
   (let [taulukon-id "suunnitelmien-taulukko"
         kuluva-hoitokauden-numero (-> @tila/suunnittelu-kustannussuunnitelma :domain :kuluva-hoitokausi :hoitokauden-numero)
+        viimeinen-vuosi? (= kuluva-hoitokauden-numero 5)
         mene-idlle (fn [id]
                      (.scrollIntoView (dom/getElement id)))
         g (g-pohjat/uusi-taulukko {:header [{:tyyppi :oma
@@ -500,13 +501,18 @@
                                              :leveys 9}
                                             {:tyyppi :teksti
                                              :leveys 1
-                                             :luokat #{"table-default" "lihavoitu" "keskita" "alas"}}
+                                             :luokat #{"table-default" "keskita" "alas"
+                                                       (when-not viimeinen-vuosi?
+                                                         "aktiivinen-vuosi")}}
                                             {:tyyppi :teksti
                                              :leveys 1
-                                             :luokat #{"table-default" "lihavoitu" "keskita" "alas"}}
+                                             :luokat #{"table-default" "keskita" "alas"
+                                                       (when viimeinen-vuosi?
+                                                         "aktiivinen-vuosi")}}
                                             {:tyyppi :teksti
                                              :leveys 1
                                              :luokat #{"table-default" "harmaa-teksti"}}]
+                                   :header-luokat #{"suunnitelma-ikonien-varit"}
                                    :header-korkeus "auto"
                                    :body (vec
                                            (concat [{:tyyppi :rivi
@@ -589,7 +595,7 @@
                                                                :luokat #{"suunnitelma-rivi"}
                                                                :osat [{:tyyppi :nappi
                                                                        :toiminnot {:on-click (fn [_] (mene-idlle id))}
-                                                                       :luokat #{"table-default" "linkki"}}
+                                                                       :luokat #{"table-default" "linkki" "solu-sisenna-1"}}
                                                                       {:tyyppi :ikoni
                                                                        #_#_:ikoni ikonit/remove
                                                                        :luokat #{"table-default" "keskita"}}
@@ -601,7 +607,7 @@
                                                                        :fmt yhteenveto-format}]})
                                                             t/hallinnollisten-idt)))))
                                    :taulukon-id taulukon-id
-                                   :luokat #{"suunnitelma-ikonien-varit"}
+                                   :body-luokat #{"suunnitelma-ikonien-varit"}
 
                                    :root-asetus! (fn [g] (e! (tuck-apurit/->MuutaTila [:gridit :suunnitelmien-tila :grid] g)))
                                    :root-asetukset {:haku (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnitelmien-tila :grid]))
@@ -614,7 +620,7 @@
                                        (t/suunnitelmien-tila-dr kuluva-hoitokauden-numero)
                                        (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                                                      :solun-polun-pituus 1
-                                                                     :jarjestys [[:nimi :maara :yhteensa :indeksikorjattu]]
+                                                                     :jarjestys [[:selite :kuluva-hoitovuosi :seuraava-hoitovuosi :ajanjakso]]
                                                                      :datan-kasittely (fn [otsikot]
                                                                                         (mapv (fn [otsikko]
                                                                                                 otsikko)
@@ -3702,9 +3708,9 @@
   [e*! app]
   (komp/luo
     (komp/piirretty (fn [_]
+                      (e! (t/->Hoitokausi))
                       (e! (t/->TaulukoidenVakioarvot))
                       (e! (t/->FiltereidenAloitusarvot))
-                      (e! (t/->Hoitokausi))
                       (e! (t/->YleisSuodatinArvot))
                       (e! (t/->Oikeudet))
                       (e! (tuck-apurit/->AloitaViivastettyjenEventtienKuuntelu 1000 (:kaskytyskanava app)))

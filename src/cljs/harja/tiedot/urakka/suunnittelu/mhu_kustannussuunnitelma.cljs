@@ -450,9 +450,11 @@
                                                                                                                                                                                                                                                                 (get hoitokausien-arvot (dec ensimmainen-hoitokauden-numero)))))
                                                                                                                                                                                                                                                           v)
                                                                                                                                                                                                      maksukausien-arvot-seuraavalle-hoitokaudelle (when (not viimeinen-hoitokausi?)
-                                                                                                                                                                                                                                                    (map (fn [[_ hoitokausien-arvot]]
-                                                                                                                                                                                                                                                           (get hoitokausien-arvot (dec toisen-hoitokauden-numero)))
-                                                                                                                                                                                                                                                         v))]
+                                                                                                                                                                                                                                                    (keep (fn [[maksukausi hoitokausien-arvot]]
+                                                                                                                                                                                                                                                            (let [ennen-urakkaa? (nil? maksukausi)]
+                                                                                                                                                                                                                                                              (when-not ennen-urakkaa?
+                                                                                                                                                                                                                                                                (get hoitokausien-arvot (dec toisen-hoitokauden-numero)))))
+                                                                                                                                                                                                                                                          v))]
                                                                                                                                                                                                  (cond-> (update tilat :ensimmainen concat maksukausien-arvot-ensimmaiselle-hoitokaudelle)
                                                                                                                                                                                                          (not viimeinen-hoitokausi?) (update :toinen concat maksukausien-arvot-seuraavalle-hoitokaudelle))))
                                                                                                                                                                                              {:ensimmainen []
@@ -2101,11 +2103,20 @@
                                        :johto-ja-hallintokorvaus "Johto- ja hallintokorvaus"
                                        :toimistokulut "Toimistokulut"
                                        :hoidonjohtopalkkio "Hoidonjohtopalkkio"}
+          kuluva-hoitokauden-numero (get-in app [:domain :kuluva-hoitokausi :hoitokauden-numero])
+          viimeinen-vuosi? (= 5 kuluva-hoitokauden-numero)
           app (reduce (fn [app [h-avain _]]
                         (assoc-in app [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet h-avain :nimi] (get tilan-hallinnollisten-nimet h-avain) ))
                       app
                       hallinnollisten-idt)]
       (-> app
+          (assoc-in [:gridit :suunnitelmien-tila :otsikot] {:kuluva-hoitovuosi (str (when-not viimeinen-vuosi?
+                                                                                      kuluva-hoitokauden-numero)
+                                                                                    ". vuosi")
+                                                            :seuraava-hoitovuosi (str (if viimeinen-vuosi?
+                                                                                        kuluva-hoitokauden-numero
+                                                                                        (inc kuluva-hoitokauden-numero))
+                                                                                      ". vuosi")})
           (assoc-in [:gridit :suunnitelmien-tila :hallinnolliset-toimenpiteet :nimi] "Hallinnolliset toimenteet")
           (assoc-in [:gridit :laskutukseen-perustuvat-hankinnat] {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
                                                                   :yhteenveto {:nimi "Määrämitattavat"}

@@ -186,7 +186,7 @@
     :oma (constructor asetukset)
     (solu/tyhja)))
 
-(defn otsikkorivi-pohja [otsikkorivi header-korkeus sarakkeiden-maara]
+(defn otsikkorivi-pohja [otsikkorivi header-korkeus header-luokat sarakkeiden-maara]
   (let [vakioleveys 1
         suhteelliset-leveydet-yhteensa (reduce (fn [summa {:keys [leveys] :or {leveys vakioleveys}}]
                                                  (+ summa leveys))
@@ -204,7 +204,7 @@
                                                               header-korkeus
                                                               korkeudet))))
                 :osat (mapv tee-osa otsikkorivi)
-                :luokat #{"salli-ylipiirtaminen"}}
+                :luokat (clj-set/union #{"salli-ylipiirtaminen"} header-luokat)}
                [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}])))
 
 (defn data-pohja [{:keys [nimi tyyppi osat luokat] :as body} sarakkeiden-maara]
@@ -250,7 +250,7 @@
               :osat (mapv tee-osa footer)}
              [{:sarakkeet [0 sarakkeiden-maara] :rivit [0 1]}]))
 
-(defn uusi-taulukko [{:keys [taulukon-id root-asetukset root-asetus! header body footer header-korkeus]}]
+(defn uusi-taulukko [{:keys [taulukon-id root-asetukset root-asetus! header body footer header-korkeus header-luokat body-luokat]}]
   {:pre [(vector? header)
          (every? map? header)
 
@@ -262,11 +262,11 @@
              (and (vector? footer)
                   (every? map? footer)))]}
   (let [sarakkeiden-maara (count header)
-        otsikko-ja-data [(otsikkorivi-pohja header header-korkeus sarakkeiden-maara)
+        otsikko-ja-data [(otsikkorivi-pohja header header-korkeus header-luokat sarakkeiden-maara)
                          (grid/grid {:nimi ::data
                                      :alueet [{:sarakkeet [0 1] :rivit [0 1]}]
                                      :koko konf/auto
-                                     :luokat #{"salli-ylipiirtaminen"}
+                                     :luokat (clj-set/union #{"salli-ylipiirtaminen"} body-luokat)
                                      :osat (mapv #(data-pohja % sarakkeiden-maara) body)})]
         g (grid/grid {:nimi ::root
                       :alueet [{:sarakkeet [0 1] :rivit [0 3]}]

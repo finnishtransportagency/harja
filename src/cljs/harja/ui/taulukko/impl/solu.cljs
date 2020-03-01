@@ -427,10 +427,10 @@
     (let [{:keys [id class]} (:parametrit this)
           taman-data (taman-derefable this)
           {:keys [ikoni teksti]} @taman-data]
-      [:div.osa.osa-ikoni {:class (when class
-                                    (apply str (interpose " " class)))
-                           :id id
-                           :data-cy (::nimi this)}
+      [:div.solu.solu-ikoni {:class (when class
+                                      (apply str (interpose " " class)))
+                             :id id
+                             :data-cy (::nimi this)}
        [:span (when (fn? ikoni)
                 [ikoni])
         teksti]]))
