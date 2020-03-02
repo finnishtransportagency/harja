@@ -426,7 +426,8 @@
                                                                     {:fn paallystysurakan-tarkka-aikataulu
                                                                      :nakyma (:nakyma optiot)
                                                                      :voi-muokata-paallystys? voi-muokata-paallystys?
-                                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?})}
+                                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
+                                                                    true)}
      [{:tyyppi :vetolaatikon-tila :leveys 2}
       {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
        :pituus-max 128 :muokattava? voi-muokata-paallystys?}
