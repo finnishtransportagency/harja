@@ -111,7 +111,7 @@
                    :poistettu true]
         uudelleen-poistettavat-paikkauskohteet (q-paikkaus/hae-paikkaukset-paikkauskohde db hakuehdot)];; TODO: hae virheeseen menneet paikkaukset
   (doseq [paikkauskohde uudelleen-poistettavat-paikkauskohteet]
-    (poista-paikkauskohde integraatioloki db asetukset (:id paikkauskohde)))))
+    (poista-paikkauskohde integraatioloki db asetukset (:urakka-id paikkauskohde) (:id paikkauskohde)))))
 
 (defrecord YhaPaikkaukset [asetukset]
   component/Lifecycle
