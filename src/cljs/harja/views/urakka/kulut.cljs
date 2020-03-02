@@ -109,22 +109,10 @@
                     (if (nil? a)
                       "Ei valittu"
                       (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
-   (flatten
-     (mapv
-       (fn [kk]
-         (map
-           (fn [hv]
-             (keyword
-               (str
-                 (name kk)
-                 "/"
-                 (name hv))))
-           (sort #{:1-hoitovuosi
-                   :2-hoitovuosi
-                   :3-hoitovuosi
-                   :4-hoitovuosi
-                   :5-hoitovuosi})))
-       kuukaudet))])
+   (for [kk kuukaudet
+         hv (range 1 6)]
+     (keyword
+      (str (name kk) "/" hv "-hoitovuosi")))])
 
 (defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
   (let [{:keys [validius]} (meta lomake)
