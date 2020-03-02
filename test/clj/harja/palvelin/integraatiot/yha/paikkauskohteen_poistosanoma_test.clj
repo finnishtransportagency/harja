@@ -11,16 +11,11 @@
 
 (deftest tarkista-poistosanoman-muodostus
   (let [db (tietokanta/luo-tietokanta testitietokanta)
-        _ (u "UPDATE paikkaus SET poistettu = TRUE where \"paikkauskohde-id\" = 1;")
+        _ (u "UPDATE paikkauskohde SET poistettu = TRUE where id = 1;")
         sanoma (paikkauskohteen-poistosanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
         sanoma-avaimilla (walk/keywordize-keys (cheshire/decode sanoma))]
-    (is (= sanoma sanoma-oikein) "Oikeanlainen sanoma palautuu.")
-    (println "sanoma "  sanoma-avaimilla)
-    (println "sanoma " (:poistettavat-paikkaukset sanoma-avaimilla))
-    (is (= 6 (-> (first (:paikkauskohteet sanoma-avaimilla))
-                                            (:paikkauskohde)
-                                            (:paikkaukset)
-                                            count)) "Poistettu paikkaus ei ole palautunut.")))
+    (is (= sanoma-oikein sanoma) "Oikeanlainen sanoma palautuu.")
+    (is (= 6 (count (:poistettavat-paikkaukset sanoma-avaimilla))) "Poistettavia paikkauksia on oikea määrä.")))
 
 (deftest ei-voi-poistaa-vaaran-urakan-kohteita
   (let [db (tietokanta/luo-tietokanta testitietokanta)] ;; kohde 1 on oulun urakan kohde]

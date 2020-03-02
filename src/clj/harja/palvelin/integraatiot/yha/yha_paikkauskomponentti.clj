@@ -19,9 +19,9 @@
 (def +virhe-yha-viestin-lukemisessa+ ::yha-virhe-viestin-lukemisessa)
 
 (defprotocol PaikkaustietojenLahetys
-  (laheta-paikkauskohde [this urakka tunniste])
+  (laheta-paikkauskohde [this urakka kohde])
   (laheta-paikkauskohteet-uudelleen [this])
-  (poista-paikkauskohde [this tunniste])
+  (poista-paikkauskohde [this urakka kohde])
   (poista-paikkauskohteet-uudelleen [this]))
 
 (defn paivita-lahetyksen-tila
@@ -91,7 +91,7 @@
   YHA:aan lähetetään kohteen kaikkien paikkausten sekä kohteen itsensä harja-id:t.
   Yksittäisen paikkauksen poisto tapahtuu lähettämällä päivitetty paikkauskohde uudelleen YHA:aan.
   Tämä funktio poistaa paikkauskohteen YHA:sta kokonaisuudessaan."
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} kohde-id]
+  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "laheta-paikkauskohde" nil
     (fn [konteksti]
@@ -100,7 +100,7 @@
                             :url            url
                             :kayttajatunnus kayttajatunnus
                             :salasana       salasana}
-            viestisisalto (paikkauskohteen-poistosanoma/muodosta db kohde-id)
+            viestisisalto (paikkauskohteen-poistosanoma/muodosta db urakka-id kohde-id)
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)]
         (kasittele-paikkauskohteen-poiston-vastaus body kohde-id)))))
 
@@ -124,7 +124,7 @@
     (laheta-paikkauskohde (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
   (laheta-paikkauskohteet-uudelleen [this]
     (laheta-paikkauskohteet-uudelleen (:integraatioloki this) (:db this) asetukset))
-  (poista-paikkauskohde [this kohde-id]
-    (poista-paikkauskohde (:integraatioloki this) (:db this) asetukset kohde-id))
+  (poista-paikkauskohde [this urakka-id kohde-id]
+    (poista-paikkauskohde (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
   (poista-paikkauskohteet-uudelleen [this ]
     (poista-paikkauskohteet-uudelleen (:integraatioloki this) (:db this) asetukset)))
