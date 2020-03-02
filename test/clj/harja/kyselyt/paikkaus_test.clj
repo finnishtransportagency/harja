@@ -39,7 +39,7 @@
                                         ::paikkaus/muotoarvo "Muotoarvo"
                                         ::paikkaus/lisa-aineet "Lisäaineet"
                                         ::paikkaus/pitoisuus 3.2M
-                                        ::paikkaus/sideainetyyppi "Sideaine"}]
+                                        ::paikkaus/sideainetyyppi "70/100"}]
    ::paikkaus/tienkohdat [{::paikkaus/ajourat [1 2]
                                        ::paikkaus/ajorata 1
                                        ::paikkaus/ajouravalit [1]
@@ -125,7 +125,7 @@
                ::paikkaus/muotoarvo "Muotoarvo"
                ::paikkaus/lisa-aineet "Lisäaineet"
                ::paikkaus/pitoisuus 3.2M
-               ::paikkaus/sideainetyyppi "Sideaine"}]
+               ::paikkaus/sideainetyyppi "70/100"}]
              [(dissoc (first materiaalit)
                       ::paikkaus/materiaali-id)])
           "Oletetut materiaalit löytyvät")
