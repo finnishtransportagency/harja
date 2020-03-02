@@ -1,5 +1,11 @@
 [
   {
+    "date": "2020-3-3",
+    "title": "MHU-urakoiden sanktiolajit lisätty",
+    "body": 
+    "<p>MHU-urakoissa on tuttujen sanktiolajien lisäksi käytössä uudet sanktiolajit <br> <ul><li>Lupaussanktio<li>Vastuuhenkilöiden vaihtosanktio<li>Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta<li>Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta</ul> <br>Näille sanktiolajeille ei valita sanktiotyyppiä.</p>"
+  },
+  {
     "date": "2020-2-20",
     "title": "Varusteiden käsittelyyn on tehty parannuksia",
     "body": 
