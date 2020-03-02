@@ -114,6 +114,13 @@
    [harja.ui.valinnat/varustetoteuman-tyyppi
     (r/wrap (:tyyppi valinnat)
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]
+   [yleiset/pudotusvalikko
+    "Lähetyksen tila"
+    {:valinta (:virheelliset-ainoastaan? valinnat)
+     :format-fn #(if % "Vain virheelliset" "Kaikki")
+     :valitse-fn #(e! (v/->ValitseVarusteNaytetaanVirheelliset %))}
+    [false true]]
+
    [:span
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko "Tietolaji"]
@@ -230,6 +237,8 @@
          :otsikko "Tien puoli"
          :tyyppi :valinta
          :valinnat (tierekisteri-varusteet/tien-puolet tietolaji)
+         :valinta-nayta (fn [arvo]
+                          (str arvo " " (tierekisteri-varusteet/puoli->selitys arvo)))
          :pituus 1
          :pakollinen? muokattava?
          :muokattava? (constantly muokattava?)})
