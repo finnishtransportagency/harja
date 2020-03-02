@@ -345,7 +345,7 @@
                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :laskut (component/using
                 (laskut/->Laskut)
-                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                [:http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :excel-vienti])
       :aliurakoitsijat (component/using
                 (aliurakoitsijat/->Aliurakoitsijat)
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])

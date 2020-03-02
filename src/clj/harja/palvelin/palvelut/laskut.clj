@@ -1,5 +1,7 @@
 (ns harja.palvelin.palvelut.laskut
-  "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
+  "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU).
+
+  OIkeampi termi olisi kulut."
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt
              [laskut :as q]
@@ -179,41 +181,51 @@
 
   (luo-tai-paivita-laskuerittely db user urakka-id laskuerittely))
 
+(defn vie-pdf [{:keys [tiedot]}] nil)
+
+(defn vie-excel [{:keys [tiedot]}] nil)
 
 (defrecord Laskut []
   component/Lifecycle
   (start [this]
-    (let [db (:db this)
-          http (:http-palvelin this)]
-      (julkaise-palvelu http :laskut
+    (let [{:keys [db http-palvelin pdf-vienti excel-vienti]} this]
+      (julkaise-palvelu http-palvelin :laskut
                         (fn [user hakuehdot]
                           (hae-urakan-laskut db user hakuehdot)))
-      (julkaise-palvelu http :laskuerittelyt
+      (julkaise-palvelu http-palvelin :laskuerittelyt
                         (fn [user hakuehdot]
                           (hae-urakan-laskuerittelyt db user hakuehdot)))
-      (julkaise-palvelu http :kaikki-laskuerittelyt
+      (julkaise-palvelu http-palvelin :kaikki-laskuerittelyt
                         (fn [user hakuehdot]
                           (hae-kaikki-urakan-laskuerittelyt db user hakuehdot)))
-      (julkaise-palvelu http :lasku
+      (julkaise-palvelu http-palvelin :lasku
                         (fn [user hakuehdot]
                           (hae-laskuerittely db user hakuehdot)))
-      (julkaise-palvelu http :tallenna-lasku
+      (julkaise-palvelu http-palvelin :tallenna-lasku
                         (fn [user laskuerittely]
                           (tallenna-lasku db user laskuerittely)))
-      (julkaise-palvelu http :poista-lasku
+      (julkaise-palvelu http-palvelin :poista-lasku
                         (fn [user hakuehdot]
                           (poista-lasku db user hakuehdot)))
-      (julkaise-palvelu http :poista-laskurivi
+      (julkaise-palvelu http-palvelin :poista-laskurivi
                         (fn [user hakuehdot]
                           (poista-laskun-kohdistus db user hakuehdot)))
+      (julkaise-palvelu http-palvelin :vie-kulujen-pdf
+                        (fn [user optiot]
+                          (vie-pdf optiot)))
+      (julkaise-palvelu http-palvelin :vie-kulujen-excel
+                        (fn [user optiot]
+                          (vie-excel optiot)))
       this))
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :laskut)
-    (poista-palvelut (:http-palvelin this) :lasku)
-    (poista-palvelut (:http-palvelin this) :laskuerittelyt)
-    (poista-palvelut (:http-palvelin this) :kaikki-laskuerittelyt)
-    (poista-palvelut (:http-palvelin this) :tallenna-lasku)
-    (poista-palvelut (:http-palvelin this) :poista-lasku)
-    (poista-palvelut (:http-palvelin this) :poista-laskurivi)
+    (poista-palvelut (:http-palvelin this) :laskut
+                     :lasku
+                     :laskuerittelyt
+                     :kaikki-laskuerittelyt
+                     :tallenna-lasku
+                     :poista-lasku
+                     :poista-laskurivi
+                     :vie-kulujen-pdf
+                     :vie-kulujen-excel)
     this))
