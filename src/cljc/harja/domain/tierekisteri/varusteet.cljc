@@ -23,7 +23,8 @@
    "tl506" "Liikennemerkki"
    "tl522" "Reunakivet"
    "tl513" "Reunapaalut"
-   "tl519" "Puomit ja kulkuaukot"
+   "tl519" "Huoltoaukot"
+   "tl520" "Puomit"
    "tl505" "Jätehuolto"
    "tl504" "WC"
    "tl518" "Kivetyt alueet"
@@ -44,7 +45,8 @@
    "Liikennemerkki" "tl506"
    "Reunakivet" "tl522"
    "Reunapaalut" "tl513"
-   "Puomit ja kulkuaukot" "tl519"
+   "Huoltoaukot" "tl519"
+   "Puomit" "tl520"
    "Jätehuolto" "tl505"
    "WC" "tl504"
    "Kivetyt alueet" "tl518"
@@ -56,6 +58,7 @@
    "Hiekkalaatikot" "tl516"
    "Viherkuviot" "tl524"
    "Tekninen piste" "tl523"})
+
 (def puolet
   {0 "Määrittämätön"
    1 "Oikea"
@@ -82,6 +85,7 @@
     "tl513" [1 2 3]
     "tl196" [1 2 7]
     "tl519" [1 2 3]
+    "tl520" [1 2 3 9]
     "tl505" [1 2 7 9]
     "tl195" [1 2 7 9]
     "tl504" [1 2 7 9]
@@ -127,6 +131,7 @@
                "tl516",
                "tl517",
                "tl519",
+               "tl520",
                "tl523",
                "tl524",
                "tl703"} tietolaji))
