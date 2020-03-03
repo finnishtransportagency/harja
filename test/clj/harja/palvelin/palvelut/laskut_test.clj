@@ -81,6 +81,7 @@
    :erapaiva      #inst "2021-12-15T21:00:00.000-00:00"
    :kokonaissumma 5555.55
    :tyyppi        "laskutettava"
+   :suorittaja-nimi "Ali Urakoitsija Ky"
    :kohdistukset  [{:kohdistus-id        5
                     :rivi                2
                     :summa               3333.33
