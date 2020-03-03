@@ -162,13 +162,9 @@
                                    (str (some #(when (= tpi (:toimenpideinstanssi %)) (:toimenpide %)) toimenpiteet))
                                    {:class #{"col-xs-offset-1 col-xs-4"}}]
                                   [osa/->Teksti
-                                   (keyword (gensym "lbl-yht-"))
-                                   (str "Yhteensä ")
-                                   {:class #{"col-xs-offset-3 col-xs-1"}}]
-                                  [osa/->Teksti
                                    (keyword (gensym "lbl-sum-"))
-                                   (str (reduce #(+ %1 (:summa %2)) 0 rivit))
-                                   {:class #{"col-xs-1"}}])
+                                   (fmt/euro (reduce #(+ %1 (:summa %2)) 0 rivit))
+                                   {:class #{"col-xs-offset-4" "col-xs-1"}}])
                    taulukko)]
     (loop [taulukko taulukko
            parillinen? true
@@ -259,8 +255,7 @@
                                                                       :pelkka-palautus? true
                                                                       :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin"}}})
                                          {:otsikko "Koontilasku nro " :arvo laskun-nro :luokka #{"col-xs-4"}}
-                                         {:otsikko "Yhteensä " :arvo "" :luokka #{"col-xs-offset-6" "col-xs-1"}}
-                                         {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-1"}}))
+                                         {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-offset-7" "col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
                                  ;; pvm tulee muodossa kk/vv (esim. huhtikuu 2020 on "04/20")
