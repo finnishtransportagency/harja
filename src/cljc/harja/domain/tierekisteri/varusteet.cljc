@@ -60,9 +60,9 @@
   {0 "Määrittämätön"
    1 "Oikea"
    2 "Vasen"
-   3 "Ajoratojen välissä"
+   3 "Ajoratojen välissä (ajosuuntia erottavalla keskialueella)"
    7 "Tien päässä"
-   8 "Tien/ajoradan keskellä"
+   8 "Keskellä (ajoradalla tai sen yläpuolella)"
    9 "Tien päällä"})
 
 (defn puoli->selitys
