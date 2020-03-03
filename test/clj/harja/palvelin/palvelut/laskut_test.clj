@@ -29,7 +29,7 @@
    :erapaiva      #inst "2021-12-15T21:00:00.000-00:00"
    :kokonaissumma 1332
    :tyyppi        "laskutettava"
-   :suorittaja-nimi "Ali Urakoitsija Ky"
+   :suorittaja-nimi "Kaarinan Kadunkiillotus Oy"
    :kohdistukset  [{:kohdistus-id        nil
                     :rivi                1
                     :summa               666
@@ -100,6 +100,7 @@
    :erapaiva      #inst "2021-10-15T21:00:00.000-00:00"
    :kokonaissumma 666.66
    :tyyppi        "laskutettava"
+   :suorittaja-nimi "Äkkipika Oy"
    :kohdistukset  [{:kohdistus-id        nil
                     :rivi                1
                     :summa               666.66
@@ -119,6 +120,7 @@
    :erapaiva      #inst "2021-10-15T21:00:00.000-00:00"
    :kokonaissumma 666.66
    :tyyppi        "laskutettava"
+   :suorittaja-nimi "Kaarinan Kadunkiillotus Oy"
    :kohdistukset  [{:kohdistus-id        nil
                     :rivi                1
                     :summa               666.66
@@ -211,9 +213,15 @@
 
 
 (deftest paivita-maksuera-testi
-  (let [lasku-kokonaishintainen-tyo (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                :laskuerittely (assoc uusi-lasku :viite "1413418")})
-        lasku-akillinen-hoitotyo (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                :laskuerittely lasku-akillinen-hoitotyo})
-        lasku-muu (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava) {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                                                                                :laskuerittely lasku-muu})]))
+  (let [lasku-kokonaishintainen-tyo
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely (assoc uusi-lasku :viite "1413418")})
+        lasku-akillinen-hoitotyo
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely lasku-akillinen-hoitotyo})
+        lasku-muu
+        (kutsu-http-palvelua :tallenna-lasku (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :laskuerittely lasku-muu})]))
