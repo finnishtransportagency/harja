@@ -39,20 +39,6 @@
 (defrecord LataaLiite [id])
 (defrecord PoistaLiite [id])
 
-(defn validoi-lomake [lomake & kentat-ja-validaatiot]
-  (let [kentat-ja-validaatiot (partition 2 kentat-ja-validaatiot)
-        validaatiot (:validius (meta lomake))
-        validointi-reduseri (r/partial
-                              (fn [lomake kaikki [kentta validointi-fn]]
-                                (let [assoc-fn (if (vector? kentta) assoc-in assoc)
-                                      get-fn (if (vector? kentta) get-in get)]
-                                  (assoc-fn kaikki kentta (validointi-fn (get-fn lomake kentta)))))
-                              lomake)
-        lasketut-validaatiot (reduce validointi-reduseri
-                                     validaatiot
-                                     kentat-ja-validaatiot)]
-    (vary-meta lomake assoc :validius lasketut-validaatiot)))
-
 (defn parsi-summa [summa]
   (cond
     (re-matches #"\d+(?:\.?,?\d+)?" (str summa))
@@ -98,6 +84,8 @@
 
 (defn lomakkeen-paivitys
   [lomake polut-ja-arvot {:keys [jalkiprosessointi-fn] :as optiot} & args]
+  (.log js/console "lomakkeen-paivitys " (pr-str lomake) ", polut-ja-arvot: " (pr-str polut-ja-arvot))
+  (.log js/console "OPTIOT: " (pr-str optiot))
   (let [jalkiprosessointi (or jalkiprosessointi-fn
                               identity)]
     (jalkiprosessointi
@@ -122,6 +110,8 @@
       (partial p/aseta-arvo osa)
       avain-arvot)))
 
+
+;; FIXME: refaktoroi, mutaatio ja tiedon mankelointi samassa
 (defn- luo-kulutaulukko
   [{:keys [toimenpiteet tehtavaryhmat maksuerat]}]
   (let [e! (tuck/current-send-function)
@@ -363,8 +353,8 @@
     (-> app
         (assoc :kulut tulos
                :taulukko (p/paivita-taulukko!
-                           (luo-kulutaulukko app)
-                           (formatoi-tulos tulos)))
+                          (luo-kulutaulukko app)
+                          (formatoi-tulos tulos)))
         (update-in [:parametrit :haetaan] dec)))
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -500,8 +490,8 @@
                                                                                                      kulut)
                                                                                                    tulos)))
                                                                               (assoc a :taulukko (p/paivita-taulukko!
-                                                                                                   (luo-kulutaulukko a)
-                                                                                                   (formatoi-tulos (:kulut a)))
+                                                                                                  (luo-kulutaulukko a)
+                                                                                                  (formatoi-tulos (:kulut a)))
                                                                                        :syottomoodi false)
                                                                               (update a :lomake resetoi-kulut)))}]
                             :epaonnistui         ->KutsuEpaonnistui}))
