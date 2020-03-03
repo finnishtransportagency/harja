@@ -116,7 +116,7 @@
    (for [kk kuukaudet
          hv (range 1 6)]
      (keyword
-      (str (name kk) "/" hv "-hoitovuosi")))])
+       (str (name kk) "/" hv "-hoitovuosi")))])
 
 (defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
   (let [{:keys [validius]} (meta lomake)
@@ -149,11 +149,11 @@
        "Koontilaskun numero"
        :arvo laskun-numero
        :on-change #(paivitys-fn
-                    {:validoitava? true}
-                    :laskun-numero (let [num (-> % .-target .-value js/parseInt)]
-                                     (if (js/isNaN num)
-                                       nil
-                                       num)))]
+                     {:validoitava? true}
+                     :laskun-numero (let [num (-> % .-target .-value js/parseInt)]
+                                      (if (js/isNaN num)
+                                        nil
+                                        num)))]
       [kentat/vayla-lomakekentta
        "Kustannus € *"
        :class #{(str "input" (if (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) "" "-error") "-default") "komponentin-input"}
@@ -271,9 +271,9 @@
                                                     (vary-meta
                                                       lomake
                                                       lisaa-validointi
-                                                      [{:polku         [:kohdistukset kohdistukset-lkm :summa]
+                                                      [{:polku       [:kohdistukset kohdistukset-lkm :summa]
                                                         :validoinnit (:kulut/summa tila/validoinnit)}
-                                                       {:polku         [:kohdistukset kohdistukset-lkm :tehtavaryhma]
+                                                       {:polku       [:kohdistukset kohdistukset-lkm :tehtavaryhma]
                                                         :validoinnit (:kulut/tehtavaryhma tila/validoinnit)}]))
                                                   (fn [lomake]
                                                     (vary-meta
@@ -295,10 +295,13 @@
          "Lisää kohdennus"
          #(paivitys-fn
             {:jalkiprosessointi-fn (fn [{:keys [kohdistukset] :as lomake}]
-                                     (vary-meta lomake lisaa-validointi [{:polku         [:kohdistukset (count kohdistukset) :summa]
-                                                                          :validointi-fn (:summa tila/validoinnit)}
-                                                                         {:polku         [:kohdistukset (count kohdistukset) :tehtavaryhma]
-                                                                          :validointi-fn (:tehtavaryhma tila/validoinnit)}]))} :kohdistukset lisaa-kohdistus)
+                                     (loki/log "KOKO " lomake)
+                                     (let [i (dec (count kohdistukset))]
+                                       (loki/log "Count " i)
+                                       (vary-meta lomake lisaa-validointi [{:polku       [:kohdistukset i :summa]
+                                                                            :validoinnit (:summa tila/validoinnit)}
+                                                                           {:polku       [:kohdistukset i :tehtavaryhma]
+                                                                            :validoinnit (:tehtavaryhma tila/validoinnit)}])))} :kohdistukset lisaa-kohdistus)
          {:ikoni        [ikonit/plus-sign]
           :vayla-tyyli? true}]])]))
 

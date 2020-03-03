@@ -94,6 +94,7 @@
 
 (defn kulu->lomake [{:keys [kohdistukset] :as lasku}]
   (let [{aliurakoitsija :suorittaja} lasku]
+    (loki/log "Urakoitsija " aliurakoitsija)
     (-> lasku
         (dissoc :suorittaja)
         #_(update :kohdistukset (fn [ks] (mapv (fn [kohdistukset]

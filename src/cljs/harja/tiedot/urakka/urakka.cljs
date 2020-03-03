@@ -115,7 +115,7 @@
                            (fn [vs]
                              (update vs polku
                                      (fn [kentta]
-                                       (.log js/console "validoi kenttä " (pr-str kentta) ", validointi: " (pr-str validointi))
+                                       (.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi))
                                        (assoc kentta
                                               :tarkistettu? true
                                               :validointi validointi
@@ -179,7 +179,7 @@
                                       :suorittaja-nimi       nil
                                       :erapaiva              nil
                                       :paivita               0}
-                            (luo-validius-meta {:kohdistukset [{}]})))
+                            (kulun-validointi-meta {:kohdistukset [{}]})))
 
 (def kulut-default {:kohdistetut-kulut {:parametrit  {:haetaan 0}
                                         :taulukko    nil
