@@ -1,16 +1,18 @@
 (ns harja.tiedot.urakka.mhu-laskutus
   (:require
-    [clojure.string :as string]
-    [tuck.core :as tuck]
-    [harja.loki :as loki]
-    harja.ui.taulukko.taulukko
-    [harja.ui.taulukko.protokollat :as p]
-    [harja.ui.taulukko.osa :as osa]
-    [harja.ui.taulukko.jana :as jana]
-    [harja.tyokalut.tuck :as tuck-apurit]
-    [harja.tiedot.urakka.urakka :as tila]
-    [harja.pvm :as pvm]
-    [reagent.core :as r])
+   [clojure.string :as string]
+   [tuck.core :as tuck]
+   [harja.loki :as loki]
+   harja.ui.taulukko.taulukko
+   [harja.ui.taulukko.protokollat :as p]
+   [harja.ui.taulukko.osa :as osa]
+   [harja.ui.taulukko.jana :as jana]
+   [harja.tyokalut.tuck :as tuck-apurit]
+   [harja.tiedot.urakka.urakka :as tila]
+   [harja.pvm :as pvm]
+   [harja.fmt :as fmt]
+   [reagent.core :as r]
+   [clojure.string :as str])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
                    [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
@@ -205,6 +207,7 @@
                          {:class #{"col-xs-1"}}])
                (not parillinen?)
                rivit)))))
+
 (defn- luo-kulutaulukko
   [{:keys [toimenpiteet tehtavaryhmat maksuerat]}]
   (let [e! (tuck/current-send-function)
@@ -259,14 +262,20 @@
                                          {:otsikko "Yhteensä " :arvo summa :luokka #{"col-xs-offset-6" "col-xs-2"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
-                                 (reduce luo-laskun-nro-otsikot
-                                         (valiotsikko-rivi
-                                           (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
-                                                                          :pelkka-palautus? true
-                                                                          :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin-strong"}}})
-                                           {:otsikko "Paivamaara " :arvo pvm :luokka #{"col-xs-4"}}
-                                           {:otsikko "Yhteensä " :arvo summa :luokka #{"col-xs-offset-6" "col-xs-2"}})
-                                         rivit))
+                                 ;; pvm tulee muodossa kk/vv (esim. huhtikuu 2020 on "04/20")
+                                 (let [[kk vv] (map #(js/parseInt %) (str/split pvm #"/"))]
+                                   (reduce luo-laskun-nro-otsikot
+                                           (valiotsikko-rivi
+                                            (r/partial p/lisaa-rivi! koko {:rivi             jana/->Rivi
+                                                                           :pelkka-palautus? true
+                                                                           :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin-strong"}}})
+                                            {:otsikko ""
+                                             :arvo (str (pvm/kk-fmt kk) "kuu " (+ 2000 vv)
+                                                        " yhteensä") :luokka #{"col-xs-4"}}
+                                            {:otsikko ""
+                                             :arvo (fmt/euro summa)
+                                             :luokka #{"col-xs-offset-7" "col-xs-1"}})
+                                           rivit)))
         jaottele-riveiksi-taulukkoon (fn [taulukko rivit]
                                        (let [taulukko-rivit (reduce luo-paivamaara-otsikot
                                                                     taulukko rivit)]
