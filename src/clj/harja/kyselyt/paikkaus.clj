@@ -140,16 +140,11 @@
 
 (defn paivita-paikkauskohteen-tila
   "Päivittää paikkauskohteen tilan harjan sisäisen id:n perusteella (lähetetty, virhe)."
-    [db urakka-id paikkauskohde]
+    [db paikkauskohde]
     (let [id (::paikkaus/id paikkauskohde)
-          luoja-id (::muokkaustiedot/luoja-id paikkauskohde)
-          ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)
           ehdot (if (id-olemassa? id)
-                  {::paikkaus/id id}
-                  {::paikkaus/ulkoinen-id ulkoinen-id
-                   ::paikkaus/urakka-id urakka-id
-                   ::muokkaustiedot/luoja-id luoja-id})]
-      (update! db ::paikkaus/paikkausohde paikkauskohde ehdot)
+                  {::paikkaus/id id})]
+      (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
       (first (hae-paikkaukset db ehdot))))
 
 (defn- paivita-paikkaus

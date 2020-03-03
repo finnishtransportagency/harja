@@ -59,7 +59,9 @@
 (def paikkauskohteen-perustiedot
   #{::id
     ::ulkoinen-id
-    ::nimi})
+    ::nimi
+    ::tila
+    ::virhe})
 
 (def paikkauksen-perustiedot
   #{::id
