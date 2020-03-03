@@ -157,9 +157,11 @@
         (doseq [[toimenkuva tiedot] johto-ja-hallintokorvaukset]
           (case toimenkuva
             "hankintavastaava" (is (= (into #{}
-                                            (mapcat (fn [hoitokausi]
-                                                      [[hoitokausi :molemmat]])
-                                                    (range 0 6)))
+                                            (map (fn [hoitokausi]
+                                                   (if (= 0 hoitokausi)
+                                                     [hoitokausi nil]
+                                                     [hoitokausi :molemmat]))
+                                                 (range 0 6)))
                                       (into #{} (keys (group-by (juxt :hoitokausi :maksukausi) tiedot)))))
             "sopimusvastaava" (is (= (into #{}
                                            (mapcat (fn [hoitokausi]
@@ -314,10 +316,10 @@
                                                         (nil? tehtavaryhma))
                                     :erillishankinnat (and (= tyyppi "laskutettava-tyo")
                                                            (nil? tehtava)
-                                                           (= tehtavaryhma "Erillishankinnat (W)"))
+                                                           (= tehtavaryhma "ERILLISHANKINNAT (W)"))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
                                                                   (nil? tehtava)
-                                                                  (= tehtavaryhma "Tilaajan rahavaraus (T3)"))
+                                                                  (= tehtavaryhma "TILAAJAN RAHAVARAUS (T3)"))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
                                                                                      (= tehtava "Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen")
                                                                                      (nil? tehtavaryhma))
