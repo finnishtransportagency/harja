@@ -66,7 +66,7 @@
         paikkaus (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
         materiaali (first (paikkaus-q/hae-paikkaukset-materiaalit db {::paikkaus/ulkoinen-id paikkaustunniste}))
         tienkohta (first (paikkaus-q/hae-paikkaukset-tienkohta db {::paikkaus/ulkoinen-id paikkaustunniste}))
-        paikkauskohde (first (paikkaus-q/hae-paikkaukset-paikkauskohe db {::paikkaus/ulkoinen-id paikkaustunniste}))]
+        paikkauskohde (first (paikkaus-q/hae-paikkaukset-paikkauskohde db {::paikkaus/ulkoinen-id paikkaustunniste}))]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
     (is (= odotettu-paikkaus (dissoc paikkaus

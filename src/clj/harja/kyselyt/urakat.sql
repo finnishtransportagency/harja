@@ -760,6 +760,11 @@ SELECT sampoid
 FROM urakka
 WHERE id = :urakka;
 
+-- name: hae-urakan-nimi
+SELECT id, nimi
+FROM urakka
+WHERE id = :urakka;
+
 -- name: hae-urakan-perustiedot-sampo-idlla
 SELECT
   id,
