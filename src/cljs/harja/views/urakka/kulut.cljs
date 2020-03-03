@@ -299,7 +299,7 @@
                                                                           :validointi-fn (:summa tila/validoinnit)}
                                                                          {:polku         [:kohdistukset (count kohdistukset) :tehtavaryhma]
                                                                           :validointi-fn (:tehtavaryhma tila/validoinnit)}]))} :kohdistukset lisaa-kohdistus)
-         {:ikoni        ikonit/plus-sign
+         {:ikoni        [ikonit/plus-sign]
           :vayla-tyyli? true}]])]))
 
 (defn aliurakoitsija-lisays-modaali
