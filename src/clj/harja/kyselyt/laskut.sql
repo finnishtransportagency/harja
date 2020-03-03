@@ -99,12 +99,14 @@ SELECT lk.id                  as "kohdistus-id",
        lk.suoritus_alku       as "suoritus-alku",
        lk.suoritus_loppu      as "suoritus-loppu",
        lk.luotu               as "luontiaika",
-       lk.muokattu            as "muokkausaika"
-from lasku_kohdistus lk
-       LEFT JOIN aliurakoitsija a ON (select suorittaja from lasku where id = :lasku) = a.id
-WHERE lk.lasku = :lasku
-  AND lk.poistettu IS NOT TRUE
-ORDER by lk.id;
+       lk.muokattu            as "muokkausaika",
+       a.id                   as "suorittaja-id",
+       a.nimi                 as "suorittaja-nimi"
+  FROM lasku_kohdistus lk
+  LEFT JOIN aliurakoitsija a ON (select suorittaja from lasku where id = :lasku) = a.id
+ WHERE lk.lasku = :lasku
+   AND lk.poistettu IS NOT TRUE
+ ORDER by lk.id;
 
 -- name: luo-tai-paivita-lasku<!
 INSERT
