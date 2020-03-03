@@ -408,7 +408,7 @@
     (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
       (let [{:keys [nayta paivita]} lomake
             validoi-fn (-> lomake meta :validoi)
-            validoitu-lomake (validoi-fn lomake)
+            validoitu-lomake ((or validoi-fn identity) lomake)
             validi? (-> validoitu-lomake meta :validi?)]
         [:div
          [:div.row
