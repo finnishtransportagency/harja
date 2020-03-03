@@ -203,7 +203,7 @@
                          {:class #{"col-xs-4"}}]
                         [osa/->Teksti
                          (keyword (gensym "summa-"))
-                         (str summa)
+                         (fmt/euro summa)
                          {:class #{"col-xs-1"}}])
                (not parillinen?)
                rivit)))))
@@ -259,7 +259,8 @@
                                                                       :pelkka-palautus? true
                                                                       :rivin-parametrit {:class #{"table-default" "table-default-header" "table-default-thin"}}})
                                          {:otsikko "Koontilasku nro " :arvo laskun-nro :luokka #{"col-xs-4"}}
-                                         {:otsikko "Yhteensä " :arvo summa :luokka #{"col-xs-offset-6" "col-xs-2"}}))
+                                         {:otsikko "Yhteensä " :arvo "" :luokka #{"col-xs-offset-6" "col-xs-1"}}
+                                         {:otsikko "" :arvo (fmt/euro summa) :luokka #{"col-xs-1"}}))
                                      (group-by :toimenpideinstanssi flatatut))))
         luo-paivamaara-otsikot (fn [koko [pvm {summa :summa rivit :rivit}]]
                                  ;; pvm tulee muodossa kk/vv (esim. huhtikuu 2020 on "04/20")
