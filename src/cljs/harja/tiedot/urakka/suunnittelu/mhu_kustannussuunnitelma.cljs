@@ -1584,9 +1584,12 @@
 (defrecord TallennaHankintojenArvot [tallennettava-asia hoitokauden-numero tunnisteet])
 (defrecord TallennaHankintojenArvotOnnistui[vastaus])
 (defrecord TallennaHankintojenArvotEpaonnistui [vastaus])
-(defrecord TallennaArvot [tallennettava-asia tunnisteet])
-(defrecord TallennaArvotOnnistui[vastaus])
-(defrecord TallennaArvotEpaonnistui [vastaus])
+(defrecord TallennaKustannusarvoitu [tallennettava-asia tunnisteet])
+(defrecord TallennaKustannusarvoituOnnistui[vastaus])
+(defrecord TallennaKustannusarvoituEpaonnistui [vastaus])
+(defrecord TallennaJohtoJaHallintokorvaukset [tallennettava-asia tunnisteet])
+(defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
+(defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
 
 (defrecord Hoitokausi [])
 (defrecord YleisSuodatinArvot [])
@@ -1616,18 +1619,7 @@
 (defrecord PaivitaJHRivit [paivitetty-osa])
 (defrecord PaivitaSuunnitelmienTila [paivitetyt-taulukot])
 (defrecord MaksukausiValittu [])
-(defrecord TallennaHankintasuunnitelma [toimenpide-avain osa polku-taulukkoon tayta-alas? laskutuksen-perusteella-taulukko?])
-(defrecord TallennaHankintasuunnitelmaOnnistui [vastaus])
-(defrecord TallennaHankintasuunnitelmaEpaonnistui [vastaus])
-(defrecord TallennaKiinteahintainenTyo [toimenpide-avain osa polku-taulukkoon tayta-alas?])
-(defrecord TallennaKiinteahintainenTyoOnnistui [vastaus])
-(defrecord TallennaKiinteahintainenTyoEpaonnistui [vastaus])
-(defrecord TallennaKustannusarvoituTyo [tallennettava-asia toimenpide-avain arvo ajat])
-(defrecord TallennaKustannusarvoituTyoOnnistui [vastaus])
-(defrecord TallennaKustannusarvoituTyoEpaonnistui [vastaus])
-(defrecord TallennaJohtoJaHallintokorvaukset [osa polku-taulukkoon])
-(defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
-(defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
+
 (defrecord TallennaJaPaivitaTavoiteSekaKattohinta [])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohintaOnnistui [vastaus])
 (defrecord TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui [vastaus])
@@ -2320,7 +2312,6 @@
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
                                                    (:kustannusarvioidut-tyot vastaus))
-          _ (println "hankinnat-laskutukseen-perustuen " hankinnat-laskutukseen-perustuen)
           rahavaraukset (distinct (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} (:haettu-asia %))
                                            (select-keys % #{:tyyppi :summa :toimenpide-avain :vuosi :kuukausi}))
                                         (:kustannusarvioidut-tyot vastaus)))
@@ -2346,7 +2337,6 @@
                                                                                                          (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                                                                                                                 :maara summa)
                                                                                                          (dissoc :summa))))
-          _ (println "hankinnat-laskutukseen-perustuen-toimenpiteittain " hankinnat-laskutukseen-perustuen-toimenpiteittain)
           hankinnat-laskutukseen-perustuen (into {}
                                                  (map (fn [[toimenpide hankinnat]]
                                                         [toimenpide (vec (vals (sort-by #(-> % key first)
@@ -2355,7 +2345,6 @@
                                                                                         (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                                                                                   hankinnat))))])
                                                       hankinnat-laskutukseen-perustuen-toimenpiteittain))
-          _ (println "hankinnat-laskutukseen-perustuen " hankinnat-laskutukseen-perustuen)
           rahavaraukset-toimenpiteittain (apply merge-with
                                                 (fn [a b]
                                                   (concat a b))
@@ -2416,6 +2405,7 @@
                                                            (let [kannasta (filterv :ennen-urakkaa asia-kannasta)]
                                                              (if (empty? kannasta)
                                                                (let [arvot {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
+                                                                            :vuosi (pvm/vuosi urakan-aloituspvm)
                                                                             :kk-v kk-v
                                                                             :osa-kuukaudesta 1
                                                                             :tunnit 0
@@ -2442,7 +2432,7 @@
                                                                                               :tunnit (or tunnit 0)
                                                                                               :tuntipalkka (or tuntipalkka 0)
                                                                                               :kk-v kk-v)
-                                                                                       (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka :kuukausi})))))]
+                                                                                       (select-keys #{:aika :id :kk-v :tunnit :tuntipalkka :kuukausi :vuosi :osa-kuukaudesta})))))]
                                     (if data-koskee-ennen-urakkaa?
                                       (assoc korvaukset toimenkuva {maksukausi [taytetty-jh-data]})
                                       (update korvaukset toimenkuva (fn [maksukausien-arvot]
@@ -3142,132 +3132,6 @@
                                                                                                                                        (update lapsirivi ::piillotettu conj :maksetaan)
                                                                                                                                        (update lapsirivi ::piillotettu disj :maksetaan)))))]))
                                                                               taulukot)))))))))
-  TallennaKiinteahintainenTyo
-  (process-event [{:keys [toimenpide-avain osa polku-taulukkoon tayta-alas?]} app]
-    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
-          taulukko (get-in app polku-taulukkoon)
-          kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
-          maksetaan (get-in app [:hankintakustannukset :valinnat :maksetaan])
-          ajat (tallennettavien-hankintojen-ajat osa taulukko tayta-alas? kopioidaan-tuleville-vuosille? maksetaan)
-
-          arvo (p/arvo osa :arvo)
-          summa (-> arvo :value (clj-str/replace #"," ".") js/Number)
-
-          lahetettava-data {:urakka-id urakka-id
-                            :toimenpide-avain toimenpide-avain
-                            :summa summa
-                            :ajat ajat}]
-      (tuck-apurit/post! app :tallenna-kiinteahintaiset-tyot
-                         lahetettava-data
-                         {:onnistui ->TallennaKiinteahintainenTyoOnnistui
-                          :epaonnistui ->TallennaKiinteahintainenTyoEpaonnistui
-                          :viive 1000
-                          :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
-                                             (str "tallenna-kustannusarvioitutyo " toimenpide-avain " " (p/arvo osa :id) " " tayta-alas?))
-                          :paasta-virhe-lapi? true})))
-  TallennaKiinteahintainenTyoOnnistui
-  (process-event [{:keys [vastaus]} app]
-    app)
-  TallennaKiinteahintainenTyoEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta! "Tallennus epäonnistui..."
-                   :warning viesti/viestin-nayttoaika-pitka)
-    app)
-  TallennaKustannusarvoituTyo
-  (process-event [{:keys [tallennettava-asia toimenpide-avain arvo ajat]}
-                  {{kuluva-hoitovuosi :vuosi kuluvan-hoitovuoden-hoitokausi :pvmt} :kuluva-hoitokausi
-                   {valittu-hoitovuosi :hoitovuosi} :suodatin :as app}]
-    (let [{:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
-          kuluvan-hoitokauden-aloitusvuosi (-> kuluvan-hoitovuoden-hoitokausi first pvm/vuosi)
-          vuodesta-eteenpain (if (or (not (contains? filteroitavat-tallennettavat-asiat tallennettava-asia))
-                                     (= kuluva-hoitovuosi valittu-hoitovuosi))
-                               kuluvan-hoitokauden-aloitusvuosi
-                               (dec (+ kuluvan-hoitokauden-aloitusvuosi valittu-hoitovuosi)))
-          ajat (or ajat
-                   (map (fn [vuosi]
-                          {:vuosi vuosi})
-                        (range vuodesta-eteenpain
-                               (pvm/vuosi loppupvm))))
-          lahetettava-data {:urakka-id urakka-id
-                            :toimenpide-avain toimenpide-avain
-                            :tallennettava-asia tallennettava-asia
-                            :summa arvo
-                            :ajat ajat}]
-      (tuck-apurit/post! app :tallenna-kustannusarvioitu-tyo
-                         lahetettava-data
-                         {:onnistui ->TallennaKustannusarvoituTyoOnnistui
-                          :epaonnistui ->TallennaKustannusarvoituTyoEpaonnistui
-                          :viive 1000
-                          :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
-                                             (str "tallenna-kustannusarvioitutyo " tallennettava-asia " " toimenpide-avain " " ajat))
-                          :paasta-virhe-lapi? true})))
-  TallennaKustannusarvoituTyoOnnistui
-  (process-event [{:keys [vastaus]} app]
-    app)
-  TallennaKustannusarvoituTyoEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta! "Tallennus epäonnistui..."
-                   :warning viesti/viestin-nayttoaika-pitka)
-    app)
-  TallennaHankintasuunnitelma
-  (process-event [{:keys [toimenpide-avain osa polku-taulukkoon tayta-alas? laskutuksen-perusteella-taulukko?]} app]
-    (let [taulukko (get-in app polku-taulukkoon)
-          kopioidaan-tuleville-vuosille? (get-in app [:hankintakustannukset :valinnat :kopioidaan-tuleville-vuosille?])
-          maksetaan (get-in app [:hankintakustannukset :valinnat :maksetaan])
-          ajat (tallennettavien-hankintojen-ajat osa taulukko tayta-alas? kopioidaan-tuleville-vuosille? maksetaan)
-          arvo (p/arvo osa :arvo)
-          summa (-> arvo :value (clj-str/replace #"," ".") js/Number)]
-      (if laskutuksen-perusteella-taulukko?
-        (tuck/process-event (->TallennaKustannusarvoituTyo :toimenpiteen-maaramitattavat-tyot toimenpide-avain summa ajat) app)
-        (tuck/process-event (->TallennaKiinteahintainenTyo toimenpide-avain osa polku-taulukkoon tayta-alas?) app))))
-  TallennaHankintasuunnitelmaOnnistui
-  (process-event [{:keys [vastaus]} app]
-    app)
-  TallennaHankintasuunnitelmaEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta! "Tallennus epäonnistui..."
-                   :warning viesti/viestin-nayttoaika-pitka)
-    app)
-  TallennaJohtoJaHallintokorvaukset
-  (process-event [{:keys [osa polku-taulukkoon]}
-                  {{valittu-hoitovuosi :hoitovuosi} :suodatin :as app}]
-    (let [taulukko (get-in app polku-taulukkoon)
-          [polku-riviin polku-osaan] (p/osan-polku-taulukossa taulukko osa)
-          rivi (get-in taulukko polku-riviin)
-          rivin-lisatty-data (::p/lisatty-data rivi)
-          rivin-oleelliset-arvot (tyokalut/rivin-arvot-otsikoilla taulukko rivi "Tunnit/kk" "Tuntipalkka" "kk/v")
-          {:keys [alkupvm loppupvm] urakka-id :id} (:urakka @tiedot/yleiset)
-          tallennettavat-hoitokaudet (clj-set/intersection (into #{}
-                                                                 (range (if (= valittu-hoitovuosi 1) 0 valittu-hoitovuosi)
-                                                                        6))
-                                                           (-> rivi ::p/lisatty-data :hoitokaudet))
-          toimenkuva (:toimenkuva rivin-lisatty-data)
-          maksukausi (:maksukausi rivin-lisatty-data)
-          lahetettava-data {:urakka-id urakka-id
-                            :toimenkuva toimenkuva
-                            :maksukausi maksukausi
-                            :jhkt (mapv (fn [hoitokausi]
-                                          (assoc (zipmap [:tunnit :tuntipalkka :kk-v]
-                                                         rivin-oleelliset-arvot)
-                                            :hoitokausi hoitokausi))
-                                        (sort tallennettavat-hoitokaudet))}]
-      (tuck-apurit/post! app :tallenna-johto-ja-hallintokorvaukset
-                         lahetettava-data
-                         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
-                          :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
-                          :viive 1000
-                          :tunniste (keyword harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma
-                                             (str "tallenna-johto-ja-hallintokorvaukset "
-                                                  toimenkuva " " maksukausi " " tallennettavat-hoitokaudet))
-                          :paasta-virhe-lapi? true})))
-  TallennaJohtoJaHallintokorvauksetOnnistui
-  (process-event [{:keys [vastaus]} app]
-    app)
-  TallennaJohtoJaHallintokorvauksetEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta! "Tallennus epäonnistui..."
-                   :warning viesti/viestin-nayttoaika-pitka)
-    app)
 
   TallennaJaPaivitaTavoiteSekaKattohinta
   (process-event [_ {:keys [hankintakustannukset hallinnolliset-toimenpiteet tavoite-ja-kattohinta]
@@ -3412,16 +3276,10 @@
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)
     app)
-  TallennaArvot
+  TallennaKustannusarvoitu
   (process-event [{:keys [tallennettava-asia tunnisteet]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
-          post-kutsu (case tallennettava-asia
-                       (:kolmansien-osapuolten-aiheuttamat-vahingot
-                         :akilliset-hoitotyot
-                         :rahavaraus-lupaukseen-1
-                         :erillishankinnat
-                         :toimistokulut
-                         :hoidonjohtopalkkio) :tallenna-kustannusarvioitu-tyo)
+          post-kutsu :tallenna-kustannusarvioitu-tyo
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
           valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
           kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :kopioidaan-tuleville-vuosille?])
@@ -3448,6 +3306,7 @@
                                                      #{:vuosi :kuukausi})))
                                     paivitettavat-hoitokauden-numerot))
                             tunnisteet))
+
           lahetettava-data (case tallennettava-asia
                              (:kolmansien-osapuolten-aiheuttamat-vahingot
                                :akilliset-hoitotyot
@@ -3463,18 +3322,62 @@
                                                      :tallennettava-asia tallennettava-asia
                                                      :summa summa
                                                      :ajat ajat})]
+      (tuck-apurit/post! app
+                         post-kutsu
+                         lahetettava-data
+                         {:onnistui ->TallennaKustannusarvoituOnnistui
+                          :epaonnistui ->TallennaKustannusarvoituEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  TallennaKustannusarvoituOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (println "TALLENNUS ONNISTUI")
+    app)
+  TallennaKustannusarvoituEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  TallennaJohtoJaHallintokorvaukset
+  (process-event [{:keys [tallennettava-asia tunnisteet]} app]
+    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+          post-kutsu :tallenna-johto-ja-hallintokorvaukset
+          hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
+          valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
+          kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :kopioidaan-tuleville-vuosille?])
+          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                              (range hoitokauden-numero 6)
+                                              [hoitokauden-numero])
+          jhk-tiedot (vec (mapcat (fn [{:keys [osan-paikka data-koskee-ennen-urakkaa?]}]
+                                    (if data-koskee-ennen-urakkaa?
+                                      (mapv (fn [m]
+                                              (select-keys m
+                                                           #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka}))
+                                            (get-in app [:domain :johto-ja-hallintokorvaukset (get-in tunnisteet [0 :toimenkuva]) (get-in tunnisteet [0 :maksukausi]) (dec hoitokauden-numero)]))
+                                      (mapv (fn [hoitokauden-numero]
+                                              (let [tiedot (select-keys (get-in app [:domain :johto-ja-hallintokorvaukset (get-in tunnisteet [0 :toimenkuva]) (get-in tunnisteet [0 :maksukausi]) (dec hoitokauden-numero) (first osan-paikka)])
+                                                                        #{:vuosi :kuukausi :osa-kuukaudesta :tunnit :tuntipalkka})]
+                                                (if (contains? tiedot :osa-kuukaudesta)
+                                                  tiedot
+                                                  (assoc tiedot :osa-kuukaudesta 1))))
+                                            paivitettavat-hoitokauden-numerot)))
+                                  tunnisteet))
+          _ (println "TUNNISTEET: " tunnisteet)
+
+          lahetettava-data {:urakka-id urakka-id
+                            :toimenkuva (get-in tunnisteet [0 :toimenkuva])
+                            :ennen-urakkaa? (nil? (get-in tunnisteet [0 :maksukausi]))
+                            :jhk-tiedot jhk-tiedot}]
       (println "LAHETETTÄVÄ DATA " lahetettava-data)
       (tuck-apurit/post! app
                          post-kutsu
                          lahetettava-data
-                         {:onnistui ->TallennaArvotOnnistui
-                          :epaonnistui ->TallennaArvotEpaonnistui
+                         {:onnistui ->TallennaKustannusarvoituOnnistui
+                          :epaonnistui ->TallennaKustannusarvoituEpaonnistui
                           :paasta-virhe-lapi? true})))
-  TallennaArvotOnnistui
+  TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "TALLENNUS ONNISTUI")
     app)
-  TallennaArvotEpaonnistui
+  TallennaJohtoJaHallintokorvauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)

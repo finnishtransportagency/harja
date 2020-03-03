@@ -327,10 +327,9 @@
       :else (urakan-aikaiset-jhkt jhkt (range 1 13)))))
 
 (defn tallenna-johto-ja-hallintokorvaukset
-  [db user {:keys [urakka-id toimenkuva maksukausi jhkt]}]
+  [db user {:keys [urakka-id toimenkuva ennen-urakkaa? jhk-tiedot]}]
   {:pre [(integer? urakka-id)
-         (string? toimenkuva)
-         (keyword? maksukausi)]}
+         (string? toimenkuva)]}
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [toimenkuva-id (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
@@ -338,41 +337,43 @@
                                                                        {::bs/toimenkuva toimenkuva})))
                                   toimenpideinstanssi-id (:id (first (tpi-q/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db {:urakka urakka-id
                                                                                                                                   :koodi  (toimenpide-avain->toimenpide :mhu-johto)})))
-                                  {urakan-alkupvm ::ur/alkupvm} (first (fetch db ::ur/urakka
-                                                                              #{::ur/alkupvm}
-                                                                              {::ur/id urakka-id}))
-                                  jhkt (muunna-jhkn-ajat toimenkuva maksukausi jhkt (pvm/vuosi urakan-alkupvm))
                                   olemassa-olevat-jhkt (fetch db ::bs/johto-ja-hallintokorvaus
-                                                              #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi ::bs/ennen-urakkaa-id}
+                                                              #{::bs/id ::bs/toimenkuva-id ::bs/vuosi ::bs/kuukausi ::bs/ennen-urakkaa}
                                                               {::bs/urakka-id urakka-id
                                                                ::bs/toimenkuva-id toimenkuva-id
-                                                               ::bs/vuosi (op/in (map :vuosi jhkt))
-                                                               ::bs/kuukausi (op/in (map :kuukausi jhkt))
-                                                               ::bs/ennen-urakkaa-id (if (some :ennen-urakkaa?
-                                                                                               jhkt)
-                                                                                       op/not-null?
-                                                                                       op/null?)})
-                                  paivitetaan? (not (empty? olemassa-olevat-jhkt))]
+                                                               ::bs/vuosi (op/in (map :vuosi jhk-tiedot))
+                                                               ::bs/kuukausi (op/in (map :kuukausi jhk-tiedot))
+                                                               ::bs/ennen-urakkaa ennen-urakkaa?})
+                                  uudet-jhkt (remove (fn [{:keys [vuosi kuukausi]}]
+                                                       (some #(and (= vuosi (::bs/vuosi %))
+                                                                   (= kuukausi (::bs/kuukausi %)))
+                                                             olemassa-olevat-jhkt))
+                                                     jhk-tiedot)]
+                              (println "olemassa-olevat-jhkt " olemassa-olevat-jhkt)
+                              (println "uudet-jhkt " uudet-jhkt)
                               (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
-                              (if paivitetaan?
-                                (doseq [{:keys [kuukausi vuosi tunnit tuntipalkka ennen-urakkaa?]} jhkt]
-                                  (let [id (some #(when (and (= toimenkuva-id (::bs/toimenkuva-id %))
-                                                             (= vuosi (::bs/vuosi %))
-                                                             (= kuukausi (::bs/kuukausi %))
-                                                             (or (and ennen-urakkaa?
-                                                                      (not (nil? (::bs/ennen-urakkaa-id %))))
-                                                                 (and (not ennen-urakkaa?)
-                                                                      (nil? (::bs/ennen-urakkaa-id %)))))
-                                                    (::bs/id %))
-                                                 olemassa-olevat-jhkt)]
-                                    (update! db
-                                             ::bs/johto-ja-hallintokorvaus
-                                             {::bs/tunnit      tunnit
-                                              ::bs/tuntipalkka tuntipalkka
-                                              ::bs/muokattu    (pvm/nyt)
-                                              ::bs/muokkaaja   (:id user)}
-                                             {::bs/id id})))
-                                (doseq [{:keys [kuukausi vuosi tunnit tuntipalkka ennen-urakkaa? osa-kuukaudesta]} jhkt]
+                              (when-not (empty? olemassa-olevat-jhkt)
+                                (doseq [jhk olemassa-olevat-jhkt
+                                        :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
+                                                             (when (and (= vuosi (::bs/vuosi jhk))
+                                                                        (= kuukausi (::bs/kuukausi jhk)))
+                                                               tunnit))
+                                                           jhk-tiedot)
+                                              tuntipalkka (some (fn [{:keys [vuosi kuukausi tuntipalkka]}]
+                                                                  (when (and (= vuosi (::bs/vuosi jhk))
+                                                                             (= kuukausi (::bs/kuukausi jhk)))
+                                                                    tuntipalkka))
+                                                                jhk-tiedot)]]
+                                  (println "ID: " (::bs/id jhk))
+                                  (update! db
+                                           ::bs/johto-ja-hallintokorvaus
+                                           {::bs/tunnit      tunnit
+                                            ::bs/tuntipalkka tuntipalkka
+                                            ::bs/muokattu    (pvm/nyt)
+                                            ::bs/muokkaaja   (:id user)}
+                                           {::bs/id (::bs/id jhk)})))
+                              (when-not (empty? uudet-jhkt)
+                                (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
                                   (insert! db
                                            ::bs/johto-ja-hallintokorvaus
                                            {::bs/urakka-id urakka-id
@@ -381,7 +382,7 @@
                                             ::bs/tuntipalkka tuntipalkka
                                             ::bs/kuukausi kuukausi
                                             ::bs/vuosi vuosi
-                                            ::bs/ennen-urakkaa-id ennen-urakkaa?
+                                            ::bs/ennen-urakkaa ennen-urakkaa?
                                             ::bs/osa-kuukaudesta osa-kuukaudesta
                                             ::bs/luotu (pvm/nyt)
                                             ::bs/luoja (:id user)})))

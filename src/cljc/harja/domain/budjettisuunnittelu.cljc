@@ -33,5 +33,6 @@
                                      ::johto-ja-hallintokorvaus-toimenkuva
                                      ::id)}
    #?(:clj {::tunnit (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
-            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
+            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::osa-kuukaudesta (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
 

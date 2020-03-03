@@ -111,7 +111,7 @@
                                :ajettavat-jarejestykset #{:mapit}}
                               true)))
     (when (= asettajan-nimi :aseta-rahavaraukset!)
-      (e! (t/->TallennaArvot tallennettava-asia
+      (e! (t/->TallennaKustannusarvoitu tallennettava-asia
                              (vec (keep (fn [rivi]
                                           (let [maara-solu (grid/get-in-grid rivi [1])
                                                 piillotettu? (grid/piillotettu? rivi)]
@@ -129,66 +129,83 @@
                                                  (assoc-in solu [:parametrit :disabled?] disabled?)))))))
 
 (defn syote-solu
-  ([nappi? fmt paivitettava-asia] (syote-solu nappi? fmt paivitettava-asia nil))
-  ([nappi? fmt paivitettava-asia solun-index]
-   (merge
-     {:tyyppi (if nappi?
-                :syote-tayta-alas
-                :syote)
-      :luokat #{"input-default"}
-      :toiminnot {:on-change (fn [arvo]
-                               (when esta-blur_
-                                 (set! esta-blur_ false))
-                               (when arvo
-                                 (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
-                                                        :arvo arvo
-                                                        :solu solu/*this*
-                                                        :ajettavat-jarejestykset #{:mapit}}
-                                                       false)))
-                  :on-focus (fn [event]
-                              (if nappi?
-                                (grid/paivita-osa! solu/*this*
-                                                   (fn [solu]
-                                                     (assoc solu :nappi-nakyvilla? true)))
-                                (let [arvo (.. event -target -value)]
-                                  (when (= arvo t/vaihtelua-teksti)
-                                    (set! esta-blur_ true)
-                                    (set! (.. event -target -value) nil)))))
-                  :on-blur (fn [arvo]
-                             (when nappi?
+  [{:keys [nappi? fmt paivitettava-asia solun-index tallenna
+           tallenna-kaikki? etsittava-osa]}]
+  (merge
+    {:tyyppi (if nappi?
+               :syote-tayta-alas
+               :syote)
+     :luokat #{"input-default"}
+     :toiminnot {:on-change (fn [arvo]
+                              (when esta-blur_
+                                (set! esta-blur_ false))
+                              (when arvo
+                                (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
+                                                       :arvo arvo
+                                                       :solu solu/*this*
+                                                       :ajettavat-jarejestykset #{:mapit}}
+                                                      false)))
+                 :on-focus (fn [event]
+                             (if nappi?
                                (grid/paivita-osa! solu/*this*
                                                   (fn [solu]
-                                                    (assoc solu :nappi-nakyvilla? false))))
-                             (when arvo
-                               (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
-                                                      :arvo arvo
-                                                      :solu solu/*this*
-                                                      :ajettavat-jarejestykset true
-                                                      :triggeroi-seuranta? true}
-                                                     true)))
-                  :on-key-down (fn [event]
-                                 (when (= "Enter" (.. event -key))
-                                   (.. event -target blur)))}
-      :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                   {:eventin-arvo {:f poista-tyhjat}}]
-                       :on-blur (if nappi?
-                                  [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]
-                                  [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}} {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}])}
-      :parametrit {:size 2}
-      :fmt fmt
-      :fmt-aktiivinen summa-formatointi-aktiivinen}
-     (when nappi?
-       {:nappia-painettu! (fn [rivit-alla arvo]
-                            (when (and arvo (not (empty? rivit-alla)))
-                              (doseq [rivi rivit-alla
-                                      :let [maara-solu (grid/get-in-grid rivi [solun-index])
-                                            piillotettu? (grid/piillotettu? rivi)]]
-                                (when-not piillotettu?
-                                  (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
-                                                         :arvo arvo
-                                                         :solu maara-solu}
-                                                        true)))))
-        :nappi-nakyvilla? false}))))
+                                                    (assoc solu :nappi-nakyvilla? true)))
+                               (let [arvo (.. event -target -value)]
+                                 (when (= arvo t/vaihtelua-teksti)
+                                   (set! esta-blur_ true)
+                                   (set! (.. event -target -value) nil)))))
+                 :on-blur (fn [arvo]
+                            (when nappi?
+                              (grid/paivita-osa! solu/*this*
+                                                 (fn [solu]
+                                                   (assoc solu :nappi-nakyvilla? false))))
+                            (when arvo
+                              (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
+                                                     :arvo arvo
+                                                     :solu solu/*this*
+                                                     :ajettavat-jarejestykset true
+                                                     :triggeroi-seuranta? true}
+                                                    true)
+                              (if tallenna-kaikki?
+                                (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) solun-index)
+                                                                                                            :tunniste-rajapinnan-dataan)
+                                                                                          ;(grid/osa-polusta solu/*this* [:.. :.. 1])
+                                                                                          (grid/hae-grid
+                                                                                            (get (grid/hae-grid (grid/etsi-osa (grid/root solu/*this*) etsittava-osa)
+                                                                                                                :lapset)
+                                                                                                 1)
+                                                                                            :lapset))))
+                                (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)])))))
+                 :on-key-down (fn [event]
+                                (when (= "Enter" (.. event -key))
+                                  (.. event -target blur)))}
+     :kayttaytymiset {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
+                                  {:eventin-arvo {:f poista-tyhjat}}]
+                      :on-blur (if nappi?
+                                 [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}}]
+                                 [:positiivinen-numero {:eventin-arvo {:f poista-tyhjat}} {:oma {:f esta-blur-ja-lisaa-vaihtelua-teksti}}])}
+     :parametrit {:size 2}
+     :fmt fmt
+     :fmt-aktiivinen summa-formatointi-aktiivinen}
+    (when nappi?
+      {:nappia-painettu! (fn [rivit-alla arvo]
+                           (when (and arvo (not (empty? rivit-alla)))
+                             (doseq [rivi rivit-alla
+                                     :let [maara-solu (grid/get-in-grid rivi [solun-index])
+                                           piillotettu? (grid/piillotettu? rivi)]]
+                               (when-not piillotettu?
+                                 (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
+                                                        :arvo arvo
+                                                        :solu maara-solu}
+                                                       true)))
+                             (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna
+                                                                        (vec (keep (fn [rivi]
+                                                                                     (let [haettu-solu (grid/get-in-grid rivi [solun-index])
+                                                                                           piillotettu? (grid/piillotettu? rivi)]
+                                                                                       (when-not piillotettu?
+                                                                                         (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
+                                                                                   rivit-alla))))))
+       :nappi-nakyvilla? false})))
 
 
 (defn rivi->rivi-kuukausifiltterilla [pohja? kuukausitasolla?-rajapinta kuukausitasolla?-polku rivi]
@@ -1033,7 +1050,7 @@
                                                                                                                                                                                             :ajettavat-jarejestykset true
                                                                                                                                                                                             :triggeroi-seuranta? true}
                                                                                                                                                                                            true)
-                                                                                                                                                                     (e! (t/->TallennaArvot (tyyppi->tallennettava-asia tyyppi) (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                                                                                                     (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                                                                                                                                                                                         :tunniste-rajapinnan-dataan)
                                                                                                                                                                                                                                       (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset)))))
                                                                                                                                                                    #_(when arvo
@@ -1112,7 +1129,7 @@
                                                                                                                                                                                                              :ajettavat-jarejestykset true
                                                                                                                                                                                                              :triggeroi-seuranta? true}
                                                                                                                                                                                                             true)
-                                                                                                                                                                                      (e! (t/->TallennaArvot (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                                                                                                                                                                      (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
                                                                                                                                                                                       #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
                                                                                                                                                                                     #_(when arvo
                                                                                                                                                                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
@@ -1287,8 +1304,10 @@
                                                       :nimi ::data-yhteenveto
                                                       :osat [{:tyyppi :teksti
                                                               :luokat #{"table-default"}}
-                                                             (syote-solu false yhteenveto-format :aseta-tunnit-yhteenveto!)
-                                                             (syote-solu false yhteenveto-format :aseta-tuntipalkka-yhteenveto!)
+                                                             (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                                                          :tallenna :johto-ja-hallintokorvaus})
+                                                             (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                                                          :tallenna :johto-ja-hallintokorvaus})
                                                              {:tyyppi :teksti
                                                               :luokat #{"table-default"}
                                                               :fmt yhteenveto-format}
@@ -1302,6 +1321,7 @@
                                                                            (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                                            teksti))))}]}
                                                      {:tyyppi :taulukko
+                                                      :nimi (str toimenkuva "-taulukko")
                                                       :osat [{:tyyppi :rivi
                                                               :nimi ::data-yhteenveto
                                                               :osat [{:tyyppi :laajenna
@@ -1323,8 +1343,12 @@
                                                                                     (t/laajenna-solua-klikattu this auki? taulukon-id [::g-pohjat/data] {:sulkemis-polku [:.. :.. :.. 1]}))
                                                                       :auki-alussa? false
                                                                       :luokat #{"table-default"}}
-                                                                     (syote-solu false yhteenveto-format :aseta-tunnit-yhteenveto!)
-                                                                     (syote-solu false yhteenveto-format :aseta-tuntipalkka-yhteenveto!)
+                                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
+                                                                                  :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
+                                                                                  :etsittava-osa (str toimenkuva "-taulukko")})
+                                                                     (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
+                                                                                  :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
+                                                                                  :etsittava-osa (str toimenkuva "-taulukko")})
                                                                      {:tyyppi :teksti
                                                                       :luokat #{"table-default"}
                                                                       :fmt yhteenveto-format}
@@ -1353,7 +1377,9 @@
                                                                                                          (if mennyt?
                                                                                                            (str teksti " (mennyt)")
                                                                                                            teksti)))}
-                                                                                               (syote-solu true yhteenveto-format :aseta-tunnit! 1)
+                                                                                               (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
+                                                                                                            :solun-index 1 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? false
+                                                                                                            :etsittava-osa (str toimenkuva "-taulukko")})
                                                                                                {:tyyppi :tyhja}
                                                                                                {:tyyppi :tyhja}
                                                                                                {:tyyppi :tyhja}]})))}]})))
@@ -1553,7 +1579,7 @@
                                                           :ajettavat-jarejestykset #{:mapit}
                                                           :triggeroi-seuranta? true}
                                                          true)
-                                   (e! (t/->TallennaArvot polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                   (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                             :tunniste-rajapinnan-dataan)
                                                                           (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset)))))
                                  #_(when arvo
@@ -1571,7 +1597,7 @@
                                                             :ajettavat-jarejestykset #{:mapit}
                                                             :triggeroi-seuranta? true}
                                                            true))
-                                   (e! (t/->TallennaArvot polun-osa
+                                   (e! (t/->TallennaKustannusarvoitu polun-osa
                                                           (vec (keep (fn [rivi]
                                                                        (let [maara-solu (grid/get-in-grid rivi [1])
                                                                              piillotettu? (grid/piillotettu? rivi)]
@@ -1596,7 +1622,7 @@
                                                           :ajettavat-jarejestykset true
                                                           :triggeroi-seuranta? true}
                                                          true)
-                                   (e! (t/->TallennaArvot polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                   (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
                                    #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
                                  #_(when arvo
                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
@@ -2409,70 +2435,6 @@
                                         :vayla-tyyli? true}
            (filterv #(not= % hoitokauden-numero) hoitovuodet)]]]
         [yleiset/ajax-loader]))))
-
-(defn hankintasuunnitelmien-syotto
-  "Käytännössä input kenttä, mutta sillä lisäominaisuudella, että fokusoituna, tulee
-   'Täytä alas' nappi päälle."
-  [this {:keys [input-luokat kaskytyskanava nimi e! laskutuksen-perusteella-taulukko? polku-taulukkoon toimenpide-avain]} value]
-  (let [on-change (fn [arvo]
-                    (when arvo
-                      (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
-                                                  (fn [komponentin-tila]
-                                                    (assoc komponentin-tila :value arvo))))))
-        on-blur (fn [event]
-                  (let [klikattu-elementti (.-relatedTarget event)
-                        klikattu-nappia? (and (not (nil? klikattu-elementti))
-                                              (or (.getAttribute klikattu-elementti "data-kopioi-allaoleviin")
-                                                  (= (str (.getAttribute klikattu-elementti "data-id"))
-                                                     (str (p/osan-id this)))))]
-                    (e! (t/->PaivitaToimenpideTaulukko (::tama-komponentti osa/*this*) polku-taulukkoon))
-                    (e! (t/->PaivitaKustannussuunnitelmanYhteenvedot))
-                    ;; Tarkastetaan onko klikattu elementti nappi tai tämä elementti itsessään. Jos on, ei piilloteta nappia.
-                    (when-not klikattu-nappia?
-                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain (::tama-komponentti osa/*this*) polku-taulukkoon false laskutuksen-perusteella-taulukko?))
-                      (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
-                                                  (fn [komponentin-tila]
-                                                    (assoc komponentin-tila :nappi-nakyvilla? false))))
-                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))))
-        on-focus (fn [_]
-                   (e! (t/->PaivitaTaulukonOsa (::tama-komponentti osa/*this*) polku-taulukkoon
-                                               (fn [komponentin-tila]
-                                                 (assoc komponentin-tila :nappi-nakyvilla? true)))))
-        on-key-down (fn [event]
-                      (when (= "Enter" (.. event -key))
-                        (.. event -target blur)))
-        input-osa (-> (osa/->Syote (keyword (str nimi "-maara-kk"))
-                                   {:on-change on-change
-                                    :on-blur on-blur
-                                    :on-focus on-focus
-                                    :on-key-down on-key-down}
-                                   {:on-change [{:positiivinen-numero {:desimaalien-maara 2}}
-                                                {:eventin-arvo {:f poista-tyhjat}}]}
-                                   {:class input-luokat
-                                    :type "text"
-                                    :value value})
-                      (p/lisaa-fmt summa-formatointi)
-                      (p/lisaa-fmt-aktiiviselle summa-formatointi-aktiivinen))
-        tayta-alas! (fn [this _]
-                      (e! (t/->PaivitaTaulukonOsa this polku-taulukkoon
-                                                  (fn [komponentin-tila]
-                                                    (assoc komponentin-tila :nappi-nakyvilla? false))))
-                      (e! (t/->TaytaAlas this polku-taulukkoon))
-                      (e! (t/->TallennaHankintasuunnitelma toimenpide-avain this polku-taulukkoon true laskutuksen-perusteella-taulukko?))
-                      (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))]
-    (fn [this {:keys [luokat]} {:keys [value nappi-nakyvilla?]}]
-      [:div.kustannus-syotto {:class (apply str (interpose " " luokat))
-                              :tab-index -1
-                              :data-id (str (p/osan-id this))}
-       [napit/yleinen-ensisijainen "Kopioi allaoleviin" (r/partial tayta-alas! this)
-        {:luokka (str "kopioi-nappi button-primary-default "
-                      (when-not nappi-nakyvilla?
-                        "piillotettu"))
-         :data-attributes {:data-kopioi-allaoleviin true}
-         :tabindex 0}]
-       [p/piirra-osa (-> input-osa
-                         (p/aseta-arvo :arvo value)
-                         (assoc ::tama-komponentti this))]])))
 
 (defn osien-paivitys-fn [nimi maara yhteensa indeksikorjattu]
   (fn [osat]

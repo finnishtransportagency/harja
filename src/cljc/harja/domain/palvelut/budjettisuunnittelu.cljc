@@ -37,10 +37,9 @@
 (s/def ::tallennettava-asia tallennettava-asia)
 (s/def ::aika (s/keys :req-un [::vuosi]
                       :opt-un [::kuukausi]))
+(s/def ::kuukausi-aika (s/keys :req-un [::vuosi ::kuukausi]))
+(s/def ::osa-kuukaudesta #(<= 0 % 1))
 (s/def ::indeksikerroin ::positive-number?)
-
-(s/def ::jhk (s/keys :req-un [::hoitokausi ::tunnit ::tuntipalkka ::kk-v]))
-(s/def ::jhkt (s/coll-of ::jhk))
 
 (s/def ::ajat (s/and (s/coll-of ::aika)
                      (fn [ajat]
@@ -54,12 +53,28 @@
                                         #(not (contains? % :kuukausi)))
                                    ajat)))))
 
+(s/def ::kuukausi-ajat (s/and (s/coll-of ::kuukausi-aika)
+                              (s/or :urakan-aikana (fn [ajat]
+                                                     (= (count ajat)
+                                                        (count (distinct ajat))))
+                                    :ennen-urakkaa (fn [ajat]
+                                                     (= 1 (count (distinct ajat)))))))
+
 (s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
                                :kind vector?))
 
 (s/def ::indeksi (s/keys :req-un [::vuosi ::indeksikerroin]))
 
-(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva ::maksukausi ::jhkt]))
+(s/def ::jhk-tieto (s/keys :req-un [::tunnit ::tuntipalkka ::osa-kuukaudesta]))
+
+(s/def ::jhk-tiedot (s/and #(s/valid? ::kuukausi-ajat (mapv (fn [tiedot]
+                                                              (select-keys tiedot #{:vuosi :kuukausi}))
+                                                            %))
+                           (s/coll-of ::jhk-tieto)))
+
+(s/def ::ennen-urakkaa? boolean?)
+
+(s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::toimenkuva  ::ennen-urakkaa? ::jhk-tiedot]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
 (s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::summa ::ajat]))

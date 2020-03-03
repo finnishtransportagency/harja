@@ -461,11 +461,14 @@
 
 (defn- grid-polku-sopii-osaan?
   [grid-polku osa]
-  (let [nimi-polku (::nimi-polku osa)]
-    (and (every? true? (map (fn [gp op]
-                              (= gp op))
+  (let [nimi-polku (::nimi-polku osa)
+        index-polku (::index-polku osa)]
+    (and (every? true? (map (fn [gp np ip]
+                              (or (= gp np)
+                                  (= gp ip)))
                             grid-polku
-                            nimi-polku))
+                            nimi-polku
+                            index-polku))
          (>= (count nimi-polku) (count grid-polku)))))
 
 (defn- solun-polun-pituus-oikein?
