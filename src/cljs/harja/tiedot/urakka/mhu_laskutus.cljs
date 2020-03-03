@@ -58,7 +58,7 @@
           (paivitys osa)))
       osat)))
 
-(defn redusoi-lomake
+(defn- merkitse-kentta-kosketuksi
   [{:keys [validoitava?]} args acc [polku arvo]]
   (let [paivitetty-lomake
         (apply
@@ -84,12 +84,10 @@
 
 (defn lomakkeen-paivitys
   [lomake polut-ja-arvot {:keys [jalkiprosessointi-fn] :as optiot} & args]
-  (.log js/console "lomakkeen-paivitys " (pr-str lomake) ", polut-ja-arvot: " (pr-str polut-ja-arvot))
-  (.log js/console "OPTIOT: " (pr-str optiot))
   (let [jalkiprosessointi (or jalkiprosessointi-fn
                               identity)]
     (jalkiprosessointi
-      (reduce (r/partial redusoi-lomake optiot args)
+      (reduce (r/partial merkitse-kentta-kosketuksi optiot args)
               lomake
               (partition 2 polut-ja-arvot)))))
 
@@ -111,40 +109,109 @@
       avain-arvot)))
 
 
-;; FIXME: refaktoroi, mutaatio ja tiedon mankelointi samassa
+(def kulutaulukon-paivitysfunktiot
+  {"Pvm"          (luo-paivitys-fn
+                   :id :pvm
+                   :arvo "Pvm"
+                   :class #{"col-xs-1"})
+   "Maksuerä"     (luo-paivitys-fn
+                   :id :maksuera
+                   :arvo "Maksuerä"
+                   :class #{"col-xs-2"})
+   "Toimenpide"   (luo-paivitys-fn
+                   :id :toimenpide
+                   :arvo "Toimenpide"
+                   :class #{"col-xs-4"})
+   "Tehtäväryhmä" (luo-paivitys-fn
+                   :id :tehtavaryhma
+                   :arvo "Tehtäväryhmä"
+                   :class #{"col-xs-4"})
+   "Määrä"        (luo-paivitys-fn
+                   :id :maara
+                   :arvo "Määrä"
+                   :class #{"col-xs-1"})})
+
+(defn- hae-avaimella-fn [verrattava haettava palautettava]
+  (fn [kohde]
+    (let [palautuksen-avain (or palautettava
+                                haettava)]
+      (when (= verrattava (if (or (vector? haettava)
+                                  (seq? haettava))
+                            (get-in kohde haettava)
+                            (haettava kohde)))
+        (palautuksen-avain kohde)))))
+
+(defn- luo-taulukon-summarivi [e! toimenpiteet tehtavaryhmat maksuerat taulukko [tpi rivit]]
+  (let [taulukko (if-not (= 1 (count rivit))
+                   (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
+                                            :pelkka-palautus? true
+                                            :rivin-parametrit {:class #{"table-default"
+                                                                        "table-default-strong"
+                                                                        "table-default-odd"}}}
+                                  [osa/->Teksti
+                                   (keyword (gensym "lbl-erapv-"))
+                                   (str (pvm/pvm (-> rivit first :erapaiva)))
+                                   {:class #{"col-xs-2"}}]
+                                  [osa/->Teksti
+                                   (keyword (gensym "lbl-tpi-"))
+                                   (str (some #(when (= tpi (:toimenpideinstanssi %)) (:toimenpide %)) toimenpiteet))
+                                   {:class #{"col-xs-offset-1 col-xs-4"}}]
+                                  [osa/->Teksti
+                                   (keyword (gensym "lbl-yht-"))
+                                   (str "Yhteensä ")
+                                   {:class #{"col-xs-offset-3 col-xs-1"}}]
+                                  [osa/->Teksti
+                                   (keyword (gensym "lbl-sum-"))
+                                   (str (reduce #(+ %1 (:summa %2)) 0 rivit))
+                                   {:class #{"col-xs-1"}}])
+                   taulukko)]
+    (loop [taulukko taulukko
+           parillinen? true
+           [{:keys [erapaiva toimenpideinstanssi tehtavaryhma summa] :as rivi} & rivit] rivit]
+      (if-not rivi
+        taulukko
+        (recur (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
+                                        :pelkka-palautus? true
+                                        :rivin-parametrit {:on-click #(e! (->AvaaLasku rivi))
+                                                           :class    #{"table-default"
+                                                                       "table-default-selectable"
+                                                                       (str "table-default-"
+                                                                            (if (true? parillinen?)
+                                                                              "even"
+                                                                              "odd"))}}}
+                        [osa/->Teksti
+                         (keyword (gensym "erapv-"))
+                         (str
+                          (when (= 1 (count rivit)) (pvm/pvm erapaiva)))
+                         {:class #{"col-xs-1"}}]
+                        [osa/->Teksti
+                         (keyword (gensym "maksuera-"))
+                         (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
+                         {:class #{"col-xs-2"}}]
+                        [osa/->Teksti
+                         (keyword (gensym "toimenpideinstanssi-"))
+                         (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
+                         {:class #{"col-xs-4"}}]
+                        [osa/->Teksti
+                         (keyword (gensym "tehtavaryhma-"))
+                         (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
+                         {:class #{"col-xs-4"}}]
+                        [osa/->Teksti
+                         (keyword (gensym "summa-"))
+                         (str summa)
+                         {:class #{"col-xs-1"}}])
+               (not parillinen?)
+               rivit)))))
 (defn- luo-kulutaulukko
   [{:keys [toimenpiteet tehtavaryhmat maksuerat]}]
   (let [e! (tuck/current-send-function)
-        paivitysfunktiot {"Pvm"          (luo-paivitys-fn
-                                           :id :pvm
-                                           :arvo "Pvm"
-                                           :class #{"col-xs-1"})
-                          "Maksuerä"     (luo-paivitys-fn
-                                           :id :maksuera
-                                           :arvo "Maksuerä"
-                                           :class #{"col-xs-2"})
-                          "Toimenpide"   (luo-paivitys-fn
-                                           :id :toimenpide
-                                           :arvo "Toimenpide"
-                                           :class #{"col-xs-4"})
-                          "Tehtäväryhmä" (luo-paivitys-fn
-                                           :id :tehtavaryhma
-                                           :arvo "Tehtäväryhmä"
-                                           :class #{"col-xs-4"})
-                          "Määrä"        (luo-paivitys-fn
-                                           :id :maara
-                                           :arvo "Määrä"
-                                           :class #{"col-xs-1"})}
+        paivitysfunktiot kulutaulukon-paivitysfunktiot
         otsikot-rivi (fn [rivi]
                        (-> rivi
                            (p/aseta-arvo :id :otsikko-rivi
                                          :class #{"table-default" "table-default-header"})
                            (p/paivita-arvo :lapset
                                            (osien-paivitys-fn paivitysfunktiot))))
-        kulut-rivi (fn [rivi]
-                     (-> rivi
-                         (p/aseta-arvo :id :kulut-rivi
-                                       :class #{"table-default-even"})))
         ; pvm {
         ;     :summa 0
         ;     :rivit [
@@ -154,8 +221,7 @@
         ;             :summa 0 } ] }
         ;
         ;
-        redusoija (fn []
-                    true)
+
         valiotsikko-rivi (fn [lisaa-fn & solut]
                            (apply lisaa-fn (map (fn [solu]
                                                   (let [{:keys [otsikko arvo luokka]} solu]
@@ -166,88 +232,20 @@
                                                      (merge {} (when-not (nil? luokka) {:class luokka}))]))
                                                 solut)))
         flattaus-fn (fn [perustiedot kaikki nykyinen]
+                      ;; Yhdistä perustiedot ja kohdistukset
                       (apply conj kaikki (map #(merge perustiedot (select-keys nykyinen [:kohdistukset]) %) (:kohdistukset nykyinen))))
         flattaa (fn [flatattavat]
                   (let [flatatut (reduce (r/partial flattaus-fn (dissoc (first flatattavat) :kohdistukset)) [] flatattavat)]
                     (sort-by :toimenpideinstanssi flatatut)))
         even? (r/atom true)
-        hae-avaimella-fn (fn [verrattava haettava palautettava]
-                           (fn [kohde]
-                             (let [palautuksen-avain (or palautettava
-                                                         haettava)]
-                               (when (= verrattava (if (or (vector? haettava)
-                                                           (seq? haettava))
-                                                     (get-in kohde haettava)
-                                                     (haettava kohde)))
-                                 (palautuksen-avain kohde)))))
-        luo-taulukon-summarivi (fn [toimenpiteet tehtavaryhmat taulukko [tpi rivit]]
-                                 (let [taulukko (if-not (= 1 (count rivit))
-                                                  (do
-                                                    (swap! even? not)
-                                                    (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
-                                                                             :pelkka-palautus? true
-                                                                             :rivin-parametrit {:class #{"table-default" "table-default-strong"
-                                                                                                         (str "table-default-"
-                                                                                                              (if (true? @even?)
-                                                                                                                "even"
-                                                                                                                "odd"))}}}
-                                                                   [osa/->Teksti
-                                                                    (keyword (gensym "lbl-erapv-"))
-                                                                    (str (pvm/pvm (-> rivit first :erapaiva)))
-                                                                    {:class #{"col-xs-2"}}]
-                                                                   [osa/->Teksti
-                                                                    (keyword (gensym "lbl-tpi-"))
-                                                                    (str (some #(when (= tpi (:toimenpideinstanssi %)) (:toimenpide %)) toimenpiteet))
-                                                                    {:class #{"col-xs-offset-1 col-xs-4"}}]
-                                                                   [osa/->Teksti
-                                                                    (keyword (gensym "lbl-yht-"))
-                                                                    (str "Yhteensä ")
-                                                                    {:class #{"col-xs-offset-3 col-xs-1"}}]
-                                                                   [osa/->Teksti
-                                                                    (keyword (gensym "lbl-sum-"))
-                                                                    (str (reduce #(+ %1 (:summa %2)) 0 rivit))
-                                                                    {:class #{"col-xs-1"}}]))
-                                                  taulukko)]
-                                   (reduce (fn [taulukko {:keys [erapaiva toimenpideinstanssi tehtavaryhma summa] :as rivi}]
-                                             (swap! even? not)
-                                             (p/lisaa-rivi! taulukko {:rivi             jana/->Rivi
-                                                                      :pelkka-palautus? true
-                                                                      :rivin-parametrit {:on-click #(e! (->AvaaLasku rivi))
-                                                                                         :class    #{"table-default"
-                                                                                                     "table-default-selectable"
-                                                                                                     (str "table-default-"
-                                                                                                          (if (true? @even?)
-                                                                                                            "even"
-                                                                                                            "odd"))}}}
-                                                            [osa/->Teksti
-                                                             (keyword (gensym "erapv-"))
-                                                             (str
-                                                               (when (= 1 (count rivit)) (pvm/pvm erapaiva)))
-                                                             {:class #{"col-xs-1"}}]
-                                                            [osa/->Teksti
-                                                             (keyword (gensym "maksuera-"))
-                                                             (str "HA" (some (hae-avaimella-fn toimenpideinstanssi [:toimenpideinstanssi :id] :numero) maksuerat))
-                                                             {:class #{"col-xs-2"}}]
-                                                            [osa/->Teksti
-                                                             (keyword (gensym "toimenpideinstanssi-"))
-                                                             (str (some (hae-avaimella-fn toimenpideinstanssi :toimenpideinstanssi :toimenpide) toimenpiteet))
-                                                             {:class #{"col-xs-4"}}]
-                                                            [osa/->Teksti
-                                                             (keyword (gensym "tehtavaryhma-"))
-                                                             (str (some (hae-avaimella-fn tehtavaryhma :id :tehtavaryhma) tehtavaryhmat))
-                                                             {:class #{"col-xs-4"}}]
-                                                            [osa/->Teksti
-                                                             (keyword (gensym "summa-"))
-                                                             (str summa)
-                                                             {:class #{"col-xs-1"}}]))
-                                           taulukko
-                                           rivit)))
+
+
 
         luo-laskun-nro-otsikot (fn [rs [laskun-nro {summa :summa rivit :rivit}]]
                                  (reset! even? true)
                                  (let [flatatut (flattaa rivit)]
                                    (reduce
-                                     (r/partial luo-taulukon-summarivi toimenpiteet tehtavaryhmat)
+                                     (r/partial luo-taulukon-summarivi e! toimenpiteet tehtavaryhmat maksuerat)
                                      (if (= 0 laskun-nro)
                                        rs
                                        (valiotsikko-rivi
@@ -266,7 +264,7 @@
                                            {:otsikko "Paivamaara " :arvo pvm :luokka #{"col-xs-4"}}
                                            {:otsikko "Yhteensä " :arvo summa :luokka #{"col-xs-offset-6" "col-xs-2"}})
                                          rivit))
-        jaottele-riveiksi-taulukkoon (fn [taulukko rivit {toimenpiteet :toimenpiteet tehtavaryhmat :tehtavaryhmat}]
+        jaottele-riveiksi-taulukkoon (fn [taulukko rivit]
                                        (let [taulukko-rivit (reduce luo-paivamaara-otsikot
                                                                     taulukko rivit)]
                                          (p/paivita-taulukko! taulukko-rivit)))]
@@ -283,7 +281,7 @@
                         :taulukon-paivitys-fn! (fn [taulukko rivit]
                                                  (let [uusi (if (nil? rivit)
                                                               taulukko
-                                                              (jaottele-riveiksi-taulukkoon taulukko rivit @tila/laskutus-kohdistetut-kulut))]
+                                                              (jaottele-riveiksi-taulukkoon taulukko rivit))]
                                                    (->
                                                      tila/laskutus-kohdistetut-kulut
                                                      (swap! assoc-in [:taulukko] uusi)
