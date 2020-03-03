@@ -116,8 +116,8 @@
                       (let [[kk hv] (str/split a #"/")]
                         (str (get kuukaudet-strs (keyword kk)) " - "
                              (get hoitovuodet-strs (keyword hv))))))}
-   (for [kk kuukaudet
-         hv (range 1 6)]
+   (for [hv (range 1 6)
+         kk kuukaudet]
      (str (name kk) "/" hv "-hoitovuosi"))])
 
 (defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
