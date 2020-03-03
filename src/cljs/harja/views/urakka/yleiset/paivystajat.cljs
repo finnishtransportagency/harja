@@ -75,8 +75,7 @@
       :pituus 16}
      {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
       :pituus 16}
-     {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
-      :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
+     {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20}
      {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
       :validoi [[:ei-tyhja "Aseta alkupvm"]
                 (fn [alku rivi]

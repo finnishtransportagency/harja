@@ -39,7 +39,7 @@ WHERE ulompi_i.id IN
        -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
       (sisempi_i.urakka IS NULL OR sisempi_i.urakka IN (:urakat)) AND
 
-      -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+      -- Tarkasta että ilmoituksen ilmoitusajankohta sopii hakuehtoihin
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
        (:loppu_annettu IS FALSE AND sisempi_i.ilmoitettu  >= :alku) OR
        (:alku_annettu IS FALSE AND sisempi_i.ilmoitettu  <= :loppu) OR
@@ -324,7 +324,7 @@ INSERT INTO ilmoitus
  tunniste,
  viestiid,
  vastaanotettu,
- "ilmoitettu-alunperin")
+ "vastaanotettu-alunperin")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -340,7 +340,7 @@ VALUES
    :tunniste,
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
-   :ilmoitettu-alunperin :: TIMESTAMPTZ);
+   :vastaanotettu-alunperin :: TIMESTAMPTZ);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -577,7 +577,7 @@ SELECT exists(SELECT
                     viestiid = :viestiid);
 
 -- name: ilmoituksen-alkuperainen-kesto
-SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
+SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
                            FROM ilmoitus
                            WHERE id = :id));
 

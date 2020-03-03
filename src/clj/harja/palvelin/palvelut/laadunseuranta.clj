@@ -296,7 +296,7 @@
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defn hae-urakkatyypin-sanktiolajit
-  "Palauttaa urakkatyypin sanktiolajit settinä"
+  "Palauttaa urakkatyypin sanktiotyypit [sic] settinä"
   [db user urakka-id urakkatyyppi]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (let [sanktiotyypit (into []

@@ -372,6 +372,17 @@
                                              :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})
            aikataulurivit)]]))
 
+(defn- paallystysurakan-tarkka-aikataulu
+  [urakka-id sopimus-id rivi vuosi nakyma voi-muokata-paallystys? voi-muokata-tiemerkinta?]
+  [tarkka-aikataulu/tarkka-aikataulu
+   {:rivi rivi
+    :vuosi vuosi
+    :nakyma nakyma
+    :voi-muokata-paallystys? (voi-muokata-paallystys?)
+    :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
+    :urakka-id urakka-id
+    :sopimus-id sopimus-id}])
+
 (defn aikataulu-grid
   [{:keys [urakka-id urakka sopimus-id aikataulurivit urakkatyyppi
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
@@ -404,18 +415,19 @@
                                                 (reset! tiedot/aikataulurivit vastaus)
                                                 (reset! tiedot/kohteiden-sahkopostitiedot nil)))
                   :ei-mahdollinen)
-      :vetolaatikot (into {}
-                          (map (juxt :id
-                                     (fn [rivi]
-                                       [tarkka-aikataulu/tarkka-aikataulu
-                                        {:rivi rivi
-                                         :vuosi vuosi
-                                         :nakyma (:nakyma optiot)
-                                         :voi-muokata-paallystys? (voi-muokata-paallystys?)
-                                         :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
-                                         :urakka-id urakka-id
-                                         :sopimus-id sopimus-id}]))
-                               aikataulurivit))}
+      :vetolaatikot (yllapitokohteet-view/alikohteiden-vetolaatikot urakka-id
+                                                                    (first @u/valittu-sopimusnumero)
+                                                                    (atom aikataulurivit)
+                                                                    (:kohdetyyppi optiot)
+                                                                    (if (= :tiemerkinta (:nakyma optiot))
+                                                                           false
+                                                                           true)
+                                                                    #{:raekoko :massamaara :toimenpide :tr-muokkaus}
+                                                                    {:fn paallystysurakan-tarkka-aikataulu
+                                                                     :nakyma (:nakyma optiot)
+                                                                     :voi-muokata-paallystys? voi-muokata-paallystys?
+                                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
+                                                                    true)}
      [{:tyyppi :vetolaatikon-tila :leveys 2}
       {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
        :pituus-max 128 :muokattava? voi-muokata-paallystys?}
@@ -424,19 +436,6 @@
       {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
        :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
        :muokattava? (constantly false)}
-      {:otsikko "Ajo\u00ADrata"
-       :nimi :tr-ajorata
-       :muokattava? (constantly false)
-       :tyyppi :string :tasaa :oikea
-       :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
-       :leveys 3}
-      {:otsikko "Kais\u00ADta"
-       :muokattava? (constantly false)
-       :nimi :tr-kaista
-       :tyyppi :string
-       :tasaa :oikea
-       :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
-       :leveys 3}
       {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
        :tyyppi :positiivinen-numero
        :tasaa :oikea

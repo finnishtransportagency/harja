@@ -20,7 +20,7 @@
       "losa": 12,
       "let": 1,
       "ajr": 0,
-      "kaista": 1
+      "kaista": 11
     },
     "alikohteet": [
       {
@@ -36,7 +36,7 @@
             "losa": 10,
             "let": 666,
             "ajr": 0,
-            "kaista": 1
+            "kaista": 11
           },
           "toimenpide": "testitoimenpide"
         }
@@ -54,7 +54,7 @@
             "losa": 12,
             "let": 1,
             "ajr": 0,
-            "kaista": 1
+            "kaista": 11
           },
           "toimenpide": "testitoimenpide"
         }
