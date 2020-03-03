@@ -1434,16 +1434,14 @@
   [otsikko & params]
   (let [avaimet->proppi {:arvo :value}
         id (gensym "kulukentta-")
-        propit (apply assoc {:type :text
-                             :for  id}
-                      (flatten
-                        (mapv
-                          (fn [[avain arvo]]
+        propit (into {:type :text
+                      :for  id}
+                     (map (fn [[avain arvo]]
                             [(if (contains? avaimet->proppi avain)
                                (avain avaimet->proppi)
                                avain)
-                             arvo])
-                          (partition 2 params))))
+                             arvo]))
+                     (partition 2 params))
         {komponentti            :komponentti
          komponentin-argumentit :komponentin-argumentit
          tyylit                 :tyylit} propit
