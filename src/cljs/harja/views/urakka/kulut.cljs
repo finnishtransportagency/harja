@@ -400,14 +400,16 @@
 (defn- kulujen-syottolomake
   [e! _]
   (let [paivitys-fn (fn [& opts-polut-ja-arvot]
-                      (let [polut-ja-arvot (if (odd?
-                                                 (count opts-polut-ja-arvot))
+                      (let [polut-ja-arvot (if (odd? (count opts-polut-ja-arvot))
                                              (rest opts-polut-ja-arvot)
                                              opts-polut-ja-arvot)
                             opts (when (odd? (count opts-polut-ja-arvot)) (first opts-polut-ja-arvot))]
                         (e! (tiedot/->PaivitaLomake polut-ja-arvot opts))))]
     (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
-      (let [{:keys [nayta paivita]} lomake]
+      (let [{:keys [nayta paivita]} lomake
+            validoi-fn (-> lomake meta :validoi)
+            validoitu-lomake (validoi-fn lomake)
+            validi? (-> validoitu-lomake meta :validi?)]
         [:div
          [:div.row
           [:h1 "Uusi kulu"]
@@ -418,7 +420,8 @@
          [napit/tallenna
           "Tallenna"
           #(e! (tiedot/->TallennaKulu))
-          {:vayla-tyyli? true}]
+          {:vayla-tyyli? true
+           :disabled (not validi?)}]
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
