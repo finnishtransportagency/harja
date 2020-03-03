@@ -406,10 +406,7 @@
                             opts (when (odd? (count opts-polut-ja-arvot)) (first opts-polut-ja-arvot))]
                         (e! (tiedot/->PaivitaLomake polut-ja-arvot opts))))]
     (fn [e! {:keys [syottomoodi lomake aliurakoitsijat tehtavaryhmat]}]
-      (let [{:keys [nayta paivita]} lomake
-            validoi-fn (-> lomake meta :validoi)
-            validoitu-lomake ((or validoi-fn identity) lomake)
-            validi? (-> validoitu-lomake meta :validi?)]
+      (let [{:keys [nayta]} lomake]
         [:div
          [:div.row
           [:h1 "Uusi kulu"]
@@ -420,8 +417,7 @@
          [napit/tallenna
           "Tallenna"
           #(e! (tiedot/->TallennaKulu))
-          {:vayla-tyyli? true
-           :disabled (not validi?)}]
+          {:vayla-tyyli? true}]
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
