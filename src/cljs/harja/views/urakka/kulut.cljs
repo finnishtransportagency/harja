@@ -22,8 +22,12 @@
             [harja.loki :refer [log]]
             [harja.loki :as loki]
             [harja.ui.kentat :as kentat])
-  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]
-                   [harja.views.urakka.kulut :refer [lomakkeen-osio]]))
+  (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
+
+(defn- lomakkeen-osio [otsikko & osiot]
+  (into [:div.col-xs-12.col-sm-6
+         [:h2 otsikko]]
+        osiot))
 
 (defn- validi-ei-tarkistettu-tai-ei-koskettu? [{:keys [koskettu? validi? tarkistettu?]}]
   (cond
