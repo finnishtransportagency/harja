@@ -675,7 +675,7 @@
                                                                          (merge rahavarauksien-kasittelijat
                                                                                 {[::g-pohjat/data toimenpide ::data-sisalto rahavaraus] {:rajapinta (keyword (str "rahavaraus-" rahavaraus "-" toimenpide))
                                                                                                                                          :solun-polun-pituus 1
-                                                                                                                                         :datan-kasittely #(do (println "-- " toimenpide " " rahavaraus " " %) %) #_identity}}))
+                                                                                                                                         :datan-kasittely identity}}))
                                                                        {}
                                                                        (t/toimenpiteen-rahavaraukset toimenpide))))
                                                       {}
@@ -1262,8 +1262,6 @@
                                                  :solun-polun-pituus 1
                                                  :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
                                                  :datan-kasittely (fn [yhteenveto]
-                                                                    (when (nil? maksukausi)
-                                                                      (println "DATAN KÄSITTELY: " yhteenveto))
                                                                     (mapv (fn [[_ v]]
                                                                             v)
                                                                           yhteenveto))

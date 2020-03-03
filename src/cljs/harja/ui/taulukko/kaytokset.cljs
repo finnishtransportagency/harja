@@ -24,11 +24,13 @@
   [{{:keys [kokonaisosan-maara desimaalien-maara]} :positiivinen-numero} toiminto]
   (comp toiminto
         (fn [arvo]
-          (when-let [positiivinen-arvo? (and arvo (re-matches (re-pattern (re/positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
-                                                                                                      :desimaalien-maara desimaalien-maara}))
-                                                              arvo))]
-            (when (or (= "" arvo) positiivinen-arvo?)
-              arvo)))))
+          (if (= "" arvo)
+            arvo
+            (when-let [positiivinen-arvo? (and arvo (re-matches (re-pattern (re/positiivinen-numero-re {:kokonaisosan-maara kokonaisosan-maara
+                                                                                                        :desimaalien-maara desimaalien-maara}))
+                                                                arvo))]
+              (when positiivinen-arvo?
+                arvo))))))
 
 (defmethod lisaa-kaytos :numero-pisteella
   [_ toiminto]
