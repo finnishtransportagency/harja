@@ -74,6 +74,7 @@
   (key-from-val tallennettava-asia->tehtava v))
 
 (def ^{:private true} tallennettava-asia->tehtavaryhma
+  ;; TODO TIlaajan varaus tänne
   {:erillishankinnat        "37d3752c-9951-47ad-a463-c1704cf22f4c"
    :rahavaraus-lupaukseen-1 "0e78b556-74ee-437f-ac67-7a03381c64f6"})
 
@@ -180,14 +181,15 @@
                                                        (into (sorted-map)
                                                              (group-by #(pvm/paivamaaran-hoitokausi (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15))
                                                                        johto-ja-hallintokorvaukset))))
-        maksukausi-lisatty (reduce (fn [johto-ja-hallintokorvaukset {:keys [toimenkuva kuukausi] :as johto-ja-hallintokorvaus}]
-                                     (if (or (= toimenkuva "päätoiminen apulainen")
-                                             (= toimenkuva "apulainen/työnjohtaja"))
-                                       (if (<= 5 kuukausi 9)
-                                           (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
-                                           (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
-                                       (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
-                                      [] hoitokauden-numero-lisatty)
+        maksukausi-lisatty (reduce (fn [johto-ja-hallintokorvaukset {:keys [toimenkuva kuukausi ennen-urakkaa] :as johto-ja-hallintokorvaus}]
+                                     (cond
+                                       ennen-urakkaa (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi nil))
+                                       (or (= toimenkuva "päätoiminen apulainen")
+                                           (= toimenkuva "apulainen/työnjohtaja")) (if (<= 5 kuukausi 9)
+                                                                                     (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
+                                                                                     (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
+                                       :else (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
+                                   [] hoitokauden-numero-lisatty)
         kk-v-lisatty (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
                             (cond
                               #_#_(not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
@@ -197,14 +199,7 @@
                               (= toimenkuva "viherhoidosta vastaava henkilö") (assoc johto-ja-hallintokorvaus :kk-v 5)
                               (= toimenkuva "harjoittelija") (assoc johto-ja-hallintokorvaus :kk-v 4)
                               :else (assoc johto-ja-hallintokorvaus :kk-v 12)))
-                          maksukausi-lisatty)
-        tarvittavat-tiedot (map (fn [johto-ja-hallintokorvaus]
-                                  (select-keys johto-ja-hallintokorvaus
-                                               #{:kk-v :hoitokausi :toimenkuva :tunnit :tuntipalkka :maksukausi}))
-                                kk-v-lisatty)]
-    #_(distinct tarvittavat-tiedot)
-    #_(println "TARVITTAVAT TIEDOT: " tarvittavat-tiedot)
-    #_tarvittavat-tiedot
+                          maksukausi-lisatty)]
     kk-v-lisatty))
 
 (defn hae-urakan-budjetoidut-tyot

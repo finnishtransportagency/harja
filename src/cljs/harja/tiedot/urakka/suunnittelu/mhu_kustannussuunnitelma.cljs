@@ -1004,8 +1004,8 @@
         hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
         kopioidaan-tuleville-vuosille? (get-in tila [:suodattimet :kopioidaan-tuleville-vuosille?])
         paivitettavat-hoitokauden-numerot (cond
-                                            kopioidaan-tuleville-vuosille? (range hoitokauden-numero 6)
                                             data-koskee-ennen-urakkaa? [1]
+                                            kopioidaan-tuleville-vuosille? (range hoitokauden-numero 6)
                                             :else [hoitokauden-numero])
         domain-paivitys (fn [tila]
                           (reduce (fn [tila hoitokauden-numero]
@@ -1291,14 +1291,12 @@
                               (fn [parametrit]
                                 (update parametrit :class (fn [luokat]
                                                             (if (= ::valinta rivin-nimi)
-                                                              (do (println "VALINTA RIVI MUKANA")
-                                                                  (paivita-luokat luokat (not (odd? index))))
+                                                              (paivita-luokat luokat (not (odd? index)))
                                                               (paivita-luokat luokat (odd? index)))))))
           (recur loput-rivit
                  (if (= ::valinta rivin-nimi)
                    index
-                   (inc index))))
-        (println "INDEX: " index)))))
+                   (inc index))))))))
 
 (defn laajenna-solua-klikattu
   ([solu auki? dom-id polku-dataan] (laajenna-solua-klikattu solu auki? dom-id polku-dataan nil false))
@@ -1570,7 +1568,8 @@
           johtopalkkio (maara-kk-taulukon-data hoidon-johto-kustannukset :hoidonjohtopalkkio)
           jh-korvaukset (reduce (fn [korvaukset {:keys [toimenkuva kk-v maksukausi hoitokaudet]}]
                                   (let [asia-kannasta (reverse (sort-by :osa-kuukaudesta (filter (fn [jh-korvaus]
-                                                                                                   (= (:toimenkuva jh-korvaus) toimenkuva))
+                                                                                                   (and (= (:toimenkuva jh-korvaus) toimenkuva)
+                                                                                                        (= (:maksukausi jh-korvaus) maksukausi)))
                                                                                                  (:johto-ja-hallintokorvaukset vastaus))))
                                         data-koskee-ennen-urakkaa? (toimenpide-koskee-ennen-urakkaa? hoitokaudet)
                                         taytetty-jh-data (if data-koskee-ennen-urakkaa?
@@ -1735,7 +1734,6 @@
                                                                :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
                                                                :summa summa
                                                                :ajat ajat})]
-      (println "LAHETETTÄVÄ DATA " lahetettava-data)
       (tuck-apurit/post! app
                          post-kutsu
                          lahetettava-data
@@ -1744,7 +1742,6 @@
                           :paasta-virhe-lapi? true})))
   TallennaHankintojenArvotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "TALLENNUS ONNISTUI")
     app)
   TallennaHankintojenArvotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -1805,7 +1802,6 @@
                           :paasta-virhe-lapi? true})))
   TallennaKustannusarvoituOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "TALLENNUS ONNISTUI")
     app)
   TallennaKustannusarvoituEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -1817,7 +1813,6 @@
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
           post-kutsu :tallenna-johto-ja-hallintokorvaukset
           hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
-          valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
           kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :kopioidaan-tuleville-vuosille?])
           paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
                                               (range hoitokauden-numero 6)

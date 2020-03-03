@@ -1306,7 +1306,7 @@
                                                                            (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                                            teksti))))}]}
                                                      {:tyyppi :taulukko
-                                                      :nimi (str toimenkuva "-taulukko")
+                                                      :nimi (str toimenkuva "-" maksukausi "-taulukko")
                                                       :osat [{:tyyppi :rivi
                                                               :nimi ::data-yhteenveto
                                                               :osat [{:tyyppi :laajenna
@@ -1330,10 +1330,10 @@
                                                                       :luokat #{"table-default"}}
                                                                      (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit-yhteenveto!
                                                                                   :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
-                                                                                  :etsittava-osa (str toimenkuva "-taulukko")})
+                                                                                  :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
                                                                      (syote-solu {:nappi? false :fmt yhteenveto-format :paivitettava-asia :aseta-tuntipalkka-yhteenveto!
                                                                                   :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? true :solun-index 1
-                                                                                  :etsittava-osa (str toimenkuva "-taulukko")})
+                                                                                  :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
                                                                      {:tyyppi :teksti
                                                                       :luokat #{"table-default"}
                                                                       :fmt yhteenveto-format}
@@ -1364,7 +1364,7 @@
                                                                                                            teksti)))}
                                                                                                (syote-solu {:nappi? true :fmt yhteenveto-format :paivitettava-asia :aseta-tunnit!
                                                                                                             :solun-index 1 :tallenna :johto-ja-hallintokorvaus :tallenna-kaikki? false
-                                                                                                            :etsittava-osa (str toimenkuva "-taulukko")})
+                                                                                                            :etsittava-osa (str toimenkuva "-" maksukausi "-taulukko")})
                                                                                                {:tyyppi :tyhja}
                                                                                                {:tyyppi :tyhja}
                                                                                                {:tyyppi :tyhja}]})))}]})))
