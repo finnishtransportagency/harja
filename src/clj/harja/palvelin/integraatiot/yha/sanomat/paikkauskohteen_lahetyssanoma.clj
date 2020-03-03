@@ -30,7 +30,7 @@
                                                   (conj {:kivi-ja-sideaineet (mapv kasittele-materiaali (:materiaalit p))})
                                                   (dissoc :materiaalit))})
         kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
-                                                       (dissoc :ulkoinen-id)
+                                                       (dissoc :ulkoinen-id :tila :virhe)
                                                        (rename-keys {:id :harja-id})
                                                        (conj {:paikkaukset (mapv kasittele-paikkaus paikkaukset)}))}]}
         sanomasisalto (merge urakka kohteet)]

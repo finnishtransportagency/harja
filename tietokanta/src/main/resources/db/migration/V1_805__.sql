@@ -1,3 +1,3 @@
 ALTER TABLE paikkauskohde
 ADD COLUMN tila LAHETYKSEN_TILA,
-ADD COLUMN virhe TEXT;
+ADD COLUMN virhe TEXT[];

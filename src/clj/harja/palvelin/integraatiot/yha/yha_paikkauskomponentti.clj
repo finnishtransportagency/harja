@@ -32,7 +32,7 @@
   ([db kohde-id tila virheet]
     (q-paikkaus/paivita-paikkauskohteen-tila db {:harja.domain.paikkaus/id kohde-id
                                                  :harja.domain.paikkaus/tila (name tila)
-                                                 :harja.domain.paikkaus/virhe virheet})))
+                                                 :harja.domain.paikkaus/virhe (when virheet (mapv #(:viesti %) (concat virheet virheet virheet))) })))
 
 (defn kasittele-paikkauskohteen-lahettamisen-vastaus
   "Päivittää virheeseen menneen paikkauskohteen lähteyksen jälkeen paikkauskohteen lähetystilan virheeksi.
