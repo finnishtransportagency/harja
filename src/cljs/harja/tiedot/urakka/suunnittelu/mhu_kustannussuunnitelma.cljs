@@ -196,7 +196,7 @@
    (let [suodatin-polku (case suodatin
                           :yleinen [:suodattimet]
                           :hankinnat [:suodattimet :hankinnat])
-         hoitokauden-numero (or hoitokauden-numero (get-in tila (conj suodatin-polku :hoitokauden-numero)))
+         hoitokauden-numero (or hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero]))
          valittu-toimenpide (get-in tila [:suodattimet :hankinnat :toimenpide])
          kopioidaan-tuleville-vuosille? (get-in tila (conj suodatin-polku :kopioidaan-tuleville-vuosille?))
          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
@@ -1581,6 +1581,12 @@
 
 (defrecord TaulukoidenVakioarvot [])
 (defrecord FiltereidenAloitusarvot [])
+(defrecord TallennaHankintojenArvot [tallennettava-asia hoitokauden-numero tunnisteet])
+(defrecord TallennaHankintojenArvotOnnistui[vastaus])
+(defrecord TallennaHankintojenArvotEpaonnistui [vastaus])
+(defrecord TallennaArvot [tallennettava-asia tunnisteet])
+(defrecord TallennaArvotOnnistui[vastaus])
+(defrecord TallennaArvotEpaonnistui [vastaus])
 
 (defrecord Hoitokausi [])
 (defrecord YleisSuodatinArvot [])
@@ -2303,6 +2309,8 @@
                                                   (reduce (fn [data-toimenpiteittain toimenpide]
                                                             (let [sort-fn (juxt :vuosi :kuukausi)
                                                                   data-backilta (vec (sort-by sort-fn (filter #(= (:toimenpide-avain %) toimenpide) data)))
+                                                                  _ (when (= :talvihoito toimenpide)
+                                                                      (println "data-backilta " data-backilta))
                                                                   data (pohjadatan-taydennys data-backilta (constantly true) rikastamis-fn)]
                                                               (merge data-toimenpiteittain
                                                                      {toimenpide data})))
@@ -2312,6 +2320,7 @@
           hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                          (nil? (:haettu-asia %)))
                                                    (:kustannusarvioidut-tyot vastaus))
+          _ (println "hankinnat-laskutukseen-perustuen " hankinnat-laskutukseen-perustuen)
           rahavaraukset (distinct (keep #(when (#{:rahavaraus-lupaukseen-1 :kolmansien-osapuolten-aiheuttamat-vahingot :akilliset-hoitotyot} (:haettu-asia %))
                                            (select-keys % #{:tyyppi :summa :toimenpide-avain :vuosi :kuukausi}))
                                         (:kustannusarvioidut-tyot vastaus)))
@@ -2337,6 +2346,7 @@
                                                                                                          (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                                                                                                                 :maara summa)
                                                                                                          (dissoc :summa))))
+          _ (println "hankinnat-laskutukseen-perustuen-toimenpiteittain " hankinnat-laskutukseen-perustuen-toimenpiteittain)
           hankinnat-laskutukseen-perustuen (into {}
                                                  (map (fn [[toimenpide hankinnat]]
                                                         [toimenpide (vec (vals (sort-by #(-> % key first)
@@ -2345,6 +2355,7 @@
                                                                                         (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                                                                                   hankinnat))))])
                                                       hankinnat-laskutukseen-perustuen-toimenpiteittain))
+          _ (println "hankinnat-laskutukseen-perustuen " hankinnat-laskutukseen-perustuen)
           rahavaraukset-toimenpiteittain (apply merge-with
                                                 (fn [a b]
                                                   (concat a b))
@@ -3348,4 +3359,123 @@
                  [:domain :hoidonjohtopalkkio (dec hoitokauden-numero)]
                  (fn [hoidonjohtopalkkiot]
                    (mapv #(assoc % :maara arvo)
-                         hoidonjohtopalkkiot))))))
+                         hoidonjohtopalkkiot)))))
+
+
+
+  TallennaHankintojenArvot
+  (process-event [{:keys [tallennettava-asia hoitokauden-numero tunnisteet]} app]
+    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+          post-kutsu (case tallennettava-asia
+                       :hankintakustannus :tallenna-kiinteahintaiset-tyot
+                       :laskutukseen-perustuva-hankinta :tallenna-kustannusarvioitu-tyo)
+          valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
+          kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :hankinnat :kopioidaan-tuleville-vuosille?])
+          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                              (range hoitokauden-numero 6)
+                                              [hoitokauden-numero])
+          summa (case tallennettava-asia
+                  :hankintakustannus (get-in app [:domain :suunnittellut-hankinnat valittu-toimenpide hoitokauden-numero (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :laskutukseen-perustuva-hankinta (get-in app [:domain :laskutukseen-perustuvat-hankinnat valittu-toimenpide hoitokauden-numero (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+          ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
+                              (mapv (fn [hoitokauden-numero]
+                                      (let [polun-osa (case tallennettava-asia
+                                                        :hankintakustannus :suunnittellut-hankinnat
+                                                        :laskutukseen-perustuva-hankinta :laskutukseen-perustuvat-hankinnat)]
+                                        (select-keys (get-in app [:domain polun-osa valittu-toimenpide (dec hoitokauden-numero) (first osan-paikka)])
+                                                     #{:vuosi :kuukausi})))
+                                    paivitettavat-hoitokauden-numerot))
+                            tunnisteet))
+          lahetettava-data (case tallennettava-asia
+                             :hankintakustannus {:urakka-id urakka-id
+                                                 :toimenpide-avain valittu-toimenpide
+                                                 :summa summa
+                                                 :ajat ajat}
+                             :laskutukseen-perustuva-hankinta {:urakka-id urakka-id
+                                                               :toimenpide-avain valittu-toimenpide
+                                                               :tallennettava-asia :toimenpiteen-maaramitattavat-tyot
+                                                               :summa summa
+                                                               :ajat ajat})]
+      (println "LAHETETTÄVÄ DATA " lahetettava-data)
+      (tuck-apurit/post! app
+                         post-kutsu
+                         lahetettava-data
+                         {:onnistui ->TallennaHankintojenArvotOnnistui
+                          :epaonnistui ->TallennaHankintojenArvotEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  TallennaHankintojenArvotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (println "TALLENNUS ONNISTUI")
+    app)
+  TallennaHankintojenArvotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  TallennaArvot
+  (process-event [{:keys [tallennettava-asia tunnisteet]} app]
+    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
+          post-kutsu (case tallennettava-asia
+                       (:kolmansien-osapuolten-aiheuttamat-vahingot
+                         :akilliset-hoitotyot
+                         :rahavaraus-lupaukseen-1
+                         :erillishankinnat
+                         :toimistokulut
+                         :hoidonjohtopalkkio) :tallenna-kustannusarvioitu-tyo)
+          hoitokauden-numero (get-in app [:suodattimet :hoitokauden-numero])
+          valittu-toimenpide (get-in app [:suodattimet :hankinnat :toimenpide])
+          kopioidaan-tuleville-vuosille? (get-in app [:suodattimet :kopioidaan-tuleville-vuosille?])
+          paivitettavat-hoitokauden-numerot (if kopioidaan-tuleville-vuosille?
+                                              (range hoitokauden-numero 6)
+                                              [hoitokauden-numero])
+          summa (case tallennettava-asia
+                  :kolmansien-osapuolten-aiheuttamat-vahingot (get-in app [:domain :rahavaraukset valittu-toimenpide "vahinkojen-korjaukset" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :akilliset-hoitotyot (get-in app [:domain :rahavaraukset valittu-toimenpide "akillinen-hoitotyo" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :rahavaraus-lupaukseen-1 (get-in app [:domain :rahavaraukset valittu-toimenpide "muut-rahavaraukset" (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :erillishankinnat (get-in app [:domain :erillishankinnat (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :toimistokulut (get-in app [:domain :toimistokulut (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara])
+                  :hoidonjohtopalkkio (get-in app [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (get-in tunnisteet [0 :osan-paikka 0]) :maara]))
+          ajat (vec (mapcat (fn [{:keys [osan-paikka]}]
+                              (mapv (fn [hoitokauden-numero]
+                                      (let [polku (case tallennettava-asia
+                                                        :kolmansien-osapuolten-aiheuttamat-vahingot [:domain :rahavaraukset valittu-toimenpide "vahinkojen-korjaukset" (dec hoitokauden-numero) (first osan-paikka)]
+                                                        :akilliset-hoitotyot [:domain :rahavaraukset valittu-toimenpide "akillinen-hoitotyo" (dec hoitokauden-numero) (first osan-paikka)]
+                                                        :rahavaraus-lupaukseen-1 [:domain :rahavaraukset valittu-toimenpide "muut-rahavaraukset" (dec hoitokauden-numero) (first osan-paikka)]
+                                                        :erillishankinnat [:domain :erillishankinnat (dec hoitokauden-numero) (first osan-paikka)]
+                                                        :toimistokulut [:domain :toimistokulut (dec hoitokauden-numero) (first osan-paikka)]
+                                                        :hoidonjohtopalkkio [:domain :hoidonjohtopalkkio (dec hoitokauden-numero) (first osan-paikka)])]
+                                        (select-keys (get-in app polku)
+                                                     #{:vuosi :kuukausi})))
+                                    paivitettavat-hoitokauden-numerot))
+                            tunnisteet))
+          lahetettava-data (case tallennettava-asia
+                             (:kolmansien-osapuolten-aiheuttamat-vahingot
+                               :akilliset-hoitotyot
+                               :rahavaraus-lupaukseen-1) {:urakka-id urakka-id
+                                                          :toimenpide-avain valittu-toimenpide
+                                                          :tallennettava-asia tallennettava-asia
+                                                          :summa summa
+                                                          :ajat ajat}
+                             (:erillishankinnat
+                               :toimistokulut
+                               :hoidonjohtopalkkio) {:urakka-id urakka-id
+                                                     :toimenpide-avain :mhu-johto
+                                                     :tallennettava-asia tallennettava-asia
+                                                     :summa summa
+                                                     :ajat ajat})]
+      (println "LAHETETTÄVÄ DATA " lahetettava-data)
+      (tuck-apurit/post! app
+                         post-kutsu
+                         lahetettava-data
+                         {:onnistui ->TallennaArvotOnnistui
+                          :epaonnistui ->TallennaArvotEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  TallennaArvotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (println "TALLENNUS ONNISTUI")
+    app)
+  TallennaArvotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app))

@@ -99,7 +99,7 @@
         nil)
     event))
 
-(defn tayta-alas-napin-toiminto [asettajan-nimi maara-solun-index rivit-alla arvo]
+(defn tayta-alas-napin-toiminto [asettajan-nimi tallennettava-asia maara-solun-index rivit-alla arvo]
   (when (and arvo (not (empty? rivit-alla)))
     (doseq [rivi rivit-alla
             :let [maara-solu (grid/get-in-grid rivi [maara-solun-index])
@@ -109,7 +109,15 @@
                                :arvo arvo
                                :solu maara-solu
                                :ajettavat-jarejestykset #{:mapit}}
-                              true)))))
+                              true)))
+    (when (= asettajan-nimi :aseta-rahavaraukset!)
+      (e! (t/->TallennaArvot tallennettava-asia
+                             (vec (keep (fn [rivi]
+                                          (let [maara-solu (grid/get-in-grid rivi [1])
+                                                piillotettu? (grid/piillotettu? rivi)]
+                                            (when-not piillotettu?
+                                              (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                        rivit-alla)))))))
 
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
@@ -685,7 +693,15 @@
                                                             :triggeroi-seuranta? true}
                                                            true
                                                            hoitokauden-numero
-                                                           :hankinnat)))))
+                                                           :hankinnat)))
+                                 (e! (t/->TallennaHankintojenArvot :hankintakustannus
+                                                                   hoitokauden-numero
+                                                                   (vec (keep (fn [rivi]
+                                                                                (let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                      piillotettu? (grid/piillotettu? rivi)]
+                                                                                  (when-not piillotettu?
+                                                                                    (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                                              rivit-alla))))))
                              (fn [hoitokauden-numero arvo]
                                (when arvo
                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
@@ -709,7 +725,8 @@
                                                        true
                                                        hoitokauden-numero
                                                        :hankinnat)
-                                 #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
+                                 (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
+                                 )
                                #_(when arvo
                                    (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
                                    (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
@@ -794,7 +811,16 @@
                                                                   :ajettavat-jarejestykset #{:mapit}
                                                                   :triggeroi-seuranta? true}
                                                                  true
-                                                                 hoitokauden-numero)))))
+                                                                 hoitokauden-numero
+                                                                 :hankinnat)))
+                                       (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta
+                                                                         hoitokauden-numero
+                                                                         (vec (keep (fn [rivi]
+                                                                                      (let [maara-solu (grid/get-in-grid rivi [1])
+                                                                                            piillotettu? (grid/piillotettu? rivi)]
+                                                                                        (when-not piillotettu?
+                                                                                          (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                                                    rivit-alla))))))
                                    (fn [hoitokauden-numero arvo]
                                      (when arvo
                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
@@ -803,7 +829,8 @@
                                                               :ajettavat-jarejestykset #{:mapit}
                                                               :triggeroi-seuranta? false}
                                                              false
-                                                             hoitokauden-numero)))
+                                                             hoitokauden-numero
+                                                             :hankinnat)))
                                    (fn [hoitokauden-numero arvo]
                                      (grid/paivita-osa! solu/*this*
                                                         (fn [solu]
@@ -815,7 +842,9 @@
                                                               :ajettavat-jarejestykset true
                                                               :triggeroi-seuranta? true}
                                                              true
-                                                             hoitokauden-numero)
+                                                             hoitokauden-numero
+                                                             :hankinnat)
+                                       (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
                                        #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
                                      #_(when arvo
                                          (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
@@ -884,6 +913,11 @@
 (defn rahavarausten-grid []
   (let [nyt (pvm/nyt)
         dom-id "rahavaraukset-taulukko"
+        tyyppi->tallennettava-asia (fn [tyyppi]
+                                     (case tyyppi
+                                       "vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot
+                                       "akillinen-hoitotyo" :akilliset-hoitotyot
+                                       "muut-rahavaraukset" :rahavaraus-lupaukseen-1))
         g (grid/grid {:nimi ::root
                       :dom-id dom-id
                       :root-fn (fn [] (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :rahavaraukset :grid]))
@@ -998,7 +1032,10 @@
                                                                                                                                                                                             :solu solu/*this*
                                                                                                                                                                                             :ajettavat-jarejestykset true
                                                                                                                                                                                             :triggeroi-seuranta? true}
-                                                                                                                                                                                           true))
+                                                                                                                                                                                           true)
+                                                                                                                                                                     (e! (t/->TallennaArvot (tyyppi->tallennettava-asia tyyppi) (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                                                                                                                                                                                        :tunniste-rajapinnan-dataan)
+                                                                                                                                                                                                                                      (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset)))))
                                                                                                                                                                    #_(when arvo
                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
@@ -1051,6 +1088,7 @@
                                                                                                                                                                         false
                                                                                                                                                                         (partial tayta-alas-napin-toiminto
                                                                                                                                                                                  :aseta-rahavaraukset!
+                                                                                                                                                                                 (tyyppi->tallennettava-asia tyyppi)
                                                                                                                                                                                  1)
                                                                                                                                                                         {:on-change (fn [arvo]
                                                                                                                                                                                       (when arvo
@@ -1074,6 +1112,7 @@
                                                                                                                                                                                                              :ajettavat-jarejestykset true
                                                                                                                                                                                                              :triggeroi-seuranta? true}
                                                                                                                                                                                                             true)
+                                                                                                                                                                                      (e! (t/->TallennaArvot (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
                                                                                                                                                                                       #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
                                                                                                                                                                                     #_(when arvo
                                                                                                                                                                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
@@ -1469,7 +1508,7 @@
                                                         [0 {}]
                                                         t/johto-ja-hallintokorvaukset-pohjadata))))))
 
-(defn maarataulukko [nimi taulukon-id yhteenvedot-polku]
+(defn maarataulukko [nimi yhteenvedot-polku]
   (let [polun-osa (keyword nimi)
         disablerivit-avain (keyword (str nimi "-disablerivit"))
         aseta-yhteenveto-avain (keyword (str "aseta-" nimi "-yhteenveto!"))
@@ -1486,7 +1525,7 @@
                                                                              (when (instance? solu/Syote osa)
                                                                                :maara))
                                                                            (grid/hae-grid osat :lapset)))}
-        g (maarataulukon-pohja (t/hallinnollisten-idt polun-osa) #_taulukon-id
+        g (maarataulukon-pohja (t/hallinnollisten-idt polun-osa)
                                polun-osa
                                (fn [g]
                                  (swap! tila/suunnittelu-kustannussuunnitelma
@@ -1513,7 +1552,10 @@
                                                           :solu solu/*this*
                                                           :ajettavat-jarejestykset #{:mapit}
                                                           :triggeroi-seuranta? true}
-                                                         true))
+                                                         true)
+                                   (e! (t/->TallennaArvot polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                                                                                            :tunniste-rajapinnan-dataan)
+                                                                          (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset)))))
                                  #_(when arvo
                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
@@ -1528,7 +1570,14 @@
                                                             :solu maara-solu
                                                             :ajettavat-jarejestykset #{:mapit}
                                                             :triggeroi-seuranta? true}
-                                                           true))))
+                                                           true))
+                                   (e! (t/->TallennaArvot polun-osa
+                                                          (vec (keep (fn [rivi]
+                                                                       (let [maara-solu (grid/get-in-grid rivi [1])
+                                                                             piillotettu? (grid/piillotettu? rivi)]
+                                                                         (when-not piillotettu?
+                                                                           (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
+                                                                     rivit-alla))))))
                                (fn [arvo]
                                  (when arvo
                                    (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
@@ -1547,6 +1596,7 @@
                                                           :ajettavat-jarejestykset true
                                                           :triggeroi-seuranta? true}
                                                          true)
+                                   (e! (t/->TallennaArvot polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
                                    #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
                                  #_(when arvo
                                      (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
@@ -1907,7 +1957,7 @@
 
 (defn suunnitelman-selitteet [this luokat _]
   [:div#suunnitelman-selitteet {:class (apply str (interpose " " luokat))}
-   [:span [ikonit/ok] "Kaikki kentätä täytetty"]
+   [:span [ikonit/ok] "Kaikki kentät täytetty"]
    [:span [ikonit/livicon-question] "Keskeneräinen"]
    [:span [ikonit/remove] "Suunnitelma puuttuu"]])
 
@@ -3740,11 +3790,11 @@
                                 g-sh (suunnittellut-hankinnat-grid)
                                 g-hlp (hankinnat-laskutukseen-perustuen-grid)
                                 g-r (rahavarausten-grid)
-                                g-er (maarataulukko "erillishankinnat" "erillishankinnat-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])
+                                g-er (maarataulukko "erillishankinnat" [:yhteenvedot :johto-ja-hallintokorvaukset])
                                 g-jhl (johto-ja-hallintokorvaus-laskulla-grid)
                                 g-jhly (johto-ja-hallintokorvaus-laskulla-yhteenveto-grid)
-                                g-t (maarataulukko "toimistokulut" "toimistokulut-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])
-                                g-hjp (maarataulukko "hoidonjohtopalkkio" "hoidonjohtopalkkio-taulukko" [:yhteenvedot :johto-ja-hallintokorvaukset])]
+                                g-t (maarataulukko "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset])
+                                g-hjp (maarataulukko "hoidonjohtopalkkio" [:yhteenvedot :johto-ja-hallintokorvaukset])]
                             (t/paivita-raidat! (grid/osa-polusta g-s [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-sh [::g-pohjat/data]))
                             (t/paivita-raidat! (grid/osa-polusta g-hlp [::g-pohjat/data]))
