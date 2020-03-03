@@ -90,7 +90,7 @@
                                      (assoc kysely-params ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)}))
         hae-paikkaukset (fn [db]
                           (let [paikkaus-materiaalit (q/hae-paikkaukset-materiaalit db kysely-params)
-                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohe db (if kysely-params-paikkaus-idt
+                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohde db (if kysely-params-paikkaus-idt
                                                                                             kysely-params-paikkaus-idt
                                                                                             kysely-params))
                                 paikkaus-tienkohta (q/hae-paikkaukset-tienkohta db (if kysely-params-tieosa
