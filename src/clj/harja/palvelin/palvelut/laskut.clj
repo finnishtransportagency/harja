@@ -43,27 +43,26 @@
                   :kokonaissumma (:kokonaissumma lasku)
                   :erapaiva      (:erapaiva lasku)
                   :laskun-numero (:laskun-numero lasku)
+                  :koontilaskun-kuukausi (:koontilaskun-kuukausi lasku)
                   :suorittaja    (:suorittaja-id lasku)
                   :liite-id      (:liite-id lasku)
                   :liite-nimi    (:liite-nimi lasku)
                   :liite-tyyppi  (:liite-tyyppi lasku)
                   :liite-koko    (:liite-koko lasku)
                   :liite-oid     (:liite-oid lasku)
-                  :kohdistukset  (into []
-                                       (map (fn [v]
-                                              (dissoc v :viite
-                                                      :tyyppi
-                                                      :kokonaissumma
-                                                      :erapaiva
-                                                      :suorittaja-id
-                                                      :liite-id
-                                                      :liite-nimi
-                                                      :liite-tyyppi
-                                                      :liite-koko
-                                                      :liite-oid))
-                                            kohdistukset))})))
+                  :kohdistukset  (mapv #(dissoc % :viite
+                                                :tyyppi
+                                                :kokonaissumma
+                                                :erapaiva
+                                                :suorittaja-id
+                                                :liite-id
+                                                :liite-nimi
+                                                :liite-tyyppi
+                                                :liite-koko
+                                                :liite-oid
+                                                :koontilaskun-kuukausi)
+                                       kohdistukset)})))
     laskukohdistukset))
-
 
 
 (defn hae-kaikki-urakan-laskuerittelyt
@@ -128,15 +127,17 @@
   Palauttaa tallennetut tiedot."
   [db user urakka-id laskuerittely]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [lasku (q/luo-tai-paivita-lasku<! db {:viite         (:viite laskuerittely)
-                                             :erapaiva      (konv/sql-date (:erapaiva laskuerittely))
-                                             :kokonaissumma (:kokonaissumma laskuerittely)
-                                             :urakka        (:urakka laskuerittely)
-                                             :suorittaja    (kasittele-suorittaja db user (:suorittaja-nimi laskuerittely))
-                                             :tyyppi        (:tyyppi laskuerittely)
-                                             :numero        (:laskun-numero laskuerittely)
-                                             :lisatieto     (:lisatieto laskuerittely)
-                                             :kayttaja      (:id user)})]
+  (let [lasku (q/luo-tai-paivita-lasku<!
+               db {:viite         (:viite laskuerittely)
+                   :erapaiva      (konv/sql-date (:erapaiva laskuerittely))
+                   :kokonaissumma (:kokonaissumma laskuerittely)
+                   :urakka        (:urakka laskuerittely)
+                   :suorittaja    (kasittele-suorittaja db user (:suorittaja-nimi laskuerittely))
+                   :tyyppi        (:tyyppi laskuerittely)
+                   :numero        (:laskun-numero laskuerittely)
+                   :lisatieto     (:lisatieto laskuerittely)
+                   :kayttaja      (:id user)
+                   :koontilaskun-kuukausi (:koontilaskun-kuukausi laskuerittely)})]
     (doseq [kohdistusrivi (:kohdistukset laskuerittely)]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)

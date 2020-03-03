@@ -434,6 +434,7 @@
     app)
   AvaaLasku
   (process-event [{lasku :lasku} app]
+    (loki/log "AVAA LASKU " (pr-str lasku))
     (assoc app :syottomoodi true
                :lomake (kulu->lomake lasku)))
 
@@ -480,7 +481,8 @@
                                             :kokonaissumma   kokonaissumma
                                             :laskun-numero   (js/parseFloat laskun-numero)
                                             :lisatieto       lisatieto
-                                            :tyyppi          "laskutettava"}} ;TODO fix
+                                            :tyyppi          "laskutettava"
+                                            :koontilaskun-kuukausi koontilaskun-kuukausi}}
                            {:onnistui            ->TallennusOnnistui
                             :onnistui-parametrit [{:tilan-paivitys-fn (fn [app tulos]
                                                                         (as-> app a

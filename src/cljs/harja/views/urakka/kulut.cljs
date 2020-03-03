@@ -21,7 +21,8 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.loki :as loki]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [clojure.string :as str])
   (:require-macros [harja.ui.taulukko.tyokalut :refer [muodosta-taulukko]]))
 
 (defn- lomakkeen-osio [otsikko & osiot]
@@ -112,11 +113,12 @@
     :format-fn    (fn [a]
                     (if (nil? a)
                       "Ei valittu"
-                      (str (get kuukaudet-strs (keyword (namespace a))) " - " (get hoitovuodet-strs (keyword (name a))))))}
+                      (let [[kk hv] (str/split a #"/")]
+                        (str (get kuukaudet-strs (keyword kk)) " - "
+                             (get hoitovuodet-strs (keyword hv))))))}
    (for [kk kuukaudet
          hv (range 1 6)]
-     (keyword
-       (str (name kk) "/" hv "-hoitovuosi")))])
+     (str (name kk) "/" hv "-hoitovuosi"))])
 
 (defn laskun-tiedot [paivitys-fn {:keys [koontilaskun-kuukausi laskun-numero erapaiva viite kohdistukset] :as lomake}]
   (let [{:keys [validius]} (meta lomake)

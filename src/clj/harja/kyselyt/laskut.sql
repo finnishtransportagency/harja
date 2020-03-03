@@ -6,7 +6,8 @@ SELECT l.id            as "laskun-id",
        l.erapaiva      as "erapaiva",
        l.tyyppi        as "tyyppi",
        l.luotu         as "luontipvm",
-       l.muokattu      as "muokkauspvm"
+       l.muokattu      as "muokkauspvm",
+       l.koontilaskun_kuukausi as "koontilaskun-kuukausi"
 from lasku l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm ::DATE AND :loppupvm ::DATE
@@ -20,6 +21,7 @@ SELECT l.id                   as "laskun-id",
        l.erapaiva             as "erapaiva",
        l.tyyppi               as "tyyppi",
        l.laskun_numero        as "laskun-numero",
+       l.koontilaskun_kuukausi as "koontilaskun-kuukausi",
        lk.rivi                as "rivi",
        lk.summa               as "summa",
        lk.toimenpideinstanssi as "toimenpideinstanssi",
@@ -106,8 +108,11 @@ ORDER by lk.id;
 
 -- name: luo-tai-paivita-lasku<!
 INSERT
-INTO lasku (viite, erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto, laskun_numero)
-VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI, current_timestamp, :kayttaja, :lisatieto, :numero)
+  INTO lasku
+       (viite, erapaiva, kokonaissumma, suorittaja, urakka, tyyppi, luotu, luoja, lisatieto,
+        laskun_numero, koontilaskun_kuukausi)
+VALUES (:viite, :erapaiva, :kokonaissumma, :suorittaja, :urakka, :tyyppi ::LASKUTYYPPI,
+        current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi)
 ON CONFLICT (viite) DO UPDATE
   SET erapaiva = :erapaiva,
     lisatieto = :lisatieto,
@@ -116,7 +121,8 @@ ON CONFLICT (viite) DO UPDATE
     suorittaja = :suorittaja,
     tyyppi = :tyyppi ::LASKUTYYPPI,
     muokattu = current_timestamp,
-    muokkaaja = :kayttaja;
+    muokkaaja = :kayttaja,
+    koontilaskun_kuukausi = :koontilaskun-kuukausi;
 
 -- name: luo-tai-paivita-laskun-kohdistus<!
 INSERT
@@ -164,6 +170,3 @@ WHERE id = :id AND poistettu IS NOT TRUE;
 -- name: hae-tehtavaryhman-nimi
 SELECT nimi FROM tehtavaryhma
 WHERE id = :id AND poistettu IS NOT TRUE;
-
-
-
