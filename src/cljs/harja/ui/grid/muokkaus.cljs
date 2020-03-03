@@ -273,7 +273,9 @@
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
-              colspan (inc (count skeema))]
+              colspan (if piilota-toiminnot?
+                        (count skeema)
+                        (inc (count skeema)))]
           [:tbody
            (if (every? :poistettu (vals muokatut))
              [:tr.tyhja [:td {:colSpan colspan}
