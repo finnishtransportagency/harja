@@ -110,7 +110,8 @@
                                                 piillotettu? (grid/piillotettu? rivi)]
                                             (when-not piillotettu?
                                               (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                        rivit-alla)))))))
+                                        rivit-alla))))
+      (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
 
 (defn maara-solujen-disable! [data-sisalto disabled?]
   (grid/post-walk-grid! data-sisalto
@@ -168,7 +169,8 @@
                                                                                                                 :lapset)
                                                                                                  1)
                                                                                             :lapset))))
-                                (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)])))))
+                                (e! (t/->TallennaJohtoJaHallintokorvaukset tallenna [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)])))
+                              (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                  :on-key-down (fn [event]
                                 (when (= "Enter" (.. event -key))
                                   (.. event -target blur)))}
@@ -197,7 +199,8 @@
                                                                                            piillotettu? (grid/piillotettu? rivi)]
                                                                                        (when-not piillotettu?
                                                                                          (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
-                                                                                   rivit-alla))))))
+                                                                                   rivit-alla))))
+                             (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
        :nappi-nakyvilla? false})))
 
 
@@ -705,7 +708,8 @@
                                                                                       piillotettu? (grid/piillotettu? rivi)]
                                                                                   (when-not piillotettu?
                                                                                     (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                              rivit-alla))))))
+                                                                              rivit-alla))))
+                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                              (fn [hoitokauden-numero arvo]
                                (when arvo
                                  (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnittellut-hankinnat!
@@ -730,12 +734,7 @@
                                                        hoitokauden-numero
                                                        :hankinnat)
                                  (e! (t/->TallennaHankintojenArvot :hankintakustannus hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                 )
-                               #_(when arvo
-                                   (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                   (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                   (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                   (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))))]
+                                 (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/suunnittellut-hankinnat-rajapinta
                                        (t/suunnittellut-hankinnat-dr)
@@ -824,7 +823,8 @@
                                                                                             piillotettu? (grid/piillotettu? rivi)]
                                                                                         (when-not piillotettu?
                                                                                           (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                                    rivit-alla))))))
+                                                                                    rivit-alla))))
+                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                    (fn [hoitokauden-numero arvo]
                                      (when arvo
                                        (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
@@ -849,12 +849,7 @@
                                                              hoitokauden-numero
                                                              :hankinnat)
                                        (e! (t/->TallennaHankintojenArvot :laskutukseen-perustuva-hankinta hoitokauden-numero [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                       #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
-                                     #_(when arvo
-                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                         (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                         (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                         (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))))]
+                                       (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))]
     (grid/rajapinta-grid-yhdistaminen! g
                                        t/laskutukseen-perustuvat-hankinnat-rajapinta
                                        (t/laskutukseen-perustuvat-hankinnat-dr)
@@ -1039,12 +1034,8 @@
                                                                                                                                                                                            true)
                                                                                                                                                                      (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                                                                                                                                                                                         :tunniste-rajapinnan-dataan)
-                                                                                                                                                                                                                                      (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset)))))
-                                                                                                                                                                   #_(when arvo
-                                                                                                                                                                       (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                                                                                       (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                                                                                                                                                       (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                                                                                                                                                       (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                                                                                                                                                                      (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset))))
+                                                                                                                                                                     (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                                                                                                                                         :on-key-down (fn [event]
                                                                                                                                                                        (when (= "Enter" (.. event -key))
                                                                                                                                                                          (.. event -target blur)))}
@@ -1117,12 +1108,7 @@
                                                                                                                                                                                                              :triggeroi-seuranta? true}
                                                                                                                                                                                                             true)
                                                                                                                                                                                       (e! (t/->TallennaKustannusarvoitu (tyyppi->tallennettava-asia tyyppi) [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                                                                                                                                                                      #_(t/triggeroi-seuranta solu/*this* (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
-                                                                                                                                                                                    #_(when arvo
-                                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                                                                                                                                                                        (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                                                                                                                                                                        (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                                                                                                                                                                        (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                                                                                                                                      (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                                                                                                                                                          :on-key-down (fn [event]
                                                                                                                                                                                         (when (= "Enter" (.. event -key))
                                                                                                                                                                                           (.. event -target blur)))}
@@ -1566,12 +1552,8 @@
                                                          true)
                                    (e! (t/->TallennaKustannusarvoitu polun-osa (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
                                                                                             :tunniste-rajapinnan-dataan)
-                                                                          (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset)))))
-                                 #_(when arvo
-                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                     (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                     (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)]))))
+                                                                          (grid/hae-grid (grid/osa-polusta solu/*this* [:.. :.. 1]) :lapset))))
+                                   (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                (fn [rivit-alla arvo]
                                  (when (and arvo (not (empty? rivit-alla)))
                                    (doseq [rivi rivit-alla
@@ -1588,7 +1570,8 @@
                                                                              piillotettu? (grid/piillotettu? rivi)]
                                                                          (when-not piillotettu?
                                                                            (grid/solun-asia maara-solu :tunniste-rajapinnan-dataan))))
-                                                                     rivit-alla))))))
+                                                                     rivit-alla))))
+                                   (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta))))
                                (fn [arvo]
                                  (when arvo
                                    (t/paivita-solun-arvo {:paivitettava-asia aseta-avain
@@ -1608,12 +1591,7 @@
                                                           :triggeroi-seuranta? true}
                                                          true)
                                    (e! (t/->TallennaKustannusarvoitu polun-osa [(grid/solun-asia solu/*this* :tunniste-rajapinnan-dataan)]))
-                                   #_(t/triggeroi-seuranta solu/*this* :yhteenveto-seuranta))
-                                 #_(when arvo
-                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Yhteensä" polku-taulukkoon (str (* 12 arvo))))
-                                     (e! (t/->MuutaTaulukonOsanSisarta osa/*this* "Indeksikorjattu" polku-taulukkoon (str (t/indeksikorjaa (* 12 arvo)))))
-                                     (e! (t/->TallennaKustannusarvoituTyo tallennettava-asia :mhu-johto arvo nil))
-                                     (go (>! kaskytyskanava [:tavoite-ja-kattohinta (t/->TallennaJaPaivitaTavoiteSekaKattohinta)])))))
+                                   (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))))
         rajapinta (t/maarataulukon-rajapinta polun-osa aseta-yhteenveto-avain aseta-avain)]
     (grid/rajapinta-grid-yhdistaminen! g
                                        rajapinta
@@ -1797,21 +1775,12 @@
       [napit/yleinen-ensisijainen "Kustannusten seuranta" #(println "Painettiin Kustannusten seuranta") {:ikoni [ikonit/stats] :disabled true}]]]
     [yleiset/ajax-loader]))
 
-(defn tavoite-ja-kattohinta-sisalto [#_{{:keys [tavoitehinnat kattohinnat]} :tavoite-ja-kattohinta
-                                      :keys [kuluva-hoitokausi indeksit]}
-                                     yhteenvedot
+(defn tavoite-ja-kattohinta-sisalto [yhteenvedot
                                      kuluva-hoitokausi
                                      indeksit]
   (let [tavoitehinnat (mapv (fn [summa]
                               {:summa summa})
-                            (mapv +
-                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :erillishankinnat])
-                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
-                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :toimistokulut])
-                                  (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
-                                  (t/summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :rahavaraukset]))
-                                  (t/summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :suunnitellut-hankinnat]))
-                                  (t/summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]))))
+                            (t/tavoitehinnan-summaus yhteenvedot))
         kattohinnat (mapv #(update % :summa * 1.1) tavoitehinnat)]
     [:div
      [hintalaskuri {:otsikko "Tavoitehinta"
@@ -1856,12 +1825,7 @@
   (let [toimenpide-tekstiksi (fn [toimenpide]
                                (-> toimenpide name (clj-str/replace #"-" " ") t/aakkosta clj-str/upper-case))
         valitse-toimenpide (r/partial (fn [toimenpide]
-                                        (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :toimenpide] toimenpide))
-                                        #_(doseq [hoitokauden-numero (range 1 6)]
-                                            (t/triggeroi-seuranta (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid])
-                                                                  (keyword (str "hankinnat-yhteenveto-seuranta-" hoitokauden-numero))))
-                                        #_(t/triggeroi-seuranta (get-in @tila/suunnittelu-kustannussuunnitelma [:gridit :suunnittellut-hankinnat :grid])
-                                                                :hankinnat-yhteensa-seuranta)))
+                                        (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :toimenpide] toimenpide))))
         valitse-kausi (fn [suunnittellut-hankinnat-grid laskutukseen-perustuvat-hankinnat-grid kausi]
                         (e! (tuck-apurit/->MuutaTila [:suodattimet :hankinnat :maksetaan] kausi))
                         (e! (t/->MaksukausiValittu))

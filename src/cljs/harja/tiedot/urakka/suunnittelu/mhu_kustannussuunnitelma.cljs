@@ -153,6 +153,16 @@
                               (<= 10 kuukausi 12))
     :else true))
 
+(defn tavoitehinnan-summaus [yhteenvedot]
+  (mapv +
+        (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :erillishankinnat])
+        (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
+        (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :toimistokulut])
+        (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+        (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :rahavaraukset]))
+        (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :suunnitellut-hankinnat]))
+        (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]))))
+
 (defn kk-v-toimenkuvan-kuvaukselle [{:keys [toimenkuva maksukausi hoitokaudet kk-v]}]
   (cond
     (toimenpide-koskee-ennen-urakkaa? hoitokaudet) (js/Math.ceil kk-v)
@@ -1330,6 +1340,9 @@
 (defrecord TallennaJohtoJaHallintokorvaukset [tallennettava-asia tunnisteet])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
 (defrecord TallennaJohtoJaHallintokorvauksetEpaonnistui [vastaus])
+(defrecord TallennaJaPaivitaTavoiteSekaKattohinta [])
+(defrecord TallennaJaPaivitaTavoiteSekaKattohintaOnnistui [vastaus])
+(defrecord TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui [vastaus])
 (defrecord Hoitokausi [])
 (defrecord YleisSuodatinArvot [])
 (defrecord HaeIndeksitOnnistui [vastaus])
@@ -1847,6 +1860,32 @@
     app)
   TallennaJohtoJaHallintokorvauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Tallennus epäonnistui..."
+                   :warning viesti/viestin-nayttoaika-pitka)
+    app)
+  TallennaJaPaivitaTavoiteSekaKattohinta
+  (process-event [_ {:keys [yhteenvedot] :as app}]
+    (let [kattohinnan-kerroin 1.1
+          yhteenvedot (tavoitehinnan-summaus yhteenvedot)
+          {urakka-id :id} (:urakka @tiedot/yleiset)
+
+          lahetettava-data {:urakka-id urakka-id
+                            :tavoitteet (vec (map-indexed (fn [index summa]
+                                                            {:hoitokausi (inc index)
+                                                             :tavoitehinta summa
+                                                             :kattohinta (* summa kattohinnan-kerroin)})
+                                                          yhteenvedot))}]
+      (tuck-apurit/post! app
+                         :tallenna-budjettitavoite
+                         lahetettava-data
+                         {:onnistui ->TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+                          :epaonnistui ->TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
+                          :paasta-virhe-lapi? true})))
+  TallennaJaPaivitaTavoiteSekaKattohintaOnnistui
+  (process-event [_ app]
+    app)
+  TallennaJaPaivitaTavoiteSekaKattohintaEpaonnistui
+  (process-event [_ app]
     (viesti/nayta! "Tallennus epäonnistui..."
                    :warning viesti/viestin-nayttoaika-pitka)
     app))
